@@ -1,0 +1,157 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Quickly checking signatures -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Sat, 2 Sep 95 18:14:53 PDT -->
+<!--X-Message-Id: 199509030113.SAA19877@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Quickly checking signatures</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00089.html">Date Prev</A>][<A HREF="msg00091.html">Date Next</A>][<A HREF="msg00089.html">Thread Prev</A>][<A HREF="msg00100.html">Thread Next</A>][<A HREF="index.html#00092">Date Index</A>][<A HREF="threads.html#00092">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Quickly checking signatures</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Quickly checking signatures</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 2 Sep 1995 18:13:40 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Let me describe Shamir's method for quickly doing a probabilistic signature
+check.  Since this was a rump session paper he didn't have it written up.
+
+Shamir uses a variation of the Rabin system.  The Rabin encryption
+system is similar to RSA, but instead of exponents which are relatively
+prime to the predecessors of the factors of the modulus, the exponent
+used is 2.  This requires somewhat different techniques.
+
+A message M is encrypted by doing M^2 mod n.  The decryption is then
+done by taking the modular square root.  There are a few technical
+hitches that occur here but nothing major.  Similarly a message M is
+signed by calculating its modular square root S such that S^2 = M mod n.
+Note that with Rabin you can't just sign any arbitrary number as that
+may allow the factors to be revealed.  However this is not a major problem
+because practical systems in use today sign specially padded hashes,
+not arbitrary numbers.
+
+Now Shamir uses a slight modification to this.  Normally we have:
+
+	S^2 = M mod n
+
+This can be written as:
+
+	S^2 = M + C*n
+
+for some C, which is simply the definition of modular equality.  Now,
+what he suggests is that instead of sending S as the signature of M, you
+send C.  This is justified on 3 grounds:
+
+	- C is the same size as S
+	- C has the same security as S (knowing M and n you can derive C
+	  from S and vice versa)
+	_ C and S are equally easy to generate
+
+However, by sending C as the signature of a message M it allows a fast
+screening to be done.  The idea is that the message should be accepted if
+M+C*n is a perfect square (because then S can be derived as the normal
+square root - that is how you get S from C as mentioned above).  And this
+is something that can be checked quickly.
+
+In number theory there is a notion of a "quadratic residue" modulo some
+number.  If a number is a quadratic residue that simply means that it has
+a square root, that it is the square of some other number using the
+modulus.  With a prime modulus half of the numbers are quadratic residues
+and half are not.  For example, with modulus 7 the q.r.'s are 1, 2 and 4
+and the non q.r.'s are 3, 5, and 6.  It turns out that testing whether a
+number x is a quadratic residue modulo a prime p can be done by
+calculating x^((p-1)/2) mod p.  This will be 1 if and only if x is a q.r.
+
+Now, the key idea is this: if a number is a perfect square then the
+result of taking that number modulo a prime must be a quadratic residue.
+This means that we can quickly determine that C is a perfect square by
+checking whether C mod p for various random small primes p is a quadratic
+residue.
+
+By picking p to be a single precision prime of say 16 bits, the q.r.
+calculation can all be done without using multiple precision arithmetic
+and so it will be very fast compared to actually checking a signature.
+
+So, the procedure for the check is as follows: given n, M and C, choose a
+small prime p and calculate M+C*n mod p.  Then raise this to the (p-1)/2
+power mod p and see if the answer is 1.  If it is, we give a
+"provisional" acceptance to the signature.  If it is not, we reject the
+signature; it cannot be valid.  This test may be repeated a few times
+with different values of p to improve the rejection of bad signatures.
+Once we have taken the input numbers mod p the rest of the arithmetic can
+be done with ordinary single precision integer variables.
+
+(One thing I overlooked is the possibility that M+C*n will be a multiple
+of p.  In that case M+C*n mod p will be 0 and this is a provisional pass.)
+
+Of course checking the signature the old-fashioned way just takes a
+single multi precision multiplication, which won't be all that slow.
+So this puts a limit on the number of p's you can check this fast
+way before it becomes slower.  Also, you'd have to choose the primes at
+random as otherwise an attacker who knew your p's could conjure up a C
+which would produce a quadratic residue for some small number of known
+p's.
+
+Hal
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00089.html">Re: PGPfone over Appletalk</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00091.html">Re: Basic Public key algorithms.</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00089.html">Re: PGPfone over Appletalk</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00100.html">Crypto '95: Robert Morris</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00092"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00092"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

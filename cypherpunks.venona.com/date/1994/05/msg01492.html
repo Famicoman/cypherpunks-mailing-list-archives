@@ -1,0 +1,334 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: GI based PK cryptosystem. -->
+<!--X-From-R13: wccNwccync.znexi.pbz (Xnl Bevzr Bbfvgvir) -->
+<!--X-Date: Fri, 27 May 94 07:55:31 PDT -->
+<!--X-Message-Id: m0q72Mp&#45;0003paC@jpplap -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>GI based PK cryptosystem.</TITLE>
+<LINK REV="made" HREF="mailto:jpp@jpplap.markv.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01513.html">Date Prev</A>][<A HREF="msg01450.html">Date Next</A>][<A HREF="msg01497.html">Thread Prev</A>][<A HREF="msg01450.html">Thread Next</A>][<A HREF="index.html#01492">Date Index</A>][<A HREF="threads.html#01492">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>GI based PK cryptosystem.</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: GI based PK cryptosystem.</LI>
+<LI><em>From</em>: <A HREF="mailto:jpp@jpplap.markv.com">jpp@jpplap.markv.com</A> (Jay Prime Positive)</LI>
+<LI><em>Date</em>: Fri, 27 May 94 06:54 PDT</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+  Ok, here it is.  I currently belive that this publishing makes the
+system un-patentable by anyone but me (and I can only patent it in the
+US, not in the EC).  It is my intent that this algorithm be unfettered
+by copyright, liscence, trademark, patent, or any other icky
+intelectual property right.  So let me state here that the algorith is
+in the public domain.  I release all copyright to it.  There, i hope
+that does it.
+
+  But if I'm wrong, oh well.  I don't think there is much economic
+worth in this scheme.  But, I would be happy to be proven wrong!  I
+expect that the odds that this system actually work are pretty long.
+But I've been over it too much, and can't see any holes, its time for
+others to poke at it.  Besides, I like the tase of crow.
+
+j'
+
+This is an -*-outline-*- of my public key crypto system
+
+(setq outline-regexp "[!$=*]+")
+(setq paragraph-start "^[ 	]+\\|^[!$=*]+")
+(setq paragraph-separate "^[ 	]*$\\|^[!$=*]+")
+
+
+* Informal introduction
+
+** Description of the system
+
+*** Key generation
+
+  In total secrecy, Andy generates two graphs, one for encoding 1's and
+the other for encoding 0's.  He then openly publishes these two graphs.
+
+*** Sending a bit
+
+  In total secrecy, Beth selects one of the two graphs, and generates a
+new graph isomorphic to the selected graph based.  Then Beth publicly
+sends the new graph to Andy.
+
+*** Recieving a bit
+
+  To decrypt which bit Andy recieved, he must determin which graph Beth
+selected, and permuted.  He must solve one case of the GI problem.  To
+make this easy, he has hidden trapdoor indentifiers in the published
+graphs.  Using my special JGI algorithm, and the trapdoor identifiers,
+Andy will be able to discover which bit Beth sent.
+
+*** The trapdoor information
+
+  To make hiding a trapdoor identifier possible, Andy also publishes a
+labeling of the two graphs.  For each node and each edge in the
+published graphs, Andy associates a labeling string.  (He uses 2k-bit
+binary numbers as labels.)
+
+  When he constructs the graphs, Andy insures that each one has a
+Hamiltonian Circuit.  The trapdoor information is the labeling of the
+Hamiltonian Circuits of the two graphs.  Naturally, each graph has a
+different Hamiltonian Circuit from the other, with a different labeling.
+
+** Informal security argument
+
+  For Eve to be able to determin the bit sent from Beth to Andy, she
+must be able to either solve instances of the Graph Isomorphism problem,
+or find the trapdoor identifier in the graph that Beth sends to Andy and
+also in the two published graphs.
+
+  (I will ignore the posibility that Andy's and Beth's 'total secrecy'
+is penetrable by Eve.  She might have psychic powers, or access to
+sophisticated spying technology.  If this is the case, too bad for Andy
+and Beth.)
+
+*** The Graph Isomorphism problem
+
+  Graph Isomorphism (GI) is a problem for which people believe there is
+no polynomial time solution.  Although GI is belived to be easyer than
+problems known to be NP complete.  So we belive that Eve has a fairly
+hard problem ahead of her, although the problem might not quite fit the
+usual definition of intractable.
+
+*** The Hameltonain Circuit problem
+
+  Instead Eve could try to discover the trapdoor information.  But since
+the Hamiltonian Circuit Decision problem is NP complete, and since NP
+complete problems are (belived) at least as hard as GI, it doesn't seem
+that there is much profit for Eve to try this aproach.
+
+
+
+* The formal version
+
+** Key generation
+
+  For a particular security parameter k, the published key consists of
+an ordered pair of graphs &lt;G0, G1&gt;.  G0 is used for sending 0 bits, and
+G1 for sending 1 bits.
+
+  Both G0 and G1 contain 2^4k nodes, and 2^4k*2^2k==2^6k edges.  Each
+graph contains a Hameltonian Circuit.  Each node, and each edge of each
+graph is labled with a member of {0,1}^k (the set of bit strings k bits
+long).  Each node has exactly 2^2k outgoing edges (and 2^2k incomming?).
+
+  To construct a graph, begin with a random set of labled nodes.
+Construct the Hameltonian Circuit by adding edges from vi to vj, each
+with a random label.  Note (one of) the string(s) which is formed by
+appending the node and edge lables in order along the Hameltonian
+Circuit.  This is the trapdoor information which makes the graph
+isomorphism problem easy.  Next add edges to the graph until each node
+has exactly 2^2k outgoing edges, label each edge at random.
+
+  (Here is where I should talk about how the GI problem is only rarely
+hard, and that the edges labeled at random garantees that we _sometimes_
+land in the hard susbset of the GI problem.  It would be nice to make a
+better construction which always landed in the hard subset of GI.  But
+this is likely to be a hard research problem.  Oh well.)
+
+** Sending a bit
+
+  Reciever sends two graphs as described above to the sender.  The
+sender decides which bit to send -- 1 or 0.  The sender then selects a
+permutation P of the nodes of the apropriate graph.  The sender then
+sends the isomorphic graph defined by the permutation P to the reciever.
+The reciever uses my GI algorithm to determin which graph was sent.
+
+** Recieving a bit
+
+  The reciever runs the folowing algorithm twice in parallel, and the
+algorithm to finish first determins which graph was sent.  The other
+algorithm is terminated (since its result is unnecesary.)
+
+*** Description of the algorithm
+
+  The JGI algorithm takes as input a trapdoor string T of labels &lt;tn1,
+te1, tn2, te2...&gt; (tni, and tei are strings of binary digits), and a
+graph G=&lt;V,E&gt; of |V| nodes.  It either halts and accepts the input, or
+halts and rejects the input.  After initializing, the algorithm will
+halt in exactly V iterations of the main loop.
+
+**** Initialization
+
+  For each node v in the graph, if the node's label matches the first
+label in the trapdoor, create a set sv containing v.  Also create a
+pair pv of &lt;v, sv&gt;.  Finally add the pair pv to the active set.
+Remove the first label from the trapdoor string.
+
+**** Main Loop
+
+  While the trapdoor string T is not empty and the active set is not
+empty, do the Outer Loop.  After performing the outer loop, make the
+next active set be the active set, and then remove the first two
+labels from the trapdoor string.
+
+***** Outer Loop
+
+  For each pair pi=&lt;vi, svi&gt; in the active set, do the Inner Loop.
+
+****** Inner Loop
+
+  For each edge e=&lt;vj, vk&gt; in E where vi==vj, if T's first label
+matches e's label, and if vk is not in svi, and if T's second label
+matches vk's label, then add the pair pi'=&lt;vk, svi union {vk}&gt; to the
+next active set.
+
+**** Final step
+
+  If the trapdoor string is empty, halt and accept. If the active set
+is empty, and the trapdoor string is not, halt and reject.
+
+*** Proof of polynomial time and space behavior
+
+  (This is a little weak, but I belive it can fly.)
+
+  The main loop executes no more than |V| times since the trapdoor
+string contains exactly |V| node labels, and each iteration removes
+one of them.  The important question is how many new pairs are added
+to the next active set, for each pair in the active set, by the outer
+and inner loops.  For one of my graphs, the expected number is (less
+than) one.  To see this note that the product of number of edge labels
+and the number of node labels equals the numbe of edges leaving a
+node.  However, the test to see if the new vk is already a member of
+the old svi reduces this number.
+
+** Proof of security
+
+  The evesdropper must solve the GI problem for the subset of graphs
+constructed, or must discover the trapdoor information, and use my GI
+algorithm.  To show how hard this is, I will show that GI of the
+subset of graphs generated is (polynomial time) GI complete, and I
+will show that discovering the trapdoor information is as hard as the
+Hameltonian circuit path discovery problem.
+
+*** The reduction to HP
+
+  Now how am I going to do this?  Ideas are solicited.
+
+*** The reduction to GI
+
+  (All I actually present are the constructions for the reductions.  I
+don't proove that isomorphism and (where apropriate) hameltonian
+posetion is retained.  But I am convinced.  Just tiered of typeing.)
+
+  I will write GI for graph isomorphism, LGI for labeld graph
+isomorphism, HLGI to Hameltonian posesing labeled graph isomorphism,
+FAHLGI for fixed (at |V|^1/2) arity Hameltonian posesing labeled graph
+isomorphism.
+
+  The subset of graphs that are generated in the key generation process
+are exactly those of the FAHLGI problem.  (This is true by
+construction.)
+
+**** FAHLGI &lt;= GI &lt;= FAHLGI
+
+  I will now prove that FAHLGI &lt;= GI &lt;= FAHLGI.  I will prove this by
+the chain FAHLGI &lt;= HLGI &lt;= FAHLGI, HLGI &lt;= LGI &lt;= HLGI, LGI &lt;= GI &lt;=
+LGI.
+
+***** FAHLGI &lt;= HLGI &lt;= FAHLGI
+
+****** FAHLGI &lt;= HLGI
+
+  Obvious: Since FAHLGI is a subset of HLGI, a HLGI algorithm will work
+just fine when given graphs from the FAHLGI problem.
+
+****** HLGI &lt;= FAHLGI
+
+  Replace each node with a clique of size |V|.  Label the nodes in the
+clique as the original node, and the edges in the clique 00.  For each
+ordered pair of nodes &lt;v1,v2&gt; in V^2, add an edge from one of the nodes
+in the clique for v1 to one of the nodes in the clique for v2.  Label
+the new edge 11x if the there is an edge &lt;v1,v2&gt; in E and its label is
+x, label the new edge label 10x for some random x, if &lt;v1,v2&gt; is not in
+E.
+
+***** HLGI &lt;= LGI &lt;= HLGI
+
+****** HLGI &lt;= LGI
+
+  Obvious: Since HLGI is a subset of LGI, a LGI algorithm will work just
+fine when given graphs from the HLGI problem.
+
+****** LGI &lt;= HLGI
+
+  For each v labeled x, construct v', v'' labeled 0x and 1x resp.  For
+each v', and each v'', add the edges &lt;v', v''&gt; and &lt;v'', v'&gt; each
+labeled 0x for some random x.  For each e= &lt;v1, v2&gt; in E labeled x add
+e'= &lt;v1', v2'&gt; labeled 1x.
+
+***** LGI &lt;= GI &lt;= LGI
+
+****** LGI &lt;= GI
+
+  For each node label add a new node, and an edge from the new node to
+each of the nodes so labeled.  For each edge, add an intermediate node.
+For each label of the edges, construct a new node, and edges from it to
+the new edge nodes.
+
+****** GI &lt;= LGI
+
+  Obvious construction: give each node and edge the label 0.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01513.html">Re: version 2.6?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01450.html">Unicorn suit</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01497.html">(Fwd) Internet electronic checking</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01450.html">Unicorn suit</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01492"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01492"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

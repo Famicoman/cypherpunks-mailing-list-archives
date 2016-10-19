@@ -1,0 +1,168 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: anonymous mailing lists -->
+<!--X-From-R13: Rnivq [nmvrerf <qzNnzfgreqnz.ypf.zvg.rqh> -->
+<!--X-Date: Mon, 1 Jul 1996 15:49:54 +0800 -->
+<!--X-Message-Id: 199607010012.UAA04061@amsterdam.lcs.mit.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: anonymous mailing lists</TITLE>
+<LINK REV="made" HREF="mailto:dm@amsterdam.lcs.mit.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01581.html">Date Prev</A>][<A HREF="msg01621.html">Date Next</A>][<A HREF="msg01593.html">Thread Prev</A>][<A HREF="msg01547.html">Thread Next</A>][<A HREF="index.html#01619">Date Index</A>][<A HREF="threads.html#01619">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: anonymous mailing lists</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:iang@cs.berkeley.edu">iang@cs.berkeley.edu</A></LI>
+<LI><em>Subject</em>: Re: anonymous mailing lists</LI>
+<LI><em>From</em>: David Mazieres &lt;<A HREF="mailto:dm@amsterdam.lcs.mit.edu">dm@amsterdam.lcs.mit.edu</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 30 Jun 1996 20:12:17 -0400 (EDT)</LI>
+<LI><em>CC</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+iang@cs.berkeley.edu (Ian Goldberg) wrote:
+
+&gt; Yesterday, Dave and I discussed at length a design for a new
+&gt; remailer network...
+
+If you are thinking of revamping the mixmaster protocol, I have a
+couple of suggestions/requests.  One basic philosophy motivating all
+of these ideas is that I would like to avoid requiring any
+"centralized control" or consensus about exactly what remailers should
+exist.  This can be achieved by pushing a lot of configuration
+parameters into the anonymous messages, where the sender has control
+over them
+
+First, D-H (or RSA with short-lived keys) is an extremely good idea.
+Long-lived encryption keys (like the current mixmaster secret keys)
+should not be used for secrecy.  However, it would also be good if you
+could avoid any man-in-the middle weaknesses.  Specifically, with
+simple D-H, an active attack could be used to record all anonymous
+messages from A to B, and weeks later if B is compromised the messages
+could then be decrypted.
+
+Thus, when sending from remailer A to remailer B, B's identity must be
+proven with B's public key (either through RSA encrypting A's half of
+the D-H secret key and a challenge with B's key, or by having B sign
+his half of the D-H secret and a nonce).  Moreover, since not every
+remailer will be known to every other, and since people may want to
+set up and test new remailers for a while before announcing them to
+the world, a strong cryptographic hash or MAC of B's public key should
+be embedded in the remailed-message itself.  Thus, A can query B for
+its public key and verify the public key, then use this public key to
+know it is talking to the real "next hop".
+
+It would also be nice to avoid having every message go through every
+remailer unless the sender actually want's it to.  In particular, a
+larger remailer network should not have to translate into more traffic
+for all the remailers, as it would be nice to have as large a network
+as possible.  Thus, if, for instance, remailer A sends messages out
+every half hour, and A wants to send messages to B, C, and D--why not
+send the three useful messages to B, C, and D all in the same round,
+and just send garbage to all the other remailers.  Of course, messages
+should be allowed to have as many next-hops as necessary, so that if
+you don't want A to know that a message's next hop is B, you can ask
+it to send the same message to C, F, and G as well as to B.  That way,
+A won't know the real next hop.
+
+Now the next question is, when sending garbage to all the other
+remailers, should "all the other remailers" be defined by A or by the
+anonymous message itself.  Here, A should definitely have some list of
+remailers it knows about.  However, maybe at each hop a message should
+be able to supply 6-byte (IP address/port number) addresses of other
+remailers to which garbage should be send.  If there appears to be a
+remailer at the address supplied, and that remailer is not already
+known to A, perhaps the new remailer should automatically be added to
+the list of garbage recipients (and then automatically deleted if it
+stops responding for 24 hours).
+
+In the event that A has a real backlog of messages for a particular
+destination B, it might make sense for A to hand some of those
+messages off to other remailers instead of just feeding them garbage.
+That way, even when one remailer is receiving a lot of mail it won't
+be immediately clear to it's operator which the preceeding hop is.
+
+Given all these features, of course, it would be necessary to have
+variable-length next-hop-descriptors instead of the fixed size and
+number currently in mixmaster.  Is there some reason this can't be
+done?  The total actual length of the 3-DES encrypted portion of the
+mixmaster message shouldn't be available to any but the last hop.
+Thus, is there something wrong with padding the message (or even just
+the 10K header portion of the message if you want to keep the message
+in two parts) with garbage to be 3-DES decrypted into more garbage at
+the next hop?  Of course the padding should be done in such a way that
+the final hop does not know how much space the remailing headers
+originally took up, but this shouldn't be too hard (for instance the
+padding could go between the headers and the message data).
+
+Finally, another very useful feature would be some support for
+improved response blocks.  Right now aliases like alpha.c2.org don't
+offer very much security because they have to go through Type-1
+remailers.  However, one could imagine mixmaster extensions to allow
+it to work for replies as well as anonymous messages.  Imagine a nym
+server with just a 10K mixmaster header as a response block.  The
+server would pad a received message to 10K, prepend the 10K mixmaster
+header, and send off the message.  At each hop of the way, the message
+would get "decrypted" with some 3-DES key (and possibly a weird IV).
+However, couldn't the recipient then just "encrypt" the message to
+recover the plaintext?  Of course, this might undesireably weaken the
+replay prevention, but there's got to be a good solution for response
+blocks somewhere near what we currently have for mixmaster.
+
+David
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01581.html">Re: rsync and md4</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01621.html">Re: MacPGP 2.6.3 released</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01593.html">Re: anonymous mailing lists</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01547.html">John Grubor and you</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01619"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01619"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

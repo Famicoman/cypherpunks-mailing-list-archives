@@ -1,0 +1,1292 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: noiz&#45;0.5: simple noise&#45;emitting package -->
+<!--X-From-R13: fgevpxNgrpujbbq.bet -->
+<!--X-Date: Tue, 7 Feb 95 15:54:09 PST -->
+<!--X-Message-Id: 199502072350.PAA17765@gwarn.versant.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>noiz-0.5: simple noise-emitting package</TITLE>
+<LINK REV="made" HREF="mailto:strick@techwood.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00284.html">Date Prev</A>][<A HREF="msg00295.html">Date Next</A>][<A HREF="msg00293.html">Thread Prev</A>][<A HREF="msg00302.html">Thread Next</A>][<A HREF="index.html#00285">Date Index</A>][<A HREF="threads.html#00285">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>noiz-0.5: simple noise-emitting package</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: noiz-0.5: simple noise-emitting package</LI>
+<LI><em>From</em>: <A HREF="mailto:strick@techwood.org">strick@techwood.org</A></LI>
+<LI><em>Date</em>: Tue, 07 Feb 1995 15:50:10 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+NAME
+
+        noiz -- a simple package for accumulating and dispensing
+                cryptographically-strong noise, using MD5 as
+                a stirring function
+
+	See "noiz.doc" for more information.
+
+I'm interested in someone pointing out serious errors in my
+algorithm or the implementation.  See particularly the ALGORITHM 
+section at the end of "noiz.doc".
+
+I believe this will meet Tim May's standards for practical entropy,
+but probably not Matt Blaze's high standards.
+
+It allows users to decide how much true entropy they require, and lets
+them share entropy with each other if they want.  Crunching with MD5
+obscures where the randomness came from.  The "noizout" command
+produces 128 high-entropy bits in a split second, and can be repeated
+for more, although it is theoretically better to add entropy to the pool
+every time you take some out.  But I personally use a crontab that adds
+a few bits every minute, and rely on the crunching to hide correlations.
+
+			strick
+
+p.s.  	I will be in chicago this weekend,
+	so I'll mess the MVCPPM :(
+
+----------------
+
+MAKE A DIRECTORY NAMED "noiz-0.5" and unshar it there.
+
+This works on SunOS and probably on almost any unix platform
+with minor tweaks to the Makefile.
+
+
+#! /bin/sh
+# This is a shell archive.  Remove anything before this line, then unpack
+# it by saving it into a file and typing "sh file".  To overwrite existing
+# files, type "sh file -c".  You can also feed this as standard input via
+# unshar, or by typing "sh &lt;file", e.g..  If this archive is complete, you
+# will see the following message at the end:
+#		"End of shell archive."
+# Contents:  README Makefile md5.c md5.h mkshar noiz.doc noiz.h
+#   noizinit.c noizout.c noizspin.c noizstir.c patchlevel version
+# Wrapped by strick@gwarn on Tue Feb  7 15:38:49 1995
+PATH=/bin:/usr/bin:/usr/ucb ; export PATH
+if test -f 'README' -a "${1}" != "-c" ; then 
+  echo shar: Will not clobber existing file \"'README'\"
+else
+echo shar: Extracting \"'README'\" \(694 characters\)
+sed "s/^X//" &gt;'README' &lt;&lt;'END_OF_FILE'
+XNAME
+X
+X	noiz -- a simple package for accumulating and dispensing
+X		cryptographically-strong noise, using MD5 as 
+X		a stirring function
+X
+XANTICOPYRIGHT
+X
+X	Anticopyright (A) 1995 Henry Strickland &lt;strick@yak.net&gt;
+X	This package is placed this package in the public domain.
+X
+X	Because this package is free, there is no warranty 
+X	for it whatsoever.  Caveat hacker.
+X
+X	This is alpha-quality software.  It seemed to work for
+X	me, but it may not do what I say it does.
+X
+X	The MD5 implementation is by Colin Plumb (1993), 
+X	and is also in the public domain.
+X
+X
+XSee "noiz.doc" for more information.
+X
+X
+XEND $Header: /mvp/fjord/strick/yaxen/noiz-0.5/RCS/README,v 1.1 95/02/07 14:55:59 strick Exp Locker: strick $
+END_OF_FILE
+if test 694 -ne `wc -c &lt;'README'`; then
+    echo shar: \"'README'\" unpacked with wrong size!
+fi
+# end of 'README'
+fi
+if test -f 'Makefile' -a "${1}" != "-c" ; then 
+  echo shar: Will not clobber existing file \"'Makefile'\"
+else
+echo shar: Extracting \"'Makefile'\" \(1904 characters\)
+sed "s/^X//" &gt;'Makefile' &lt;&lt;'END_OF_FILE'
+X#####  noiz/Makefile
+X#
+X#       Anticopyright (A) 1995 Henry Strickland &lt;strick@yak.net&gt;
+X#
+X#       This package is placed this package in the public domain.
+X#
+X#       Because this package is free, there is no warranty
+X#       for it whatsoever.  Caveat hacker.
+X#
+X#
+X#       This file Makefile is dedicated to the ascii	TAB	character.
+X#
+X
+XBIN=/usr/local/bin
+XNOIZ=/etc/noiz
+X
+XOWNER=root
+XGROUP=kmem
+X
+XCC= gcc
+XCFLAGS= -O -D'NOIZ_FILE="$(NOIZ)"'
+X
+X
+Xall : noizinit noizstir noizout noizspin
+X
+Xnoizstir : noizstir.o md5.o 
+X	$(CC) -o noizstir $(CFLAGS) noizstir.o md5.o
+X
+Xnoizout : noizout.o md5.o 
+X	$(CC) -o noizout $(CFLAGS) noizout.o md5.o
+X
+Xclean:
+X	rm -f *.o
+X	rm -f noizinit noizstir noizout noizspin
+X	rm -f a.out core
+X
+Xinstall: all
+X	test -d $(BIN) || mkdir $(BIN)
+X	strip noizinit noizout noizstir noizspin
+X	install -o $(OWNER) -g $(GROUP) -m  550 noizinit $(BIN)
+X	install -o $(OWNER) -g $(GROUP) -m 2555 noizstir $(BIN)
+X	install -o $(OWNER) -g $(GROUP) -m 2555 noizout $(BIN)
+X	install -o $(OWNER) -g $(GROUP) -m  555 noizspin $(BIN)
+X	$(BIN)/noizinit
+X	chown $(OWNER) $(NOIZ)
+X	chgrp $(GROUP) $(NOIZ)
+X	chmod 660 $(NOIZ)
+X	$(BIN)/noizspin | $(BIN)/noizstir
+X	$(BIN)/noizspin | $(BIN)/noizstir
+X	$(BIN)/noizspin | $(BIN)/noizstir
+X	$(BIN)/noizspin | $(BIN)/noizstir
+X	$(BIN)/noizspin | $(BIN)/noizstir
+X	ls -li / /var/adm/ | $(BIN)/noizstir
+X	$(BIN)/noizspin | $(BIN)/noizstir
+X	$(BIN)/noizspin | $(BIN)/noizstir
+X	$(BIN)/noizspin | $(BIN)/noizstir
+X	$(BIN)/noizspin | $(BIN)/noizstir
+X	$(BIN)/noizspin | $(BIN)/noizstir
+X	netstat -s | $(BIN)/noizstir
+X	$(BIN)/noizspin | $(BIN)/noizstir
+X	$(BIN)/noizspin | $(BIN)/noizstir
+X	$(BIN)/noizspin | $(BIN)/noizstir
+X	$(BIN)/noizspin | $(BIN)/noizstir
+X	$(BIN)/noizspin | $(BIN)/noizstir
+X	:
+X	:
+X	: Suggestion for your crontab:
+X	:   "* * * * * $(BIN)/noizspin | $(BIN)/noizstir"
+X	:
+X
+X# END $Header: /mvp/fjord/strick/yaxen/noiz-0.5/RCS/Makefile,v 1.6 95/02/07 15:35:36 strick Exp Locker: strick $
+END_OF_FILE
+if test 1904 -ne `wc -c &lt;'Makefile'`; then
+    echo shar: \"'Makefile'\" unpacked with wrong size!
+fi
+# end of 'Makefile'
+fi
+if test -f 'md5.c' -a "${1}" != "-c" ; then 
+  echo shar: Will not clobber existing file \"'md5.c'\"
+else
+echo shar: Extracting \"'md5.c'\" \(7656 characters\)
+sed "s/^X//" &gt;'md5.c' &lt;&lt;'END_OF_FILE'
+X/*
+X * This code implements the MD5 message-digest algorithm.
+X * The algorithm is due to Ron Rivest.  This code was
+X * written by Colin Plumb in 1993, no copyright is claimed.
+X * This code is in the public domain; do with it what you wish.
+X *
+X * Equivalent code is available from RSA Data Security, Inc.
+X * This code has been tested against that, and is equivalent,
+X * except that you don't need to include two pages of legalese
+X * with every copy.
+X *
+X * To compute the message digest of a chunk of bytes, declare an
+X * MD5Context structure, pass it to MD5Init, call MD5Update as
+X * needed on buffers full of bytes, and then call MD5Final, which
+X * will fill a supplied 16-byte array with the digest.
+X */
+X#include &lt;string.h&gt;	/* for memcpy() */
+X#include "md5.h"
+X
+X#ifndef HIGHFIRST
+X#define byteReverse(buf, len)	/* Nothing */
+X#else
+Xvoid byteReverse(unsigned char *buf, unsigned longs);
+X
+X#ifndef ASM_MD5
+X/*
+X * Note: this code is harmless on little-endian machines.
+X */
+Xvoid byteReverse(unsigned char *buf, unsigned longs)
+X{
+X	uint32 t;
+X	do {
+X		t = (uint32)((unsigned)buf[3]&lt;&lt;8 | buf[2]) &lt;&lt; 16 |
+X		            ((unsigned)buf[1]&lt;&lt;8 | buf[0]);
+X		*(uint32 *)buf = t;
+X		buf += 4;
+X	} while (--longs);
+X}
+X#endif
+X#endif
+X
+X/*
+X * Start MD5 accumulation.  Set bit count to 0 and buffer to mysterious
+X * initialization constants.
+X */
+Xvoid
+XMD5Init(struct MD5Context *ctx)
+X{
+X	ctx-&gt;buf[0] = 0x67452301;
+X	ctx-&gt;buf[1] = 0xefcdab89;
+X	ctx-&gt;buf[2] = 0x98badcfe;
+X	ctx-&gt;buf[3] = 0x10325476;
+X
+X	ctx-&gt;bits[0] = 0;
+X	ctx-&gt;bits[1] = 0;
+X}
+X
+X/*
+X * Update context to reflect the concatenation of another buffer full
+X * of bytes.
+X */
+Xvoid
+XMD5Update(struct MD5Context *ctx, unsigned char const *buf, unsigned len)
+X{
+X	uint32 t;
+X
+X	/* Update bitcount */
+X
+X	t = ctx-&gt;bits[0];
+X	if ((ctx-&gt;bits[0] = t + ((uint32)len &lt;&lt; 3)) &lt; t)
+X		ctx-&gt;bits[1]++;	/* Carry from low to high */
+X	ctx-&gt;bits[1] += len &gt;&gt; 29;
+X
+X	t = (t &gt;&gt; 3) &amp; 0x3f;	/* Bytes already in shsInfo-&gt;data */
+X
+X	/* Handle any leading odd-sized chunks */
+X
+X	if ( t ) {
+X		unsigned char *p = (unsigned char *)ctx-&gt;in + t;
+X
+X		t = 64-t;
+X		if (len &lt; t) {
+X			memcpy(p, buf, len);
+X			return;
+X		}
+X		memcpy(p, buf, t);
+X		byteReverse(ctx-&gt;in, 16);
+X		MD5Transform(ctx-&gt;buf, (uint32 *)ctx-&gt;in);
+X		buf += t;
+X		len -= t;
+X	}
+X
+X	/* Process data in 64-byte chunks */
+X
+X	while (len &gt;= 64) {
+X		memcpy(ctx-&gt;in, buf, 64);
+X		byteReverse(ctx-&gt;in, 16);
+X		MD5Transform(ctx-&gt;buf, (uint32 *)ctx-&gt;in);
+X		buf += 64;
+X		len -= 64;
+X	}
+X
+X	/* Handle any remaining bytes of data. */
+X
+X	memcpy(ctx-&gt;in, buf, len);
+X}
+X
+X/*
+X * Final wrapup - pad to 64-byte boundary with the bit pattern 
+X * 1 0* (64-bit count of bits processed, MSB-first)
+X */
+Xvoid
+XMD5Final(unsigned char digest[16], struct MD5Context *ctx)
+X{
+X	unsigned count;
+X	unsigned char *p;
+X
+X	/* Compute number of bytes mod 64 */
+X	count = (ctx-&gt;bits[0] &gt;&gt; 3) &amp; 0x3F;
+X
+X	/* Set the first char of padding to 0x80.  This is safe since there is
+X	   always at least one byte free */
+X	p = ctx-&gt;in + count;
+X	*p++ = 0x80;
+X
+X	/* Bytes of padding needed to make 64 bytes */
+X	count = 64 - 1 - count;
+X
+X	/* Pad out to 56 mod 64 */
+X	if (count &lt; 8) {
+X		/* Two lots of padding:  Pad the first block to 64 bytes */
+X		memset(p, 0, count);
+X		byteReverse(ctx-&gt;in, 16);
+X		MD5Transform(ctx-&gt;buf, (uint32 *)ctx-&gt;in);
+X
+X		/* Now fill the next block with 56 bytes */
+X		memset(ctx-&gt;in, 0, 56);
+X	} else {
+X		/* Pad block to 56 bytes */
+X		memset(p, 0, count-8);
+X	}
+X	byteReverse(ctx-&gt;in, 14);
+X
+X	/* Append length in bits and transform */
+X	((uint32 *)ctx-&gt;in)[ 14 ] = ctx-&gt;bits[0];
+X	((uint32 *)ctx-&gt;in)[ 15 ] = ctx-&gt;bits[1];
+X
+X	MD5Transform(ctx-&gt;buf, (uint32 *)ctx-&gt;in);
+X	byteReverse((unsigned char *)ctx-&gt;buf, 4);
+X	memcpy(digest, ctx-&gt;buf, 16);
+X	memset(ctx, 0, sizeof(ctx));	/* In case it's sensitive */
+X}
+X
+X#ifndef ASM_MD5
+X
+X/* The four core functions - F1 is optimized somewhat */
+X
+X/* #define F1(x, y, z) (x &amp; y | ~x &amp; z) */
+X#define F1(x, y, z) (z ^ (x &amp; (y ^ z)))
+X#define F2(x, y, z) F1(z, x, y)
+X#define F3(x, y, z) (x ^ y ^ z)
+X#define F4(x, y, z) (y ^ (x | ~z))
+X
+X/* This is the central step in the MD5 algorithm. */
+X#define MD5STEP(f, w, x, y, z, data, s) \
+X	( w += f(x, y, z) + data,  w = w&lt;&lt;s | w&gt;&gt;(32-s),  w += x )
+X
+X/*
+X * The core of the MD5 algorithm, this alters an existing MD5 hash to
+X * reflect the addition of 16 longwords of new data.  MD5Update blocks
+X * the data and converts bytes into longwords for this routine.
+X */
+Xvoid
+XMD5Transform(uint32 buf[4], uint32 const in[16])
+X{
+X	register uint32 a, b, c, d;
+X
+X	a = buf[0];
+X	b = buf[1];
+X	c = buf[2];
+X	d = buf[3];
+X
+X	MD5STEP(F1, a, b, c, d, in[ 0]+0xd76aa478,  7);
+X	MD5STEP(F1, d, a, b, c, in[ 1]+0xe8c7b756, 12);
+X	MD5STEP(F1, c, d, a, b, in[ 2]+0x242070db, 17);
+X	MD5STEP(F1, b, c, d, a, in[ 3]+0xc1bdceee, 22);
+X	MD5STEP(F1, a, b, c, d, in[ 4]+0xf57c0faf,  7);
+X	MD5STEP(F1, d, a, b, c, in[ 5]+0x4787c62a, 12);
+X	MD5STEP(F1, c, d, a, b, in[ 6]+0xa8304613, 17);
+X	MD5STEP(F1, b, c, d, a, in[ 7]+0xfd469501, 22);
+X	MD5STEP(F1, a, b, c, d, in[ 8]+0x698098d8,  7);
+X	MD5STEP(F1, d, a, b, c, in[ 9]+0x8b44f7af, 12);
+X	MD5STEP(F1, c, d, a, b, in[10]+0xffff5bb1, 17);
+X	MD5STEP(F1, b, c, d, a, in[11]+0x895cd7be, 22);
+X	MD5STEP(F1, a, b, c, d, in[12]+0x6b901122,  7);
+X	MD5STEP(F1, d, a, b, c, in[13]+0xfd987193, 12);
+X	MD5STEP(F1, c, d, a, b, in[14]+0xa679438e, 17);
+X	MD5STEP(F1, b, c, d, a, in[15]+0x49b40821, 22);
+X
+X	MD5STEP(F2, a, b, c, d, in[ 1]+0xf61e2562,  5);
+X	MD5STEP(F2, d, a, b, c, in[ 6]+0xc040b340,  9);
+X	MD5STEP(F2, c, d, a, b, in[11]+0x265e5a51, 14);
+X	MD5STEP(F2, b, c, d, a, in[ 0]+0xe9b6c7aa, 20);
+X	MD5STEP(F2, a, b, c, d, in[ 5]+0xd62f105d,  5);
+X	MD5STEP(F2, d, a, b, c, in[10]+0x02441453,  9);
+X	MD5STEP(F2, c, d, a, b, in[15]+0xd8a1e681, 14);
+X	MD5STEP(F2, b, c, d, a, in[ 4]+0xe7d3fbc8, 20);
+X	MD5STEP(F2, a, b, c, d, in[ 9]+0x21e1cde6,  5);
+X	MD5STEP(F2, d, a, b, c, in[14]+0xc33707d6,  9);
+X	MD5STEP(F2, c, d, a, b, in[ 3]+0xf4d50d87, 14);
+X	MD5STEP(F2, b, c, d, a, in[ 8]+0x455a14ed, 20);
+X	MD5STEP(F2, a, b, c, d, in[13]+0xa9e3e905,  5);
+X	MD5STEP(F2, d, a, b, c, in[ 2]+0xfcefa3f8,  9);
+X	MD5STEP(F2, c, d, a, b, in[ 7]+0x676f02d9, 14);
+X	MD5STEP(F2, b, c, d, a, in[12]+0x8d2a4c8a, 20);
+X
+X	MD5STEP(F3, a, b, c, d, in[ 5]+0xfffa3942,  4);
+X	MD5STEP(F3, d, a, b, c, in[ 8]+0x8771f681, 11);
+X	MD5STEP(F3, c, d, a, b, in[11]+0x6d9d6122, 16);
+X	MD5STEP(F3, b, c, d, a, in[14]+0xfde5380c, 23);
+X	MD5STEP(F3, a, b, c, d, in[ 1]+0xa4beea44,  4);
+X	MD5STEP(F3, d, a, b, c, in[ 4]+0x4bdecfa9, 11);
+X	MD5STEP(F3, c, d, a, b, in[ 7]+0xf6bb4b60, 16);
+X	MD5STEP(F3, b, c, d, a, in[10]+0xbebfbc70, 23);
+X	MD5STEP(F3, a, b, c, d, in[13]+0x289b7ec6,  4);
+X	MD5STEP(F3, d, a, b, c, in[ 0]+0xeaa127fa, 11);
+X	MD5STEP(F3, c, d, a, b, in[ 3]+0xd4ef3085, 16);
+X	MD5STEP(F3, b, c, d, a, in[ 6]+0x04881d05, 23);
+X	MD5STEP(F3, a, b, c, d, in[ 9]+0xd9d4d039,  4);
+X	MD5STEP(F3, d, a, b, c, in[12]+0xe6db99e5, 11);
+X	MD5STEP(F3, c, d, a, b, in[15]+0x1fa27cf8, 16);
+X	MD5STEP(F3, b, c, d, a, in[ 2]+0xc4ac5665, 23);
+X
+X	MD5STEP(F4, a, b, c, d, in[ 0]+0xf4292244,  6);
+X	MD5STEP(F4, d, a, b, c, in[ 7]+0x432aff97, 10);
+X	MD5STEP(F4, c, d, a, b, in[14]+0xab9423a7, 15);
+X	MD5STEP(F4, b, c, d, a, in[ 5]+0xfc93a039, 21);
+X	MD5STEP(F4, a, b, c, d, in[12]+0x655b59c3,  6);
+X	MD5STEP(F4, d, a, b, c, in[ 3]+0x8f0ccc92, 10);
+X	MD5STEP(F4, c, d, a, b, in[10]+0xffeff47d, 15);
+X	MD5STEP(F4, b, c, d, a, in[ 1]+0x85845dd1, 21);
+X	MD5STEP(F4, a, b, c, d, in[ 8]+0x6fa87e4f,  6);
+X	MD5STEP(F4, d, a, b, c, in[15]+0xfe2ce6e0, 10);
+X	MD5STEP(F4, c, d, a, b, in[ 6]+0xa3014314, 15);
+X	MD5STEP(F4, b, c, d, a, in[13]+0x4e0811a1, 21);
+X	MD5STEP(F4, a, b, c, d, in[ 4]+0xf7537e82,  6);
+X	MD5STEP(F4, d, a, b, c, in[11]+0xbd3af235, 10);
+X	MD5STEP(F4, c, d, a, b, in[ 2]+0x2ad7d2bb, 15);
+X	MD5STEP(F4, b, c, d, a, in[ 9]+0xeb86d391, 21);
+X
+X	buf[0] += a;
+X	buf[1] += b;
+X	buf[2] += c;
+X	buf[3] += d;
+X}
+X#endif
+END_OF_FILE
+if test 7656 -ne `wc -c &lt;'md5.c'`; then
+    echo shar: \"'md5.c'\" unpacked with wrong size!
+fi
+# end of 'md5.c'
+fi
+if test -f 'md5.h' -a "${1}" != "-c" ; then 
+  echo shar: Will not clobber existing file \"'md5.h'\"
+else
+echo shar: Extracting \"'md5.h'\" \(519 characters\)
+sed "s/^X//" &gt;'md5.h' &lt;&lt;'END_OF_FILE'
+X#ifndef MD5_H
+X#define MD5_H
+X
+Xtypedef unsigned long uint32;
+X
+Xstruct MD5Context {
+X	uint32 buf[4];
+X	uint32 bits[2];
+X	unsigned char in[64];
+X};
+X
+Xvoid MD5Init(struct MD5Context *context);
+Xvoid MD5Update(struct MD5Context *context, unsigned char const *buf, unsigned len);
+Xvoid MD5Final(unsigned char digest[16], struct MD5Context *context);
+Xvoid MD5Transform(uint32 buf[4], uint32 const in[16]);
+X
+X/*
+X * This is needed to make RSAREF happy on some MS-DOS compilers.
+X */
+Xtypedef struct MD5Context MD5_CTX;
+X
+X#endif /* !MD5_H */
+END_OF_FILE
+if test 519 -ne `wc -c &lt;'md5.h'`; then
+    echo shar: \"'md5.h'\" unpacked with wrong size!
+fi
+# end of 'md5.h'
+fi
+if test -f 'mkshar' -a "${1}" != "-c" ; then 
+  echo shar: Will not clobber existing file \"'mkshar'\"
+else
+echo shar: Extracting \"'mkshar'\" \(76 characters\)
+sed "s/^X//" &gt;'mkshar' &lt;&lt;'END_OF_FILE'
+X#!/bin/sh
+Xset -x
+Xmake clean
+Xrm -f .shar
+Xshar README Makefile [a-z]* &gt; .shar
+END_OF_FILE
+if test 76 -ne `wc -c &lt;'mkshar'`; then
+    echo shar: \"'mkshar'\" unpacked with wrong size!
+fi
+# end of 'mkshar'
+fi
+if test -f 'noiz.doc' -a "${1}" != "-c" ; then 
+  echo shar: Will not clobber existing file \"'noiz.doc'\"
+else
+echo shar: Extracting \"'noiz.doc'\" \(9532 characters\)
+sed "s/^X//" &gt;'noiz.doc' &lt;&lt;'END_OF_FILE'
+XNAME
+X
+X	noiz -- a simple package for accumulating and dispensing
+X		cryptographically-strong noise, using MD5 as 
+X		a stirring function
+X
+XANTICOPYRIGHT
+X
+X	Anticopyright (A) 1995 Henry Strickland &lt;strick@yak.net&gt;
+X	This package is placed this package in the public domain.
+X
+X	Because this package is free, there is no warranty 
+X	for it whatsoever.  Caveat hacker.
+X
+X	This is alpha-quality software.  It seemed to work for
+X	me, but it may not do what I say it does.
+X
+X	The MD5 implementation is by Colin Plumb (1993), 
+X	and is also in the public domain.
+X
+X
+XSYNOPSIS
+X
+X	noizinit
+X
+X		creates the file /etc/noiz
+X
+X
+X	noizstir &lt; noise-source
+X
+X		stirs the noise-source into /etc/noiz
+X
+X
+X	noizout &lt; noise-source &gt; output-noise
+X
+X		produces 16 bytes of noise, for applications to use
+X
+X
+X	noizspin &gt; output-time
+X
+X		prints a somewhat-random number, with several bits of
+X		entropy.
+X
+X
+XFILES
+X
+X	/etc/noiz       a binary file containing 256 bytes of noise
+X			state.   That's 2048 bits of entropy, assuming
+X			it has been stirred with that much entropy.
+X
+X
+X
+XDESCRIPTION
+X
+X	noizinit        creates /etc/noiz and initializes it with bytes
+X			0, 1, 2, 3, ... 255.
+X
+X			It must be stirred several times with noizstir
+X			before it is ready to be used by noizout.
+X
+X
+X	noizspin        Set an alarm for 1 second.  Using an unsigned
+X			long, count until the alarm is received, and
+X			print the count, in ascii, as a decimal number,
+X			followed by a newline.
+X
+X
+X	noizstir        changes the noise ("stirs" it) in /etc/noiz,
+X			based on prior contents of /etc/noiz, current
+X			time, pid, ppid, and input bytes read from
+X			standard input.
+X
+X			The standard input may be empty (as in
+X
+X				noizstir &lt; /dev/null
+X
+X			) or may be some system-generated noise (as in
+X
+X				ps uaxg | noizstir
+X				ls -li /tmp/ | noizstir
+X				netstat -s | noizstir
+X
+X			) or you may use the "noizspin" command which
+X			was designed especially for this purpose:
+X
+X				noizspin | noizstir
+X
+X	noizout         Produces 16 bytes of random noise, based on the
+X			contents of /etc/noiz, current time, pid, ppid,
+X			and input bytes read from standard input.   The
+X			output is 16 raw binary bytes; if you want some
+X			kind of ascii encoding, you must convert the
+X			output.  Piping the output into "od -x" is
+X			useful for debugging.
+X
+X			Unlike noizstir, noizout does not change
+X			/etc/noiz.  You may use it without empty
+X			standard input, but it is better to feed it
+X			some extra noise.  The noizspin command is good
+X			for this:
+X
+X				noizspin | noizout 
+X
+X			The bytes emitted from noizout do not reveal
+X			the contents of /etc/noiz.  In fact, no command
+X			does, so all users can share /etc/noiz.
+X
+X			Because noizout always stirs current time, pid,
+X			and ppid into its output, even this command,
+X			repeated many times without running noizstir,
+X			will generate fairly high-entropy random
+X			output:
+X
+X				noizout &lt; /dev/null
+X				
+X
+X
+XDIAGNOSTICS
+X
+X	All four programs print one line to stderr and exit with a
+X	nonzero status if they cannot read or write /etc/noiz and they
+X	need to.
+X
+X	Otherwise the programs execute without writing to stdout, and
+X	they exit with status zero.
+X
+X
+X
+XRECOMMENDED INSTALLATION
+X
+X	You should probably be root to do the "make install".  You may
+X	use "make BIN=/etc install" to put the four binaries into the
+X	/etc/ directory instead of /usr/local/bin/.
+X
+X	/etc/noiz	owner root 
+X			group kmem
+X			mode 660     (not publically readable or writable)
+X
+X	/usr/local/bin/noizinit
+X			owner root
+X			group kmem
+X			mode 550	(no special permissions)
+X					(only execute at install time)
+X
+X	/usr/local/bin/noizstir
+X			owner root
+X			group kmem
+X			mode 2555	(setgid kmem)
+X					(anyone can execute)
+X
+X	/usr/local/bin/noizout
+X			owner root
+X			group kmem
+X			mode 2555	(setgid kmem)
+X					(anyone can execute)
+X
+X	/usr/local/bin/noizspin
+X			owner root
+X			group kmem
+X			mode 555	(no special permissions)
+X					(anyone can execute)
+X
+X
+X	For your crontab:
+X
+X		* * * * * /usr/local/bin/noizspin | /usr/local/bin/noizstir
+X
+X		This will stir the /etc/noiz with a few bits of noise
+X		per minute.
+X
+X		You may put it in the crontab for root, or for daemon,
+X		or users themselves may do it.
+X
+X
+XEXAMPLE SESSION
+X
+X		gwarn#
+Xinitialize	gwarn#
+X/etc/noiz	gwarn#
+X		gwarn#
+X		gwarn# /usr/local/bin/noizinit
+Xshow initial	gwarn#
+Xcontents 	gwarn#
+X		gwarn# od -x /etc/noiz
+X		0000000  0001 0203 0405 0607 0809 0a0b 0c0d 0e0f
+X		0000020  1011 1213 1415 1617 1819 1a1b 1c1d 1e1f
+X		0000040  2021 2223 2425 2627 2829 2a2b 2c2d 2e2f
+X		0000060  3031 3233 3435 3637 3839 3a3b 3c3d 3e3f
+X		0000100  4041 4243 4445 4647 4849 4a4b 4c4d 4e4f
+X		0000120  5051 5253 5455 5657 5859 5a5b 5c5d 5e5f
+X		0000140  6061 6263 6465 6667 6869 6a6b 6c6d 6e6f
+X		0000160  7071 7273 7475 7677 7879 7a7b 7c7d 7e7f
+X		0000200  8081 8283 8485 8687 8889 8a8b 8c8d 8e8f
+X		0000220  9091 9293 9495 9697 9899 9a9b 9c9d 9e9f
+X		0000240  a0a1 a2a3 a4a5 a6a7 a8a9 aaab acad aeaf
+X		0000260  b0b1 b2b3 b4b5 b6b7 b8b9 babb bcbd bebf
+X		0000300  c0c1 c2c3 c4c5 c6c7 c8c9 cacb cccd cecf
+X		0000320  d0d1 d2d3 d4d5 d6d7 d8d9 dadb dcdd dedf
+X		0000340  e0e1 e2e3 e4e5 e6e7 e8e9 eaeb eced eeef
+X		0000360  f0f1 f2f3 f4f5 f6f7 f8f9 fafb fcfd feff
+X		0000400
+X		gwarn#
+Xspin some 	gwarn#
+Xrandom numbers	gwarn#
+Xwith noizspin	gwarn#
+X		gwarn# noizspin
+X		3082293
+X		gwarn# noizspin
+X		3025490
+X		gwarn# noizspin
+X		3077496
+X		gwarn# noizspin
+X		2985100
+X		gwarn# noizspin
+X		3047690
+X		gwarn# noizspin
+X		3082529
+X		gwarn# noizspin
+X		3063415
+X/etc/noiz	gwarn#
+Xis unchanged	gwarn#
+Xuntil stirred	gwarn#
+X		gwarn# od -x /etc/noiz
+X		0000000  0001 0203 0405 0607 0809 0a0b 0c0d 0e0f
+X		0000020  1011 1213 1415 1617 1819 1a1b 1c1d 1e1f
+X		0000040  2021 2223 2425 2627 2829 2a2b 2c2d 2e2f
+X		0000060  3031 3233 3435 3637 3839 3a3b 3c3d 3e3f
+X		0000100  4041 4243 4445 4647 4849 4a4b 4c4d 4e4f
+X		0000120  5051 5253 5455 5657 5859 5a5b 5c5d 5e5f
+X		0000140  6061 6263 6465 6667 6869 6a6b 6c6d 6e6f
+X		0000160  7071 7273 7475 7677 7879 7a7b 7c7d 7e7f
+X		0000200  8081 8283 8485 8687 8889 8a8b 8c8d 8e8f
+X		0000220  9091 9293 9495 9697 9899 9a9b 9c9d 9e9f
+X		0000240  a0a1 a2a3 a4a5 a6a7 a8a9 aaab acad aeaf
+X		0000260  b0b1 b2b3 b4b5 b6b7 b8b9 babb bcbd bebf
+X		0000300  c0c1 c2c3 c4c5 c6c7 c8c9 cacb cccd cecf
+X		0000320  d0d1 d2d3 d4d5 d6d7 d8d9 dadb dcdd dedf
+X		0000340  e0e1 e2e3 e4e5 e6e7 e8e9 eaeb eced eeef
+X		0000360  f0f1 f2f3 f4f5 f6f7 f8f9 fafb fcfd feff
+X		0000400
+X		gwarn#
+Xso stir it,	gwarn#
+Xwith some	gwarn#
+Xrandom input	gwarn#
+X		gwarn# noizspin | noizstir
+X		gwarn# od -x /etc/noiz
+X		0000000  b695 3c73 7a0c 73e0 b37b 55f5 e6cf 2dec
+X		0000020  1fa7 1544 890e a039 6a21 e2ec 4669 35ea
+X		0000040  a9d8 1175 0dd9 9742 fd6a 1501 9039 1d73
+X		0000060  2b0e 0864 93e8 63bf 4a63 3398 b63c ef77
+X		0000100  2534 cd7e 0e79 fb56 5f53 bcc5 5b68 968d
+X		0000120  910e bbf4 e222 03b2 13d8 908c e508 74a8
+X		0000140  d056 fb99 ea7f dddb 9b2f c654 4cd0 1384
+X		0000160  8899 3507 1dbb c367 43f1 9806 17e0 8780
+X		0000200  95f7 af5a 7a78 92e0 126c 4f2d 3721 a5ee
+X		0000220  4a12 f7c3 3186 febb 3ea8 f048 4fd1 41b8
+X		0000240  812f 1d43 66a7 8e2d 7ca4 cddb 39c6 6b5f
+X		0000260  9a8c 646b c511 304b eb9b b235 46da 5d2e
+X		0000300  ec53 5816 c742 e92d 2468 8579 302d d932
+X		0000320  2f45 03fb 4f2c ff10 b84d 15a5 8e46 8e84
+X		0000340  ff12 0d68 26a3 10c2 87b5 4ebc 3b59 afa2
+X		0000360  2bb2 bb64 371e 2f99 b108 c7d5 42eb 68c9
+X		gwarn#
+X		gwarn#
+Xnow emit some 	gwarn#
+X16-byte		gwarn#
+Xhigh-entropy	gwarn#
+Xoutput and 	gwarn#
+Xdisplay it	gwarn#
+Xwith od -x	gwarn#
+X		gwarn# noizspin | noizout | od -x
+X		0000000  be7b 81f9 744c 2dca e36d a6c6 9394 7bf2
+X		0000020
+X		gwarn# noizspin | noizout | od -x
+X		0000000  1cea b243 2b0e 55c3 7630 886c 3be3 d03f
+X		0000020
+X		gwarn# noizspin | noizout | od -x
+X		0000000  6887 864d b4fc 40e6 7eb1 0d9e 6b47 f148
+X		0000020
+X		gwarn#
+Xdemonstrate	gwarn#
+Xhigh-entropy	gwarn#
+Xoutput even	gwarn#
+Xwithout noise	gwarn#
+Xinput and 	gwarn#
+Xwithout 	gwarn#
+Xstirring	gwarn#
+X		gwarn#
+X		gwarn# noizout &lt; /dev/null | od -x
+X		0000000  e54f 67a6 52ec 3d61 ddfd 1208 5f52 fead
+X		0000020
+X		gwarn# noizout &lt; /dev/null | od -x
+X		0000000  6472 5f9e fe81 fcab bca8 6d22 2400 0d0a
+X		0000020
+X		gwarn# noizout &lt; /dev/null | od -x
+X		0000000  2df4 9d73 ddc2 5aa4 10c6 59b8 e31c efda
+X		0000020
+X		gwarn# noizout &lt; /dev/null | od -x
+X		0000000  7f64 6671 957e b4aa ae4b 8fd8 7e90 601e
+X		0000020
+X		gwarn# noizout &lt; /dev/null | od -x
+X		0000000  2d8e 522c 700a 5367 d67f dae3 0977 0689
+X		0000020
+X
+X
+X
+XALGORITHMS
+X
+X   Let the syntax X[i..j] represent a subrange of an array X.
+X   Let the syntax X[] represent the entire array X.
+X
+X   Let the array Noiz[0..15][0..15] represent the 256 bytes of /etc/noiz
+X   Let the array Noiz[r] represent the rth row (16 bytes) of Noiz
+X
+X   Let the array Input[] represent bytes read from standard input
+X
+X   Let the syntax  MD5( x, y, z... )  represent the MD5 hash of the 
+X   concatenation of the arguments x, y, z...
+X
+X
+X
+X   Algorithm of "noizstir":
+X
+X	read Noiz[][] from /etc/noiz
+X
+X	read Input[] from standard input
+X
+X	In_hash[0..15] := MD5(  Noiz[][], 
+X				Input[],
+X				time, 
+X				pid,
+X				ppid,
+X				and some extra stuff from sloppy buffering
+X			     );
+X
+X	FOR r := 0 TO 15
+X
+X	    Out_hash[0..15] := MD5(	Noiz[r],
+X					In_hash[0..15],
+X					In_hash[0..r]
+X	    		   	  );
+X
+X	    Noiz[r] := Noiz[r] BITWISE_XOR Out_hash[];
+X
+X	NEXT r
+X
+X	write Noiz[][] to /etc/noiz
+X
+X
+X
+X   Algorithm of "noizout"
+X
+X	read Noiz[][] from /etc/noiz
+X
+X	read Input[] from standard input
+X
+X	Out_hash[0..15] := MD5(  Noiz[][], 
+X				 Input[],
+X				 time, 
+X				 pid,
+X				 ppid,
+X				 and some extra stuff from sloppy buffering
+X			      );
+X
+X  	write Out_hash[] to standard output 
+X
+X
+X
+X
+XEND $Header: /mvp/fjord/strick/yaxen/noiz-0.5/RCS/noiz.doc,v 1.6 95/02/07 15:35:37 strick Exp Locker: strick $
+END_OF_FILE
+if test 9532 -ne `wc -c &lt;'noiz.doc'`; then
+    echo shar: \"'noiz.doc'\" unpacked with wrong size!
+fi
+# end of 'noiz.doc'
+fi
+if test -f 'noiz.h' -a "${1}" != "-c" ; then 
+  echo shar: Will not clobber existing file \"'noiz.h'\"
+else
+echo shar: Extracting \"'noiz.h'\" \(395 characters\)
+sed "s/^X//" &gt;'noiz.h' &lt;&lt;'END_OF_FILE'
+X/* 	noiz.h
+X
+X	Anticopyright (A) 1995 Henry Strickland &lt;strick@yak.net&gt; 
+X
+X        This package is placed this package in the public domain.
+X
+X        Because this package is free, there is no warranty
+X        for it whatsoever.  Caveat hacker.
+X*/
+X
+X
+X
+X
+X#define	NOIZ_FILE	"/etc/noiz"
+X
+X
+X/* END $Header: /mvp/fjord/strick/yaxen/noiz-0.5/RCS/noiz.h,v 1.2 95/02/07 14:19:52 strick Exp Locker: strick $ */
+END_OF_FILE
+if test 395 -ne `wc -c &lt;'noiz.h'`; then
+    echo shar: \"'noiz.h'\" unpacked with wrong size!
+fi
+# end of 'noiz.h'
+fi
+if test -f 'noizinit.c' -a "${1}" != "-c" ; then 
+  echo shar: Will not clobber existing file \"'noizinit.c'\"
+else
+echo shar: Extracting \"'noizinit.c'\" \(767 characters\)
+sed "s/^X//" &gt;'noizinit.c' &lt;&lt;'END_OF_FILE'
+X/*      noizinit.c
+X
+X        Anticopyright (A) 1995 Henry Strickland &lt;strick@yak.net&gt;
+X
+X        This package is placed this package in the public domain.
+X
+X        Because this package is free, there is no warranty
+X        for it whatsoever.  Caveat hacker.
+X*/
+X
+X
+X/*
+X	This file noizinit.c is dedicated to Richard Stallman,
+X	who taught me the joy of free software.
+X*/
+X
+X
+X#include &lt;stdio.h&gt;
+X#include "noiz.h"
+X
+Xmain()
+X{
+X	int e;
+X	int i;
+X
+X	FILE* f= fopen( NOIZ_FILE, "w" );
+X	if (!f) goto bad;
+X
+X	for ( i=0; i&lt;256; i++ ) {
+X		e= putc(i,f);
+X		if (e==EOF) goto bad;
+X	}
+X
+X	e= fclose(f);
+X	if ( e!=0 ) goto bad;
+X
+X	return 0;
+X
+Xbad:
+X	perror( NOIZ_FILE );
+X	exit(255);
+X}
+X
+X/* END $Header: /mvp/fjord/strick/yaxen/noiz-0.5/RCS/noizinit.c,v 1.3 95/02/07 15:28:59 strick Exp Locker: strick $ */
+END_OF_FILE
+if test 767 -ne `wc -c &lt;'noizinit.c'`; then
+    echo shar: \"'noizinit.c'\" unpacked with wrong size!
+fi
+# end of 'noizinit.c'
+fi
+if test -f 'noizout.c' -a "${1}" != "-c" ; then 
+  echo shar: Will not clobber existing file \"'noizout.c'\"
+else
+echo shar: Extracting \"'noizout.c'\" \(1559 characters\)
+sed "s/^X//" &gt;'noizout.c' &lt;&lt;'END_OF_FILE'
+X/*      noizstir.c   -- stir the noise file with stdin
+X
+X        Anticopyright (A) 1995 Henry Strickland &lt;strick@yak.net&gt;
+X
+X        This package is placed this package in the public domain.
+X
+X        Because this package is free, there is no warranty
+X        for it whatsoever.  Caveat hacker.
+X*/
+X
+X
+X/* 
+X	This file noizout.c is dedicated in memory of John Cage,
+X	who explained to me the point of his pointless noise. 
+X*/
+X
+X
+X
+X#include &lt;stdio.h&gt;
+X#include "noiz.h"
+X#include "md5.h"
+X
+Xchar noiz[256];
+Xchar pad[256];
+X
+Xunsigned char out_hash[16];
+X
+Xstruct MD5Context context;
+X
+Xmain()
+X{
+X	int e;
+X	int i;
+X	long seconds;
+X	long pid;
+X	long ppid;
+X	int row;
+X
+X	FILE* f= fopen( NOIZ_FILE, "r" );
+X	if (!f) goto bad;
+X
+X	for ( i=0; i&lt;256; i++ ) {
+X		e= getc(f);
+X		if (e==EOF) goto bad;
+X		noiz[i]= e;
+X	}
+X
+X	MD5Init( &amp;context );
+X	MD5Update(&amp;context, (unsigned char*) &amp;noiz, 256);
+X	while ( fread(pad, 1, 256, stdin) &gt; 0 ) {
+X		MD5Update(&amp;context, (unsigned char*) &amp;pad, 256);
+X	}
+X	time( &amp;seconds );
+X	pid= getpid();
+X	ppid= getppid();
+X	MD5Update( &amp;context, (unsigned char*) &amp;seconds, sizeof seconds );
+X	MD5Update( &amp;context, (unsigned char*) &amp;pid, sizeof pid );
+X	MD5Update( &amp;context, (unsigned char*) &amp;ppid, sizeof ppid );
+X	MD5Final( out_hash, &amp;context );
+X
+X	for ( i=0; i&lt;16; i++ ) {
+X		e= putchar(out_hash[i]);
+X		if (e==EOF) goto bad;
+X	}
+X
+X	e= fflush(stdout);
+X	if (e==EOF) goto bad;
+X	e= fclose(stdout);
+X	if (e==EOF) goto bad;
+X
+X	return 0;
+Xbad:
+X	perror( NOIZ_FILE );
+X	exit(255);
+X}
+X
+X/* END $Header: /mvp/fjord/strick/yaxen/noiz-0.5/RCS/noizout.c,v 1.3 95/02/07 15:29:00 strick Exp Locker: strick $ */
+END_OF_FILE
+if test 1559 -ne `wc -c &lt;'noizout.c'`; then
+    echo shar: \"'noizout.c'\" unpacked with wrong size!
+fi
+# end of 'noizout.c'
+fi
+if test -f 'noizspin.c' -a "${1}" != "-c" ; then 
+  echo shar: Will not clobber existing file \"'noizspin.c'\"
+else
+echo shar: Extracting \"'noizspin.c'\" \(729 characters\)
+sed "s/^X//" &gt;'noizspin.c' &lt;&lt;'END_OF_FILE'
+X/*      noizspin.c
+X
+X        Anticopyright (A) 1995 Henry Strickland &lt;strick@yak.net&gt;
+X
+X        This package is placed this package in the public domain.
+X
+X        Because this package is free, there is no warranty
+X        for it whatsoever.  Caveat hacker.
+X*/
+X
+X/*
+X	This file noizspin.c is dedicated to Matt Blaze,
+X	because I learned the trick from his code.
+X*/
+X
+X
+X#include &lt;stdio.h&gt;
+X#include &lt;sys/types.h&gt;
+X#include &lt;signal.h&gt;
+X
+Xunsigned long x;
+X
+Xenough()
+X{
+X	printf("%lu\n", x );
+X	fflush(stdout);
+X	exit(0);
+X}
+X
+Xmain()
+X{
+X	signal( SIGALRM, enough );
+X	alarm(1);
+X
+X	while (1) {
+X		++x;
+X	}
+X
+X	/*NOTREACHED*/
+X	return 255;
+X}
+X
+X/* END $Header: /mvp/fjord/strick/yaxen/noiz-0.5/RCS/noizspin.c,v 1.1 95/02/07 15:35:39 strick Exp Locker: strick $ */
+END_OF_FILE
+if test 729 -ne `wc -c &lt;'noizspin.c'`; then
+    echo shar: \"'noizspin.c'\" unpacked with wrong size!
+fi
+# end of 'noizspin.c'
+fi
+if test -f 'noizstir.c' -a "${1}" != "-c" ; then 
+  echo shar: Will not clobber existing file \"'noizstir.c'\"
+else
+echo shar: Extracting \"'noizstir.c'\" \(1841 characters\)
+sed "s/^X//" &gt;'noizstir.c' &lt;&lt;'END_OF_FILE'
+X/*      noizstir.c   -- stir the noise file with stdin
+X
+X        Anticopyright (A) 1995 Henry Strickland &lt;strick@yak.net&gt;
+X
+X        This package is placed this package in the public domain.
+X
+X        Because this package is free, there is no warranty
+X        for it whatsoever.  Caveat hacker.
+X*/
+X
+X
+X/*
+X	This file noizstir.c is dedicated to Jacques Atali,
+X	in honor of his book "Noise, The Political Economy
+X	of Music."
+X*/
+X
+X
+X#include &lt;stdio.h&gt;
+X#include "noiz.h"
+X#include "md5.h"
+X
+Xchar noiz[256];
+Xchar pad[256];
+X
+Xunsigned char in_hash[16];
+Xunsigned char out_hash[16];
+X
+Xstruct MD5Context context;
+X
+Xmain()
+X{
+X	int e;
+X	int i;
+X	long seconds;
+X	long pid;
+X	long ppid;
+X	int row;
+X
+X	FILE* f= fopen( NOIZ_FILE, "r+" );
+X	if (!f) goto bad;
+X
+X	for ( i=0; i&lt;256; i++ ) {
+X		e= getc(f);
+X		if (e==EOF) goto bad;
+X		noiz[i]= e;
+X	}
+X
+X	MD5Init( &amp;context );
+X	MD5Update(&amp;context, (unsigned char*) &amp;noiz, 256);
+X	while ( fread(pad, 1, 256, stdin) &gt; 0 ) {
+X		MD5Update(&amp;context, (unsigned char*) &amp;pad, 256);
+X	}
+X	time( &amp;seconds );
+X	pid= getpid();
+X	ppid= getppid();
+X	MD5Update( &amp;context, (unsigned char*) &amp;seconds, sizeof seconds );
+X	MD5Update( &amp;context, (unsigned char*) &amp;pid, sizeof pid );
+X	MD5Update( &amp;context, (unsigned char*) &amp;ppid, sizeof ppid );
+X	MD5Final( in_hash, &amp;context );
+X
+X	for (row=0; row&lt;16; row++ ) {
+X		MD5Init( &amp;context );
+X		MD5Update( &amp;context, noiz+16*row, 16 );
+X		MD5Update( &amp;context, in_hash, 16 );
+X		MD5Update( &amp;context, in_hash, row+1 );
+X		MD5Final( out_hash, &amp;context );
+X		for ( i=0; i&lt;16; i++ ) {
+X			noiz[16*row+i] ^= out_hash[i];
+X		}
+X	}
+X
+X	fflush(f);
+X	rewind(f);
+X	
+X	for ( i=0; i&lt;256; i++ ) {
+X		e= putc(noiz[i],f);
+X		if (e==EOF) goto bad;
+X	}
+X
+X	e= fclose(f);
+X	if (e==EOF) goto bad;
+X
+X	return 0;
+X
+Xbad:
+X	perror( NOIZ_FILE );
+X	exit(255);
+X}
+X
+X/* END $Header: /mvp/fjord/strick/yaxen/noiz-0.5/RCS/noizstir.c,v 1.3 95/02/07 15:29:01 strick Exp Locker: strick $ */
+END_OF_FILE
+if test 1841 -ne `wc -c &lt;'noizstir.c'`; then
+    echo shar: \"'noizstir.c'\" unpacked with wrong size!
+fi
+# end of 'noizstir.c'
+fi
+if test -f 'patchlevel' -a "${1}" != "-c" ; then 
+  echo shar: Will not clobber existing file \"'patchlevel'\"
+else
+echo shar: Extracting \"'patchlevel'\" \(2 characters\)
+sed "s/^X//" &gt;'patchlevel' &lt;&lt;'END_OF_FILE'
+X0
+END_OF_FILE
+if test 2 -ne `wc -c &lt;'patchlevel'`; then
+    echo shar: \"'patchlevel'\" unpacked with wrong size!
+fi
+# end of 'patchlevel'
+fi
+if test -f 'version' -a "${1}" != "-c" ; then 
+  echo shar: Will not clobber existing file \"'version'\"
+else
+echo shar: Extracting \"'version'\" \(9 characters\)
+sed "s/^X//" &gt;'version' &lt;&lt;'END_OF_FILE'
+Xnoiz-0.5
+END_OF_FILE
+if test 9 -ne `wc -c &lt;'version'`; then
+    echo shar: \"'version'\" unpacked with wrong size!
+fi
+# end of 'version'
+fi
+echo shar: End of shell archive.
+exit 0
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00284.html">Re: Zimmermann</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00295.html">EPIC Alert 2.02</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00293.html">Re: Zimmermann</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00302.html">Re: noiz-0.5: simple noise-emitting package</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00285"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00285"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

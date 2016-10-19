@@ -1,0 +1,143 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Revealing individual messages. -->
+<!--X-From-R13: Pvyy Egrjneg <fgrjnegfNvk.argpbz.pbz> -->
+<!--X-Date: Mon, 20 Oct 1997 04:17:50 +0800 -->
+<!--X-Message-Id: 3.0.3.32.19971019130323.006dbf48@popd.ix.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199710180748.IAA00798@server.test.net -->
+<!--X-Reference: 3.0.3.32.19971017170704.009de630@mail.pgp.com -->
+<!--X-Reference: l03102803b06e45baee64@[158.152.121.6] -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Revealing individual messages.</TITLE>
+<LINK REV="made" HREF="mailto:stewarts@ix.netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00944.html">Date Prev</A>][<A HREF="msg00959.html">Date Next</A>][<A HREF="msg01853.html">Thread Prev</A>][<A HREF="msg00959.html">Thread Next</A>][<A HREF="index.html#00945">Date Index</A>][<A HREF="threads.html#00945">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Revealing individual messages.</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Ian Miller &lt;<A HREF="mailto:Ian_Miller@bifroest.demon.co.uk">Ian_Miller@bifroest.demon.co.uk</A>&gt;, <A HREF="mailto:ietf%2Dopen%2Dpgp@imc.org">ietf-open-pgp@imc.org</A></LI>
+<LI><em>Subject</em>: Re: Revealing individual messages.</LI>
+<LI><em>From</em>: Bill Stewart &lt;<A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 19 Oct 1997 13:03:23 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;l03102803b06e45baee64@[158.152.121.6]&gt;</LI>
+<LI><em>References</em>: &lt;199710180748.IAA00798@server.test.net&gt;&lt;3.0.3.32.19971017170704.009de630@mail.pgp.com&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+At 02:34 PM 10/18/1997 +0100, Ian Miller wrote, to ietf-open-pgp@imc.org
+&gt;One thing sadly lacking from all current PGP implementations is the ability
+&gt;to reveal the contents of _some_ messages encrypted to you, without handing
+&gt;over the secret key.  This is most important as damage limitation when
+&gt;ordered by a court of law to reveal certain messages.  [The most
+&gt;pathological case is where Mallory has generated those messages himself,
+&gt;merely to persuade the courts to force you to hand over your privacy key.]
+
+The easy approach is to decrypt the message, but there's of course
+no way for the Court to validate that your decryption was correct.
+But if you want more than that, it's not hard to write, either by
+finding where in the 7000 pages of PGP source (:-) to add a few
+print statements, or by using the APIs when they come out.
+Perhaps it's even there today, by setting -debug=42 or whatever.
+
+The decryption needs to show
+1) The public key that was used to encrypt the message
+2) The PK-encrypted session key, including the random padding
+3) The decryption of the PK-encrypted session key, including the random padding,
+	(and including the algorithm indicator, if it's encrypted)
+3.1) Indication of which bits are the session key  itself, for the slow-witted
+4) The decrypted compressed plaintext (optional)
+5) The decrypted raw plaintext
+
+And it would be nice to have a tool that also provides a mechanism
+to encrypt a random-padded session key to a public key 
+to verify the output.  Perhaps Adam Back (et al.)'s 2-line perl code,
+with some pretty output formatting.
+
+&gt; Accordingly for RSA encryption at least I propose a
+&gt;modification to the DEK plaintext that contains the session key.  Currently
+&gt;this is largely random containing over a hundred bytes of nonce
+&gt;(for a 1024bit-key).  If part of this nonce was replaced by sender-Id,
+&gt;timestamp and similar data, then Alice would at least learn who had sent
+&gt;the message (Bob) and when.  They might then have to opportunity to contact
+&gt;the Bob to ask for retransmission and warn of the interception.
+
+No way.  This is bad.  You don't want traceability built into PGP.
+If the sender _wants_ to be traceable, he can sign the message.
+If the sender wants convenient but repudiable identification,
+he can put his name and any other information he wants in the plaintext.
+
+Besides, PGP doesn't know who the sender _is_ except by signature;
+you can set a default key if you like, but otherwise there's no way
+for PGP to decide whether to use the "Bob &lt;marley@wailers.com&gt;" key
+in Bob's secret key ring, or the "Louis Freeh &lt;biglouie@fbi.com&gt;" key,
+and for that matter PGP will work fine with no secret-key file at all.
+
+If you're concerned about Bad Cops planting forged messages on people, 
+this won't help - it's easy for them to forge unsigned information also.
+After all, the PGP source code is open, so Bad Cops can add code to
+set the timestamp/sender/etc themselves.  Or they can ignore code,
+and just set their system clock appropriately.
+
+				Thanks!
+					Bill
+Bill Stewart, stewarts@ix.netcom.com
+Regular Key PGP Fingerprint D454 E202 CBC8 40BF  3C85 B884 0ABE 4639
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00944.html">Re: "First do no harm"</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00959.html">Re: Revealing individual messages.</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01853.html">ATTENTION GOLFERS! PLAY GOLF AND GET PAID FOR IT!</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00959.html">Re: Revealing individual messages.</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00945"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00945"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,243 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: towards an eternity service -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Mon, 9 Sep 1996 11:22:49 +0800 -->
+<!--X-Message-Id: 199609082212.XAA00383@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>towards an eternity service</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00711.html">Date Prev</A>][<A HREF="msg00678.html">Date Next</A>][<A HREF="msg00719.html">Thread Prev</A>][<A HREF="msg00798.html">Thread Next</A>][<A HREF="index.html#00732">Date Index</A>][<A HREF="threads.html#00732">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>towards an eternity service</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: towards an eternity service</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 8 Sep 1996 23:12:50 +0100</LI>
+<LI><em>Cc</em>: <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A>, <A HREF="mailto:remailer%2Doperators@c2.org">remailer-operators@c2.org</A>, <A HREF="mailto:loki@infonex.com">loki@infonex.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+[the relevance of this to remailer-operators, is that my example
+prototype architecture for discussion relies heavily on mixmaster
+remailers]
+
+Ross Anderson's eternity service (postscript paper somewhere on
+<A  HREF="http://www.cl.cam.ac.uk/~rja14/">http://www.cl.cam.ac.uk/~rja14/</A>) is a distributed file system with the
+criteria that it should not be possible to delete information from it.
+The paper outlines ways that you might go about doing this, and gives
+as a design goal that it should not be possible even for concerted
+government attacks to remove information from the service.  Roughly
+the approach described is to have anonymous servers with secret shared
+data.  The server doesn't know what it is serving, and the server
+charges per Mb/year of data storage.
+
+This seems a pretty interesting idea, as it would be a great boon to
+free speech to be able to reliably publish information that would
+survive attempts to "unpublish" it, which seem to be gaining in
+popularity.  Notable recent examples of such attacks being
+Scientologist attacks on distribution of it's `scriptures', the German
+governments banning of nazi revisionist material, and the impending
+possibility of a repeat of the CDA at a (US) state level.
+
+I think it is desirable to get something working now, even if it is
+far short of the design criteria Anderson describes.  A working model
+would provide something on which to base discussion of improvements,
+and would also be an interesting experiment to see the sorts of uses
+such a system would be put to, and the political reaction to it's
+uses.
+
+The following doesn't depend on, but would be helped by having direct
+socket delivery of packets (for performance) in the mixmaster
+remailer-net and forward secrecy (for resilence to attack).
+
+The idea comes in two parts, the first part, an anonymous www proxy
+using mixmaster to deliver packets, is present to provide cover
+traffic for real eternity system requests, the second part describes a
+way to acheive an eternity like system with the traffic mixed in with
+part 1 traffic, so that the two types of traffic can not be
+distinguished by attackers.
+
+1. anonymous www proxies over mixmaster
+
+The stated design goal for this part (it's partly a cover goal, though
+useful in its own right) is to ensure that users can access publically
+accessible www pages without divulging their identity to the sites
+they are accessing, or even to an attacker who is monitoring net
+traffic.  The user wants to hide which sites they are accessing, and
+what information they are accessing.  No attempt is made to conceal
+the identity of the www sites accessed, a normal URL is used to access
+them.  This is basically just like www.anonymizer.com, except that
+traffic is routed over the mixmaster net.
+
+An http &lt;-&gt; mixmaster interface would be added to the existing
+mixmaster.  You add a blip in the line for outgoing traffic on your
+own machine which converts all outgoing http requests into mixmaster
+packets and feeds them into the remailer network.  You choose random
+chains to get to the http servers.  The delivered packet at the exit
+remailer node is a new mixmaster packet type, a http request type,
+rather than a request to email to an individual, or post to a
+newsgroup, it results in an (where possible SSL encrypted) http
+request being made to the specified http server.
+
+Also included with the request is a mixmaster reply chain, so that the
+exit mixmaster node can route the return the requested www pages, and
+SSL session traffic back to the originator.
+
+As you might imagine if this became popular, it could generate a lot
+of traffic.  For a practical system I think it's inevitable that you'd
+need to provide some financial incentive for the mixmaster operators
+to subsidize their T3s :-) So you would need to incorporate per hop
+payments, for the remailers.  This could be a relatively small payment,
+but is just there to ensure that they have the money to increase their
+bandwidth if the demand requires it.
+
+I think that about explains part 1.
+
+2. an eternity like system built on this system
+
+There are a couple of extra requirements for the eternity system,
+firstly that the address of the www site must be concealed also, and
+secondly that the data is secret shared across multiple eternity www
+sites.
+
+The first requirement can be met by the anonymous eternity www sites
+publically posting to a newsgroup (via a mixmaster remailer of
+course:-) a mixmaster chain pointing at themselves.
+
+To reduce the problem of the flood attack for finding the endpoint of
+a chain, firstly some of Peter Allan's suggestions on extra cover
+traffic, and on adding extra hops to increase cover traffic should
+help, but ultimately this only makes a longer concerted flood
+necessary to find the output.
+
+I don't see any easy solution to the flood attack, the only _real_
+answer is a DC net.  A slightly simpler, but less robust solution
+would be to find ways to have fixed levels of traffic between nodes in
+the remailer network.  Surplus traffic at entry points could be
+rejected, so that the sender knows to try another remailer.
+
+The other requirement for eternity is that the data should be secret
+shared.
+
+If all the eternity www servers publish their reply blocks, the user
+sends requests to a number of the eternity servers selected randomly.
+Choose the number so that it is likely that you will get the required
+k of n shares, given that there are n servers, and they all hold
+shares in the data, and that k of n shares are required to recover the
+secret.
+
+You also need to ensure that the exit mixmaster which is acting as a
+http forwarder server can't tell whether it is making an eternity
+system request or an anonymous www proxy request.  The fact that http
+traffic is blindly forwarded means that if the http request is SSL
+encrypted the http forwarding mixmaster remailer will not know the
+contents of the traffic, and so will not be able to distinguish
+traffic type: eternity or anonymous proxy.
+
+As the eternity www servers don't know what the data in the shares
+they are holding is, they can't provide the indexing facility
+directly.  Rather ordinary www pages, and other eternity www pages can
+be used to collect links to interesting eternity pages.  In
+otherwords, it's decentralised, as is the www, and any indexing left
+up to the authors of eternity hosted www documents, or anyone elses
+indexing to interesting links.
+
+A compromise technology which would greatly simplify access to the
+service would be public www proxies or gateways to the eternity
+service, so that no new software was required for the client.  This
+would serve a similar role to WWW based remailers.
+
+The scheme is complex in places but basically requires no new
+technology, at least for a crude implementation, without the finer
+points.
+
+What can be missed out in a first pass implementation, and deferred
+for later incremental improvements:
+
+	ecash postage to pay for remailer resources
+	fixed traffic between remailers
+	payment for www sites (anonymous www proxy and eternity service)
+	oblivious transfer to setup shares
+
+so that leaves the following to be done:
+
+	blip in the line which routes http requests over mixmaster
+	mixmaster reply chains for return http traffic
+	secret sharing of data to send to eternity www servers
+	periodic posting of mix reply blocks by eternity www servers
+	public access www proxy, or www-cgi based gateway
+
+comments, volunteers?
+
+Adam
+--
+exported RSA today? --&gt; <A  HREF="http://www.dcs.ex.ac.uk/~aba/rsa/">http://www.dcs.ex.ac.uk/~aba/rsa/</A>
+
+#!/bin/perl -sp0777i&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;j]dsj
+$/=unpack('H*',$_);$_=`echo 16dio\U$k"SK$/SM$n\EsN0p[lN*1
+lK[d2%Sa2/d0$^Ixp"|dc`;s/\W//g;$_=pack('H*',/((..)*)$/)
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00798" HREF="msg00798.html">Re: towards an eternity service</A></STRONG>
+<UL><LI><EM>From:</EM> Steve Reid &lt;steve@edmweb.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00711.html">Re: Court challenge to AOL junk-mail blocks</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00678.html">Re: Cypherpunks subscribers - Singapore and NZ gvts, plus IRS</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00719.html">[PARANOID NOISE] Satellites flying formation?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00798.html">Re: towards an eternity service</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00732"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00732"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

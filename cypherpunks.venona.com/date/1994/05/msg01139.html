@@ -1,0 +1,298 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: On Encrypted rlogin sessions -->
+<!--X-From-R13: aryfbaNobylneq.jcq.ftv.pbz (@ryfba Pbylneq) -->
+<!--X-Date: Thu, 19 May 94 01:14:12 PDT -->
+<!--X-Message-Id: 9405190814.AA24193@bolyard.wpd.sgi.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>On Encrypted rlogin sessions</TITLE>
+<LINK REV="made" HREF="mailto:nelson@bolyard.wpd.sgi.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01140.html">Date Prev</A>][<A HREF="msg01144.html">Date Next</A>][<A HREF="msg01140.html">Thread Prev</A>][<A HREF="msg01144.html">Thread Next</A>][<A HREF="index.html#01139">Date Index</A>][<A HREF="threads.html#01139">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>On Encrypted rlogin sessions</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: On Encrypted rlogin sessions</LI>
+<LI><em>From</em>: <A HREF="mailto:nelson@bolyard.wpd.sgi.com">nelson@bolyard.wpd.sgi.com</A> (Nelson Bolyard)</LI>
+<LI><em>Date</em>: Thu, 19 May 94 01:14:24 -0700</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:nelson@sgi.com">nelson@sgi.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Encrypting sessions of the Berkeley rlogin protocol is trickier than one
+might imagine.  There's a "feature" of BSD sockets that can cause data to
+be delivered in a different order than was intended.  The straightforward
+approach used in the Kerberos IV implementation of encrypted rlogin,
+krlogin -x, didn't address this problem, which is why krlogin sessions are
+sometimes terminated, suddenly and unexpectedly.
+
+This paper, which I wrote and submitted to the MIT kerberos bug list
+several years ago, explains the problem, and one solution that I
+implemented successfully in an encrypted rsh/rcp/rlogin product that was
+never marketed.  I submit it here, for your edification and amusement.
+This paper is approximately 4 printed pages long.
+
+In my spare time, I'm trying to prepare a version of the protocol design
+documentation for that old product that can be released for publication.
+
+BACKGROUND:
+
+BSD sockets provides a feature known as "Out Of Band" (OOB) data
+transmission.  It provides a way to send one byte of data in the TCP data
+stream that is separated from the data stream by the receiver and made
+available to the receiving program ahead of the rest of the received (and
+queued) data previously received.  The OOB feature is implemented using a
+feature of the TCP protocol called the "urgent pointer", which was never
+intended for this use, and which doesn't always work as anticipated for
+this purpose.  When OOB data is received, a signal (SIGURG) is sent to the
+receiver to let it know that "urgent" OOB data has been received.
+
+- - - - - (the old paper follows) - - - - -
+
+THE PROBLEM:
+
+The "Out Of Band" feature of BSD sockets, used by the rlogin programs,
+has a nasty and little-known behavior which I call "OOB creep-in".  
+Normally, an OOB byte is sent, marked with the TCP urgent pointer, and 
+is extracted from the incoming data stream when received at the destination
+system.  However, under some somewhat-rare circumstances, an OOB byte can
+be received without being marked by the urgent pointer, and consequently
+the "out of Band" byte is delivered to the receiving program "in band",
+indistinguishable from the ordinary data stream.  The OOB byte "creeps in"
+to the "in band" data stream.
+
+This behavior is documented (er, mentioned) in the BSD 4.3 tcp source code
+in "tcp_input.c":
+
+	/*
+	 * Remove out of band data so doesn't get presented to user.
+	 * This can happen independent of advancing the URG pointer,
+	 * but if two URG's are pending at once, some out-of-band
+	 * data may creep in... ick.
+	 */
+
+There are several ways this can happen, but the simplest scenario is this:
+
+1. Sender sends a byte of OOB data.
+2. A TCP segment with OOB data (urgent pointer) is sent.  Call this segment A.
+3. Sender sends more normal in-band data (this is optional).
+4. Segment A is not received, due to CRC error, or dropped by gateway.
+5. Sender sends another byte of OOB data. 
+6. A new TCP segment (segment B) with the new OOB data (new urgent pointer) 
+   is sent.  Sender socket's urgent pointer now points at latest OOB byte, 
+   not the earlier one.
+7. Sender's TCP retransmit timer fires, causing all sent but unacknowledged
+   data (including all of segments A &amp; B) to be retransmitted in a new
+   segment, called segment C.
+
+In segment C, the urgent pointer points to the newest byte of urgent data,
+not to the OOB byte of segment A.  So both the old and new bytes of OOB
+data are delivered but the urgent pointer only points to the latter one 
+of them, the earlier OOB byte is not detected as being urgent or "out of 
+band".
+
+The rlogin daemon uses OOB data to convey commands to the rlogin client,
+such as "enable XON-XOFF", "disable XON-XOFF", "return current window size"
+and "flush all received data".  When an OOB byte "creeps in" (in an
+unencrypted rlogin session) it appears as a funny character on the rlogin
+user's screen.  Some terminals display these as blanks, and very often
+these go unnoticed by users.  When noticed, the user typically takes some
+trivial action to correct it; such as redoing the "ls" command, or typing
+"^L" to redraw the screen in vi.
+
+Unfortunately, for users of Kerberos krlogin -x, which encrypts the
+entire in-band data stream, the consequences of OOB creep-in are very
+noticeable, confusing (except to those who understand this phenomenon),
+and usually require the rlogin session to be restarted to correct the
+problem.
+
+The protocol used by "krlogin -x" sends all in-band data in blocks that
+look like this:
+
+	|    Length     | encrypted data ...
+	+---+---+---+---+---+---+---+---+---+---+---+---+---+---+ ...
+	   4 bytes        roundup(length,8) bytes 
+
+where Length is a 32-bit integer sent in Network Byte Order, unencrypted,
+and is followed by roundup(length,8) [that's the smallest multiple of 8
+that is no smaller than length] bytes of encrypted data.
+
+A view of an rlogin session would show a series of these blocks:
+
+	...xxxxxLLLLxxxxxxxxLLLLxxxxxxxxLLLLxxxxxxxxLLLLxxxx...
+
+OOB bytes are inserted in the data stream by TCP after (or before) a block
+and are normally removed before being received by the client.  The actual
+TCP data stream, with OOB data shown, might look like:
+
+	...xxxxxBLLLLxxxxxxxxLLLLxxxxxxxxLLLLxxxxxxxxBLLLLxxxx...
+
+If such a data stream were to experience creep-in, the rlogin client,
+expecting:
+	...xxxxxLLLLxxxxxxxxLLLLxxxxxxxxLLLLxxxxxxxxLLLLxxxx...
+would actually receive:
+	...xxxxxBLLLLxxxxxxxxLLLLxxxxxxxxLLLLxxxxxxxxLLLLxxxx...
+
+Instead of receiving a legitimate length LLLL, the receiver gets an
+incorrect length BLLL.  The receiver becomes "out of sync" with the sender.
+
+When this occurs, B is generally non-zero, and krlogin detects this
+condition because the resultant value of the 4-byte length field is out of
+range (too large).  This error is reported by krlogin code (incorrectly) 
+as End-Of-File on the TCP socket.  This causes the "reader" process to
+terminate.  The krlogin user experiences an unexpected termination of the
+session.
+
+There are other problems with OOB as it is used in rlogin.  For example,
+even in "normal operation" (e.g. no retransmission of data) loss of OOB
+data occurs when the reader's system is slow and cannot process the first
+OOB byte before the second byte is received.  That is, BSD code keeps only
+one byte of received OOB at a time, and if the first byte is not consumed
+by the receiving process before a second OOB byte arrives, the first byte
+is lost, overwritten by the second.
+
+SOLUTIONS:
+
+Several solutions to the creep-in problem exist.  One solution, which (I
+am told) has been implemented in another UNIX workstation vendor's kernel, 
+prevents creep in by preventing the transmission of a second OOB byte until
+the receipt of the first OOB byte has been acknowledged by the receiver.
+Thus two OOB bytes are prevented from being sent in the same TCP segment.
+This solution is not in general use, and I ruled it out for the code I was
+developing because I was looking for a solution that would run on a wide
+range of 4.3-based platforms, and not only on those featuring this fix.
+Also, this solution does not prevent loss of OOB data.
+
+Another potential solution completely eliminates the use of OOB in krlogin,
+using an in-band mechanism to send commands.  For example, one could use
+the most significant byte of the length field to send the command bytes,
+instead of using OOB.  Without the SIGURG signal however, the "flushwrite"
+function becomes rather untimely and useless.
+
+The solution I chose uses OOB for the benefit of the SIGURG signal, and the
+timely processing of flushes that it brings, but processes ALL the OOB data
+in-band, so none is ever lost.  That solution was succesfully implemented in
+the code I developed.  My programs did not suffer from creep-in; that is, 
+users of my encyrypted rlogin program experienced the exact same behavior 
+as experienced by users of ordinary rlogin.  No loss of synchronization is 
+caused by creep-in.
+
+Although the code in the product I developed is proprietary to SGI, I can
+outline the elements of the solution.  If you're interested in this
+solution (or some variant) for Version 5 of Kerberos, much more detail can
+probably be supplied.
+
+1.  Use socket option SO_OOBINLINE.  With this option, received OOB data
+    generates a SIGURG, but is NOT removed from the data stream (remains
+    in-band).
+
+2.  The entire data stream is encrypted, both in-band and OOB data.
+
+3.  Send the encrypted data exactly as done in unencrypted rlogin.  That 
+    is, no length or padding data is added.  The protocol is identical to
+    unencrypted rlogin (after key exchange is performed), except that the
+    data is all encrypted.
+
+4.  Use 64-bit Cipher Feedback (CFB) {en,de}cryption (see FIPS pub 81) 
+    instead of CBC or PCBC.  The CFB method has several advantages:
+
+	1.  text is {en,de}crypted one byte-at-a-time, so each byte of
+	    plaintext is {en,de}crypted immediately, yet the encryption 
+	    algorithm is still used only once every 8 bytes.  
+	    (little additional overhead)
+
+	2.  No length data is sent. 
+
+	3.  There is no padding, yet it is very resistant to known-plaintext 
+	    attack.
+
+	4.  There is no media bandwidth overhead, the number of ciphertext
+	    bytes and plaintext bytes are identical.  
+
+Disadvantages of this scheme: All received data must be buffered and
+decrypted, even that which is to be immediately flushed.
+
+The routines reader() and oob() are completely rewritten.  Instead of a
+single buffer which is alternately read, then written; reader reads data
+into buffers which are put on a chain of buffers-to-be-written (to the
+tty).  Reader reads data into these buffers until no more data is available
+to be read.  Then it writes data from the chain of buffers-to-be-written
+until the chain is exhausted or until SIGURG occurs.  Then it goes back to
+reading.
+
+OOB data is processed immediately as it is read.  A command to flush data
+causes the chain of buffers-to-be-written to be freed.
+
+The oob() routine merely counts the OOB received, and causes writing (to
+the tty) to stop and reading (from the socket) to begin again.  No reading
+and no longjmps are done in oob().
+
+While this solution is too large a change to be considered a "bug fix" or
+"patch" to kerberos version 4, perhaps it can be considered as a new
+krlogin protocol for version 5.  [It wasn't]
+
+Your feedback is solicited.  
+
+--
+Nelson Bolyard       Multimedia Server Division      Silicon Graphics, Inc.
+nelson@sgi.COM       Phone: 415-390-1919             Fax: 415-967-8496
+Disclaimer: I do not speak for Silicon Graphics.
+--
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01140.html">DEF CON II Convention Update #7</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01144.html">Forward of alt.security.pgp message</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01140.html">DEF CON II Convention Update #7</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01144.html">Forward of alt.security.pgp message</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01139"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01139"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

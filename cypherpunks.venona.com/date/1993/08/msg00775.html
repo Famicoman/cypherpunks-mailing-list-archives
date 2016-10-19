@@ -1,0 +1,177 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Source Code NOT available for ViaCrypt PGP -->
+<!--X-From-R13: abezNargpbz.pbz (@bezna Vneql) -->
+<!--X-Date: Thu, 26 Aug 93 14:42:34 PDT -->
+<!--X-Message-Id: 9308262139.AA05382@netcom3.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Source Code NOT available for ViaCrypt PGP</TITLE>
+<LINK REV="made" HREF="mailto:norm@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00771.html">Date Prev</A>][<A HREF="msg00777.html">Date Next</A>][<A HREF="msg00771.html">Thread Prev</A>][<A HREF="msg00800.html">Thread Next</A>][<A HREF="index.html#00775">Date Index</A>][<A HREF="threads.html#00775">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Source Code NOT available for ViaCrypt PGP</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Source Code NOT available for ViaCrypt PGP</LI>
+<LI><em>From</em>: <A HREF="mailto:norm@netcom.com">norm@netcom.com</A> (Norman Hardy)</LI>
+<LI><em>Date</em>: Thu, 26 Aug 93 14:39:43 -0700</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Regarding Secret key generation.
+cme@ellisun.sw.stratus.com (Carl Ellison) says:
+&gt; The only place to worry is with key generation,
+&gt; both IDEA and RSA.
+I presume this is true.
+ 
+I include a Scheme program that finds the first
+prime in an arithmetic sequence. It uses a function published in Knuth.
+You can either study my program or compare its output with some program
+written by someone else to the same spec. If people are interested
+I will annotate the code and its output better. As it is now
+the prime that it finds is the last number that it outputs before it stops.
+Curiously it has a probability of error which is large for small numbers
+but exceedingly small for large numbers, just the opposite of human testers.
+I claim that this is a good specification for choosing your secret primes.
+It has a slight advantage over merely finding the first prime beyond some
+specified number because that tends to find primes that follow long runs of
+composites. It just now (as I edited this) found the prime 1000000000000000
+00000000000000000000000000000000000000000000000000000000000000913
+as the first prime in the sequence 10^80+11*n. I typed (scan (expt 10 80) 11)
+to the interpreter to get this. It took several minutes.
+I used MacGambit on a 68030.
+The output theoretically depends on the hokey random number generator here
+but if two implementations yield different answers due to different random
+number generators Knuth and others would be very interested!
+For use in real RSA application we should include a function that hashes
+typed in text into a bignum. A good hash of long text is a very good
+random number! It need not be a crypto hash!
+ 
+(define (ex x)(write x)x)
+(define (rand31 seed) (lambda()(let* ((hi (quotient seed 127773))
+(lo (- seed (* 127773 hi)))(test (- (* 16807 lo) (* 2836 hi))))
+(set! seed (if (&gt; test 0) test (+ test 2147483647))) seed)))
+(define (gbrand max seed)(let* ((rq (rand31 seed))
+  (nq (let v ((c max)(n 0))(if (&lt; c (expt 2 31))
+   (cons (let w ((cx c)(nx 1))(if (&lt; cx 2) nx (w (quotient cx 2)(+ nx 1))))n)
+  (v (quotient c (expt 2 31))(+ n 1)))))
+  (z (car nq))(n (cdr nq))(k (+ (* 31 n) z)))
+(write(list max k z n))
+; max, k, n, z, L and m are non-negative integers.
+; 2^(k-1)&lt;=max&lt;2^k. k=31*n+z. 0&lt;z&lt;=31. 
+; I claim this code is efficient if 
+; (quotient .. (expt 2 ..)) and (modulo .. (expt 2 ..)) are efficient.
+  (if (= n 0)(lambda () (let r ()(let ((q (modulo (rq) (expt 2 z))))
+     (if (&lt; q max) q (r)))))
+  (let ((L (quotient max (expt 2 (- k 31)))))(write L)
+; max = L*2^(k-31) + m; 0&lt;=m&lt;2^(k-31). L is the high 31 bits of max.
+    (lambda()(+ (* (expt 2 z)(let g ((nx n))(if (= nx 1)
+    (let r ()(let ((q (rq)))(if (&lt; q L) q (r))))
+   (+ (* (expt 2 31)(g (- nx 1)))(rq)))))(modulo (rq)(expt 2 z))))))))
+ 
+(load "Random.scm")
+(define ww (lambda(n x)(display (list n x)) x))
+; The following definition is to ensure that modulo never
+; produces negative numbers.
+(define modulo (let ((modulo modulo))(lambda (a m)
+   (if (negative? a) (- (- m 1) (modulo (-(- m 1) a) m))
+   (if (positive? a) (modulo a m) 0)))))
+; The following is the "Jacobi Symbol". (a|P)
+(define (j a P) (if (&lt; a 2) (if (= a 1) 1
+      (if (= a 0) 0 (j (modulo a P) P)))
+   (if (&gt;= a P) (j (modulo a P) P)
+   (if (even? a) (let((q (j (/ a 2) P))
+   (m (modulo P 8))) (if (or (= m 3)(= m 5))(- q) q))
+   (let((q (j (modulo P a) a)))
+   (if(or (= (modulo P 4) 1) (= (modulo a 4) 1)) q (- q)))))))
+(define (mod-exp b p m)(cond ((= p 0) 1)
+   ((even? p)(let ((x (mod-exp b (/ p 2) m)))(modulo (* x x)m)))
+   (#t (modulo (* b (mod-exp b (- p 1) m)) m))))
+; The following is by Solovay &amp; Strassen as presented in Knuth page 396.
+(define (p-test a P)(if(zero? a)(cdr 2))(and (odd? P) (= (gcd a P) 1)
+   (zero? (modulo (- (j a P)(mod-exp a (/(- P 1) 2) P)) P))))
+(quote "The function scan below returns the first prime in the")
+(quote "arithmetic sequence a + n*b")
+(define (scan a b)(let* ((g (gcd a b))(n (modulo b 210))
+  (random (gbrand (+ a (if (positive? b) 0 (* 2000 b))) 228765))
+  (probe (+ 1 (random))))
+   (if (&gt; g 1) (list "Always divisible by" g)
+     (let more ((a1 a)(m (modulo a 210))(cn 0))
+    (if (and (let all ((l (list 2 3 5 7)))(or (null? l)
+      (and (positive? (remainder m (car l))) (all (cdr l)))))
+        (let all ((l 20)(p probe)) (or (zero? l)
+          (and (ww cn (pt p a1))
+      (all (- l 1)(+ 1 (random)))))))
+      a1
+      (begin (display ",")(more (+ a1 b)(modulo (+ m n) 210)(+ cn 1))))))))
+(define (pc wx) (let zz ((q (- wx 1))(s 0))(if (zero? q) s
+   (zz (- q 1)(+ (if (p-test q wx) 1 0) s)))))
+; The following prmality test is from second edition of
+; volume 2 of Knuth's "The Art of Computer Programming",
+; page 379.
+(define (pt x n) (or (= n 2)
+   (let* ((pr (let z ((q (- n 1))(k 0))(if (odd? q)(cons q k)
+               (z (quotient q 2)(+ k 1)))))
+          (q (car pr))(k (cdr pr))(nm1 (- n 1)))
+   (let lp ((j 0)(y (mod-exp x q n)))
+       (or (and (= j 0)(= y 1)) (= y nm1)
+       (and (&lt; (+ j 1) k)(lp (+ j 1)(modulo (* y y) n))))))))
+ ; 10^100-797, 10^200-189, 10^299-171, 10^300-69 are prime.
+ ~.
+ ~.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00771.html">Re: Source Code NOT available for ViaCrypt PGP</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00777.html">Re: Commercial PGP: Verifying Trustworthiness</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00771.html">Re: Source Code NOT available for ViaCrypt PGP</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00800.html">Re: Source Code NOT available for ViaCrypt PGP</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00775"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00775"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

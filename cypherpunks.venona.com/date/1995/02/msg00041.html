@@ -1,0 +1,164 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re:  Lucky primes &#38; omlets on my face... -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Wed, 1 Feb 95 18:13:38 PST -->
+<!--X-Message-Id: 199502020213.SAA17094@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re:  Lucky primes &amp; omlets on my face...</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00039.html">Date Prev</A>][<A HREF="msg00051.html">Date Next</A>][<A HREF="msg00043.html">Thread Prev</A>][<A HREF="msg00110.html">Thread Next</A>][<A HREF="index.html#00041">Date Index</A>][<A HREF="threads.html#00041">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re:  Lucky primes &amp; omlets on my face...</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re:  Lucky primes &amp; omlets on my face...</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 1 Feb 1995 18:13:05 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+From: Nathan Zook &lt;nzook@bga.com&gt;
+
+&gt; Recall:  x^p = x mod p therefore, x^(p-1) = 1 mod p. So what we need is:
+&gt; (x^e)^d = x^ed = x^(p-1)*i+1 = x mod p.  
+
+This would only be true for prime p, but with RSA we are dealing with
+composite moduli.  What we want is ed=1 mod phi(n), where
+phi(n)=(p-1)(q-1).  (Actually you want to use (p-1)(q-1)/gcd((p-1),(q-1)).
+I forget what that is called.)
+
+Conceptually, I gather you are setting e = 0x10001, then finding its
+multiplicative inverse d mod phi(n) (or mod p-1 in your example).  Then
+you are looking for other possible values for d.  I am a little unclear
+on what the interval would be between suitable values of d.  I think it
+would be phi(n)/gcd as above, or p-1 in your example, but I am not sure.
+
+&gt; Let's try this again.
+&gt;  
+&gt; Let 2*x be the target number of bits in the modulous.
+&gt;  
+&gt; Let n be a large random number with x+2 digits.
+&gt; Let n1 be the next multiple of 0x10001.
+&gt; Let t2 be n1 mod 8, t3 be n1 mod 9, t5 be n1 mod 25, t7 be n1 mod 49.
+&gt;  
+&gt; Loop:
+&gt; For i = 2 to 7
+&gt;  If n1 = 1 mod i and (n1-1)/i + 1 is not a multiple of {2,3,5,7}
+&gt;     If (n1-1)/i + 1  is prime.
+&gt;       {
+&gt;         Let k = 0's in n1/0x10001.
+&gt;         If k is in range, save and exit.
+&gt;       }
+&gt;     EndIf
+&gt;  EndIf
+&gt; Next
+&gt; n1 += 0x10001;
+&gt; EndLoop
+&gt;  
+&gt; Recall:  x^p = x mod p therefore, x^(p-1) = 1 mod p. So what we need is:
+&gt; (x^e)^d = x^ed = x^(p-1)*i+1 = x mod p.  
+&gt;  
+&gt; ie: ed = (p-1)*i+1
+&gt; or: (ed - 1) / i + 1 = p
+&gt;  
+&gt; Now 0x10001 inverts easily, it is just n1/0x10001.  By keeping track of
+&gt; various quantities, we can eliminate all multiprecision divisions except
+&gt; for the original one needed to get n1 and the t's, and doing increments
+&gt; instead.
+
+I still don't follow this.  Is k claimed to be d?  Where do we verify
+that ed=1 mod (p-1)?  ed would be n1, right?  When you said "If (n1-1)/i
++ 1 is prime" did you mean "is p"?  I really don't think this whole thing
+works.
+
+Let me tell you what I tried.  I inverted e to get a correct d.  Then I
+looked at different d's to find one with lots of 0's.  This turned out
+to be useless!  The reasons is that PGP does not use d.  It uses the
+Chinese Remainder Theorem to do its exponentiation.  The two
+exponentiations it does use exponents d mod (p-1) and d mod (q-1).
+Adding multiples of phi to d does not change these values (since it is
+a multiple of both p-1 and q-1).
+
+Now one thing you could do is to use in place of d mod (p-1),
+(d mod (p-1)) + k*(p-1) where we choose k to minimize the sum of the number
+of bits and the number of 1 bits in this expression.  Unfortunately the
+PGP data structures do not store d mod (p-1), it is constructed on the
+fly when you do a decryption.  So there is no where to save a
+pre-computed optimal value for the two exponents used in the CRT
+exponentiations.  So, this was a good idea, but the implementation does
+not fit into the current structure very well.
+
+Hal
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6
+
+iQBVAwUBLzA/mhnMLJtOy9MBAQEjmAIAzQbwkia3F7+4F7tNUewKnZVYsBEhgoBk
+h5jem/qjUxFeGhYNUL/pSLKJPR+PlzleZmBQJyOlk3q7KL0ety851g==
+=EHVe
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00110" HREF="msg00110.html">Re: Lucky primes &amp; omlets on my face...</A></STRONG>
+<UL><LI><EM>From:</EM> chen@intuit.com (Mark Chen)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00039.html">NYC area C'Punks meet 2/11/95</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00051.html">Frothing remailers, the advertising and pinging problems</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00043.html">Lucky primes &amp; omlets on my face...</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00110.html">Re: Lucky primes &amp; omlets on my face...</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00041"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00041"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

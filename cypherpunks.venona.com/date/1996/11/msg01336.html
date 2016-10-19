@@ -1,0 +1,160 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Members of Parliament Problem -->
+<!--X-From-R13: Vny Tvaarl <unyNenva.bet> -->
+<!--X-Date: Sat, 16 Nov 1996 10:46:36 &#45;0800 (PST) -->
+<!--X-Message-Id: 199611161725.JAA01334@crypt.hfinney.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Members of Parliament Problem</TITLE>
+<LINK REV="made" HREF="mailto:hal@rain.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01345.html">Date Prev</A>][<A HREF="msg01339.html">Date Next</A>][<A HREF="msg01264.html">Thread Prev</A>][<A HREF="msg01419.html">Thread Next</A>][<A HREF="index.html#01336">Date Index</A>][<A HREF="threads.html#01336">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Members of Parliament Problem</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:paul@fatmons.demon.co.uk">paul@fatmons.demon.co.uk</A></LI>
+<LI><em>Subject</em>: Re: Members of Parliament Problem</LI>
+<LI><em>From</em>: Hal Finney &lt;<A HREF="mailto:hal@rain.org">hal@rain.org</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 16 Nov 1996 09:25:35 -0800</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+From: paul@fatmans.demon.co.uk
+&gt; You could also have an arbitrated blind signature protocol whereby 
+&gt; trent shares a keypair with all users. bob encrypts his comment, M 
+&gt; with the key he shares with trent. On recieving it trent carries out 
+&gt; a blind signature on it and publishes it, as trent knows only bob has 
+&gt; the shared key, K he knows bob said M but as it is a blind sigature 
+&gt; and he is likely to be signing a lot of messages (trent is of course 
+&gt; a computer program) he doesn`t know which message came from bob.
+
+I don't quite follow how this would work.  If Trent issues a blind
+signature, then that means (doesn't it?) that he doesn't see what he
+is signing.  So how can he confirm that the message is actually from
+a member of the group when he doesn't see it?
+
+&gt; Also Chaums group signatures could be used but unfortunately the 
+&gt; arbitrator can find out who said what, but does not normally know.
+&gt; Also trent can forge digital signatures with this protocol.
+&gt; Chaum further mentions protocols for this sort of thing that do not 
+&gt; even need an arbitrator but I don`t have the papers on this.
+
+Not all of Chaum's proposals in the original paper from Eurocrypt 91
+have this property.  Here is what he has, somewhat simplified.  Z is
+the trusted party for those protocols which use one.
+
+1) Each group member makes up a key which he will use for one signature.
+Z signs each key to certify that it is a member of the group.  People
+don't re-use keys so that messages are unlinkable.  Z can tell who sent
+which message since he knows the keys.
+
+2) Z publishes an RSA modulus N, gives each group member a secret exponent
+si, and publishes v = the product of all the si.  Members sign message m
+by producing m**si mod N.  Then to confirm the signature they engage in a
+zero knowledge protocol to prove that the signature is of the proper form
+and that si divides v (without revealing si).  Chaum gives a protocol for
+this.
+
+3) Z again publishes an RSA modulus N, and each group member chooses his
+own RSA modulus Ni = pi * qi.  To sign message m he produces m**pi mod N.
+He then proves in zero knowledge that the signature is of the proper
+form and that pi divides the product of all the Ni (without revealing pi).
+This is the same zero knowledge protocol as in (2) above.
+
+4) Members agree on a large public prime p with generator g.  Each member
+chooses a secret exponent si with public key ki = g**si mod p.  (This is a
+standard discrete log cryptosystem setup.)  To sign message m he produces
+m**si mod p.  He must then prove in zero knowledge that the signature
+is of the proper form and that si is the private exponent corresponding
+to the public key of some group member, without revealing exactly which
+group member it is for.  The protocol for this is not very efficient.
+It uses a cut and choose concept and has to be iterated multiple times.
+
+In methods 1, 2, and 3, Z can tell who made a signature.  In method
+2, Z can forge signatures for other members.  Method 4 doesn't use
+a trusted party.
+
+Method number 4 is very similar to Chaum's original proposal for
+undeniable signatures, although the zero knowledge proof is very different
+since he doesn't want to reveal which particular key his exponent
+corresponds to.
+
+In the Eurocrypt 94 paper by Chen and Pederson they show a very nice
+protocol for proving that you know the exponent corresponding to
+one of a set of Diffie Hellman public keys.  This is similar to the
+problem in (4) above.  Given k1=g**s1, k2=g**s2, ..., you can prove
+that you know one of the si without revealing which one.  The protocol
+is pretty simple and just requires one challenge and response, although
+the amount of data sent is proportional to the number of ki in the set.
+
+This could be used to prove group membership anonymously.  If there
+were a list published of public keys of people on the cypherpunks list,
+you could prove you were on that list without revealing your identity.
+I think it could be made a signature protocol by having the challenge
+c depend on a hash of the message.  But the authors don't do it that
+way, they do a more complicated protocol because they are seeking to
+achieve unconditional rather than cryptographic anonymity.
+
+Hal
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01419" HREF="msg01419.html">Re: Members of Parliament Problem</A></STRONG>
+<UL><LI><EM>From:</EM> "Michael Froomkin - U.Miami School of Law" &lt;froomkin@law.miami.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01345.html">Re: A New Crypto Announcement--Could be Ominous</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01339.html">Re: [POLITICS] Re: Members of Parliament Problem</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01264.html">Re: Members of Parliament Problem</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01419.html">Re: Members of Parliament Problem</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01336"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01336"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

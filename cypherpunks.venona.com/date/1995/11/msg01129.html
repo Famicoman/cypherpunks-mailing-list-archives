@@ -1,0 +1,338 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Design proposal: crypto&#45;capable generic interface -->
+<!--X-From-R13: nggvyn <nggvynNcevzrarg.pbz> -->
+<!--X-Date: Thu, 23 Nov 1995 07:44:08 +0800 -->
+<!--X-Message-Id: Pine.BSD.3.91.951122214304.21297A&#45;100000@usr1.primenet.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.SUN.3.91.951122094209.29001A&#45;100000@infinity.c2.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Design proposal: crypto-capable generic interface</TITLE>
+<LINK REV="made" HREF="mailto:attila@primenet.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01112.html">Date Prev</A>][<A HREF="msg01079.html">Date Next</A>][<A HREF="msg01100.html">Thread Prev</A>][<A HREF="msg01675.html">Thread Next</A>][<A HREF="index.html#01129">Date Index</A>][<A HREF="threads.html#01129">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Design proposal: crypto-capable generic interface</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Raph Levien &lt;<A HREF="mailto:raph@c2.org">raph@c2.org</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Design proposal: crypto-capable generic interface</LI>
+<LI><em>From</em>: attila &lt;<A HREF="mailto:attila@primenet.com">attila@primenet.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 22 Nov 1995 23:22:49 +0000 (GMT)</LI>
+<LI><em>Cc</em>: "Timothy C. May" &lt;<A HREF="mailto:tcmay@got.com">tcmay@got.com</A>&gt;, Carl Ellison &lt;<A HREF="mailto:cme@TIS.COM">cme@TIS.COM</A>&gt;,       <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01100.html">Pine.SUN.3.91.951122094209.29001A-100000@infinity.c2.org</A>&gt;</LI>
+<LI><em>Organization</em>: "home for retired hackers and unrepented cryptophreaks"</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+On Wed, 22 Nov 1995, Raph Levien wrote:
+
+&gt; On Wed, 22 Nov 1995, Carl Ellison wrote:
+&gt; 
+&gt; &gt; &gt;Date: Sat, 18 Nov 1995 00:42:21 -0800 (PST)
+&gt; &gt; &gt;From: Raph Levien &lt;raph@c2.org&gt;
+&gt; &gt;
+&gt; &gt; &gt;   I propose that the new interface lives as a sort of daemon, rather
+&gt; &gt; &gt;than a static collection of command line script pieces. 
+&gt; &gt; 
+&gt; &gt; Danger, Will Robinson!  (see below)
+&gt; 
+  attila-&gt;
+    the daemon, in and off itself, is not dangerous -it becomes critical
+if it is accessible via the port number tables. the problem with a user
+invoked slave process via a socket mechanism is the same as with a .dll or
+likable library: the application need to determine the authenticty of the
+single application socket" 
+
+    the system wide multi-process daemon has an advantage in one respect: it
+can only be loaded by the administrator, and as long as each invocation 
+declares (and wipes at exit) its one memory allocation, including any 
+pseudo-static variables --keep in mind that it must not be tied to the 
+external tables.  Therefore, in order to not be passing keys, passphrase, 
+and all that good stuff across a lan, the daemon must be able to verify 
+that the caller is literally local.  This works even on diskless 
+workstations as long as they have sufficient memory to support the 
+application and the processes are specified non-swappable.
+ &lt;-attila
+
+&gt;    In restrospect, "daemon" was a poor choice of words to describe my
+&gt; proposal. "Slave process" gets the idea across much better, but may be a
+&gt; bit less PC. A daemon sits on a publicly accessible port, such as a TCP/IP
+&gt; socket. The slave process is only accessible to the user who invoked it
+&gt; (enforced by the OS's file permissions). Further, it only gives secrets to
+&gt; individual processes that authenticated themselves first (by sending a
+&gt; passphrase down the connection to the slave process). 
+&gt; 
+&gt; &gt; &gt;   Once the negotation has been established, the application can send
+&gt; &gt; &gt;the daemon MIME objects that the app does not understand but the
+&gt; &gt; &gt;daemon does (for example, an image/fractal). The daemon can return a
+&gt; &gt; &gt;MIME object that the app does understand (for example, an image/ppm).
+&gt; &gt; 
+&gt; &gt; This part sounds good...a sort of master translation service.
+&gt; 
+&gt;    I'm glad you like it!
+&gt;
+    &lt;attila&gt; the temptation here is to use plugins to reduce the load
+component.  Again, you have the problem of tampered linkable libraries or
+.dlls.  Secondly, the problem with diskless workstations rears up, again
+--the diskless workstations must obtain their loadable modules from the
+LAN/WAN unless RAM is infinite and everything is preloaded --except, hear
+comes the LAN/WAN again before load. 
+
+    of course, both the basic daemon and all the loadable plugins can an
+also be encrypted with the header containing at least lateral and linear 
+checksums, if not polynomial check subroutines for authentication. in both 
+cases, the base daemon must verify the authenticity which means it needs 
+a system manager modifiable list table.
+
+    the use of public/private key pairs which can me modified for each
+sight by a system manager with either a special routine or a debugger,
+provides an additional level of security. 
+
+    although you could enable a similar service between the daemon and 
+the calling module using DH for each "session," thereby making it even 
+harder for an interloper to monitor any IPC connections, even if LAN/WAN 
+usage was permitted under these conditions --just how far do you want or 
+need to push the limits of "secure."  I'll answer that the usual way for 
+anyone who has written code, let alone secure code or crypto --to the max 
+--better snooping tools are alway around the corner (it's just like the 
+arms race).  --and, there is always the wrapper approach on top of this.
+ &lt;attila&gt;
+ 
+&gt; &gt; &gt;   Alternatively, the daemon may request an authentication. This is
+&gt; &gt; &gt;useful when resolving external bodies that require authentication,
+&gt; &gt; &gt;including non-anonymous FTP, and standard authenticated HTTP. In this
+&gt; &gt; &gt;case, the daemon sends a message to the app requesting the
+&gt; &gt; &gt;authentication. It specifies whether it needs both username and
+&gt; &gt; &gt;password, or just password. In the latter case, it hands a username to
+&gt; &gt; &gt;the application.
+&gt; &gt; &gt;   The application can then query the user for the authentication
+&gt; &gt; &gt;data. It hands this back to the daemon. In reply, the daemon indicates
+&gt; &gt; &gt;success or failure. In case of success, it hands the object back to
+&gt; &gt; &gt;the app.
+&gt; &gt; 
+&gt; &gt; Now I get worried.  This communication with the demon is via some IPC --
+&gt; &gt; maybe even via a LAN.  Some things can't be distributed safely and
+&gt; &gt; authentication is #2 on my list.
+&gt; 
+&gt;    No, the communication is not via a LAN. On a Unix system, the 
+&gt; communication is through Domain Sockets. Both processes live on the same 
+&gt; machine, and the socket "lives" on the local file system.
+&gt;
+    &lt;attila&gt; No, that is not is not always true; again, user space
+sockets present the same security risk as loadable modules unless you have
+a base socket which decrypts and authenticates each loadable module. And, 
+user sockets are more easily attacked.
+ &lt;attila&gt;
+ 
+&gt;    I submit that my proposal is every bit as secure as, say, PGP is now. 
+&gt; If you can't trust the operating system not to hand domain sockets from 
+&gt; one process to another, then you certainly can't trust it to, for 
+&gt; example, substitute different binaries for the crypto program (an attack 
+&gt; which Ian et al cleverly mounted a few weeks ago).
+&gt;    If it were not the case that my proposal was as secure as PGP, then I 
+&gt; would want to withdraw it. However, the proposal has so many advantages 
+&gt; that I would want to see a serious description of the attack, rather than 
+&gt; just feelings of endangerment to Will Robinson.
+&gt; 
+&gt; &gt; &gt;   Encryption is a bit more tricky, but in essence you just hang a
+&gt; &gt; &gt;premail-alike off this kind of protocol. The hard part is specifying
+&gt; &gt; &gt;the key, but you just call it a "parameter" and put in hooks for the
+&gt; &gt; &gt;daemon to ask for whatever parameters it needs. 
+&gt; &gt; 
+&gt; &gt; Crypto keys are #1 on my list of things you can't distribute (unless they
+&gt; &gt; are wrapped, of course).
+&gt; 
+&gt;    I should have made it cleaer that I am referring to public keys. If 
+&gt; public keys are on the list of things that can't be distributed, then I 
+&gt; believe we are in trouble.
+&gt;
+    &lt;attila&gt; in order for a "user" to decrypt public key paired messages,
+the users private key must be passed to the daemon --obviously in a secure
+packet which again can be initiated with DH; the alternative is a lookup
+from a standardized location such as ~/.private/ring which can be
+non-readable except by the owner or by the daemon running suid as the user
+at the authentication level. 
+
+    Personally, I would rather pass the private key from the user module
+intereface in an authentication packet and not have it necessarily visible
+--the same goes for the pass phrase. 
+    
+    this checking and rechecking may be necessary for maximum security on 
+a multi-user machine, but you may have more authentication overhead than 
+translation overhead in a short packet...
+
+    and, what do you do with MickeySoft?  with as much 3.1 base code as 
+there appears to be from the complaints, W95 looks like a problem for 
+multi-process packetizing, etc. Maybe NT is better?  I do not use either 
+and will stay with some form of BSD (Solaris and FreeBSD currently). I 
+may be the last holdout on earth as the posting yesterday detailed, but I 
+will be a holdout.
+  &lt;attila&gt;
+ 
+&gt; &gt; &gt;						 This requires that
+&gt; &gt; &gt;keys have some nonforgeable names, which is unfortunately not a
+&gt; &gt; &gt;feature of PGP 2.6.2. S/MIME will do it just fine, if you buy into the
+&gt; &gt; &gt;Certifcation Authority (&lt;wink&gt; at Nick Szabo).
+&gt; &gt; 
+&gt; &gt; Public keys, if that's what you're talking about, have perfectly good
+&gt; &gt; nonforgeable names -- themselves.  They are unique.  They are the proper
+&gt; &gt; name which can collect all the attributes of that key which are of interest
+&gt; &gt; (e.g., permission to spend $, name of a human who knows the private key,
+&gt; &gt; attributes about that human, etc.).
+&gt; 
+&gt;    Ok. But public keys have one serious disadvantage: their size. I can't 
+&gt; put a public key on my business card or read it over the phone. I want a 
+&gt; unforgeable key name. I want this to be the standard key name in the 
+&gt; interface between the application and the crypto engine. I want users to 
+&gt; be able to specify them directly, at the very least to bootstrap the 
+&gt; public key infrastructure.
+&gt;    I propose using the MD5 hash of the whitespace-free MOSS 
+&gt; representation of the public key, in hex. It's simple enough to be 
+&gt; described in one sentence, but does everything I want.
+&gt;
+    &lt;attila&gt; there is nothing that says you can not use a 64 or 128 bit
+public key; nothing says you must use 1024 bits for the public. the fact
+the private key is 1024 bits is irrelevant other than the fact it
+increases security. there are some advantages of simplicity for
+simplicity's sake! :)
+  &lt;attila&gt;
+ 
+&gt;    Note that PGP 2.6.2 does _not_ allow the use of a public key as the 
+&gt; name of a public key, unless you do a horrible hack such as replace the 
+&gt; pubring.pgp file with the one public key of interest. This is a 
+&gt; significant problem when trying to identify which key signed a signed 
+&gt; message. I haven't bashed around with TISMOSS enough, but I'm not sure it 
+&gt; will allow this either. I got the impression that it preferred the use of 
+&gt; an alias.
+&gt; 
+&gt; &gt; &gt;   One final aside: I've been fairly frustrated with this mailing list
+&gt; &gt; &gt;as a forum for talking about real design proposals and implementation
+&gt; &gt; &gt;issues. Ignorant posts by the likes of Dr. Fred and Alice d'Clueless
+&gt; &gt; &gt;tend to attract far more attention than real crypto work. I want a
+&gt; &gt; &gt;forum for, and just for, cypherpunks who write code. If I had just a
+&gt; &gt; &gt;smidgen more free time (as if), I'd be trying to start one
+&gt; &gt; &gt;myself. Anyone else?
+&gt; &gt;
+    &lt;attila&gt; for a man with a piled higher and deeper, Dr. Fred's spelling
+and grammer skills are quite poor, maybe 8th grade.  we dont need to deal
+with the pompous holier than thou attitude from anyone.
+    I too have a piled higher and deeper in information techniques (which
+includes security). what's it worth?  Not much if you can not support it
+with your actions and accomplishments. 
+    ...just open your mouth Dr. Fred so we can check your IQ (Ignorance
+Quotient!). 
+  &lt;attila&gt;
+
+&gt; &gt; I've seen this happen several times.  As a list gets popular, it
+&gt; &gt; diversifies.  You might try sci.crypt.research -- since it's moderated.
+&gt; 
+&gt;    Thanks for the suggestion. However, my concerns are with 
+&gt; implementation and deployment, not research.  I am perfectly willing to 
+&gt; consider cryptographic algorithms to be black boxes that do what they say 
+&gt; they will. I think the charter exists to start a new list. John Gilmore 
+&gt; has already offered to start a "coderpunks" list on toad.com. Shall we 
+&gt; take him up on it?
+&gt; 
+&gt; Raph
+&gt; 
+    &lt;attila&gt; The problem with a new list is that we really need a
+moderated list;  the condition being that all messages dealing with code
+pass if you are a member, but no one should be discriminated agains
+membership --no politics, not even the alerts which we really should be
+aware of as public "policy" (if you can call it that) does concern how we
+approach crypto in general. sci.crypt.research is a little more techinical
+that it needs to be and rarely has the give and take we have in this list
+--particularly when we are kicking around a proposal (like the universal 
+translator of this thread.
+    I would suggest that the code arguments be cross posted to the 
+current list.  we might find some interesting political considerations 
+may lead to proposals for code.
+    The problem is the the moderator --who has the time? If not John 
+Gilmore, maybe TCM??? 
+    I have more or less retired from active consulting and would do it if
+I were not overcommitted including some travel for the next several months
+--I do have a fast notebook, but toll charges are a bitch.  It is
+important that there is "moderation" which blows away ideas despite
+personal bias and preference. 
+    One possible way to set the moderated list is to post as we always 
+have to cypherpunks, and the moderator pops all the code related postings 
+over to cypherpunks.moderated@toad.com (or whereever). This means the 
+main list is complete, with the moderated list code limited. Once a 
+message thread is identified, procmail would pick up the thread and 
+forward it. .procmailrc commands could be handled automatically with a 
+small script.
+    Currently, after procmail breaks incoming into lists, I sort
+cypherpunks by subject and "pre-delete" all the noise discussions (other
+than a few like tcm or gilmore or perry, etc.). I could get nasty with a
+more aggresive procmail (mine only splits incoming into separate lists and
+wipes out Dr. Fred before it even gets to any list). 
+    Do a few of us wish to hash this problem out in email?  Maybe we 
+could swap the responsibility around when someone is out of town. Count 
+me in, I'm all in favour of a moderated list with a reasonably controlled 
+membership, not just a listproc or majordome open subscribe function.
+
+  &lt;attila&gt;
+ 
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01100" HREF="msg01100.html">Re: Design proposal: crypto-capable generic interface</A></STRONG>
+<UL><LI><EM>From:</EM> Raph Levien &lt;raph@c2.org&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01112.html">Re: MED_vac</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01079.html">Re: Junk E-Mail</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01100.html">Re: Design proposal: crypto-capable generic interface</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01675.html">Re: Design proposal: crypto-capable generic interface</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01129"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01129"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,590 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Bug in PGP MPI library -->
+<!--X-From-R13: nabalzbhfNrkgebcvn.jvzfrl.pbz -->
+<!--X-Date: Wed, 9 Feb 94 20:30:16 PST -->
+<!--X-Message-Id: 199402100406.AA10198@xtropia -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Bug in PGP MPI library</TITLE>
+<LINK REV="made" HREF="mailto:anonymous@extropia.wimsey.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00549.html">Date Prev</A>][<A HREF="msg00550.html">Date Next</A>][<A HREF="msg00556.html">Thread Prev</A>][<A HREF="msg00550.html">Thread Next</A>][<A HREF="index.html#00544">Date Index</A>][<A HREF="threads.html#00544">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Bug in PGP MPI library</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Bug in PGP MPI library</LI>
+<LI><em>From</em>: <A HREF="mailto:anonymous@extropia.wimsey.com">anonymous@extropia.wimsey.com</A></LI>
+<LI><em>Date</em>: Wed, 9 Feb 1994 20:06:37 -0800</LI>
+<LI><em>Comments</em>: This message was anonymously remailed. Do not reply to the address in the From: line, unless you wish to report a problem. Thank you.</LI>
+<LI><em>Remailed-By</em>: remail@extropia.wimsey.com</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Someone please prove me wrong, but I think there is a bug in the function
+mp_modexp_crt (RSA decryption and signing) in PGP23a's MPI library. Attached 
+to this message is a program which demonstrates the bug.
+
+While testing Magic Money for lingering bugs, the client gave the error
+"Coin from server has bad signature!" I tried again with different coins,
+and the program worked. The proto.dat file had been cleared as the coins
+were read, so there was no way to repeat the error.
+
+I set up a batch file to repeatedly cycle coins between the client and the
+server, backing up proto.dat each time. After an hour or so, the error
+happened again, and I started tracing it. There didn't seem to be any bug
+to find. For this particular coin, the unblinded coin was garbage. For any
+other coin, the program worked.
+
+I wrote this test program, bug.c, to find the error. It uses the same coin, 
+blinding factor, public, and secret key as Magic Money was using when it 
+crashed. The program first blinds the coin, then signs it, then unblinds it, 
+decrypts the RSA signature, and displays the results.
+
+If you just run "bug", Here's what happens:
+
+&gt;bug 
+
+e=0001 0015 
+n=A8DF 1E61 234B E660 800A 4167 40A9 102D 
+  FC01 6962 AD6C BE39 2664 92AE E8B4 CE3A 
+  93EB F4BE FFD1 104A DB81 2F95 684E C188 
+  0901 379C 99BC 5E24 7EC2 660B 1463 139F 
+d=4612 D56D AA0A B760 3561 60C6 EE7A 5CE8 
+  A74B D0C9 501E D7B1 C145 D654 3B38 E90A 
+  6FF4 BC13 221E E354 345D B789 38D6 3427 
+  DA7A 48D6 570C 3860 FC86 0B8F AB80 FCE5 
+p=C737 3481 985A B4B3 4E0F 0ECB 8E58 1B49 
+  74F4 70D4 0B81 CF2C F858 781F D70F 79EB 
+q=D901 B376 D73A 2163 56D8 3B7B EE02 73F8 
+  9A3F E7FD AC56 F4D9 E072 CECF 85B1 CC1D 
+u=825E FE26 ED64 7E91 6256 A8E8 3DC7 C8E5 
+  0E52 46FE 56B0 B3C9 3559 2C03 BFA1 C06B 
+
+original coin=0001 FFFF FFFF FFFF FFFF FFFF FFFF FFFF 
+	      FFFF FFFF FFFF FFFF FFFF FFFF FF00 3020 
+	      300C 0608 2A86 4886 F70D 0205 0500 0410 
+	      14C1 A83C 1B84 FCAD 472F 6425 3F74 7C80 
+
+blinding fact=005B 52D8 BA8D 6AE9 4652 8C2D 5CBB 4BEB 
+	      D0C7 80C9 48BC 797A CDEE BDE0 E53D 4329 
+	      9E7A 00B3 8FF1 5BA4 E78B 81C8 C99A 9C16 
+	      CFA7 33A3 93D0 A5C0 7604 8F85 87D9 4D31 
+
+ blinded coin=797B A351 2280 62DC 1D02 84F8 1812 52E8 
+	      152B A421 D7C8 8CD1 E061 776C 138A 9776 
+	      E2D6 5764 AF64 4C21 D589 176D 0FD2 F346 
+	      7A45 5EB9 7E1F 964A 189C 55BC FD53 0775 
+
+  signed coin=9994 B5AF A3A5 7B30 9058 5D76 C531 3EF2 
+	      81F6 B973 3805 2673 C8D3 C4A8 051A 4979 
+	      7882 F598 BB66 57C8 8104 76BB 06D7 F85D 
+	      4AA1 AEF3 18EC A105 C8B2 64D4 96ED 6BE4 
+
+   final coin=2EF9 8656 2799 3071 692A D693 3EF3 AF4D 
+	      D296 B6AE E3A3 A283 94B1 242E 43BD 9042 
+	      086A CCED 5A0A A4F4 F4A9 C1FE B3D0 5C22 
+	      BF60 D14D 717F C188 4701 57E5 C9E1 5A77 
+
+	      Notice that the final coin is gibberish.
+
+By running "bug b" it increments the blinding factor by one, then performs
+the same calculation.
+
+&gt;bug b 
+
+original coin=0001 FFFF FFFF FFFF FFFF FFFF FFFF FFFF 
+	      FFFF FFFF FFFF FFFF FFFF FFFF FF00 3020 
+	      300C 0608 2A86 4886 F70D 0205 0500 0410 
+	      14C1 A83C 1B84 FCAD 472F 6425 3F74 7C80 
+
+blinding fact=005B 52D8 BA8D 6AE9 4652 8C2D 5CBB 4BEB 
+	      D0C7 80C9 48BC 797A CDEE BDE0 E53D 4329 
+	      9E7A 00B3 8FF1 5BA4 E78B 81C8 C99A 9C16 
+	      CFA7 33A3 93D0 A5C0 7604 8F85 87D9 4D32 
+
+ blinded coin=7010 DE32 C491 A343 F041 2779 BA9B BEF3 
+	      C394 3DAE 2B48 8110 2260 7D18 876A 820F 
+	      AFB1 9913 6E77 4D95 185E 17F7 2496 7137 
+	      8212 5509 B641 D3BD F67A 685A 0A20 8B9B 
+
+  signed coin=2879 A082 C7DE 2BFC C39D 8E21 F245 17B7 
+	      96DC 2458 A201 4756 DA93 8D09 23F2 7741 
+	      964C 1984 5A15 AC6F 4AD7 50AB CE98 5E12 
+	      CDC6 C1F8 5F14 8699 3FB7 036F B439 F39A 
+
+   final coin=0001 FFFF FFFF FFFF FFFF FFFF FFFF FFFF 
+	      FFFF FFFF FFFF FFFF FFFF FFFF FF00 3020 
+	      300C 0608 2A86 4886 F70D 0205 0500 0410 
+	      14C1 A83C 1B84 FCAD 472F 6425 3F74 7C80 
+
+	      The final coin is now correct.
+
+By running "bug c" the coin itself is incremented by one, but the blinding
+factor is not incremented.
+
+&gt;bug c 
+
+original coin=0001 FFFF FFFF FFFF FFFF FFFF FFFF FFFF 
+	      FFFF FFFF FFFF FFFF FFFF FFFF FF00 3020 
+	      300C 0608 2A86 4886 F70D 0205 0500 0410 
+	      14C1 A83C 1B84 FCAD 472F 6425 3F74 7C81 
+
+blinding fact=005B 52D8 BA8D 6AE9 4652 8C2D 5CBB 4BEB 
+	      D0C7 80C9 48BC 797A CDEE BDE0 E53D 4329 
+	      9E7A 00B3 8FF1 5BA4 E78B 81C8 C99A 9C16 
+	      CFA7 33A3 93D0 A5C0 7604 8F85 87D9 4D31 
+
+ blinded coin=5F91 E5B7 95F7 C37B 5CE6 F0A3 A7CC A51B 
+	      7C0E ED85 2E2D CE1F F8E8 75B0 1559 7945 
+	      0CA5 BE69 AD2E A75E 5F4E 1D8E 0704 DA3B 
+	      8957 D63C E195 1078 5E75 0F31 7E7C DA68 
+
+  signed coin=4A0B EA0E C336 DE7E 3BC6 0448 9B4B 6185 
+	      9964 91BD 3A5E E424 520D 2AEF BF9A 7FBA 
+	      382C 136C 0FA4 9D58 A237 8160 C00C EE76 
+	      5817 D39E 92B6 BD6F 05DD 91CE 4C97 CB85 
+
+   final coin=0001 FFFF FFFF FFFF FFFF FFFF FFFF FFFF 
+	      FFFF FFFF FFFF FFFF FFFF FFFF FF00 3020 
+	      300C 0608 2A86 4886 F70D 0205 0500 0410 
+	      14C1 A83C 1B84 FCAD 472F 6425 3F74 7C81 
+
+	      Again, the final coin is correct.
+
+By running "bug r" everything happens as though you just ran "bug". Neither
+the blinding factor or coin is incremented. But, the program uses the slower
+mp_modexp instead of mp_modexp_crt to perform the signature.
+
+&gt;bug r 
+
+original coin=0001 FFFF FFFF FFFF FFFF FFFF FFFF FFFF 
+	      FFFF FFFF FFFF FFFF FFFF FFFF FF00 3020 
+	      300C 0608 2A86 4886 F70D 0205 0500 0410 
+	      14C1 A83C 1B84 FCAD 472F 6425 3F74 7C80 
+
+blinding fact=005B 52D8 BA8D 6AE9 4652 8C2D 5CBB 4BEB 
+	      D0C7 80C9 48BC 797A CDEE BDE0 E53D 4329 
+	      9E7A 00B3 8FF1 5BA4 E78B 81C8 C99A 9C16 
+	      CFA7 33A3 93D0 A5C0 7604 8F85 87D9 4D31 
+
+ blinded coin=797B A351 2280 62DC 1D02 84F8 1812 52E8 
+	      152B A421 D7C8 8CD1 E061 776C 138A 9776 
+	      E2D6 5764 AF64 4C21 D589 176D 0FD2 F346 
+	      7A45 5EB9 7E1F 964A 189C 55BC FD53 0775 
+
+  signed coin=6613 B2B0 75FD 398B 30EE C3FD 6A84 9E7D 
+	      39D2 738A 387B 4100 CD3F 0DFD C8A7 1D13 
+	      7941 0CA7 BE13 1C5E 1E9F 7174 648F 494E 
+	      B57B 32BA 585E DC04 45DF C40A 468E 32BC 
+
+   final coin=0001 FFFF FFFF FFFF FFFF FFFF FFFF FFFF 
+	      FFFF FFFF FFFF FFFF FFFF FFFF FF00 3020 
+	      300C 0608 2A86 4886 F70D 0205 0500 0410 
+	      14C1 A83C 1B84 FCAD 472F 6425 3F74 7C80 
+
+	      The final answer is right, and the signed coin is 
+	      different from the signed coin in the first example.
+
+That pins down the error to mp_modexp_crt. Maybe I'm missing something,
+but it appears there are a few values for which this function just does
+not work right. If you want to try it, here's the program.
+
+						 Pr0duct Cypher
+
+=========================== cut 8&lt; here =================================
+/* bug.c
+
+   Strange bug demo - "bug b" increments blinding factor
+		      "bug c" increments coin
+		      "bug r" uses regular mp_modexp instead of
+			      mp_modexp_crt
+
+   Compile with mpilib and mpiio, define DEBUG for mpiio
+*/
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include "usuals.h"
+#include "mpilib.h"
+#include "mpiio.h"
+
+typedef unit unitarr[MAX_UNIT_PRECISION];
+
+/* Multiplicative inverse - used for finding d */
+void mp_inv(unitptr x,unitptr a,unitptr n);
+
+char e_string[]="0001,0015h";
+
+char d_string[]="\
+4612,D56D,AA0A,B760,3561,60C6,EE7A,5CE8\
+A74B,D0C9,501E,D7B1,C145,D654,3B38,E90A\
+6FF4,BC13,221E,E354,345D,B789,38D6,3427\
+DA7A,48D6,570C,3860,FC86,0B8F,AB80,FCE5h";
+
+char n_string[]="\
+A8DF,1E61,234B,E660,800A,4167,40A9,102D\
+FC01,6962,AD6C,BE39,2664,92AE,E8B4,CE3A\
+93EB,F4BE,FFD1,104A,DB81,2F95,684E,C188\
+0901,379C,99BC,5E24,7EC2,660B,1463,139Fh";
+
+char p_string[]="\
+C737,3481,985A,B4B3,4E0F,0ECB,8E58,1B49\
+74F4,70D4,0B81,CF2C,F858,781F,D70F,79EBh";
+
+char q_string[]="\
+D901,B376,D73A,2163,56D8,3B7B,EE02,73F8\
+9A3F,E7FD,AC56,F4D9,E072,CECF,85B1,CC1Dh";
+
+char u_string[]="\
+825E,FE26,ED64,7E91,6256,A8E8,3DC7,C8E5\
+0E52,46FE,56B0,B3C9,3559,2C03,BFA1,C06Bh";
+
+char original_coin_string[]="\
+0001,FFFF,FFFF,FFFF,FFFF,FFFF,FFFF,FFFF\
+FFFF,FFFF,FFFF,FFFF,FFFF,FFFF,FF00,3020\
+300C,0608,2A86,4886,F70D,0205,0500,0410\
+14C1,A83C,1B84,FCAD,472F,6425,3F74,7C80h"; 
+
+char blinding_factor_string[]="\
+005B,52D8,BA8D,6AE9,4652,8C2D,5CBB,4BEB\
+D0C7,80C9,48BC,797A,CDEE,BDE0,E53D,4329\
+9E7A,00B3,8FF1,5BA4,E78B,81C8,C99A,9C16\
+CFA7,33A3,93D0,A5C0,7604,8F85,87D9,4D31h";
+
+main(int argc,char *argv[])
+{
+int rflag;
+unitarr e;
+unitarr d;
+unitarr n;
+unitarr p;
+unitarr q;
+unitarr u;
+unitarr dp;
+unitarr dq;
+unitarr original_coin;
+unitarr blinding_factor;
+unitarr temp;
+unitarr blinded_coin;
+unitarr signed_coin;
+unitarr unblinded_coin;
+unitarr final_coin;
+
+set_precision(MAX_UNIT_PRECISION);
+
+/* Load all the values */
+str2reg(original_coin,original_coin_string);
+str2reg(blinding_factor,blinding_factor_string);
+str2reg(e,e_string);
+str2reg(d,d_string);
+str2reg(n,n_string);
+str2reg(p,p_string);
+str2reg(q,q_string);
+str2reg(u,u_string);
+
+/* Increment variable if condition entered */
+if(argc==2) {
+  if(*argv[1]=='b'||*argv[1]=='B')
+    mp_inc(blinding_factor);
+  if(*argv[1]=='c'||*argv[1]=='C')
+    mp_inc(original_coin);
+  if(*argv[1]=='r'||*argv[1]=='r')
+    rflag=TRUE;
+  else
+    rflag=FALSE;
+  }
+
+/* Display them to check */
+mp_display("e=",e);
+mp_display("n=",n);
+mp_display("d=",d);
+mp_display("p=",p);
+mp_display("q=",q);
+mp_display("u=",u);
+
+printf("\n");
+mp_display("original coin=",original_coin);
+
+/* Raise the blinding factor to the power e */
+mp_modexp(temp,blinding_factor,e,n);
+
+/* Blind the coin */
+stage_modulus(n);
+mp_modmult(blinded_coin,original_coin,temp);
+
+printf("\n");
+mp_display("blinding fact=",blinding_factor);
+printf("\n");
+mp_display(" blinded coin=",blinded_coin);
+
+/* Sign the blinded coin */
+if(rflag)
+  mp_modexp(signed_coin,blinded_coin,d,n);
+else {
+  mp_move(temp,p);
+  mp_dec(temp);
+  mp_mod(dp,d,temp);
+  mp_move(temp,q);
+  mp_dec(temp);
+  mp_mod(dq,d,temp);
+  mp_modexp_crt(signed_coin,blinded_coin,p,q,dp,dq,u);
+  }
+
+printf("\n");
+mp_display("  signed coin=",signed_coin);
+
+/* Invert the blinding factor */
+mp_inv(temp,blinding_factor,n);
+
+/* Unblind the coin */
+stage_modulus(n);
+mp_modmult(unblinded_coin,signed_coin,temp);
+
+/* Decrypt the signed coin */
+mp_modexp(final_coin,unblinded_coin,e,n);
+
+printf("\n");
+mp_display("   final coin=",final_coin);
+return(0);
+}
+
+#define swap(p,q)  { unitptr t; t = p;  p = q;  q = t; }
+#define iplus1  ( i==2 ? 0 : i+1 )      /* used by Euclid algorithms */
+#define iminus1 ( i==0 ? 2 : i-1 )      /* used by Euclid algorithms */
+
+#ifdef OLD_MPINV
+void mp_inv(unitptr x,unitptr a,unitptr n)
+	/* Euclid's algorithm extended to compute multiplicative inverse.
+	   Computes x such that a*x mod n = 1, where 0&lt;a&lt;n */
+{
+	/*      The variable u is unnecessary for the algorithm, but is 
+		included in comments for mathematical clarity. 
+	*/
+	short i;
+/*      unit y[MAX_UNIT_PRECISION], temp[MAX_UNIT_PRECISION];
+	unit gcopies[3][MAX_UNIT_PRECISION], vcopies[3][MAX_UNIT_PRECISION];
+#define g(i) (  &amp;(gcopies[i][0])  )
+#define v(i) (  &amp;(vcopies[i][0])  )
+    Major stack space hog! */
+unit *y=safemalloc(sizeof(unit)*MAX_UNIT_PRECISION);
+unit *temp=safemalloc(sizeof(unit)*MAX_UNIT_PRECISION);
+unit *gcopies[3];
+unit *vcopies[3];
+for(i=0;i&lt;3;i++) {
+  gcopies[i]=malloc(sizeof(unit)*MAX_UNIT_PRECISION);
+  vcopies[i]=malloc(sizeof(unit)*MAX_UNIT_PRECISION);
+  }
+#define g(i) gcopies[i]
+#define v(i) vcopies[i]  
+
+/*      unit ucopies[3][MAX_UNIT_PRECISION]; */
+/* #define u(i) (  &amp;(ucopies[i][0])  ) */
+	mp_move(g(0),n); mp_move(g(1),a);
+/*      mp_init(u(0),1); mp_init(u(1),0); */
+	mp_init(v(0),0); mp_init(v(1),1);
+	i=1;
+	while (testne(g(i),0))
+	{       /* we know that at this point,  g(i) = u(i)*n + v(i)*a  */      
+		mp_udiv( g(iplus1), y, g(iminus1), g(i) );
+		mp_mult(temp,y,v(i));
+		mp_move(v(iplus1),v(iminus1));
+		mp_sub(v(iplus1),temp);
+	/*      mp_mult(temp,y,u(i));
+		mp_move(u(iplus1),u(iminus1));
+		mp_sub(u(iplus1),temp); */
+		i = iplus1;
+	}
+	mp_move(x,v(iminus1));
+	if (mp_tstminus(x))
+		mp_add(x,n);
+	mp_burn(g(iminus1));    /* burn the evidence on the stack...*/
+	mp_burn(g(iplus1));
+	mp_burn(v(0));
+	mp_burn(v(1));
+	mp_burn(v(2));
+	mp_burn(y);
+	mp_burn(temp);
+#undef g
+#undef v
+free(y);
+free(temp);
+for(i=0;i&lt;3;i++) {
+  free(gcopies[i]);
+  free(vcopies[i]);
+  }
+}       /* mp_inv */
+
+#else /* !OLD_MPINV */
+
+/* Faster mp_inv, based on "Fast Multiplicative Inverse in Modular
+ * Arithmetic", J. Gordon, in Cryptography and Coding, edited by
+ * Henry J. Beker and F.C. Piper, 1989.
+ * The mapping from the variables in that paper to our variables is,
+ * roughly, M-&gt;n, X-&gt;a, HCF-&gt;u(iminus1), U-&gt;u(i), temp-&gt;u(iplus1),
+ * INV-&gt;v(iminus1), V-&gt;v(i), temp-&gt;v(iplus1).  We rotate the assignment
+ * to temp and INV in their 2nd block of code.
+ */
+void mp_inv(unitptr x,unitptr a,unitptr n)
+	/* Euclid's algorithm extended to compute multiplicative inverse.
+	   Computes x such that a*x mod n = 1, where 0&lt;a&lt;n */
+{
+	/*      The variable u is unnecessary for the algorithm, but is 
+		included in comments for mathematical clarity. 
+	*/
+	int shifts;
+	int i;
+	int enterloop;
+/*
+	unit vcopies[3][MAX_UNIT_PRECISION],
+	     ucopies[3][MAX_UNIT_PRECISION];
+#define u(i) (  &amp;(ucopies[i][0])  )
+#define v(i) (  &amp;(vcopies[i][0])  )   Stack space hog deleted */
+
+unit *ucopies[3];
+unit *vcopies[3];
+for(i=0;i&lt;3;i++) {
+  ucopies[i]=malloc(sizeof(unit)*MAX_UNIT_PRECISION);
+  vcopies[i]=malloc(sizeof(unit)*MAX_UNIT_PRECISION);
+  }
+#define u(i) ( ucopies[i] )
+#define v(i) ( vcopies[i] )
+
+i = 1;
+
+/* Modify this to do one division at the beginning.  That makes it faster.
+	mp_move(u(0),n); mp_move(u(1),a);
+	mp_init(v(0),0); mp_init(v(1),1); mp_init(v(2),1);
+ */
+	mp_move(u(0),a); mp_init(v(0),1);
+	/* Init U to n%a, V to -n/a. */
+	mp_udiv(u(1), v(1), n, a); mp_neg(v(1)); mp_move(v(2),v(1));
+	do {
+		enterloop = 0;
+		shifts = -1;
+		if (mp_compare(u(i),u(iminus1)) &gt; 0)   
+		 /* if U &gt; HCF then */
+			mp_init(u(iplus1),0);
+		else {
+			enterloop = 1;
+			mp_move(u(iplus1),u(i));
+			/* temp := U */
+			while (mp_compare(u(iplus1),u(iminus1)) &lt;= 0) { 
+			/* temp&lt;=HCF */
+				++shifts;
+				mp_shift_left(u(iplus1)); 
+				 /* leftshift(temp,1) */
+			}
+			mp_shift_right_bits(u(iplus1),1);
+			 /* rightshift(temp,1) */
+		}
+		mp_sub(u(iminus1),u(iplus1));
+		/* temp := HCF - temp */
+		mp_move(u(iplus1),u(iminus1));
+
+		i = iplus1;
+		 /* V := tempV, tempV := INV, INV := V, */
+		 /* U := tempU, tempU := HCF, HCF := U; */
+		 /* (All simultaneous) */
+
+		if (enterloop) {
+			while (shifts--)
+				mp_shift_left(v(i));
+				 /* leftshift(V,shifts) */
+			mp_sub(v(iplus1),v(i));
+				 /* temp = temp - V */
+		}
+		mp_move(v(i),v(iplus1));  
+				 /* V := temp */
+	} while (testne(u(i),0) &amp;&amp; mp_compare(u(i),u(iminus1))!=0);
+	mp_move(x,v(iminus1));
+	if (mp_tstminus(x))
+		mp_add(x,n);
+	mp_burn(u(0));  /* burn the evidence on the stack...*/
+	mp_burn(u(1));
+	mp_burn(u(2));
+	mp_burn(v(0));
+	mp_burn(v(1));
+	mp_burn(v(2));
+
+for(i=0;i&lt;3;i++) {
+  free(ucopies[i]);
+  free(vcopies[i]);
+  }
+#undef u
+#undef v
+}       /* mp_inv */
+#endif /* !OLD_MPINV */
+=========================== cut 8&lt; here =================================
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a
+
+iQCVAgUBLVmP6MGoFIWXVYodAQHBdgP7B9n/nep0Y1hV2ze3GMJoBpZvq0BKfT3y
+EjLFvk2+z9Y3kRTqsA42lGFV0rcQwgkm588VbE7JmT/b0AvGoOm4Hqp9wEzYMfFz
+iMy8fVRitUHT2VFryLpzCdRtwPzDkW62yIQUMgWcgpW05Vu+GMEgtgD70CpJbKfb
+GuIT2jH6Tzc=
+=UcS4
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00550" HREF="msg00550.html">Re: Bug in PGP MPI library</A></STRONG>
+<UL><LI><EM>From:</EM> Derek Atkins &lt;warlord@MIT.EDU&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00549.html">For Pr0duct Cypher</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00550.html">Re: Bug in PGP MPI library</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00556.html">Re:  Testing</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00550.html">Re: Bug in PGP MPI library</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00544"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00544"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

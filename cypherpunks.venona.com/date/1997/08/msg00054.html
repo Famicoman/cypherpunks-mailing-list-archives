@@ -1,0 +1,229 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: RSA &#45; the song -->
+<!--X-From-R13: Yrag Qevfcva <xragNfbatoveq.pbz> -->
+<!--X-Date: Sun, 3 Aug 1997 03:16:06 +0800 -->
+<!--X-Message-Id: 19970802120226.07980@bywater.songbird.com -->
+<!--X-Content-Type: multipart/mixed -->
+<!--X-Reference: 199708011035.LAA01061@server.test.net -->
+<!--X-Derived: bin00000.bin -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>RSA - the song</TITLE>
+<LINK REV="made" HREF="mailto:kent@songbird.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00057.html">Date Prev</A>][<A HREF="msg00064.html">Date Next</A>][<A HREF="msg00018.html">Thread Prev</A>][<A HREF="msg00058.html">Thread Next</A>][<A HREF="index.html#00054">Date Index</A>][<A HREF="threads.html#00054">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>RSA - the song</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A>, <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A></LI>
+<LI><em>Subject</em>: RSA - the song</LI>
+<LI><em>From</em>: Kent Crispin &lt;<A HREF="mailto:kent@songbird.com">kent@songbird.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 2 Aug 1997 12:02:26 -0700</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00018.html">199708011035.LAA01061@server.test.net</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+On Fri, Aug 01, 1997 at 11:35:02AM +0100, Adam Back wrote:
+[...]
+&gt; 
+&gt; print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+&gt; )]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+&gt; 
+&gt; &gt; I dug out a midi interpreter I wrote a number of years ago, 
+&gt; &gt; and it is indeed trivial to modify it to read any text as input.  
+&gt; &gt; Unfortunately, I wrote that long before the midi file spec was 
+&gt; &gt; finalized, and the hardware I wrote it for is also long gone.  But 
+&gt; &gt; it's probably not much work to get file output working again...and 
+&gt; &gt; the thought of a general text-to-midi translator is rather 
+&gt; &gt; entertaining -- I could play this entire mail message through it, for 
+&gt; &gt; example... It would definitely make better music if some rhythmic 
+&gt; &gt; variation was part of the coding, but that would make it a little 
+&gt; &gt; harder to make an automatic decoder...
+&gt; 
+&gt; I'd find it most cool to hear an audio file of the above.
+
+Well, I generated a midi file that encodes music which in turn is a 
+direct algorithmic encoding of your program.  I didn't have a 
+convenient way to go to a direct sound file, but midi players are 
+very widely available -- any recent pc with a sound card will have a 
+"multimedia midi jukebox" or something like that.  And there are 
+probably free ones on the net -- I didn't look.  The midi file will 
+be a mime attachment to this message.  It's also at 
+
+	<A  HREF="ftp://songbird.com/pub/rsa.mid">ftp://songbird.com/pub/rsa.mid</A> 
+
+For aesthetic reasons I modified the encoding from the simple one
+mentioned earlier, and, rather than try to modify one of my earlier
+midi programs, I just hacked this one out from other sources.  The
+program will actually encode any binary data into a piece of music. 
+
+I think that musically the piece is actually somewhat interesting -- I
+kind of like it.  Like the source text, it is rather dense.  But if
+you listen to it a few times patterns and phrasing will appear.  It 
+sounds like reasonable avante garde music, actually -- something a 
+college radio station might broadcast to the world late at night...
+
+The program is really rather trivial, so rather than describing the 
+encoding, I am just appending it to this message.
+
+--------------------------------------------------------------------
+/*
+    dtom -- convert data to midi
+        dtom midifile &lt;datafile
+            or
+        datasource | dtom midifile
+
+        convert standard in to a midi representation of the data, and
+        write it to a standard midi file.  The midi data is designed
+        to so that the sound produced will permit decoding by a pitch
+        to midi device.  Two things are done to increase the musical
+	interest:  First, the notes are selected from a diatonic 
+	scale, instead of a chromatic.  And second, the rhythm is 
+        also varied algorithmically -- any decoding from the sound 
+        should ignore all rhythmic variation.
+
+	Code uses "midifilelib" from Tim Thompson &amp; Michael 
+	Czeiszperger, and is cobbled from one of their examples.
+
+*/
+    
+
+#include &lt;stdio.h&gt;
+#include &lt;ctype.h&gt;
+#include "midifile.h"
+
+#define ROOT 36
+
+FILE *fp;
+
+/* offsets for three octaves of diatonic major scale */
+int scale[] = {0,2,4,5,7,9,11,12,14,16,17,19,23,24,26,28,29,31,33,35,36};
+
+mputc(c) { return(putc(c,fp));}
+
+int writetrack(track)
+int track;
+{
+    int note_duration;
+    int rest_duration;
+    int high_nybble;
+    int low_nybble;
+    char c;
+    char n1[2];
+    char n2[2];
+
+    mf_write_tempo((long)100000);
+
+    while( (c = getchar()) != EOF ) {
+
+        high_nybble = (c&gt;&gt;4) &amp; 0xf;
+        low_nybble  = c &amp; 0xf;
+	
+	/* low note */
+        n1[0] = scale[low_nybble]+ROOT;	/* note number */
+        n1[1] = 64;                     /* velocity */
+
+	/* high note */
+        n2[0] = scale[high_nybble]+ROOT+scale[16];
+        n2[1] = 64;
+
+	/* shouldn't happen */
+	if( n1[0] &gt;= n2[0] ) printf("warning -- voice crossover!\n");
+
+	/* note_duration needs to be long enough for pitch detectors */
+	note_duration = 120*((c&amp;15) + 4);
+	rest_duration = 120*(((c&gt;&gt;5)&amp;3));
+
+        if(!mf_write_midi_event(rest_duration,note_on,1,n1,2)) 	return(-1);
+        if(!mf_write_midi_event(0,note_on,1,n2,2))		return(-1);
+
+        if(!mf_write_midi_event(note_duration,note_off,1,n1,2))	return(-1);
+        if(!mf_write_midi_event(0,note_off,1,n2,2))		return(-1);
+    }
+
+    return(1);
+} /* end of write_track() */
+
+main(argc,argv)
+char **argv;
+{
+    if( !(fp = fopen(argv[1],"w")) ) exit(1);
+
+    Mf_putc = mputc;
+    Mf_writetrack = writetrack;
+    mfwrite(0,1,480,fp);
+}
+
+---------------------------------------------------------------------------
+
+
+-- 
+Kent Crispin				"No reason to get excited",
+kent@songbird.com			the thief he kindly spoke...
+PGP fingerprint:   B1 8B 72 ED 55 21 5E 44  61 F4 58 0F 72 10 65 55
+<A  HREF="http://songbird.com/kent/pgp_key.html">http://songbird.com/kent/pgp_key.html</A>
+</PRE>
+<P><A HREF="bin00000.bin" >rsa.mid</A></P>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00058" HREF="msg00058.html">Re: RSA - the song</A></STRONG>
+<UL><LI><EM>From:</EM> amp@pobox.com</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00018" HREF="msg00018.html">using perl-rsa</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Back &lt;aba@dcs.ex.ac.uk&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00057.html">Re: free market services vs monopoly government</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00064.html">bulk postage fine (was Re: non-censorous spam control)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00018.html">using perl-rsa</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00058.html">Re: RSA - the song</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00054"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00054"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,237 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: A Netscape Server implementation error -->
+<!--X-From-R13: Oaqerj Dbbf <OaqerjDNorrgyr.ivebavk.pb.mn> -->
+<!--X-Date: Tue, 19 Sep 95 15:45:31 PDT -->
+<!--X-Message-Id: 305F486F@beetle.vironix.co.za -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>A Netscape Server implementation error</TITLE>
+<LINK REV="made" HREF="mailto:AndrewR@beetle.vironix.co.za">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01295.html">Date Prev</A>][<A HREF="msg01300.html">Date Next</A>][<A HREF="msg01295.html">Thread Prev</A>][<A HREF="msg01314.html">Thread Next</A>][<A HREF="index.html#01360">Date Index</A>][<A HREF="threads.html#01360">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>A Netscape Server implementation error</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: sameer &lt;<A HREF="mailto:sameer@c2.org">sameer@c2.org</A>&gt;</LI>
+<LI><em>Subject</em>: A Netscape Server implementation error</LI>
+<LI><em>From</em>: Andrew Roos &lt;<A HREF="mailto:AndrewR@beetle.vironix.co.za">AndrewR@beetle.vironix.co.za</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 20 Sep 95 00:43:00 S</LI>
+<LI><em>Cc</em>: "'<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>'" &lt;<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>&gt;,       "'<A HREF="mailto:kipp@netscape.com">kipp@netscape.com</A>'" &lt;<A HREF="mailto:kipp@netscape.com">kipp@netscape.com</A>&gt;</LI>
+<LI><em>Encoding</em>: 153 TEXT</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Hi Sameer
+
+Thanks in advance for the T-shirt, and I like the Web site. On the   
+subject of Netscape implementation errors, I note that the SSL protocol   
+specification states in section 5.6.1 (CLIENT-MASTER-KEY) that "It is   
+also an error if CLEAR-KEY-LENGTH is non-zero and the the CIPHER-KIND is   
+not an export cipher".
+
+However, I note that Netscape Commerce Server 1.1 will happily accept a   
+"secure" connection using the non-export cipher SSL_CK_RC4_128_WITH_MD5,   
+even if the CLEAR-KEY-LENGTH is set to 16 and the *entire* master key is   
+sent unencrypted.
+
+Here is an extract from an SSL session with www.netscape.com which   
+illustrates the oversight:
+
+ ------------------------------- Start of Session   
+ ---------------------------
+
+(1) The session was initialised as normal, and the following values were   
+exchanged in the SERVER-HELLO and CLIENT-HELLO:
+
+Challenge:
+a2 ff 2e 94 8d f9 f4 e2 2c f6 bd ae 7f 47 db 6c
+
+Connection id:
+ef 47 3b 44 db d9 8d 1a f0 da 3e 14 73 97 a3 1f
+
+(2) I then sent the following CLIENT-MASTER-KEY message, which is   
+reproduced in full:
+
+SSL Record Header:
+80 9a
+
+Message type: SSL_MT_CLIENT_MASTER_KEY
+02
+
+Cipher kind: SSL_CK_RC4_128_WITH_MD5
+01 00 80
+
+Clear key length: 16
+00 10
+
+Encypted key length: 128 bytes
+00 80
+
+Key arg length: 0
+00 00
+
+Clear key data: the *entire* master key sent in the clear
+af 24 2e e8 2b b1 75 d1 27 a2 b8 76 8b 49 c3 f3
+
+Encrypted key: this is a zero-length block formatted using PKCS#1 block   
+type 2 and encrypted under Netscape's public key. Since it contains no   
+data, an eavesdropper would not need to decrypt it in order to decrypt   
+the rest of the session.
+
+af 24 2e e8 2b b1 75 d1 27 a2 b8 76 8b 49 c3 f3
+9b 9b 0b ff cd e8 2f 2c 0d 16 4e 90 73 26 4e e7
+e0 3f 45 8a ce 9a 21 d6 2a 6b b8 9a 20 4e bc cf
+d0 01 36 86 1c db e0 8b a8 e3 4c 9b 15 11 ea 95
+b1 50 3f c9 42 9a 97 77 0f 9d 29 97 7e 87 1b 8f
+77 b6 c9 c6 53 90 5b 74 4c 92 99 62 ad 8b bf 4c
+28 ac 1b 11 32 64 56 c9 f0 d5 6f c9 89 6b 55 3f
+b9 42 aa 7b 7c f0 a1 89 93 22 13 46 e2 58 63 23
+b2 51 83 92 76 46 05 65 87 86 5b 52 5a d1 02 ee
+
+(3) I calculated the session keys in the normal manner, using the master   
+key which was sent entirely in the clear. The result was:
+
+Client read key:
+14 3e 84 a6 54 57 d6 51 94 cf 54 f5 5a 29 4a ef
+
+Client write key:
+9d e1 16 77 92 ee 89 f2 2d 30 c2 a2 e1 77 9f 5d
+
+(4) Instead of disconnecting, the Netscape server sent the following   
+reply (the header has been removed):
+
+28 40 00 75 b8 d6 60 68 f5 cf ba 65 78 49 35 83
+d3 3a b5 d3 81 23 2d f8 7d c6 f8 47 4d 0c 62 c3
+b4
+
+This was decrypted using the client read key to give the following   
+SERVER_VERIFY message:
+
+Message Authentication Code:
+7b 95 2a 84 a1 55 fc 59 32 6b 53 ec e0 1d 80 4a
+
+Message type: SSL_MT_SERVER_VERIFY
+05
+
+Challenge data (which agrees with the challenge sent in the   
+CLIENT-HELLO):
+a2 ff 2e 94 8d f9 f4 e2 2c f6 bd ae 7f 47 db 6c
+
+(5) The negotiation phase of the protocol was concluded with encrypted   
+CLIENT-FINISHED and SERVER_FINISHED messages as per normal.
+
+(6) I sent the encrypted HTTP command "GET / HTTP/1.0" and received the   
+following text (after decryption, stripping MAC and header, etc:
+
+HTTP/1.0 200 OK
+Server: Netscape-Commerce/1.1
+Date: Tuesday, 19-Sep-95 21:15:23 GMT
+Last-modified: Tuesday, 19-Sep-95 21:14:09 GMT
+Content-length: 5278
+Content-type: text/html
+
+Followed by the Netscape home page, which included the following   
+statement:
+
+&lt;A HREF="/newsref/std/random_seed_security.html"&gt;Find out&lt;/A&gt; how   
+Netscape is responding immediately to upgrade customers and minimize risk   
+of future threats.
+
+(7) Having obtained the warm, fuzzy feeling I so desired, I closed the   
+connection secure in the knowledge that my secrets were safe with   
+Netscape.
+
+ -------------------------------- End of Session   
+ -----------------------------
+
+This shows that Commerce Server 1.1 is prepared to accept a "secure"   
+connection which is completely insecure as the entire master key has been   
+sent in the clear and an eavesdropper could decrypt the session without   
+any cryptanalysis.
+
+This does not mean that sessions between "well-behaved" browsers and   
+Netscape servers are insecure, since the browser will send all 16 bytes   
+of the key encrypted. Neither could it be used for an active attack,   
+since if a new master was substituted for the one sent by the client,   
+this would be detected during authentication of the SERVER-VERIFY   
+message.
+
+However, it would provide an opportunity for a malicious browser supplier   
+to "doctor" secure browsers so that they sent all (or part) of the master   
+key in the clear, even when using non-export ciphers. (Of course there   
+are better ways to do this; the "random padding" of PKCS block type 2   
+comes to mind).
+
+Although this is not nearly as important a result as Ian and Davids, it   
+is the first server hack, so can I have another T shirt?  :-)
+
+Andrew
+________________________________________________________________
+Andrew Roos &lt;andrewr@vironix.co.za&gt;
+
+// C++ programmers have class (but not much inheritance)
+
+PGP Fingerprint: F6 D4 04 6E 4E 16 80 59 3A F2 27 94 8B 9F 40 26
+Full key at <A  HREF="ftp://ftp.vironix.co.za/PGP-keys/AndrewRoos">ftp://ftp.vironix.co.za/PGP-keys/AndrewRoos</A>
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01314" HREF="msg01314.html">Re: A Netscape Server implementation error</A></STRONG>
+<UL><LI><EM>From:</EM> sameer &lt;sameer@c2.org&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01295.html">NetManage - Cylink Press Announcement</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01300.html">netscape's response</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01295.html">NetManage - Cylink Press Announcement</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01314.html">Re: A Netscape Server implementation error</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01360"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01360"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

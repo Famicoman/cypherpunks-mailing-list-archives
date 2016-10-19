@@ -1,0 +1,236 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Cypherpunk Chip -->
+<!--X-From-R13: [WYSW@UZSNqrycuv.pbz -->
+<!--X-Date: Wed, 18 Aug 93 20:45:52 PDT -->
+<!--X-Message-Id: 01H1WQ5739PU8ZGJD4@delphi.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Cypherpunk Chip</TITLE>
+<LINK REV="made" HREF="mailto:MIKEINGLE@delphi.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00481.html">Date Prev</A>][<A HREF="msg00547.html">Date Next</A>][<A HREF="msg00635.html">Thread Prev</A>][<A HREF="msg00562.html">Thread Next</A>][<A HREF="index.html#00554">Date Index</A>][<A HREF="threads.html#00554">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Cypherpunk Chip</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Cypherpunk Chip</LI>
+<LI><em>From</em>: <A HREF="mailto:MIKEINGLE@delphi.com">MIKEINGLE@delphi.com</A></LI>
+<LI><em>Date</em>: Wed, 18 Aug 1993 23:36:19 -0400 (EDT)</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I'd like to propose a Cypherpunk chip to take the place of the
+Clipper chip. This could go a long way toward bringing the
+Cypherpunk vision to life, and it could also make someone a
+fortune. But first, I'm going to flame a bit.
+ 
+Even without key escrow and secret algorithms, Clipper is no good.
+The Clipper chip uses a conventional single-key algorithm, so if
+you want to use it with public-key, you have to do the RSA
+operations in software. This makes it vulnerable to tampering and
+key stealing. Clipper is essentially a beefed-up DES with a built-
+in spy hole and a classified "trust us" algorithm.
+ 
+The NSA seems to believe that only their classified algorithms are
+unbreakable. This is not true. We don't need to trust the NSA to
+give us an unbreakable single-key cipher. What we need are two
+good, respected ciphers and a simple reorganization operation.
+ 
+Choose, for instance, IDEA and triple-DES. Both are good
+algorithms. They have keys which are long enough to rule out any
+possibility of a brute-force attack. They are resistant to known
+methods of cryptanalysis, including differential cryptanalysis.
+They have good dispersion and produce pseudo-random ciphertext.
+Whether the NSA could break either of these, using a classified
+method, is pure speculation.
+ 
+IDEA and triple-DES are very different algorithms. DES is based on
+bit manipulation and permutation tables, whereas IDEA uses 16-bit
+arithmetic operations. This is good, because it means that if
+either algorithm has a flaw, the other one is not likely to have
+the same flaw.
+ 
+Take a 64-byte section of plaintext. Encrypt it using triple-DES.
+Now, reorganize the ciphertext: take the first byte of each 8-byte
+DES block (bytes 0,8,16, and so on) and make the first 8 bytes of
+the reorganized section. Repeat with the second, third, etc. until
+the entire 64 bytes are reorganized. So:
+ 
+0       0       0       0       0       0       0       0       
+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@
+becomes:
+AIQYgow4BJRZhpx5...and so on.
+ 
+Then, re-encrypt the section with IDEA, producing double-encrypted
+ciphertext.
+ 
+Suppose you now change one bit in the ciphertext and decrypt it.
+When you decrypt IDEA, you get one 8-byte block of garbage (which
+is indistinguishable from the rest of the still-encrypted data).
+When you undo the reorganization, you get one bad byte in each DES
+block. So when you DES decrypt, you get 64 bytes of garbage.
+ 
+This compound cipher is effectively a 64-byte block cipher, in that
+every bit in the 64 bytes depends on every other bit. This means
+that you would have to attack a 64-byte section i.e. you would need
+64 bytes of plaintext to attempt a plaintext attack. And even if
+you had the 64 bytes, you probably couldn't do anything with it. If
+you found a weakness in either cipher that allowed you to attack
+it, the same weakness would not exist in the other cipher (since
+they are based on different methods). So you could not attack the
+compound cipher. For this reason, a combination of two ciphers,
+especially with the reorganization, should be much more secure than
+one cipher. If I had to choose a cryptosystem to bet my life on,
+I'd choose this above Skipjack any day.
+ 
+Of course, it would be slower than a single cipher, but there are
+ways to make it usable. For example, the reorganization would be
+performed by straight-line assembly language, with no loops. And
+the encryption program would use a large disk buffer. Or, better
+yet, use hardware. See below.
+ 
+The Cypherpunk Chip
+ 
+Why couldn't we make a chip of our own, with some venture capital?
+This would be a public-key encryption chip, with all the necessary
+hardware self-contained, which would make secure phones, faxes,
+computers, and everything very easy. RSA Data Security could make
+a fortune if they received only a small royalty on each one sold.
+The design of the chip would be extremely public and readily
+available. Any company could produce them if it was willing to pay
+for the use of the RSA algorithm.
+ 
+The chip would contain a hardware true-random-number generator;
+facilities for executing RSA; MD5 or another message digest; and an
+extremely secure conventional cipher such as the compound cipher
+mentioned above. It would also contain nonvolatile (flash ROM)
+registers to store its public key and secret key.
+ 
+Hardware random numbers can be generated by several methods. One is
+to measure the jitter in an unstable oscillator. Another is to
+reverse bias a diode, right on the edge of zener breakdown, causing
+it to produce white noise. These methods can be proven by quantum
+mechanics to be inherently random.
+ 
+The chip would be sold blank - no serial number or anything. The
+user would instruct it to initialize itself by generating a key
+pair. It would do this internally, producing and remembering a
+public key and secret key. This might take a while, but you only
+have to do it once. When this is finished, you can easily extract
+the public key, but there would be no way to extract the secret key
+from the chip. The chip would be designed to make it very difficult
+and expensive to extract the secret key by physical surgery, thus
+making key stealing hard. The secret key would be stored internally
+in encrypted form, using a pass phrase much like PGP does, and the
+chip would decrypt it before each operation.
+ 
+In addition to the initialization, there would be five basic
+operations. The chip could output its public key, encrypt, generate
+signatures, decrypt, and check signatures.
+To encrypt, you would send the chip one or more public keys for
+people you want to send to. It would generate a random session key,
+and output the session key RSA-encrypted with each of the provided
+public keys. It would never reveal the actual session key. Then the
+chip would accept plaintext, 64 bytes at a time, and output
+ciphertext. When the encryption of a particular message was
+finished, the chip would forget the session key.
+ 
+To sign, you would send the text to the chip, along with the pass
+phrase, and it would run the MD5 algorithm on it. When finished, it
+would output the signature, the MD5 encrypted with its secret key.
+ 
+To check a signature, you would send the text, signature, and
+public key, and the chip would output good or bad.
+ 
+To decrypt, you would send the ciphertext and pass phrase, and the
+chip would output the plaintext.
+ 
+This chip would do basically what PGP does, except that it would be
+self-contained, very difficult to steal keys from, and easy to use
+in any device. The chip would not need to be hard-wired into a
+device. It could be built into a card or other plug-in module,
+perhaps PCMCIA compatible. You could use this as an electronic
+identity, while retaining the option to remain anonymous by getting
+a second card and generating a new identity. The card might also
+contain a memory for other people's public keys.
+ 
+You could, for example, insert the card into a pay phone and dial
+your pass phrase. This would secure the call, allow you and the
+recipient of the call to verify each others' identities, and pay
+for the call with digital cash.
+ 
+If this chip existed, "crypto-anarchy" would be easy. Everyone
+would have a motive to use it. There would be no more credit card
+fraud, no more phone-code fraud, no more bad checks, no more
+hacking, no more surveillance, etc. The chip could make it happen.
+We cipherpunks could actually win.
+ 
+The chip would be introduced in a low-key way. We would let the
+market see its advantages and jump on it, before the bad guys
+recognized the threat. For example, it could be introduced as an
+option for computers - plug it into a PCMCIA card slot and use it
+to secure E-mail, your hard drive, etc. Don't advertise what it
+could become; just let it happen. When we get it started, it will
+happen by itself.
+ 
+                                     &lt; mikeingle@delphi.com &gt;
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00562" HREF="msg00562.html">Re: Cypherpunk Chip</A></STRONG>
+<UL><LI><EM>From:</EM> cme@ellisun.sw.stratus.com (Carl Ellison)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00481.html">Anon: remailer list</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00547.html">network parallel decryption amateur style</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00635.html">Re: Cracking &amp; auditing crypto protocols</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00562.html">Re: Cypherpunk Chip</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00554"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00554"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

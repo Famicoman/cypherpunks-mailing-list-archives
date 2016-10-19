@@ -1,0 +1,262 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Netscape the Big Win -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Fri, 21 Jul 95 10:28:50 PDT -->
+<!--X-Message-Id: 199507211727.KAA06527@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Netscape the Big Win</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00690.html">Date Prev</A>][<A HREF="msg00710.html">Date Next</A>][<A HREF="msg00690.html">Thread Prev</A>][<A HREF="msg00771.html">Thread Next</A>][<A HREF="index.html#00691">Date Index</A>][<A HREF="threads.html#00691">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Netscape the Big Win</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:enzo@ima.net">enzo@ima.net</A></LI>
+<LI><em>Subject</em>: Re: Netscape the Big Win</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 21 Jul 1995 10:27:41 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+From: Enzo Michelangeli &lt;enzo@ima.net&gt;
+&gt; On Thu, 20 Jul 1995, Hal wrote:
+&gt; &gt; That is why I am working on the proxy approach.  Any browser should be
+&gt; &gt; able to use enhancements supplied in this way.  Netscape is the big name
+&gt; &gt; this year, who knows who it will be next year.  As long as IP
+&gt; &gt; connectivity is available a proxy can get into the stream and apply
+&gt; &gt; enhancements.
+&gt; 
+&gt; I still maintain that an approach based on SOCKS would be more flexible, 
+&gt; adaptable to any TCP-based application. Here's what I'm thinking about:
+
+I agree with this general approach, but I looked into it in some detail,
+and SOCKS has a fatal flaw for my purposes: the address to connect to is
+passed as an IP 32-bit address.  That means the software on the PC
+has to do the DNS lookup.  And *that* means that the ultimate site being
+connected to is revealed.
+
+One of my goals is to protect the secrecy of the sites that a person is
+browsing.  If an in-the-clear DNS lookup is done for each site that will
+hardly be effective, even if the actual connection request is encrypted.
+An eavesdropper on the internet will be able to observe the DNS lookup
+traffic.
+
+Now SOCKS V5 is going to change this; it allows the proxy to receive the
+request as a hostname rather than an IP address.  So no DNS lookup is
+necessary by the client.  Conceivably a modified winsock such as Enzo is
+suggesting could use that protocol, although it is not really stable
+yet.
+
+Also, I don't know how easy it is to intercept winsock calls and modify
+them in this way.  So the proxy I have written works using the HTML proxy
+hook rather than the SOCKS hook.
+
+&gt; 1. Windows apps: a general purpose socksifier, intercepting Winsock API
+&gt; calls by *unmodified* applications and opening a single TCP connection to 
+&gt; the port 1080 of a sockd server. The good news is: some good folks at NEC 
+&gt; are already working at this project, and are looking for beta-testers.
+
+This sounds very good if it already is almost working.  The TCP
+connection which is opened would have to be to a server on the local
+machine, so it would be important that the software support that.  Also,
+the local SOCKS relay would of course not want its winsock calls to be
+intercepted and translated in this way, so there would need to be some
+alternative way to access "vanilla" winsock.  Can you give any
+more information on the NEC work?
+
+&gt; 2. A "SOCKS en/decrypting relay": a sockd server that, on a 
+&gt; per-site/per-port basis depending on a configuration file, may either 
+&gt;  a) open TCP connections on behalf of its clients; 
+&gt;  b) relay a plain SOCKS connection to a remote peer;
+&gt;  c) open a SSL connection to a remote peer on, say, a port 1180 reserved
+&gt;     for "SSL-ized SOCKS" connections)
+&gt; Of course, that beast should also listen at the ports 1080 and 1180 and 
+&gt; take the same actions a) b) or c) as appropriate.
+
+For chaining purposes you would connect to the relay on the net on the
+secure port and request a TCP connection (not a SOCKS connection) to
+the second relay in the chain at its secure port.  Then you negotiate a
+secure connection from your home PC to that second relay so that the
+traffic you send to it won't be visible to the first relay.  Once that
+is done you send a SOCKS request to that second relay to connect to the
+next machine in the chain.  So really only function (a) is needed for
+the relays on the net.
+
+The relay on the PC needs to be able to do (c), but more importantly it
+needs to be able to set up encryption chains, where every outgoing packet
+is nestedly encrypted, with the outermost encryption for the first relay
+in the chain, the next layer for the next relay, and so on.  Each relay
+decrypts and strips off one layer, then passes the remaining raw data
+through.  This way no one relay knows who is talking to whom or what they
+are saying.  The reverse happens for return packets.
+
+&gt; The SOCKS en/decrypting relay could be written both as MS-Windows DLL and as 
+&gt; UNIX daemon.
+
+I have written a simple dummy relay for winsock and it requires a pretty
+different programming style than for Unix.  Netscape has a habit of
+firing off a bunch of requests at once, so it has to be extremely
+asynchronous.  For Windows this means you get a windows message every
+time a packet arrives and use non-blocking I/O.  In Unix this is usually
+handled by forking a new process to handle each independent connection.
+Non-blocking I/O can be used in Unix but I don't think there is a
+non-blocking connect as there is in Windows.  Maybe Windows 95 will allow
+a more Unix-style communication model, though.  Should the proxy require
+Windows 95, or will Windows 3 still be in widespread use for another
+year or two?
+
+Also IMO the requirements for the Internet relay are pretty different
+than for the Windows relay.  The Internet relay needs only to be able to
+decrypt/encrypt on the port where the request comes from while sending
+plain data the other way.  It needs a config file so the owner can
+control what kinds of outgoing TCP connections can be done.  The Windows
+one needs to be able to do nested encryption (if chains will be allowed
+eventually), to set up chains, etc.  So for these reasons I am inclined
+to think that the two relays would be separate programs.
+
+&gt; The chain would be:
+&gt; 
+&gt; - From a Windows client machine:
+&gt; 
+&gt;  Standard app -&gt; Socksifier DLL by NEC -&gt; encrypting relay -----&gt; 
+&gt;   ---&gt; Internet -----&gt; decrypting relay -&gt; server
+&gt; 
+&gt; - From a Unix client machine:
+&gt; 
+&gt;  Socksified (recompiled) app -&gt; encrypting relay ------&gt;
+&gt;   ---&gt; Internet -----&gt; decrypting relay -&gt; server
+&gt; 
+&gt; I'm assuming here that the encrypting relay should live close to machine
+&gt; (the same, or, at least on the same network) as the client app, and the
+&gt; decrypting relay close to the server. A single daemon could do both jobs, 
+&gt; allowing chaining "a` la remailer", but I'm using here two different 
+&gt; names for sake of clarity. Besides, the Windows version probably wouldn't 
+&gt; need decrypting ability.
+
+The Windows version would need to decrypt incoming data; you don't want
+that coming in the clear.
+
+&gt; Great advantage over Netscape: we could use EAY's free SSL implementation,
+&gt; and all the server administrators could generate and sign their own
+&gt; certificates. The present trouble with Netscape is that NS-Navigator
+&gt; refuses to accept certificates not signed as "Netscape compatible". Our
+&gt; en/decrypting relay could be more forgiving :-)
+
+The other problem with Netscape SSL is that it will only open secure
+connections to URL's marked "https://".  Similarly SHTTP has a special
+URL "shttp://".  There is no provision in either one to open a secure
+connection to "http://".  A relay proxy would allow all connections to be
+encrypted between the PC and one or more relays.
+
+I am a little unclear on the certificate situation.  As we saw with the
+PGP key servers before RSAREF PGP existed, RSA put pressure on these
+public sites which they saw as contributing to the use of infringing
+software.  Similarly having a certificate created by infringing software
+might be seen as illegal, even if RSAREF was actually used for the
+handshaking in the protocol.  Server operators are quite vulnerable to
+threatening letters from RSA.
+
+Another problem with RSAREF is that it does not allow you to exchange a
+session key using RSA encryption in a straightforward manner.  The entry
+points you have legal access to choose a random session key, PK encrypt
+it, send it, and then encrypt the message using that session key with DES
+or 3DES.  However I notice that SSLREF calls undocumented entry points
+like RSAPrivateDecrypt and RSAPublicEncrypt.  I am not sure how they are
+able to do this.  Maybe they got special permission from RSA.  I don't
+know whether the SSLEAY library would be able to do this without such
+special arrangements.
+
+&gt; As the SSL stuff built in
+&gt; Netscape would be unused, we could also improve the protocol (plugging
+&gt; security holes) ignoring compatibility issues.
+
+Yes, really there is no need to make it be SSL specifically except for
+the fact that it is an explicit protocol for which libraries exist.
+
+&gt; The administrators of
+&gt; secure servers should just advise the users to configure their local
+&gt; encrypting relays to pass through their decrypting relay (that would boil
+&gt; down to a line added to the encrypting relay configuration). 
+
+&gt; It would all be beautifully modular, relatively simple to code (as someone
+&gt; else has done, or is doing, most of the hard work) and independent from
+&gt; big-brother certifying authorities. 
+
+Yes, I think the overall approach is very promising.  Perhaps my desire
+for chaining is too ambitious for a first attempt.  The transparent
+intervention of SOCKS that you describe would be very nice if that is
+available soon.
+
+One other problem is the risk taken by people running the relay servers
+on the net.  These could be used to launder connections by hacker /
+cracker types.  So probably only a limited set of outgoing ports would be
+permitted, say, 80 and 1080 which are the most common http ports.  This
+would restrict the utility of the SOCKS approach for other uses like
+secure telnet, unfortunately.
+
+Hal
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00771" HREF="msg00771.html">Re: Netscape the Big Win</A></STRONG>
+<UL><LI><EM>From:</EM> Enzo Michelangeli &lt;enzo@ima.net&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00893" HREF="msg00893.html">Re: Netscape the Big Win</A></STRONG>
+<UL><LI><EM>From:</EM> paul@poboy.b17c.ingr.com (Paul Robichaux)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00690.html">Re: Netscape the Big Win</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00710.html">big word listing</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00690.html">Re: Netscape the Big Win</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00771.html">Re: Netscape the Big Win</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00691"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00691"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

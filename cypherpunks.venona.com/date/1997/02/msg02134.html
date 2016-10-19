@@ -1,0 +1,462 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: distributed mailing list architecture -->
+<!--X-From-R13: Fubznf Dbrffyre <Fubznf.DbrffyreNfbobyri.eurva.qr> -->
+<!--X-Date: Thu, 13 Feb 1997 10:16:34 &#45;0800 (PST) -->
+<!--X-Message-Id: 199702131812.TAA17470@sobolev.rhein.de -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199702072011.UAA00463@server.test.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: distributed mailing list architecture</TITLE>
+<LINK REV="made" HREF="mailto:Thomas.Roessler@sobolev.rhein.de">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02101.html">Date Prev</A>][<A HREF="msg02100.html">Date Next</A>][<A HREF="msg01579.html">Thread Prev</A>][<A HREF="msg00638.html">Thread Next</A>][<A HREF="index.html#02134">Date Index</A>][<A HREF="threads.html#02134">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: distributed mailing list architecture</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: distributed mailing list architecture</LI>
+<LI><em>From</em>: Thomas Roessler &lt;<A HREF="mailto:Thomas.Roessler@sobolev.rhein.de">Thomas.Roessler@sobolev.rhein.de</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 13 Feb 1997 19:12:40 +0100</LI>
+<LI><em>Cc</em>: <A HREF="mailto:roessler@sobolev.rhein.de">roessler@sobolev.rhein.de</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01579.html">199702072011.UAA00463@server.test.net</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Maybe you have some use for the appended perl script.  I created it for a
+list setup quite similar to what is currently being discussed on
+cypherpunks.  It has never ever been used in production; you'll notice
+yourself that the code is not too nice.
+
+The script currently tries to handle majordomo and SmartList exploders; at
+least SmartList needs to be hacked a little bit to avoid daily subscription
+approvals to people being moved between different sub-lists.
+
+Distribute and use this script freely; credit is appreciated.
+
+tlr
+------------------------------
+#!/usr/bin/perl
+
+############################################################
+#
+# $Id: distlist.pl,v 1.2 1997/01/24 17:20:38 roessler Exp $
+#
+
+#
+# Handle distributed mailing lists.
+#
+
+require 'getopts.pl';
+
+$c_sublists='lists';		# Data about the sublists
+$c_distfile='dist';		# A list of mail addresses
+$c_datafile='dist.data';	# _Our_ list of addresses
+$c_contact='roessler@sobolev.rhein.de';
+				# Whom to contact in case of problems
+$sendmail="| /usr/sbin/sendmail -t -odq";
+
+
+$debug=0;			# Debugging output.  Can also be
+				# turned on by using the -x switch.
+
+$signature="-- \nThis mail has been generated automatically by the distlist\n".
+    "program. Please contact $c_contact in case of problems.\n";
+
+
+@sublists=();
+@newsubs=();
+
+#
+# Command line processing
+#
+
+&amp;dprint (1, 'Processing the command line...\n');
+&amp;Getopts('s:d:D:c:x:');
+
+$c_sublists=$opt_s if $opt_s;
+$c_distfile=$opt_d if $opt_d;
+$c_datafile=$opt_D if $opt_D;
+$c_contact=$opt_c  if $opt_c;
+$debug=$opt_x	   if $opt_x;
+
+#
+# Read the data and config files, perform various checks.
+#
+
+#
+# sublists
+#
+
+&amp;dprint(1, "Reading $c_sublists...");
+
+# format: addr:maxsubscr:listtype:password:adminrequest:maintainer
+
+open(SUBLISTS, $c_sublists) || die("Can't open $c_sublists");
+SUBLIST: while(&lt;SUBLISTS&gt;) {
+    next SUBLIST if /^#/ || /^$/;
+    chop;
+    ($addr, $maxsubscr, $listtype, $password, $admin, $maintainer) = split(/:/, $_);
+    $s_maxsubscr{$addr}=$maxsubscr;
+    $s_listtype{$addr}=$listtype;
+    $s_password{$addr}=$password;
+    $s_admin{$addr}=$admin;
+    $s_maintainer{$addr}=$maintainer;
+    $s_onlist{$addr}=0;
+    $s_addem{$addr}="";
+    $s_delem{$addr}="";
+    &amp;dprint(3,"Parsed list $addr: maximum $maxsubscr people; listtype $listtype; password $password.; administrative address $admin; maintainer $maintainer");
+    @sublists=(@sublists, $addr);
+}
+
+close(SUBLISTS);
+
+# In addition, we define a special list for people to be redistributed later.
+
+$s_maxsubscr{'later'}=100000;		# Very big. ;)
+$s_listtype{'later'}="";
+$s_password{'later'}="";
+$s_onlist{'later'}=0;
+$s_addem{'later'}="";
+$s_delem{'later'}="";
+
+#
+# Read our dist file
+#
+
+
+
+# format: user:list
+
+if(open(DATAFILE, $c_datafile)) {
+    &amp;dprint(1, "Reading $c_datafile...");
+
+  USERLINE: while(&lt;DATAFILE&gt;) {
+      next USERLINE if /^#/ || /^$/;
+      chop;
+      ($user, $list) = split(/:/, $_);
+      
+      # Check if the list exists; handle user.
+      
+      if(! $s_maxsubscr{$list}) {
+	  &amp;dprint(2, "While checking user $user:  $list does no longer exist.");
+	  $list="later";
+      } elsif( $s_onlist{$list} &gt;= $s_maxsubscr{$list} ) {
+	  &amp;dprint(2, "Warning: $list is full.  Redistributing people later.");
+	  $s_delem{$list}=join(':',$user,$s_delem{$list});
+	  $list="later";
+      } 
+      
+      $s_onlist{$list}++;
+      $u_list{$user}=$list;
+      
+      $deletem{$user}=$user;
+  }
+    
+    close(DATAFILE);
+    &amp;dprint(1,"$c_datafile finished.");
+} else {
+    &amp;dprint(1, "Warning:  Can't read $c_datafile.");
+}
+
+
+#
+# Now, read the real distribution file.
+#
+
+&amp;dprint(1, "Reading $c_distfile...");
+
+open(DISTFILE, $c_distfile) || die("Can't open $c_distfile");
+
+ DISTLINE: while(&lt;DISTFILE&gt;) {
+     next DISTLINE if /^#/ || /^$/ || /^\(/;
+     chop;
+     
+     if(!$u_list{$_}) {			# A new member.
+	 &amp;dprint(2, "Found a new member: $_.");
+	 @newsubs=($_, @newsubs);
+     } else {				# We know him.
+	 &amp;dprint(3, "Well-known: $_.");
+	 delete $deletem{$_};
+     }
+     
+ }
+
+close(DISTFILE);
+
+
+#
+# Handle deletions.
+#
+
+foreach $user (keys %deletem) {
+    $list=$u_list{$user};
+    delete $u_list{$user};
+    $s_onlist{$list}--;
+    $s_delem{$list}=join(':', $s_delem{$list}, $user);
+    &amp;dprint(3, "Removing $user from sublist $list.");
+}
+
+#
+# Handle postponed subscriptions:  The later list.
+#
+
+foreach (keys %u_list) {
+    next unless $u_list{$_} eq "later";
+    @newsubs=($_, @newsubs);
+    delete $u_list{$_};
+    &amp;dprint(3, "Adding $_ to the list of new subscriptions.  Was postponed.");
+}
+
+
+&amp;dprint(1, "Distributing new subscriptions...");
+
+ NEWSUBS: foreach $user (@newsubs) {
+
+     $avg=0.0;
+     foreach $l (@sublists) {
+	 $avg += $s_onlist{$l}/$s_maxsubscr{$l};
+     }
+     
+     $avg = $avg / ($#sublists + 1.0);
+     
+     if ($avg &gt;= 1) {
+	 &amp;dprint(2, "Warning: All sublists are full while trying to insert $user.");
+     }
+
+     undef $possible;
+
+     foreach $l (@sublists) {
+	 if($s_onlist{$l} &lt;= $avg*$s_maxsubscr{$l}) {
+	     $possible=$l;
+	 }
+
+	 if($s_onlist{$l} &lt; $avg*$s_maxsubscr{$l}) {
+	     last;
+	 }
+     }
+
+     if($possible) {
+	 $l = $possible;
+     }
+     
+     $s_addem{$l}=join(':', $s_addem{$l}, $user);
+     $s_onlist{$l}++;
+     $u_list{$user}=$l;
+     
+ }
+
+#
+# Write our own data file.
+#
+
+if(open(DATAFILE, "&gt;$c_datafile")) {
+    foreach (keys %u_list) {
+	printf DATAFILE "%s:%s\n", $_, $u_list{$_};
+    }
+    close(DATAFILE);
+} else {
+    &amp;dprint(1, "Warning: Can't write $c_datafile.");
+}
+
+#
+# The lists have been put together.  Commit the changes.
+#
+
+&amp;dprint(1, "Committing the changes...");
+
+foreach $l (@sublists) {
+    if($s_listtype{$l} eq "majordomo") {
+	&amp;commit_majordomo($l);
+    } elsif ($s_listtype{$l} eq "smartlist") {
+	&amp;commit_smartlist($l);
+    } else {
+	&amp;dprint(1, "While trying to commit changes for $l:");
+	&amp;dprint(1, "Unknown list type $s_listtype{$l}.\n");
+    }
+}
+
+#
+# To be done:  Print out some statistics.
+#
+
+print "Distlist results:\n";
+print "-----------------\n";
+print "\n";
+printf "There are currently %d subscribers on %d sublists.\n\n", scalar(keys %u_list), $#sublists+1;
+
+$full_lists=0;
+
+printf "%-40s     on  max\n", "Name";
+printf "----------------------------------------------------\n";
+
+foreach $l (@sublists) {
+    printf "%-40s   %4d %4d", $l, $s_onlist{$l}, $s_maxsubscr{$l};
+    
+    if($s_onlist{$l} &gt;= $s_maxsubscr{$l}) {
+	print "   *** This list is full ***";
+	$full_lists++;
+    }
+
+    print "\n";
+}
+
+if($full_lists) {
+    print "\n$full_lists of the sublists are *full*.  Please get in touch\n";
+    print "with the maintainers.\n";
+}
+
+print "\n\n";
+print $signature;
+
+############################################################
+#
+# Some helper functions.
+#
+
+# Print out diagnostics.
+
+sub dprint
+{
+    if($_[0] &lt;= $debug) {
+	printf STDERR "%s\n", $_[1];
+    }
+}
+
+
+sub commit_majordomo
+{
+    my $list=$_[0];
+    my @bla;
+    my $ll;
+    my $user;
+
+    &amp;dprint(2, "Committing changes to majordomo list $list");
+    &amp;dprint(3, "to be added: $s_addem{$list}");
+    &amp;dprint(3, "to be deleted: $s_delem{$list}");
+
+    ($ll, @bla)=split(/@/, $list);
+
+    if(!open(SENDMAIL, $sendmail)) {
+	&amp;dprint(1, "Warning:  Can't start sendmail when committing changes to $list");
+    }
+
+    print SENDMAIL "To: $s_admin{$list}\n";
+    print SENDMAIL "From: $c_contact\n";
+    print SENDMAIL "\n\n";
+    
+    foreach $user (@bla=split(/:/, $s_addem{$list})) {
+	print SENDMAIL "approve $s_password{$list} subscribe $ll $user\n"
+	    if $u_list{$user};
+    }
+
+    foreach $user (@bla=split(/:/, $s_delem{$list})) {
+	print SENDMAIL "approve $s_password{$list} unsubscribe $ll $user\n"
+	    unless $u_list{$user} eq $list;
+    }
+
+    print SENDMAIL $signature;
+    
+    close(SENDMAIL);
+}
+
+sub smartlist_xcommand
+{
+    my ($list, $to, $passwd, $command, $maintainer) = @_;
+
+    if(!open(SENDMAIL, $sendmail)) {
+	&amp;dprint(1, "Can't start sendmail when committing changes for $list");
+    }
+
+    print SENDMAIL "To: $to\n";
+    print SENDMAIL "From: $c_contact\n";
+    print SENDMAIL "X-Command: $maintainer $passwd $command\n";
+    print SENDMAIL "\n\n";
+    print SENDMAIL $signature;
+
+    close SENDMAIL;
+}	
+	
+    
+
+sub commit_smartlist
+{
+    my $list=$_[0];
+    my @bla;
+    my $user;
+
+    &amp;dprint(2, "Committing changes to smartlist list $list");
+    
+    foreach $user (@bla=split(/:/, $s_addem{$list})) {
+	&amp;smartlist_xcommand($list, $s_admin{$list}, $s_password{$list},
+			    "subscribe $user", $s_maintainer{$list})
+	    if $u_list{$user};
+    }
+
+    foreach $user (@bla=split(/:/, $s_delem{$list})) {
+	&amp;smartlist_xcommand($list, $s_admin{$list}, $s_password{$list},
+			    "unsubscribe $user", $s_maintainer{$list})
+	    unless $u_list{$user} eq $list;
+    }
+}
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01579" HREF="msg01579.html">distributed mailing list architecture</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Back &lt;aba@dcs.ex.ac.uk&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02101.html">RAM CHIP SALE!</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02100.html">Re: Procmail during the transition, anyone?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01579.html">distributed mailing list architecture</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00638.html">Re: subscribe</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02134"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02134"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

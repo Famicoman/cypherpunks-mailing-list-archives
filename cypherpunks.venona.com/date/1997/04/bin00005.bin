@@ -1,0 +1,666 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+
+
+                            PGPSteps                  
+                            --------   
+                    Pretty Good Privacy (PGP)               
+                   Installation - Step by Step 
+
+by Harka <harka(at)nycmetro.com>
+
+last updated: 04/23/1997
+
+"PGPSteps" (c) may be distributed freely without charge, unchanged
+and the intact signature. The latest version is available by
+sending an e-mail to harka(at)nycmetro.com with the subject: SEND
+PGPSTEPS (finger for update info).
+
+Note: This document is intended for first-time PGP users. It is
+meant as a short step-by-step reference guide for the installation
+of PGP (Pretty Good Privacy), versions 2.6.2 and 2.6.3i, on an IBM
+compatible computer running DOS/Windows.
+However, it is _not_ meant to replace the PGP-documentation in any
+way. As a matter of fact, it is highly recommended to read at least
+pgpdoc1.txt (included in the PGP-distribution) _before_  actually
+installing the program.
+Much more additional info not covered here you'll also find in the
+various comprehensive FAQ's (see FURTHER INFORMATION at the end).
+
+Portions from the PGP documentation have been used herein. Thanks
+to Philip Zimmermann, Perry Metzger, Colin Plumb, Derek Atkins,
+Jeffrey I. Schiller, all of the Cypherpunks list and others.
+
+It might be useful to print this document out as a reference.
+====================================================================
+
+So you feel like having some more privacy by using PGP?
+Wise decision! Congratulations :)
+
+
+ All install steps in short
+ --------------------------
+
+  --download the respective PGP version
+  --unzip the archive (zip file) into a temporary directory
+  --create C:\PGP directory in DOS with  MD PGP  from the C:\ prompt
+    or use the Windows File Manager (FILE/CREATE DIRECTORY)
+  --unzip second archive (zip file) into that directory
+  --edit autoexec.bat, adding the lines
+    SET PGPPATH=C:\PGP
+    SET PATH=C:\PGP;%PATH%
+    and
+    SET TZ= (see below).
+  --save autoexec.bat and reboot
+  --create key pair with  pgp -kg
+  --sign key with  pgp -ks yourID -u yourID  (only version 2.6.2)
+  --add keys from keys.asc to your public keyring with
+    pgp -ka keys.asc
+  --verify integrity of PGP distribution archive with
+    pgp pgp*.asc pgp*.zip (see file names to replace *)
+  --copy keys to floppy as a backup, write-protect it and keep in a
+    safe location
+  --have fun
+
+
+ Getting PGP
+ -----------
+
+The latest official US-version is PGP 2.6.2 (freeware). If you are
+a citizen of the United States, you can download pgp262.zip from
+the Massachussetts Institute of Technology (MIT) at
+http://web.mit.edu/network/pgp.html
+
+The latest international version is 2.6.3i (freeware). If you live
+in any other country than the US, you can download pgp263i.zip from
+the International PGP-Homepage at
+http://www.ifi.uio.no/PGP/
+
+The reason for two separate versions are patent law issues. If you
+use the international version in the US (or vice versa) you might
+be in violation of these patent laws.
+Both versions are, however, essentially the same thing. Therefore
+download and use the one, that applies to you.
+
+
+Having downloaded the zip file, unzip the archive into a temporary
+directory and you'll find a second zip file in it plus a
+corresponding file PGP262i.asc. This is the signature, that let's
+you verify the integrity of the archive (after you've installed
+PGP).
+Now unzip the second archive into a directory of your choice, let's
+say C:\PGP. Remember to recurse the directories by using pkunzips
+- -d option (you should now have a subdirectory within C:\PGP called
+DOC, i.e. C:\PGP\DOC. As you might have guessed already, that
+contains the PGP documentation :)).
+
+You will need PKUNZIP version 2.04g or later to uncompress and
+split the PGP262.ZIP archive file into individual files. PKUNZIP is
+shareware and is widely available on MSDOS machines. (more details
+if necessary you'll find in the PGP documentation in a file called
+setup.doc)
+
+
+ Setting the Environment
+ -----------------------
+
+Next, you can set an MSDOS "environment variable" to let PGP know
+where to find its special files. Use your favorite text editor to
+add the following lines to your AUTOEXEC.BAT file (usually on your
+C: drive):
+
+   SET PGPPATH=C:\PGP
+   SET PATH=C:\PGP;%PATH%
+
+In DOS you can use EDIT by typing  EDIT C:\AUTOEXEC.BAT . You'll
+probably already have a couple of SET lines, just put the one's for
+PGP in there somewhere.
+In WINDOWS you can go to Program Manager (the main screen) and go
+to the menu FILE, RUN and type  SYSEDIT . This will open several
+files, including the AUTOEXEC.BAT. Go to that window and include
+the SET lines from above.
+
+Substitute your own directory name if different from "C:\PGP".
+
+While you're editing the AUTOEXEC.BAT, include the TZ variable as
+well. The TZ (Time-Zone)-variable tells MSDOS what time zone you
+are in, which helps PGP create GMT timestamps for its keys and
+signatures. If you properly define TZ in AUTOEXEC.BAT, then MSDOS
+gives you good GMT timestamps, and will handle daylight savings
+time adjustments for you. Here are some sample lines to insert into
+AUTOEXEC.BAT (see above on how to), depending on your time zone:
+
+For Los Angeles:  SET TZ=PST8PDT
+For Denver:       SET TZ=MST7MDT
+For Arizona:      SET TZ=MST7
+   (Arizona never uses daylight savings time)
+For Chicago:      SET TZ=CST6CDT
+For New York:     SET TZ=EST5EDT
+For London:       SET TZ=GMT0BST
+For Amsterdam:    SET TZ=MET-1DST
+For Moscow:       SET TZ=MSK-3MSD
+For Aukland:      SET TZ=NZT-13
+
+Your AUTOEXEC.BAT should now look similar to this example:
+
+@ECHO OFF
+C:\MCAFEE\VSHIELD /anyaccess /xmsdata /only a:
+PROMPT $P$G
+PATH=C:\NC;C:\DOS;C:\;C:\NC\WINSOCK;C:\WINDOWS;C:\MCAFEE
+SET PGPPATH=C:\PGP
+SET PATH=C:\PGP;%PATH%
+SET TZ=EST5EDT
+SET MIXPATH=C:\NC\PI
+SET TEMP=C:\TRASH
+SET WINPMT=[WINDOWS] $P$G
+SET BLASTER=A220 I5 D1 T4
+SET GALAXY=A220 I5 D1 K10 P530 T6
+C:\DOS\SMARTDRV.EXE 1024 512 /X
+C:\MCAFEE\VSHIELD /reconnect
+win :
+
+
+If it does, EXCELLENT! Now save it and reboot your system to run
+AUTOEXEC.BAT, which will set up PGPPATH and TZ for you.
+
+
+ Generating Your First Key
+ -------------------------
+
+Being new to PGP, it might be a good idea to create a test key
+first, so that you can play around with it and even pretend to send
+messages back and forth. That will give you some feeling on how it
+works (and also take some of the fear away :)). But note, that this
+is for _testing_ purposes only, it's not your actual key yet! I
+recommend to play around in DOS using the command lines, so when
+you use one of the many shells and front-ends available later on,
+you'll know what's going on "behind the scenes".
+
+To generate your test key, go to DOS and type:
+
+pgp -kg
+
+Since this will be a test key only, choose the smallest key size
+(1), make your keyID  Test Key <test@test.com>  and the pass phrase
+TEST.
+Then generate the key.
+
+Now you'll find two new files in your C:\PGP directory: secring.pgp
+(your secret keyring) and pubring.pgp (your public keyring).
+Basically you're ready to play now.
+
+You might want to start by signing your own public key (Note: the
+international version 2.6.3i already does that automatically for
+you during key generation) by typing:
+
+pgp -ks test -u test
+
+("test" being the ID for the key, that you sign and the second
+"test" the ID, that will be used to sign with. Since you sign your
+own key, both ID's are the same. Later on with your real key,
+however, the ID "test" will be replaced by your actual name and the
+key to be signed will very likely be somebody else's).
+
+You could also add the public keys from C:\PGP\keys.asc to your
+public keyring with:
+
+pgp -ka keys.asc
+
+After having added the keys, you now can also verify the integrity
+of the PGP archive (good idea!) by typing:
+
+pgp pgp262i.asc pgp262i.zip  (check the filenames)
+
+PGP should tell you that it has a Good Signature from:
+
+Jeffrey I. Schiller <jis(at)mit.edu>
+
+It will also tell you that it doesn't "trust" the (jis(at)mit.edu)
+key. This is because PGP does not *know* that the enclosed key
+really belongs to Jeffrey.
+Don't worry about this now. Read the section "How to Protect Public
+Keys from Tampering" in Volume 1 of the PGP manual.
+
+Or you can take some document and sign it clear-text with
+
+pgp -sta filename
+
+and then verify it by typing
+
+pgp filename.asc
+
+
+Or you can encrypt files, sign them, wipe them, extract keys, check
+fingerprints or, or, or...
+
+At the end of this document you'll find a very helpful command line
+summary with enough options to play with. And, of course, read the
+actual PGP documentation before you move on to the next step!!
+
+
+ Getting set up for real
+ -----------------------
+
+Alright, you've played around with PGP, might have generated
+several keys, sent messages "back and forth", read the
+documentation and maybe the FAQ's, and generally you feel pretty
+comfortable with it. Of course, you actually want to now use PGP in
+the "real world". :)
+
+Since you've edited the autoexec.bat, have set up the PGP directory
+etc. already during the test run, all you actually have to do to
+get back to "ground zero" is delete the files C:\PGP\SECRING.PGP,
+C:\PGP\SECRING.BAK (if there), C:\PGP\PUBRING.PGP and
+C:\PGP\PUBRING.BAK (if there).
+
+Now generate your actual key with:
+
+pgp -kg
+
+This time choose at least "military grade" (option 3, 1024 bits)
+for your key size. Note, that both 2.6.2 and 2.6.3i support up to
+2048 bit keys. If you want the maximum key size, you'll have to
+actually type 2048, instead of simply choosing 1, 2 or 3.
+
+For the key ID use the generally used format of:
+
+firstname lastname <handle@domain.name>
+
+example:
+
+John Doe <jdoe@whatever.com>
+
+(including the <>).
+
+
+Now choose a _strong_ and _long_ passphrase. At least 20 different
+characters are recommended. Try to avoid simple words but include
+as many different (random) characters as possible.
+
+Example: 
+
+Passphrase "Thomas" is really not a good one, especially if that's
+your name.
+
+"Thomas is wandering over the Red Square" is better already, but
+wouldn't stand long either to a dictionary attack.
+
+"Th0m@$iswaN-Der1ngOVE/RtH%r&dS\QA~<" would therefore be a much
+better choice.
+
+Use your imagination and remember: long, unguessable and many
+different characters!
+
+
+_Never_ write your passphrase down, don't tell it to anybody (not
+even to your boy/girlfriend, husband, mother or whomever!) and
+never let anybody look over your shoulder, when you type it in!!
+
+Now finish generating the key. Btw., when it comes to "type some
+random text", don't hit the same key over and over again :). Type
+your favorite poem or an article from the newspaper until it beeps.
+
+Now sign your own key again with  pgp -ks yourID -u yourID  (only
+2.6.2.) and then make backup copies of the keys and the original
+pgp zip-archive (that you downloaded) to a floppy disk.
+Write-protect the disk and keep it in a safe place, where _nobody_
+but you has access to it.
+
+
+You're finished with the setup now and ready to roll!
+(Was pretty easy, huh? :))
+
+
+ Most common mistakes in the beginning
+ -------------------------------------
+
+1. Sending your secring.pgp and/or your passphrase to somebody
+   else.
+
+DON'T!! You don't need to share any of this with public key
+cryptography (see PGP documentation for more details). All that
+people need to encrypt mail to you or check your signature is your
+_public_ key.
+
+2. Sending the entire file pubring.pgp to somebody else.
+
+No need to either. Extract only your _own_ key with  pgp -kxa
+yourID filename  into a file. This file you can now send either as
+attachment or simply cut & paste the key into your e-mail window
+and send it as regular e-mail.
+
+3. Writing down your passphrase.
+
+As strange as it may seem, but despite all warnings a lot of people
+still do that. DON'T! EVER!
+Besides, after using PGP on a daily basis, you really should not
+forget your passphrase anymore anyway.
+
+4. Not keeping physical control of secring.pgp
+
+Don't let _anybody_ get a copy of your secret keyring. Because the
+only thing, that will stand from there between them and all your
+e-mail is your passphrase. And if it's a weak one (that they can
+crack or guess) or they even know it (see "Writing down your
+passphrase"), then it's over with security and privacy. And that
+would be very unfortunate indeed.
+The same applies to the floppy disks with the backups.
+
+As a common tag line on the Internet goes:
+
+"My public key you can get with the subject: Send public key.
+ My secret key you can pry out of my cold, dead fingers!!"
+
+5. Not being careful with plain-text(s)
+
+PGP only protects messages and files as long as they are encrypted.
+If you save the de-crypted text(s) to your hard drive or even print
+them out and leave them laying around on your desk, then PGP can't
+help you anymore either, if somebody finds it.
+So either delete the files (wipe them with  pgp -w filename) or
+encrypt them to yourself or encrypt them conventionally (pgp -c
+filename), if you need to keep them.
+
+6. Not reading the PGP documentation at least once
+
+no comment, except RTFM!
+
+
+ Front Ends and Plug-In's
+ ------------------------
+
+Of course, most of us get pretty tired after a while doing
+everything manually via command lines. That's where so called
+front-ends come in. These are additional programs, that make things
+like PGP much easier to use.
+
+There are literally tons of them out there (check
+http://www.ifi.uio.no/PGP/) for some of them.
+
+Personally I recommend the following three:
+
+** AutoPGP ** by Stale Schumacher <staalesc(at)ifi.uio.no>, the
+same guy, who also wrote the international PGP version 2.6.3i.
+(Shareware; registration fee is 15$)
+
+This is a DOS program designed to work together with
+QWK/SOUP-standard offline mail readers, such as OLX, Blue Wave, 1st
+Reader etc.. It makes sending/receiving PGP messages really, really
+easy, especially if you have lots of them.
+
+check http:/www.ifi.uio.no/~staalesc/AutoPGP/ to download it.
+
+
+** Private Idaho ** by Joel McNamara <joelm(at)eskimo.com>
+(Freeware)
+
+A Windows front-end not only for PGP, but also for anonymous
+remailers and NYM-servers. Nice and easy to use interface, and it
+works together with most popular mail programs. If you have a SLIP
+or PPP connection, you can even send/receive PGP messages right
+from Private Idaho itself. If not, you can "port" messages from the
+PI window into your regular mail program (Netscape Mail, for
+example) with the click of a button. If that doesn't work, you can
+still write your messages in Private Idaho, encrypt/sign them and
+then cut & paste it into your normal e-mail program (and vice
+versa, of course).
+It also comes with a PGP Quickstart file for Windows, in case you
+really don't feel comfortable setting up PGP in plain DOS. But why
+would you, since you're reading this...:)
+
+check http://www.eskimo.com/~joelm/ to download it.
+
+
+** PGPMail ** by Pretty Good Privacy Inc.
+(29,95 $ for US users, who have PGP 2.6.2 already installed)
+Contact: <pgpservice(at)pgp.com>
+
+- From the masters themselves a full-featured plug-in for the Windows
+95/NT versions of Eudora 3.0 and Netscape Mail. You actually don't
+even need to have the freeware PGP version installed. All you'd
+need is PGPMail 4.5 (pgpmail45.exe). However, the price given above
+is a special discount given to PGP 2.6.2 freeware users (see web
+page for details).
+PGPMail 4.5 makes PGP-encryption not only easy, but fast as well.
+During installation it will add a few buttons to your Eudora
+window, which means, that you never have to leave Eudora (or
+Netscape) to encrypt/decrypt/sign etc..
+Highly recommended, for newcomers and seasoned PGP-users alike.
+
+check http://www.pgp.com/products/PGPmail.cgi to download it
+(US-citizens only).
+
+PGPMail is export-controlled software. Therefore a URL outside the
+US can not be provided here. If you live outside the US and you use
+Windows 95/NT, you might want to check the windows95 directory at:
+
+ftp://ftp.replay.com/pub/replay/pub/pgp/pc/
+
+for any other front-ends and/or plug-in's available.
+
+
+
+ Here's a quick summary of PGP v2.6 commands
+ -------------------------------------------                                      
+
+To encrypt a plaintext file with the recipient's public key:
+     pgp -e textfile her_userid
+
+To sign a plaintext file with your secret key:
+     pgp -s textfile [-u your_userid]
+
+To sign a plaintext file with your secret key and have the output
+readable to people without running PGP first:
+     pgp -sta textfile [-u your_userid]
+
+To sign a plaintext file with your secret key, and then encrypt it
+with the recipient's public key:
+     pgp -es textfile her_userid [-u your_userid]
+
+To encrypt a plaintext file with just conventional cryptography, type:
+     pgp -c textfile
+
+To decrypt an encrypted file, or to check the signature integrity of a
+signed file:
+     pgp ciphertextfile [-o plaintextfile]
+
+To encrypt a message for any number of multiple recipients:
+     pgp -e textfile userid1 userid2 userid3
+
+- --- Key management commands:
+
+To generate your own unique public/secret key pair:
+     pgp -kg
+
+To add a public or secret key file's contents to your public or
+secret key ring:
+     pgp -ka keyfile [keyring]
+
+To extract (copy) a key from your public or secret key ring:
+     pgp -kx userid keyfile [keyring]
+or:  pgp -kxa userid keyfile [keyring]
+
+To view the contents of your public key ring:
+     pgp -kv[v] [userid] [keyring]
+
+To view the keys in the keyring with the signatures:
+     pgp -kvv [userid] [keyring] 
+
+To view the "fingerprint" of a public key, to help verify it over
+the telephone with its owner:
+     pgp -kvc [userid] [keyring]
+
+To view the contents and check the certifying signatures of your
+public key ring:
+     pgp -kc [userid] [keyring]
+
+To edit the userid or pass phrase for your secret key:
+     pgp -ke userid [keyring]
+
+To edit the trust parameters for a public key:
+     pgp -ke userid [keyring]
+
+To remove a key or just a userid from your public key ring:
+     pgp -kr userid [keyring]
+
+To sign and certify someone else's public key on your public key ring:
+     pgp -ks her_userid [-u your_userid] [keyring]
+
+To remove selected signatures from a userid on a keyring:
+     pgp -krs userid [keyring]
+
+To permanently revoke your own key, issuing a key compromise
+certificate:
+     pgp -kd your_userid
+
+To disable or reenable a public key on your own public key ring:
+     pgp -kd userid
+
+- --- Esoteric commands:
+
+To decrypt a message and leave the signature on it intact:
+     pgp -d ciphertextfile
+
+To create a signature certificate that is detached from the document:
+     pgp -sb textfile [-u your_userid]
+
+To detach a signature certificate from a signed message:
+     pgp -b ciphertextfile
+
+- --- Command options that can be used in combination with other
+    command options (sometimes even spelling interesting words!):
+
+To produce a ciphertext file in Ascii radix-64 format, just add the
+- -a option when encrypting or signing a message or extracting a key:
+     pgp -sea textfile her_userid
+or:  pgp -kxa userid keyfile [keyring]
+
+To wipe out the plaintext file after producing the ciphertext file,
+just add the -w (wipe) option when encrypting or signing a message:
+     pgp -sew message.txt her_userid
+
+To specify that a plaintext file contains ASCII text, not binary, and
+should be converted to recipient's local text line conventions, add
+the -t (text) option to other options:
+     pgp -seat message.txt her_userid
+
+To view the decrypted plaintext output on your screen (like the
+Unix-style "more" command), without writing it to a file, use
+the -m (more) option while decrypting:
+     pgp -m ciphertextfile
+
+To specify that the recipient's decrypted plaintext will be shown
+ONLY on her screen and cannot be saved to disk, add the -m option:
+     pgp -steam message.txt her_userid
+
+To recover the original plaintext filename while decrypting, add
+the -p option:
+     pgp -p ciphertextfile
+
+To use a Unix-style filter mode, reading from standard input and
+writing to standard output, add the -f option:
+     pgp -feast her_userid outputfile
+
+
+ Further Information
+ -------------------
+
+All of the following FAQ's have much more additional information
+not covered here, URL's, book references, ftp-sites etc.. Check 'em
+out...
+
+Where to get the latest PGP (Pretty Good Privacy) FAQ; by Peter
+Herngaard <pethern(at)datashopper.dk>:
+
+ftp://ftp.csn.net/mpj/getpgp.asc
+
+
+The Beginners Guide to Pretty Good Privacy; by Bill Morton
+<wjmorton(at)nbnet.nb.ca>:
+
+http://www.clark.net/pub/rothman/pgpbg11.asc
+
+
+The comp.security.pgp FAQ (the "official" PGP FAQ):
+
+http://www.pgp.net/pgpnet/pgp-faq/
+
+
+The International PGP FAQ (for version 2.6.3i); by Stale Schumacher
+<staalesc(at)ifi.uio.no>:
+
+http://www.uio.no/~staalesc/PGP/FAQ.shtml
+
+or via email with message to <pgp(at)hypnotech.com>; subject: GET
+FAQ
+
+
+The Passphrase FAQ; by Randall T. Williams <ac387(at)yfu.ysu.edu>:
+
+http://www.stack.nl/~galactus/remailers/passphrase-faq.html
+
+
+ Want to know more about Privacy and Civil Liberties issues?
+ -----------------------------------------------------------
+
+check out these organizations and web sites:
+
+** Electronic Privacy Information Center (EPIC) **
+
+http://www.epic.org/
+
+
+** Electronic Frontier Foundation (EFF) **
+
+http://www.eff.org/
+
+
+** Center for Democracy and Technology (CDT) **
+
+http://www.cdt.org/
+
+
+** The Voters Telecommunication Watch (VTW) **
+
+http://www.vtw.org/
+
+
+** American Civil Liberties Union (ACLU) **
+
+http://www.aclu.org/
+
+
+** Democracy Net **
+
+http://www.democracy.net/
+
+
+** Privacy International **
+
+http://www.privacy.org/pi/
+
+
+** Amnesty International (general human rights)
+
+http://www.amnesty.org/
+
+====================================================================
+
+May there be peace in this world, may all anger dissolve and may
+all living beings find the way to happiness...
+
+
+harka(at)nycmetro.com
+finger or e-mail for public key [KeyID: 04174301]
+Fingerprint: FD E4 F8 6D C1 6A 44 F5  28 9C 40 6E B8 94 78 E8
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQEVAwUBM16+sTltEBIEF0MBAQEVpAf/XKvZ0rXCz1jURbnjuVVHFudWcGV8qq4p
+Ac7nKTZEiCSEykQNJZ6X+Kziup4tGSORqd7IXJYK6IoSRzKsXfChSAYZiK19dSyI
+fUer0r+7mRwjukXRmKdl5r6haon2WHj2Qrpf3xQL/A1iwYhl7sjwYnJAkRG6cPEj
+b5+sbcx1VId99IZfF83ArG5ATsEQncv+x4OVDoR6WqwS3d5/abu0A1qRQL2rhyK/
+pfLfSY01zMc/zU64rl8B9EA/lx+0snn9c91718VBbdYN8n7rIj3u07u3HLtedSGD
+RsRnObl2idDV0/WqkBTM7DrjqDFsV1RH61JGQhqfHaudkfqb5TUwgg==
+=EDD4
+-----END PGP SIGNATURE-----

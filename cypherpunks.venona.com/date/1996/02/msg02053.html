@@ -1,0 +1,218 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: InterNIC Guardian Object Draft -->
+<!--X-From-R13: yzppneguNpf.hznff.rqh -->
+<!--X-Date: Sun, 25 Feb 1996 21:56:54 +0800 -->
+<!--X-Message-Id: 199602251334.IAA29519@opine.cs.umass.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199602241712.MAA26212@ops.internic.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: InterNIC Guardian Object Draft</TITLE>
+<LINK REV="made" HREF="mailto:lmccarth@cs.umass.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02044.html">Date Prev</A>][<A HREF="msg02055.html">Date Next</A>][<A HREF="msg02034.html">Thread Prev</A>][<A HREF="msg02093.html">Thread Next</A>][<A HREF="index.html#02053">Date Index</A>][<A HREF="threads.html#02053">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: InterNIC Guardian Object Draft</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A> (Cypherpunks Mailing List)</LI>
+<LI><em>Subject</em>: Re: InterNIC Guardian Object Draft</LI>
+<LI><em>From</em>: <A HREF="mailto:lmccarth@cs.umass.edu">lmccarth@cs.umass.edu</A></LI>
+<LI><em>Date</em>: Sun, 25 Feb 1996 08:34:12 -0500 (EST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:jasdips@INTERNIC.NET">jasdips@INTERNIC.NET</A>, <A HREF="mailto:markk@NETSOL.COM">markk@NETSOL.COM</A>, <A HREF="mailto:erice@INTERNIC.NET">erice@INTERNIC.NET</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg02034.html">199602241712.MAA26212@ops.internic.net</A>&gt;</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A> (Cypherpunks Mailing List)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+<A  HREF="ftp://rs.internic.net/policy/internic/internic-gen-1.txt">ftp://rs.internic.net/policy/internic/internic-gen-1.txt</A> says:
+&gt; Jasdip Singh
+&gt; Network Solutions
+&gt; Mark Kosters
+&gt; Network Solutions
+&gt; 
+&gt; The InterNIC Guardian Object
+&gt; DRAFT
+
+Thanks to Eric Eden for forwarding a copy to cypherpunks. I'd like to 
+comment on the proposed set of authentication options (authorization schemes).
+
+[...]
+&gt; Auth Scheme
+&gt; 
+&gt; Authorization scheme used to authenticate a Guardian before updating
+&gt; the Object it is guarding. The proposed schemes in an increasing
+&gt; order of strength are MAIL-FROM, CRYPT-PW, and PGP [1].
+&gt; 
+&gt; MAIL-FROM MAIL-FROM will parse the FROM: field in the mail header
+&gt; of an update message and match it with the email address
+&gt; of the Guardian guarding the Object to be updated.
+&gt; MAIL-FROM is the default Auth Scheme.
+
+I realize this is meant to be the simplest/least-secure option. Nevertheless,
+it seems to me that checking the "From " header instead of the "From:" header
+would increase the security of this option at essentially no computational
+cost. (I think "From " is commonly called "From_" in the literature these
+days.) From_ is harder to forge than "From:", although that's not saying a
+great deal.
+
+Might I assume that the current InterNIC practice is to check "From:" ?
+If so, you might consider switching to From_ in the interim, before the
+Guardian Object stuff gets implemented.
+
+&gt; CRYPT-PW CRYPT-PW will encrypt the cleartext password supplied
+&gt; in an update message and match it with the encrypted
+&gt; password of the Guardian guarding the Object to be
+&gt; updated. Initially when a new Guardian is being
+&gt; registered or the authentication information is being
+&gt; added to an existing Contact, the encrypted password
+&gt; MUST be supplied. The Unix crypt(3) routine SHOULD be
+&gt; used to encrypt a cleartext password.
+
+I think that Unix's md5(1) would be a better transformation choice. It is 
+available to a similar extent as crypt(3), and is more inversion-resistant.
+I'm not sure how the speeds compare. What sort of volume of update messages 
+does InterNIC anticipate handling ?  
+
+Also, if you use a hash function such as MD5, you don't need to fool around
+with doing something like E_pass(pass). 
+
+In Section 9.3, it says:
+&gt; The authentication information for a Guardian will be visible in WHOIS
+&gt; unless the Guardian chooses to keep it private. This information will
+&gt; be public by default because a Guarded Object should be protected by
+&gt; the inherent strength of the selected authorization scheme rather than
+&gt; by hiding the authorization information for its Guardian. 
+
+I certainly appreciate the sentiment expressed here that "security through
+obscurity" is a wash. However, in this particular situation I don't think
+that's the right issue. Keeping the details of a security algorithm or
+protocol is rather dubious in many cases. But it's entirely reasonable and
+good for a security protocol to specify that some sensitive application data 
+handled by the protocol will be hidden. Encryption is, after all, a way to
+hide information....
+
+Let me wax concrete now. :} If a Guardian uses CRYPT-PW and the authentication
+information appears in the public WHOIS database, then an attacker can learn
+crypt(3)_KEY(pass) just by looking up the WHOIS entry. Assuming the Guardian 
+isn't hassling with managing a distinct key to encrypt the password, then the
+attacker knows crypt(3)_pass(pass). Now she is all set to do an offline
+password guessing attack. So exposing the ciphertext of the encrypted password
+introduces a weakness.
+
+More importantly, the CRYPT-PW protocol is subject to a replay attack. A 
+passive attacker just needs to eavesdrop on an update message to learn the 
+plaintext password. Then she can forge additional update messages using the 
+purloined password, causing annoyance to Guardians using AFTER-UPDATE
+notification and disruption to those using NOT-CARE update notification 
+(i.e. none). 
+
+&gt; PGP PGP stands for Pretty Good Privacy [2]. The sender will
+&gt; sign the update message with a Guardian's secret PGP
+&gt; key. The InterNIC will verify the received update
+&gt; message with the Guardian's public PGP key. 
+
+As far as I can see from the draft, the contact update templates do not
+include date or time information. This makes the protocol vulnerable to 
+a simple replay attack. An attacker can record update messages and replay
+them to InterNIC later. 
+
+Depending upon a Guardian's notification status, this could allow the 
+attacker to confuse things by restoring an old contact information record. 
+Even if a Guardian is using BEFORE-UPDATE, she might not notice that a
+subtle change has been undone. An update notification message arriving on 
+the heels of a similar one might get approved by a Guardian, who chalks it
+up to a mail transport glitch.
+
+Requiring some sort of timestamp field in the signed portion of the contact
+templates would be good.
+
+&gt; How to
+&gt; register a Guardian's public PGP key with the InterNIC
+&gt; will be explained in another document.
+
+Any hints on what this will be like ?
+
+Hope this helps. Feel free to ask questions.
+
+(cc:ed to cypherpunks@toad.com, jasdips@internic.net and markk@netsol.com)
+
+Lewis	"You're always disappointed, nothing seems to keep you high -- drive 
+	your bargains, push your papers, win your medals, fuck your strangers;
+	don't it leave you on the empty side ?"  (Joni Mitchell, 1972)
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBMTBlC2f7YYibNzjpAQEJrgQAvhQHFbLPpL+n3jjFwO0LW4F72d3/lUcJ
+yXhlxS0ko7+0SvXfmndAJ41S/queMjhcLwjJZRWtbQbtdc45lXQxJkykXafQz6Je
+y+7T7ZwTMAIDAbd8hcpncv1C5NJrCTqEZNHnFxevmSyWtIgxzM+ndugwWyfVULCQ
+JfkAa2ssxIA=
+=2Q31
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="02093" HREF="msg02093.html">Re: InterNIC Guardian Object Draft</A></STRONG>
+<UL><LI><EM>From:</EM> Jasdip Singh &lt;jasdips@genie.internic.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="02034" HREF="msg02034.html">InterNIC Guardian Object Draft</A></STRONG>
+<UL><LI><EM>From:</EM> Eric Eden &lt;erice@internic.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02044.html">Thank you, MoJo Wire beta-testers</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02055.html">TED_hal</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02034.html">InterNIC Guardian Object Draft</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02093.html">Re: InterNIC Guardian Object Draft</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02053"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02053"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

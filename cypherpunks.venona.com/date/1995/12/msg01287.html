@@ -1,0 +1,165 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Secure versus ? -->
+<!--X-From-R13: fbyznaN[WF.SRG -->
+<!--X-Date: Tue, 5 Dec 95 08:51:33 PST -->
+<!--X-Message-Id: 9512051652.AA17214@ua.MIT.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Secure versus ?</TITLE>
+<LINK REV="made" HREF="mailto:solman@MIT.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01286.html">Date Prev</A>][<A HREF="msg01290.html">Date Next</A>][<A HREF="msg01276.html">Thread Prev</A>][<A HREF="msg01380.html">Thread Next</A>][<A HREF="index.html#01287">Date Index</A>][<A HREF="threads.html#01287">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Secure versus ?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Secure versus ?</LI>
+<LI><em>From</em>: <A HREF="mailto:solman@MIT.EDU">solman@MIT.EDU</A></LI>
+<LI><em>Date</em>: Tue, 05 Dec 1995 11:52:37 EST</LI>
+<LI><em>Cc</em>: <A HREF="mailto:solman@MIT.EDU">solman@MIT.EDU</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Thanks to everybody who replied to my previous message. As most of you
+suspected, it turned out to be possible to break the permutations I was
+using. The reason why I have pursued this despite its non-intuitiveness
+is that the following well known protocol also seems to have the same
+property I claimed. Please tell me how a computationally unbounded
+adversary could defeat the following: (without active attack against
+which this immediatelly fails (i.e. it has to be combined with an
+authentication algorithm)).
+
+Please help me, this problem is totally driving me crazy!
+
+A VARIATION OF SHAMIR'S THREE PASS PROTOCOL SAFE FROM PASSIVE ATTACK
+BY A COMPUTATIONALLY UNBOUNDED ADVERSARY:
+
+Alice wants to send Bob a message. She is going to send her message a
+fraction of a bit of a time via the following protocol.
+
+Before hand:
+
+1. Enumerate all the primes from 256 to 511. Call them N.
+2. For each prime, enumerate all the numbers less than it that are
+   also relatively prime to N-1. Call these E.
+3. Number each pair of E and N.
+
+The algorithm can be divided into an inner loop and an outer loop. The
+outer loop calls the inner loop.
+
+Inner Loop:
+
+Alice wants to use the inner loop to send bit b.
+1. Alice randomly chooses seven bits of salt, and prepends b to them
+   creating an 8 bit M
+2. Alice randomly chooses an (Na,Ea) pair from the list of possibilities.
+3. Alice calculates D such that E*D mod (N-1) equals 1
+4. Bob randomly chooses an (Nb,Eb) pair from the list of possibilities.
+5. Bob calculates D
+6. Alice sends Bob the nine bit number (M^Ea) mod Na = C1
+7. Bob sends Alice (C1^Eb) mod Nb = C2
+8. Alice sends Bob (C2^Da) mod Na = C3
+9. Bob calculates (C3^Db) mod Nb = M, the bit being the MSB.
+
+The unbounded passive adversary calculates a probability (p) between 0.5
+and one with which he/she can guess the bit. This is based on the facts
+that
+
+1. only a fraction of all pairs of Na and Ea will map C2 to C3,
+2. only a fraction of all pairs of Nb and Eb will map C1 to C2,
+3. only a fraction of all Na are high enough to produce C1.
+
+With thousands of transform pairs, there are more bits of entropy in the
+transform and salt selection, than there is information in the three messages.
+
+Alice, Bob and Eve can thus know what p is.
+
+Outer Loop:
+
+1. Alice sends Bob an initialization vector using the inner loop.
+2. Alice uses the inner loop to send Bob a series of bits.
+   Each bit is either a random bit or the next bit of the message depending
+   what the value of p for the previous inner loop was.
+
+	A simple proper (but VERY INEFFICIENT) outer loop algorithm
+        would be the following:
+
+Alice:
+	1. If the p for the previous inner loop was 0.5, send the XOR
+           of the message and the previously sent bit.
+	2. If the p for the previous message was not 0.5, send a random bit.
+
+Bob:
+	1. If the p for the previous message was 0.5, take the bit, XOR
+           with the previous bit, and append it to the message.
+	2. Otherwise just save the bit for one more itteration.
+
+PLEASE help me. I CAN'T find how this fails to be information-theoretically
+secure, but I am convinced that it should not be possible to do this, and
+I have been absolutely unproductive at anything since I first started
+working on this.
+
+Cheers,
+
+Jason W. Solinsky
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01380" HREF="msg01380.html">Re: Secure versus ?</A></STRONG>
+<UL><LI><EM>From:</EM> Robbie Gates &lt;gates_r@maths.su.oz.au&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01286.html">Re: Info on Netscape's key escrow position</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01290.html">Re: No Privacy Right on "My" Desktop ?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01276.html">ZD Net Update v.1 #2</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01380.html">Re: Secure versus ?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01287"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01287"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

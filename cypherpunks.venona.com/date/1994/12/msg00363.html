@@ -1,0 +1,173 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: GUCAPI (Grand Unified Crypto API) -->
+<!--X-From-R13: "Z. Fbqq [nfpb" <pnpghfNuxf.arg> -->
+<!--X-Date: Tue, 6 Dec 94 13:15:01 PST -->
+<!--X-Message-Id: 199412062119.QAA14522@bb.hks.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>GUCAPI (Grand Unified Crypto API)</TITLE>
+<LINK REV="made" HREF="mailto:cactus@hks.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00352.html">Date Prev</A>][<A HREF="msg00355.html">Date Next</A>][<A HREF="msg00350.html">Thread Prev</A>][<A HREF="msg00373.html">Thread Next</A>][<A HREF="index.html#00363">Date Index</A>][<A HREF="threads.html#00363">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>GUCAPI (Grand Unified Crypto API)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: GUCAPI (Grand Unified Crypto API)</LI>
+<LI><em>From</em>: "L. Todd Masco" &lt;<A HREF="mailto:cactus@hks.net">cactus@hks.net</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 6 Dec 1994 16:19:05 -0500</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+
+I've been thinking a lot recently about how to implement a generic API for
+crypto such that the interface could be independent of the cipher used.
+What I'm thinking of is something like:
+
+guc_init_crypto();
+guc_encrypt();
+guc_decrypt();
+guc_assemble();
+
+guc_key_get();
+guc_key_put();
+guc_key_gen();
+
+So, to encrypt a PGP-style message, you'd:
+
+	guc_init_cypto("PGP_26", &amp;context, &amp;keys, &amp;message );
+
+Which would initialize whatever random vectors you're likely to need for
+a PGP session and allocate the appropriate space to the pointers.  The
+types should be totally opaque, implemented in the library.
+
+	guc_key_gen("PGP_26", &amp;keys);
+
+Which would generate a session key for IDEA and grow the keys structure
+appropriately;
+
+	guc_get_key("PGP_26", &amp;keys, originator);
+	guc_get_key("PGP_26", &amp;keys, recipient1);
+	guc_get_key("PGP_26", &amp;keys, recipient2);
+	...
+
+Which would grow the keys structure and add in appropriate RSA keys.  
+(Alternatively, it could be done as one vector with all the recipients
+lists).
+
+	guc_encrypt("PGP_26", &amp;keys, &amp;input, &amp;message);
+
+Which would encrypt the IDEA session key with the appropriate RSA key and
+the input with the IDEA session key. And,
+
+	guc_seal("PGP_26", &amp;message, &amp;output);
+
+Which would put the messages into the appropriate (Radix-64?) format and
+put it out to the output, (the output structure would specify whether
+memory is to be allocated and filled, files written to, whatever).
+
+My goal is to come up with an API that could be integrated once into an
+application and would be flexible enough that new crypto methods, whether
+ciphers or key management, could be supported entirely by upgrading the
+library.  This includes being flexible enough to cover as diverse
+methods as OTPs (where the init function would open a file or other
+pad as its "random vector," key retrieval would be a noop, and encode
+would just XOR) and PEM (key management would be done on the basis of
+the method specified.  I'm fuzzy on how to generalize key management
+into a model that would include both web-of-trust and PEM-style certificates,
+so conversation on this would be greatly appreciated).
+
+It seems to me that the benefits are pretty clear: Set up such an API
+as a spec that can be implemented both inside and outside of the US and
+it allows everybody to implement to one API.  There's no good reason to
+have a bazillion different crypto APIs if a generalized one can be 
+achieved.
+
+I've posted about this before and received no response: since I'd like to
+solidify the API soon so I can firm up the coding I'm doing, I ask that
+folks take the time to comment.  The code I end up producing will be 
+publicly available, possibly as a "non-commercial use" copyright, perhaps
+PD. 
+
+Thoughts?
+- --
+Todd Masco     | "'When _I_ use a word,' Humpty-Dumpty said, in a rather
+cactus@hks.net |  scornful tone, 'it means just what I choose it to mean -
+cactus@bb.com  |  neither more nor less.'"   - Lewis Carroll
+
+- ---
+[This message has been signed by an auto-signing service.  A valid signature
+means only that it has been received at the address corresponding to the
+signature and forwarded.]
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+Comment: Gratis auto-signing service
+
+iQBFAwUBLuTVNCoZzwIn1bdtAQFK1AGA16g1wgKMc4qg3SVxDMW3y+1IGeWDbVvj
+Q6uqlRmyaFNm1NjNfV0gCxZgAZ9oM338
+=br4C
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00373" HREF="msg00373.html">Re: GUCAPI (Grand Unified Crypto API)</A></STRONG>
+<UL><LI><EM>From:</EM> Derek Atkins &lt;warlord@MIT.EDU&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00352.html">Re: Shrinking government</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00355.html">Ho, Ho, Ho</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00350.html">Ride to CP meeting request</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00373.html">Re: GUCAPI (Grand Unified Crypto API)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00363"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00363"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

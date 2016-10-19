@@ -1,0 +1,267 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: PGP MIME INTERNET DRAFT considered harmful. -->
+<!--X-From-R13: cnhy.ryyvbggNueabjy.ybarfgne.bet (Bnhy Syyvbgg) -->
+<!--X-Date: Tue, 21 May 1996 01:12:52 +0800 -->
+<!--X-Message-Id: 31a0442b.flight@flight.hrnowl.lonestar.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>PGP MIME INTERNET DRAFT considered harmful.</TITLE>
+<LINK REV="made" HREF="mailto:paul.elliott@hrnowl.lonestar.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01211.html">Date Prev</A>][<A HREF="msg01218.html">Date Next</A>][<A HREF="msg01404.html">Thread Prev</A>][<A HREF="msg01227.html">Thread Next</A>][<A HREF="index.html#01222">Date Index</A>][<A HREF="threads.html#01222">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>PGP MIME INTERNET DRAFT considered harmful.</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>Subject</em>: PGP MIME INTERNET DRAFT considered harmful.</LI>
+<LI><em>From</em>: <A HREF="mailto:paul.elliott@hrnowl.lonestar.org">paul.elliott@hrnowl.lonestar.org</A> (Paul Elliott)</LI>
+<LI><em>Date</em>: Mon, 20 May 1996 08:55:05 +0000 (GMT)</LI>
+<LI><em>Apparently-to</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Distribution</em>: world</LI>
+<LI><em>Newsgroups</em>: alt.security.pgp,comp.mail.mime</LI>
+<LI><em>Organization</em>: Me?  Organized?</LI>
+<LI><em>Resent-date</em>: Mon, 20 May 1996 05:06:35 -0500</LI>
+<LI><em>Resent-from</em>: <A HREF="mailto:paul.elliott@flight.hrnowl.lonestar.org">paul.elliott@flight.hrnowl.lonestar.org</A> (Paul Elliott)</LI>
+<LI><em>Resent-message-id</em>: &lt;01I4X2HBQ3O4000SLC@Post-Office.UH.EDU&gt;</LI>
+<LI><em>Resent-to</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Summary: The PGP MIME INTERNET DRAFT, draft-elkins-pem-pgp-03.txt,
+contains a design error with respect to signatures on binary data.
+
+
+This error results from the failure to recognize the distinction between
+those features of MIME which are necessary to represent complex data and
+those features of MIME that are used to transport the data.
+
+The design error will result in the following negative results if
+PGP-MIME is widely used with binary data.
+
+(1) Huge unnecessary inefficiency whenever binary data is sent signed
+and encrypted.
+
+(2) The signatures on PGP MIMEd objects can not be extracted from a MIME
+context and used where MIME programs are not available.
+
+(3) Many users will rightly refuse to sign the entities the PGP-MIME
+draft envisions. This reduces the utility of PGP-MIME.
+
+(4) If users do sign these files, they will be signing data for which
+there are no commonly available inspection tools. This will eventually
+result in a security breach.
+
+- ----------------------------------------------------------------------
+
+
+The problem is that when binary data is to be signed the data is to be
+PGPed _after_ base64 has been applied and the MIME headers added.
+
+This is required by the draft:
+&gt;
+&gt;3.  Content-Transfer-Encoding restrictions
+&gt;
+&gt;     Multipart/signed and multipart/encrypted are to be treated by agents
+&gt;     as opaque, meaning that the data is not to be altered in any way
+&gt;     [1].  However, many existing mail gateways will detect if the next
+&gt;     hop does not support MIME or 8-bit data and perform conversion to
+&gt;     either Quoted-Printable or Base64.  This presents serious problems
+&gt;     for multipart/signed, in particular, where the signature is
+&gt;     invalidated when such an operation occurs.  For this reason it is
+&gt;     necessary to REQUIRE that ALL data signed according to this protocol
+&gt;     be constrained to 7 bits (8-bit data should be encoded using either
+&gt;     Quoted-Printable or Base64).  Note that this also includes the case
+&gt;     where a signed object is also encrypted (see section 6).  This
+&gt;     restriction will increase the likelihood that the signature will be
+&gt;     valid upon receipt.
+&gt;
+&gt;     Data that is only to be encrypted is allowed to contain 8-bit
+&gt;     characters and therefore need not be converted to a 7-bit format.
+&gt;
+&gt;
+In this the draft follows RFC1847.
+
+[Encrypted &amp; Signed binary data.] 
+Now when there is a data path for PGP's cyphertext, PGP provides a
+binary data path for its plain text. Thus, the inner base64 that PGP
+MIME internet draft requires is totally unnecessary. It will cause a 30%
+increase in the size of those messages that are encrypted and signed and
+large amounts of CPU time will be used applying &amp; removing the base64.
+
+It is worth noting that huge amounts of binary data will be transferred
+by MIME, so the above represents a significant problem.
+
+[Signed binary data.]
+Now let us consider the question of what PGP-MIME draft requires users
+to sign. Suppose we want to send a signed .gif file to a sysop. The
+sysop wants to store the .gif in his download section. Suppose the sysop
+wants to store the signature as a detached signature so that people who
+download it can check the authorship. But the signature proposed by the
+PGP-MIME draft is useless for this purpose. It has MIME headers attached
+and it has been base64'ed. People who download such a file from a BBS
+have no use for it, unless they have MIME.
+
+Or suppose we send as signed .gif file to the maintainer of a WEB page.
+He stores the .gif on an insecure UNIX system connected to the internet.
+Suppose, a year later the maintainer wants to check if the .gif has been
+tampered with. Can the maintainer store the signature on a floppy and
+use the signature for later checking? No, the only way the signatures
+specified by the draft can be used, would be to add MIME headers and
+apply base64. The maintainer will have to store the entire MIME message,
+.gif and all if he wants to check the signature later.
+
+Or let us consider an .gif artist. The artist has a policy of only
+signing works that he can be proud of. He does not sign his sketches,
+because he does not want sketches to tarnish his reputation. Before
+signing and releasing a work, he examines it with several different gif
+viewers and paint programs. But what does the draft PGP-MIME want the
+artist to sign? It wants him to sign a file that has been base64'ed and
+with mime headers added. The artist can not examine the file to be
+signed with any of his gif viewers or paint programs. Everyone's mother
+has told them to "Never sign anything unless you have read the fine
+print first." But here we have a file that has been scrambled so that it
+can not be inspected with the commonly available tools. The artist
+refuses to sign. Not only does he not know what he is signing, but the
+base64 offends his artistic standards. Who can be proud of base64?
+Necessary perhaps, but lets face it, base64 is an horrible kludge built
+to meet the deficiencies of a network.
+
+If users get in the habit of signing binary files which represent
+multimedia data, and which can not be examined with commonly available
+inspection tools, it is inevitable and predictable that sooner or later
+this will cause some kind of negative security event.
+
+Now there is some justification for the way the draft handles text.
+Different operating systems and machine architectures represent text in
+different ways, so that it is necessary that digital signatures be taken
+over some "canonical" format so that signatures will check on different
+operating systems. Even after text has been mangled by Quoted-Printable 
+it can still be read after a fashion by the person asked to sign it.
+
+Operating systems and machine architectures also differ in the way they
+represent binary data. The differences in the ways integers, floating
+point numbers and other such thingies are represented are  well known.
+However, such differences must be handled at the application level. The
+location within a file of integers, floating points, etc must be set by
+the application programmer/designer. PGP, MIME, and base64 can not deal
+with these differences, because the location of integers and floats can
+not be specified in advance for an arbitrary data file. Thus, from the
+point of view of PGP and base64, these differences do not exist and
+binary data may as well be a stream of bytes. Thus, in the case of
+binary data, base64 is not more "canonical" than the original data.
+There is no good reason to sign the base64 rather than the original
+data. Once a file has been base64ed, the file can not be examined
+with the usual inspection tools.
+
+The draft has chosen to treat text and binary data similarly. This
+results in negative results mentioned above, but the developer and draft
+author do not have to deal with any logic to handle text and binary data
+separately. User utility and security have been sacrificed for the
+convenience of simplicity for the draft author and the PGP-MIME
+developer.
+
+
+The typical user of MIME software is not necessarily technically
+sophisticated. When the deficiencies and disasters associated with
+software patterned on this draft become apparent, not everyone will know
+exactly which software component is at fault. The problems associated
+with the draft (or its successors) may adversely affect the reputation
+of PGP.
+
+Now some descendant of the draft could become a standard or the draft
+could become a de-facto standard through wide-spread  use. Such a
+standard could become a barrier to the acceptance of other software
+without the draft's deficiencies. Thus, the draft could permanently
+inflict poor software on the world. (Look at the memory architecture of
+the IBMPC for one example. Or look at the MSDOS operating system for
+another example.)
+
+The draft should be withdrawn. People should rethink and create a better
+plan to combine the benefits of PGP and MIME.
+
+It should accommodate the user who wishes to mail a generally usable PGP
+signature (that is, one that can be used outside the context of MIME)
+along with multimedia binary data.
+
+It should not ask a user to apply a signature to any data that cannot be
+examined with commonly available tools.
+
+It should not require anyone to sign an artifact of a data transfer
+system such as base64.
+
+It should not require any additional space overhead  (more than that
+which may be necessary for transport) when signing and encrypting.
+
+- --
+Paul Elliott                                  Telephone: 1-713-781-4543
+Paul.Elliott@hrnowl.lonestar.org              Address:   3987 South Gessner #224
+                                              Houston Texas 77063
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.3
+Charset: cp850
+
+iQCVAgUBMaBPRPBUQYbUhJh5AQH2hwP+J1ADSzD3Yx4gvUIvAwN+EDikIN2IaHhM
+j+znIlt9QPzl5SSp44H+JnhoivhKR3562ACI1nexNMZ9E2MrPNioiGmrmz0uGwM6
+Px/k2HbioQrgqmmP0IO/98cTZGA71pK7iNk7AZbWpEW4XfWkyRDW9hQzrCEZXXw8
+jQwM/VHUPl8=
+=BvoZ
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01211.html">Re: WELCOME TO THE NEW ROMAN EMPIRE</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01218.html">Re: Toastmasters?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01404.html">Re: CAPITALISTS' SUCK</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01227.html">Re: PGP MIME INTERNET DRAFT considered harmful.</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01222"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01222"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

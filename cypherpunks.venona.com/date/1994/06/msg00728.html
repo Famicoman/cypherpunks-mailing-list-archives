@@ -1,0 +1,189 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: New program to integrate encryption/signing with mail/news -->
+<!--X-From-R13: Eghneg Ezvgu <fghNarzrfvf.jvzfrl.pbz> -->
+<!--X-Date: Fri, 17 Jun 94 05:46:26 PDT -->
+<!--X-Message-Id: 2e019887.nemesis@nemesis.wimsey.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>New program to integrate encryption/signing with mail/news</TITLE>
+<LINK REV="made" HREF="mailto:stu@nemesis.wimsey.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00732.html">Date Prev</A>][<A HREF="msg00737.html">Date Next</A>][<A HREF="msg01067.html">Thread Prev</A>][<A HREF="msg00741.html">Thread Next</A>][<A HREF="index.html#00728">Date Index</A>][<A HREF="threads.html#00728">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>New program to integrate encryption/signing with mail/news</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: New program to integrate encryption/signing with mail/news</LI>
+<LI><em>From</em>: Stuart Smith &lt;<A HREF="mailto:stu@nemesis.wimsey.com">stu@nemesis.wimsey.com</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 17 Jun 94 5:35:17 -0800</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:Stu@nemesis.wimsey.com">Stu@nemesis.wimsey.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+I have written a new program to help integrate encryption and
+signature programs such as (but not limited to) PGP.  This is
+the doc file that is included.  I am going to try to upload it
+to ftp.csua.berkeley.edu, the cypherpunks ftp site, in directory
+/pub/cypherpunks/incoming.  The file name is mess11.zip.  Not
+sure where it will end up, but if you can't find it or don't
+have ftp, I will gladly mail it to you.
+
+This is the first program of any sort, simple though it is, that
+I have ever unleashed on the public at large, comments are
+greatly appreciated - please be gentle :)
+
+I'm biased of course, but I find it a rather elegant (ergonomic
+is what I want to say :) way to let users encrypt or sign
+messages.  Please give it a try, it is freeware and may be
+distributed under the GNU Public License.
+
+
+mess - automagic Mail Encryption and Signing System for mail &amp; news
+
+Copyright 1994 Stuart Smith
+May be distributed under the terms of the GNU General Public License.
+
+
+This program is meant to be run in lieu of an editor from a mail or news
+program.  The editor you want to use should be the first argument on
+the command line.  The article or message to be edited should be the second.
+
+mess first starts the editor with the specified file.  If you want your
+message to be encrypted or signed, place one or more of the following strings
+at the beginning of a line.  (i.e. each string must start at the beginning of
+its own line)
+
+ [encrypt]
+ [encrypt] &lt;key_ID&gt;
+ [sign]
+ [sign] &lt;key_ID&gt;
+
+Only the first encrypt or sign string will be acted on and removed from the
+text.  Further copies are ignored.  If you add a space and a key ID,
+these will be added to the PGP command line so that PGP will not ask
+you for them.  A key ID (any text fragment unique to a public key
+description) is considered as everything from one space after 
+the [encrypt]/[sign] string.
+
+mess now also scans headers, if they are included, for To: or From: headers
+and will use these as key_ID's.  If you specify a key_ID after [sign] or
+ [encrypt], it will override the key_ID found in the headers.  I use trn,
+which does pass headers to the editor and it seems to work great.  Elm
+doesn't though so I can't test it, but I assume it would work as well.  I
+had to try and make the program smart enough to figure out if there even
+are headers.  To do this, it first splits the file in two at the first blank
+line.  Everything above is considered header lines.  If however, it does not
+match From:, To:, or Subject:, then it assumes that headers were not in fact
+included in the file and that it is really just parsing the first paragraph. 
+In which case it throws it out and just uses the whole file as the body,
+with no headers.
+
+If a public or secret key is not found matching the key_ID found in the
+header or entered manually, PGP will fail, leaving your message intact,
+including the [encrypt]/[sign] strings, if present.
+
+I've tried not to emphasize PGP to much because I wrote the program so
+that it could be used with any encryption program. PGP is of course a
+natural for the job.  Right now, the defaults for the encrypt and sign
+strings, encrypt and sign options, and even the encryption program to call
+are in #define statements, so they're pretty easy to change.  In the
+future I might add a configuration file for such things or allow them
+to be specified on the command-line.
+
+Ideas I have for the near future include somewhat better help for wrong
+command-line args and such;  configuration file for some default or more
+command-line options;  allow mailers or news readers that will do this to
+pass sender &amp; recipient information on the command line;  less moving
+around of temp files - right now the plaintext of a message gets copied
+into a temporary file before going to pgp, and while *that* temporary file
+is wiped by pgp, the original file is only deleted.  I will try and
+organize things better or perhaps if someone can point me to a portable
+file wipe?
+
+The executable included runs under OS/2 with the emx runtime package.
+I've tried to avoid doing anything platform specific (I use OS/2),
+if I messed up, let me know.
+
+I have tested the program using Elm for OS/2 and TRN for OS/2 which I use
+to read mail and news from the UUPC v1.2b program.  I got the idea for
+the [encrypt] and [sign] bit from Elm_2 for OS/2 which had something
+similar, but I tried to improve on it.  I would like to hear from people
+using this on other computers or with other mail/news programs.  If you have
+any suggestions, please forward them, thanks.
+
+I hope you find this useful, I'd appreciate any comments &amp; ideas.
+&lt;Stu@nemesis.wimsey.com&gt;
+
+- -- 
+ Baba baby mama shaggy papa baba bro baba rock a shaggy baba sister
+shag saggy hey doc baba baby shaggy hey baba can you dig it baba baba
+        E7 E3 90 7E 16 2E F3 45   *   28 24 2E C6 03 02 37 5C 
+   Stuart Smith                           &lt;stu@nemesis.wimsey.com&gt;
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6
+
+iQCVAgUBLgGmhai5iP4JtEWBAQG57gP/WYN7IPhww23irASao7BRT+NWbJcxAi+K
+3FGw+YZm3Q7kzFO3ASB/DghzGmpxA1s6ZjpJWZAqqmhPMMBPNHZHHBQVF4OfxAtZ
+2LK9vKi+Lfv5aOX5OVddEq9MxAOH6t6W6MlPL270gzir+uBhV38apqrj4iOqLSw/
+mmZ9rrjNAPA=
+=Ofwa
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00732.html">Re: "The Virtual Hand": Free-market Internet guide</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00737.html">Re: swipe working on infinity.c2.org</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01067.html">FW: Crypto export legislation defeated in House Intelligence Cmte.</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00741.html">Re: Digital Timestamping</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00728"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00728"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

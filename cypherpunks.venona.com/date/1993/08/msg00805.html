@@ -1,0 +1,229 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: REMAIL: Attacks on remailers -->
+<!--X-From-R13: uhturfNnu.pbz (Sevp Vhturf) -->
+<!--X-Date: Fri, 27 Aug 93 10:22:51 PDT -->
+<!--X-Message-Id: 9308271714.AA11676@ah.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9308271052.AA07922@achilles.ctd.anl.gov -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>REMAIL: Attacks on remailers</TITLE>
+<LINK REV="made" HREF="mailto:hughes@ah.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00804.html">Date Prev</A>][<A HREF="msg00806.html">Date Next</A>][<A HREF="msg00802.html">Thread Prev</A>][<A HREF="msg00856.html">Thread Next</A>][<A HREF="index.html#00805">Date Index</A>][<A HREF="threads.html#00805">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>REMAIL: Attacks on remailers</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: REMAIL: Attacks on remailers</LI>
+<LI><em>From</em>: <A HREF="mailto:hughes@ah.com">hughes@ah.com</A> (Eric Hughes)</LI>
+<LI><em>Date</em>: Fri, 27 Aug 93 10:14:19 -0700</LI>
+<LI><em>In-Reply-To</em>: Samuel Pigg's message of Fri, 27 Aug 93 05:52:43 CDT &lt;<A HREF="msg00802.html">9308271052.AA07922@achilles.ctd.anl.gov</A>&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Attack (7) is made by an opponent who monitors all network traffic,
+but has no access to the insides of the remailer nodes.
+
+The defense is more subtle, however, than proposed.
+
+&gt;(7): Look at all messages coming out of the first remailer, and
+&gt;follow them into their 2nd remailers; take all messages from those and
+&gt;follow them on, and so on.  This will eventually lead to a number of
+&gt;destinations, one of which must have been the destination of the original
+&gt;message.  Over a period of time, look for correlations between destinations
+&gt;and sources.
+
+Let us assume that these remailers have the basic characteristics of
+mixes: encryption rewriting, size quantization, and message
+reordering.  Furthermore, let us assume that the defense of using
+'large' chains of 'popular' remailers is being used.
+
+&gt;With enough
+&gt;mixing at each stage of the chain, the number of possible destinations
+&gt;will become astronomically large, 
+
+The possible number of destinations should increase exponentially with
+each hop.  If gather-and-rearrange mixing is done, then the number is
+the product of the rearrangement thresholds for each remailer.  If a
+radioactive decay model for reordering is used, then it is the
+expected value of the number of destinations which grows
+exponentially, that is, the possible number of destinations (those
+with non-zero probability) grows faster that the expected value of the
+number of destinations.  They are both exponential, but one has a
+larger base than the other.
+
+What is more important than the reordering algorithm is that the
+expected number of destinations grows exponentially with the number of
+hops.  There will be correlations, but with linear increase in cost we
+can get rid of them, we hope.  
+
+&gt;making correlations statistically impossible
+
+What is the nature of the remailer path, however, for which we have an
+assurance that the correlations are too difficult to carry out?  Or to
+ask a simpler question for a simpler environment where we assume all
+remailers are equal, just how long does the path have to be?
+
+We know that by making the paths "long enough" that we can prevent
+correlations from becoming significant.  The question is how do we
+find out what is long enough?
+
+&gt;such an attack (PROLONGED monitoring of all
+&gt;remailers) would be very difficult to perform, esp. with use of
+&gt;remailer-remailer socket connections.
+
+The fact that it would be difficult is not the issue for the theory,
+but for the practice.  The extremely high cost, however, could be
+justified for 'national security' reasons against a few targets, or
+to break the system completely open looking for 'tax evaders.'
+
+If our theory is good against an arbitrarily strong opponent, then the
+system can withstand sustained attack.  If the existence of the system
+is seen as sufficiently threatening, for any number of different
+threats, we should plan for a sustained attack.  We need to know what
+the limits of the capability are and not just guess.
+
+I've been thinking about an invariant for communications systems proof
+against traffic analysis which I call 'privacy diffusion'.  The
+privacy diffusion is a probability distribution over possible
+recipients.  One characteristic of the privacy diffusion is the
+expected value of the number of different recipients.  This is a good
+first measure, but I suspect it won't be enough.
+
+The expected number of recipients is multiplicative in the diffusion
+per node, as described above.  If different downstream nodes have
+different mixing thresholds, they'll need to be weighted.  Since the
+system is multiplicative, the weighting should be by geometric mean,
+i.e. a downstream node with probability 1/10 should multiply by the
+10th root of its own threshold.  One can see that if all the
+downstream nodes have equal likelihood and identical thresholds, that
+this formula degenerates into the simple one above.
+
+In fact, there is a simple closed form expression for this value,
+namely, e^-E(ln p), the inverse exponential of the expected log
+probability.  This is exactly e^H, where H is the entropy of the
+probability distribution.  e^H is also the expected size of the search
+space, were we looking for encryption keys.
+
+On the other hand, this situation is unlike a key search space in that
+every value is not equally likely and that the priors are not
+independent.  In a phrase, not everybody talks to everyone else, but
+everyone who talks talks to someone else.  We can make a baseline
+model of a communications graph with probabilities on it.  (This
+doesn't take into account state, e.g. conversations tend to happen
+alternately.)  Most edges on this graph will have p=0, i.e. these two
+people have never communicated.  Let us remove these null edges.  What
+we are left with is a sparse graph with lots of clustering (friends of
+friends).  In this situation, if our message could have gone to ten
+million people (say, 7 hops each with threshold 10), it is more likely
+that it went to one of twenty or fifty.
+
+Even if you don't know what the graph looks like, you'll know that it
+is sparse, and you'll have some idea of what the characteristic
+distributions are.  This is exactly the equivalent of studying letter,
+digram, and higher order statistics for English and other natural
+languages.  The statistics gathered as to the prior distribution will
+appear in the observed output unless one has some good idea of how to
+'confuse and diffuse' them.
+
+I am pushing an analogy here between cracking codes and cracking
+traffic patterns.  I am pretty sure that there are more parallels than
+meet the eye.  The appearance of the entropy in the expected number of
+recipients may be only the tip of a much larger correlation.
+
+traffic			cipher
+=======			======
+statistics of		letter frequencies
+interconnection		of the plaintext
+
+observed messages	ciphertext
+
+path through		key
+remailers
+
+mixing algorithms	encryption
+
+null messages		padding
+
+This whole mix system needs a lot more thought before we'll have an
+assurance that it will be secure against sustained attack.
+
+-------------------------------------------------------
+
+On the lighter side, I couldn't resist this next one.
+
+&gt;(8): Correlate messages being sent from person A with messages being
+&gt;received a certain time later by person B.  
+
+&gt;Defense: [...] The sender's traffic pattern is
+&gt;then constant and no information can be gained from it.
+
+And for the receiver, just subscribe to cypherpunks under several
+different aliases.
+
+Eric
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00856" HREF="msg00856.html">Re: REMAIL: Attacks on remailers (LONG (again))</A></STRONG>
+<UL><LI><EM>From:</EM> b44729@achilles.ctd.anl.gov (Samuel Pigg)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00802" HREF="msg00802.html">Re: Attacks on remailers (LONG)</A></STRONG>
+<UL><LI><EM>From:</EM> b44729@achilles.ctd.anl.gov (Samuel Pigg)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00804.html">Re: Commercial PGP; trapdoor rumors</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00806.html">Mailer hooks for PGP</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00802.html">Re: Attacks on remailers (LONG)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00856.html">Re: REMAIL: Attacks on remailers (LONG (again))</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00805"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00805"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

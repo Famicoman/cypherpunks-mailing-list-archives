@@ -1,0 +1,205 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Anonymous return addresses -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Sun, 9 Jun 1996 11:14:24 +0800 -->
+<!--X-Message-Id: 199606082329.QAA14538@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Anonymous return addresses</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00574.html">Date Prev</A>][<A HREF="msg00576.html">Date Next</A>][<A HREF="msg00597.html">Thread Prev</A>][<A HREF="msg00693.html">Thread Next</A>][<A HREF="index.html#00573">Date Index</A>][<A HREF="threads.html#00573">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Anonymous return addresses</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Anonymous return addresses</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 8 Jun 1996 16:29:56 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Browsing through the 1995 IEEE Symposium on Security and Privacy
+proceedings at the library, I found two articles of interest here.  The
+first, "Preserving Privacy in a Network of Mobile Computers", is really a
+method for anonymously receiving mail via reading it from a large
+database such that no one knows which part you are reading.  This is a
+topic which we discussed here at some length a year or two ago, but I
+think this article has a new idea about it which I will discuss below.
+
+The other one was "Holding Intruders Accountable on the Internet" and it
+had one strange comment.  Basically it was about a way of trying to track
+down cracker types who break into systems.  One strategy these people use
+is to log into a whole series of insecure hosts, one after the other,
+before attacking their target.  Then tracing back where they came from is
+very difficult.  Cliff Stoll's "The Cuckoo's Egg" is the classic account
+of how hard it is to trace these people.  Probably the new books about
+Mitnick talk about the same thing.
+
+The idea in this article is that you monitor the whole net and track
+all the rlogin and telnet traffic between pairs of hosts.  Then they
+describe a statistical technique for determining that two different
+telnet sessions are chained together by recognizing the same patterns
+of traffic on them.  Basically they count the frequency of spaces and
+punctuation marks on minute-long time slices and try to correlate
+them.  This way you can tell that the intruder attacking here is also
+using these other hosts over there, and try to track him down that
+way.
+
+I don't think this is very practical, and I have mixed feelings about the
+technology - I don't favor breakins, but the kinds of surveillance that
+would be necessary to implement their technique seem very threatening.
+Also they do mention the obvious countermeasure of using encryption at
+each stage, which would be easy with such things as the secure remote
+shell programs around now.
+
+The interesting comment came when they were discussing an alternative
+scheme, which would be to have all hosts keep track of their incoming and
+outgoing connections:  "The difficulty with all such host-based tracing
+systems is that, when an extended connection crosses a host which is not
+running the system, accountability is altogether lost at that point....
+Even if most hosts could be secured, the intruder community could easily
+maintain a set of machines to launder connections, just as they maintain
+anonymous remailers."
+
+So apparently in the view of these authors anonymous remailers are
+maintained by "the intruder community."  It is unfortunate that we have
+this image among some member of the larger community.  BTW, there are
+periodic suggestions here to run general-purpose connection redirectors,
+but people should be aware of the problem that cracker types would seize
+on these as another shield for their crimes.  These would have to be
+limited to specific uses, such as port 80 which is the http port and
+which hopefully can't easily be used for attacks.
+
+In any case, let me describe the message-receipt idea from the other paper
+I mentioned above, which is by David A. Cooper and Kenneth P. Birman of
+Cornell.  They have a few ideas, among them exchanging message labels
+for the next message in an ongoing conversation, so that later messages
+don't have any identifying information on them, but just opaque message
+labels which can be scanned for matches to those of interest.  This is a
+concept we have discussed before.  However you still have the problem
+at least for the first message to an anonymous recipient of getting it to
+him anonymously even though the message says what pseudonym it is for.
+
+A simple idea is to put all such messages into a database and to let
+everyone scan the message headers to see whom they are for.  Then when
+they see one for them they download, decrypt, and read it.  For more
+security, let the database machine be trusted, and let the download
+request and response be sent encrypted.  Now only the database machine
+knows which person asked for which message.  This provides a level of
+security analogous to sending through a single remailer.
+
+(Another idea is to download all messages, but that is generally
+infeasable if there are a lot of people using the system.)
+
+The new idea is to use multiple databases to get security similar to
+using multiple remailers.  I'll describe it using two machines.  Each
+holds a database of messages, and the two databases are exactly alike.
+Some mechanism keeps the two synchronized.  Furthermore, all the
+messages need to be the same size.  There will need to be some padding
+and fragmentation/assembly mechanism to arrange for this.
+
+Someone who wants to receive some mail anonymously first downloads all
+the message headers as before, and determines which messages are for
+them.  Suppose just one is, and it is message number 20 out of a database
+of, say, 50 messages.  Now what the reader does is to choose a random 50
+bit number (where 50 is the total number of messages in the database).
+He makes a copy of this number, and toggles bit 20 in one of them (20 is
+the message he wants to receive).  Then he sends one number to one of the
+database servers, and the other to the other server.  Each one receives a
+random-looking 50 bit number.
+
+What each server does is to take the messages from the database which
+correspondo to 1 bits in the 50 bit number, and XOR all those messages
+together, byte for byte.  The resulting output will be the same size as
+a quantized message.  It is sent, encrypted, back to the requestor.
+
+Now all he does is to XOR the two messages he got back from the servers.
+All of them will cancel out except for message 20, which is the one he
+wants.  This can be generalized to more than two servers, by creating
+multiple bit strings and arranging so that the XOR of all of them will
+just leave the bit set for the message he wants.  If he wants more than
+one message the protocol has to be repeated separately for each message.
+
+There is no large amount of traffic needed, as each server only sends an
+amount of data equal to one message.  The individual servers do not get
+any information about which message the requestor wants (other than that
+it is one of the 50).  Only by colluding and XOR'ing their bit strings
+can they figure that out.  The same kind of collusion is needed to trace
+a sent message using two remailers, so the security is similar to what we
+get sending messages.
+
+Messages would have a finite lifetime and would expire and be removed
+from the database after a while.  The authors propose breaking the
+database up into batches with a fixed number of messages, but I don't
+fully follow the reasoning behind this.  I guess it reduces the load on
+the server when it does its XOR's.
+
+I'm not sure whether this particular scheme was proposed when we
+discussed this concept in the past, but it does seem like an interesting
+alternative way to receive messages.
+
+Hal
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00693" HREF="msg00693.html">Re: Anonymous return addresses</A></STRONG>
+<UL><LI><EM>From:</EM> "Robert A. Rosenberg" &lt;hal9001@panix.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00594" HREF="msg00594.html">Re: Anonymous return addresses</A></STRONG>
+<UL><LI><EM>From:</EM> "Mark M." &lt;markm@voicenet.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00574.html">Clam Wars</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00576.html">Re: NSA/CIA to snoop INSIDE the U.S.???</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00597.html">lets hack German Telekom</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00693.html">Re: Anonymous return addresses</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00573"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00573"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

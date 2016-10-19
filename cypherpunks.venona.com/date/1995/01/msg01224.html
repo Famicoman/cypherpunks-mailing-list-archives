@@ -1,0 +1,196 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: analysis of Chaum's MIX continued -->
+<!--X-From-R13: "Irv Rnv" <jrvqnvNrfxvzb.pbz> -->
+<!--X-Date: Tue, 24 Jan 95 19:05:11 PST -->
+<!--X-Message-Id: 199501250304.AA05794@mail.eskimo.com -->
+<!--X-Content-Type: multipart/mixed -->
+<!--X-Derived: bin00000.bin -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>analysis of Chaum's MIX continued</TITLE>
+<LINK REV="made" HREF="mailto:weidai@eskimo.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01232.html">Date Prev</A>][<A HREF="msg01227.html">Date Next</A>][<A HREF="msg01321.html">Thread Prev</A>][<A HREF="msg01227.html">Thread Next</A>][<A HREF="index.html#01224">Date Index</A>][<A HREF="threads.html#01224">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>analysis of Chaum's MIX continued</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: analysis of Chaum's MIX continued</LI>
+<LI><em>From</em>: "Wei Dai" &lt;<A HREF="mailto:weidai@eskimo.com">weidai@eskimo.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 24 Jan 1995 19:03:59 -0800</LI>
+<LI><em>Cc</em>: <A HREF="mailto:weidai@eskimo.com">weidai@eskimo.com</A></LI>
+<LI><em>Priority</em>: normal</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:weidai@eskimo.com">weidai@eskimo.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Last week I wrote about a way to trace who Alice, 
+using a Chaumian mix, is writing to, by calculating a score 
+for each user based on the number of times the receipt of a 
+message by the mix from Alice is followed by a transmit to 
+the user during the output phase of that batch (I need a 
+name for these occurences... any sugestions?).  Does 
+this method actually work?  Well, let's see...
+
+(Let me note that this method of traffic analysis can be 
+applied to any Chaum type MIX, even if the MIX uses random 
+delays instead of batches.  It can even be used on entire 
+MIX-nets, by treating the MIX-net as a single large mix.  
+However, I have to make several assumptions in the 
+following analysis of how well this method works.  This 
+doesn't mean that it won't work outside those assumptions, 
+just that I don't know enough statistics to figure out how 
+well it would work in a more general situation.  Maybe someone 
+can give me a recommendation for a good statistics textbook?)
+
+Let's assume:
+1.  there is one mix which processes a batch every time it 
+receives a certain number of messages
+2.  there are N users
+3.  all users send at most one message to the mix per 
+batch, the probability that he will do so is S (I'm assuming 
+every user sends the same number of messages per unit time 
+on average, many of which can be dummies, and that the 
+timing of these messages are random)
+4.  all users receive at most one message from the mix per 
+batch, with probability R (R&lt;S or R&gt;S depending on 
+wheather the mix eats more dummy messages than it 
+generates)
+
+Alice and Bob (the targets of the traffic analysis) are 
+simply two of those users.
+
+5.  In a particular batch, there is a probability Q (Q&lt;=R and Q&lt;=S) 
+that Alice will send a message to Bob.  This implies that 
+for each batch in which Alice doesn't send a message to 
+Bob, there is a probability of (S-Q)/(1-Q) that she will 
+send some other message to the mix (which may be a dummy 
+message or a message to someone else).  Similiarly, for each 
+batch in which Bob doesn't receive a message from Alice, 
+there is a probability of (R-Q)/(1-Q) that he will receive 
+some other message from the mix.
+
+Let T be the length of time (expressed in number of 
+batches) since the start of the traffic monitoring
+and let M(user) be the total number of times the receipt 
+of a message by the mix from Alice is followed by a transmit 
+to user during the output phase of that batch.
+
+Note that the distribution of M is a binomial 
+distribution B(T, R*S).  This means:
+	mean of M = T*R*S
+	standard deviation of M = sqrt(T*R*S*(1-R*S))
+
+On the other hand,
+	M(Bob) = T*Q + T(1-Q) * ((S-Q)/(1-Q)) * ((R-Q)/(1-Q))
+		which simplifies to:
+	M(Bob) = T * (Q + (S-Q)*(R-Q)/(1-Q))
+
+Now, we can calculate a z-score for M(Bob) by subtracting 
+from it the mean of M (this difference simplifies to 
+T*Q*(1-S)*(1-R)/(1-Q) ) and dividing the difference by the 
+standard deviation.  We can then find the standard normal 
+probability p(z) associated with the z-score, and finally 
+multiply 1-p(z) and the total number of users (N) to find how 
+many users can be expected to have a larger M than Bob.  
+Let's call this number A.
+
+In conclusion:
+                   T*Q*(1-S)*(1-R)/(1-Q)  
+A = N * (1 - p ( ------------------------- ) )
+                    sqrt(T*R*S*(1-R*S))   
+
+It seems that as long as Q&gt;0, S&lt;1, and R&lt;1, A converges to 
+0 as T increases.  This means under the above assumptions, 
+Bob will eventually be traced out if these 3 conditions are 
+met.
+
+Wei Dai
+
+P.S.  If there aren't any serious mistakes in the above 
+analysis, I may produce a table showing how long it would 
+take for A to fall below 1 for various values of Q, R, 
+S, and N.  Is there any interest in this?
+
+For now, I've attached an Excel spreadsheet so you can try 
+plugging numbers into the above formula.
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBLyW/fzl0sXKgdnV5AQHQ/gP+LF/P19djHH5UpXfNQWPsljRTFZv9Bi/S
+nHJZKVOHC+T5b4/JLHIbNMbH5xRiM4wKHmmpdAoqNRBfWQm+nlikXnuwXJYZemM3
+OxAEPLHflMby6SRvrtvT5r+ajm1GVqgYc2JE4Dyz5zBNqBlto1DG0KFK+1MNdYEQ
+CDUAK5GndnU=
+=qRUF
+-----END PGP SIGNATURE-----</PRE>
+<PRE>
+This message contains a file prepared for transmission using the
+MIME BASE64 transfer encoding scheme. If you are using Pegasus
+Mail or another MIME-compliant system, you should be able to extract
+it from within your mailer. If you cannot, please ask your system
+administrator for help.
+
+   ---- File information -----------
+     File:  mix-anal.xls
+     Date:  24 Jan 1995, 18:51
+     Size:  14848 bytes.
+     Type:  Binary
+</PRE>
+<P><A HREF="bin00000.bin" >mix-anal.xls</A></P>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01232.html">Re: Clinton freezes U.S. assets of Mideast groups</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01227.html">Re: Security of UNIX, NT, etc. (Was: Clinton Freezes...)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01321.html">Re: anonymous IRC access....</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01227.html">Re: Security of UNIX, NT, etc. (Was: Clinton Freezes...)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01224"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01224"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

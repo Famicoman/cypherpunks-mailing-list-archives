@@ -1,0 +1,191 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: PGP/Unix scripts, mail proggies? -->
+<!--X-From-R13: Xrerzrl Pneergg <wrerzrlNsberdhrfg.pbz> -->
+<!--X-Date: Fri, 16 Aug 1996 06:56:25 +0800 -->
+<!--X-Message-Id: Pine.BSI.3.93.960815110720.16514A&#45;100000@descartes.forequest.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.SUN.3.95.960808222342.27876A&#45;100000@sunspot.tiac.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: PGP/Unix scripts, mail proggies?</TITLE>
+<LINK REV="made" HREF="mailto:jeremey@forequest.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01255.html">Date Prev</A>][<A HREF="msg01264.html">Date Next</A>][<A HREF="msg00725.html">Thread Prev</A>][<A HREF="msg01273.html">Thread Next</A>][<A HREF="index.html#01250">Date Index</A>][<A HREF="threads.html#01250">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: PGP/Unix scripts, mail proggies?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Chris Lee &lt;<A HREF="mailto:chrislee@sunspot.tiac.net">chrislee@sunspot.tiac.net</A>&gt;</LI>
+<LI><em>Subject</em>: Re: PGP/Unix scripts, mail proggies?</LI>
+<LI><em>From</em>: Jeremey Barrett &lt;<A HREF="mailto:jeremey@forequest.com">jeremey@forequest.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 15 Aug 1996 11:13:58 -0700 (PDT)</LI>
+<LI><em>cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00725.html">Pine.SUN.3.95.960808222342.27876A-100000@sunspot.tiac.net</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+On Thu, 8 Aug 1996, Chris Lee wrote:
+
+&gt; Hello all,
+&gt; 
+&gt; 	I joined this list a while ago and am curious whether a there is a
+&gt; simple way to encrypt/decrypt e-mail with PGP in a Linux(Unix)
+&gt; enviroment...?  Sorry if this has been answered a thousand times, but it
+&gt; would really make PGP a more viable option with my small ISP.
+&gt; 
+&gt; Thank you very much for any answers, please reply to me personally.
+&gt; 
+
+Here's what I use, a simple sh script with pine for signing/encrypting.
+
+#!/bin/sh
+
+# Written by:  Jeremey Barrett &lt;jeremey@forequest.com&gt;
+#
+# Simple as hell sh script for automating PGP. I use pine, and have not
+# tried this with any other mailer, but it should work. The version of this I
+# use asks all kinds of questions about using remailers and nym servers
+# before editing the mail, so it can toss in templates and such. Anyway,
+# hack this at will.
+#
+
+# Pine configgy stuff I use with this:
+# 
+#	A)	enable-alternate-editor-cmd
+#	B)	enable-alternate-editor-implicitly
+#	C) 	signature-at-bottom
+#	D)	editor=&lt;full path to this script&gt;
+
+# I would use emacs cept that firing it up for every mail I send would suck
+PGPEDITOR='pico -z -t'
+
+# Some echos don't like -n, modify if necessary
+ECHOTYPE='echo -n'
+
+# Edit the mail... the mailer shold give us the tmp file as $1
+$PGPEDITOR $1
+
+clear
+
+# Annoy with questions
+$ECHOTYPE "PGP sign this message? [n] "
+read PGP
+
+if [ "$PGP" = "y" -o "$PGP" = "Y" ]
+then 
+
+  $ECHOTYPE "PGP encrypt this message? [n] "
+  read PGPE
+
+  if [ "$PGPE" = "y" -o "$PGPE" = "Y" ] 
+  then
+    pgp -east +clearsig=ON $1
+    mv $1.asc $1
+  else
+    pgp -sat +clearsig=ON $1
+    mv $1.asc $1
+  fi
+
+else
+
+$ECHOTYPE "PGP encrypt this message? [n] "
+read PGPE
+
+if [ "$PGPE" = "y" -o "$PGPE" = "Y" ] 
+then
+  pgp -eat $1
+  mv $1.asc $1
+fi
+
+fi
+
+
+- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+Jeremey Barrett
+Senior Software Engineer                        jeremey@forequest.com
+The ForeQuest Company                           <A  HREF="http://www.forequest.com/">http://www.forequest.com/</A>
+
+PGP Public Key: <A  HREF="http://www.forequest.com/people/jeremey/pgpkey.html">http://www.forequest.com/people/jeremey/pgpkey.html</A>
+                
+		"less is more."  -- Mies van de Rohe.
+- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBMhNo0i/fy+vkqMxNAQHwRgP/etGXm06WG7yTVLYYKbwmasezVJX9RScS
+kyY4kWornpBQvTRK7VKNAzVH5Pe7lXFtQAL1kpVtuNxwXsZf2tKVzXC8ZwhCF8eZ
+poAH6m8pE6d9n2Ft22PTOza6URU+Lx+18D3AoNyEvEQE8xMaMIOno121eiq5/Smk
+5BOPFkSuzKM=
+=EUq6
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01273" HREF="msg01273.html">Re: PGP/Unix scripts, mail proggies?</A></STRONG>
+<UL><LI><EM>From:</EM> Gregory Demetrick &lt;gjdemetr@infi.net&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="01303" HREF="msg01303.html">Re: PGP/Unix scripts, mail proggies?</A></STRONG>
+<UL><LI><EM>From:</EM> bryce@digicash.com</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00725" HREF="msg00725.html">PGP/Unix scripts, mail proggies?</A></STRONG>
+<UL><LI><EM>From:</EM> Chris Lee &lt;chrislee@sunspot.tiac.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01255.html">Press Release: Apple's CyberDog Web Bowser</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01264.html">Re: Jurisdictionless Distributed Data Havens</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00725.html">PGP/Unix scripts, mail proggies?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01273.html">Re: PGP/Unix scripts, mail proggies?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01250"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01250"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

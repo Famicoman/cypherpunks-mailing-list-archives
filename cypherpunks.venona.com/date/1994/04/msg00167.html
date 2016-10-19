@@ -1,0 +1,249 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: REMAIL: Ray's improved anonymous remailer -->
+<!--X-From-R13: ewpNtah.nv.zvg.rqh (Dnl) -->
+<!--X-Date: Mon, 4 Apr 94 22:12:11 PDT -->
+<!--X-Message-Id: 9404050511.AA10240@geech.gnu.ai.mit.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: REMAIL: Ray's improved anonymous remailer</TITLE>
+<LINK REV="made" HREF="mailto:rjc@gnu.ai.mit.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00160.html">Date Prev</A>][<A HREF="msg00162.html">Date Next</A>][<A HREF="msg00112.html">Thread Prev</A>][<A HREF="msg00129.html">Thread Next</A>][<A HREF="index.html#00167">Date Index</A>][<A HREF="threads.html#00167">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: REMAIL: Ray's improved anonymous remailer</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: REMAIL: Ray's improved anonymous remailer</LI>
+<LI><em>From</em>: <A HREF="mailto:rjc@gnu.ai.mit.edu">rjc@gnu.ai.mit.edu</A> (Ray)</LI>
+<LI><em>Date</em>: Tue, 5 Apr 94 1:11:53 WET DST</LI>
+<LI><em>Cc</em>: <A HREF="mailto:rjc@gnu.ai.mit.edu">rjc@gnu.ai.mit.edu</A> (Ray)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Hal writes:
+&gt;These mostly sound like great features.  The virtual addresses are something
+&gt;we have needed for a long time.  The idea of keeping records of which remailers
+&gt;are responding should help with the use of the network, too.  The one problem
+&gt;with this is that it might be tempting for the users to just trust the
+&gt;remailers to choose their chain paths.  It would be much better for the user's
+&gt;own software to hook up, find out which remailers are operating, then choose
+&gt;a chain.  Ray's software will allow this, but this function could be split
+&gt;off from the remailers to a specialized server, perhaps.
+
+   Good idea. The remailer assumes a few things. 1) if you don't
+give an explicit chaining path, and chaining is turned on, the
+remailer automatically picks the remailers with the heaviest usage for
+chaining. 2) if you give an explicit path, do not override it unless a 
+remailer in the path doesn't respond
+
+   A better idea might be a sort of "domain remailer naming service"
+which locates users on a remailer network (instead of explicitly
+giving out the remailer that your virtual address is located on) This
+DrNS would have to be trusted and secure, but it does cut down the
+number of trust entities since you only have it to trust, not every
+remailer on the network which has a copy of where your virtual address
+is located. Julf's APS is sorta like this already.
+
+   I like the decentralized approach best. Let's say you don't want
+any plaintext associated with your real e-mail address. Simply
+set up two virtual addresses as follows:
+
+Remailer1: foo -&gt; rjc@gnu.ai.mit.edu
+Remailer2: AnonymousRay -&gt; foo#remailer1
+
+  Now when a plaintext arrives at remailer2, it is encrypted for
+remailer1, and with *your* public key (associated with "AnonymousRay")
+if one is present.
+
+  So one remailer sees (plaintext, foo#remailer1), the other one
+sees (ciphertext, rjc@gnu.ai.mit.edu), but neither sees
+(plaintext, rjc@gnu.ai.mit.edu) Of course, collaboration is a problem,
+but you can always increase the chain length to take care of that.
+
+  You can include SASE standard cypherpunk remailer blocks too if you
+want to further confuse the issue.
+
+&gt;I'm not sure about the advantages of remailers signing and encrypting messages
+&gt;between themselves.  It seems to me that the network should work even without
+&gt;this.  Ideally we don't want the remailer network to be too centralized and
+&gt;close-knit.  It's better for them to be strangers to each other since if they
+&gt;coordinate their efforts they can defeat anonymity.
+
+  Ah, I didn't explain this. Originally, I planned to implement some
+remailer network level commands such as "add/change my stats in your
+list of remailers", "put a link to this virtual user in your networking
+map", "change my public key", etc. To do this, I assumed that
+only *trusted* remailers would be added to your remailer network list so 
+that only trusted entities could do network level commands (by signing
+them) and only trusted remailers could introduce other remailers to the
+network. Now I think I'll require the operator to do this stuff manually
+so if you change the parameters of your remailer, you have to manually
+notify others on the network and they have to update the configuration
+files manually.
+
+  Encrypting messages between remailers is useful because you want
+to make sure there is no correlation between incoming requests and
+outgoing ciphertexts. You not only want to encrypt them, you want to
+alter the sizes of them. I didn't think it was wise to pad a
+1,000 byte message out to a 100,000 byte message if both were in the
+"mix" Instead, I opted to "packetize" the messages and quantize the
+packet lengths to an operator configurable length. Each packet is
+encrypted separately and I'm investigating the feasibility of
+sending them through separate chains. The problem is, all the pieces
+must end up at some remailer where they are reassembled. This
+situation would be alleviated if there was a standardized remailer
+client operating on the receiving/user side. Even cooler, a 
+telescript/postscript like language for splicing and dicing incoming
+mail streams. Sort of a PGP/Mail scripting language that can't do any damage
+executing scripts embedded in incoming mail.
+
+&gt;&gt;p.p.s. e-mail commands are of the same form as the extropian's mailing
+&gt;&gt;list, backwards compatibility with the cypherpunks pasting token is not
+&gt;&gt;supported. Why? All headers in the message are ignored (and in socket-mode,
+&gt;&gt;there is no header anyway) and the prefered mode of operation is to encrypt 
+&gt;&gt;the body and the commands so no outside eyes can see the remail request
+&gt;&gt;destination nor the message subject.
+
+&gt;This was one reason I suggested supporting both old-style CP and the
+&gt;extropians-style syntax ("::Anon-To").  As Ray suggests, in some cases we
+&gt;might not have message headers in the RFC822 sense.  I think it is simpler
+&gt;to think about a message which has remailer commands at the top.
+
+   It was an easier implementation issue for me to just handle
+commands in the body vs. header and body. Putting commands in
+unencrypted headers seems to be a bad idea (especially if you are
+giving the remailer an explicit chain. You want to defeat traffic
+analysis, not help it) 
+
+&gt;&gt; Socket mode provides a more secure form of operation by bypassing the
+&gt;&gt;standard sendmail delivery mechanism allowing a message to be
+&gt;&gt;piped directly to the remailer. In addition, the socket mode remailer
+&gt;&gt;functions as an information server allowing clients to request
+&gt;&gt;a publically networked list of public keys and up-to-date list of
+&gt;&gt;\rem servers. The port number can be anything but I'm suggesting we all 
+&gt;&gt;agree to use port 2258.
+
+&gt;The number of sites which allow users to run socket servers is far smaller
+&gt;than the number which allow mail filters, so not many people will be able
+&gt;to use this feature.  OTOH the mail-only sites are generally of low security
+&gt;and an owned-and-operated system should be able to use this feature.  So it
+&gt;is definately a plus for those who can use it.
+
+   This works already. The remailer is written such that it doesn't
+care whether the data is coming from a sendmail STDIN stream, or a
+socket. All it does is redirect the socket to STDIN once the
+"DATA" command is given. Then, the same routine which processes the
+mail side of the server works on the socket data.
+
+   The socket-mode is pretty much a 'free' feature (didn't take
+any special logic in the command processor). The software
+can run without it, but it works better for internet users.
+
+&gt;Ray had mentioned above that these user handles can also map to encrypted
+&gt;remailer strings.  This way users don't have to trust any one remailer op-
+&gt;erator to keep their identity secret.  This need for trust is one reason
+&gt;I am not enthusiastic about user#remailer1#remailer2#remailer3 as an
+&gt;address, although it is admirably concise and easy to use.  The problem is
+
+  Karl Barrus suggested that I use the usenet style FIFO format as in,
+remailer1#remailer2#remailer3#user (like foo!bar!user) I'm not sure
+which is more intuitive, but I would like some feedback on this.
+I agree that one must trust a remailer operator, but I think there's
+already too much trust in the single non-networked remailer currently used.
+(operator logging easily catches any anonymity)
+
+&gt;that it exposes the path to the first remailer in the chain.  I really feel
+&gt;that paths must use nested encryption to be of much value.  Similarly, the
+&gt;darkmodem#*#*#deepanon requires the user to really trust the first remailer
+&gt;in the chain.  Perhaps it deserves such trust, but I feel that a system which
+&gt;does not require such trust would be superior.  (Again, Ray's proposal is
+&gt;broad enough that it will allow non-trust modes of operation, as I understand
+&gt;it; my main concern is that these other options are so easy that they will
+&gt;tempt people to be lazy and slip into modes where they are vulnerable to
+&gt;unscrupulous remailer operators.)
+
+  I agree completely. This is always the danger which is why I think
+remailers should have ratings, flags, and comments in the list of
+remailers, and that remailer operators should only include those
+that they trust. I also feel that virtual addresses should always be
+many levels deep. (user -&gt; foo#remailer1 -&gt; bar#remailer2 -&gt; 
+baz#remailer3 which is an encrypted Eric Hughes style cypherpunk
+remailer block.  The only problem is that since Eric's software isn't
+part of the notification net, the software has no idea whether the
+remailer is up and running or not)
+
+  Some security through obscurity will be needed.
+
+&gt;I am really looking forward to seeing Ray's software.  It sounds like a
+&gt;good package of functions.
+
+  Thanks. I still have a lot of work to do on it. I got side tracked
+for the last two weeks and my undertaking was a little too ambituous.
+When I announced it, most of the library I/O functions were done, but
+the major network logic still needs to be written. It should be beta testing
+in the next few weeks. Make any requests/suggestions now. ;-)
+
+  Thanks for the comments,
+
+-Ray
+
+
+
+-- Ray Cromwell        |    Engineering is the implementation of science;   --
+-- rjc@gnu.ai.mit.edu  |       politics is the implementation of faith.     --
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00160.html">RE: rights in cyberspace &lt;warning: long commentary&gt;</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00162.html">RE: Cyberspace, Crypto Anarchy, and Pushing Limits</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00112.html">REMAIL: Ray's improved anonymous remailer</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00129.html">Re: THOUGHT: International Electronic Declaration of Rights</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00167"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00167"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

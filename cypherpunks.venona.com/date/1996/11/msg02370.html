@@ -1,0 +1,218 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: IPG algorithim -->
+<!--X-From-R13: Sevp [heenl <revpzNyar.pbz> -->
+<!--X-Date: Sat, 30 Nov 1996 13:20:07 &#45;0800 (PST) -->
+<!--X-Message-Id: 199611302118.NAA12825@slack.lne.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199611301953.NAA14436@manifold.algebra.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: IPG algorithim</TITLE>
+<LINK REV="made" HREF="mailto:ericm@lne.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02376.html">Date Prev</A>][<A HREF="msg02377.html">Date Next</A>][<A HREF="msg02372.html">Thread Prev</A>][<A HREF="msg02377.html">Thread Next</A>][<A HREF="index.html#02370">Date Index</A>][<A HREF="threads.html#02370">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: IPG algorithim</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:ichudov@algebra.com">ichudov@algebra.com</A></LI>
+<LI><em>Subject</em>: Re: IPG algorithim</LI>
+<LI><em>From</em>: Eric Murray &lt;<A HREF="mailto:ericm@lne.com">ericm@lne.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 30 Nov 1996 13:18:12 -0800 (PST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:wichita@cyberstation.net">wichita@cyberstation.net</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg02372.html">199611301953.NAA14436@manifold.algebra.com</A>&gt; from "Igor Chudov @ home" at Nov 30, 96 01:53:52 pm</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+I have translated the IPG algorithim's "engine" to C, to generate
+some random values from it for testing purposes.  It does not
+look very random in either the xnoisesph program or the DIEHARD
+test battery.   However I may well have misinterprested Mr. Wood's
+description (his writing is, as Mr. Chudov points out, difficult to
+understand) or written my code incorrectly.  Here it is, play
+with it yourself.  To my untrained eye the lack of randomness
+in what's essentially a stream cipher would be disturbing.
+However I am not a cryptoanalysist so I do not know to
+what extent this weakens the cipher.
+
+
+The IPG description does not say (but implies to me) that
+the various tables that are to be filled in by "random" values must
+be filled in by PRNGs that are seeded with the same seeds by
+each of the party that knows the key.  Otherwise the "encryptor
+streams" that are generated will be unrelated and decryption will not
+be possible.  To make my test work I have used the simple rand()
+function to fill in the tables.
+
+
+Corrections are welcome.
+
+
+
+#include &lt;stdio.h&gt;
+
+/* a C translation of the IPG "EUREKA" algorithim's "engine".
+** This is supposed to produce random numbers for the IPG
+** "encryptor stream".
+** See <A  HREF="http://www.netprivacy.com/">http://www.netprivacy.com/</A> for the original description.
+** Eric Murray  ericm@lne.com  This code placed under GNU copyleft.  */
+
+/* machine-dependent stuff, change to suit different platforms: */
+typedef unsigned char byte;
+typedef unsigned short uint16;
+
+
+/* tables: */
+uint16 A[53];
+uint16 B[53];
+uint16 C[53];
+
+
+int init_table(uint16*table, uint16 min, uint16 max)
+{
+	/* IPG specifies no algorithim for producing the "random"
+	** initial values in the ABC tables, but it's obvious that
+	** it requires a PRNG that's somehow seeded from the "key".
+	** I've just used rand() here.  In UNIX rand() called with no
+	** seed is supposed to seed itself with 0. */
+	int i;
+	int count, r;
+
+	for(i = 0; i &lt; 53; i++) {
+		table[i] = min + (rand() % (max - min));
+	}
+}
+
+main(int argc, char **argv)
+{
+	uint16 jv;
+	int argcnt, i, n, count, diehard, nelem;
+
+	diehard = 0;
+	argcnt = 1;
+	if (argc &gt;= 2) {
+		if (strncmp(argv[argcnt],"-d") == 0) {
+			diehard++;
+			argcnt++;
+		}
+	}
+	if (argc &gt; argcnt - 1 ) {
+		n = atoi(argv[argcnt]);
+		fprintf(stderr,"Generating %d values\n",n);
+	}
+	else {
+		n = 2000;
+	}
+
+	/* seed tables: */
+	fprintf(stderr,"Seeding:  A");  fflush(stderr);
+	init_table(A,0,65535);
+	fprintf(stderr," B");  fflush(stderr);
+	init_table(B,0,12227);
+	fprintf(stderr," C");  fflush(stderr);
+	init_table(C,16384,20361);
+	fprintf(stderr,"\n");  fflush(stderr);
+
+	/* generate n values: */
+	for(; n &gt; 0; n--) {
+		/* jv is "random" (where's it seeded from?) */
+		jv = (uint16)(rand() % 53);
+
+		/* count limits the number of traverses to 53^2 so we don't get stuck */
+		for(count = 0; count &lt; 2809; count++) {
+			jv++;
+			if (jv == 53) jv = 0;
+			A[jv] = (A[jv] + B[jv]) % C[jv];
+			if (A[jv] &lt; 16384) break;
+		}
+		if (count == 2809) fprintf(stderr,"Oops.\n");
+		else {
+			if (!diehard) {
+				printf("%d\n",A[jv]);
+			}
+			else {
+				/* print output in DIEHARD required format:
+				** actually since we have 16-bit ints and DIEHARD
+				** wants 32-bit ints, we print 20 per line instead of 10 */
+				if (nelem++ &gt; 19) {printf("\n"); nelem = 0;}
+				printf("%4.4x",(unsigned int)A[jv]);
+			}
+		}
+	}
+}
+
+
+
+-- 
+Eric Murray  ericm@lne.com  ericm@motorcycle.com  <A  HREF="http://www.lne.com/ericm">http://www.lne.com/ericm</A>
+PGP keyid:E03F65E5 fingerprint:50 B0 A2 4C 7D 86 FC 03  92 E8 AC E6 7E 27 29 AF
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="02377" HREF="msg02377.html">Re: IPG algorithim</A></STRONG>
+<UL><LI><EM>From:</EM> ichudov@algebra.com (Igor Chudov @ home)</LI></UL></LI>
+<LI><STRONG><A NAME="02378" HREF="msg02378.html">Re: IPG algorithim</A></STRONG>
+<UL><LI><EM>From:</EM> ichudov@algebra.com (Igor Chudov @ home)</LI></UL></LI>
+<LI><STRONG><A NAME="02381" HREF="msg02381.html">Re: IPG algorithim</A></STRONG>
+<UL><LI><EM>From:</EM> Dale Thorn &lt;dthorn@gte.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="02372" HREF="msg02372.html">Re: Ignoramus Chewed-Off on IPG algorithm</A></STRONG>
+<UL><LI><EM>From:</EM> ichudov@algebra.com (Igor Chudov @ home)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02376.html">"CypherPunks" and The Pink Swastika</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02377.html">Re: IPG algorithim</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02372.html">Re: Ignoramus Chewed-Off on IPG algorithm</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02377.html">Re: IPG algorithim</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02370"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02370"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

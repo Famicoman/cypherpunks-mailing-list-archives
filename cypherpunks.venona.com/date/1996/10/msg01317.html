@@ -1,0 +1,134 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: [CORRECTION] Re: DES cracker. -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Fri, 18 Oct 1996 10:09:23 &#45;0700 (PDT) -->
+<!--X-Message-Id: 199610180227.DAA00352@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199610171533.QAA00477@server.test.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>[CORRECTION] Re: DES cracker.</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01316.html">Date Prev</A>][<A HREF="msg01336.html">Date Next</A>][<A HREF="msg01288.html">Thread Prev</A>][<A HREF="msg01315.html">Thread Next</A>][<A HREF="index.html#01317">Date Index</A>][<A HREF="threads.html#01317">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>[CORRECTION] Re: DES cracker.</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A></LI>
+<LI><em>Subject</em>: [CORRECTION] Re: DES cracker.</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 18 Oct 1996 03:27:33 +0100</LI>
+<LI><em>CC</em>: <A HREF="mailto:ted@coolfactor.com">ted@coolfactor.com</A>, <A HREF="mailto:eay@mincom.com">eay@mincom.com</A>, <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A>,       <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg01288.html">199610171533.QAA00477@server.test.net</A>&gt; (message from Adam Backon Thu, 17 Oct 1996 16:33:48 +0100)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Eric Young pointed out to me a factor of 8 error in my DES CBC block
+timing cacluations (I used megabytes, Erics figures are in megabytes,
+Peter's are in mega _bits_, this fact escaped my notice, though I must
+say I was very impressed with Peters optimisations :-).
+
+Peter since posted his cool keysched optimisations, which change
+things also.
+
+So here's the table revisited (extrapolated to 133Mhz Pentium, from
+Peter's 90Mhz to keep it in line with the previously posted table):
+
+keysched = 3.8us
+DES cbc = 7.3us
+
+n keys    |  key   |   DES  | elapsed for | elapsed per |
+at a time |  sched |   cbc  | n key tests | key test    | keys/sec
+-----------------------------------------------------------------------
+     1       3.4us    21.9us      25.3us         25.3us    39.5k keys/s
+     2       3.4us    43.8us      47.2us         23.6us    42.4k keys/s
+     4       3.4us    87.6us      91.0us         22.7us    44.0k keys/s
+     8       3.4us   175.2us     178.6us         22.3us    44.8k keys/s
+    16       3.4us   350.4us     353.8us         22.1us    45.2k keys/s
+    32       3.4us   700.8us     704.2us         22.0us    45.4k keys/s
+    64       3.4us  1401.6us    1405.0us         22.0us    45.6k keys/s
+   128       3.4us  2803.2us    2806.6us         21.9us    45.6k keys/s
+
+So as you can see this greatly reduces the gains to be made from
+multiple keys.  Not worth doing more than 64 keys, and 64 keys only
+buys 15% increase in keys/sec.
+
+When Peter adds what he calls the "glue" code in his paper (extra code
+to move data, compare results etc), the advantage of multiple keys may
+go down further.
+
+Also if the extra code for testing multiple keys pushes the code
+requirements over the 8k L1 code cache, or the extra data space pushes
+the data over the 8k L1 data cache, this may lose more than is gained.
+The extra code complexity will add a small amount of overhead too.
+
+The data requirements for multiple keys aren't that high. (Extra data
+is number of blocks required per test x 8 byte block size = 64 x 8 x 3
+= 1.5k, or 384 bytes if you restrict yourself to 16 keys at once, and
+lose the last 1% gain).
+
+Adam
+--
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01288" HREF="msg01288.html">Re: DES cracker.</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Back &lt;aba@dcs.ex.ac.uk&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01316.html">Re: DES cracker.</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01336.html">Identity is Just Another Credential...</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01288.html">Re: DES cracker.</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01315.html">Re: DES cracker.</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01317"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01317"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

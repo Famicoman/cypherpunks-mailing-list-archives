@@ -1,0 +1,574 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Hiding conventionally encrypted messages in PGP messages to someelse. -->
+<!--X-From-R13: 0k7QT5048RNabjurer -->
+<!--X-Date: Fri, 2 Sep 94 20:20:37 PDT -->
+<!--X-Message-Id: 199409030238.AA18130@xtropia -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Hiding conventionally encrypted messages in PGP messages to someelse.</TITLE>
+<LINK REV="made" HREF="mailto:0x7CF5048D@nowhere">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00056.html">Date Prev</A>][<A HREF="msg00061.html">Date Next</A>][<A HREF="msg00056.html">Thread Prev</A>][<A HREF="msg00061.html">Thread Next</A>][<A HREF="index.html#00057">Date Index</A>][<A HREF="threads.html#00057">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Hiding conventionally encrypted messages in PGP messages to someelse.</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:alt.security.pgp.usenet@decwrl.dec.com">alt.security.pgp.usenet@decwrl.dec.com</A></LI>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:alt.security.pgp.usenet@decwrl.dec.com">alt.security.pgp.usenet@decwrl.dec.com</A></LI>
+<LI><em>Subject</em>: Hiding conventionally encrypted messages in PGP messages to someelse.</LI>
+<LI><em>From</em>: <A HREF="mailto:0x7CF5048D@nowhere">0x7CF5048D@nowhere</A></LI>
+<LI><em>Date</em>: Fri, 2 Sep 1994 19:38:05 -0700</LI>
+<LI><em>Comments</em>: This message was anonymously remailed. Do not reply to the address in the from header, unless you wish to report a problem. Thank you.</LI>
+<LI><em>Newsgroups</em>: alt.security.pgp</LI>
+<LI><em>Remailed-By</em>: remail@extropia.wimsey.com</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+-----BEGIN PGP SIGNED MESSAGE-----
+
+I have been thinking about steganography lately. Correct me if I am
+wrong, but it seems to me that if one wants to hide encrypted data, then
+all this public key encryption stuff becomes irrelevant. It seems that
+the sender and the recipient must agree on a way to hide the data. The
+time of this agreement is a perfect time to exchange conventional
+key(s).
+
+Speaking of conventional encryption, PGP uses conventional encryption
+(IDEA). RSA is only used to transmit a conventional encryption key,
+after it has been randomly chosen. So if we wish to hide conventionally
+encrypted data, why not use the purloined letter method, and hide it as
+the conventionally encrypted data in a PGP encrypted file?
+
+Then, when Darth Vader finds the PGP encrypted file, we can say that we
+can not decrypt the file, because it was encrypted for
+obiwan@galaxy.far.far.away. If the RSA headers confirm this, Darth will
+have no reason to disbelieve us. Hopefully, obiwan will be out of
+Darth's reach.
+
+To create such a file, we would simply create as PGP usually does,
+except that we specify or record the conventional IDEA key used. Then to
+decrypt the file, we simply ignore the RSA headers and use the specified
+or recorded conventional IDEA key. We could even insure that the IDEA
+key in the RSA encrypted headers is wrong. So, obiwan can not reveal
+the data even if Darth can seize him.
+
+I have created a hack to PGP ui to do all of the above!
+The hack works exactly like ordinary PGP except that there
+are 3 new configuration parameters which may only be specified
+only on the command line. These parameters are +DISPLAYIDEAKEY
++SPECIFYIDEAKEY and +WRONGIDEAKEY.
+
++DISPLAYIDEAKEY=on causes the IDEA key used to be displayed in
+hex.
+
++SPECIFYIDEAKEY is used to specify the idea key. It can
+be specified as a passphrase or as a hexadecimal string.
+
++WRONGIDEAKEY=on causes the wrong idea key to be encrypted
+into the RSA blocks so that the nominal recipient can not
+decrypt the file.
+
+Examples:
+
+pgp "+SPECIFYIDEAKEY=my pass phrase" -eat file obiwan@galaxy.far.far.away
+
+We will be able to decrypt the encrypted file even though we are
+not obiwan by:
+
+pgp "+SPECIFYIDEAKEY=my pass phrase" file.asc
+
+If we wish to encrypt as above but we do not want obiwan to be able
+to decrypt we would say:
+
+pgp +WRONGIDEAKEY=on "+SPECIFYIDEAKEY=my pass phrase" -eat file obiwan@galaxy.far.far.away
+
+obiwan will not be able to decrypt (but we will), because the wrong idea
+key (chosen randomly) will be RSA encrypted in the headers.
+
+We can use the +DISPLAYIDEAKEY=on parameter to display the idea key used.
+
+pgp +DISPLAYIDEAKEY=on -eat file obiwan@galaxy.far.far.away
+
+This will print the idea key in hex.
+
+We will be able to decrypt by specifying the displayed key in hex.
+
+pgp +SPECIFYIDEAKEY=0X7ee723d686cf5aac8d4b3fd091a00e3e file.asc
+
+We can use the parameter +SPECIFYIDEAKEY=PROMPT (upper case)
+to cause the hacked PGP to prompt for the pass phrase or hex
+string from the terminal.
+
+If you use any of the above be sure that +SELF_ENCRYPT
+is off. It will not do to have your own name in the RSA headers
+when Darth comes for you.
+
+To create a hacked version of the program, do the following 
+steps:
+
+1) Run this message thru pgp to restore the cutmarks.
+2) unpack the pgp 2.6 ui sources to a directory.
+3) apply the context diffs (below) using patch.
+	patch &lt;file
+4) compile as usual.
+5) rename the executable something other than pgp so as
+   to respect Phil's trade mark.
+
+
+Someone please store this message on BBS's and public
+FTP sites so that it is publicly available.
+
+Context diffs follow.
+- --------------------cut here------------------------------
+diff -c ..\src/config.c ./config.c
+*** ../src/config.c	Wed May 25 18:58:19 1994
+- --- ./config.c	Tue Aug 23 12:45:21 1994
+***************
+*** 88,94 ****
+  	/* options below this line can only be used as command line
+  	 * "long" options */
+  #define CONFIG_INTRINSICS	BATCHMODE
+! 	BATCHMODE, FORCE
+  };
+  
+  static char *intrinsics[] =
+- --- 88,95 ----
+  	/* options below this line can only be used as command line
+  	 * "long" options */
+  #define CONFIG_INTRINSICS	BATCHMODE
+! 	BATCHMODE, FORCE,
+! 	DISPLAYIDEAKEY,SPECIFYIDEAKEY,WRONGIDEAKEY,
+  };
+  
+  static char *intrinsics[] =
+***************
+*** 99,104 ****
+- --- 100,106 ----
+  	"INTERACTIVE", "PKCS_COMPAT", "ARMOR_VERSION", "VERSION_BYTE",
+  	/* command line only */
+  	"BATCHMODE", "FORCE",
++ 	"DISPLAYIDEAKEY","SPECIFYIDEAKEY","WRONGIDEAKEY",
+  };
+  
+  static INPUT_TYPE intrinsicType[] =
+***************
+*** 109,114 ****
+- --- 111,117 ----
+  	BOOL, NUMERIC, STRING, NUMERIC,
+  	/* command line only */
+  	BOOL, BOOL,
++ 	BOOL, STRING, BOOL,
+  };
+  
+  /* Possible settings for variables */
+***************
+*** 411,416 ****
+- --- 414,424 ----
+  			case BATCHMODE: batchmode = flag; break;
+  			case FORCE: force_flag = flag; break;
+  			case PKCS_COMPAT: pkcs_compat = value; break;
++ 			case DISPLAYIDEAKEY: display_idea_key = flag; break;
++ 			case SPECIFYIDEAKEY:
++ 				specify_idea_key = str;
++ 				break;
++ 			case WRONGIDEAKEY: wrong_idea_key = flag; break;
+  			}
+  	}
+  
+diff -c ..\src/crypto.c ./crypto.c
+*** ../src/crypto.c	Fri May 27 12:01:05 1994
+- --- ./crypto.c	Tue Aug 23 10:40:26 1994
+***************
+*** 458,464 ****
+  	return RANDSEED_SIZE;
+  }
+  
+! int make_random_ideakey(byte key[IDEAKEYSIZE+RAND_PREFIX_LENGTH])
+  /*	Make a random IDEA key.  Returns its length (the constant 16).
+  	It also generates a random IV, which is placed in the key array
+  	after the key proper, but is not counted in the length.
+- --- 458,464 ----
+  	return RANDSEED_SIZE;
+  }
+  
+! int make_random_ideakey_ign(byte key[IDEAKEYSIZE+RAND_PREFIX_LENGTH],int ignore)
+  /*	Make a random IDEA key.  Returns its length (the constant 16).
+  	It also generates a random IV, which is placed in the key array
+  	after the key proper, but is not counted in the length.
+***************
+*** 483,489 ****
+  		randaccum((IDEAKEYSIZE+RAND_PREFIX_LENGTH)*8);
+  			 /* get some random key bits */
+  
+! 		for (count = 0; count &lt; IDEAKEYSIZE+RAND_PREFIX_LENGTH; count++)
+  			key[count] = randombyte();
+  	}
+  
+- --- 483,489 ----
+  		randaccum((IDEAKEYSIZE+RAND_PREFIX_LENGTH)*8);
+  			 /* get some random key bits */
+  
+! 		for (count = ignore; count &lt; IDEAKEYSIZE+RAND_PREFIX_LENGTH; count++)
+  			key[count] = randombyte();
+  	}
+  
+***************
+*** 493,499 ****
+  /* Generate a good random IDEA key and initial vector */
+  /* If we have no random bytes, the randombyte() part will be useless */
+  	count = IDEAKEYSIZE+RAND_PREFIX_LENGTH;
+! 	while (count--)
+  		key[count] = idearand() ^ try_randombyte();
+  
+  /* Write out a new randseed.bin */
+- --- 493,499 ----
+  /* Generate a good random IDEA key and initial vector */
+  /* If we have no random bytes, the randombyte() part will be useless */
+  	count = IDEAKEYSIZE+RAND_PREFIX_LENGTH;
+! 	while (count-- &gt; ignore )
+  		key[count] = idearand() ^ try_randombyte();
+  
+  /* Write out a new randseed.bin */
+***************
+*** 501,507 ****
+  	
+  	return IDEAKEYSIZE;
+  }
+! 
+  
+  word32 getpastlength(byte ctb, FILE *f)
+  /*	Returns the length of a packet according to the CTB and
+- --- 501,510 ----
+  	
+  	return IDEAKEYSIZE;
+  }
+! int make_random_ideakey(byte key[IDEAKEYSIZE+RAND_PREFIX_LENGTH])
+! {
+! 	return make_random_ideakey_ign(key,0);
+! }
+  
+  word32 getpastlength(byte ctb, FILE *f)
+  /*	Returns the length of a packet according to the CTB and
+***************
+*** 2075,2081 ****
+  {
+  	FILE *f;	/* input file */
+  	FILE *g;	/* output file */
+! 	byte ideakey[16];
+  	struct hashedpw *hpw;
+  
+  	if (verbose)
+- --- 2078,2084 ----
+  {
+  	FILE *f;	/* input file */
+  	FILE *g;	/* output file */
+! 	byte ideakey[IDEAKEYSIZE+RAND_PREFIX_LENGTH]; /* 16 + 8 */
+  	struct hashedpw *hpw;
+  
+  	if (verbose)
+***************
+*** 2099,2105 ****
+  
+  	/* Get IDEA password, hashed to a key */
+  	if (passwds)
+! 	{	memcpy(ideakey, passwds-&gt;hash, sizeof(ideakey));
+  		memset(passwds-&gt;hash, 0, sizeof(passwds-&gt;hash));
+  		hpw = passwds;
+  		passwds = passwds-&gt;next;
+- --- 2102,2110 ----
+  
+  	/* Get IDEA password, hashed to a key */
+  	if (passwds)
+! 	{
+! 		make_random_ideakey_ign(ideakey,IDEAKEYSIZE);
+! 		memcpy(ideakey, passwds-&gt;hash, sizeof(passwds-&gt;hash));
+  		memset(passwds-&gt;hash, 0, sizeof(passwds-&gt;hash));
+  		hpw = passwds;
+  		passwds = passwds-&gt;next;
+***************
+*** 2140,2145 ****
+- --- 2145,2183 ----
+  /*======================================================================*/
+  
+  static byte (*keyID_list)[KEYFRAGSIZE] = NULL;
++ int display_key(byte ideakey[24])
++ {
++   int i;
++   for(i=0;i&lt;IDEAKEYSIZE;i++)
++ 	fprintf(pgpout,"%02.2x",(unsigned)ideakey[i]);
++ }
++ int ideakey_get(byte ideakey[24])
++ {
++ 	char buf[160];
++ 	unsigned val;
++ 	int i;
++ 	if (strcmp(specify_idea_key,"PROMPT") == 0)
++ 	{
++ 	  fprintf(pgpout,"Enter passphrase for Idea key:");
++ 	  fflush(pgpout);
++ 	  getstring(buf,sizeof(buf),showpass);
++ 	  specify_idea_key = buf;
++ 	}
++ 	if( (specify_idea_key[0] == '0')
++ 		&amp;&amp; (toupper(specify_idea_key[1]) == 'X') )
++ 	{
++ 	  char * buf;
++ 	  buf = specify_idea_key+2;
++ 	  for(i=0;i&lt;IDEAKEYSIZE;i++)
++ 	  {
++ 	    sscanf(buf+(2*i),"%02x",&amp;val);
++ 	    ideakey[i] = (byte) (unsigned char) (val&amp;0xff);
++ 	  }
++ 	}
++ 	else hashpass(specify_idea_key,strlen(specify_idea_key),ideakey);
++ 	fill0(specify_idea_key,strlen(specify_idea_key));
++ 	return IDEAKEYSIZE;
++ }
+  
+  int encryptfile(char **mcguffins, char *infile, char *outfile, 
+  	boolean attempt_compression)
+***************
+*** 2206,2212 ****
+  		fseek(f, 0, SEEK_SET); /* Get back to the beginning for encryption */
+  	}
+  
+! 	ckp_length = make_random_ideakey(ideakey);
+  	/* Returns a 24 byte random IDEA key */
+  
+  /* Assume MSB external byte ordering */
+- --- 2244,2258 ----
+  		fseek(f, 0, SEEK_SET); /* Get back to the beginning for encryption */
+  	}
+  
+! 	if ( specify_idea_key &amp;&amp; !wrong_idea_key)
+! 	{
+! 		ckp_length = make_random_ideakey_ign(ideakey,IDEAKEYSIZE);
+! 		ideakey_get(ideakey);
+! 	}
+! 	else
+! 	{
+! 		ckp_length = make_random_ideakey(ideakey);
+! 	};
+  	/* Returns a 24 byte random IDEA key */
+  
+  /* Assume MSB external byte ordering */
+***************
+*** 2261,2266 ****
+- --- 2307,2327 ----
+  	}
+  	free(keyID_list);
+  
++ 	if(wrong_idea_key &amp;&amp; display_idea_key ) 
++ 	{
++ 	  int i;
++ 	  fprintf(pgpout,"Key specified in RSA headers is :");
++ 	  display_key(ideakey);
++ 	  fprintf(pgpout,"\nbut,\n");
++ 	}
++ 	if (wrong_idea_key &amp;&amp; specify_idea_key) ideakey_get(ideakey);
++ 	if ( display_idea_key )
++ 	{
++ 	  fprintf(pgpout,"Idea Key used to conventionally encrypt data is :");
++ 	  display_key(ideakey);
++ 	  fputc('\n',pgpout);
++ 	}
++ 
+  	close_idearand();
+  	/**	Finished with RSA block containing IDEA key. */
+  
+***************
+*** 2862,2867 ****
+- --- 2923,2946 ----
+  		nkeys = nkey;
+  	}
+  
++ 	if ( gotkey &amp;&amp; specify_idea_key &amp;&amp; display_idea_key )
++ 	{
++ 		fprintf(pgpout,"Idea key specified by the RSA headers is:");
++ 		display_key(outbuf+1);
++ 		fprintf(pgpout,"\n but ");
++ 	}
++ 	if( specify_idea_key )
++ 	{
++ 		ideakey_get(outbuf+1);
++ 		gotkey = 1;
++ 	};
++ 	if ( display_idea_key )
++ 	{
++ 	  fprintf(pgpout,"Idea key used to conventionally decrypt file is:");
++ 	  display_key(outbuf+1);
++ 	  fputc('\n',pgpout);
++ 	};
++ 	
+  	/* Ok, Now lets clean up, and continue on to the rest of the file so
+  	 * that it can be decrypted properly.  Things should be ok once I
+  	 * reset some stuff here...	-derek
+***************
+*** 2877,2899 ****
+  		fclose(f);
+  		return(-1);
+  	}
+! 	/* Verify that top of buffer has correct algorithm byte */
+! 	--count;	/* one less byte to drop algorithm byte */
+  /* Assume MSB external byte ordering */
+! 	if (version_error(outbuf[0], IDEA_ALGORITHM_BYTE))
+! 	{	fclose(f);
+  		return(-1);
+! 	}
+  
+! 	/* Verify checksum */
+! 	count -= 2;	/* back up before checksum */
+  /* Assume MSB external byte ordering */
+! 	chksum = fetch_word16(outbuf+1+count);
+! 	if (chksum != checksum(outbuf+1, count))
+! 	{	fprintf(pgpout,PSTR("\n\007Error: RSA-decrypted block is corrupted.\n\
+  This may be caused either by corrupted data or by using the wrong RSA key.\n"));
+  		fclose(f);
+  		return(-1);
+  	}
+  
+  	/* outbuf should contain random IDEA key packet */
+- --- 2956,2981 ----
+  		fclose(f);
+  		return(-1);
+  	}
+! 	if ( !specify_idea_key)
+! 	{
+! 	  /* Verify that top of buffer has correct algorithm byte */
+! 	  --count;	/* one less byte to drop algorithm byte */
+  /* Assume MSB external byte ordering */
+! 	  if (version_error(outbuf[0], IDEA_ALGORITHM_BYTE))
+! 	  {	fclose(f);
+  		return(-1);
+! 	  }
+  
+! 	  /* Verify checksum */
+! 	  count -= 2;	/* back up before checksum */
+  /* Assume MSB external byte ordering */
+! 	  chksum = fetch_word16(outbuf+1+count);
+! 	  if (chksum != checksum(outbuf+1, count))
+! 	  {	fprintf(pgpout,PSTR("\n\007Error: RSA-decrypted block is corrupted.\n\
+  This may be caused either by corrupted data or by using the wrong RSA key.\n"));
+  		fclose(f);
+  		return(-1);
++ 	  }
+  	}
+  
+  	/* outbuf should contain random IDEA key packet */
+diff -c ..\src/crypto.h ./crypto.h
+*** ../src/crypto.h	Fri May 27 11:59:04 1994
+- --- ./crypto.h	Mon Aug 22 13:24:08 1994
+***************
+*** 59,64 ****
+- --- 59,65 ----
+  
+  /* Make a random IDEA key.  Returns its length (the constant 16). */
+  int make_random_ideakey(byte *key);
++ int make_random_ideakey_ign(byte *key,int ignore);
+  
+  /*	Return date string, given pointer to 32-bit timestamp */
+  char *cdate(word32 *tstamp);
+diff -c ..\src/pgp.c ./pgp.c
+*** ../src/pgp.c	Fri May 27 12:15:04 1994
+- --- ./pgp.c	Mon Aug 22 16:27:10 1994
+***************
+*** 387,392 ****
+- --- 387,398 ----
+  struct hashedpw *passwds = 0, *keypasswds = 0;
+  static struct hashedpw **passwdstail = &amp;passwds;
+  
++ /* these are the static variables used by deceptive pgp */
++ boolean wrong_idea_key=0;  /* use wrong idea key (nominal recip can not decrypt)*/
++ char * specify_idea_key=NULL; /* specify idea key */
++ boolean display_idea_key=0;      /* display idea key used */
++ 
++ 
+  int main(int argc, char *argv[])
+  {
+  	int status, opt;
+diff -c ..\src/pgp.h ./pgp.h
+*** ../src/pgp.h	Wed May 25 18:43:23 1994
+- --- ./pgp.h	Mon Aug 22 16:27:10 1994
+***************
+*** 238,243 ****
+- --- 238,248 ----
+  extern char armor_version[MAX_VERSION_LENGTH];	/* version text in armor output */
+  extern int version_byte;	/* PGP packet format version */
+  
++ /* these are the static variables used by deceptive pgp */
++ extern boolean wrong_idea_key;  /* use wrong idea key (nominal recip can not decrypt)*/
++ extern char * specify_idea_key; /* specify idea key */
++ extern boolean display_idea_key;      /* display idea key used */
++ 
+  /* These lists store hashed passwords for future use. */
+  /* passwds are passwords of as-yet-unknown purpose; keypasswds
+     are passwords used to decrypt keys. */
+ 
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6
+
+iQCVAgUBLmeJbA2Gnhl89QSNAQEqRAP+LUaxwuUR/v0MgvhWohbfD3wtc1UoWVWz
+7uPC35Q3wHb6A7KRPpCDLwq3u5PxBaMt9hMiIuwWPb9/N8a+PO7yav2uOd3goCrt
+HoMpf+Ap4uKsnFWvMgUWo7gQvwYqMPNLdeX0+QbhjbXhqjBF+BvKsx4nU+yrHeXP
+mUxE8V444zU=
+=G/eW
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00056.html">Re: Program to circumvent the Sep 1 Legal Kludge part 1/5</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00061.html">Re: Hiding conventionally encrypted messages in PGP messages to someelse.</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00056.html">Re: Program to circumvent the Sep 1 Legal Kludge part 1/5</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00061.html">Re: Hiding conventionally encrypted messages in PGP messages to someelse.</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00057"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00057"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

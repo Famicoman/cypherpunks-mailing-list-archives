@@ -1,0 +1,133 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: building libraries -->
+<!--X-From-R13: Dnl Oenpuryvna <fhaqreNrfpncr.pbz> -->
+<!--X-Date: Thu, 3 Aug 95 08:48:35 PDT -->
+<!--X-Message-Id: Pine.BSD/.3.91.950803113122.12078M&#45;100000@escape.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199507310521.WAA08413@ix4.ix.netcom.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: building libraries</TITLE>
+<LINK REV="made" HREF="mailto:sunder@escape.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00143.html">Date Prev</A>][<A HREF="msg00147.html">Date Next</A>][<A HREF="msg00293.html">Thread Prev</A>][<A HREF="msg00145.html">Thread Next</A>][<A HREF="index.html#00144">Date Index</A>][<A HREF="threads.html#00144">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: building libraries</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Bill Stewart &lt;<A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: building libraries</LI>
+<LI><em>From</em>: Ray Arachelian &lt;<A HREF="mailto:sunder@escape.com">sunder@escape.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 3 Aug 1995 11:40:02 -0400 (EDT)</LI>
+<LI><em>Cc</em>: Alex Tang &lt;<A HREF="mailto:altitude@cic.net">altitude@cic.net</A>&gt;, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;199507310521.WAA08413@ix4.ix.netcom.com&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+On Sun, 30 Jul 1995, Bill Stewart wrote:
+
+&gt; If you did everything in an RSAREF-compatible manner, that would help;
+&gt; I think somebody outside the US has written an RSAREF-clone.
+&gt; Some problems include building programs that have generic-callout hooks
+&gt; instead of crypto-specific hooks (so that they don't get bitten by ITAR),
+&gt; while still maintaining reasonable efficiency and convenience.
+
+One way to achieve this is to provide multi-layered generic "compression" 
+hooks which get called in this manner:
+
+ Compress[x](char *bufferin, size_t insize, char *bufferout, size_t *osize);
+
+Then you chain several of these by alternating the in/out buffers, say 
+something like this:
+
+ for (i=0; i&lt;MAXCOMPRESSORS; i+=2)
+ {
+  Compress[i](buffer1,size1,buffer2,&amp;size2);
+  Compress[i+1](buffer2,size2,buffer1,&amp;size1);
+ }
+
+To decompress, you'd do something like this:
+
+ for (i=MAXCOMPRESSORS-1; i; i-=2)
+ {
+  Decompress[i+1](buffer2,size2,buffer1,&amp;size1);
+  Decompress[i](buffer1,size1,buffer2,&amp;size2);
+ }
+
+This lets you set up a chain of compressors, each compressing the output 
+of the previous levels.  And what you do is allow these compressors to be 
+external to the program!  (If one or more of those should be hooks to 
+encrypt, well, hey, that's just a 'bug' ;-)
+
+Basically this does C1(C2(C3(C4...CN(text)))))...) to compress the output of 
+the previous compressors.  I would reccomend that the last in the set be 
+the encryptors or else all the other compressors would fail. :-)
+
+Now, would &gt;THAT&lt; be exportable?
+
+=================================================================93=======
+ + ^ + |  Ray Arachelian | Amerika: The land of the Freeh. | \-_    _-/  |
+  \|/  |sunder@escape.com| Where day by day, yet another   |  \  --  /   |
+&lt;--+--&gt;|                 | Constitutional right vanishes.  |6 _\-  -/_  6|
+  /|\  |    Just Say     |                                 |----\  /---- | 
+ + v + | "No" to the NSA!| Jail the censor, not the author!|     \/      |
+=======/---------------------------------------------------------VI------/
+      /  I watched and weeped as the Exon bill passed, knowing that yet /
+     / another freedom vanished before my eyes.  How soon before we see/
+    /a full scale dictatorship in the name of decency? While the rest /
+   /of_the_world_fights_FOR_freedom,_our_gov'ment_fights_our_freedom_/
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00143.html">Re: Australia next to ban PGP</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00147.html">Re: NYET--attempted formal specs (again)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00293.html">Re: ACLU Opposes Exon-Like Speech Crimes in Managers Amend. to House Telco Bill</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00145.html">Re: building libraries</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00144"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00144"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

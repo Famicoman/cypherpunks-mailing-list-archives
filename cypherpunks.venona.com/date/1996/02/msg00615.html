@@ -1,0 +1,159 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: [CODE] Signing Web Pages -->
+<!--X-From-R13: "Sq Qnec, YVWXAZ ElfOqzva" <repNqny1820.pbzchgrx.arg> -->
+<!--X-Date: Thu, 8 Feb 1996 18:44:40 +0800 -->
+<!--X-Message-Id: 199602081016.FAA05219@dal1820.computek.net -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>[CODE] Signing Web Pages</TITLE>
+<LINK REV="made" HREF="mailto:erc@dal1820.computek.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00610.html">Date Prev</A>][<A HREF="msg00616.html">Date Next</A>][<A HREF="msg00612.html">Thread Prev</A>][<A HREF="msg00616.html">Thread Next</A>][<A HREF="index.html#00615">Date Index</A>][<A HREF="threads.html#00615">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>[CODE] Signing Web Pages</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: [CODE] Signing Web Pages</LI>
+<LI><em>From</em>: "Ed Carp, KHIJOL SysAdmin" &lt;<A HREF="mailto:erc@dal1820.computek.net">erc@dal1820.computek.net</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 8 Feb 1996 04:16:42 -0600 (CST)</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:ecarp@netcom.com">ecarp@netcom.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Here's a quick script I hacked together in the last few minutes to sign 
+web pages.  Very simple-minded, it nonetheless does the job.  If you want 
+to see how it looks in action, visit <A  HREF="http://dal1820.computek.net">http://dal1820.computek.net</A>
+
+#! /bin/sh
+#
+# signit - use PGP to sign a web page
+# Written 02/08/96 by Ed Carp (ecarp@netcom.com)
+#
+# This could conceptually be used to sign (and optionally verify)
+# shell scripts, etc.  The possibilities are endless...
+#
+
+#
+# Set up some variables...
+#
+
+# Change this if you're so inclined...
+PGPHELP="http:\/\/www.yahoo.com\/Computers\/Security_and_Encryption"
+
+# Look for a line that starts like this...
+LOOKFOR="This web page has been signed with"
+ADDLINE="$LOOKFOR &lt;A HREF=$PGPHELP&gt;PGP&lt;\/A&gt;.  To see the digital signature, click &lt;A HREF=$1.asc.html&gt;here&lt;\/A&gt;."
+
+#
+# First, we need to make sure that the page hasn't already been signed...
+#
+
+F=`grep "^$LOOKFOR" $1|wc -l`
+F="`echo $F`"
+# If it hasn't already been signed, add signature line
+if [ "$F" = "0" ]; then
+	echo Adding PGP signature HTML to document
+	echo "s/&lt;\/BODY&gt;/$ADDLINE&lt;\/BODY&gt;/g" &gt; $1.temp.$$
+	echo "s/&lt;\/body&gt;/$ADDLINE&lt;\/body&gt;/g" &gt;&gt; $1.temp.$$
+	sed -f $1.temp.$$ &lt; $1 &gt; $1.$$
+	rm -f $1.temp.$$
+	mv $1.$$ $1
+fi
+pgp -asb $1
+# Add rudimentary HTML
+echo "&lt;HTML&gt;&lt;HEAD&gt;&lt;TITLE&gt;PGP Digital Signature of $1&lt;/TITLE&gt;&lt;/HEAD&gt;" &gt; $1.$$
+echo "&lt;BODY&gt;&lt;I&gt;PGP Digital Signature generated `date`&lt;/I&gt;&lt;HR&gt;&lt;PRE&gt;" &gt;&gt; $1.$$
+cat $1.asc &gt;&gt; $1.$$
+echo "&lt;/PRE&gt;&lt;/BODY&gt;&lt;/HTML&gt;" &gt;&gt; $1.$$
+mv $1.$$ $1.asc.html
+rm $1.asc
+echo Done.
+--
+Ed Carp, N7EKG    			Ed.Carp@linux.org, ecarp@netcom.com
+					214/993-3935 voicemail/digital pager
+					800/558-3408 SkyPager
+Finger ecarp@netcom.com for PGP 2.5 public key		an88744@anon.penet.fi
+
+"Past the wounds of childhood, past the fallen dreams and the broken families,
+through the hurt and the loss and the agony only the night ever hears, is a
+waiting soul.  Patient, permanent, abundant, it opens its infinite heart and
+asks only one thing of you ... 'Remember who it is you really are.'"
+
+                    -- "Losing Your Mind", Karen Alexander and Rick Boyes
+
+The mark of a good conspiracy theory is its untestability.
+		    -- Andrew Spring
+----------------------------------------------------------------------
+According to the Communications Decency Act, these are the words you may
+no longer use in your Internet correspondence:  Shit, piss, fuck, cunt,
+cock-sucker, mother-fucker and tits. The use of shit, piss, fuck, cunt,
+cock-sucker, mother-fucker and tits, may now earn you a substantial fine
+as well as possible jail time, should President Clinton sign this Bill
+into law.  Please refrain from using shit, piss, fuck, cunt, cock-sucker,
+mother-fucker and tits, to protect your children as well as others, from
+their evil influence, thus keeping America "ideologically pure".
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00616" HREF="msg00616.html">Re: [CODE] Signing Web Pages</A></STRONG>
+<UL><LI><EM>From:</EM> "Ed Carp, KHIJOL SysAdmin" &lt;erc@dal1820.computek.net&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00635" HREF="msg00635.html">Re: [CODE] Signing Web Pages</A></STRONG>
+<UL><LI><EM>From:</EM> Mike Fletcher &lt;fletch@ain.bls.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00610.html">Re: POTP gets good press</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00616.html">Re: [CODE] Signing Web Pages</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00612.html">pgp HELP!!!!!</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00616.html">Re: [CODE] Signing Web Pages</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00615"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00615"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

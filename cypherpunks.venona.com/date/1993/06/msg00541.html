@@ -1,0 +1,129 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re:  xor w/prbs -->
+<!--X-From-R13: orneNrntyr.sfy.abnn.tbi (Prne Uvyrf) -->
+<!--X-Date: Thu, 17 Jun 93 22:37:47 PDT -->
+<!--X-Message-Id: 9306180534.AA01952@eagle.fsl.noaa.gov -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re:  xor w/prbs</TITLE>
+<LINK REV="made" HREF="mailto:bear@eagle.fsl.noaa.gov">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00533.html">Date Prev</A>][<A HREF="msg00534.html">Date Next</A>][<A HREF="msg00533.html">Thread Prev</A>][<A HREF="msg00551.html">Thread Next</A>][<A HREF="index.html#00541">Date Index</A>][<A HREF="threads.html#00541">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re:  xor w/prbs</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re:  xor w/prbs</LI>
+<LI><em>From</em>: <A HREF="mailto:bear@eagle.fsl.noaa.gov">bear@eagle.fsl.noaa.gov</A> (Bear Giles)</LI>
+<LI><em>Date</em>: Fri, 18 Jun 93 05:34:49 GMT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;How *do* you break this cypher?  He is generating a lot of random numbers
+&gt;between 0 and 255, and xor'ing each successive one with the next byte of plain-
+&gt;text.  I know that this is a trivial cypher to break, according to PRZ at
+&gt;least, but how do you do it?
+
+In this case, since the modulus is a small power of 2, you can do exhaustive
+search.  There is _one_ sequence of 256 distinct values.
+
+Still want to know how long it will take to crack his ciphertext?
+
+&gt;#define MULTIPLIER 0x015a4e35L
+&gt;#define INCREMENT 1
+&gt;
+&gt;long RandomSeed;
+&gt;
+&gt;int GetRandomNumber(int Range)
+&gt;	{
+&gt;	RandomSeed = MULTIPLIER * RandomSeed + INCREMENT;
+&gt;	return(RandomSeed % Range);
+&gt;	}
+&gt;
+&gt;So how do you crack this cipher without trying all the keys, guys?
+
+Since 
+
+   max_integer / gcd (range, max_integer) &gt; range
+
+you can move the modulus operation around without worrying about
+weird effects from the finite word size.  This is because the 
+closed form of the loop is:
+
+   seed[k] = (seed[0] * mult^k + incr * sum (j = 0 to k-1) of mult^j) % range
+
+which is equal to
+
+   seed[k] = (seed[0] % range) * (mult % range)^k +
+			  (incr % range) * sum (j = 0 to k-1) of (mult % range)^j
+
+and the modulus operation with a power-of-2 range simply keeps the last
+n bits.  But, this also means there are effectively only "range" possible
+values for the initial seed.
+
+Even if you make the increment and multiplier part of the key, they must
+(both?) be odd so you only have 22 bits of key.  Of course at this point
+you can simply use the fact that this "one time pad" is actually a 
+Vigenere cipher with 256 columns -- easy to crack if you have some
+insight into the nature of the plaintext (e.g., English text).
+
+For instance, 10-15 small documents (40 lines) encrypted with the same
+key is enough to crack it even if the multiplier and increment are 
+unknown but constant.
+
+Bear Giles
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00533.html">xor w/prbs</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00534.html">OTP dual decryption</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00533.html">xor w/prbs</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00551.html">Re: xor w/prbs</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00541"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00541"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

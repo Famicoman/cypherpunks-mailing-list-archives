@@ -1,0 +1,152 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Fiat Shamir Zero Knowledge Test -->
+<!--X-From-R13: xbbygrxNvby.vr (wzpp) -->
+<!--X-Date: Thu, 31 Aug 95 17:34:35 PDT -->
+<!--X-Message-Id: 199509010028.BAA06686@joyce.iol.ie -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Fiat Shamir Zero Knowledge Test</TITLE>
+<LINK REV="made" HREF="mailto:kooltek@iol.ie">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[Date Prev][<A HREF="msg00029.html">Date Next</A>][Thread Prev][<A HREF="msg00029.html">Thread Next</A>][<A HREF="index.html#00005">Date Index</A>][<A HREF="threads.html#00005">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Fiat Shamir Zero Knowledge Test</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Fiat Shamir Zero Knowledge Test</LI>
+<LI><em>From</em>: <A HREF="mailto:kooltek@iol.ie">kooltek@iol.ie</A> (jmcc)</LI>
+<LI><em>Date</em>: Fri, 01 Sep 1995 01:31:16 +0100</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;Can someon point me to a net description of
+&gt;the "Fiat Shamir Zero Knowledge Test" used
+&gt;in the RCA DirecTV smart cards.
+&gt;
+
+The standard text on this is the paper "How To Prove Yourself" by Fiat and
+Shamir. I'll try and dig up the name of the ftp site I found it on but in
+the meantime here is a rough description.
+
+The access control system for RCA DirecTv was developed by News Datacom.
+They, News Datacom, also developed the security for the VideoCrypt system
+here in Europe. The smart card used in VideoCrypt here in Europe has been
+continually reverse-engineered for the last three card issues. (currently on
+issue 09). Therefore much of the description below is based on the European
+system. Of course the fact that the DSS cards are now turning up in Europe
+repainted as Sky cards indicates that the ROM is identical. This is where
+the routined for card i/o protocols and data packets are. As a result, the
+DirecTv system probably uses the same packet types. Any of the pirate smart
+card emulator programs available on BBSes on FTP sites can be used to
+monitor the data flowing to and from the card. Cutting to the chase:
+
+Packet - Direction- Bytes - Function
+70       C &gt; D      6       Card presents  6 byte ID number to decoder
+7C       C &gt; D     16       Card sends tiering/authorisation levels to decoder
+7E	 C &gt; D     64       Card sends X value for ZKT to decoder 
+80       D &gt; C	    1       Decoder sends Q flag to card (either 00h or 01h)
+82       C &gt; D     64       Card's Y ZKT response to decoder
+70       C &gt; D      6       Card presents 6 byte ID number to decoder
+
+
+The Fiat Shamir ZKT as used in here is dependent on a number of elements:
+S, the serial number of the card. 
+N, the common modulus. 
+R, the look-up table in the card (a block of data).
+X, the value sent by the card to be authenticated.
+Q, the calculation mode flag (either 00h or 01h)
+Y, the calculated response from the card.
+
+The X value is calculated as X=R^2 mod N. The Y responses are calculated as
+follows.
+
+ Y = R if Q=00h
+ Y = (R * S) mod N if Q=01h
+
+The Q flag tells the card how to generate response Y. The card would be
+authenticated in the following cases:
+
+If Q=00h then Y^2 = X mod N
+
+If Q=01h then Y^2 = (X * V) mod N where V is the card identity number
+received prior to the authentication process. S, the card serial number is
+derived from V by the equation: S = sqrt (V) mod N
+
+The implementation of the ZKT in VideoCrypt is faulty and open to a simple
+hack. It is designed to make the card authenticate itself. Many of the
+earlier decoders had a flaw in the ZKT calculation routines in the decoder.
+Of course the data in the decoder was easily popped by hackers since the
+microcontroller in charge of the authentication was not secured.
+
+In the VideoCrypt system, one of the latest bypasses for the ZKT is to
+record the response from a valid card and have the pirate card replay it.
+This saves a lot of time and it does work perfectly.
+
+Since the complete contents, (ROM and EEPROM), of the VideoCrypt card are
+now available, the whole idea of authentication is invalid. In the DSS
+system, however, there the ZKT is still viable though there are some ways in
+which it theoretically could  be bypassed if it uses the same implementation
+as VideoCrypt.
+
+Regards...jmcc
+(John McCormac)
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: 2.6.2
+
+mQCNAzAYiFIAAAEEANTTBXIijEE82VN6nL7U+Or0Br4/eJ6POKxfxy64GOJsEO7g
+kPrAI3zzuYZ4XhOH01Lt4dtr+0hmanMpKOssYR02sZGaR6OARWSRe9KIWpSUGHG3
+8pBBCqYO6adzFEVEOclqDQ1L6QZaOsf+qX8h9eo/bXpeYg43PZvSRmmL6lExAAUR
+tA5rb29sdGVrQGlvbC5pZQ==
+=vzc/
+-----END PGP PUBLIC KEY BLOCK-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Next by Date:
+<STRONG><A HREF="msg00029.html">sums with BIG numbers</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00029.html">sums with BIG numbers</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00005"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00005"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

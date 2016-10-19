@@ -1,0 +1,238 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: http://www.dataet.com/public/source/vsacmv20/ -->
+<!--X-From-R13: vpuhqbiNnytroen.pbz (Wtbe Quhqbi N ubzr) -->
+<!--X-Date: Sat, 17 May 1997 09:59:56 +0800 -->
+<!--X-Message-Id: 199705170136.UAA16850@manifold.algebra.com -->
+<!--X-Content-Type: text -->
+<!--X-Reference: 970516200054_1557203574@emout14.mail.aol.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: http://www.dataet.com/public/source/vsacmv20/</TITLE>
+<LINK REV="made" HREF="mailto:ichudov@algebra.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00892.html">Date Prev</A>][<A HREF="msg00909.html">Date Next</A>][<A HREF="msg00895.html">Thread Prev</A>][<A HREF="msg01393.html">Thread Next</A>][<A HREF="index.html#00897">Date Index</A>][<A HREF="threads.html#00897">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: http://www.dataet.com/public/source/vsacmv20/</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:DataETRsch@aol.com">DataETRsch@aol.com</A></LI>
+<LI><em>Subject</em>: Re: http://www.dataet.com/public/source/vsacmv20/</LI>
+<LI><em>From</em>: <A HREF="mailto:ichudov@algebra.com">ichudov@algebra.com</A> (Igor Chudov @ home)</LI>
+<LI><em>Date</em>: Fri, 16 May 1997 20:36:27 -0500 (CDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00895.html">970516200054_1557203574@emout14.mail.aol.com</A>&gt; from "DataETRsch@aol.com" at May 16, 97 08:00:59 pm</LI>
+<LI><em>Organization</em>: Bool Sheet Software</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:ichudov@algebra.com">ichudov@algebra.com</A> (Igor Chudov)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@algebra.com">owner-cypherpunks@algebra.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+DataETRsch@aol.com wrote:
+&gt; Here are the addresses of the slightly modified versions of the Pascal source
+&gt; code files of VSA2048 Cryptography Module V2.0 (the shareware trial edition
+&gt; version):
+&gt; 
+&gt; <A  HREF="http://www.dataet.com/public/source/vsacmv20/vsacm.dpr">http://www.dataet.com/public/source/vsacmv20/vsacm.dpr</A>
+&gt; <A  HREF="http://www.dataet.com/public/source/vsacmv20/intunit.pas">http://www.dataet.com/public/source/vsacmv20/intunit.pas</A>
+&gt; <A  HREF="http://www.dataet.com/public/source/vsacmv20/libunit.pas">http://www.dataet.com/public/source/vsacmv20/libunit.pas</A>
+&gt; <A  HREF="http://www.dataet.com/public/source/vsacmv20/stdunit.pas">http://www.dataet.com/public/source/vsacmv20/stdunit.pas</A>
+&gt; 
+&gt; If you are not located within the United States, don't even consider viewing
+&gt; the files.
+
+Thank you VERY MUCH for releasing the source code. This shows that you are
+serious about your program and truly appreciate how important is the process
+of review as far as your credibility is concerned.
+
+I have downloaded your code and looked at it. Looks rather interesting
+(especially the part below). What I did not understand, however, is
+what is SetVal and how it works. Also, I was not clear how you set
+variables AE1, AE2, ..., AE10 and so on.
+
+As far as I understand, you use these variables to select the particular 
+encryption method. Do you normally select only one method on some random 
+basis or you use several passes?
+
+Also, some may be interested to look at this particular encryption
+method (I added some indentation and comments for readability). I believe
+that it is not particularly strong.
+
+
+procedure TC1001;
+label 1000;
+begin
+
+for B1 := 0 to 255 do 
+	Used[B1] := False;
+
+for B1 := 0 to 255 do
+begin
+  1000:
+  B2 := Random(256);
+  if Used[B2] then goto 1000;
+  EncTable[B1] := B2;
+  DecTable[B2] := B1;
+  Used[B2] := True;
+end;
+
+{============================= ENCRYPTION ==========================}
+if Process then
+  repeat
+    if Size - CurByte &gt;= Segment then Copied := Segment;
+    if Size - CurByte &lt;  Segment then Copied := (Size - CurByte);
+    FileSeek(AccFile, CurByte, 0);
+    FileRead(AccFile, Block, Copied);
+    for I1 := 1 to Copied do
+    begin
+      Block[I1] := Block[I1] xor Random(256);
+      Block[I1] := EncTable[Block[I1]];
+    end;
+
+    FileSeek(AccFile, CurByte, 0);
+    FileWrite(AccFile, Block, Copied);
+    
+    CurByte := CurByte + Segment;
+  until (Copied &lt;&gt; Segment) or (CurByte &gt; Size - 3);
+
+{======================= DECRYPTION ============================}
+if not Process then
+  repeat
+    if Size - CurByte &gt;= Segment 
+	then Copied := Segment;
+    if Size - CurByte &lt;  Segment 
+	then Copied := (Size - CurByte);
+
+    FileSeek(AccFile, CurByte, 0);
+    FileRead(AccFile, Block, Copied);
+
+    for I1 := 1 to Copied do
+    begin
+      Block[I1] := DecTable[Block[I1]];
+      Block[I1] := Block[I1] xor Random(256);
+    end;
+
+    FileSeek(AccFile, CurByte, 0);
+    FileWrite(AccFile, Block, Copied);
+    CurByte := CurByte + Segment;
+  until (Copied &lt;&gt; Segment) or (CurByte &gt; Size - 3);
+end;
+
+ignoramus
+
+&gt; Yes, I realize that the public release of the source code files is long
+&gt; overdue (okay, REALLY long overdue), but I would appreciate it if you
+&gt; e-mailed any suggestions, comments, criticisms, insults, etc. to
+&gt; jeremy@dataet.com. As I am not subscribed to the cypherpunks' mailing list, I
+&gt; would not receive any messages regarding the source code posted to the list.
+&gt; It would be best to download VSACM V2.0 from our Web site and make use of the
+&gt; help file included and analyze each function or procedure within the source
+&gt; code systematically. VSACM.DPR is the main project file. INTUNIT.PAS
+&gt; basically contains functions, procedures and data structures not directly
+&gt; available to developers. LIBUNIT.PAS contains the functions and procedures
+&gt; that are readily available to developers. STDUNIT.PAS contains the source of
+&gt; the algorithm extensions.
+&gt; 
+&gt; Also, there is a VSA2048 encrypted binary file located at
+&gt; <A  HREF="http://www.dataet.com/public/source/vsacmv20/crackit.dat">http://www.dataet.com/public/source/vsacmv20/crackit.dat</A>. The file was
+&gt; encrypted using 120-bit (NOT 128-bit) VSA2048 key. Yes, I'm making things a
+&gt; whole 8 bits easier (although the maximum key length is 2048 bits). The first
+&gt; cypherpunk who develops a VSA2048 decryption utility, decrypts the file, and
+&gt; sends decrypted message and the correct key to info@dataet.com and
+&gt; cypherpunks@toad.com will receive a free basic Web site package. (Package
+&gt; details are located at <A  HREF="http://www.dataet.com">http://www.dataet.com</A>). (Igor, this is it!)
+&gt; 
+&gt; If someone does indeed decrypt the file, I myself will post an apology and a
+&gt; declaration that VSA2048 constitutes a defective encryption algorithm to the
+&gt; cypherpunks mailing list. I will have the marketing of the VSA2048 encryption
+&gt; algorithm discontinued.
+&gt; 
+&gt; The decryption utility must be a program that either incorporates the source
+&gt; code internally or incorporates the source code as a compiled DLL. (You must
+&gt; compile the given source code. The shareware trial edition version of VSACM
+&gt; V2.0, which only allows keys up to 40 bits in length, is NOT compatible with
+&gt; the given source code.)
+&gt; 
+&gt; The "contest" expires on June 20th, 1997. The message and the correct key
+&gt; will be posted to cypherpunks@toad.com on June 21st, 1997. By the way, if
+&gt; someone cannot hack the file by June 20th...well...I don't know who'll be
+&gt; laughing then. After all, the applied key is only 120 bits in length. Also,
+&gt; the contest is currently limited to those who are subscribed to the
+&gt; cypherpunks' mailing list. There are no exceptions.
+&gt; 
+&gt; By the way, you can check out DataET Research's Web site at
+&gt; <A  HREF="http://www.dataet.com">http://www.dataet.com</A>. (No, we're NOT using America Online as our Web space
+&gt; provider anymore.)
+&gt; 
+&gt; Regards,
+&gt; 
+&gt; Jeremy Yu-Ramos
+&gt; DataET Research
+&gt; 
+
+
+
+	- Igor.
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01393" HREF="msg01393.html">Re: http://www.dataet.com/public/source/vsacmv20/</A></STRONG>
+<UL><LI><EM>From:</EM> 3umoelle@informatik.uni-hamburg.de (Ulf Möller)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00895" HREF="msg00895.html">http://www.dataet.com/public/source/vsacmv20/</A></STRONG>
+<UL><LI><EM>From:</EM> DataETRsch@aol.com</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00892.html">Re: Disinformation from folks like Kent on this list</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00909.html">Re: Civil Disobediance</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00895.html">http://www.dataet.com/public/source/vsacmv20/</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01393.html">Re: http://www.dataet.com/public/source/vsacmv20/</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00897"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00897"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

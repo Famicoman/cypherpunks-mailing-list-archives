@@ -1,0 +1,189 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Card Playing Protocol? -->
+<!--X-From-R13: enenpuryNcevfz.cbyl.rqh (Oefra Dnl Oenpuryvna) -->
+<!--X-Date: Sun, 17 Jul 94 08:27:12 PDT -->
+<!--X-Message-Id: 9407171514.AA15664@prism.poly.edu -->
+<!--X-Content-Type: text -->
+<!--X-Reference: 199407152244.AA22734@world.std.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Card Playing Protocol?</TITLE>
+<LINK REV="made" HREF="mailto:rarachel@prism.poly.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00837.html">Date Prev</A>][<A HREF="msg00839.html">Date Next</A>][<A HREF="msg00785.html">Thread Prev</A>][<A HREF="msg00900.html">Thread Next</A>][<A HREF="index.html#00842">Date Index</A>][<A HREF="threads.html#00842">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Card Playing Protocol?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:kentborg@world.std.com">kentborg@world.std.com</A> (Kent Borg)</LI>
+<LI><em>Subject</em>: Re: Card Playing Protocol?</LI>
+<LI><em>From</em>: <A HREF="mailto:rarachel@prism.poly.edu">rarachel@prism.poly.edu</A> (Arsen Ray Arachelian)</LI>
+<LI><em>Date</em>: Sun, 17 Jul 1994 11:14:58 -0400 (EDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:rvslyke@prism.poly.edu">rvslyke@prism.poly.edu</A> (Richard Van Slyke)</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00784.html">199407152244.AA22734@world.std.com</A>&gt; from "Kent Borg" at Jul 15, 94 06:44:21 pm</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+What I suggest you do is you build something that can be telnetted into.
+
+Say, something that would sit on a specific telnet port that people can telnet
+into.  When they do, another copy of the poker (or whatever game) process is
+forked into existence, and all of these processes can talk to each other
+to pass on the deck encrypted in some form or other.
+
+From what I remember off the top of my head:
+
+  You have to use a cypher which allows each card to be doubly encrypted and
+decrypted without decrypting both encryptions:
+
+  1.  Card encrypted by player 1:   E1(Card,eK1)
+  2.  Card encrypted by player 2:   E2(Card,eK2)
+  3.  Card encrypted by player 1, then encrypted by player 2:
+                                    E2(E1(Card,eK1),eK2)
+
+Now, whatever you do, player one must be able to decrypt his encryption from
+step 3 above.  That is he should be able to take: E2(E1(Card,eK1),eK2) and
+decrypt it with his key giving E2(Card,eK2) as follows:
+
+      D1(E2(E1(Card,eK1),eK2),dK1) = E2(Card,eK2)
+
+Where E1(card,key1) means encrypted by Player 1 with his key, and eK1 means
+Player 1's encryption key; D1() means decrypt by player 1 with his decryption
+key dK1, etc.
+
+You can take any cypher you like and make it into a random number generator
+by putting it in a feedback mode which doesn't encrypt, but rather just
+generates numbers (I forgot the name of this mode, but it's one of the DES
+modes that's commonly used for communications which is immune to noise.) This
+mode is built so that both sides use this sort of generator and simply XOR
+the plaintext with the generated data to produce the cyphertext, and the
+receiver XOR's the generated code of his generator with the received
+cyphertext.
+
+Anyway, what I'm getting to here is that XOR (exclusive OR, the ^ operator in
+C) will allow you to meet the above requirement:
+D1(E2(E1(Card,eK1),eK2),dK1) = E2(Card,eK2) so as to be able to implement the
+card playing protocol.
+
+An analogy to this is a box that has two pad locks on it put in such a way so
+that the owner of one lock can remove that lock without having the other owner
+remove his first.
+
+Basically the two players pass an encrypted deck to each other.  Off the top
+of my head (please check this!) both players encrypt the deck of cards.  
+Alice and Bob are our players.  So Alice picks her hand, but since they are
+still encrypted with Bob's key, she can't see what she's picked.  She passes
+her picked hand to Bob.  He decrypts the hard with his key and returns it to
+Alice.  Since this had was encrypted by Alice, Bob can't reveal it by decryption
+
+Then Alice decrypts her hand and holds on to it.  She then passes the whole
+deck (except for her hand) to Bob.  He picks his hand, sends it back to Alice,
+she decrypts his hand and returns it to Bob.  He decrypts his hand and keeps
+it, then passes the deck back to Alice.
+
+When Alice needs to pick a card, she has to pass it to Bob to decrypt, etc.
+And that in a nutshell is how the protocol works.  Since both sides see that
+all the cards are there, they can verify that no one has cheated.  Since
+neither side can see the other's cards, the game is safe.
+
+I don't recall what you do with discarded cards... maybe mark them as such?
+
+Also here's something else out to help you:
+
+// shuffle the deck routine:
+cardtype   cards[4*13+2]; // four suites of 13 cards + 2 jokers.
+
+//initialize the deck:
+for (i=0; i&lt;=4*13+2; i++) cards[i].cardnumber=i;
+
+//shuffle the deck:
+for (i=0; i&lt;=10000; i++)
+ {
+  c1=rand() % (4*13+2);
+  c2=rand() % (4*13+2);
+  swapcards(&amp;cards[c1],&amp;cards[c2]);
+ }
+
+
+You still have to define what the cards structure is, but I suggest you put
+in plenty of information in them such as a discarded flag, maybe a player's
+ID in which hand this card lives (if you pass the whole deck instead of the
+unused cards), flags to indicate which players encrypted this card, etc.
+
+The two for loops above work to build a deck for you in the best possible way.
+The 1st, initializes the deck in order..   The second shuffles the cards
+by swapping two at a time.  These functions are far more efficient for
+shuffling/building a deck of cards than by picking a random number for a card
+ID and checking to see if we've already seen it.
+
+
+Also, I would add functions in to automate the game, be it Poker, or 21, or
+whatever....  Ie: allowing the players to decide what's wild, automatically
+checking each player's hand and telling them their hand, allowing for a card
+split in Blakc Jack, etc.
+
+If you like I can see if I can find some sources to card games for you...
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00900" HREF="msg00900.html">How to make a random permutation</A></STRONG>
+<UL><LI><EM>From:</EM> hughes@ah.com (Eric Hughes)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00784" HREF="msg00784.html">Card Playing Protocol?</A></STRONG>
+<UL><LI><EM>From:</EM> kentborg@world.std.com (Kent Borg)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00837.html">Re: Card Playing Protocol</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00839.html">No Subject</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00785.html">Re: Card Playing Protocol?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00900.html">How to make a random permutation</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00842"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00842"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

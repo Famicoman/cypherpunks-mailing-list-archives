@@ -1,0 +1,142 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: HAVAL (was Re: crypto benchmarks) -->
+<!--X-From-R13: Irv Rnv <jrvqnvNrfxvzb.pbz> -->
+<!--X-Date: Sun, 21 Jan 1996 17:41:27 +0800 -->
+<!--X-Message-Id: Pine.SUN.3.91.960121011209.29362E&#45;100000@eskimo.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 31017081.19731341@smtp.ix.netcom.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: HAVAL (was Re: crypto benchmarks)</TITLE>
+<LINK REV="made" HREF="mailto:weidai@eskimo.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01195.html">Date Prev</A>][<A HREF="msg01216.html">Date Next</A>][<A HREF="msg01192.html">Thread Prev</A>][<A HREF="msg02581.html">Thread Next</A>][<A HREF="index.html#01196">Date Index</A>][<A HREF="threads.html#01196">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: HAVAL (was Re: crypto benchmarks)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: John Lull &lt;<A HREF="mailto:lull@acm.org">lull@acm.org</A>&gt;</LI>
+<LI><em>Subject</em>: Re: HAVAL (was Re: crypto benchmarks)</LI>
+<LI><em>From</em>: Wei Dai &lt;<A HREF="mailto:weidai@eskimo.com">weidai@eskimo.com</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 21 Jan 1996 01:29:49 -0800 (PST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01192.html">31017081.19731341@smtp.ix.netcom.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+On Sat, 20 Jan 1996, John Lull wrote:
+
+&gt; I didn't see your original post, but did see Deranged's response.  I
+&gt; would be interested to see whatever you come up with.
+
+I ended up doing it like this:
+
+for (i=0; i&lt;4; i++)
+{
+	FF_42(t7, t6, t5, t4, t3, t2, t1, t0, w[wi2[8*i+0]], mc2[8*i+0]);
+	FF_42(t6, t5, t4, t3, t2, t1, t0, t7, w[wi2[8*i+1]], mc2[8*i+1]);
+	FF_42(t5, t4, t3, t2, t1, t0, t7, t6, w[wi2[8*i+2]], mc2[8*i+2]);
+	FF_42(t4, t3, t2, t1, t0, t7, t6, t5, w[wi2[8*i+3]], mc2[8*i+3]);
+	FF_42(t3, t2, t1, t0, t7, t6, t5, t4, w[wi2[8*i+4]], mc2[8*i+4]);
+	FF_42(t2, t1, t0, t7, t6, t5, t4, t3, w[wi2[8*i+5]], mc2[8*i+5]);
+	FF_42(t1, t0, t7, t6, t5, t4, t3, t2, w[wi2[8*i+6]], mc2[8*i+6]);
+	FF_42(t0, t7, t6, t5, t4, t3, t2, t1, w[wi2[8*i+7]], mc2[8*i+7]);
+}
+
+This allows all the transform functions to fit into L1 cache, but at a 
+cost.  Besides the overhead of the for loop, each macro call now does two 
+extra table lookups (in wi2 and mc2). The net result is a ~100% speedup 
+over the reference implementation.
+
+Also, FYI, the boolean functions used in the reference implementation can be 
+optimized.  Thanks to Deranged Mutant for these:
+
+/*
+#define f_2(x6, x5, x4, x3, x2, x1, x0)                         \
+           ((x2) &amp; ((x1) &amp; ~(x3) ^ (x4) &amp; (x5) ^ (x6) ^ (x0)) ^ \
+            (x4) &amp; ((x1) ^ (x5)) ^ (x3) &amp; (x5) ^ (x0)) 
+*/
+
+#define f_2(x6, x5, x4, x3, x2, x1, x0)                         \
+	(((x4&amp;x5)|x2) ^ (x0|x2) ^ x2&amp;(x1&amp;(~x3)^x6) ^ x3&amp;x5 ^ x1&amp;x4)
+
+/*
+#define f_4(x6, x5, x4, x3, x2, x1, x0)                                 \
+           ((x4) &amp; ((x5) &amp; ~(x2) ^ (x3) &amp; ~(x6) ^ (x1) ^ (x6) ^ (x0)) ^ \
+            (x3) &amp; ((x1) &amp; (x2) ^ (x5) ^ (x6)) ^                        \
+            (x2) &amp; (x6) ^ (x0))
+*/
+
+#define f_4(x6, x5, x4, x3, x2, x1, x0)                                 \
+	((((~x2&amp;x5)^(x3|x6)^x1^x0)&amp;x4) ^ ((x1&amp;x2^x5^x6)&amp;x3) ^ (x2&amp;x6) ^ x0)
+
+
+/*
+#define f_5(x6, x5, x4, x3, x2, x1, x0)             \
+           ((x0) &amp; ((x1) &amp; (x2) &amp; (x3) ^ ~(x5)) ^   \
+            (x1) &amp; (x4) ^ (x2) &amp; (x5) ^ (x3) &amp; (x6))
+*/
+
+#define f_5(x6, x5, x4, x3, x2, x1, x0)             \
+	((((x0&amp;x2&amp;x3)^x4)&amp;x1) ^ ((x0^x2)&amp;x5) ^ (x3&amp;x6) ^ x0)
+
+Wei Dai
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01192" HREF="msg01192.html">Re: HAVAL (was Re: crypto benchmarks)</A></STRONG>
+<UL><LI><EM>From:</EM> lull@acm.org (John Lull)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01195.html">Update on Netscape and the Anonymiser site</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01216.html">Re: Idea for "friendly" Windows password hack</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01192.html">Re: HAVAL (was Re: crypto benchmarks)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02581.html">Re: HAVAL (was Re: crypto benchmarks)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01196"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01196"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

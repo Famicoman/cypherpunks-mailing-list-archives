@@ -1,0 +1,158 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Ping of Death? -->
+<!--X-From-R13: Urabpvqr <tra2600Nnenparg.pbz> -->
+<!--X-Date: Wed, 18 Dec 1996 11:35:21 &#45;0800 (PST) -->
+<!--X-Message-Id: Pine.LNX.3.95.961218112912.24125A&#45;100000@shelob.aracnet.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199612172317.PAA22019@slack.lne.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Ping of Death?</TITLE>
+<LINK REV="made" HREF="mailto:gen2600@aracnet.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01213.html">Date Prev</A>][<A HREF="msg01216.html">Date Next</A>][<A HREF="msg01162.html">Thread Prev</A>][<A HREF="msg01189.html">Thread Next</A>][<A HREF="index.html#01214">Date Index</A>][<A HREF="threads.html#01214">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Ping of Death?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Eric Murray &lt;<A HREF="mailto:ericm@lne.com">ericm@lne.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Ping of Death?</LI>
+<LI><em>From</em>: Genocide &lt;<A HREF="mailto:gen2600@aracnet.com">gen2600@aracnet.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 18 Dec 1996 11:35:13 -0800 (PST)</LI>
+<LI><em>cc</em>: James Glave &lt;<A HREF="mailto:james@hotwired.com">james@hotwired.com</A>&gt;, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01162.html">199612172317.PAA22019@slack.lne.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+On Tue, 17 Dec 1996, Eric Murray wrote:
+
+&gt; &gt; Anyone heard of the Ping of Death, aka the Ping Bomb. It's a large chunk of
+&gt; &gt; hostile code, disguised as a mere ping, that can lead to server rebooting.
+&gt; 
+&gt; It would be quite a trick to get an OS to run code from inside
+&gt; a ping packet.  Are you sure this isn't the well-known giant ping packet bug?
+&gt; Receiving one or more of those can cause some hosts to reboot.
+&gt; 
+	I believe you are referring to the oversized ping packet...
+
+     I've gotten a helluva lot of mail on this since I started up my web
+     page on the topic. The summaries are presented there, but if you are
+     really curious or want details I can forward on specific messages to
+     you. It's at <A  HREF="http://www.sophist.demon.co.uk/ping">http://www.sophist.demon.co.uk/ping</A>, but it *is* only
+     covering the results of a ping, not the internals. (I'm thinking more
+     from a "how-can-I-stop-it" point of view than a
+     "why-does-it-happen"...)
+
+I just wanted to note that some of the diagnoses people are using to track
+this problem might be a bit shaky.  For example, if you're not doing your
+diagnosis on the console or on a serial terminal, the machine might appear
+to be "hung" during the test when in fact you've simply blocked it from
+receiving network traffic.  (Not that this isn't a problem, mind you.)
+I would also like to start a discussion on just what the vulnerability is
+vs. what systems are vulnerable.
+This may be quite well known (and some of it is inferred from previous
+messages), but I'd like to double check with people that may have
+definitive answers.  Using snoop on Solaris 2.5, I watched a ``ping -l
+65510'' from an NT 4.0 box.  At first I thought maybe Microsoft was
+sending IP or ICMP packets with bad options, or field values.  But, it
+appears there is nothing malformed with the packets other than they are
+too long (per RFC 791 - INTERNET PROTOCOL SPECIFICATION).  ``ping -l                                                                
+65510'' ==&gt; ICMP datagram of 8 (ICMP hdr) + 65510 (data) = 65518 octets.
+Add to this the minium IP hdr of 20 octets and get we 65538 octets.  This
+is 2 octets &gt; maximum allowed IP datagram of 65536.
+
+The real problem appears to be that when a [vulnerable] host gets this
+huge ping datagram, it has to create a simular ping datagram to return to
+the sender.  The return datagram must return the incoming ping datagram's
+data section as its own.
+
+So when the [vulnerable] host is assembling this huge datagram it does
+something like
+
+     ``memcpy( assemble_buffer+20+8, ping_pkt-&gt;data, ping_pkt-&gt;data_len)''
+
+over running the assemble_buffer which is a fixed value of 65536.  On the
+systems that instantaneously reboot, we are just "fortunate" enough to
+have stomped on some important kernel data structure.
+
+Genocide
+Head of the Genocide2600 Group
+
+
+============================================================================
+		   **Coming soon! www.Genocide2600.com!
+         ____________________
+  *---===|                  |===---*
+  *---===|     Genocide     |===---*     "You can be a king or a street
+  *---===|       2600       |===---*   sweeper, but everyone dances with the
+  *---===|__________________|===---*              Grim Reaper."
+                                       
+Email:  gen2600@aracnet.com	Web:  <A  HREF="http://www.aracnet.com/~gen2600">http://www.aracnet.com/~gen2600</A>
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	It is by caffeine alone that I set my mind in motion.
+	It is by the Mountain Dew that the thoughts acquire speed,
+	the lips acquire stains, the stains become a warning.
+	It is by caffeine alone that I set my mind in motion.
+================================================================================
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01162" HREF="msg01162.html">Re: Ping of Death?</A></STRONG>
+<UL><LI><EM>From:</EM> Eric Murray &lt;ericm@lne.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01213.html">Re: Cypherpunks as Philosopher Kings</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01216.html">Re: Parolees Can't Possess Crypto</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01162.html">Re: Ping of Death?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01189.html">Re: Ping of Death?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01214"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01214"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

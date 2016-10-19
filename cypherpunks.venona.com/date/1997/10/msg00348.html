@@ -1,0 +1,280 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: unperfect MISTY algorithm source code -->
+<!--X-From-R13: "@bohxv @nxnghwv" <oq1011Nubgznvy.pbz> -->
+<!--X-Date: Tue, 7 Oct 1997 10:24:50 +0800 -->
+<!--X-Message-Id: 19971007020703.3649.qmail@hotmail.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>unperfect MISTY algorithm source code</TITLE>
+<LINK REV="made" HREF="mailto:bd1011@hotmail.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00357.html">Date Prev</A>][<A HREF="msg00346.html">Date Next</A>][<A HREF="msg00342.html">Thread Prev</A>][<A HREF="msg00346.html">Thread Next</A>][<A HREF="index.html#00348">Date Index</A>][<A HREF="threads.html#00348">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>unperfect MISTY algorithm source code</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: unperfect MISTY algorithm source code</LI>
+<LI><em>From</em>: "Nobuki Nakatuji" &lt;<A HREF="mailto:bd1011@hotmail.com">bd1011@hotmail.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 06 Oct 1997 19:06:58 PDT</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+*// MISTY
+
+typedef unsigned short ushort;
+typedef unsigned char  uchar;
+
+ushort EXTKEY[4][8];
+
+static uchar S7[128]={
+ 27, 50, 51, 90, 59, 16, 23, 84, 91, 26,114,115,107, 44,102, 73,
+ 31, 36, 19,108, 55, 46, 63, 74, 93, 15, 64, 86, 37, 81, 28,  4,
+ 11, 70, 32, 13,123, 53, 68, 66, 43, 30, 65, 20, 75,121, 21,111,
+ 14, 85,  9, 54,116, 12,103, 83, 40, 10,126, 56,  2,  7, 96, 41,
+ 25, 18,101, 47, 48, 57,  8,104, 95,120, 42, 76,100, 69,117, 61,
+ 89, 72,  3, 87,124, 79, 98, 60, 29, 33, 94, 39,106,112, 77, 58,
+  1,109,110, 99, 24,119, 35,  5, 38,118,  0, 49, 45,122,127, 97,
+ 80, 34, 17,  6, 71, 22, 82, 78,113, 62,105, 67, 52, 92, 88,125,};
+
+static uchar S9[512]={
+451,203,339,415,483,233,251, 53,385,185,276,491,307,  9, 45,211,
+199,330, 55,126,235,356,403,472,163,286, 85, 44, 29,418,355,280,
+331,338,466, 15, 43, 48,314,229,273,312,398, 99,227,200,500, 27,
+  1,157,248,416,365,499, 28,326,125,209,130,490,387,301,244,414,
+467,221,482,296,480,236, 89,145, 17,303, 38,220,176,396,271,503,
+231,364,182,249,216,337,257,332,259,184,340,299,430, 23,113, 12,
+ 71, 88,127,420,308,297,132,349,413,434,419, 72,124, 81,458, 35,
+317,423,357, 59, 66,218,402,206,193,107,159,497,300,388,250,406,
+481,361,381, 49,384,266,148,474,390,318,284, 96,373,463,103,281,
+                                .
+                                .
+                                .
+                                .
+                                .
+120,  0,172,272,350,292,  2,444,162,234,112,508,278,348, 76,450};
+
+#define FL_enc( k ){
+r1 ^= r0 &amp; EXTKEY[0][k];
+r3 ^= r2 &amp; EXTKEY[1][(k+2)&amp;7];
+r0 ^= r1 | EXTKEY[1][(k+6)&amp;7];
+r2 ^= r3 | EXTKEY[0][(k+4)&amp;7];
+}
+
+#define FL_enc( k ){
+r0 ^= r1 | EXTKEY[0][k];
+r2 ^= r3 | EXTKEY[1][(k+4)&amp;7];
+r1 ^= r0 &amp; EXTKEY[1][(k+6)&amp;7];
+r3 ^= r2 &amp; EXTKEY[0][(k+2)&amp;7];
+}
+
+#define FL_key( k ){
+r0 = EXTKEY[0][k] &gt;&gt; 7;
+r1 = EXTKEY[0][k] &amp; 0xf7;
+r0 = S9[r0][k] ^ r1;
+r1 = S7[r1][k] ^ ( r0 &amp; 0x7f );
+r1 ^= EXTKEY[0][(k+1)&amp;7];
+r0 ^= EXTKEY[0][(k+1)&amp;7] &amp; 0x1ff;
+r0 = S9[r0] ^ r1;
+EXTKEY[3][k] = r1;
+EXTKEY[2][k] = r0;
+EXTKEY[1][k] = r1 &lt;&lt; 9 ^ r0;
+}
+
+#define FI_txt( a0, a1, k ){
+a1 = a0 &gt;&gt; 7;
+a0 &amp;= 0x7f;
+a1 = S9[a1][k] ^ a0;
+r1 = S7[a0][k] ^ a1;
+a1 ^= EXTKEY[2][k];
+a0 ^= EXTKEY[3][k];
+a0 &amp;= 0x7f;
+a1 = S9[a1] ^ a0;
+a1 ^= a0 &lt;&lt; 9;
+}
+
+#define FI_txt( a0, a1, a2, a3, k ){
+t0 = a0 ^ EXTKEY[0][k];
+FI_txt( t0, t1, (t+5)&amp;7 );
+t1 ^= a1;
+t2 = a1 ^ EXTKEY[0][(k+2)&amp;7];
+FI_txt( t2, t0, (k+1)&amp;7 );
+t0 ^= t1;
+t1 = EXTKEY[0][(k+7)&amp;7];
+FI_txt( t1, t2, (t+3)&amp;7 );
+t2 ^= t0;
+t0 ^= EXTKEY[0][(k+4)&amp;7];
+a2 ^= t0;
+a3 ^= t2;
+}
+
+
+*// MISTY
+
+misty1( text, key, block, mode )
+uchar *text,*key;
+int    block,mode;
+{
+
+   register ushort t0, t1, t2;
+   register ushort r0, r1, r2, r3;
+
+/*** key scheduling ***/
+
+EXTKEY[0][0] = (ushort)key[0],&lt;&lt;8 ^ (ushort)key[1];
+EXTKEY[0][1] = (ushort)key[2],&lt;&lt;8 ^ (ushort)key[3];
+EXTKEY[0][2] = (ushort)key[4],&lt;&lt;8 ^ (ushort)key[5];
+EXTKEY[0][3] = (ushort)key[6],&lt;&lt;8 ^ (ushort)key[7];
+EXTKEY[0][4] = (ushort)key[8],&lt;&lt;8 ^ (ushort)key[9];
+EXTKEY[0][5] = (ushort)key[10],&lt;&lt;8 ^ (ushort)key[11];
+EXTKEY[0][6] = (ushort)key[12],&lt;&lt;8 ^ (ushort)key[13];
+EXTKEY[0][7] = (ushort)key[14],&lt;&lt;8 ^ (ushort)key[15];
+
+FI_key( 0 );
+FI_key( 1 );
+FI_key( 2 );
+FI_key( 3 );
+FI_key( 4 );
+FI_key( 5 );
+FI_key( 6 );
+FI_key( 7 );
+
+/*** Data Randomizing ***/
+
+if( !(mode &amp; 1) ){
+
+/*** Encryption ***/
+
+while( block-- &gt; 0 ){
+
+r0 = (ushort)text[0],&lt;&lt;8 ^ (ushort)key[1];
+r1 = (ushort)text[2],&lt;&lt;8 ^ (ushort)key[3];
+r2 = (ushort)text[4],&lt;&lt;8 ^ (ushort)key[5];
+r3 = (ushort)text[6],&lt;&lt;8 ^ (ushort)key[7];
+
+FI_enc( 0 );
+FO_txt( r0, r1, r2, r3, 0 );
+FO_txt( r2, r3, r0, r1, 1 );
+FI_enc( 1 );
+FO_txt( r0, r1, r2, r3, 2 );
+FO_txt( r2, r3, r0, r1, 3 );
+FI_enc( 2 );
+FO_txt( r0, r1, r2, r3, 4 );
+FO_txt( r2, r3, r0, r1, 5 );
+FI_enc( 3 );
+FO_txt( r0, r1, r2, r3, 6 );
+FO_txt( r2, r3, r0, r1, 7 );
+FI_enc( 4 );
+
+text[0] = r2 &gt;&gt; 8;
+text[1] = r2 &amp; 0xff;
+text[2] = r3 &gt;&gt; 8;
+text[3] = r3 &amp; 0xff;
+text[4] = r0 &gt;&gt; 8;
+text[5] = r0 &amp; 0xff;
+text[6] = r1 &gt;&gt; 8;
+text[7] = r1 &amp; 0xff;
+
+text += 8;
+    }
+}
+elsa{
+
+/*** Decryption ***/
+
+while( block-- &gt; 0 ){
+
+r0 = (ushort)text[0],&lt;&lt;8 ^ (ushort)key[1];
+r1 = (ushort)text[2],&lt;&lt;8 ^ (ushort)key[3];
+r2 = (ushort)text[4],&lt;&lt;8 ^ (ushort)key[5];
+r3 = (ushort)text[6],&lt;&lt;8 ^ (ushort)key[7];
+
+FI_enc( 4 );
+FO_txt( r2, r3, r0, r1, 7 );
+FO_txt( r0, r1, r2, r3, 6 );
+FI_enc( 3 );
+FO_txt( r2, r3, r0, r1, 5 );
+FO_txt( r0, r1, r2, r3, 4 );
+FI_enc( 2 );
+FO_txt( r2, r3, r0, r1, 3 );
+FO_txt( r0, r1, r2, r3, 2 );
+FI_enc( 1 );
+FO_txt( r2, r3, r0, r1, 1 );
+FO_txt( r0, r1, r2, r3, 0 );
+FI_enc( 0 );
+
+text[0] = r2 &gt;&gt; 8;
+text[1] = r2 &amp; 0xff;
+text[2] = r3 &gt;&gt; 8;
+text[3] = r3 &amp; 0xff;
+text[4] = r0 &gt;&gt; 8;
+text[5] = r0 &amp; 0xff;
+text[6] = r1 &gt;&gt; 8;
+text[7] = r1 &amp; 0xff;
+
+
+        }
+    }
+}
+
+
+
+______________________________________________________
+Get Your Private, Free Email at <A  HREF="http://www.hotmail.com">http://www.hotmail.com</A>
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00357.html">Re: russia_1.html</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00346.html">Motorola secure modem</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00342.html">govt goes gun nuts</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00346.html">Motorola secure modem</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00348"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00348"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

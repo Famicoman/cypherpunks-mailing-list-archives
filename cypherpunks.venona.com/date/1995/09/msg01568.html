@@ -1,0 +1,179 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Exchange random numbers (was: Re: netscape's response) -->
+<!--X-From-R13: Quevfgvna Irggretera <pjrNQfyv.Egnasbeq.SRG> -->
+<!--X-Date: Thu, 21 Sep 95 11:53:38 PDT -->
+<!--X-Message-Id: 199509211852.LAA22259@Csli.Stanford.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199509210958.TAA10764@sweeney.cs.monash.edu.au -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Exchange random numbers (was: Re: netscape's response)</TITLE>
+<LINK REV="made" HREF="mailto:cwe@Csli.Stanford.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01566.html">Date Prev</A>][<A HREF="msg01467.html">Date Next</A>][<A HREF="msg01602.html">Thread Prev</A>][<A HREF="msg01698.html">Thread Next</A>][<A HREF="index.html#01568">Date Index</A>][<A HREF="threads.html#01568">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Exchange random numbers (was: Re: netscape's response)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:jirib@cs.monash.edu.au">jirib@cs.monash.edu.au</A></LI>
+<LI><em>Subject</em>: Re: Exchange random numbers (was: Re: netscape's response) </LI>
+<LI><em>From</em>: Christian Wettergren &lt;<A HREF="mailto:cwe@Csli.Stanford.EDU">cwe@Csli.Stanford.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 21 Sep 1995 11:52:26 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:jsw@netscape.com">jsw@netscape.com</A></LI>
+<LI><em>In-Reply-To</em>: Your message of Thu, 21 Sep 1995 19:58:35 +1000.            &lt;<A HREF="msg01602.html">199509210958.TAA10764@sweeney.cs.monash.edu.au</A>&gt; </LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+| &gt; Of course you have to be very careful, as you say. Did you see my
+| &gt; problem-section in the original letter? I included it above.
+| ... [the referenced section elided by jirib] ...
+| 
+| If I only ever give out a hash of my seed, and only ever *add* any received
+| info to my seed (and stir it in well), how can anyone find out anything?
+| (Apart from hash weaknesses.)
+
+Giving out contribution: 
+     MD5(select_bits(my_seed, start_bit, stop_bit)) -&gt; remote
+Taking in contribution : 
+     my_seed = my_seed XOR 
+     ((select_low_bits(remote_contrib, contrib_width) &lt;&lt; contrib_area)
+
+You also need to keep track of who has contributed what, and how much.
+This might become a problem if you don't have a safe authentification
+mechanism, like baseing the tracking on the IP-numbers etc.
+
+But I don't believe this is a real problem, since you always
+contribute 'entropy', not exact values. You need to know the exact
+state of the random generator to be able to predict how your
+contribution will affect the generator.
+
+The boot-strap stage is actually the big problem still. But if the
+initial stages are 'random enough' to withstand a total crack, I guess
+the randomness gathered will increase rapidly, and increase the
+safety a lot.
+
+| The only thing that remains is that I cannot really count on a stranger
+| to actually give me something truly random. In fact, since at least
+| one other person knows it, I shouldn't count any entropy from it at all.
+|
+| However, if I get e bits from each of n servers, and k of them are rogue,
+| then I have e*(n-k) bits, ie e*n*(1-k/n). With a suitably conservative
+| estimate of k/n, this should be acceptable.
+| 
+| In any case, accepting donations of entropy cannot possibly reduce the
+| amount of entropy I have, can it?
+
+This isn't a problem as I see it, he'll only know what bits he
+flipped, not the actual state.
+
+I guess someone could mount an attack on the remote_contrib, finding
+the part of my_seed by bruting the remote_contrib that I submitted.
+But even if that is done, you'll only know a small part of the total
+seed. And the remote end can't choose which segment of my_seed that
+will be revealed.
+
+I also see a problem if an attacker is controlling the whole
+environment, but this is no different from the original problem, and
+a lot more unlikely.
+
+| &gt; and that you should only give out approximately the same amount of 
+| &gt; randomness to the neighbour, as you point out below.
+| ...
+| 
+| I'm not sure I follow this one. Why?
+| 
+| If the neighbour is willing to trust me for more, and cannot possibly
+| deduce my seed from the numbers ('cause it's a strong 1-way hash),
+| the only thing it costs me is CPU time - it'd cost me more to keep
+| track of who asked for how much when.
+
+Well, the reason would be that if someone bruted your contribution,
+they would still have to guess the remaining part. Double safe! :-)
+
+| ...
+| &gt; My approach solves part of the problem of "the observable local
+| &gt; environment" problem. 
+| ...
+| 
+| Then again, you can always ping. With a well-chosen target, you get
+| 10 bits raw from the first packet... Perhaps about 7 or 8 of actual
+| usable entropy (and before you flame me, ping melb.dialix.oz.au).
+
+Yes, but if one assumes that the algorithm to gather the seed is
+known, its quite possible for someone else to do it at the same time
+as you do it, or even observe your ping packet req/reply. And how do
+you determine which 'random host' to ping?
+
+| Part of this is that once the sources of randomness are sufficiently
+| diverse, it's just easier for an attacker to modify your s/w.
+| Especially if you never throw out your seed, so that all your interactions
+| since the beginning are unfathomably stirred into your current key.
+
+Yes, I believe this is important too.
+
+/Christian
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01698" HREF="msg01698.html">Re: Exchange random numbers (was: Re: netscape's response)</A></STRONG>
+<UL><LI><EM>From:</EM> Jiri Baum &lt;jirib@cs.monash.edu.au&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01602" HREF="msg01602.html">Exchange random numbers (was: Re: netscape's response)</A></STRONG>
+<UL><LI><EM>From:</EM> Jiri Baum &lt;jirib@sweeney.cs.monash.edu.au&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01566.html">Netscape closes up 1 3/8 today!</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01467.html">Re: NSA and Netscape Crack</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01602.html">Exchange random numbers (was: Re: netscape's response)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01698.html">Re: Exchange random numbers (was: Re: netscape's response)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01568"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01568"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

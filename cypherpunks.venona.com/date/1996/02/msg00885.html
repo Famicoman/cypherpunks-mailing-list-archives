@@ -1,0 +1,219 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: The Decense Project -->
+<!--X-From-R13: Dnl Qebzjryy <ewpNpynex.arg> -->
+<!--X-Date: Sun, 11 Feb 1996 12:42:24 +0800 -->
+<!--X-Message-Id: 199602110410.XAA20161@clark.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>The Decense Project</TITLE>
+<LINK REV="made" HREF="mailto:rjc@clark.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00794.html">Date Prev</A>][<A HREF="msg00884.html">Date Next</A>][<A HREF="msg00802.html">Thread Prev</A>][<A HREF="msg00889.html">Thread Next</A>][<A HREF="index.html#00885">Date Index</A>][<A HREF="threads.html#00885">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>The Decense Project</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: The Decense Project</LI>
+<LI><em>From</em>: Ray Cromwell &lt;<A HREF="mailto:rjc@clark.net">rjc@clark.net</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 10 Feb 1996 23:10:00 -0500 (EST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:rjc@clark.net">rjc@clark.net</A> (Ray Cromwell)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+The Decense Project
+
+  A few days ago I was reading Clarinet Newsbytes Top news. It read
+like something right out of 1984. "Germany cracks down on AOL and
+Compuserve", "Japan busts Japanese porn web site", "French bans web
+sites with banned book", "China issues internet regulations", and
+"Clinton signs Telecom bill" The other shoe is starting to drop. The
+ante has been raised as governments around the world are trying to
+control the content of the Internet. But the politicians writing this
+type of legislation have no clue what they are really dealing
+with. They are are part of a centralized organization with a
+centralized philosophy trying to cope with something inherently
+decentralized, non-physical, and constantly evolving. We all know the
+genie is out of the bottle. Let's write some code to keep it that
+way.
+
+Enough of the rhetoric.
+
+Decense is the name of what I hope to be, a family of software protocols
+designed to "decensor" the net. I'm contributing the first, and I hope,
+most useful piece. I hope others will join me in developing this software,
+making it more robust, and distributing it across the net.
+
+
+What is Decense?
+
+The first piece of the Decense software is designed to provide "penet" like
+double-blind anonymous transactions for the http protocol. It is written
+as a cgi-bin script which provides a seamless mapping between anonymous
+ids and remote web servers. Servers running Decense can be chained like
+anonymous remailers to increase site level security.
+
+
+Decense works as follows.
+
+The server maintains a database mapping anonymous ids to url directories.
+For instance 'foo' -&gt; 'www.c2.org' as an example. The anonymous ids are
+stored as md5 hashes so that if the site is ever compromised, the db
+cannot be used to get a complete listing of all anonids&lt;-&gt;sites. The
+attacker is forced to hash and compare each one he is looking for. 
+[yes, he still gets a listing of all the urls, but chaining takes care of
+that to some extent. In the future, I want to use the unhashed 'anonid' as 
+a key to a symmetric cipher to encrypt/encrypt each url field of the database.
+The db would be stored as (hashed(anonid), DES/IDEA(anonurl)
+                               ^ key            ^ value       ]
+
+
+A url is constructed as follows
+
+http://&lt;decense.server.host&gt;/&lt;cgi-bin-dir&gt;/decense/&lt;anonid&gt;/&lt;relative url&gt;
+
+Decense will lookup the anonid in the database, and map it to a url, such
+as "<A  HREF="http://foo.bar">http://foo.bar</A>", it will then append the relative url portion yielding
+"<A  HREF="http://foo.bar/">http://foo.bar/</A>&lt;relative url&gt;"
+
+It will proceed to fetch the document at that URL. If the document is
+an html or text file, it will scan the file replacing any references to
+the remote server with the decense url.
+
+Example:
+
+Let's say I am running decense at <A  HREF="http://foo.bar">http://foo.bar</A> with an anonid of 
+'c2' which maps to www.c2.org.
+
+If I then request <A  HREF="http://foo.bar/cgi-bin/decense/c2/index.html">http://foo.bar/cgi-bin/decense/c2/index.html</A>
+and index.html contains the following URL
+
+&lt;img src="/c2.jpg"&gt;
+
+the URL will be changed to 
+
+&lt;img src="<A  HREF="http://foo.bar/cgi-bin/decense/c2/c2.jpg">http://foo.bar/cgi-bin/decense/c2/c2.jpg</A>"&gt; 
+
+in the returned document.
+
+
+Future plans for Decense
+
+  I am heavily loaded down with work right now. But future versions of
+Decense should have
+
+1) the ability to filter out mailto: and instead, substitute in a url
+pointing to a post/mail cgi-script which sends mail to the real recipient
+through an anonymous remailer chain.
+
+2) the ability to proxy through SSL servers for encryption
+
+3) the ability to handle authenticated urls properly
+
+4) the ability to handle a document being located on multiple sites, with
+optional shamir sharing, so that a site is a) either picked at random
+to retrieve a document or b) a portion of the sites are picked, and the
+document is fetched and reassembled via a sharing protocol from those
+sites.    
+
+
+
+I will release source code in about a day, I'm now alpha testing it.
+
+If you would like to contribute to Decense, send mail to 
+   rcromw1@gl.umbc.edu
+
+-Ray
+rjc@clark.net
+
+
+
+
+
+ 
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00889" HREF="msg00889.html">Re: The Decense Project</A></STRONG>
+<UL><LI><EM>From:</EM> Laszlo Vecsey &lt;master@internexus.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00794.html">A Rant about Senator James Exon</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00884.html">Choices</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00802.html">Updated type2.list/pubring.mix</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00889.html">Re: The Decense Project</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00885"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00885"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

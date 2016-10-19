@@ -1,0 +1,337 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: PGP padding scripts (again) -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Sat, 4 Feb 95 10:17:03 PST -->
+<!--X-Message-Id: 199502041816.KAA20644@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>PGP padding scripts (again)</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00133.html">Date Prev</A>][<A HREF="msg00138.html">Date Next</A>][<A HREF="msg00140.html">Thread Prev</A>][<A HREF="msg00138.html">Thread Next</A>][<A HREF="index.html#00134">Date Index</A>][<A HREF="threads.html#00134">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>PGP padding scripts (again)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: PGP padding scripts (again)</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 4 Feb 1995 10:16:28 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Sorry for the bandwidth waste, but my anonymous correspondent was not
+able to ftp these scripts.  I also got another request for the scripts.
+So here again is my post with a pair of perl scripts which will insert
+padding pretty much undetectably into a .pgp file.  The one limitation is
+the quality of Perl's random number generator.
+
+
+
+Here are a couple of perl scripts I wrote last year to add padding to PGP
+encrypted files.  The usage would be:
+
+perl pgppadt.pl filename bytestoadd
+
+The output file is filename.pad.
+
+It only works on binary ".pgp" public-key encrypted files (not ascii armored
+files).  So there would be some work needed to make it a really useful tool.
+It would also be better to use a strong source of random numbers.  I
+think Carl Ellison recently posted some tools that could help with this.
+The two files are pgppad.pl, which does the work, and pgppadt.pl, a very
+simple test driver to show how to use it.  They are in a shar archive.
+
+Hal
+
+---------------cut here----------------
+#!/bin/sh
+# to extract, remove the header and type "sh filename"
+if `test ! -s ./pgppad.pl`
+then
+echo "writing ./pgppad.pl"
+cat &gt; ./pgppad.pl &lt;&lt; '\End\Of\Shar\'
+# Perl module to allow padding and some other manipulation of PGP
+# files.
+#
+# Include this with the statement:
+# require 'pgppad.pl'
+#
+# 10/16/93
+# Hal Finney
+
+
+# Read a PGP Cipher Type Byte and the following length.
+# One argument: file to read from
+# Returns several things, in this order:
+# CTB, with the length information removed, as a number.
+# Length of following packet.
+# Name of this kind of packet, made up, see list below.
+# Packed CTB/length packet, suitable for writing out.
+# Returns an empty string on error.
+sub read_ctb {
+    local($file) = @_;
+    local($ctb, $length, $name, $rctb, $rlength, $lengthlength);
+
+    if (read ($file, $rctb, 1) != 1) {		# Raw ctb
+	return "";
+    }
+    $ctb = unpack ("C", $rctb);
+    if ($ctb &lt; 128) {
+	return "";		# Must have high bit set
+    }
+    $lengthlength = $ctb % 4;
+    $ctb -= $lengthlength;
+    if ($lengthlength == 0) {
+	$lengthlength = 1;
+    } elsif ($lengthlength == 1) {
+	$lengthlength = 2;
+    } elsif ($lengthlength == 2) {
+	$lengthlength = 4;
+    } else {
+	$lengthlength = 0;
+	$length = -1;	# Unknown length
+    }
+    if (read ($file, $rlength, $lengthlength) != $lengthlength) {
+	return "";
+    }
+    if ($lengthlength==1) {
+	$length = unpack("C", $rlength);
+    } elsif ($lengthlength==2) {
+	$length = unpack("n", $rlength);
+    } elsif ($lengthlength==4) {
+	$length = unpack("N", $rlength);
+    }
+    $rctb = pack ("C a".$lengthlength, $rctb, $rlength);  # Packed data
+    if ($ctb==0x84) {
+	$name = "pubkey header";
+    } elsif ($ctb==0x88) {
+	$name = "signature";
+    } elsif ($ctb==0x8c) {
+	$name = "message digest";
+    } elsif ($ctb==0x94) {
+	$name = "secret key";
+    } elsif ($ctb==0x98) {
+	$name = "public key";
+    } elsif ($ctb==0xa0) {
+	$name = "compressed";
+    } elsif ($ctb==0xa4) {
+	$name = "conventional encrypted";
+    } elsif ($ctb==0xa8) {
+	$name = "plaintext";
+    } elsif ($ctb==0xb0) {
+	$name = "trust";
+    } elsif ($ctb==0xb4) {
+	$name = "user id";
+    } elsif ($ctb==0xb8) {
+	$name = "comment";
+    } else {
+	return "";
+    }
+    return ($ctb, $length, $name, $rctb);
+}
+
+# Write a CTB and length field out.
+# 3 arguments: file handle, ctb value, and length in bytes.
+# No return value.
+# Length gets output as 1, 2, or 4 bytes, the smallest in which it
+# will fit.
+# If length is negative we output no length field, but an "indefinite
+# length" code is added to ctb.
+sub write_ctb {
+    local($file, $ctb, $length) = @_;
+    local($rctb);
+
+    $ctb = $ctb - ($ctb % 4);	# Be sure 2 low bits are clear
+    if ($length &lt; 0) {
+	$rctb = pack ("C", $ctb+3);		# Packed data
+    } elsif ($length &gt; 65535) {
+	$rctb = pack ("C N", $ctb+2, $length);  # Packed data
+    } elsif ($length &gt; 255) {
+	$rctb = pack ("C n", $ctb+1, $length);  # Packed data
+    } else {
+	$rctb = pack ("C C", $ctb+0, $length);  # Packed data
+    }
+    print $file $rctb;
+}
+
+# This entry point always outputs a 4-byte count.  Length must be &gt; 0.
+# Otherwise like write_ctb.
+sub write_ctb_4 {
+    local($file, $ctb, $length) = @_;
+    local($rctb);
+
+    $ctb = $ctb - ($ctb % 4);	# Be sure 2 low bits are clear
+    if ($length &lt; 0) {
+	die ("write_ctb_4 called with negative length\n");
+    }
+    $rctb = pack ("C N", $ctb+2, $length);  # Packed data
+    print $file $rctb;
+}
+
+
+# Pad a PGP public-key-encrypted file to the specified length.
+# Arguments: input file handle; output file handle; new size.
+# Returns negative value on error.  See the code for what the
+# different values mean.
+# Returns 0 on success.
+sub pgppad {
+    local($infile, $outfile, $size) = @_;
+    local($ctb, $length, $name, $rctb, $insize, $buf);
+
+    # Read ctb &amp; length of pubkey header
+    ($ctb, $len, $name, $rctb) = &amp;read_ctb($infile);
+    if ($ctb == 0) {
+	return -1;	# Error
+    }
+    if ($name ne "pubkey header") {
+	return -2;	# Error
+    }
+    if ($len &lt; 0) {
+	return -3;	# Error
+    }
+
+    $insize = length($rctb) + $len;
+
+    # Read packet of pubkey header
+    if (read ($infile, $data, $len) != $len) {
+	return -3;
+    }
+
+    # Write out pubkey header, unchanged
+    &amp;write_ctb($outfile, $ctb, $len);
+    print $outfile $data;
+
+    # Read ctb and length of conventional packet
+    ($ctb, $len, $name, $rctb) = &amp;read_ctb($infile);
+    if ($ctb == 0) {
+	return -4;	# Error
+    }
+    if ($name ne "conventional encrypted") {
+	return -5;	# Error
+    }
+
+    # Calculate size of outgoing conventional packet.
+    # Assume rctb won't change size; it may grow by 1 or 2 in some
+    # rather rare cases, in which case we'll be a byte or two too big.
+    $size -= $insize + length($rctb);
+    if ($size &lt; $len) {
+	return -6;	# Error
+    }
+
+    # Output CTB with new length
+    &amp;write_ctb_4($outfile, $ctb, $size);
+
+    # Copy remainder of input file
+    while (read ($infile, $buf, 32768)) {
+	print $outfile $buf;
+    }
+
+    # Note that this random number generator is probably not
+    # cryptographically strong.
+    srand (time|$$);
+    while ($len &lt; $size) {
+	print $outfile pack ("C", int(rand(256)));
+	++$len;
+    }
+
+    return 0;		# Success
+}
+
+1;	# Non-zero return for 'require'
+\End\Of\Shar\
+else
+  echo "will not over write ./pgppad.pl"
+fi
+if `test ! -s ./pgppadt.pl`
+then
+echo "writing ./pgppadt.pl"
+cat &gt; ./pgppadt.pl &lt;&lt; '\End\Of\Shar\'
+# Test program for pgppad.pl, showing how to use it.
+require 'pgppad.pl';
+
+open (IN, $ARGV[0]) || die ("Couldn't open $ARGV[0]\n");
+open (OUT, "&gt;$ARGV[0].pad") || die ("Couldn't create $ARGV[0].pad\n");
+
+$padding = $ARGV[1];
+
+@stat = stat(IN);
+$size = $stat[7];
+print "Input file $ARGV[0] has size $size bytes\n";
+print "Output file $ARGV[0].pad will have size ".$size+$padding." bytes\n";
+
+if (($code = &amp;pgppad (IN, OUT, $size+$padding)) &lt; 0) {
+    die ("pgppad returns code $code\n");
+}
+
+close (IN);
+close (OUT);
+print ("Done\n");
+
+\End\Of\Shar\
+else
+  echo "will not over write ./pgppadt.pl"
+fi
+echo "Finished archive 1 of 1"
+exit
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00138" HREF="msg00138.html">Re: PGP padding scripts (again)</A></STRONG>
+<UL><LI><EM>From:</EM> Samuel Kaplin &lt;skaplin@mirage.skypoint.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00133.html">There is another NetCash</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00138.html">Re: PGP padding scripts (again)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00140.html">Re: There is another NetCash</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00138.html">Re: PGP padding scripts (again)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00134"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00134"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

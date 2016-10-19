@@ -1,0 +1,187 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Anonymous Forwarding -->
+<!--X-From-R13: ewpNtah.nv.zvg.rqh (Dnl) -->
+<!--X-Date: Mon, 6 Sep 93 03:26:14 PDT -->
+<!--X-Message-Id: 9309061019.AA29877@geech.gnu.ai.mit.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Anonymous Forwarding</TITLE>
+<LINK REV="made" HREF="mailto:rjc@gnu.ai.mit.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00091.html">Date Prev</A>][<A HREF="msg00093.html">Date Next</A>][<A HREF="msg00091.html">Thread Prev</A>][<A HREF="msg00093.html">Thread Next</A>][<A HREF="index.html#00092">Date Index</A>][<A HREF="threads.html#00092">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Anonymous Forwarding</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Anonymous Forwarding</LI>
+<LI><em>From</em>: <A HREF="mailto:rjc@gnu.ai.mit.edu">rjc@gnu.ai.mit.edu</A> (Ray)</LI>
+<LI><em>Date</em>: Mon, 6 Sep 93 6:19:07 WET DST</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+  Do you have spare email accounts laying around? 
+
+  Would you like to have them forward mail to your main account anonymously?
+
+  These are the questions which led me to hack up an anonymous .forward
+technique. I figured that I'd use a spare account to receive mail which I 
+normally wouldn't want connected to my main address. Furthermore, mail
+forwarded to my main email address would be automatically encrypted to
+prevent the prying eyes of the sysadmin from snooping.
+
+Anonymous Forwarding
+--------------------
+
+  My software works like this. The destination address is prepared
+as a standard remailer header and pgp encrypted for one or more remailers, 
+e.g.
+
+====================================
+::
+Request-Remailing-To: my_real_address
+
+====================================
+
+  becomes
+
+===================================
+::
+Encrypted: PGP
+
+-----BEGIN PGP MESSAGE-----
+Version: 2.3a
+
+hIwCPhjICRQCw4kBBACnRARz+qDK21BXcSUba3WjT4NEjoMtq+PZoJujGN2A/Ati
+O31UHYpULTP7j8OKBC+4Zuuan2e8CLTG9f3/XgYSuv8YRU5DtKr6bEuDDuojjgfr
+/ZudUWTej646ZJTqhrXRQldg/x/Wuu3kx8tby0zf+PcqqOssw7S2rgT6yrrdG6YA
+AABFct7lohDMViS01vOxzWr3RYernaqB9bkQmWlGd32TFrbe9bGf6BFBMvlDT8v+
+C6xf1qI24mDslNiGoabjd/nCsE6d4EFT
+=7jt6
+-----END PGP MESSAGE-----
+===================================
+
+  These "anonymous return addresses" are stored in the home directory
+(e.g. lib/shell.addr, lib/rosebud.addr, etc) on the spare account.
+
+  When an incoming message is processed through .forward, the body
+of the message is stored and optionally encrypted with the public key
+of the main email account. The software then picks a remailer return address
+at random (e.g. lib/rosebud.addr), and appends it on the front of the
+encrypted body. This file is then re-encrypted with the public key of the
+destination anonymous remailer (optional). I did this so no one sees the
+obvious two-part message (pgp encrypted return address and pgp encrypted
+body). It probably doesn't add security, but it's optional.
+
+  There is a configuration variable called "chain". If it is higher than
+1, then up to "chain" number of remailers are chosen at random and
+chained together. Optionally, each new envelope in the chain will use
+the public key of the next remailer for encryption.
+
+  So what happens is an incoming message is encrypted, the forwarding
+address (which is already encrypted for specific remailers) is
+added to an encrypted body and bounced randomly off a certain number
+of remailers to the final destination which is the main email account.
+Now you're all set to subscribe to alt.bomb.building with your other
+email account without fear of it being connected to your "real" account. ;-)
+
+
+Anonymous Mailing Lists
+-----------------------
+
+  Using my anonymous-forwarding script I have thrown together a kludgy
+anonymous mailing list program. Not only are the users on this list totally
+anonymous but the list address itself is secret! (Don't ya just love
+double-blind mechanisms?)
+
+  To subscribe, users simply pgp encrypt a "Request-Remailing-To:"
+block as I detailed above and send it to the list request address. The
+list software sends out messages using the exact same script as
+anonymous-forward. At no time does the mailing list software see the
+real e-mail address. Only by collaborating with the operators of 
+anonymous remailers can the list operator find out the real
+address of a user.
+
+  The list address itself is also secret. Ihe true address is embedded
+in an encrypted "Request-Remailing-To:" block and chained through several
+remailers. Users post to the mailing list by adding their response to the
+encrypted return block and sending it to the first anonymous remailer in the 
+chain. (the list software automatically puts the list's return block
+at the start of every message for easy response. [no cut/pasting needed])
+
+Hopes, Dreams, and Bugs
+-----------------------
+
+  Obviously, with the small number of remailers on the net, and most of
+them running from multiuser machines and student accounts, security is
+not high. As the number of remailers increase, the probability of a bunch
+of remailer operators all collaborating is small. If remailers ever
+reach the level of popularity of gopher/fsp sites, it would be near 
+impossible to shut down an anonymous mailing list. (there's no postmaster
+to complain to because you don't know the true address!)
+
+  Alas, there is currently no way of returning error messages so if something
+bad happens, you aren't notified. Shutting down a single remailer in the
+chain would be very harmful. A fault-tolerant mechanism is needed and
+a robust way of returning error messages.
+
+-rjc
+
+p.s. If I have reinvented the wheel, ignore this message. I didn't see
+any anonymous forward/list software on soda so I figured no one had
+written any.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00091.html">Anonymous Forwarding</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00093.html">Key signing, authentication</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00091.html">Anonymous Forwarding</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00093.html">Key signing, authentication</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00092"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00092"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

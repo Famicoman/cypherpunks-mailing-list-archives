@@ -1,0 +1,160 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: RC4 ? -->
+<!--X-From-R13: abobqlNibk.kf4nyy.ay (Oa0aKz0Gf GfSe) -->
+<!--X-Date: Tue, 13 Sep 94 13:37:09 PDT -->
+<!--X-Message-Id: 199409132036.AA24724@xs1.xs4all.nl -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>RC4 ?</TITLE>
+<LINK REV="made" HREF="mailto:nobody@vox.xs4all.nl">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00403.html">Date Prev</A>][<A HREF="msg00411.html">Date Next</A>][<A HREF="msg00433.html">Thread Prev</A>][<A HREF="msg00411.html">Thread Next</A>][<A HREF="index.html#00428">Date Index</A>][<A HREF="threads.html#00428">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>RC4 ?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: RC4 ?</LI>
+<LI><em>From</em>: <A HREF="mailto:nobody@vox.xs4all.nl">nobody@vox.xs4all.nl</A> (An0nYm0Us UsEr)</LI>
+<LI><em>Date</em>: Tue, 13 Sep 1994 22:36:42 +0200</LI>
+<LI><em>Organization</em>: Global Anonymous Remail Services Ltd.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+SUBJECT:  RC4 Source Code
+
+
+I've tested this.  It is compatible with the RC4 object module
+that comes in the various RSA toolkits.  
+
+/* rc4.h */
+typedef struct rc4_key
+{      
+     unsigned char state[256];       
+     unsigned char x;        
+     unsigned char y;
+} rc4_key;
+void prepare_key(unsigned char *key_data_ptr,int key_data_len,
+rc4_key *key);
+void rc4(unsigned char *buffer_ptr,int buffer_len,rc4_key * key);
+
+
+/*rc4.c */
+#include "rc4.h"
+static void swap_byte(unsigned char *a, unsigned char *b);
+void prepare_key(unsigned char *key_data_ptr, int key_data_len,
+rc4_key *key)
+{
+     unsigned char swapByte;
+     unsigned char index1;
+     unsigned char index2;
+     unsigned char* state;
+     short counter;     
+     
+     state = &amp;key-&gt;state[0];         
+     for(counter = 0; counter &lt; 256; counter++)              
+     state[counter] = counter;               
+     key-&gt;x = 0;     
+     key-&gt;y = 0;     
+     index1 = 0;     
+     index2 = 0;             
+     for(counter = 0; counter &lt; 256; counter++)      
+     {               
+          index2 = (key_data_ptr[index1] + state[counter] +
+index2) % 256;                
+          swap_byte(&amp;state[counter], &amp;state[index2]);            
+
+          index1 = (index1 + 1) % key_data_len;  
+     }       
+ }
+ 
+ void rc4(unsigned char *buffer_ptr, int buffer_len, rc4_key
+*key)
+ { 
+     unsigned char x;
+     unsigned char y;
+     unsigned char* state;
+     unsigned char xorIndex;
+     short counter;              
+     
+     x = key-&gt;x;     
+     y = key-&gt;y;     
+     
+     state = &amp;key-&gt;state[0];         
+     for(counter = 0; counter &lt; buffer_len; counter ++)      
+     {               
+          x = (x + 1) % 256;                      
+          y = (state[x] + y) % 256;               
+          swap_byte(&amp;state[x], &amp;state[y]);                        
+               
+          xorIndex = state[x] + (state[y]) % 256;                 
+               
+          buffer_ptr[counter] ^= state[xorIndex];         
+      }               
+      key-&gt;x = x;     
+      key-&gt;y = y;
+ }
+ 
+ static void swap_byte(unsigned char *a, unsigned char *b)
+ {
+     unsigned char swapByte; 
+     
+     swapByte = *a; 
+     *a = *b;      
+     *b = swapByte;
+ }
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00403.html">Re: Mailing list for cryptography</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00411.html">Finger me for MEDUSA</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00433.html">Social body and crypto</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00411.html">Finger me for MEDUSA</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00428"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00428"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

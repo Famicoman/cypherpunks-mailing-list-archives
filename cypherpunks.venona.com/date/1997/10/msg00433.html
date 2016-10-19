@@ -1,0 +1,162 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: What's really in PGP 5.5? -->
+<!--X-From-R13: "Xvz Dhffryy" <wehffryyNflapelcg.pbz> -->
+<!--X-Date: Thu, 9 Oct 1997 00:54:31 +0800 -->
+<!--X-Message-Id: 01bcd407$02595600$2901320a@Polaris.domain -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: What's really in PGP 5.5?</TITLE>
+<LINK REV="made" HREF="mailto:jrussell@syncrypt.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00427.html">Date Prev</A>][<A HREF="msg00434.html">Date Next</A>][<A HREF="msg00471.html">Thread Prev</A>][<A HREF="msg00435.html">Thread Next</A>][<A HREF="index.html#00433">Date Index</A>][<A HREF="threads.html#00433">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: What's really in PGP 5.5?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: &lt;<A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A>&gt;</LI>
+<LI><em>Subject</em>: Re: What's really in PGP 5.5?</LI>
+<LI><em>From</em>: "Jim Russell" &lt;<A HREF="mailto:jrussell@syncrypt.com">jrussell@syncrypt.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 8 Oct 1997 12:27:02 -0400</LI>
+<LI><em>Cc</em>: "Bruce Schneier" &lt;<A HREF="mailto:schneier@counterpane.com">schneier@counterpane.com</A>&gt;, &lt;<A HREF="mailto:risks@csl.sri.com">risks@csl.sri.com</A>&gt;,       &lt;<A HREF="mailto:cryptography@c2.net">cryptography@c2.net</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+The swirl of controversy that has arisen since the 2 Oct announcement of the
+PGP Business Security Suite has been quite amazing.  Yet, all of the focus
+has been on what's been *added* to PGP v5.5.  Jon Callas said it explicitly:
+
+&gt;&gt;Corporate Message Recovery is included *only* in PGP for Business
+Security.
+
+What sense, then, can I make of the following?
+
+I have been examining the published source code for PGP v5.0 for Personal
+Privacy (note that this is *not* a corporate version), and have discovered
+that this recovery scheme already appears to be in place, in some form at
+least, in that version.
+
+The following code appears in the published pgp.c, lines 518-537:
+
+   /*
+    * This is our version of "Commercial Key Escrow".
+    *
+    * A company can set the CompanyKey in the site-wide
+    * configuration file and it will be added to the
+    * recipient list for all encrypted messages.  Then
+    * again, the user can override the setting in their
+    * own pgp.cfg or on the command line.
+    */
+   companyKey = pgpenvGetString (env, PGPENV_COMPANYKEY,
+            NULL, NULL);
+   if (companyKey &amp;&amp; *companyKey) {
+    /* Add the company key to the recipient list */
+    e = ringSetFilterSpec (ui_arg-&gt;arg.ringset,
+             ringset,
+             companyKey,
+             PGP_PKUSE_ENCRYPT);
+    if (e &lt;= 0)
+     exitUsage(e);
+   }
+
+This certainly *looks* like the implementation that is being discussed in
+the press release, although I did not find it mentioned in any documentation
+for PGP for Personal Privacy v5.0. The questions this code brings to my mind
+are:
+
+1.  Does this mean that even the Personal Privacy versions of PGP have a
+message recovery scheme available?  The 2 Oct press release from PGP states
+that the corporate message recovery "transparently integrates with *any*
+version of PGP client software".  (Emphasis mine).
+
+2.  If this is implemented via a configuration setting, does it provide an
+opportunity for an attacker to reset the "CompanyKey" to their own key?  In
+the Windows environment, it appears that PGP uses the System Registry to
+hold configuration settings.  Is it possible for me to trick someone into
+running a .REG script that will set the CompanyKey to a key to which I hold
+the private component?
+
+3.  This appears to me to be quite contradictory to the descriptions posted
+by Jon Callas on 7 Oct.  The procedure that Jon describes, using an
+attribute in the self-signature, would tell an encryptor external to The
+Corporation to use the "skeleton key" on INCOMING mail.  The 5.0 code seems
+to imply an automatic extra recipient on OUTGOING mail, and this impression
+is reinforced by the description of the SMTP server policy enforcement in
+the 2 Oct product description on PGP's web site.  (Let's not forget that
+SMTP is a protocol for OUTGOING mail.) Which is it, or is it actually both?
+
+Now, I realize that the long-time PGP users, the computer experts who can
+take the source code and recompile the application, could simply remove any
+sections they don't like, or go into the configuration settings and change
+everything to their liking.  However, isn't encryption supposed to be moving
+to a new target audience, the people who use a computer as a tool, and don't
+necessarily know the internals? These are the people who need to feel secure
+using encryption, and magic, invisible encryption to a third-party is
+probably not going to give them warm fuzzy feelings.
+
+Jim Russell &lt;jrussell@syndata.com&gt;
+ Senior Engineer
+ SynData Technologies, Inc.
+ <A  HREF="http://www.syndata.com">http://www.syndata.com</A>
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00435" HREF="msg00435.html">Re: What's really in PGP 5.5?</A></STRONG>
+<UL><LI><EM>From:</EM> "William H. Geiger III" &lt;whgiii@invweb.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00427.html">Re: russia_1.html</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00434.html">Question</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00471.html">Re: What's really in PGP 5.5?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00435.html">Re: What's really in PGP 5.5?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00433"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00433"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

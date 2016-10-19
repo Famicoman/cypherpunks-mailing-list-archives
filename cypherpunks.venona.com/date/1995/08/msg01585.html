@@ -1,0 +1,150 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: sums with BIG numbers -->
+<!--X-From-R13: Dnl Qebzjryy <ewpNpynex.arg> -->
+<!--X-Date: Thu, 31 Aug 95 20:28:32 PDT -->
+<!--X-Message-Id: 199509010327.XAA25211@clark.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9509010227.AA28294@toad.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: sums with BIG numbers</TITLE>
+<LINK REV="made" HREF="mailto:rjc@clark.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01586.html">Date Prev</A>][<A HREF="msg01588.html">Date Next</A>][<A HREF="msg01584.html">Thread Prev</A>][<A HREF="msg01588.html">Thread Next</A>][<A HREF="index.html#01585">Date Index</A>][<A HREF="threads.html#01585">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: sums with BIG numbers</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:scmayo@rschp1.anu.edu.au">scmayo@rschp1.anu.edu.au</A> (Sherry Mayo)</LI>
+<LI><em>Subject</em>: Re: sums with BIG numbers</LI>
+<LI><em>From</em>: Ray Cromwell &lt;<A HREF="mailto:rjc@clark.net">rjc@clark.net</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 31 Aug 1995 23:27:32 -0400 (EDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;9509010227.AA28294@toad.com&gt; from "Sherry Mayo" at Sep 1, 95 12:27:30 pm</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; 
+&gt; Can anyone point me to any books, documentation or
+&gt; whatever that will explain the methods used in routines
+&gt; like bignum for doing sums with 'too-big' numbers.
+
+
+Try Knuth's The Art of Computer Programming, Volume 2, Seminumerical 
+Algorithms.
+
+Most bignum routines work like this. An integer is represented
+as a polynomial p(x) with coefficients a_0, a_1, ..., a_n, where
+x is the radix or "base" of the number. The coefficients come from
+the ring of integers, modulo the base. For instance, if you are
+using base-2 (x=2), the number 28 could be represented as
+p(x) = a_4 x^4 + a_3 + x^3 + a_2 x^2 + a_1 x + a_0 
+
+where a_4=a_3=a_2=1 and a_1=a_0=0.  Each a_n is an element of Z mod x
+
+To add two bignums, P(x) and Q(x) simply sum coefficients of like
+terms like you would with any polynomial addition, with one simple
+modification. If a_k is the coefficient of the x^k term of P(x), and
+b_k is the coefficient of the x^k term of Q(x), then the
+x^k term of P(x)+Q(x) is a_k+b_k+(carry of previous term) mod x.
+(new carry=(a_k+b_k + previous carry)/x)
+All this says is, the new term is the sum of the coefficients 
+on the x^k terms, modulo x (because your coefficients can not hold
+numbers larger than 'x'), plus the carry of the last term. The
+carry is 1 if a_k+b_k+previous_carry &gt; x. 
+
+Now you may ask, if our coefficients in our bignum are stored as
+32-bit integers, how do I compute the result in C and take into
+account overflow?
+
+Well, add the two numbers together. If the result is less than either
+of the numbers, an overflow has occured and you must carry (the
+machine register has 'rolled over'). For multiplication, you can
+either break a 32-bit number into 2 16-bit chunks and perform 4 16-bit
+multiplies to get a 64-bit result (using 16x16-&gt;32 bit hardware
+multiplication) or you can use a number of type "long long int" in C
+and let the compiler do it for you.
+
+
+A short example: let X=123 and Y=789 be bignums represented via the
+polynomials P(x)=1 x^2 + 2 x + 3 and Q(x)=7 x^2 + 8 x + 9  with
+x=10. let r_n be the coefficients of the resultant polynomial 
+R(x)=P(x)+Q(x)
+
+Start at the least significant term. Carry=0
+Now r_0=(a_0 + b_0)+carry mod x, or r_0=9+3 mod 10=2, carry=(9+3)/10=1
+    r_1=8 + 2 + carry = 11 mod 10 = 1    carry=11/10 = 1 
+    r_2=1+7 + carry = 9  carry = 9 / 10 = 0
+    
+So the result is 912.
+  
+Explicit modulos are only required if you are working in some base
+other then the machine's natural word size. (otherwise the
+'roll over' effect gives you the mod for free)
+
+If you are seeking the fastest practical methods of doing multiplication,
+division, and modular exponentiation, look up information on 
+Karatsuba multiplication, fast reciprocals via Newton's Method,
+and Fast Integer Squaring combined with exponent shifting.
+(if you are looking at PGP's source code, PGP does not use the
+fastest algorithms)
+
+-Ray
+
+
+
+
+  
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01586.html">Re: opinions on RSA Secure?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01588.html">LuRaSHA vaporware...</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01584.html">Re: sums with BIG numbers</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01588.html">LuRaSHA vaporware...</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01585"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01585"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

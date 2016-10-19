@@ -1,0 +1,203 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: (fwd) "Will You Be a Terrorist?" -->
+<!--X-From-R13: uhturfNnu.pbz (Sevp Vhturf) -->
+<!--X-Date: Mon, 19 Sep 94 17:14:37 PDT -->
+<!--X-Message-Id: 9409192336.AA15969@ah.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 35l8lv$6g9@bb.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>(fwd) "Will You Be a Terrorist?"</TITLE>
+<LINK REV="made" HREF="mailto:hughes@ah.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00678.html">Date Prev</A>][<A HREF="msg00666.html">Date Next</A>][<A HREF="msg00678.html">Thread Prev</A>][<A HREF="msg00683.html">Thread Next</A>][<A HREF="index.html#00665">Date Index</A>][<A HREF="threads.html#00665">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>(fwd) "Will You Be a Terrorist?"</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: (fwd) "Will You Be a Terrorist?"</LI>
+<LI><em>From</em>: <A HREF="mailto:hughes@ah.com">hughes@ah.com</A> (Eric Hughes)</LI>
+<LI><em>Date</em>: Mon, 19 Sep 94 16:36:21 -0700</LI>
+<LI><em>In-Reply-To</em>: L. Todd Masco's message of 19 Sep 1994 19:59:59 -0400 &lt;<A HREF="msg00678.html">35l8lv$6g9@bb.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+   [...] giving both limited-use remailers 
+
+Limited use remailers are exactly what a subscription service does.
+
+   Could you send me what you've done on this?  I think it's a desirable
+   feature to have, though requiring that people hack their sendmail.cfs
+   is not a big boost to the "popularity of package" indicator.
+
+Admittedly, sendmail.cf hacking is not for the light of heart.  I've
+appended a little tutorial I wrote a few months ago on how to do this.
+The only correction I have on rereading is that version 8 sendmail
+doesn't use frozen configuration files.
+
+Eric
+-----------------------------------------------------------------------------
+
+
+How to add + to your email syntax
+---------------------------------
+
+Ever wanted one of those cool &lt;user+@domain&gt; addresses?  So you can
+use &lt;user+loud_mailing_list@domain&gt; and get a filter to easily move
+the list out from your regular mail?  Now you can.
+
+This tutorial works if you're running a fairly standard version of
+sendmail.  It requires some hacking to sendmail.cf, so you need the
+permission to do that; that's usually root.  The modifications are
+fairly straightforward.
+
+I.  Add + to the list of operator symbols.
+
+The sendmail 'o' macro determines how to break up strings in
+sendmail.cf rules into tokens.  In order to be able to recognize +
+specially, you'll have to add to the operator symbols to make it
+separately recognizable.
+
+So, first do a 
+
+	% grep -n ^Do sendmail.cf
+	116:Do.:%@!^=/[]
+
+Now, go in and edit line 116 and add a + sign at the end:
+
+	Do.:%@!^=/[]+
+
+That's all.  Now sendmail will not include + inside of its tokens.
+
+
+II.  Duplicate local delivery rules to accept + syntax.
+
+Sendmail is a delivery multiplexer.  You want to change the syntax for
+local deilvery, so all you need to change is the local mail
+specifications.  First, make sure your local mailer is called 'local'.
+You can search for the mailer definition as follows:
+
+	% grep ^Mlocal sendmail.cf
+	Mlocal,	P=/usr/libexec/mail.local, F=lsDFMmn, [...]
+
+I've elided the tail end of the line, because all you really need to
+ascertain is that the local mailer has the right name.
+
+Now you want to search for all the delivery rules that deliver mail to
+the local mailer:
+
+	% grep -n '#local' sendmail.cf
+	563:R$-&lt;@$w&gt;		$#local$:$1
+	585:R$-&lt;@$D&gt;		$#local$:$1			user@ah.com
+	614:R$+			$#local$:$1			everything else
+
+I have three rules for local delivery.  (The second one is custom, and
+allows for delivery to a domain address for which no IP address
+exists.)  All you do now is to add a rule for '+' delivery for each
+kind of existing local delivery.  After I changed mine, it said:
+
+	% grep -n '#local' sendmail.cf
+	563:R$-&lt;@$w&gt;		$#local$:$1
+	564:R$-+$*&lt;@$w&gt;		$#local$:$1
+	586:R$-&lt;@$D&gt;		$#local$:$1			user@ah.com
+	587:R$-+$*&lt;@$D&gt;		$#local$:$1			user@ah.com
+	616:R$-+$*		$#local$:$1			everything else
+	617:R$+			$#local$:$1			everything else
+
+Rules that matched "$-", a single token, I changed to match "$-+$*", a
+single token followed by "+" followed by zero or more tokens.
+
+Rules that matched "$+", one or more tokens, I changed to match
+"$-+$*", same as above.  I added the changed rule _before_ the
+original rule because otherwise the $+ would swallow up everything.
+
+The $1 in the second column refers to the first macro to match in the
+pattern in column one.  That's the username the mail gets to delivered
+to.  If you have more complicated usernames, you're likely already a
+seasoned sendmail trooper.
+
+
+III.  Install and Test
+
+You should probably increment the version number when you make the
+change.  It's in the 'Z' macro, do
+
+	% grep -n ^DZ sendmail.cf
+	104:DZ2.06
+
+Freeze the sendmail configuration with
+
+	sendmail -bz
+
+otherwise your changes won't take effect.  Now send yourself some test
+mail and make sure it works.
+
+
+Eric Hughes
+hughes@ah.com
+17 February 1994
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00683" HREF="msg00683.html">Sendmail hacking (was (fwd) "Will You Be a Terrorist?")</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Shostack &lt;adam@bwh.harvard.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00678" HREF="msg00678.html">Re: (fwd) "Will You Be a Terrorist?"</A></STRONG>
+<UL><LI><EM>From:</EM> cactus@bb.com (L. Todd Masco)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00678.html">Re: (fwd) "Will You Be a Terrorist?"</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00666.html">Such a Sweetie Pie</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00678.html">Re: (fwd) "Will You Be a Terrorist?"</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00683.html">Sendmail hacking (was (fwd) "Will You Be a Terrorist?")</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00665"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00665"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

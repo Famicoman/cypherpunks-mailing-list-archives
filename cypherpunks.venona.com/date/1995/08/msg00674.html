@@ -1,0 +1,127 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Use of the IV in DES &#38; stuffing the first block w/ random stuff -->
+<!--X-From-R13: "I. Yvaarl" <xvaarlNobtneg.Qbybenqb.SRG> -->
+<!--X-Date: Wed, 16 Aug 95 07:58:18 PDT -->
+<!--X-Message-Id: 199508161458.IAA12814@bogart.Colorado.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: SAA03523.199508152240@garotte.va.pubnix.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Use of the IV in DES &amp; stuffing the first block w/ random stuff</TITLE>
+<LINK REV="made" HREF="mailto:kinney@bogart.Colorado.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00677.html">Date Prev</A>][<A HREF="msg00684.html">Date Next</A>][<A HREF="msg00657.html">Thread Prev</A>][<A HREF="msg00641.html">Thread Next</A>][<A HREF="index.html#00674">Date Index</A>][<A HREF="threads.html#00674">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Use of the IV in DES &amp; stuffing the first block w/ random stuff</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Use of the IV in DES &amp; stuffing the first block w/ random stuff</LI>
+<LI><em>From</em>: "W. Kinney" &lt;<A HREF="mailto:kinney@bogart.Colorado.EDU">kinney@bogart.Colorado.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 16 Aug 1995 08:58:05 -0600 (MDT)</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00657.html">SAA03523.199508152240@garotte.va.pubnix.com</A>&gt; from "Josh M. Osborne" at Aug 15, 95 06:40:57 pm</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+&gt; &gt;You might want to do something fancy like choose a random salt,
+&gt; &gt;use the salt for the IV, and use MD5(salt,human-selected-key) for the key.
+&gt; &gt;This makes pre-computation much less useful (unless you're careless
+&gt; &gt;and use MD5(key,salt) instead if MD5(salt,key)...), and means that
+&gt; &gt;you use a different session key for each batch of stuff you encrypt,
+&gt; &gt;even though you're using the same key.  If you're paranoid about replay
+&gt; &gt;attacks, you could let some of the bits of the salt be random and some 
+&gt; &gt;be a counter, and never accept a key smaller than the one from the
+&gt; &gt;previous successfully-decrypted message.
+&gt; 
+&gt; Hmmmm, so I should put the salt in the clear at the start of the file?
+&gt; This looks like an intresting idea.
+
+What I do in Curve Encrypt for the Mac is use the MD5 of the pass phrase,
+a 128-bit random salt (overkill is cheap here) and a one-byte counter field
+passed repeatedly through MD5, like this:
+
+&lt;bare key&gt; = MD5[&lt;pass phrase&gt;]
+&lt;salt&gt; = 128 bits of randoms
+&lt;counter&gt; = 0
+
+MD5Init()
+for (a tenth of a second)
+	MD5Update[&lt;counter&gt;&lt;key&gt;&lt;salt&gt;&lt;key&gt;&lt;salt&gt;]
+	&lt;counter&gt; = &lt;counter&gt; + 1
+
+&lt;key&gt; = MD5Final()
+
+At startup, the program determines how many iterations of MD5Update can be
+accomplished in a tenth of a second on the current CPU, and the loop is run
+that many times. The number of iterations and the salt are stored with the
+encrypted file, in the clear. The point to the &lt;counter&gt;&lt;key&gt;&lt;salt&gt;&lt;key&gt;&lt;salt&gt;
+concatenation is that this buffer is 65 bytes long, and MD5 works on 64-bit
+blocks, so that the buffer is shifted by one byte in the MD5 block each
+iteration, making precomputation of the MD5 addition steps more of a pain.
+Also note that the buffer is _not_ repeatedly MD5-hashed, but repeatedly sent
+to MD5Update() instead. This is out of fear that there might be fixed-points
+in the hash algorithm.
+
+
+                                    -- Will
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00657" HREF="msg00657.html">Re: Use of the IV in DES &amp; stuffing the first block w/ random stuff</A></STRONG>
+<UL><LI><EM>From:</EM> "Josh M. Osborne" &lt;stripes@va.pubnix.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00677.html">Re: Purple Boxes vs. Native Signal Processing</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00684.html">BUY_lou</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00657.html">Re: Use of the IV in DES &amp; stuffing the first block w/ random stuff</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00641.html">The Spotlight</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00674"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00674"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

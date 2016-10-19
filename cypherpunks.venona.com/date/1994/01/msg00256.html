@@ -1,0 +1,202 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: PGP's e exponent too small? -->
+<!--X-From-R13: [nggurj X Uuvb <zt5a+Nnaqerj.pzh.rqh> -->
+<!--X-Date: Sun, 16 Jan 94 12:18:16 PST -->
+<!--X-Message-Id: IhCO22a00VonMZfEZ3@andrew.cmu.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9401161330.AA10496@toad.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: PGP's e exponent too small?</TITLE>
+<LINK REV="made" HREF="mailto:mg5n+@andrew.cmu.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00253.html">Date Prev</A>][<A HREF="msg00250.html">Date Next</A>][<A HREF="msg00242.html">Thread Prev</A>][<A HREF="msg00237.html">Thread Next</A>][<A HREF="index.html#00256">Date Index</A>][<A HREF="threads.html#00256">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: PGP's e exponent too small?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: PGP's e exponent too small?</LI>
+<LI><em>From</em>: Matthew J Ghio &lt;<A HREF="mailto:mg5n%2B@andrew.cmu.edu">mg5n+@andrew.cmu.edu</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 16 Jan 1994 15:16:02 -0500 (EST)</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00242.html">9401161330.AA10496@toad.com</A>&gt;</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00242.html">9401161330.AA10496@toad.com</A>&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Mike Ingle &lt;MIKEINGLE@delphi.com&gt; wrote:
+
+&gt; Is the e exponent in PGP too small? It's usually 17 decimal.
+&gt;
+&gt; Applied Cryptography pp. 287-288 says:
+&gt;
+&gt; "Low Exponent Attack Against RSA
+&gt;
+&gt; Another suggestion to 'improve' RSA is to use low values for e, 
+&gt; the public key. This makes encryption fast and easy to perform.
+&gt; Unfortunately, it is also insecure. Hastad demonstrated a successful
+&gt; attack against RSA with a low encryption key [417]. Another
+&gt; attack by Michael Wiener will recover e, when e is up to one
+&gt; quarter the size of n [878]. A low decryption key, d,
+&gt; is just as serious a problem. Moral: Choose large values for e and d."
+
+smb@research.att.com wrote in reply:
+
+&gt; There was some discussion on this on sci.crypt.  Briefly, the
+&gt; folks from RSA don't agree that it's a problem in practice.  If
+&gt; you always include some random padding in the message,
+&gt; you're safe, if I remember what Kaliski posted.
+
+Not true.  If the RSA folks really believe that, they are kidding
+themselves.  I don't see what adding padding will do to provent solving
+for the key (although it is a good idea for other reasons).  Here's why
+you shouldn't use low powers of d:
+
+Remember that d and e are factors of (p-1)(q-1)+1.  Doing a little math,
+we can rewrite that as de=pq-p-q+2.  Unless p or q is very small, (which
+is unlikely because a small factor is easy to find, which would weaken
+the key), the product (p-1)(q-1)+1 is going to be somewhere near
+pq-2*SQRT(pq). (Actually, it will always be greater than
+pq-2*SQRT(pq)+2.  SQRT=SquareRoot)  By first trying obvious, small
+factors of pq, it would be possible to establish a lower bounds on
+(p-1)(q-1)+1.  Consider the following example using small numbers:
+
+pq=161
+Now, suppose you have a public key exponent 7.
+
+You try a few factors say, 2 and 3 on 161, which don't factor it.  You
+now know that p&gt;3 and q&gt;3.  Therefore, the smallest value pq could be
+would be pq-3-pq/3+2, which is 161-3-53.6+2=106.4
+The square root of 161 is ~12.7. Therefore the upper limit of
+(p-1)(q-1)+1=pq-2(12.7)+2=161-25.4+2=137.6
+Since we are only dealing with whole numbers, we have 107&lt;de&lt;137
+since we know e is 7, we have 107&lt;7d&lt;137 -&gt; 15&lt;d&lt;20
+Then try the four possible values of d (16,17,18,19) and break the code: d=19
+
+If d (the secret key) is small, (suppose e was 19 and d was 7) it makes
+things even easier.  Consider 107&lt;19d&lt;137  -&gt;  5.6&lt;d&lt;7.2  -&gt;  d=6 or d=7
+ Only two possibilities!
+
+This attack can be used on large numbers too.  Suppose pq=10^50
+(approximately).  Then suppose you try dividing with the first billion
+(10^9) numbers and are not able to find a factor of pq.  You then know
+that p&gt;10^9 and q&gt;10^9.  Therefore (p-1)(q-1)+1 lower bound is
+10^50-10^9-10^41+2, and the upper bound is 10^50-2*10^25+2.  Although
+that is still a lot of possibilities, it does eliminates 99.9999999% of
+possibilities for d.  If d is small, it would be a relatively quick
+search.  If e was greater than 10^48, there would be fewer than 100
+possibilities for d.
+
+
+This attack can be avoided.  Consider again the previous example:
+p=7  q=23  pq=161
+de=(p-1)(q-1)+1=133  d=19 e=7
+
+If for any x,  x mod pq = x^(de) mod pq
+then, by substitution, we have:
+x^(de) mod pq = x^(2de) mod pq
+therefore,
+x^(2de) mod pq = x^(3de) mod pq
+combining this, we have:
+x mod pq = x^(de) mod pq = x^(2de) mod pq = x^(3de) mod pq = x^(4de) mod
+pq ... and so on.
+
+Taking 2(p-1)(q-1) where p=7, q=23 gives 265.  That factors into 53*5. 
+We have another keypair in additon to the 7,19 already found. 
+Continuing on, we find many more keypairs:
+
+(7-1)(23-1)+1=133=7*19
+2(7-1)(23-1)+1=265=53*5
+3(7-1)(23-1)+1=397 (prime)
+4(7-1)(23-1)+1=529=23*23
+5(7-1)(23-1)+1=661 (prime)
+6(7-1)(23-1)+1=793=61*13
+7(7-1)(23-1)+1=925=25*37
+8(7-1)(23-1)+1=1057=151*7 (duplicate of 19*7; 19+133=151)
+9(7-1)(23-1)+1=1189=41*29
+10(7-1)(23-1)+1=1321 (prime)
+11(7-1)(23-1)+1=1453 (prime)
+12(7-1)(23-1)+1=1585=317*5 (duplicate of 53*5)
+13(7-1)(23-1)+1=1717=101*17
+14(7-1)(23-1)+1=1849=43*43
+15(7-1)(23-1)+1=1981=283*7 (duplicate of 19*7)
+16(7-1)(23-1)+1=2113 (prime)
+17(7-1)(23-1)+1=2245=449*5 (duplicate of 53*5)
+18(7-1)(23-1)+1=2377 (prime)
+19(7-1)(23-1)+1=2509=13*193 (duplicate of 61*13)
+20(7-1)(23-1)+1=2641=139*19 (duplicate of 7*19) 
+21(7-1)(23-1)+1=2773=47*59
+22(7-1)(23-1)+1=2905=35*83
+23(7-1)(23-1)+1=3037 (prime)
+24(7-1)(23-1)+1=3169 (prime)
+25(7-1)(23-1)+1=3301 (prime)
+
+Some are duplicates, and some are primes, but we have found 8 key pairs:
+7*19, 53*5, 61*13, 25*37, 41*29, 101*17, 47*59, and 35*83.  We also
+found two self-reversing secret keys, 23 and 43.  If you continue this
+on, you will find keypairs containing every prime number that is not a
+factor of (p-1)(q-1).  By using this method, you can easily find a
+keypair with large enough numbers to defeat guessing techniques.  For
+example, 47*59 and 35*83 might be good choices.  Furthermore, d*e will
+not be simply (p-1)(q-1)+1, which defeats the method of guessing the
+range of values described earlier.
+
+Remember: In the RSA PK system, key generation is everything.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00242" HREF="msg00242.html">Re: PGP's e exponent too small?</A></STRONG>
+<UL><LI><EM>From:</EM> smb@research.att.com</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00253.html">Applied Cryptography</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00250.html">SQUISH</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00242.html">Re: PGP's e exponent too small?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00237.html">PGP posting validation</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00256"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00256"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

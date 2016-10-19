@@ -1,0 +1,184 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Proposal for anon chaining -->
+<!--X-From-R13: YW@@SK IWZZWO[ V <xvaarlNfcbg.Qbybenqb.SRG> -->
+<!--X-Date: Fri, 16 Apr 93 07:13:24 PDT -->
+<!--X-Message-Id: 199304161412.AA09006@spot.Colorado.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Proposal for anon chaining</TITLE>
+<LINK REV="made" HREF="mailto:kinney@spot.Colorado.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00156.html">Date Prev</A>][<A HREF="msg00161.html">Date Next</A>][<A HREF="msg00165.html">Thread Prev</A>][<A HREF="msg00159.html">Thread Next</A>][<A HREF="index.html#00157">Date Index</A>][<A HREF="threads.html#00157">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Proposal for anon chaining</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:74076.1041@compuserve.com">74076.1041@compuserve.com</A></LI>
+<LI><em>Subject</em>: Proposal for anon chaining</LI>
+<LI><em>From</em>: KINNEY WILLIAM H &lt;<A HREF="mailto:kinney@spot.Colorado.EDU">kinney@spot.Colorado.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 16 Apr 93 8:12:53 MDT</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Recent traffic on anonymous remailers/servers:
+
+&gt;From:  Eli   &lt;ebrandt@jarthur.claremont.edu&gt;
+&gt;&gt; From: Hal &lt;74076.1041@CompuServe.COM&gt;
+&gt;&gt; This method of posting does not allow you to receive replies.  I have set
+&gt;&gt; "nicknames" for these two accounts as "Untraceable account" which will appear
+&gt; &gt;in the "From" line on the postings.  Hopefully that will offer a clue that
+&gt; &gt;the normal reply mechanism doesn't work.  Maybe the nickname should say so
+&gt;&gt; more explicitly?
+&gt;
+&gt;
+&gt;The security provided by this technique could be provided without
+&gt;the IMHO serious disadvantage of having no return address.  Eric's
+&gt;hybrid approach, where a pseudonym server hands mail to an remailer
+&gt;chain, is secure (barring sophisticated traffic analysis) if you
+&gt;trust the last remailer in the chain.  Julf, have you thought about
+&gt;whether you want to do something like this?
+
+&gt; Hal
+
+Here's an idea I haven't seen suggested before, which would remove the need
+for a pseudonym server:
+
+The way things stand now, chaining Cypherpunk remailers works by nesting PGP
+encryptions of the form
+
+&lt;remail header&gt;
+
+***********
+message text
+***********
+
+If you want to chain remailers, you encrypt the above, make IT the new 
+message text, and then add another header, and so on until you get bored. 
+My proposal is for a modification of this protocol to allow for 
+pseudonymous return mail addresses, like this:
+
+The trick would be to separate the message text from the remailer routing 
+information, in a message of the form
+
+***********
+ROUTING INFORMATION
+***********
+
+***********
+MESSAGE TEXT
+***********
+
+where both blocks are encrypted with PGP. The message text would be 
+encrypted with the PGP public key of the intended final recipient of the 
+message, and would not be modified by the intermediate anon remailers. 
+The routing information would be for the benefit of the remailers only. 
+It would be created by the RECIPIENT and made publicly available as a 
+pseudonymous mail address. It would work like this:
+
+Suppose user foo@bar.com wishes to establish a pseudonymous identity, and 
+wants to route it through anon remailers "anon1" and "anon2". What he does 
+is take a message of the form
+
+::
+Request-Remailing-To: foo@bar.com
+
+and encrypts it with server anon1's PGP public key, to create 
+&lt;ANON1 ENCRYPTED ADDRESS&gt;.  Then he adds another header to make
+
+::
+Request-Remailing-To: anon1
+
+&lt;ANON1 ENCRYPTED ADDRESS&gt;
+
+and encrypts THIS with anon2's public key to make &lt;ANON2 ENCRYPTED ADDRESS&gt;, 
+and adds a header to make
+
+::
+Request-Remailing-To: anon2
+
+&lt;ANON2 ENCRYPTED ADDRESS&gt;
+
+Obviously, this procedure can be nested to arbitrary depth, chaining 
+through as many anon servers as you like. The trick is that this address 
+block can be made PUBLIC, since the only way to unwind the routing is 
+to have access to the secret keys of all the intermediate anon servers, 
+and the identity of the recipient is protected. foo@bar.com then 
+anonymously posts a PGP public key and a routing block to some public forum,
+and people can communicate with him without having any idea as to his 
+actual identity.  When I want to send a message to him, I encrypt the 
+message with his provided public key, and then add the encrypted routing 
+header, which he has also provided.  I give him my own pseudonymous 
+mail routing header to allow him to reply.
+
+This seems to me to be a very robust pseudonymous mail system which 
+could be implemented by relatively minor changes to the existing Cypherpunk 
+remailer structure. It has the additional advantage of being decentralized 
+and maintenance-free.  It could be used for pseudonyms on net news, e-mail, 
+wherever, and could presumably be integrated in some way into Julf's 
+anon server.
+
+Comments?
+
+                                -- Will
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00159" HREF="msg00159.html">Re: Proposal for anon chaining</A></STRONG>
+<UL><LI><EM>From:</EM> Eli Brandt &lt;ebrandt@jarthur.Claremont.EDU&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00156.html">Re: ANON: Chaining to Penet remailer</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00161.html">Dorothy Denning's friends strike</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00165.html">Re: ANON: Chaining to Penet remailer</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00159.html">Re: Proposal for anon chaining</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00157"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00157"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

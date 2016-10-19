@@ -1,0 +1,334 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Cantsin Protocol No. 2 -->
+<!--X-From-R13: abobqlNDSBZOK.QA[ (Oabalzbhf) -->
+<!--X-Date: Wed, 3 Dec 1997 08:44:09 +0800 -->
+<!--X-Message-Id: 199712030038.BAA29410@basement.replay.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Cantsin Protocol No. 2</TITLE>
+<LINK REV="made" HREF="mailto:nobody@REPLAY.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00121.html">Date Prev</A>][<A HREF="msg00117.html">Date Next</A>][<A HREF="msg00109.html">Thread Prev</A>][<A HREF="msg00377.html">Thread Next</A>][<A HREF="index.html#00122">Date Index</A>][<A HREF="threads.html#00122">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Cantsin Protocol No. 2</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@Algebra.COM">cypherpunks@Algebra.COM</A></LI>
+<LI><em>Subject</em>: Cantsin Protocol No. 2</LI>
+<LI><em>From</em>: <A HREF="mailto:nobody@REPLAY.COM">nobody@REPLAY.COM</A> (Anonymous)</LI>
+<LI><em>Date</em>: Wed, 3 Dec 1997 01:38:03 +0100 (MET)</LI>
+<LI><em>Organization</em>: Replay and Company UnLimited</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Anonymous &lt;anon@anon.efga.org&gt; wrote:
+&gt;Monty Cantsin writes:
+&gt;&gt; You can't see it up here, but this is a signed message using a
+&gt;&gt; protocol which is modestly titled "Cantsin Protocol No. 1".
+&gt;&gt; Suggestions for improvement are most welcome.
+&gt;
+&gt;A very interesting idea!  Please consider the following suggestions
+&gt;if you like, or feel free to ignore them.
+
+Your suggestions were very helpful.  Thank you for making them!
+
+I'm calling the latest version "Cantsin Protocol No.2" and its
+identifying number is "25BA1A9F5B9010DD8C752EDE887E9AF3".
+
+It is similar to Cantsin Protocol No. 1, but the bug with the hash of
+the public key is fixed.  Instead of concatenating the values p, g,
+and y, you concatenate "p:&lt;p&gt; g:&lt;g&gt; y:&lt;y&gt;" and compute the hash.  p,
+g, and y should be represented as ASCII hexadecimal digits without
+leading 0s.
+
+The hashes should now be correct SHA1 hashes.
+
+&gt;One problem with signatures which have no indication at the top is
+&gt;that two passes over the data are necessary: the first to scan and
+&gt;find the start-of-signature indicator, and another to go back and
+&gt;calculate the hash.  Signatures such as S/MIME and PGP have enough
+&gt;information at the top of the signed message to allow one pass
+&gt;processing.
+
+My thinking on this is that passes are cheap these days.  I want the
+signature to be unobtrusive which probably can't be done if only one
+pass is required.
+
+Incidentally, a nice feature of these signatures is that they can be
+moved around in the file just by changing the offset.  You don't need
+to control the secret key to do it.
+
+&gt;&gt; The first line is "16A5942B6EED349ECF4594C784DFD177 [Cantsin
+&gt;&gt; Protocol No. 1]".  The hexadecimal number was chosen randomly and
+&gt;&gt; is the indicator that this is a Cantsin Protocol No. 1 signature.
+&gt;&gt; The number was chosen randomly and it is somewhat unlikely that
+&gt;&gt; anybody else will accidently choose it.
+&gt;
+&gt;You might want to think about what happens if the document itself
+&gt;contains (maliciously, or perhaps because it is talking about your
+&gt;signatures) the string in question (as yours does and this one does
+&gt;as well).  This could throw off an automated signature checker.
+
+The signature checker should ignore bad or incomplete signatures.  I
+would consider this to be a bug in the software and not a bug in the
+protocol.  A bad signature simply lacks meaning and an error message
+need not be reported.
+
+That might seem a little callous, but actually it's how we should
+regard signatures.  The current model seems to be "computer, check the
+signature on this file and tell me if it's good", whereas the correct
+(in my view) model is, "computer, extract all of the material from
+this file which is properly signed and throw out the rest."
+
+(Of course, you could imagine a smart editor which highlighted the
+areas of a document which were signed by various parties.  It seems a
+little early to implement this.)
+
+If it's not authenticated, you shouldn't even look at it.  I've taken
+to putting the To: and Subject: header lines at the bottom of my
+messages for this purpose.  There's really no need to keep any of the
+header fields.
+
+The header fields can be put at the end just as unambiguously as at
+the beginning, but at the end they can be signed.
+
+&gt;&gt; The second line in the signature is an SHA1 hash of the public key.
+&gt;&gt; The hash is computed on the concatenation of the hexadecimal ASCII
+&gt;&gt; forms of p, g, and y respectively.  There should be no leading zeros.
+&gt;&gt; (Remember to leave off the newline!)
+&gt;
+&gt;Presumably you could use the key hash to look up the key to use for
+&gt;verifying the message.
+
+Strictly speaking it's there to save space.  If we put the public key
+components in every signature it wouldn't be much harder for the key
+management software to compute a hash on them somehow.  This does not
+have to be standardized.
+
+&gt;This has a mild denial of service attack.  Someone else could create
+&gt;a key with different boundaries between p, g, and y but which would
+&gt;create the same string as this concatenation, and therefore the same
+&gt;hash.  If you left the "p: ", "g: ", and "y: " in place it would
+&gt;prevent this.  PGP's key fingerprints have had the same problem.
+
+ACK!  I knew about this problem, but I couldn't remember exactly how
+it worked.  So I said, "Monty, let's not be dumb like those PGP guys.
+Let's concatenate the keys together and compute the hash.  Nobody will
+ever..."
+
+Thank you very much for pointing this out.
+
+&gt;&gt; The fourth line contains an offset and a length to specify the area
+&gt;&gt; of the text which is signed.  The offset is relative to the
+&gt;&gt; signature itself.  That is, the first character of the Cantsin
+&gt;&gt; Protocol No. 1 code is at position 0.  As signatures are usually
+&gt;&gt; appended, the offset will usually be the additive inverse of the
+&gt;&gt; length.
+&gt;
+&gt;It is intriguing that this can be used to sign a subset of the text.
+&gt;Presumably there could be multiple signature blocks each of which
+&gt;signed different subsets, possibly with different keys.  One problem
+&gt;is that it is not obvious to the human reader what part of the text
+&gt;is signed.  A nice effect with PGP and S/MIME signatures is that even
+&gt;readers who don't have the tools can have some slight confidence in
+&gt;signatures, because other readers will often report it when
+&gt;signatures don't verify.  With a signature that only covers a portion
+&gt;of the text, people might assume that if there are no reports of
+&gt;failure, more of the text is signed than is the case.  This is not a
+&gt;technical problem but is a social phenomenon which may not interact
+&gt;well with this signature format.
+
+People who want this feature should type something like "BEGIN CANTSIN
+PROTOCOL NO. 2" and "END CANTSIN PROTOCOL NO. 2" into the text at the
+right points.
+
+&gt;You need to specify a canonical line ending format.  Based on the
+&gt;count values in your document, it appears that you are counting line
+&gt;terminators as being one character long.  Your count value of 1CB9
+&gt;corresponds to decimal 7353, there are exactly 7353 characters from
+&gt;the first character of your message body to the beginning of your
+&gt;signature magic number, if line ends are one character.
+&gt;
+&gt;The specific characters for line endings need to be specified as well
+&gt;for the hash to be calculated consistently.  Your hash appears to be
+&gt;calculated with LF as the line ending (although the hash program is
+&gt;broken, see below).  Probably CR/LF would be preferable for the line
+&gt;endings as that is a widely used internet standard as well as being
+&gt;common on windows.
+
+My feeling on this is that this is outside the scope of a signature
+protocol.  The protocol should not make any assumptions about what is
+being signed nor should it modify what is being signed.
+
+I use LF to terminate lines and would recommend this to others, but it
+is not part of the Cantsin Protocol No. 2 specification.
+
+In any event, if we must put in patches to handle the poor fidelity of
+electronic mail, the patches should go in afterwards.  When a
+signature checking program finds "&gt;From" it should replace it with
+"From" and see if it can get the right checksum.  Likewise, it should
+try the various line endings until it gets a match.  There can't be
+more than about 12 variants, so this shouldn't create an onerous
+burden on the machine.  (And, I suppose, it would be possible to add a
+field after the length or after the hash which made a suggestion about
+the line ending.)
+
+&gt;&gt; You also need to be able to compute SHA1 hashes.  I've been using
+&gt;&gt; something called "sha1file" which, I believe, originated at Adam
+&gt;&gt; Back's web site.
+&gt;
+&gt;That program has a bug.  The routine SHA1_update in the file sha1.c
+&gt;is missing a line:
+&gt;
+&gt;   CENSORED BY THE UNITED ST
+&gt;   A
+&gt;      TES GOVERNMENT CENSORED BY THE UNITED STATES
+&gt;       GOVERNMENT CENSORED B
+&gt;      Y THE UNITED STATES GOVERN
+&gt;      MENT CENSORED BY THE UNITED 
+&gt;      STATES GOVERNMEN
+&gt;      T CENSORED BY TH
+&gt;***   E UNITED STA  ***  MISSING  ***
+&gt;   T
+&gt;
+&gt;Correcting this will make your hashes be correct.
+
+Another great suggestion.  The hashes should be correct now.
+
+Incidentally, in another thread I've been talking about partial
+signatures.  The code above is an example of where this would be
+useful.  In some countries we are not allowed to express ourselves
+freely without persecution.  If I wanted to provably quote somebody
+who included forbidden ideas in their message, it wouldn't be possible
+without partial signatures.
+
+&gt;&gt; El Gamal is simple enough that the signature on this message can be
+&gt;&gt; checked using standard Unix tools such as dc version 1.1.  Let's
+&gt;&gt; say M is the SHA1 hash of the message.  It is checked by verifying
+&gt;&gt; the truth of this equation: (y^a * a^b) mod p = g^M mod p.
+&gt;
+&gt;El Gamal is a rather lengthy signature, although the verification
+&gt;equation is relatively simple.  DSS has a shorter signature.
+
+This might be a good thing to add to a later Cantsin Protocol.
+
+&gt;There are some subtleties to choosing El Gamal keys, but with the
+&gt;2048 bit values you have chosen you are pretty safe.
+
+Schneier doesn't mention this, although presumably this information
+will show up in one of his references.  Do you know offhand of a
+published source which covers this?
+
+&gt;Also, you can't really justify using 2048 bit keys when your hash is
+&gt;only 160 bits.  The hash becomes the weak link for keys beyond about
+&gt;1024 bits, and unless you use a stronger hash your key strength is
+&gt;misleading.  This is why DSS is only specified up to 1024 bits.
+
+This is just intuition, isn't it?  Since we really don't know how hard
+it is to factor it seems hard to claim we know the ratio of difficulty
+between breaking SHA1 and El Gamal.  Factoring could be broken before
+SHA1.
+
+Not that any great science was applied to the choice of a 2048 bit
+prime, it just seemed like a good size.  ;-)
+
+Also, I think it is a mistake for people to communicate the strength
+of a system by choosing various key lengths based on general popular
+views.  It's probably better to say "I estimate this system requires
+at least 2^x operations to break."
+
+We've seen this with people choosing short keys so nobody will get the
+idea that it is secure.  This just seems all wrong to me.  The key
+length is only one way in which a key could be insecure.  Monty
+Cantsin's authentication key, for example, is not kept very securely.
+But, the way to communicate that is to say "this key is not kept all
+that securely."
+
+However, in Cantsin Protocol No. 2 the size of the prime chosen is
+completely unspecified.  There doesn't seem to be a reason to restrict
+the choice other people will make regarding the length of the prime.
+
+I could imagine choosing a short key for control over a
+semi-persistent identity.  The advantage is that you can claim
+somebody else brute forced the key for statements you wish to
+repudiate.  Similarly, I could imagine choosing an obnoxiously long
+key to make it hard for people who don't have super fast machines to
+associate with you.
+
+Monty Cantsin
+Editor in Chief
+Smile Magazine
+<A  HREF="http://www.neoism.org/squares/smile_index.html">http://www.neoism.org/squares/smile_index.html</A>
+<A  HREF="http://www.neoism.org/squares/cantsin_10.htm">http://www.neoism.org/squares/cantsin_10.htm</A>
+
+Subject: Cantsin Protocol No. 2
+To: cypherpunks@algebra.com
+25BA1A9F5B9010DD8C752EDE887E9AF3 [Cantsin Protocol No. 2]
+94C43229A76383D818D39952F7A41ACA0394C6FE
+C602F22D31BBC6245643E58AD8EB260B58DC1250
+-2B49 2B49
+CEDDBC793332877C29C3BF084DDD8DE8113E6C80E13995BCAFACE2E7D719194A8CAEB987D2DAC013204F1A2909B1FADCB7EFE39F0F764B140CA5711D057B4EF1EF880ACAF1FF19FB5E92E4A8E4F1CE4B0F18CBB37274629EDACFF412C5A971C20869A956497491F41F3D0E7791F85E18ED638B0552A275CF2F24002646084CB3BCF0AE52A38826D1D986CBE460B793836291326C3636A452B54A79DE949CB6A12FD1852D9FC438D6D7E63989CC031161B8872E1EE60D0C4521FCF7096B98E1DEF560432314258359370763BCE5D3D4610B097DC68C1EDCD1F3D5084069C74191C798383C3BF822EC97DE84531B20ECCB36B13EC9153252C88FFAFE71CD65B197
+AFC25A731FAD9BB9A373B7D9972EA9CED870CC6FDACE0B2A2AEAC4F0C33115B15E689CBF943B757F8690C945CC1CB29E4F86276EB0643E215ADB92CEFE1394DD8320DDF703D4212EFEFA59081C21BBD2ED6282304D2DB496735BBCB3E5B802C2B78037EC041DDD8BBC1E4712CF18E56237E5BCDB37127F538BEF1E0038949B42F88140E608F02282570388D07785841069FD76EFC78E170E12DC1CF6570E7D67603707E15717704EBF8DE50014141DC8F8C80432333B5647B176093A45834F4460BDD2465306AE56156EFE1D0686F0FB4F7743CED116F47121EB4970B4CFDBEC6E56E90AADAA97836E95F3723B3216E99EC9FDE324943AFF6F257880423DFCE7
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00377" HREF="msg00377.html">Signature checker for Cantsin Protocol No. 2</A></STRONG>
+<UL><LI><EM>From:</EM> Steffen Zahn &lt;zahn@berlin.snafu.de&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00121.html">Re: Minsky skeptical of privacy</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00117.html">hashcash spam throttle</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00109.html">Re: Minsky skeptical of privacy</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00377.html">Signature checker for Cantsin Protocol No. 2</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00122"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00122"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

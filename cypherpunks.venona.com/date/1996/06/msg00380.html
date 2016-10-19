@@ -1,0 +1,158 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Triple&#45;DES chip idea: built&#45;in 1DES&#45;cracker -->
+<!--X-From-R13: Xbua Uvyzber <tahNgbnq.pbz> -->
+<!--X-Date: Thu, 6 Jun 1996 21:43:05 +0800 -->
+<!--X-Message-Id: 199606060750.AAA06399@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Triple-DES chip idea: built-in 1DES-cracker</TITLE>
+<LINK REV="made" HREF="mailto:gnu@toad.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00371.html">Date Prev</A>][<A HREF="msg00379.html">Date Next</A>][<A HREF="msg01035.html">Thread Prev</A>][<A HREF="msg00395.html">Thread Next</A>][<A HREF="index.html#00380">Date Index</A>][<A HREF="threads.html#00380">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Triple-DES chip idea: built-in 1DES-cracker</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:gnu@toad.com">gnu@toad.com</A></LI>
+<LI><em>Subject</em>: Triple-DES chip idea: built-in 1DES-cracker</LI>
+<LI><em>From</em>: John Gilmore &lt;<A HREF="mailto:gnu@toad.com">gnu@toad.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 06 Jun 1996 00:50:54 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+It just occurred to me that companies which are designing Triple-DES
+chips should spend a small chunk of their chip area and design time
+on building in features for fast single-DES key search.
+
+As in Matt Wiener's design, this would include logic to generate a
+sequence of trial keys, and a circuit to evaluate the likelihood that
+the trial key was "interesting" after examining the trial plaintext.
+All of this logic would be on-chip and isolated from the pins of the
+chip, so it could run at high speed without any impact on the rest of
+the system.
+
+Then, as these chips are deployed into consumer boards or
+motherboards, a small amount of software plus the Internet will make
+distributed DES cracking feasible.  Whenever the chip wasn't busy
+doing some "real work" encoding data for the user, it would be
+spinning its wheels cracking a DES key for fun or profit.
+
+There are lots of interesting ways to build the comparison circuitry
+to examine the trial plaintext.  The cheapest is to provide a single
+64-bit register with the desired plaintext; that's what Matt's design
+did.  Another cheap way would be to provide two 64-bit registers: a
+mask and a value.  AND with the mask and compare to the value; it's
+interesting if equal.  A second and/or third set of mask and value
+registers (and another ciphertext register) would permit the test to
+be across 16 or 24 bytes of ciphertext/plaintext rather than just 8.
+This would be useful if e.g. your mask is only looking to see that the
+high order bit of each byte is off in the ciphertext (indicating a
+probability of ASCII text).  8-byte comparison would give you a
+false-hit every 256 keys; 16-byte comparison would reduce that to one
+every 65,536 keys.
+
+Matt's chips froze when they got a match.  A FIFO on the comparison
+output would let the chip continue to spin, looking for more matches,
+before software got around to reading the results of a previous hit.
+This would permit the chip to do DES-cracking in polled mode, without
+using interrupts.  If the DES-cracking control registers were all
+disjoint from the ordinary DES operational registers, the DES-cracking
+could be initiated at any time, independent of the chip's encryption
+functions, and could then be checked-up on periodically, again without
+impacting the chip's normal functioning.  As an extreme example, it
+could be started at system boot time, and checked only at system
+shutdown for hits.
+
+If you wanted to get truly fancy, the comparison should have eight
+256-bit vectors, one per byte of plaintext.  Each vector is indexed by
+the byte of plaintext, producing a single bit.  If it's 1, that byte
+has an interesting value.  So if you set only the bits corresponding
+to ASCII uppercase letters, then only a plaintext ASCII uppercase
+letter is interesting.  So, the eight trial-plaintext bytes produce
+eight bits, one from each vector.  Mash those together, and use this
+8-bit value as an index to a ninth bit vector, which would let you
+specify which combinations of "interesting" plaintext bytes are truly
+interesting enough to stop the chip for.  E.g. if you insist that all
+of the ciphertext bytes are ASCII uppercase letters, then all the
+eight bit-vectors will be set up the same, and this ninth bit vector
+will have a single 1-bit at index 11111111 (all bytes match).  If on
+the other hand, any six out of the eight being uppercase is good
+enough for you, you'd put a bunch of 1-bits into the ninth vector (one
+for each possible way that six of the eight would match, such as
+11010111 and 00111111 and 01111110).  In nine 256-bit vectors (less
+than 300 bytes of on-chip storage), you could specify truly complex
+and useful conditions like "First two bytes of plaintext equals
+0x2C07, next three bytes are uppercase ASCII, next byte is a
+don't-care, following byte is an ASCII digit".  This would be great
+for matching up packet headers or partial plaintext, when looking for
+the key to encrypted network traffic.  However, even these days,
+adding 300 bytes of static storage to a 3DES chip for this kind of
+ancillary function doesn't seem likely, until the market for
+DES-cracker boxes matures.  (Each such box tends to consume large
+numbers of DES chips, making them an attractive target market for a
+chip vendor.)
+
+But some of the simpler des-cracker assists I mentioned should be easy
+to implement with only a few dozen bytes of static storage, some small
+circuits and maybe one more address pin, making them suitable for
+mass-market chips for PC's and such.
+
+	John Gilmore, gnu@toad.com
+
+PS:  Note that this feature would not affect the exportability of your
+chip, which was already nil.  Design and build it overseas.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00371.html">Re: whitehouse web incident, viva la web revolution</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00379.html">Re: Micropayments: myth?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01035.html">Re: Zimmerman/ViaCrypt?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00395.html">Norton Eyes only</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00380"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00380"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

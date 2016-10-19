@@ -1,0 +1,118 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: PGPTools Minor Bug -->
+<!--X-From-R13: erznvyreNzreqr.qvf.bet (erznvyre obthf nppbhag) -->
+<!--X-Date: Wed, 2 Feb 94 20:01:04 PST -->
+<!--X-Message-Id: 9402030359.AA28381@merde.dis.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>PGPTools Minor Bug</TITLE>
+<LINK REV="made" HREF="mailto:remailer@merde.dis.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00167.html">Date Prev</A>][<A HREF="msg00175.html">Date Next</A>][<A HREF="msg00444.html">Thread Prev</A>][<A HREF="msg00163.html">Thread Next</A>][<A HREF="index.html#00164">Date Index</A>][<A HREF="threads.html#00164">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>PGPTools Minor Bug</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: PGPTools Minor Bug</LI>
+<LI><em>From</em>: <A HREF="mailto:remailer@merde.dis.org">remailer@merde.dis.org</A> (remailer bogus account)</LI>
+<LI><em>Date</em>: Wed, 2 Feb 94 19:59:15 PST</LI>
+<LI><em>Remailed-By</em>: remailer bogus account &lt;remailer@utter.dis.org&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+There is a minor bug in PGPTOOLS.C which needs to be fixed. In 
+pgp_extract_rsa, two lines need to be added. This variable was not being
+cleared. When the precision was later set to max, there was garbage left
+in the high-order bytes of the mpi. This caused the size of the MPI to be
+wrong, and the function would not decrypt 2.2 or earlier packets. It could
+also occasionally fail to decrypt a 2.3 packet. Sorry about that.
+
+					   Pr0duct Cypher
+
+/* Decrypts and extracts the key from an RSA-encrypted block */
+/* Returns true if successful, false if not */
+int pgp_extract_rsa(struct fifo *f,byte ideakey[16],
+     struct pgp_pubkey *pk,struct pgp_seckey *sk)
+{
+struct mpi *p=safemalloc(sizeof(struct mpi));
+struct mpi *c=safemalloc(sizeof(struct mpi));
+unit *dp=safemalloc(sizeof(unitarr));
+unit *dq=safemalloc(sizeof(unitarr));
+unit *temp=safemalloc(sizeof(unitarr));
+byte result;
+
+word16 checksum=0;
+byte *pp;
+byte type;
+word32 length;
+set_precision(MAX_UNIT_PRECISION);        &lt;--------- ADD
+mp_burn(p-&gt;value);                        &lt;--------- ADD
+set_precision(bits2units(pk-&gt;n.bits+SLOP_BITS));
+pgp_examine_packet(f,&amp;type,&amp;length);
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a
+
+iQCVAgUBLU4ptsGoFIWXVYodAQG3GQQApg45mfrbfoUP4BhrtmvE+zRGdSp6zx9+
+M7GDnJ+vpCVzQj6S7Z+y1RZ4FFAT6yX/63oeVvhW8FzNZ1s5xOZivbIZrhC6WPJU
+qZiuy/veXD7OrWpUJueucT5xPF/Nsjdx3w2DiAy2x7YtRycpzugMSpSdvJcCcOuK
+rGBkPV2eJDc=
+=+WVh
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00167.html">New remailer up.</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00175.html">RE: fwd: Canadian gov't eavesdropping</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00444.html">Re: New remailer up</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00163.html">LPC on ADSP2105</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00164"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00164"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

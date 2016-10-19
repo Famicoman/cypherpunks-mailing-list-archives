@@ -1,0 +1,143 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: GUCAPI (Grand Unified Crypto API) -->
+<!--X-From-R13: "XSTT ZWQCGWO (QSW)" <XZWQCGWONzup.hvhp.rqh> -->
+<!--X-Date: Tue, 6 Dec 94 14:25:05 PST -->
+<!--X-Message-Id: MAILQUEUE&#45;101.941206162307.480@mhc.uiuc.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: GUCAPI (Grand Unified Crypto API)</TITLE>
+<LINK REV="made" HREF="mailto:JLICQUIA@mhc.uiuc.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00371.html">Date Prev</A>][<A HREF="msg00360.html">Date Next</A>][<A HREF="msg00370.html">Thread Prev</A>][<A HREF="msg00360.html">Thread Next</A>][<A HREF="index.html#00364">Date Index</A>][<A HREF="threads.html#00364">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: GUCAPI (Grand Unified Crypto API)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: GUCAPI (Grand Unified Crypto API)</LI>
+<LI><em>From</em>: "JEFF LICQUIA (CEI)" &lt;<A HREF="mailto:JLICQUIA@mhc.uiuc.edu">JLICQUIA@mhc.uiuc.edu</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 6 Dec 1994 16:23:07 CST</LI>
+<LI><em>Organization</em>: McKinley Health Center, University of Illin</LI>
+<LI><em>Priority</em>: normal</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+&gt; From:          "L. Todd Masco" &lt;cactus@hks.net&gt;
+
+&gt; I've been thinking a lot recently about how to implement a generic API for
+&gt; crypto such that the interface could be independent of the cipher used.
+
+Here's a few random thoughts:
+
+Perhaps we could split the functions into groups according to the purpose 
+of the group.  Thus, key generation protocols would be in one group, 
+encryption in another, decryption in another, file I/O routines in 
+another, and so on.  This would seem to encourage a more modular 
+approach.  It would provide an additional level of abstraction as well; 
+you could implement higher-level actions in terms of lower-level ones.  
+For example, you could implement "PGP-encrypt" in terms of calls to 
+RSA-specific and IDEA-specific functions; from the point of view of the 
+application, however, raw RSA and "PGP-style" encryption would look like 
+two separate implementations of the same API.  It could also facilitate 
+certain other types of apps; for example, if we had a "key management" 
+API and implementations of the API for PGP keys and PEM keys, we could 
+easily construct an app that could PGP-encrypt with PEM keys and vice 
+versa.
+
+Not to be an OO bigot or anything, but I would implement these as object 
+groups, with the parents defining the API and the children implementing 
+it.  As an example, consider this "Key" hierarchy:
+
+                    Key
+                   /   \
+              PubKey   PrivKey
+- -&gt;              /       /   \
+            RSAKey  DESKey  IDEAKey
+             /  \
+        PGPKey  PEMKey
+
+The arrow indicates the drawing line between definition and 
+implementation classes.  Note the common heritage of PGPKey and PEMKey 
+with RSAKey; this could be used as a mechanism for converting between 
+keys if RSAKey were implemented as a "raw" key, while PGPKey and PEMKey 
+could include other key-specific baggage such as userIDs, attached 
+certificates, etc.  Supposedly, then, key management and other stuff 
+could be made specific to the key type, but encrypting and decrypting 
+could consist of a simple:
+
+  Boolean RSAencrypt(char *message, RSAKey &amp;key);
+
+(to use C++ language - substitute your own OOL if desired) and could then 
+use either key format for its dirty work.  Of course, this is simplistic, 
+as the encryption engine itself would probably be an object also, etc., 
+etc.
+
+There's some very rough ideas!  They're in bad need of clarification; let 
+'em have it!
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBLuTj6DER5KvPRd0NAQE2yAP/dqcaHUXa9UrGpGxWOg+8xs2/AhCh0TS6
+0Cca76O6Ztc/vzEpBdz1iAMVa/N7DDybwTHR+wgTPjBEKoy1vqMjSPZpEk2Zwhpy
+8EgQvGOHInJrMdlWssEZWn8Av1tSaYJtNrtDV2hTEB9pZSzhIi1T257gqjSrnHks
+mH3qT0tQTjg=
+=AXya
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00371.html">Re: Dec. 10th Bay Area Cypherpunks Meeting</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00360.html">Re:       Re: GUCAPI (Grand Unified Crypto API)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00370.html">Re: GUCAPI (Grand Unified Crypto API)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00360.html">Re:       Re: GUCAPI (Grand Unified Crypto API)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00364"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00364"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

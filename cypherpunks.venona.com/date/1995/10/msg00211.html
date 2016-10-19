@@ -1,0 +1,186 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux] -->
+<!--X-From-R13: [nex [heenl <znexNtebaqne.mn> -->
+<!--X-Date: Tue, 31 Oct 1995 07:36:57 +0800 -->
+<!--X-Message-Id: 199510302148.XAA00832@grumble.grondar.za -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux]</TITLE>
+<LINK REV="made" HREF="mailto:mark@grondar.za">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00188.html">Date Prev</A>][<A HREF="msg00190.html">Date Next</A>][<A HREF="msg00207.html">Thread Prev</A>][<A HREF="msg00190.html">Thread Next</A>][<A HREF="index.html#00211">Date Index</A>][<A HREF="threads.html#00211">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux]</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "Theodore Ts'o" &lt;<A HREF="mailto:tytso@MIT.EDU">tytso@MIT.EDU</A>&gt;</LI>
+<LI><em>Subject</em>: Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux] </LI>
+<LI><em>From</em>: Mark Murray &lt;<A HREF="mailto:mark@grondar.za">mark@grondar.za</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 30 Oct 1995 23:48:24 +0200</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;    Something I didn't mention earlier; we felt that letting the unwashed
+&gt;    masses read /dev/*random was not a good idea, as they could deplete
+&gt;    the pool of entropy all to easily for attack purposes. 
+&gt; 
+&gt; That should be a system administration issue.  If someone wants to make
+&gt; /dev/random readable only by root at their site, that's their business.
+&gt; I don't see any point in trying to enforce that in the kernel code.
+
+Is not in the kernel, this is just the permissions on /dev/*random.
+
+&gt; I don't agree that restricting read access is useful.  First of all, if
+&gt; the pool of entropy is depleted, someone who tries to obtain entropy by
+&gt; reading /dev/random will know that they didn't get enough entropy.  So
+&gt; assuming a program that actually checks return values from system calls,
+&gt; this is at worse a denial of service attack, and there are much easier
+&gt; ways of performing those srots of attacks: "while (1) fork()", for
+&gt; example.
+
+Hmm. Lemme think about this...
+
+&gt; Secondly, making /dev/random only readable by "privileged programs"
+&gt; means that people won't be able to compile their own version of PGP that
+&gt; can take advantage of the random number generator.  Instead, they would
+&gt; have to use a setuid version of PGP, and I'm quite sure PGP wasn't
+&gt; written such that it would be safe to turn on its setuid bit.  
+
+How about SetGID? We were going for 660 root.kmem.
+
+&gt; Finally, even if you did have trustworthy applications which you could
+&gt; setuid and only allow those programs to have access to /dev/random,
+&gt; someone who repeatedly ran those applications could still end up
+&gt; depleteing the pool of entropy.
+&gt; 
+&gt; So in the general case I would advise that /dev/random be left world
+&gt; readable, since you *do* want general user programs to have access to
+&gt; high quality random numbers.  
+
+Ponder... I'll put this forward.
+
+&gt; Again, /dev/random can be set to whatever permissions the system
+&gt; administrator wants.  Secondly, writing to /dev/random merely adds
+&gt; randomness to the pool, via the mixing algorithm.  It won't actually
+&gt; permit people to *set* the state of the pool, and assuming that the
+&gt; state of the pool is not known before the write operation, writing to it
+&gt; won't allow the user to know what the state is after the write
+&gt; operation.
+
+What happens if some attacker does:
+
+for (;;) {
+	write_to_devrandom(NULL);
+	check_to_see_if_state_is_crackable();
+}
+
+? "Gut feel" suggests to me that large ammounts of "predicted" input might
+be worse than the normal sort of system noise you have been using.
+
+&gt; And, for race condition reasons, something which I need to implement
+&gt; soon is an ioctl(), usuable only by root, that simultaneously updates
+&gt; the entropy estimate *and* submits data to be mixed into the pool.  (Why
+&gt; this is necessary should be obvious after a few minutes thought.)
+
+Clue me in - I'm not quite with you? :-)
+
+&gt;    Are you sure about this? The stochastisity if this would be pretty
+&gt;    hefty. Not only would our attacker have to get the _time_ that the
+&gt;    interrupt occurred (if it interrupted our machine), he would then have
+&gt;    to process in brute-force mode all possible times in his error range.
+&gt;    What is more, more interrupts are coming in...
+&gt; 
+&gt; I didn't say that it would be trivial for an attacker to do this, but
+&gt; it's certainly *doable*.  Some of the network traffic analyzers that
+&gt; have been made available (I think Sandia National Labs has one that does
+&gt; this), records down to millisecond accuracy when a packet was sniffed on
+&gt; the network.  
+
+Is this millisecond accuracy quantifiable in terms of bits of entropy?
+if so, the ethernet is surely safe?
+
+&gt; For this reason, people shouldn't really trust initializing PGP's random
+&gt; number generator over a network connection, since it is possible for an
+&gt; adversary to obtain very high quality timings of when your telnet or
+&gt; rlogin packets appeared on the network, and hence be able to guess
+&gt; (within some error range) what the interkeyboard timings which PGP used
+&gt; to initialize its random number generator.
+&gt; 
+&gt; The adversary might have to try a large number of possibilities, but if
+&gt; the number of possibilities is less than a brute-force search, you
+&gt; definitely have a weakness --- a fact which Netscape learned to its
+&gt; embarassment a few weeks ago.
+
+Again, if you can quantify the number of possibilities into bits of entropy,
+your code is good. Depending on current technology, this may have to change.
+
+M
+
+--
+Mark Murray
+46 Harvey Rd, Claremont, Cape Town 7700, South Africa
++27 21 61-3768 GMT+0200
+Finger mark@grumble.grondar.za for PGP key
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00190" HREF="msg00190.html">Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux]</A></STRONG>
+<UL><LI><EM>From:</EM> "Theodore Ts'o" &lt;tytso@MIT.EDU&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00201" HREF="msg00201.html">Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux]</A></STRONG>
+<UL><LI><EM>From:</EM> "Josh M. Osborne" &lt;stripes@va.pubnix.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00188.html">Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux]</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00190.html">Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux]</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00207.html">Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux]</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00190.html">Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux]</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00211"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00211"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

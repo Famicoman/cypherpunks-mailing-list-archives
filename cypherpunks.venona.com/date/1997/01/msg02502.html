@@ -1,0 +1,403 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Mailcrypt nym.alias.net support -->
+<!--X-From-R13: Xrerzrl Pneergg <wrerzrlNirevjro.pbz> -->
+<!--X-Date: Sat, 25 Jan 1997 03:23:37 &#45;0800 (PST) -->
+<!--X-Message-Id: 199701251117.DAA10089@descartes.veriweb.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Mailcrypt nym.alias.net support</TITLE>
+<LINK REV="made" HREF="mailto:jeremey@veriweb.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02503.html">Date Prev</A>][<A HREF="msg02507.html">Date Next</A>][<A HREF="msg00686.html">Thread Prev</A>][<A HREF="msg00183.html">Thread Next</A>][<A HREF="index.html#02502">Date Index</A>][<A HREF="threads.html#02502">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Mailcrypt nym.alias.net support</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Mailcrypt nym.alias.net support</LI>
+<LI><em>From</em>: Jeremey Barrett &lt;<A HREF="mailto:jeremey@veriweb.com">jeremey@veriweb.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 25 Jan 1997 03:17:16 -0800 (PST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:jeremey@veriweb.com">jeremey@veriweb.com</A></LI>
+<LI><em>Organization</em>: VeriWeb Internet Corp.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+For those of you who use mailcrypt (Emacs-PGP interface) for email, I
+have hacked in support for pseudonyms ala nym.alias.net. In fact,
+the code has nym.alias.net hardcoded for now. I'm gonna add more stuff,
+but I'm just letting this out as is.
+
+This patch affects mailcrypt.el and mc-remail.el. I made these changes
+to mailcrypt 3.4, so your mileage may vary on other versions. I did
+this after the C2 party tonight, so typos and bugs are possible. Please
+email me if bugs are found. "This value is not configureable" does not
+qualify, I know it's not configureable yet.
+
+(BTW there are a couple functions not used, I was doing it one way, then
+changed my way of thinking, but the code is ok so I left it.)
+
+
+Installing it:
+
+ o cd to your lisp directory
+
+ o cat /path/to/the/patch | patch -p0, or something similar
+   (You will need to pgp this message before extracting the patch
+    to get rid of the leading "- " on some lines.)
+
+ o recompile the .el files, ala:
+
+   emacs -batch -f batch-byte-compile mc-remail.el
+   emacs -batch -f batch-byte-compile mailcrypt.el
+
+
+Using it:
+
+ o You _must_ have a remailer chain defined. This does not work
+   with a single remailer (though a chain of length 1 might work).
+
+ o Compose a message or reply as normal. Once you are done (the message
+   would go out without nyms or remailers or anything if you hit
+   C-c C-c), hit C-c / n.
+
+ o The first question asks for a remailer chain, it will do completions.
+
+ o The second question asks for the name of your nym. This is assumed
+   to be @nym.alias.net, DO NOT include @nym.alias.net. If your nym
+   is jimbob@nym.alias.net, just answer jimbob. This does not do 
+   completions at the moment. Putting your nym in your .emacs file
+   is a bit weird anyway.
+
+ o You will be asked for a signature for your nym's private key.
+
+ o The message will be rewritten to send@nym.alias.net and then
+   to the remailer chain you chose.
+
+ o Send it.
+
+
+Hack the code at will, if you make significant enhancements, please
+email patches to me. Of course there is no warranty of any sort, if
+it blows up your machine you're out a machine.
+
+
+I will put this on my web page (<A  HREF="http://www.veriweb.com/people/jeremey">http://www.veriweb.com/people/jeremey</A>)
+for those that prefer that.
+
+Ok, here's the patch:
+
+- ---------------------------------cut here-----------------------------------
+*** mailcrypt.el	Tue Oct 10 12:33:45 1995
+- --- /usr/home/jeremey/PGP/mailcrypt-3.4/mailcrypt.el	Sat Jan 25 02:45:27 1997
+***************
+*** 51,56 ****
+- --- 51,57 ----
+  (autoload 'mc-sign "mc-toplev" nil t)
+  (autoload 'mc-insert-public-key "mc-toplev" nil t)
+  (autoload 'mc-remailer-encrypt-for-chain "mc-remail" nil t)
++ (autoload 'mc-remailer-encrypt-for-nym "mc-remail" nil t)
+  (autoload 'mc-remailer-insert-response-block "mc-remail" nil t)
+  (autoload 'mc-remailer-insert-pseudonym "mc-remail" nil t)
+  
+***************
+*** 101,107 ****
+        (define-key mc-write-mode-map "\C-c/b"
+  	'mc-remailer-insert-response-block)
+        (define-key mc-write-mode-map "\C-c/p"
+! 	'mc-remailer-insert-pseudonym)))
+  
+  (easy-menu-define
+   mc-read-mode-menu (if mc-xemacs-p nil (list mc-read-mode-map))
+- --- 102,110 ----
+        (define-key mc-write-mode-map "\C-c/b"
+  	'mc-remailer-insert-response-block)
+        (define-key mc-write-mode-map "\C-c/p"
+! 	'mc-remailer-insert-pseudonym)
+!       (define-key mc-write-mode-map "\C-c/n"
+! 	'mc-remailer-encrypt-for-nym)))
+  
+  (easy-menu-define
+   mc-read-mode-menu (if mc-xemacs-p nil (list mc-read-mode-map))
+*** mc-remail.el	Wed Oct  4 15:45:56 1995
+- --- /usr/home/jeremey/PGP/mailcrypt-3.4/mc-remail.el	Sat Jan 25 02:44:16 1997
+***************
+*** 378,383 ****
+- --- 378,401 ----
+  	  (re-search-forward "^$" nil 'move)
+  	  (cons (copy-marker start) (copy-marker (point)))))))
+  
++ (defun mc-find-nym-from-header (name subject &amp;optional insert)
++   ;; Find the header with a "::" immediately after the
++   ;; mail-header-separator.  Return region enclosing header.  Optional
++   ;; arg INSERT means insert the header if it does not exist already.
++   (save-excursion
++     (goto-char (point-min))
++     (re-search-forward
++      (concat "^" (regexp-quote mail-header-separator) "\n"))
++     (if (or (and (looking-at "From") (forward-line 1))
++ 	    (and insert
++ 		 (progn
++ 		   (insert-before-markers 
++ 		    (concat "From: " name "\nTo: \nSubject:" subject "\n\n"))
++ 		   (forward-line -1))))
++ 	(let ((start (point)))
++ 	  (re-search-forward "^$" nil 'move)
++ 	  (cons (copy-marker start) (copy-marker (point)))))))
++ 
+  (defun mc-find-hash-header (&amp;optional insert)
+    (save-excursion
+      (goto-char (point-min))
+***************
+*** 400,411 ****
+- --- 418,442 ----
+  (defsubst mc-replace-main-field (field replacement)
+    (mc-replace-field field replacement (mc-find-main-header t)))
+  
++ (defsubst mc-nuke-main-field (field)
++   (mc-nuke-field field (mc-find-main-header t)))
++ 
+  (defsubst mc-replace-hash-field (field replacement)
+    (mc-replace-field field replacement (mc-find-hash-header t)))
+  
+  (defsubst mc-replace-colon-field (field replacement)
+    (mc-replace-field field replacement (mc-find-colon-header t)))
+  
++ (defsubst mc-insert-nym-header (replacement)
++   (mc-find-nym-from-header replacement 
++ 			   (cdr (car (mc-get-fields "Subject" 
++ 						    (mc-find-main-header)))) t)
++   (mc-replace-main-field "To" "send@nym.alias.net")
++   (mc-nuke-main-field "Cc")
++   (mc-nuke-main-field "Organization")
++   (mc-nuke-main-field "Subject")
++   (mc-nuke-main-field "From"))
++ 
+  (defun mc-recipient-is-remailerp ()
+    (let ((to (mc-get-fields "To" (mc-find-main-header))))
+      (and to
+***************
+*** 516,521 ****
+- --- 547,568 ----
+  	(setq pseudonym (concat pseudonym " &lt;x@x.x&gt;")))
+      (mc-replace-colon-field "From" pseudonym)))
+  
++ (defun mc-remailer-insert-nym-nym ()
++   "Insert pseudonym as a From field in the hash-mark header.
++ 
++ See the documentation for the variable `mc-remailer-pseudonyms' for
++ more information."
++   (interactive)
++   (let ((completion-ignore-case t)
++ 	pseudonym)
++     (setq pseudonym
++ 	  (cond ((null mc-remailer-pseudonyms)
++ 		 (read-from-minibuffer "Pseudonym: "))
++ 		(t
++ 		 (completing-read "Pseudonym: "
++ 				  (mapcar 'list mc-remailer-pseudonyms)))))
++     (mc-insert-nym-header pseudonym)))
++ 
+  ;;}}}
+  ;;{{{ Mixmaster support
+  (defvar mc-mixmaster-path nil
+***************
+*** 730,735 ****
+- --- 777,826 ----
+        (error "Unable to encrypt message to %s"
+  	     (mc-remailer-userid remailer)))))
+  
++ (defun mc-rewrite-for-nym-internal (nym &amp;optional pause)
++   ;; Rewrite the current mail buffer for nym.alias.net.  This
++   ;; includes pulling down the To: and Subject: headers, changing
++   ;; the To: header, and encrypting to send@nym.alias.net and signing 
++   ;; with the nym's key. This should be used only as part of
++   ;; mc-rewrite-for-nym since it will subsequently chain the message
++   ;; through a set of remailers.
++   (let ((addr "send@nym.alias.net")
++ 	(main-header (mc-find-main-header)))
++ 
++     ;; Move "Subject" lines down.
++     (goto-char (cdr main-header))
++     (forward-line 1)
++     (mapcar
++      (function (lambda (f) (insert (car f) ":" (cdr f))))
++      (mc-get-fields "Subject" main-header t))
++     (insert "\n")
++ 
++     ;; Move "To" lines down.
++     (goto-char (cdr main-header))
++     (forward-line 1)
++     (mapcar
++      (function (lambda (f) (insert (car f) ":" (cdr f))))
++      (mc-get-fields "To" main-header t))
++ 
++     ;; Insert "From" for nym.alias.net
++     (goto-char (cdr main-header))
++     (forward-line 1)
++     (insert (concat "From: " nym "\n"))
++ 
++     (goto-char (car main-header))
++     (insert "To: send@nym.alias.net\n")
++ 
++     (if pause
++ 	(let ((cursor-in-echo-area t))
++ 	  (message "SPC to encrypt for %s : " addr)
++ 	  (read-char-exclusive)))
++     (setq main-header (mc-find-main-header))
++     (goto-char (cdr main-header))
++     (forward-line 1)
++     (let ((mc-encrypt-for-me nil))
++       (mc-encrypt-message "send@nym.alias.net" nil (point) nil 
++ 			  (concat nym "@nym.alias.net") t))))
++ 
+  (defun mc-rewrite-for-chain (chain &amp;optional pause)
+    ;; Rewrite the current buffer for a chain of remailers.
+    ;; CHAIN must be in canonical form.
+***************
+*** 744,749 ****
+- --- 835,856 ----
+  	  (mc-rewrite-for-remailer (car chain) pause)
+  	(mc-rewrite-for-mixmaster chain pause)))))
+  
++ (defun mc-rewrite-for-nym (nym chain &amp;optional pause)
++   ;; Rewrite the current buffer for nym.alias.net through a
++   ;; chain of remailers. CHAIN must be in canonical form.
++   ;; nym is assumed to be the nym's name WITHOUT @nym.alias.net on it.
++   (let (rest)
++     (if mc-mixmaster-path
++ 	(setq rest (mc-mixmaster-skip chain))
++       (setq rest chain))
++     (if (null chain) nil
++       (mc-rewrite-for-nym-internal nym pause)
++       (mc-rewrite-for-chain
++        (if (eq rest chain) (cdr rest) rest) pause)
++       (if (eq rest chain)
++ 	  (mc-rewrite-for-remailer (car chain) pause)
++ 	(mc-rewrite-for-mixmaster chain pause)))))
++ 
+  (defun mc-unparse-chain (chain)
+    ;; Unparse CHAIN into a string suitable for printing.
+    (if (null chain)
+***************
+*** 782,787 ****
+- --- 889,926 ----
+  	   (cdr (assoc chain-name chains))
+  	   chains))
+      (mc-rewrite-for-chain chain pause)
++     (if chain
++ 	(save-excursion
++ 	  (set-buffer buffer)
++ 	  (erase-buffer)
++ 	  (insert "Rewritten for chain `" chain-name "':\n\n"
++ 		  (mc-unparse-chain chain))
++ 	  (message "Done.  See %s buffer for details." mc-buffer-name)))))
++ 
++ ;;}}}
++ 
++ (defun mc-remailer-encrypt-for-nym (&amp;optional pause)
++   "Encrypt message for a nym server, to be resent, prompting for chain to use.
++ 
++ With \\[universal-argument], pause before each encryption."
++   (interactive "P")
++   (let ((chains (mc-remailer-make-chains-alist))
++ 	(buffer (get-buffer-create mc-buffer-name))
++ 	chain-name chain nym)
++     (mc-nuke-field "CC")
++     (mc-nuke-field "Organization")
++     (mc-disallow-field "FCC")
++     (mc-disallow-field "BCC")
++     (setq chain-name
++ 	  (completing-read
++ 	   "Choose a remailer or chain: " chains nil 'strict-match))
++     (setq nym
++ 	  (read-from-minibuffer "Pseudonym: "))
++     (setq chain
++ 	  (mc-remailer-canonicalize-chain
++ 	   (cdr (assoc chain-name chains))
++ 	   chains))
++     (mc-rewrite-for-nym nym chain pause)
+      (if chain
+  	(save-excursion
+  	  (set-buffer buffer)
+- ---------------------------------cut here-----------------------------------
+
+- -- 
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Jeremey Barrett
+Senior Software Engineer                         jeremey@veriweb.com
+VeriWeb Internet Corp.                           <A  HREF="http://www.veriweb.com/">http://www.veriweb.com/</A>
+
+PGP Key fingerprint =  3B 42 1E D4 4B 17 0D 80  DC 59 6F 59 04 C3 83 64
+PGP Public Key: <A  HREF="http://www.veriweb.com/people/jeremey/pgpkey.txt">http://www.veriweb.com/people/jeremey/pgpkey.txt</A>
+                
+		"less is more."  -- Mies van de Rohe.
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+Comment: Processed by Mailcrypt 3.4, an Emacs/PGP interface
+
+iQCVAwUBMunrci/fy+vkqMxNAQHpQQQAkN8wQ+/65qsN4326gFRmEMjcwQH1mj2v
+/WZGnxyB2ADYlF0AMXfU60NzUO31KZzEbbOu8oX2I0KptXrDGiLYoQ6uerw/W441
+1B4uAd2pEztqWwfwyYmLj57meQWJw1IjH7AuF0Mz9NJ7OLEWq+H5CC9w4zwo6u1/
+nTrWv396Y6Q=
+=jpyn
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02503.html">Re: Rejection policy of the Cypherpunks maiing list</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02507.html">Cypher-Oops!</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00686.html">Re: Rejection policy of the Cypherpunks mailing list</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00183.html">Mailcrypt nym.alias.net support</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02502"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02502"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

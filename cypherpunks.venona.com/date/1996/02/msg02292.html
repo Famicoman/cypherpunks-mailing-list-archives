@@ -1,0 +1,197 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: new zip cracking code -->
+<!--X-From-R13: Oabalzbhf -->
+<!--X-Date: Sat, 10 Feb 1996 18:09:57 +1100 (EST) -->
+<!--X-Message-Id: 3f81e57e9db66b581941ceff328cf1fb@NO&#45;ID&#45;FOUND.mhonarc.org -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>new zip cracking code</TITLE>
+<LINK REV="made" HREF="mailto:Anonymous">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00706.html">Date Prev</A>][<A HREF="msg00776.html">Date Next</A>][<A HREF="msg00749.html">Thread Prev</A>][<A HREF="msg00863.html">Thread Next</A>][<A HREF="index.html#02292">Date Index</A>][<A HREF="threads.html#02292">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>new zip cracking code</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: new zip cracking code</LI>
+<LI><em>Date</em>: Sat, 10 Feb 1996 18:09:57 +1100 (EST)</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Does anyone have any pointers to cryptanalysis papers on the Zip
+encryption scheme (presented below)? I've seen a few MSDOS executeables
+which used some sort of brute force attack, which didn't seem
+particularly intelligent or effective for long passwords. If anyone has
+some pointers, or source I'd be glad to hear of it. From what I can see
+of Schlafly's algorithm a bute force attack could be speed up a great
+deal by pre-compution and expansaion of elements of the first 3 or so
+rounds at the very least.
+
+Ideas anyone?
+
+
+Decryption
+----------
+
+The encryption used in PKZIP was generously supplied by Roger
+Schlafly.  PKWARE is grateful to Mr. Schlafly for his expert
+help and advice in the field of data encryption.
+
+PKZIP encrypts the compressed data stream.  Encrypted files must
+be decrypted before they can be extracted.
+
+Each encrypted file has an extra 12 bytes stored at the start of
+the data area defining the encryption header for that file.  The
+encryption header is originally set to random values, and then
+itself encrypted, using 3, 32-bit keys.  The key values are 
+initialized using the supplied encryption password.  After each byte
+is encrypted, the keys are then updated using psuedo-random number
+generation techniques in combination with the same CRC-32 algorithm 
+used in PKZIP and described elsewhere in this document.
+
+The following is the basic steps required to decrypt a file:
+
+1) Initialize the three 32-bit keys with the password.
+2) Read and decrypt the 12-byte encryption header, further
+   initializing the encryption keys.
+3) Read and decrypt the compressed data stream using the
+   encryption keys.
+
+
+Step 1 - Initializing the encryption keys
+-----------------------------------------
+
+Key(0) &lt;- 305419896
+Key(1) &lt;- 591751049
+Key(2) &lt;- 878082192
+
+loop for i &lt;- 0 to length(password)-1
+    update_keys(password(i))
+end loop
+
+
+Where update_keys() is defined as:
+
+
+update_keys(char):
+  Key(0) &lt;- crc32(key(0),char)
+  Key(1) &lt;- Key(1) + (Key(0) &amp; 000000ffH)
+  Key(1) &lt;- Key(1) * 134775813 + 1
+  Key(2) &lt;- crc32(key(2),key(1) &gt;&gt; 24)
+end update_keys
+
+
+Where crc32(old_crc,char) is a routine that given a CRC value and a 
+character, returns an updated CRC value after applying the CRC-32 
+algorithm described elsewhere in this document.
+
+
+Step 2 - Decrypting the encryption header
+-----------------------------------------
+
+The purpose of this step is to further initialize the encryption
+keys, based on random data, to render a plaintext attack on the
+data ineffective.
+
+
+Read the 12-byte encryption header into Buffer, in locations
+Buffer(0) thru Buffer(11).
+
+loop for i &lt;- 0 to 11
+    C &lt;- buffer(i) ^ decrypt_byte()
+    update_keys(C)
+    buffer(i) &lt;- C
+end loop
+
+
+Where decrypt_byte() is defined as:
+
+
+unsigned char decrypt_byte()
+    local unsigned short temp
+    temp &lt;- Key(2) | 2
+    decrypt_byte &lt;- (temp * (temp ^ 1)) &gt;&gt; 8
+end decrypt_byte
+
+
+After the header is decrypted, the last two bytes in Buffer
+should be the high-order word of the CRC for the file being
+decrypted, stored in Intel low-byte/high-byte order.  This can
+be used to test if the password supplied is correct or not.
+
+
+Step 3 - Decrypting the compressed data stream
+----------------------------------------------
+
+The compressed data stream can be decrypted as follows:
+
+
+loop until done
+    read a charcter into C
+    Temp &lt;- C ^ decrypt_byte()
+    update_keys(temp)
+    output Temp
+end loop
+
+
+-- 
++----------------------------------+-----------------------------------------+
+|Julian Assange                    | "if you think the United  States has    |
+|FAX: +61-3-9819-9066              |  stood still, who built the largest     |
+|EMAIL: proff@suburbia.net         |  shopping centre in the world?" - Nixon |
++----------------------------------+-----------------------------------------+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00706.html">Re: Fair Credit Reporting Act and Privacy Act</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00776.html">What is really happening in Oregon</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00749.html">Re: violating politicians privacy</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00863.html">new zip cracking code</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02292"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02292"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

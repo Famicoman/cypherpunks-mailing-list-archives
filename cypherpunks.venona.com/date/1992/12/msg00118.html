@@ -1,0 +1,200 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: one&#45;time&#45;pad distribution for dc&#45;nets -->
+<!--X-From-R13: lnarxNabinink.abin.rqh (Knarx [negvafba) -->
+<!--X-Date: Sun, 13 Dec 92 15:42:04 PST -->
+<!--X-Message-Id: 9212132337.AA20132@novavax.nova.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>one-time-pad distribution for dc-nets</TITLE>
+<LINK REV="made" HREF="mailto:yanek@novavax.nova.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00116.html">Date Prev</A>][<A HREF="msg00115.html">Date Next</A>][<A HREF="msg00115.html">Thread Prev</A>][<A HREF="msg00126.html">Thread Next</A>][<A HREF="index.html#00118">Date Index</A>][<A HREF="threads.html#00118">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>one-time-pad distribution for dc-nets</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: one-time-pad distribution for dc-nets</LI>
+<LI><em>From</em>: <A HREF="mailto:yanek@novavax.nova.edu">yanek@novavax.nova.edu</A> (Yanek Martinson)</LI>
+<LI><em>Date</em>: Sun, 13 Dec 92 18:37:57 EDT</LI>
+<LI><em>Cc</em>: rmsdell!ym</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+As mentioned in my previous message, dc-nets need a one-time pad keystream.
+Of the many methods of accomplishing this, for my experimental dc-net I
+chose not the most secure method, but the simplest to implement.
+Recognizing that dc-net users will want to use various key-distribution
+mechanisms (true one-time pad, with the keys trasnfered over a secure
+out-of-band channel, diffey-hellmann, etc) I designed the dc-net to be as
+independent of the key distribution method as possible.  The dc-net just
+reads the keystream from a file, and calls a program when it is about to
+run out of keys, and needs more.  
+
+This message describes the method of key distribution I will use.  I assume
+that all participants know each others' public keys, and have verified such
+by independent means, or they are signed by mutually trusted certifiers.
+PGP encryption is used to send randomly generated one-time pad.  Two
+participants send keys to each other whenever the remaining key stream 
+reaches below an agreed-upon threshold, then the keys are combined in a
+pre-determined way (no matter which one sent his message first, the result
+will be the same).  Keys are transferred in large chunks, larger than the
+normal message size, so that these trasfers would not have to be too
+frequent.  
+
+-----------------------------------------------------------------------
+MESSAGE FORMAT:
+
+(messages are sent as signed, armored encrypted PGP messages)
+
+  Subject: dc-net transmission
+
+  DCNET &lt;network&gt;; PARTICIPANT &lt;userid&gt;; KEYCHUNK &lt;n&gt;
+
+  &lt;binary data follows&gt;
+
+
+-----------------------------------------------------------------------
+ALGORITHM:
+
+When remaining keystream for &lt;userid&gt; on dcnet &lt;network&gt; falls below
+MINTHRESHOLD, increment keychunk number (n), generate CHUNKSIZE random
+bits, encrypt and sign them, and send them to the other person.
+
+Wait for the other participant's message.  Decrypt it, and verify the
+signature. 
+
+Compare the two key chunks (the one you sent, and the one you received),
+and order them by placing the one with lower value first.
+
+Append them in the above order to the key file.
+
+
+------------------------------------------------------------------------
+NOTES:
+
+If both persons use the same MINTHRESHOLD and CHUNKSIZE, then they should
+send their messages at approximately the same time, but there is no
+guarantee of which one will arrive first.  If a keychunk is received before
+one has been sent, one is generated and sent, and then compared to the
+received key.
+
+For the sake of simplicity, I will assume everyone will use the same
+CHUNKSIZE and MINTHRESHOLD.  This is not a requirement, and the proper
+operation of the system in now way depends on this.
+
+The purpose of MINTHRESHOLD is to provide a safety margin, so that key
+exchange would not interfere with the regular operation of the dc-net.
+
+In choosing CHUNKSIZE and MINTHRESHOLD, the basic tradeoff is space versus
+time.  Maximizing these values will reduce the number of transmissions,
+possibly making more efficient bulk transmission methods possible.  But, it
+will increase the storage requirements of each participant.
+
+Each participant will need to store at most
+
+(MINTHRESHOLD+CHUNKSIZE) * &lt;number of participants&gt;
+
+Each participant will need to obtain new keys approximately every 
+
+RBSIZE/CHUNKSIZE of idle rounds, or MSGSIZE/CHUNKSIZE of messages
+transmitted.
+
+For this project I will choose a CHUNKSIZE of 75K, allowing for 600 idle
+rounds, or 15 messages transmitted.
+
+MINTHRESHOLD will be 150K.  The storage requirements will be about
+2 megabytes of a net of 8 participants, or about 5 megabytes for a net
+of 25 participants.
+
+
+
+----------------------------------------------------------------------
+FUTURE ENCHANCEMENTS:
+
+A more efficient bulk-transfer method may be used, such as dropping the
+chunks off to a known ftp site.  As soon as the chunk is picked up, it is
+deleted.  Many ftp sites have such "temporary", "incoming", or "dropoff"
+directories.  Many sites could be agreed on, in case one fails.  All
+participants should not use the same site, so as not to cause too much load
+on any single machine.
+
+Some method of randomizing the key transfer could be used, so all
+participants would not run out of keys at the same time, causing
+unneccessary load on the mail transport system.
+
+If a broadcast medium is used, an efficient variant of Diffey-Hellmann
+can be used, in which each participant needs to generate only one secret
+random number, and publish the corresponding public value.  Then every one
+can combine it with their secret value, in a way that results in each pair
+of participants having a common secret key unknown to anyone else.
+
+If feasible, one-time-pads can be transferred in person, using floppy
+disks.
+
+
+--------------------------------------------------------------------
+Again, I would appreciate any ideas, comments, suggestions at:
+
+
+--
+Yanek Martinson    mthvax.cs.miami.edu!safe0!yanek     uunet!medexam!yanek
+this address preferred --&gt;&gt; yanek@novavax.nova.edu &lt;&lt;-- this address preferred
+Phone (305) 765-6300 daytime   FAX: (305) 765-6708  1321 N 65 Way/Hollywood
+      (305) 963-1931 evenings       (305) 981-9812  Florida, 33024-5819
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00116.html">Electronic P.O.Boxes</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00115.html">Electronic P.O.Boxes</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00115.html">Electronic P.O.Boxes</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00126.html">Re: Random numbers</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00118"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00118"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

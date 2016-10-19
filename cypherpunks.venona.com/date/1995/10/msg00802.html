@@ -1,0 +1,253 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Basic Flaws in Internet Security and Commerce -->
+<!--X-From-R13: tnhguvreNrfcerffb.QE.Prexryrl.SRG (Bnhy_O Unhguvre) -->
+<!--X-Date: Mon, 9 Oct 95 14:29:31 PDT -->
+<!--X-Message-Id: 9510092126.AA22117@espresso.CS.Berkeley.EDU.mammoth -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Basic Flaws in Internet Security and Commerce</TITLE>
+<LINK REV="made" HREF="mailto:gauthier@espresso.CS.Berkeley.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00812.html">Date Prev</A>][<A HREF="msg00803.html">Date Next</A>][<A HREF="msg00857.html">Thread Prev</A>][<A HREF="msg00905.html">Thread Next</A>][<A HREF="index.html#00802">Date Index</A>][<A HREF="threads.html#00802">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Basic Flaws in Internet Security and Commerce</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:bugtraq@crimelab.com">bugtraq@crimelab.com</A></LI>
+<LI><em>Subject</em>: Basic Flaws in Internet Security and Commerce</LI>
+<LI><em>From</em>: <A HREF="mailto:gauthier@espresso.CS.Berkeley.EDU">gauthier@espresso.CS.Berkeley.EDU</A> (Paul_A Gauthier)</LI>
+<LI><em>Date</em>: Mon, 09 Oct 1995 14:26:06 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:gauthier@cs.Berkeley.EDU">gauthier@cs.Berkeley.EDU</A>, <A HREF="mailto:brewer@cs.Berkeley.EDU">brewer@cs.Berkeley.EDU</A>, <A HREF="mailto:iang@cs.Berkeley.EDU">iang@cs.Berkeley.EDU</A>,       <A HREF="mailto:daw@cs.Berkeley.EDU">daw@cs.Berkeley.EDU</A>, <A HREF="mailto:fur@netscape.com">fur@netscape.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Basic Flaws in Internet Security and Commerce
+
+We believe that the current focus on secure session-layer protocols and
+sufficient randomness have obscured more fundamental flaws in end-to-end
+security. In particular, secure end-to-end transactions require two parts: a
+secure protocol to communicate over untrusted channels, and trusted code at
+both endpoints. The latter problem has received less attention, but destroys
+security regardless of the quality of the protocols or of the random numbers.
+
+We have implemented a series of related attacks utilizing IP spoofing:
+
+   *  We can spoof NFS to patch binaries on the fly if we are on any subnet
+     between the NFS client and NFS server. We used this to turn legitimate
+     Netscape browsers into versions that used a fixed key (known only to us),
+     thus invisibly eliminating security.
+   *  The same trick allows us to defeat Kerberos security by attacking kinit.
+   *  We can also spoof NFS file-handle lookups, so that we can replace any
+     file (such as .login) with another file that runs with root access
+     privileges (even if the requesting user cannot).
+
+These work because the trusted path to executables is really not trustworthy in
+most environments. Although we use on-the-wire patching to compromise
+executables, the client binaries can also be compromised during download, by
+on-the-wire patching of FTP or HTTP transfers. Trojan horses and viruses could
+also patch the client software after it's on the local disk, especially on
+systems like Windows 95 that do not provide access control for files.
+
+Given that these are realistic threats, we believe that these issues must be
+resolved before internet security and commerce are realistic.
+
+-------------------------------------------------------------------------------
+
+We began to consider in more detail some fundamental weaknesses of common
+network security practices that would lead to trivial further attacks on
+Netscape as well as many other security tools like Kerberos. It was our goal to
+demonstrate that it is trivially possible to patch executables on-the-wire to
+completely compromise their security.
+
+In doing so, we hope to reinforce the point that security is an end-to-end
+problem that is far harder than getting the protocols correct. Strong, correct
+protocols only make more subtle endpoint attacks more likely, especially in
+light of the potential for financial gain as the amount of commerce on the
+Internet increases. Most of the attacks we discuss are suitable for the
+systematic exploitation of large groups of users: an entire organization, or
+even a large fraction of the user base of a particular piece of software.
+
+In many computing environments a pool of common executables, like the Netscape
+binary, are provided to clients by a fileserver. In such systems, including
+NFS, AFS and Windows NT, there is no authentication of the file contents sent
+between clients and servers.
+
+In these systems there are provisions for sophisticated access checks to
+determine file permissions, at open or handle lookup time. But the file
+contents that are read from the server are not authenticated in any secure way.
+The client has no way to determine if the bytes are indeed being sent by the
+server.
+
+Our first attack model is one in which the attacker has (promiscuous) network
+access to any machine on any ethernet subnet between the fileserver and the
+clients under attack. In under a day we produced software that can exploit the
+lack of authentication in NFS to patch the object code of any executable
+on-the-wire as it travels between the NFS server and the client machine.
+
+The technical details of the attack are rather simple. To retrieve data from
+the NFS server a client sends a short request message detailing which block
+from the file it is interested in (where a block is a range of bytes). The
+attack software is located on an ethernet segment between the client and the
+NFS server, so is able to snoop this traffic.
+
+The attack software snoops, waiting for any request for a particular block of a
+particular executable; for example, the block containing the session-key
+generation code in the Netscape executable. It is then able to forge a reply
+from the NFS server and transmit it to the client. If the forged packet reaches
+the client before the legitimate reply, it is accepted and the legitimate reply
+is discarded as a duplicate.
+
+There is obviously a race condition between the injection of the forged
+response and the true response. Since the attacking software is focused solely
+on this task, while the fileserver is certainly servicing requests from many
+clients, it stands a very good chance of winning the race. We have observed
+that the attacking software wins the race a large fraction of the time.
+
+Given this ability it becomes possible to compromise the security features of
+any executable loaded from the network. We have examined the Netscape v1.1N
+executable and located the code that selects the session key. By patching only
+4 bytes we were able to cause the selection of a predictable session key every
+time the browser engages in the SSL protocol. It is then trivial to snoop and
+decrypt all traffic from the browser to secure servers, obtaining credit card
+numbers or other private information.
+
+Since this is really an attack on the client, it is not limited to the Netscape
+browser. On the contrary, it is extremely widely applicable. An appropriate
+patch to the Kerberos kinit executable makes possible the compromise of any
+passwords entered by users, and therefore all of the authentication facilities
+provided by Kerberos.
+
+In many environments, including our own here at UC Berkeley, all the Kerberos
+application binaries are served from an NFS server. This represents a major
+flaw in security as our attack demonstrates. Having authenticated file services
+(kerberized NFS or AFS) is useless if the integrity of the kinit executable
+cannot be ensured (most easily by obtaining it from local disk).
+
+However, making local copies of crucial binaries is not sufficient in the face
+of a more serious set of variants on the NFS spoofing attack. The spoofing
+software can be placed as before, in a position to snoop requests to the NFS
+server. As clients issue a lookup filehandle request the spoofing software can
+return the handle to a different executable and also forge its attributes. By
+tricking users into executing code that is setuid root, unlimited access to the
+client's workstation can be obtained easily.
+
+It is possible to mount NFS partitions so that setuid root executables will not
+be honored by the client. Still, the spoofing software can make arbitrary NFS
+filehandle lookup requests succeed, and substitute a trojan of some sort. The
+attacker could cause misspellings of commonly executed commands to appear to
+succeed, or could spoof other files that are trusted by the operating system.
+For example, the user's .login file is a natural and easy target from which to
+leverage further damage.
+
+This implies that it is unsafe to execute any program obtained via an insecure
+channel to an NFS server, no matter what the privilege level of the client
+user.
+
+Neither is it limited to NFS or file-serving protocols in particular. Protocols
+based on TCP, rather than UDP, are just as vulnerable. It is possible to hijack
+non-authenticated TCP connections, although it is somewhat more complicated.
+
+Attacks based on spoofing traffic coming from the distribution site of popular
+software packages is also possible. Berkeley, for example, is a mirror site for
+the Netscape browser. Any student with promiscuous network access on a machine
+between the ftp server and the main link to the larger Internet could have
+installed similar patching software to patch the huge number of copies of the
+binary that were retrieved from server.berkeley.edu.
+
+More mundane attacks based on trojan horses or viruses remain viable today.
+These attacks must exploit some other weakness in a system's security to
+infiltrate, but once in place they can perform patches to local binaries to
+fully compromise a system. Previously such attacks were mostly motived only by
+ego or malice; it is now more valuable to compromise a client invisibly, so
+that the user believes the system is secure. Thus, unlike traditional viruses,
+the new strains will aim to have no visible effect on the system, thus making
+them difficult to detect and easy to spread unintentionally. Our patch of
+Netscape has this flavor.
+
+We realize that it is impossible to eliminate all security holes; one can
+always question whether it is safe to trust the hardware, or whether outside
+channels used for communication of public keys or checksums are truly secure,
+etc. Fortunately, in practice it should suffice to handle far less than all of
+these risks. We hope to have demonstrated one gaping hole in practical security
+today, and to have highlighted the problem of the trusted endpoint.
+
+There is one simple step that we can suggest that would go a long way towards
+improving the security of endpoints. Increasing the practice of software
+providers widely publishing cryptographically secure checksums of their
+executables would be extremely helpful. A small amount of paranoia and care
+must be applied to securing the executables used in the verification process. A
+read-only floppy disk would be appropriate to hold the verification software,
+for example.
+
+We are concerned that security on users' workstations and PCs is currently
+insufficient. When real money is at stake, endpoint security must withstand
+greater scrutiny. In summary, protecting the communications channel doesn't
+help if the endpoints can be subverted. We implemented and discussed several
+related attacks that replace legitimate programs by compromised versions. Until
+we can trust every program that executes between the time we boot and the time
+we finish the secure protocol, we cannot reliably authenticate anything. Today
+there is no basis for this trust.
+
+Eric Brewer, brewer@cs.berkeley.edu
+Paul Gauthier, gauthier@cs.berkeley.edu
+Ian Goldberg, iang@cs.berkeley.edu
+David Wagner, daw@cs.berkeley.edu
+
+A copy of this post is available as
+<A  HREF="http://http.cs.berkeley.edu/~gauthier/endpoint-security.html">http://http.cs.berkeley.edu/~gauthier/endpoint-security.html</A>
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00812.html">Re: Certificate proposal</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00803.html">Re: Certificate proposal</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00857.html">GISA budget: millions for cryptanalytic machine</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00905.html">Re: Basic Flaws in Internet Security and Commerce</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00802"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00802"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

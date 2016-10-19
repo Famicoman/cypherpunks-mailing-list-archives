@@ -1,0 +1,197 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: analysis of RemailerNet -->
+<!--X-From-R13: Irv Rnv <jrvqnvNrfxvzb.pbz> -->
+<!--X-Date: Thu, 12 Jan 95 06:02:40 PST -->
+<!--X-Message-Id: Pine.SUN.3.91.950112055457.3862B&#45;100000@eskimo.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>analysis of RemailerNet</TITLE>
+<LINK REV="made" HREF="mailto:weidai@eskimo.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00585.html">Date Prev</A>][<A HREF="msg00595.html">Date Next</A>][<A HREF="msg00586.html">Thread Prev</A>][<A HREF="msg00615.html">Thread Next</A>][<A HREF="index.html#00582">Date Index</A>][<A HREF="threads.html#00582">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>analysis of RemailerNet</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Cypherpunks &lt;<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>&gt;</LI>
+<LI><em>Subject</em>: analysis of RemailerNet</LI>
+<LI><em>From</em>: Wei Dai &lt;<A HREF="mailto:weidai@eskimo.com">weidai@eskimo.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 12 Jan 1995 05:57:56 -0800 (PST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:weidai@eskimo.com">weidai@eskimo.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+I've been reading through T.C. May's FAQ, and came upon this 
+section about analyzing the RemailerNet.
+
+&gt;            + What's needed:
+&gt;              - aggreement on some terminology (this doesn't require
+&gt;                 consensus, just a clearly written paper to de facto
+&gt;                 establish the terminology)
+&gt;              - a formula relating degree of untraceability to the major
+&gt;                 factors that go into remailers: packet size and
+&gt;                 quantization, latency (# of messages), remailer policies,
+&gt;                 timing, etc.
+&gt;              - Also, analysis of how deliberate probes or attacks might
+&gt;                 be mounted to deduce remailer patterns (e.g., Fred always
+&gt;                 remails to Josh and Suzy and rarely to Zeke).
+&gt;            - I think this combinatorial analysis would be a nice little
+&gt;               monograph for someone to write.
+&gt;    8.10.2. A much-needed thing. Hal Finney has posted some calculations
+&gt;             (circa 1994-08-08), but more work is sorely needed.
+
+I think one of the most difficult aspects of analyzing remailers is 
+the large number of variables you have to deal with.  In 
+contrast, when analyzing ciphers things are pretty much 
+static.  The only thing variable you have to worry about is 
+key length.  But think of the factors you have to include in 
+a complete analysis of the RemailerNet:
+
+1.  different methods of attack
+        - passive traffic analysis (i.e., packet sniffing)
+        - active attacks: including physical attacks, subverting 
+          remailer security, flooding, denial-of-service,
+          starting "trap" remailers, etc.
+
+2.  differences at the user level
+        - fixed vs random chains vs something in between
+        - length of chains
+        - numbers of real messages sent
+        - numbers of fake (cover) messages sent
+        - concerns about latency, bandwidth, and monetary costs
+        - acceptibility of risk, and benifits of anonymity
+
+3.  differences at the individual remailer level
+        - the mixing mechanism: does batched mailing occur by time or by the
+          number of messages in the queue, and is there a rollover pool?
+        - security: including vulnerabilities to political, 
+          physical, and electronic attacks
+        - usage level
+        - price
+
+4.  differences at the RemailerNet level
+        - total numbers of remailers
+        - average security (or the number of compromised remailers)
+        - total number of users
+
+... and I'm sure there are more.  The number of variables and the 
+complex way they're all interrelated make the analysis 
+difficult.  Perhaps a good way to go about this is to construct 
+simplified models which focus on different aspects.  For 
+example, someone pointed out that if you didn't have to worry 
+about active attacks, and the attacker can monitor all the 
+remailers, then you can treat the entire RemailerNet as a 
+single large remailer.  I'm not sure how well this approach 
+would work, since I don't know how easy it would be to 
+integrate the different simplified models into a realistic one.
+
+Anyhow, this might at least give us some insights, so I'll 
+make some attempts in this direction, and post my results.
+
+Just to start things off though, let me try an *extremely*
+simple model.
+
+Assume there is just one remailer, it's perfectly secure, and it 
+does 4 batches of remailing at equal intervals each day.  There are 
+one million users, each of whom receives a mail from the remailer 
+once per day.  Alice is sending anonymous mail to Bob through this 
+system, also once per day.  But just to be extra careful, she 
+also sends a cover mail to the remailer at some other time 
+each day, which gets redirected to its /dev/null.
+
+So the situation looks like this on day 1:
+
+            Alice sends     Bob receives     some random user receives
+Batch #1:       0                0                   0
+Batch #2:       1                1                   0
+Batch #3:       0                0                   1
+Batch #4:       1                0                   0
+
+Suppose Eve, the traffic analyst, is trying to figure out who 
+Alice is sending mail to.  After the first day, she can 
+eliminate about half of the remailer users from the list of possible 
+targets, because they, like the the random user above,
+received a mail even though Alice didn't send one out during the 
+collection period of that batch.  Now, since Eve can eliminate 
+on average half of the list every day, Bob will be the only person left on 
+that list after about (log base 2 of one million) = 20 days.
+
+Suppose Alice sent out some different numbers of cover e-mail:
+
+        # of cover mail     # of days to discover Bob
+               0               log base 4 of 1,000,000 = 10
+               1               log base 2 of 1,000,000 = 20
+               2               log base 4/3 of 1,000,000 = 48
+               3               log base 1 of 1,000,000 = infinity!
+
+Hopefully that makes sense...  Comments?
+
+Wei Dai
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBLxU0QTl0sXKgdnV5AQFkoAP/SSyqbbDw+zoh+q5aL0+xr5BcLzaEoS4h
+NASocZvKHGLe8/sfefDj4J2zPINKhmQzbKdD4oHirPEVbnWZC+7Us3giCKl80t2V
+bKx6QPB1hJWi6n3cFme6NCuTjmHCsgrQ/bI2j524O43FhW6BIQAAxQ6GGN10t1V8
+3nv3SzUC6jE=
+=Y2qv
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00585.html">Re: Cybersmut</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00595.html">Re: CBS/C.Chung Plan Hit Job on Internet? (fwd)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00586.html">Re: Cryptanalysis</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00615.html">Re: analysis of RemailerNet</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00582"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00582"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

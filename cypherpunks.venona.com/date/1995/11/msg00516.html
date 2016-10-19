@@ -1,0 +1,138 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Small keysizes do make sense (was PGP Comment weakens...) -->
+<!--X-From-R13: Dncu Zrivra <encuNQE.Prexryrl.SRG> -->
+<!--X-Date: Fri, 10 Nov 1995 06:03:59 +0800 -->
+<!--X-Message-Id: 199511092046.MAA16851@kiwi.cs.berkeley.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199511091951.OAA15564@jekyll.piermont.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Small keysizes do make sense (was PGP Comment weakens...)</TITLE>
+<LINK REV="made" HREF="mailto:raph@CS.Berkeley.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00530.html">Date Prev</A>][<A HREF="msg00533.html">Date Next</A>][<A HREF="msg00527.html">Thread Prev</A>][<A HREF="msg00559.html">Thread Next</A>][<A HREF="index.html#00516">Date Index</A>][<A HREF="threads.html#00516">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Small keysizes do make sense (was PGP Comment weakens...)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:perry@piermont.com">perry@piermont.com</A></LI>
+<LI><em>Subject</em>: Re: Small keysizes do make sense (was PGP Comment weakens...) </LI>
+<LI><em>From</em>: Raph Levien &lt;<A HREF="mailto:raph@CS.Berkeley.EDU">raph@CS.Berkeley.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 09 Nov 1995 12:46:03 -0800</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: Your message of "Thu, 09 Nov 1995 14:51:02 EST."            &lt;<A HREF="msg00527.html">199511091951.OAA15564@jekyll.piermont.com</A>&gt; </LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; I've found that in practice the compression pass takes longer than the
+&gt; RSA pass for PGP. If you accept the time for the file compression I
+&gt; don't see how you can have trouble with the 1024 bit RSA operation.
+
+When in doubt, measure. The following measurements were done on a DEC
+Alpha 3000/300, 150Mhz, Digital Unix 3.2. The first test file was an
+email I sent this morning, with a size of 5379 bytes, which is typical
+for the email I send. The second test file was the PostScript version
+of a 52 page tech report done by our research group this summer, with
+a size of 656676 bytes. The version of PGP used was MIT 2.6.2, compiled
+with the default osf configuration (-O compile flag).
+
+In all cases, user time only (not system time) is measured. This seems
+reasonable, because neither compression nor RSA inherently require I/O.
+The standard deviation on timings was somewhere around 5 or 10 ms. I
+took the average "by eye" over about ten runs each. I did not include
+signing tasks, as neither PGP/MIME signing nor clearsigning include a 
+compression step.
+
+Task 1: encrypt file, generating compressed output (RSA is quadratic)
+keysize  compression  time   file size in   file size out
+---------------------------------------------------------
+382      on           95 ms   5379 bytes      2205 bytes
+382      off          90 ms   5379 bytes      8165 bytes
+1024     on           90 ms   5379 bytes      2315 bytes
+1024     off          85 ms   5379 bytes      8275 bytes
+382      on           3.86 s  656676 bytes    255575 bytes
+382      off          2.43 s  656676 bytes    920984 bytes
+1024     on           3.84 s  656676 bytes    255685 bytes
+1024     off          2.43 s  656676 bytes    921090 bytes
+
+Task 2: decrypt file from Task 1 (RSA is cubic)
+keysize  compression  time   file size in   file size out
+---------------------------------------------------------
+382      on           135 ms  2205 bytes      5379 bytes
+382      off          140 ms  8165 bytes      5379 bytes
+1024     on           1.14 s  2315 bytes      5379 bytes
+1024     off          1.14 s  8275 bytes      5379 bytes
+382      on           1.43 s  255575 bytes    656676 bytes
+382      off          2.68 s  920984 bytes    656676 bytes
+1024     on           2.42 s  255685 bytes    656676 bytes
+1024     off          3.74 s  921090 bytes    656676 bytes
+
+We can conclude that for small files, the size of a typical email,
+compression is completely negligible, and the effect of key size is
+significant. We can also conclude that for large compressible files,
+compression increases encryption time by roughly two seconds per
+MB, but decreases decryption time by roughly the same amount (by
+virtue of having to decrypt fewer bytes).
+
+Raph
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00527" HREF="msg00527.html">Re: Small keysizes do make sense (was PGP Comment weakens...)</A></STRONG>
+<UL><LI><EM>From:</EM> "Perry E. Metzger" &lt;perry@piermont.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00530.html">Re: PGP Comment feature weakens remailer security</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00533.html">Re: Exporting software doesn't mean exporting</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00527.html">Re: Small keysizes do make sense (was PGP Comment weakens...)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00559.html">Re: Small keysizes do make sense (was PGP Comment weakens...)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00516"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00516"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,233 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Brands cash -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Mon, 22 Aug 94 16:18:16 PDT -->
+<!--X-Message-Id: 199408222317.QAA07557@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199408201652.JAA29752@jobe.shell.portal.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Brands cash</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00952.html">Date Prev</A>][<A HREF="msg00956.html">Date Next</A>][<A HREF="msg00848.html">Thread Prev</A>][<A HREF="msg00966.html">Thread Next</A>][<A HREF="index.html#00955">Date Index</A>][<A HREF="threads.html#00955">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Brands cash</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Brands cash</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 22 Aug 1994 16:17:34 -0700</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00848.html">199408201652.JAA29752@jobe.shell.portal.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+In the last installment, I described a particular technique that could
+be used for signatures based on discrete logs.  (There are many DL-based
+signature algorithms, but this particular one lends itself to the blinding
+technique.)  I should point out that this signature is due to Chaum, and
+in fact everything I will discuss comes from Chaum's work.  Brands goes on
+to develop some nifty cash systems based on it, but his extensions are too
+complicated to touch on more than briefly.
+
+Blind signatures are, IMO, the key to anonymous digital cash, and in fact
+to many forms of anonymity.  The ability to engage in mutual information
+manipulation with another person, while guaranteeing that no linkage will
+later be possible between the data exchanged and the results of that
+calculation, is the foundation for interacting in a complex way without
+losing any privacy.  The significant feature of the blind signature I
+will describe here is that it is a "restrictive" signature.  In the
+original Chaum blinding technique, there were no limits on what was actually
+being signed.  With this restrictive blinding, only a limited set of
+transformations are possible between what is seen by the signer and what
+is later exhibited as the signature.  These transformations fully protect
+privacy, but the restrictions protect the interests of the signer and
+end up simplifying the protocols (which were complex just to protect his
+interests).
+
+Recall that there were two kinds of DL-based signatures I discussed earlier.
+In the interactive signature, Vicki the verifier came up with a challenge
+number c which she went to Paul the prover (signer).  Paul produced a
+response r which depended on c, and using r, c, and the other numbers from
+the protocol Vicki is able to check and confirm the signature.  In the non-
+interactive signature, the challenge number c is calculated as a cryptographic
+hash function of the other numbers, and r is again shown based on c.  Vicki
+no longer has to interact with Paul; she (or anyone else) can confirm the
+signature based on r, c, and the other numbers.  The hash function basically
+takes the place of the interactive verifier, and since it is cryptographically
+strong c is essentially random.
+
+The blind signature basically combines these two techniques.  Vicki wants
+to end up with a non-interactive signature on m', which is a special trans-
+formation of m.  To do this, she engages in an interactive signature protocol
+with Paul, getting him to sign m.  But the c she sends to Paul is an easily-
+undoable blinding of c', which comes from the cryptographic hash function
+applied to m' and the other numbers.  The r she gets back is then easily
+transformed into an r' that works with the cryptographic hash.  The result is
+that she ends up with a non-interactive signature on m' because Paul was
+willing to participate in an interactive signature session on m, and Vicki
+chose the c carefully so it would work in the final signature she shows.
+
+(This shows, BTW, that it is not safe in general to have a system which
+uses both interactive and non-interactive signatures using the same keys.
+This technique allows non-interactive signatures to be produced from inter-
+active sessions on different numbers.  In the blinding protocol, Paul knows
+what Vicki is up to, and he willingly goes along with the blind signature.
+Similar problems were pointed out long ago with RSA signatures.)
+
+Now for the mathematics.  Recall the g is the "generator" of the group,
+the base of all of the powers.  x is Paul's secret key, and GX=g^x is his
+public key.  The relationship between m', which is what Vicki will end up
+with a signature on, and m, which is the number that Paul sees, is
+
+	m' = (m^s)*(g^t).
+
+In other words, a signature may be blinded by being taken to any power, and
+multiplied by any power of the generator g.
+
+This means that if Paul puts some restrictions on the m that he is willing
+to sign, Vicki will not in general be able to end up with a signature on
+an arbitrary m' of her choice.  Due to the difficulty of the discrete log
+problem, she cannot in general find s and t such that (m^s)*(g^t) is a
+desired m'.  Instead, she can do little better than to choose s and t at
+random and just accept whatever m' comes out.
+
+As the first step of the interactive protocol, Paul chooses a random w
+and sends Vicki MX = m^x, GW = g^w, and MW = m^w.  In the non-interactive
+signature, the challenge c is calculated as the hash of (m,MX,GW,MW).  Vicki
+must transform these numbers so that Paul will not recognize them, but in
+such a way that the mathematical relationships are maintained.
+
+To do this, Vicki chooses two (more) random numbers, u and v (along with
+s and t above).  These will be such that w'=u*w+v, although Vicki never
+knows w (or w').  Then she calculates her numbers as follows:
+
+    MX' = m'^x = ((m^s)*(g^t))^x = (m^(s*x))*(g^(t*x)) = (MX^s)*(GX^t)
+    GW' = g^w' = g^(u*w+v) = (g^(u*w))*(g^v) = (GW^u)*(g^v)
+    MW' = m'^w' = ((m^s)*(g^t))^(u*w+v) = [...] =
+					(GW^(u*t))*(MW^(u*s))*(m'^v)
+
+These are not that hard given the definitions above, except for that last
+one, where I skipped a few steps :-).
+
+Using these, Vicki calculates her hash c'= Hash(m',MX',GW',MW').  Now,
+the c she sends to Paul will be used to calculate r = c*x+w.  She wants
+to end up with r' = c'*x+w' .  This can be achieved by the following
+two transformations, based on w'=u*w+v:
+
+	c = c'/u
+	r' = u*r + v
+
+This c is sent to Paul, and the returned r is transformed to r'.  The
+resulting signature on m' is (MX',GW',MW',r'), and it is perfectly valid
+just like any other non-interactive signature using this signature function.
+
+Well, the mathematics are a little complicated, I know.  The main things to
+take away are that the restrictive blinding does require some interaction
+with the signer in order to end up with a non-interactive signature, and
+that the limitations on the blinding which can be done are to take the
+signed number to a power and multiply it by some power of g.
+
+There are a couple of easy applications of the simple blind signature.
+(I made both of these up based on Brands' hints, so if there are
+problems with these specific examples please don't blame him.)
+
+The blind signature by itself is perfectly suitable for on-line cash.
+The cash could be represented as any signed value using a particular
+secret key.  Unlike with RSA signatures, it's not possible to conjure up
+a bunch of perfect 3rd powers (or whatever).  The only way to come up with
+anything that satisifies the tests for a valid signature is by participating
+in the algorithms above.  So by itself (MX',GW',MW',r') and m' could
+constitute a "piece" of digital cash.  It would be anonymous and untraceable
+just like the simple Chaum online cash.
+
+Another nice application is to a system of pseudonyms and credentials.
+Chaum originated this idea but his implementation was complicated and
+clumsy, involving cut-and-choose, hundreds of discarded validator terms,
+and other messy stuff.  Using Brands' technology each person could have
+an identity string I, and get that signed by the validator-issuer, reblinding
+it to be I^s which would be the pseudonym at a given organization (you don't
+need the g^t term for this application).  Instantly we have constrained
+pseudonyms to be of the desired form without any mess.
+
+Now if you get a credential from some organization ("good credit risk"),
+and want to show it on your pseudonym at another organization, you get
+them to sign I^s and reblind that to be a signature on I^s'.  You can do
+this by taking I^s to the s'-s power, an allowed transformation under the
+blinding rules.  And you can't turn it into a signature on some other
+person's pseudonym because there is no way to know what power I^s would have
+to be taken to to get I'^s for some other I' due to the DL problem.
+
+So, pseudonym/credential systems practically fall in your lap with this
+signature, and Brands has been able to extend his ideas a very long way
+along these lines.  He has all kinds of different rules which can be applied
+by modifying the basic idea.  I hope that he will be able to publish his
+results soon so that we can see what the possibilities are.
+
+Hal Finney
+hfinney@shell.portal.com
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00966" HREF="msg00966.html">Re: Brands cash</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00848" HREF="msg00848.html">Brands cash</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00952.html">Unauthorized Advertising Attempt</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00956.html">Re:  Creating privacy crises: Society hacking</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00848.html">Brands cash</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00966.html">Re: Brands cash</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00955"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00955"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

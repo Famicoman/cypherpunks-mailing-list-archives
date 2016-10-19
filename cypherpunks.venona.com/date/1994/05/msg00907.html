@@ -1,0 +1,185 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Magic Money on a port -->
+<!--X-From-R13: Enzrre <fnzrreNfbqn.orexryrl.rqh> -->
+<!--X-Date: Sat, 14 May 94 23:25:00 PDT -->
+<!--X-Message-Id: 199405150411.VAA05280@infinity.hip.berkeley.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Magic Money on a port</TITLE>
+<LINK REV="made" HREF="mailto:sameer@soda.berkeley.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00910.html">Date Prev</A>][<A HREF="msg00918.html">Date Next</A>][<A HREF="msg01073.html">Thread Prev</A>][<A HREF="msg00918.html">Thread Next</A>][<A HREF="index.html#00907">Date Index</A>][<A HREF="threads.html#00907">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Magic Money on a port</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Magic Money on a port</LI>
+<LI><em>From</em>: Sameer &lt;<A HREF="mailto:sameer@soda.berkeley.edu">sameer@soda.berkeley.edu</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 14 May 1994 21:11:35 -0700 (PDT)</LI>
+<LI><em>Pgp-Strong-Print</em>: 3C AE E4 00 C2 6A 81 FF  49 4E EE 0C CD CD 1D 80</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I wrote a little perl script to put the magic money server on a port.
+
+This should help in writing a client program which doesn't require the user
+to deal with sending repeated messages to the bank.
+
+Most of it I just took from the perl manpage. It requires shlock.pl.
+
+Please send bug reports.
+
+#!/usr/local/bin/perl
+
+($port) = @ARGV;
+$port = 1992 unless $port;
+$magicserver = "/home/infinity/nexbucks/s";
+$waitlock = "/home/infinity/nexbucks/waiter.pid";
+$processlock = "/home/infinity/nexbucks/processor.pid";
+
+require 'sys/socket.ph';
+require './shlock.pl';
+
+# First check to see if the process is running
+unless(&amp;shlock($waitlock))
+{
+    print "Process already running\n";
+    exit;
+}
+
+$sockaddr = 'S n a4 x8';
+
+($name, $aliases, $proto) = getprotobyname('tcp');
+($name, $aliases, $port) = getservbyname($port, 'tcp')
+    unless $port =~ /^\d+$/;
+
+$this = pack($sockaddr, &amp;AF_INET, $port, "\0\0\0\0");
+
+select(NS); $| = 1; select(stdout);
+
+socket(S, &amp;PF_INET, &amp;SOCK_STREAM, $proto) || die "socket: $!";
+bind(S, $this) || die "bind: $!";
+listen(S, 5) || die "connect: $!";
+
+select(S); $| = 1; select(stdout);
+
+# Ok the socket has been setup. Fork, wait for the parent lock to die
+# and then lock again
+if(fork)
+{
+    exit;
+}
+
+# Wait for the old process to die
+sleep 10 unless(&amp;shlock($waitlock));
+
+for (;;) {
+#    print "Listening again\n";
+    ($addr = accept(NS,S)) || die $!;
+    unless(fork)
+    {
+#        print "accept ok\n";
+	($af,$port,$inetaddr) = unpack($sockaddr,$addr);
+	@inetaddr = unpack('C4',$inetaddr);
+#	print "$af $port @inetaddr\n";
+
+	$tmpin = "/tmp/mmin." . $$ ;
+	$tmpout = "/tmp/mmout." . $$ ;
+
+	open(TIN, "&gt;$tmpin") || die $!;
+
+	print NS "Submit to the Nexus Bank:\n";
+	while (&lt;NS&gt;) {
+	    print TIN;
+	    last if /^-----END/ ;
+	}
+	close(TIN);
+
+	# Wait for the process lock to stop
+
+	unless(&amp;shlock($processlock))
+	{
+	    print NS "Please wait for other requests to finish.";
+	    do
+	    {
+		print NS "." ;
+		sleep 10;
+	    }
+	    until(&amp;shlock($processlock));
+	}
+	
+	print NS "order processing.";
+
+	# Run magic money
+	open(MM, "| $magicserver &gt; $tmpout");
+	open(TIN, $tmpin);
+	while(&lt;TIN&gt;)
+	{
+	    print NS "." ;
+	    print MM;
+	}
+	close(TIN);
+	close(MM);
+
+	print NS "done.\n";
+	open(OUTPUT, $tmpout);
+	print NS &lt;OUTPUT&gt;;
+	close OUTPUT;
+	exit;
+    }
+}
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00910.html">[ANON] War in rec.guns</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00918.html">Magic Money Client/Server using IPC</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01073.html">[ANON] War in rec.guns</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00918.html">Magic Money Client/Server using IPC</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00907"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00907"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,156 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: VMM question &#45; reply (fwd) -->
+<!--X-From-R13: Xvz Qubngr <enintrNffm.pbz> -->
+<!--X-Date: Tue, 3 Feb 1998 09:49:58 +0800 -->
+<!--X-Message-Id: 199802030146.TAA30693@einstein.ssz.com -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>VMM question - reply (fwd)</TITLE>
+<LINK REV="made" HREF="mailto:ravage@ssz.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00062.html">Date Prev</A>][<A HREF="msg00061.html">Date Next</A>][<A HREF="msg00049.html">Thread Prev</A>][<A HREF="msg00052.html">Thread Next</A>][<A HREF="index.html#00051">Date Index</A>][<A HREF="threads.html#00051">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>VMM question - reply (fwd)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@ssz.com">cypherpunks@ssz.com</A> (Cypherpunks Distributed Remailer)</LI>
+<LI><em>Subject</em>: VMM question - reply (fwd)</LI>
+<LI><em>From</em>: Jim Choate &lt;<A HREF="mailto:ravage@ssz.com">ravage@ssz.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 2 Feb 1998 19:46:05 -0600 (CST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Forwarded message:
+
+&gt; Date: Mon, 02 Feb 1998 01:39:47 -0600
+&gt; From: Lenny Blumberg &lt;lenny@bga.com&gt;
+&gt; Subject: VMM question - reply
+
+&gt; Hmmmm.....
+&gt;       I would imagine that the OS would keep a disk map in memory and
+&gt; mark it with a flag to indicate if it's been paged into memory.
+
+This is a function of the "Look Aside Buffer" and the actual operation is a
+bit more complicated. The vmm must keep up with which processes have it
+mapped, where in their indipendant memory maps it shows up at, what the
+status is in each of those maps, whether it's sharable or not (though the
+Linux vmm doesn't seem to do any write locking), and probably some functions
+that I've missed.
+
+&gt; At
+&gt; that point, instead of updating the disk drive - It looks up the page in
+&gt; memory and updates that copy.
+
+There are two ways to do this in general...
+
+Write-through: means the vmm goes ahead and not only updates the vmm copy
+               but the copy on the drive. Note that this may or may not
+               actualy update other copies if a process has one that isn't
+               sharable (ie has its own private copy). This has a lot of
+               over-head in that there is lots of i/o.
+
+Write-back: means that the data in the individual pages doesn't get written
+            to the drive until the page is either swapped out of active
+            memory (and written to swap) or is closed. This is a form of
+            'lazy propogation'. Again, this doesn't address how other
+            processes may have their images effected.
+
+&gt;   The only problem is that at that point,
+&gt; you're now running into a mess of lock problems that carry their own
+&gt; overhead.
+
+One easy way, at least on a Unix machine, is to keep the system clock setting
+when the page is created. Then close them in chronological sequence. This
+obviously has it's problems. The first person to open isn't guaranteed to be
+the first person done. Another method would be to select via a PRNG the
+'first' process to update the page. Then each following would take their
+turn according to the spin of the wheel. This leaves us with two options,
+as each process closes it only writes the changes that it has made; which
+could overwrite the previous user if they edited the same part of the file.
+The alternative would be to force each user to create a different file with
+some filename convention to differentiate them. Then leave it up to some
+unknown method to arbitrate the file propogations at that point by some
+'compare and share' method perhaps.
+
+&gt;      Another alternative would be to track the disk map and force a
+&gt; write for a page that is pending a read.
+
+How do you know ahead of a read that a process is going to read that page?
+Or are you saying that before another process can open a file we force the
+first process to go ahead and write its changes? What happens once two or
+more have the page mapped and begin editing? How do you propose to manage
+the file closure writes that will occur?
+
+
+    ____________________________________________________________________
+   |                                                                    |
+   |       The most powerful passion in life is not love or hate,       |
+   |       but the desire to edit somebody elses words.                 |
+   |                                                                    |
+   |                                  Sign in Ed Barsis' office         |
+   |                                                                    | 
+   |            _____                             The Armadillo Group   |
+   |         ,::////;::-.                           Austin, Tx. USA     |
+   |        /:'///// ``::&gt;/|/                     <A  HREF="http://www.ssz.com/">http://www.ssz.com/</A>   |
+   |      .',  ||||    `/( e\                                           |
+   |  -====~~mm-'`-```-mm --'-                         Jim Choate       |
+   |                                                 ravage@ssz.com     |
+   |                                                  512-451-7087      |
+   |____________________________________________________________________|
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00062.html">Re: The Continued Attack on Cash (Was: "The Right of Anonymity"...)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00061.html">Re: Bush Gang Suspected In Assault On Presidency</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00049.html">INFO-RUSS: Israel Issues Iraq Warning (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00052.html">Hacker group battles child porn [c|net News, 2/2/98]</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00051"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00051"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

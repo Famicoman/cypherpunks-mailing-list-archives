@@ -1,0 +1,239 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: IPG algorithim -->
+<!--X-From-R13: jvpuvgnNplorefgngvba.arg -->
+<!--X-Date: Wed, 11 Dec 1996 01:47:11 &#45;0800 (PST) -->
+<!--X-Message-Id: Pine.BSI.3.95.961211034239.11832H&#45;100000@citrine.cyberstation.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199611302127.PAA14989@manifold.algebra.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: IPG algorithim</TITLE>
+<LINK REV="made" HREF="mailto:wichita@cyberstation.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00656.html">Date Prev</A>][<A HREF="msg00659.html">Date Next</A>][<A HREF="msg00675.html">Thread Prev</A>][<A HREF="msg00676.html">Thread Next</A>][<A HREF="index.html#00657">Date Index</A>][<A HREF="threads.html#00657">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: IPG algorithim</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "Igor Chudov @ home" &lt;<A HREF="mailto:ichudov@algebra.com">ichudov@algebra.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: IPG algorithim</LI>
+<LI><em>From</em>: <A HREF="mailto:wichita@cyberstation.net">wichita@cyberstation.net</A></LI>
+<LI><em>Date</em>: Wed, 11 Dec 1996 03:47:02 -0600 (CST)</LI>
+<LI><em>cc</em>: Eric Murray &lt;<A HREF="mailto:ericm@lne.com">ericm@lne.com</A>&gt;, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;199611302127.PAA14989@manifold.algebra.com&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+On Sat, 30 Nov 1996, Igor Chudov @ home wrote:
+
+&gt; Eric Murray wrote:
+&gt; &gt; 
+&gt; &gt; 
+&gt; &gt; 
+&gt; &gt; I have translated the IPG algorithim's "engine" to C, to generate
+&gt; &gt; some random values from it for testing purposes.  It does not
+&gt; &gt; look very random in either the xnoisesph program or the DIEHARD
+&gt; &gt; test battery.   However I may well have misinterprested Mr. Wood's
+&gt; &gt; description (his writing is, as Mr. Chudov points out, difficult to
+&gt; &gt; understand) or written my code incorrectly.  Here it is, play
+&gt; &gt; with it yourself.  To my untrained eye the lack of randomness
+&gt; &gt; in what's essentially a stream cipher would be disturbing.
+&gt; &gt; However I am not a cryptoanalysist so I do not know to
+&gt; &gt; what extent this weakens the cipher.
+&gt; 
+&gt; Thanks for an interestnig approach to testing (see below).
+&gt; 
+&gt; &gt; The IPG description does not say (but implies to me) that
+&gt; &gt; the various tables that are to be filled in by "random" values must
+&gt; &gt; be filled in by PRNGs that are seeded with the same seeds by
+&gt; &gt; each of the party that knows the key.  Otherwise the "encryptor
+&gt; &gt; streams" that are generated will be unrelated and decryption will not
+&gt; &gt; be possible.  To make my test work I have used the simple rand()
+&gt; &gt; function to fill in the tables.
+&gt; 
+&gt; A good point.
+&gt; 
+&gt; &gt; Corrections are welcome.
+&gt; 
+&gt; see below.
+&gt;  
+&gt; &gt; 
+&gt; &gt; #include &lt;stdio.h&gt;
+&gt; &gt; 
+&gt; &gt; /* a C translation of the IPG "EUREKA" algorithim's "engine".
+&gt; &gt; ** This is supposed to produce random numbers for the IPG
+&gt; &gt; ** "encryptor stream".
+&gt; &gt; ** See <A  HREF="http://www.netprivacy.com/">http://www.netprivacy.com/</A> for the original description.
+&gt; &gt; ** Eric Murray  ericm@lne.com  This code placed under GNU copyleft.  */
+&gt; &gt; 
+&gt; &gt; /* machine-dependent stuff, change to suit different platforms: */
+&gt; &gt; typedef unsigned char byte;
+&gt; &gt; typedef unsigned short uint16;
+&gt; &gt; 
+&gt; &gt; 
+&gt; &gt; /* tables: */
+&gt; &gt; uint16 A[53];
+&gt; &gt; uint16 B[53];
+&gt; &gt; uint16 C[53];
+&gt; &gt; 
+&gt; &gt; 
+&gt; &gt; int init_table(uint16*table, uint16 min, uint16 max)
+&gt; &gt; {
+&gt; &gt; 	/* IPG specifies no algorithim for producing the "random"
+&gt; &gt; 	** initial values in the ABC tables, but it's obvious that
+&gt; &gt; 	** it requires a PRNG that's somehow seeded from the "key".
+&gt; &gt; 	** I've just used rand() here.  In UNIX rand() called with no
+&gt; &gt; 	** seed is supposed to seed itself with 0. */
+&gt; &gt; 	int i;
+&gt; &gt; 	int count, r;
+&gt; &gt; 
+&gt; &gt; 	for(i = 0; i &lt; 53; i++) {
+&gt; &gt; 		table[i] = min + (rand() % (max - min));
+&gt; &gt; 	}
+&gt; &gt; }
+&gt; &gt; 
+&gt; &gt; main(int argc, char **argv)
+&gt; &gt; {
+&gt; &gt; 	uint16 jv;
+&gt; &gt; 	int argcnt, i, n, count, diehard, nelem;
+&gt; &gt; 
+&gt; &gt; 	diehard = 0;
+&gt; &gt; 	argcnt = 1;
+&gt; 
+&gt; how about doing randomize()?
+&gt; 
+&gt; &gt; 	if (argc &gt;= 2) {
+&gt; &gt; 		if (strncmp(argv[argcnt],"-d") == 0) {
+&gt; &gt; 			diehard++;
+&gt; &gt; 			argcnt++;
+&gt; &gt; 		}
+&gt; &gt; 	}
+&gt; &gt; 	if (argc &gt; argcnt - 1 ) {
+&gt; &gt; 		n = atoi(argv[argcnt]);
+&gt; &gt; 		fprintf(stderr,"Generating %d values\n",n);
+&gt; &gt; 	}
+&gt; &gt; 	else {
+&gt; &gt; 		n = 2000;
+&gt; &gt; 	}
+&gt; &gt; 
+&gt; &gt; 	/* seed tables: */
+&gt; &gt; 	fprintf(stderr,"Seeding:  A");  fflush(stderr);
+&gt; &gt; 	init_table(A,0,65535);
+&gt; &gt; 	fprintf(stderr," B");  fflush(stderr);
+&gt; &gt; 	init_table(B,0,12227);
+&gt; &gt; 	fprintf(stderr," C");  fflush(stderr);
+&gt; &gt; 	init_table(C,16384,20361);
+&gt; &gt; 	fprintf(stderr,"\n");  fflush(stderr);
+&gt; &gt; 
+&gt; &gt; 	/* generate n values: */
+&gt; &gt; 	for(; n &gt; 0; n--) {
+&gt; &gt; 		/* jv is "random" (where's it seeded from?) */
+&gt; &gt; 		jv = (uint16)(rand() % 53);
+&gt; &gt; 
+&gt; &gt; 		/* count limits the number of traverses to 53^2 so we don't get stuck */
+&gt; &gt; 		for(count = 0; count &lt; 2809; count++) {
+&gt; 
+&gt; 2809 is a too small limit. For example, if ALL B == 1, A == 16385, and 
+&gt; C == 20361, the loop may need (20361-16385) passes to get to the &lt; 16384
+&gt; value.
+&gt; 
+&gt; Again, if all A = 16385, all B = 0, all C = 16386, the loop will never 
+&gt; end with a correct A (your code reflects that).
+&gt; 
+&gt; &gt; 			jv++;
+&gt; &gt; 			if (jv == 53) jv = 0;
+&gt; &gt; 			A[jv] = (A[jv] + B[jv]) % C[jv];
+&gt; &gt; 			if (A[jv] &lt; 16384) break;
+&gt; &gt; 		}
+&gt; &gt; 		if (count == 2809) fprintf(stderr,"Oops.\n");
+&gt; &gt; 		else {
+&gt; &gt; 			if (!diehard) {
+&gt; &gt; 				printf("%d\n",A[jv]);
+&gt; &gt; 			}
+&gt; &gt; 			else {
+&gt; &gt; 				/* print output in DIEHARD required format:
+&gt; &gt; 				** actually since we have 16-bit ints and DIEHARD
+&gt; &gt; 				** wants 32-bit ints, we print 20 per line instead of 10 */
+&gt; &gt; 				if (nelem++ &gt; 19) {printf("\n"); nelem = 0;}
+&gt; &gt; 				printf("%4.4x",(unsigned int)A[jv]);
+&gt; &gt; 			}
+&gt; &gt; 		}
+&gt; &gt; 	}
+&gt; &gt; }
+&gt; &gt; 
+&gt; &gt; 
+&gt; 
+&gt; You are also bringing a good point that Chi-squared tests are not
+&gt; sufficient to make any conclusions about usefulness of this particular
+&gt; pseudo random number generator.
+&gt; 
+&gt; 	- Igor.
+&gt; 
+Chi Squares alone are not sufficient but we are only talking about the
+seed algorithm, and at our web sites, you will find Standard Deviations,
+Chi Squares, Delta ICs, autocorrelations, cross correlations, and a
+variety of other tests done on single characters, couplets - pairs,
+first differences, second differences, offset differences and all kinds of
+other tests. 
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00676" HREF="msg00676.html">Re: IPG algorithim</A></STRONG>
+<UL><LI><EM>From:</EM> ichudov@algebra.com (Igor Chudov @ home)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00656.html">Re: IPG algorithim</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00659.html">Re: IPG algorithim</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00675.html">Re: IPG algorithim</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00676.html">Re: IPG algorithim</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00657"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00657"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

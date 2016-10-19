@@ -1,0 +1,750 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: here ya go -->
+<!--X-From-R13: cbvreNfsh.pn (Exlr [reyva Bbvre) -->
+<!--X-Date: Sat, 5 Jun 93 03:18:43 PDT -->
+<!--X-Message-Id: 9306051015.AA15046@malibu.sfu.ca -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>here ya go</TITLE>
+<LINK REV="made" HREF="mailto:poier@sfu.ca">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00186.html">Date Prev</A>][<A HREF="msg00188.html">Date Next</A>][<A HREF="msg00212.html">Thread Prev</A>][<A HREF="msg00188.html">Thread Next</A>][<A HREF="index.html#00187">Date Index</A>][<A HREF="threads.html#00187">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>here ya go</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: here ya go</LI>
+<LI><em>From</em>: <A HREF="mailto:poier@sfu.ca">poier@sfu.ca</A> (Skye Merlin Poier)</LI>
+<LI><em>Date</em>: Sat, 5 Jun 93 3:15:58 PDT</LI>
+<LI><em>Faculty</em>: Computing Science / Mathematics</LI>
+<LI><em>Organization</em>: Simon Fraser University</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+heres the procomm+ 2.0 hook prog...
+
+-----snip snip-----
+/*
+22222222222222222222222222222222222222222222222222222222222222222222222
+22                                                                   22
+22 HOOK.C - Programmer's interface for PROCOMM PLUS 2.0              22
+22 COPYRIGHT  (C) 1990 DATASTORM TECHNOLOGIES, INC.                  22
+22                                                                   22
+22 PROCOMM PLUS passes the "hook" program the address in memory of   22
+22 the PCPLUS.PRM file structure, and the ASPECT N0-N9 and S0-S9     22
+22 arrays.  This sample code makes local copies of these so it can   22
+22 use the small memory model and not have access those locations    22
+22 directly (look at the movedata() function calls.)                 22
+22                                                                   22
+22 This file also contains other PROCOMM PLUS information that       22
+22 programmers may wish to make use of.                              22
+22                                                                   22
+22 NOTE: This code example is written for Microsoft C, which         22
+22 defaults to "word alignment" of integer size items and causes     22
+22 extra bytes to be inserted in structures to insure field          22
+22 alignment.  Turbo C, Zortech C, and other compilers that default  22
+22 to "packed" or byte alignment must be explicitly set to word      22
+22 alignment (usually the -a compiler option).                       22
+22                                                                   22
+22222222222222222222222222222222222222222222222222222222222222222222222
+22222222222222222222222222222222222222222222222222222222222222222222222
+22                                                                   22
+22 IMPORTANT NOTICE:  The concepts and the text contained in this    22
+22 file are hereby released into the Public Domain for use by        22
+22 programmers in developing PROCOMM PLUS-compatible code.           22
+22 Programs developed using this file may be distributed freely by   22
+22 programmers without any financial or legal obligation to          22
+22 Datastorm Technologies, Inc.  However, this in no way implies     22
+22 that any other material in the PROCOMM PLUS package may be        22
+22 distributed in such manner, or that PROCOMM PLUS or any other     22
+22 Datastorm product may be bundled for distribution with programs   22
+22 developed using this file.                                        22
+22                                                                   22
+22222222222222222222222222222222222222222222222222222222222222222222222
+*/
+ 
+#include "stdio.h"
+#include "stdlib.h"
+#include "dos.h"
+ 
+/*
+22222222222222222222222222222222222222222222222222222222222222222222222
+22                                                                   22
+22 Structure for PROCOMM PLUS PCPLUS.PRM information                 22
+22                                                                   22
+22222222222222222222222222222222222222222222222222222222222222222222222
+*/
+struct PARMLIST
+   {
+ 
+/* line settings */
+ 
+   int port;              /* com port, 0=COM1 etc */
+   unsigned int baud;     /* index into baud_rate[] array */
+   int parity;            /* parity: NOEMS = 01234 */
+   int sbits;             /* stop bits as int */
+   int dbits;             /* data bits as int */
+ 
+/* Modem General Options */
+ 
+   int mdm_timeout;       /* secs to wait for connect */
+   int mdm_pause;         /* secs to pause between calls */
+   int abdetect;          /* autobaud for dialing: FALSE/TRUE */
+   int ddtrflg;           /* 1=drop dtr in dial dir */
+   char redialc;          /* character to send in redial */
+   int cdover;            /* override CD and send init string ? */
+   int maxcalls;          /* max retries for dial dir */
+ 
+/* Modem Command Options */
+ 
+   char mdminit[47];      /* modem init string */
+   char mdmcmd[25];       /* modem dialing command */
+   char mdmsuf[25];       /* modem dial command suffix */
+   char hu_str[25];       /* modem hangup string */
+   char ans_str[25];      /* modem auto anser string */
+   char no_ans_str[25];   /* modem no auto answer string */
+ 
+/* Modem Result Messages */
+ 
+   char mdm_msg[11][16];  /* modem messages, 0-6 = connect */
+ 
+/* Modem Port Assignments */
+ 
+   int baseaddr[8];       /* com port base addresses */
+   int irqnumbr[8];       /* com port irq selection */
+ 
+/* Terminal General Options */
+ 
+   int termtype;          /* terminal type */
+   int echo_flag;         /* duplex: 0=FULL, 1=HALF */
+   int use_xon;           /* use flow control: FALSE/TRUE */
+   int hardflow;          /* use hasrware flow ctrl: FALSE/TRUE */
+   int wrap;              /* use line wrap FALSE/TRUE */
+   int scrlflag;          /* scroll page FALSE/TRUE */
+   int lfflag;            /* add LF to CR coming in: FALSE/TRUE */
+   char dest_bs;          /* use destructive BS: FALSE/TRUE */
+   int brklen;            /* BREAK length in ms */
+   int enq_on;            /* respond to ENQ: NONE/ANSWERBACK/CIS B */
+   int use_uline;                      /* 1=EGA/VGA true underlining */
+   int col132mode;        /* 0=80 col, 1=132 col */
+   int ansi8bit;          /* 1=ANSI 8 bit mode, 0=ANSI 7 bit mode */
+ 
+/* Terminal Color Options */
+ 
+   int tcnorm;            /* Terminal normal attribute */
+   int tcbold;            /* Terminal bold attribute */
+   int tchalf;            /* Terminal wrt prt/half intense attribute */
+   int tcrev;             /* Terminal reverse attribute */
+   int tculine;           /* Terminal underscore attribute */
+ 
+/* Display/Sound Options */
+ 
+   int explode;           /* use exploding windows: FALSE/TRUE */
+   int soundon;           /* use sound: FALSE/TRUE */
+   int alarmon;           /* use alarm: FALSE/TRUE */
+   int attenlen;          /* seconds for alarm sound */
+   int snow;              /* flag for using fast display updates */
+   int sline_off;         /* 0=use status line, 1=use 25 lines of data */
+   int bigcur;            /* 0=line, 1=block */
+   unsigned int rfarsize; /* far mem for redisplay buffer */
+   int startextralines;   /* startup in extraline mode? */
+   int extralines;        /* 25, 28, 43 or 50 line mode */
+ 
+/* General Options */
+ 
+   char prtfilename[13];  /* name of PRN device */
+   int cd_at_exit;        /* 0=ignore, 1=hangup, 2=ask */
+   int fastkbd;           /* AT keyboard speedup */
+   int remcmd;            /* flag for using remote script commands */
+   int xlatflag;          /* use xlate: FALSE/TRUE */
+   char xlatps;           /* pause character */
+   int keypause;          /* pause between chars in ms */
+   int nophonelog;        /* flag for using phone log */
+   int filelu;            /* flag for using auto filename lookup */
+   int use123;            /* use lotus menus ? */
+   char key123;           /* lotus menu key */
+   int dtrflag;           /* drop DTR in hangup: FALSE/TRUE */
+   int page_is_xfer;      /* 1=PgUp/Dn xfer, 0=Ctrl-PgUp/Dn xfer */
+   char chat_blk_mode;    /* flag for char/block mode in "chat" */
+ 
+/* Host Mode Options */
+ 
+   int hardwire;          /* host connection type: MODEM/DIRECT */
+   int autobaud;          /* use autobaud in host mode */
+   char host_id[51];      /* host welcome string */
+   int opensys;           /* host is open system: FALSE/TRUE */
+   char hostup[51];       /* host mode upload default dir */
+   char hostdn[51];       /* host mode download default dir */
+   int hosttimeout;       /* host inactivity timeout (in minutes) */
+   int hostbyemode;       /* what to do after end of call */
+   int hostnewuserdl;     /* can new user xfer files? */
+ 
+/* File/Path Options */
+ 
+   char log_name[65];     /* default log file name */
+   char scr_name[65];     /* default screen dump fiel name */
+   char dl_path[65];      /* default d/l path */
+   char viewname[65];     /* view prog name */
+   char ed_name[65];      /* editor name */
+ 
+/* Color Options */
+ 
+   int hmclr;             /* colors */
+   int hmhi;
+   int pdclr;
+   int pdhi;
+   int slclr;
+   int slhi;
+   int tcclr;
+   int tchi;
+   int xclr;
+   int xhi;
+   int ddclr;
+   int ddhi;
+   int kmclr;
+   int kmhi;
+   int pmclr;             /* colors for pulldown menus */
+   int pmhi;              /* colors for pulldown menus */
+   int pmrev;             /* colors for pulldown menus */
+ 
+/* ASCII Options */
+ 
+   int ascii_echo;        /* echo ascii uploads: FALSE/TRUE */
+   int blankx;            /* expand blank lines in ASCII uploads */
+   int tabx;              /* expand tabs in ASCII uploads */
+   int cpace;             /* char pace time for ASCII uploads */
+   int pchar;             /* pace character for ASCII uploads */
+   int pace;              /* line pace for ascii u/l */
+   int up_cr;             /* CR define for ascii u/l:      */
+   int up_lf;             /* LF define for ascii u/l:      */
+   int dn_cr;             /* CR define for ascii d/l:      */
+   int dn_lf;             /* LF define for ascii d/l:      */
+   int strip8;            /* strip 8th bit in ASCII xfers */
+   int ascii_dl_to;                    /* auto timeout value for ascii dloads */
+ 
+/* Kermit Options */
+ 
+   int srpsiz;            /* kermit stuff */
+   char spadchar;         /* kermit stuff */
+   int ksoh;
+   int spad;
+   char squote;
+   char sqt8bitchar;
+   char sseol;
+   int sbctr;             /* kermit stuff */
+   int sbinary;
+   int turnch;            /* kermit stuff */
+ 
+/* Zmodem Options */
+ 
+   int zadl;              /* ZMODEM auto download flag */
+   int zds;               /* ZMODEM time/date stamp flag */
+   int zcr;               /* ZMODEM crash recovery flag (0, 1, 2, 3) */
+   int zscr;              /* ZMODEM send crash recovery flag (0, 1 */
+   int ztw;               /* ZMODEM tx window size (0, 2048, 4096) */
+   int zcrc;              /* ZMODEM crc type (0 = 32 bit, 1 = 16 bit) */
+/* int zmt;                  ZMODEM moby turbo compatibility flag */
+ 
+/* External Protocol Options */
+ 
+   char epname[3][9];     /* display name */
+   char epupload[3][16];  /* upload command */
+   char epdnload[3][16];  /* download command */
+   int epmode[3];         /* 0,1,2=ASPECT,Program,Hook */
+ 
+/* General Protocol Options */
+ 
+   int relax;             /* XMODEM relaxed mode: FALSE/TRUE */
+   int trash;             /* garbage placeholder */
+ 
+/* Editor Options */
+ 
+   unsigned char textmode;             /* input mode 0:Aspect 1:word */
+   unsigned char omiteof;              /* don't write EOF flag */
+   unsigned char exptabs;              /* expand tab characters */
+   unsigned char wordwrap;             /* word wrap enable flag */
+   unsigned char justify;              /* right margin justify flag */
+   unsigned tabsize;                   /* tab-stop constant */
+   unsigned pindent;                   /* programming indent level */
+   unsigned windent;                   /* indent level (zero-based) */
+   unsigned lmargin;                   /* left margin (zero-based) */
+   unsigned rmargin;                   /* right margin (zero-based) */
+   unsigned es0;                       /* status line headers */
+   unsigned es1;                       /* status line file information */
+   unsigned es2;                       /* status line message area */
+   unsigned et0;                       /* normal text display */
+   unsigned et1;                       /* reverse video text display */
+   unsigned et2;                       /* highlighted text display */
+   unsigned ep0;                       /* prompt window display */
+   unsigned ep1;                       /* prompt input field */
+   unsigned em0;                       /* default message attribute */
+   unsigned em1;                       /* message MSG attribute */
+   unsigned em2;                       /* message EMSG attribute */
+ 
+ 
+   #if defined(ACSI)
+   char acsi_callname[17];/* ACSI server name */
+   #endif
+ 
+   int mouse_x_sensitivity;            /* x mickey sensitivity */
+   int mouse_y_sensitivity;            /* y mickey sensitivity */
+ 
+   int xfer_cd;                        /* flag for testing CD in Xfers */
+   int clip_separator;                 /* char sent between clipboard entries */
+ 
+   int ax132;                          /* Value for AL for forced video mode */
+   int hcmdrte;                        /* TRUE if using HCOMMAND.RTE */
+   } ;                                 /* End of parmlist */
+ 
+ 
+/*
+22222222222222222222222222222222222222222222222222222222222222222222222
+22                                                                   22
+22 Structure for PROCOMM PLUS dialing directory entry.               22
+22                                                                   22
+22222222222222222222222222222222222222222222222222222222222222222222222
+*/
+struct DDREC
+   {
+   char ddname[25];                    /* name */
+   char ddphone[21];                   /* phone number */
+   int  ddbaud;                        /* baud rate as int */
+   char ddparity;                      /* parity as short int */
+   char dddata;                        /* data bits as short int */
+   char ddstop;                        /* stop bits as short int */
+   char dddup;                         /* duplex as short int: 0 = full */
+   char ddscript[9];                   /* ASPECT file w/o ext */
+   char ddlast[9];                     /* last call: mm/dd/yy */
+   int  ddtotal;                       /* total connects */
+   char ddproto;                       /* default protocol as short int */
+   char ddterm;                        /* terminal type as short int */
+   char ddmode;                        /* 0 = mode, 1 = direct */
+   char ddpassword[11];                /* like it says */
+   char ddmacfile[9];                  /* keyboard macro file */
+   char ddkbdfile[9];                  /* keyboard mapping file */
+   char ddport;                        /* com port to use */
+   char ddnotefile[9];                 /* note file */
+   };
+ 
+/*
+22222222222222222222222222222222222222222222222222222222222222222222222
+22                                                                   22
+22 Structure for PROCOMM PLUS .KBD file terminal entry:              22
+22                                                                   22
+22 struct TERMTABLE                                                  22
+22    {                                                              22
+22    char def[79][12];                                              22
+22    };                                                             22
+22                                                                   22
+22 All fields are fixed length and are padded with NULLs.            22
+22                                                                   22
+22 The file is built in the terminal order in the term_desc array    22
+22 below.  Each terminal entry has the keys stored in the following  22
+22 order:                                                            22
+22                                                                   22
+22 KEYPAD ASTERISK (*)                                               22
+22 KEYPAD MINUS (-)                                                  22
+22 KEYPAD PLUS (+)                                                   22
+22 KEYPAD PERIOD (.)                                                 22
+22 KEYPAD SLASH (//)                                                 22
+22 KEYPAD ENTER (CR)                                                 22
+22                                                                   22
+22 TAB                                                               22
+22 BACKTAB                                                           22
+22 INSERT                                                            22
+22 DELETE                                                            22
+22 BACKSPACE                                                         22
+22                                                                   22
+22 CTRL-HOME                                                         22
+22 CTRL-END                                                          22
+22 CTRL-PGUP                                                         22
+22 CTRL-PGDN                                                         22
+22 CTRL-BACKSPACE                                                    22
+22                                                                   22
+22 F1                                                                22
+22 F2                                                                22
+22 F3                                                                22
+22 F4                                                                22
+22 F5                                                                22
+22 F6                                                                22
+22 F7                                                                22
+22 F8                                                                22
+22 F9                                                                22
+22 F10                                                               22
+22 F11                                                               22
+22 F12                                                               22
+22                                                                   22
+22 KEYPAD 0                                                          22
+22 KEYPAD 1                                                          22
+22 KEYPAD 2                                                          22
+22 KEYPAD 3                                                          22
+22 KEYPAD 4                                                          22
+22 KEYPAD 5                                                          22
+22 KEYPAD 6                                                          22
+22 KEYPAD 7                                                          22
+22 KEYPAD 8                                                          22
+22 KEYPAD 9                                                          22
+22                                                                   22
+22 SHIFT-F1                                                          22
+22 SHIFT-F2                                                          22
+22 SHIFT-F3                                                          22
+22 SHIFT-F4                                                          22
+22 SHIFT-F5                                                          22
+22 SHIFT-F6                                                          22
+22 SHIFT-F7                                                          22
+22 SHIFT-F8                                                          22
+22 SHIFT-F9                                                          22
+22 SHIFT-F10                                                         22
+22 SHIFT-F11                                                         22
+22 SHIFT-F12                                                         22
+22                                                                   22
+22 GREY CURSOR UP                                                    22
+22 GREY CURSOR DOWN                                                  22
+22 GREY CURSOR LEFT                                                  22
+22 GREY CURSOR RIGHT                                                 22
+22 GREY INSERT                                                       22
+22 GREY DELETE                                                       22
+22 GREY HOME                                                         22
+22 GREY END                                                          22
+22 GREY PGUP                                                         22
+22 GREY PGDN                                                         22
+22                                                                   22
+22 CTRL-F1                                                           22
+22 CTRL-F2                                                           22
+22 CTRL-F3                                                           22
+22 CTRL-F4                                                           22
+22 CTRL-F5                                                           22
+22 CTRL-F6                                                           22
+22 CTRL-F7                                                           22
+22 CTRL-F8                                                           22
+22 CTRL-F9                                                           22
+22 CTRL-F10                                                          22
+22 CTRL-F11                                                          22
+22 CTRL-F12                                                          22
+22                                                                   22
+22 CURSOR UP                                                         22
+22 CURSOR DOWN                                                       22
+22 CURSOR LEFT                                                       22
+22 CURSOR RIGHT                                                      22
+22                                                                   22
+22 HOME KEY                                                          22
+22 END KEY                                                           22
+22 ENTER KEY (CR)"                                                   22
+22                                                                   22
+22222222222222222222222222222222222222222222222222222222222222222222222
+*/
+unsigned char *termdesc[] =
+{
+   "TTY     ",    /* TTY     0                   */
+   "VT52    ",    /* VT52    1                   */
+   "VT100   ",    /* VT100   2                   */
+   "VT102   ",    /* VT102   3                   */
+   "VT220   ",    /* VT220   4                   */
+   "VT320   ",    /* VT320   5                   */
+   "ANSI    ",    /* BBS     6                   */
+   "IBM PC  ",    /* IBMPC   7                   */
+   "WYSE 75 ",    /* WYSE75  8  (ANSI terminal)  */
+   "ATT 605 ",    /* ATT605  9  (ANSI terminal)  */
+   "ATT 4410",    /* ATT4410 10 (ANSI terminal)  */
+   "TVI 922 ",    /* TV922   11 (ANSI terminal)  */
+   "HEATH 19",    /* H19     12                  */
+   "IBM 3101",    /* IBM3101 13                  */
+   "IBM 3161",    /* IBM3161 14                  */
+   "DG D100 ",    /* DGD100  15                  */
+   "DG D200 ",    /* DGD200  16                  */
+   "DG D210 ",    /* DGD210  17                  */
+   "ADDS 60 ",    /* ADDS60  18                  */
+   "ADDS 90 ",    /* ADDS90  19                  */
+   "ADM 3A  ",    /* ADM3    20                  */
+   "ADM 5   ",    /* ADM5    21                  */
+   "ADM 31  ",    /* ADM31   22                  */
+   "ESPRIT 3",    /* ESPRIT3 23                  */
+   "3270/950",    /* IBM3270 24                  */
+   "TVI 910 ",    /* TV910   25                  */
+   "TVI 912 ",    /* TV912   26                  */
+   "TVI 920 ",    /* TV920   27                  */
+   "TVI 925 ",    /* TV925   28                  */
+   "TVI 950 ",    /* TV950   29                  */
+   "TVI 955 ",    /* TV955   30                  */
+   "WYSE 50 ",    /* WYSE50  31                  */
+   "WYSE 100"     /* WYSE100 32                  */
+};
+ 
+/*
+22222222222222222222222222222222222222222222222222222222222222222222222
+22                                                                   22
+22 p.baud from the "parmlist" structure above is an index into the   22
+22 following 2 arrays.                                               22
+22                                                                   22
+22 i.e. the current baud rate for PROCOMM PLUS is baud_rate[p.baud]. 22
+22                                                                   22
+22222222222222222222222222222222222222222222222222222222222222222222222
+*/
+char *baud_desc[] =                    /* baud rates as strings       */
+{
+"300\0\0\0",
+"1200\0\0",
+"2400\0\0",
+"4800\0\0",
+"9600\0\0",
+"19200\0",
+"38400\0",
+"57600\0",
+"115200"
+};
+ 
+long baud_rate[] =                     /* baud rates as longs         */
+{
+300,
+1200,
+2400,
+4800,
+9600,
+19200,
+38400,
+57600,
+115200
+};
+ 
+ 
+/*
+22222222222222222222222222222222222222222222222222222222222222222222222
+22                                                                   22
+22 HOOK.C declarations and defines                                   22
+22                                                                   22
+22222222222222222222222222222222222222222222222222222222222222222222222
+*/
+#define PARMSIZE sizeof(struct PARMLIST)
+#define VMAX 10
+#define SLEN 81
+#define NSIZE VMAX * 2
+#define SSIZE VMAX * SLEN
+ 
+struct PARMLIST near p;                /* PCPLUS.PRM structure        */
+int asp_nums[VMAX];                    /* ASPECT N0-N9 array          */
+unsigned char asp_strings[VMAX][SLEN]; /* ASPECT S0-S9 array          */
+ 
+unsigned int ptr_seg1;                 /* segment addr                */
+unsigned int ptr_off1;                 /* offset addr                 */
+unsigned int ptr_seg2;                 /* segment addr                */
+unsigned int ptr_off2;                 /* offset addr                 */
+unsigned int ptr_seg3;                 /* segment addr                */
+unsigned int ptr_off3;                 /* offset addr                 */
+char far *suptr;                       /* ptr to far storage          */
+int type;                              /* flag from PROCOMM PLUS      */
+struct SREGS seg;                      /* structure for DS value      */
+ 
+/*
+22222222222222222222222222222222222222222222222222222222222222222222222
+22                                                                   22
+22 main() program routine                                            22
+22                                                                   22
+22 Hook programs receive the following arguments:                    22
+22                                                                   22
+22 ARG 1: The string "PCPLUS".                                       22
+22 ARG 2: Far pointer in ASCII to the ASPECT N0-N9 array.            22
+22 ARG 3: Far pointer in ASCII to the ASPECT S0-S9 array.            22
+22 ARG 4: Far pointer in ASCII to the PCPLUS.PRM structure.          22
+22 ARG 5: Integer in ASCII indicating where hook was called from.    22
+22                                                                   22
+22222222222222222222222222222222222222222222222222222222222222222222222
+*/
+ 
+void main(argc,argv)
+int argc;
+char *argv[];
+{
+   /*
+   22222222222222222222222222222222222222222222222222222222222222222222222
+   22                                                                   22
+   22 get value of segment registers into structure (we need DS value). 22
+   22                                                                   22
+   22222222222222222222222222222222222222222222222222222222222222222222222
+   */
+   segread(&amp;seg);                      /* get value of DS register    */
+ 
+   /*
+   22222222222222222222222222222222222222222222222222222222222222222222222
+   22                                                                   22
+   22 get segment and offset of ASPECT N0-N9 array...                   22
+   22                                                                   22
+   22222222222222222222222222222222222222222222222222222222222222222222222
+   */
+   suptr = (char far *) atol(argv[2]); /* convert str to ptr          */
+   ptr_seg1 = FP_SEG(suptr);           /* get segment addr            */
+   ptr_off1 = FP_OFF(suptr);           /* get offset addr             */
+ 
+   /*
+   22222222222222222222222222222222222222222222222222222222222222222222222
+   22                                                                   22
+   22 copy ASPECT array into local array                                22
+   22                                                                   22
+   22222222222222222222222222222222222222222222222222222222222222222222222
+   */
+   movedata(ptr_seg1,ptr_off1,seg.ds,(unsigned int)&amp;asp_nums[0],NSIZE);
+ 
+   /*
+   22222222222222222222222222222222222222222222222222222222222222222222222
+   22                                                                   22
+   22 get segment and offset of ASPECT S0-S9 array...                   22
+   22                                                                   22
+   22222222222222222222222222222222222222222222222222222222222222222222222
+   */
+   suptr = (char far *) atol(argv[3]); /* convert str to ptr          */
+   ptr_seg2 = FP_SEG(suptr);           /* get segment addr            */
+   ptr_off2 = FP_OFF(suptr);           /* get offset addr             */
+ 
+   /*
+   22222222222222222222222222222222222222222222222222222222222222222222222
+   22                                                                   22
+   22 copy ASPECT array into local array                                22
+   22                                                                   22
+   22222222222222222222222222222222222222222222222222222222222222222222222
+   */
+   movedata(ptr_seg2,ptr_off2,seg.ds,(unsigned int)&amp;asp_strings[0][0],SSIZE);
+ 
+   /*
+   22222222222222222222222222222222222222222222222222222222222222222222222
+   22                                                                   22
+   22 get segment and offset of PCPLUS.PRM structure from PROCOMM PLUS  22
+   22                                                                   22
+   22222222222222222222222222222222222222222222222222222222222222222222222
+   */
+   suptr = (char far *) atol(argv[4]); /* convert str to ptr          */
+   ptr_seg3 = FP_SEG(suptr);           /* get segment addr            */
+   ptr_off3 = FP_OFF(suptr);           /* get offset addr             */
+ 
+   /*
+   22222222222222222222222222222222222222222222222222222222222222222222222
+   22                                                                   22
+   22 copy PROCOMM PLUS' structure into local structure                 22
+   22                                                                   22
+   22222222222222222222222222222222222222222222222222222222222222222222222
+   */
+   movedata(ptr_seg3,ptr_off3,seg.ds,(unsigned int)&amp;p.port,PARMSIZE);
+ 
+   /*
+   22222222222222222222222222222222222222222222222222222222222222222222222
+   22                                                                   22
+   22 "TYPE" lets you know where the hook program was called from in    22
+   22 PROCOMM PLUS:                                                     22
+   22                                                                   22
+   22 TYPE VALUE       CALLING LOCATION                                 22
+   22 ---------------------------------                                 22
+   22     0            Upload Protocol                                  22
+   22     1            Download Protocol                                22
+   22     2            Aspect Script                                    22
+   22     3            Meta Key Hook                                    22
+   22                                                                   22
+   22222222222222222222222222222222222222222222222222222222222222222222222
+   */
+   type = atoi(argv[5]);
+ 
+   /*
+   22222222222222222222222222222222222222222222222222222222222222222222222
+   22                                                                   22
+   22 The following code is a simple example of what you can do with    22
+   22 a "hook" program.  It assumes it was called fram an ASPECT script 22
+   22 and was passed some information in ASPECT variables N7 and S7.    22
+   22 It displays that information, then displays some information      22
+   22 about current settings in PROCOMM PLUS.  It then puts new data    22
+   22 into N7 and S7 and passes it back to PROCOMM PLUS.                22
+   22                                                                   22
+   22 This is a sample ASPECT program that you can use with this hook   22
+   22 program to show how things get passed back and forth:             22
+   22                                                                   22
+   22 proc main                                                         22
+   22    locate 0 0                                                     22
+   22    n7 = 777                                                       22
+   22    strcpy s7 "This message is from the ASPECT file."              22
+   22    hook "hook.exe"                                                22
+   22    fatsay 10 0 31 "ASPECT variable N7 passed from hook: %d" n7    22
+   22    fatsay 11 0 31 "ASPECT variable S7 passed from hook: %s" s7    22
+   22 endproc                                                           22
+   22                                                                   22
+   22222222222222222222222222222222222222222222222222222222222222222222222
+   */
+ 
+   /* sample: */
+   printf("\nASPECT variable N7 passed to hook: %d",asp_nums[7]);
+   printf("\nASPECT variable S7 passed to hook: %s",asp_strings[7]);
+ 
+   printf("\n\n\nPROCOMM PLUS INFO:\n");
+   printf("\nBaud Rate: %s, Terminal: %s",baud_desc[p.baud],termdesc[p.termtype]);
+   printf("\nPort: COM%d, Modem Init String: %s",p.port+1,p.mdminit);
+ 
+   /* put some info into variables for return to ASPECT... */
+   asp_nums[7] = 99;
+   strcpy(asp_strings[7],"This message is from the hook program.");
+ 
+   /* copy local variables back into ASPECT variables... */
+   movedata(seg.ds,(unsigned int)&amp;asp_nums[0],ptr_seg1,ptr_off1,NSIZE);
+   movedata(seg.ds,(unsigned int)&amp;asp_strings[0][0],ptr_seg2,ptr_off2,SSIZE);
+ 
+   /* signal normal exit (can be tested for with ASPECT "if success" command) */
+   /* 0 signal sucess, 1 signals failure.                                     */
+   exit(0);
+}
+ 
+
+--
+-----====&gt; Skye Merlin Poier &lt;====----- 
+Undergrad in CMPT/MATH (Virtual Reality)       ||||      ||||
+          email: poier@sfu.ca                  p-OO &lt;--&gt; OO-q   THINK
+   PGP Public Key available on finger           \==      ==/
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00186.html">Re: Software infrastructure</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00188.html">Re: DISKREET--Norton</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00212.html">Re:  Tempest@home?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00188.html">Re: DISKREET--Norton</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00187"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00187"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

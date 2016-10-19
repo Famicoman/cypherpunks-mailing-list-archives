@@ -1,0 +1,317 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Interoperability, one&#45;use remailer tickets -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Mon, 5 Dec 94 21:42:32 PST -->
+<!--X-Message-Id: 199412060542.VAA11700@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 01HK8FKNB3LE90PJWN@delphi.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Interoperability, one-use remailer tickets</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00329.html">Date Prev</A>][<A HREF="msg00326.html">Date Next</A>][<A HREF="msg00249.html">Thread Prev</A>][<A HREF="msg00310.html">Thread Next</A>][<A HREF="index.html#00324">Date Index</A>][<A HREF="threads.html#00324">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Interoperability, one-use remailer tickets</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Interoperability, one-use remailer tickets</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 5 Dec 1994 21:42:08 -0800</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00245.html">01HK8FKNB3LE90PJWN@delphi.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Mike Ingle &lt;MIKEINGLE@delphi.com&gt; writes some very nice ideas about
+remailers:
+
+&gt;The remailers need a one-time reply mechanism.
+
+&gt;This would enable many other things, including "persistent" anonymous
+&gt;entities, without using broadcast techniques. The current remailers
+&gt;encourage hit-and-run anonymity, like the recent burst of anonymous
+&gt;nastiness, and discourage conversational anonymity and persistent
+&gt;anonymous entities. Sending a one-way message is easy and fairly secure.
+
+Bill Stewart pointed out some of the problems with one-shot reply
+addresses, although he seemed to be analyzing them as features which the
+remailers provided against the users's will.  I think Mike's idea was
+that this is something which remailer users would like.  Still, Bill's
+comments seem valid.  How useful is a single-use reply address?  If you
+posted a message to a mailing list or newsgroup only the first person
+would get through to you.  You could post a message with a list of
+reply addresses but that would open up some traffic analysis problems.
+
+Two people having a conversation fits this model somewhat well, with
+each person sending a new reply address that can reach them with each
+message.  But even in this case how often is there a strict alternation
+of messages?  Perhaps a "one ahead" approach would work, where each
+person at all times has either one or two addresses which will get
+through to the other side as long as they are in "alternation mode".
+Then when one person needs to get a message to the other out of turn,
+he uses up his spare address.  Then he gets sent two new addresses in
+the reply message since now he has none, and they are back in the
+initial state.
+
+&gt;One way to do this: each remailer has a list of secret (symmetric) keys.
+&gt;Each secret may have an expiration date. By some method (problem discussed
+&gt;later) the user and the remailer establish a shared secret, adding it to the
+&gt;list, while the remailer does not find out who the user is. The reply ticket
+&gt;contains a series of nested hops, each encrypted with that remailer's secret
+&gt;plus all the others after it.
+
+&gt;When the ticket is used, the remailer decrypts one layer of the ticket to
+&gt;obtain the next hop. It then encrypts the message with that secret key. Now
+&gt;it forgets the secret key (poof!) and passes the message and remainder of
+&gt;the ticket on to the next remailer.
+
+&gt;The ticket is getting decrypted at each hop, and the message is getting
+&gt;encrypted. Thus there is nothing recognizable between hops, and the trail is
+&gt;burning up as the message propagates. At the terminal end, the recipient
+&gt;applies all of the secret keys in the proper order to decrypt the message.
+&gt;Of course, an additional end-to-end public-key encryption is also an option.
+
+As you have seen, this model is very similar to Chaum's 1981 paper except
+for where the secret keys come from.  This is not to disparage your ideas
+but it's just that as long as we have giants around, we might as well
+stand on their shoulders.  Chaum's system was considerably simpler as it
+used ordinary PK decryption of the address at each stage, with the header
+including a secret key that would encrypt the body to maintain
+unlinkability.  As you point out this has a certain kind of vulnerability
+to coercion that your scheme is less sensitive to.
+
+&gt;The catch: how do we establish a shared secret with the remailer, without
+&gt;identifying ourselves to it? If the first remailer (the one the replyer
+&gt;sends the ticket to) is corrupt, and it knows who established the secret
+&gt;contained in the ticket, it knows the end-to-end path of the message.
+
+&gt;Solution 1: each remailer has a public key. To establish shared secrets with
+&gt;a series of remailers, you send a normally-chained and nested message, using
+&gt;each remailer's public key. Each remailer decrypts a layer, stores the
+&gt;secret contained for it, and passes the message on. The first few remailers
+&gt;may not get secrets; they are just there to anonymize the message.
+
+&gt;  Problem: secret-establishing message is replayed, setting trail back up,
+&gt;  then reply ticket is replayed. Solution: when a secret is used, it is
+&gt;  one-way hashed, the hash stored, the secret forgotten. Secrets which have
+&gt;  already been used will not be accepted the second time. When the used
+&gt;  secrets list gets full, a new public/secret pair is generated and the old
+&gt;  one is forgotten, preventing any more replays. 
+
+Chaum too used a list of message hashes, although his use was to
+prevent the reply-replay attack.  I will note that this attack is going
+to be pretty difficult to mount on your scheme as it would require
+either saving all messages from a suspected target of an anonymous
+address, or saving all messages into the remailer network in toto, then
+perhaps playing (all of?) them back.  So it is not going to be easy to
+set up this chain again.  In addition to your idea of hashes you could
+use some time limits to restrict this kind of reply attack.
+
+&gt;    Problem: remailers are coerced or hacked to decrypt a captured secret-
+&gt;    establishing message, before the secret key is expired. Trail of a reply
+&gt;    ticket can then be followed. Solution: no good one that I can think of.
+
+Yes, this is the kind of coercion that as you point out the Chaum
+scheme is vulnerable to.  There we rely on the remailers to not send
+two messages to the same one-shot address in order to prevent replay
+attacks.  But as long as the remailer key is valid there is the chance
+that the remailer could be coerced and forced to decrypt your anonymous
+address, allowing it to be traced back to you.
+
+I do think that your scheme is less sensitive to this kind of coercion
+because of the difficulty of knowing which message to ask the remailer to
+decrypt.  Ironically, your scheme is even stronger than "forward"
+messages throught the remailer network.  Those are equally vulnerable to
+this kind of coercion.  If a suspect sends a message through the remailer
+network, it can be replayed in just the way that we are worried about for
+Chaum replies, and the remailers coerced into decrypting it at each step.
+
+We tend not to worry so much about this forward vulnerability as we do
+about the reverse one.  Partially this is because our current remailers
+don't implement Chaum's scheme, but partially too we sense that an
+interesting public pseudonym is a more inviting target than the hopefully
+anonymous true name behind it.  I'm not really sure how good an
+assumption this is, though.  So I am less inclined to view Chaum's scheme
+as broken since the remailer network inherently suffers the same
+vulnerabilities.  We hope to develop enough independent remailers that
+the coercion issue will not be a major problem.  Tim May has advocated
+hardware, tamper-proof circuits to hold the keys so that coercion is
+impossible.
+
+Plus, I think an important part of the picture which is not currently
+being implemented is remailer key changes.  This can provide forward
+secrecy similar to your scheme.  Once last week's key is gone, there is
+no longer any danger of your message ever being traced (as long as you
+trust the remailer to truly erase it, just as in your scheme).  This
+would be useful both for ordinary remailing and for Chaum-style reply
+blocks, which as I say are both vulnerable to the reply-with-coercion
+attack.
+
+There is one attack on all these schemes which you didn't mention, which is
+that the bad guys are the first one to try the return address and coerce
+each remailer along the way.  This might be especially dangerous in the
+case of your "pigeonhole" described below, where the pigeonhole account
+makes for a tempting target for the snoopers, giving them a chance to
+intercept the reply message back to you and be the first ones to be using
+it.
+
+&gt;Solution 2: establish a shared secret by a simple, direct Diffie-Hellman
+&gt;exchange with the remailer. You send a public-piece in a message, remailer
+&gt;sends you a public-piece, both sides compute the secret. If the remailer is
+&gt;corrupt, it now knows who you are. This is a level-1 secret.
+
+&gt;Use the level-1 secret as a reply ticket to establish a secret with another
+&gt;remailer. Message goes through a remailer, to the target you want to
+&gt;establish a secret with. Target replies using the level-1 secret. This is a
+&gt;level-2 secret; two remailers have to be corrupt to trace this secret to
+&gt;you. If you want, use the level-2 secret for another exchange to create a
+&gt;level-3 secret, and so on until your comfort zone is reached. An automatic
+&gt;program sits around stockpiling secrets for you. Problem: high bandwidth.
+
+&gt;Does anyone know of a better way to establish a shared secret in an
+&gt;untraceable way? Both of these methods have their problems.
+
+That is a very nice idea for using DH.  Here is a variant which might use
+less bandwidth.  Have each remailer create a lot of DH key halves, values
+of hi = g^xi so xi is the secret discrete log of the public DH key half
+hi.  All these hi get published.  Now you need to reserve one for
+yourself to use in your return ticket, which you do perhaps with an
+ordinary remailed message to that remailer as in your first solution.
+
+You create a random y and use hi^y for your secret key for that remailer.
+The reply block contains i and g^y which lets the remailer calculate the
+same secret.  Then it deletes xi when it gets used so you get the forward
+secrecy you desire.  This is not subject to the reply attack you were
+worried about because all you told the remailer was i, and xi is gone for
+good so they can't re-create the secret.
+
+(Equivalently, have the remailers create lots of public keys and
+publicize them, and reserve one in the same way.  Then have the remailer
+erase the secret key when it gets used.  This is just another way of
+describing the above.)
+
+&gt;Given a secure two-way messaging mechanism, persistent anonymous identities
+&gt;are established using a "pigeonhole service". This is a service, with a
+&gt;publicized address, that will accept public-key encrypted mail and store it
+&gt;in a "pigeonhole". The owner of the pigeonhole anonymously sends a request
+&gt;(with authentication) and a reply ticket. The pigeonhole service sends the
+&gt;owner his mail using the ticket.
+
+This is a good idea, although there is a tradeoff between frequent polls
+of the pigeonhole, which might allow some traffic analysis particularly
+if there is a suspected link between persona and true name, and less
+frequent checks, which may cause high priority messages to be delayed.
+
+&gt;Anonymous users would need a client that could set up trails, create
+&gt;tickets, request mail from the pigeonhole, etc. One nice feature of the
+&gt;system is that non-anonymous users could talk to anonymous users without
+&gt;having a client. The anonymous message would be of the form:
+
+&gt;--- BEGIN REPLY TICKET (LEAVE AT HEAD OF REPLY) ---
+&gt;(Reply ticket ciphertext)
+&gt;--- END REPLY TICKET ---
+&gt;Message text
+
+&gt;The non-anonymous user could reply with any mail reader, send the message
+&gt;back to the remailer that sent it to him, and the message would be
+&gt;transported securely back to the anonymous user that sent it.
+
+Yes, well, we do this already with our current remailers.  Many
+people have written clients to create these reply blocks, along with
+little instructions to the baffled recipient to cut and past the reply
+block at the front of the reply message.  Once in a while these even
+work, I think.
+
+With your pigeonhole idea you don't need this, you can just have a
+Reply-To that points at the pigeonhole, which is one of its biggest
+advantages.
+
+&gt;For reliability in a large remailer network, end-to-end reliability is
+&gt;better than point-to-point reliability. Messages should be m-of-n secret
+&gt;shared before transmission, and reassembled at the terminal end. For
+&gt;clientless reception, the terminal node remailer could do the reassembly
+&gt;and splitting of replies.
+
+I agree with this.  This also relates to issue of message size
+quantization with cryptographically strong padding.  I don't suppose the
+RSAREF library could do that...
+
+&gt;Code for secret sharing is available, but most secret-sharing algorithms
+&gt;create shadows each the size of the message. This can be avoided: use an
+&gt;error correcting code to add enough information to the original so the
+&gt;message can be recreated with any m of n pieces. Break into pieces, encrypt
+&gt;each piece, and secret-share the key.
+
+Yes, this is a good idea.  I first read about this in the 1993 Crypto
+conference proceedings, in a paper called "Secret Sharing Made Short" by
+Hugo Krawczyk.  You might find the paper useful although it sounds very
+similar to what you have in mind already.
+
+
+Considering all the pros and cons, I am afraid that even the security of
+the one-shot return address is probably insufficient, especially when the
+simple "post replies to usenet encrypted with this key" is so easy and
+safe.  Granted it will be a problem once everybody starts doing that, but
+flooding is going to be hard to beat for safety.
+
+Hal
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00245" HREF="msg00245.html">Interoperability, one-use remailer tickets</A></STRONG>
+<UL><LI><EM>From:</EM> Mike Ingle &lt;MIKEINGLE@delphi.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00329.html">AABBS Conviction relation to child porn?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00326.html">Dec. 10th Bay Area Cypherpunks Meeting</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00249.html">Re: Interoperability, one-use remailer tickets</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00310.html">Re:  Interoperability, one-use remailer tickets</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00324"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00324"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

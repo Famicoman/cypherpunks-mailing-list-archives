@@ -1,0 +1,825 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Netscape SSL implementation is broken! -->
+<!--X-From-R13: Quevfgvna Irggretera <pjrNvg.xgu.fr> -->
+<!--X-Date: Sun, 17 Sep 95 22:26:37 PDT -->
+<!--X-Message-Id: 199509180525.HAA06519@piraya.electrum.kth.se -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Netscape SSL implementation is broken!</TITLE>
+<LINK REV="made" HREF="mailto:cwe@it.kth.se">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01128.html">Date Prev</A>][<A HREF="msg01134.html">Date Next</A>][<A HREF="msg01137.html">Thread Prev</A>][<A HREF="msg01135.html">Thread Next</A>][<A HREF="index.html#01142">Date Index</A>][<A HREF="threads.html#01142">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Netscape SSL implementation is broken!</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Netscape SSL implementation is broken!</LI>
+<LI><em>From</em>: Christian Wettergren &lt;<A HREF="mailto:cwe@it.kth.se">cwe@it.kth.se</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 18 Sep 1995 07:26:16 +0200</LI>
+<LI><em>Cc</em>: Ian Goldberg &lt;<A HREF="mailto:iang@cs.berkely.edu">iang@cs.berkely.edu</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Hi!
+
+Neat, I'd say. Has everyone sold their Netscape Comm stock yet? :-)
+
+I guess we should send them the draft-ietf-security-randomness-00.txt
+asap.
+
+I was also thinking about how many Credit Card numbers will pass
+between now and the moment Netscape has done anything about it.
+This piece of information does have quite a value, I'd say.
+
+I have included a short program that tries to generate non-guessable
+random numbers. It was written a bit back, and my coding style isn't
+all that good. It might be interesting, or not.  (Btw, if you find any
+problems with it, I'd appreciate to know about it.)
+
+/Christian
+
+
+----- ZZ: README -----
+asadi -
+   "As strong as DES is" (hopefully)
+
+Written by: Christian Wettergren
+            cwe@nada.kth.se
+            February 1993
+
+Introduction
+------------
+
+This utility generates a "random" hexstring, which can be used as input
+to xauth, for example. It uses a private secret and some other input
+to generate the hexstring. In this way a long-term secret can be used
+to generate a short-term secret. Since the short-term secret might be
+compromised (different xauth cookies might be tried repeatedly, since 
+o warning is emitted from the Xserver) it is not safe to use the
+same secret on repeated occasions.
+
+This utility does not even need a private long-term secret, since it
+may use the ticket generated within the Kerberos authentication system.
+In this way the long-term secret is as guarded as your private password
+or the Kerberos master-password.
+
+If you don't use the Kerberos system, you have to regenerate the long-term
+secret sometimes (in the same way as you change your password). This
+utility tries to help you with that step too. A decent pseudo-random
+generator is included, and a routine that helps you generate the secret
+might be run.
+
+The short-term secret wont reveal anything about the long-term secret,
+since the long-term secret is altered and then encrypted with DES. The
+result is the short-term secret. 
+
+
+Search space
+------------
+
+The algorithm used to generate the long-term secret tries to enlarge the
+search-space as much as possible. so that an exhaustive attack becomes
+difficult.
+
+The factors involved are:
+
+     1/ A good random generator
+     2/ time-of-day
+     3/ user entered text
+     4/ user dependant elapsed time
+     5/ pid of process
+     6/ hostid of computer
+     7/ not using consecutive values from
+        random generator (initial throw-away &amp;
+        intermediate throw-away.)
+
+The most important of all is of course the random generator. The included 
+generator is a minimum standard.
+
+
+
+
+
+
+
+    Probable usage: 
+      echo add $DISPLAY MIT-MAGIC-COOKIE-1 `asadi` | xauth 
+
+    DISCLAIMER: No guarantees are made about this
+    program, explicit or implicit. It is distributed
+    AS IS. etc... :-)
+
+  opensafely() -
+  open file, try not to reveal when it was
+  written.
+
+  Unfortunately, this is not possible!
+  No matter how this is done, at least the
+  ctime reveals when it was written.
+
+  If I don't remember incorrectly, there are
+  bugs in the filesystem under SunOS, so that
+  the ctime-field is updated too often. Maybe 
+  this might distort this field sometimes.
+
+  Another approach might be to chmod the file
+  whenever it is used. In this way it's ctime
+  field is updated and hence overwritten.
+  It does not reveal anything extra either, 
+  since the approximate time when the cookie is
+  generated is probably shown in ~/.Xauthority
+  anyway.
+
+
+/* gensecret() -
+
+   generate a good secret "random" file.
+
+   This routine tries to enlarge the search-space
+   for a potential cracker. The involved factors
+   are:
+
+     1/ A good random generator (see accompanying file.)
+     2/ time-of-day
+     3/ user entered text
+     4/ user dependant elapsed time
+     5/ pid of process
+     6/ hostid of computer
+     7/ not using consecutive values from
+        random generator (initial throw-away &amp;
+        intermediate throw-away.)
+
+   This approach hopefully deters an attack, or at least
+   makes it considerably harder for the attacker.
+
+   Does anyone see any weakness in the above approach? It
+   is not based on any cryptological analysis, so no
+   guarantees are made of it's appropriateness.
+*/
+
+  fprintf(stderr, "asadi - generate a good random hexstring based on\n");
+  fprintf(stderr, "        a private secret as a seed. (This secret can\n");
+  fprintf(stderr, "        be the Kerberos ticket-file.) Could be used\n");
+  fprintf(stderr, "        for getting a good xauth-cookie, for example.\n\n");
+  fprintf(stderr, "Usage: asadi [-r] [-l n] [-v] [filename]\n");
+  fprintf(stderr, "       -r   -- generate a secret file (default: ~/.secret\n");
+  fprintf(stderr, "       -l n -- how many 8-byte blocks to output (default: 16)\n");
+  fprintf(stderr, "       -v   -- verbose, not very interesting.\n");
+  fprintf(stderr, "       filename -- name of secret file (default: Kerberos\n");
+  fprintf(stderr, "                   ticket file, or ~/.secret)\n");
+
+
+---- ZZ: asadi.c ----
+
+/*****************************************
+    asadi v1.1 -
+      "As strong as DES is" (hopefully)
+
+    This utility generates a "random" 
+    hexstring, which can be used as input
+    to xauth, for example. Either a Kerberos
+    ticketfile or a secret file is used as
+    seed to the random generator. Other input
+    is probably hostid, process id and time,
+    depending on the implementation of the 
+    DES-library.
+
+    The random generator used is the DES-
+    algorithm. This method is guaranteed 
+    not to reveal anything about the used 
+    seed. To crack the cookie you have to 
+    crack DES. (There is also a normal good 
+    pseudo-random generator included, to
+    facilitate the generation of secrets.)
+
+
+    Written by: Christian Wettergren
+                cwe@nada.kth.se
+                February 1993
+
+    Usage:
+      asadi [keyfilename] [-v] [-l num] [-r]
+
+    The number of 8-byte blocks to 
+    generate can be controlled with the 
+    -l-switch. There is also a verbose-
+    switch.
+
+    If one does not use Kerberos, a secret file
+    can be used as a key instead. The contents 
+    of this file will not be revealed by this 
+    program, but you should of course NOT USE 
+    your password anyway!
+
+    To help generate this secret file is a
+    decent (according to it's author, not me) random-
+    generator included in this program. Use
+    the r-switch for this. It deposits the secret
+    in the file ~/.secret (with the appropriate
+    chmod). This file is also used if there is
+    no Kerberos.
+
+    Probable usage: 
+      echo add $DISPLAY MIT-MAGIC-COOKIE-1 `asadi` | xauth 
+
+    DISCLAIMER: No guarantees are made about this
+    program, explicit or implicit. It is distributed
+    AS IS. etc... :-)
+*****************************************/
+
+
+/* Settings of this program */
+
+#define USEKRB /* switches the use of Kerberos on/off */
+#define DEFAULTKEYLEN  8 /* multiples of 16 nibbles */
+#define SECRETFILE ".secret"
+
+
+#include &lt;stdio.h&gt;
+#include &lt;errno.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/time.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;utime.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;des.h&gt;
+#ifdef USEKRB
+#include &lt;krb.h&gt;
+#endif
+
+/* some unprototyped routines */
+extern char *getpass();
+extern void goodsrand(unsigned long);
+extern unsigned long goodrand(void);
+extern char *getenv(char *);
+extern void *malloc(int);
+
+
+/* Globals */
+char *keyfile = NULL;
+int vflag = 0;
+int keylen = DEFAULTKEYLEN;
+
+int major = 1; /* version of program */
+int minor = 0;
+
+/* calculate a secret key from the file. */
+
+/* Algorithm: read 8 bytes, add them byte-wise to the
+   cblock, continue until eof.
+
+   Hence there is no actual reason to use files
+   larger than eight bytes, but the above approach is
+   used since the ticket-files are larger. (In this 
+   way I don't have to care about file's structure 
+   too much, either.)
+*/
+void calcsecretkey(char *file, des_cblock *key) {
+
+  des_cblock tmp;
+  int i;
+  int fd;
+
+  if (vflag)
+    fprintf(stderr, "file: %s\n", keyfile);
+
+  if ((fd = open(file, O_RDONLY)) == -1) {
+    fprintf(stderr, 
+	    "Could not open '%s', no cookie generated! (errno=%d)\n", 
+	    file, errno);
+    exit(1);
+  }
+
+  while (read(fd, &amp;tmp, sizeof(des_cblock)) == sizeof(des_cblock)) {
+    for(i = 0; i &lt; sizeof(des_cblock); i++)
+      *((unsigned char *)key + i)
+	= *((unsigned char *)key + i) + *((unsigned char *)tmp + i);
+    DES_ZERO_CBLOCK(tmp);  /* fixes eof-condition */
+  }
+
+  /* close the file */
+  if (close(fd) == -1) {
+    fprintf(stderr, "Could not close file! (errno=%d)\n", errno);
+    exit(1);
+  }
+}
+
+
+void printcblock(FILE *fd, des_cblock *blk) {
+
+  int i;
+  for(i=0; i &lt; sizeof(des_cblock); i++) {
+    fprintf(fd, "%02x", 
+	   (unsigned int)(*((unsigned char *)blk + i) &amp; 255));
+  }
+}
+
+/* 
+  opensafely() -
+  open file, try not to reveal when it was
+  written.
+
+  Unfortunately, this is not possible!
+  No matter how this is done, at least the
+  ctime reveals when it was written.
+
+  If I don't remember incorrectly, there are
+  bugs in the filesystem under SunOS, so that
+  the ctime-field is updated too often. Maybe 
+  this might distort this field sometimes.
+
+  Another approach might be to chmod the file
+  whenever it is used. In this way it's ctime
+  field is updated and hence overwritten.
+  It does not reveal anything extra either, 
+  since the approximate time when the cookie is
+  generated is probably shown in ~/.Xauthority
+  anyway.
+*/
+int opensafely(char *file) {
+
+  int fd;
+
+  /* delete old file, if any */
+  if (unlink(file) == -1) {
+    if (errno != ENOENT) {
+      fprintf(stderr, "Error: could not unlink '%s'. (errno=%d)\n", 
+	      file, errno);
+      exit(1);
+    }
+  }
+
+  /* open it again */
+  if ((fd = open(file, O_WRONLY|O_CREAT, S_IRUSR)) == -1) {
+    fprintf(stderr, "Error: could not create '%s'. (errno=%d)\n", 
+	    file, errno);
+    exit(1);
+  }
+  return(fd);
+}
+
+/* gensecret() -
+   generate a good secret "random" file.
+
+   This routine tries to enlarge the search-space
+   for a potential cracker. The involved factors
+   are:
+
+     1/ A good random generator (see accompanying file.)
+     2/ time-of-day
+     3/ user entered text
+     4/ user dependant elapsed time
+     5/ pid of process
+     6/ hostid of computer
+     7/ not using consecutive values from
+        random generator (initial throw-away &amp;
+        intermediate throw-away.)
+
+   This approach hopefully deters an attack, or at least
+   makes it considerably harder for the attacker.
+
+   Does anyone see any weakness in the above approach? It
+   is not based on any cryptological analysis, so no
+   guarantees are made of it's appropriateness.
+*/
+void gensecret(char *file) {
+
+  int i,j;
+  struct timeval t, s;
+  unsigned long d, u, v;
+  int fd;
+  unsigned long x;
+  char *c;
+  char n[100];
+  int ta, b;
+  struct utimbuf tm;
+
+  /* Get time before enter */
+  gettimeofday(&amp;s, (struct timezone *)0);
+  
+  /* heading */
+  printf("\nGenerating a Secret!\n");
+
+  /* get user's response */
+  printf("\nCAUTION! Don't use your password below!\n");
+  printf("You don't have to remember this data, so\n");
+  printf("just type something in.\n\n");
+  c = getpass("Enter something:");
+
+  /* get time after enter */
+  gettimeofday(&amp;t, (struct timezone *)0);
+  d = t.tv_usec - s.tv_usec;
+
+  /* make something of input */
+  for(j=0; j &lt; strlen(c) / sizeof(unsigned long); j++) {
+
+    /* collect sizeof(long) bytes of input */
+    for(v=0, i=0; i &lt; sizeof(unsigned long); i++) 
+      v = (v &lt;&lt; 8) + c[i+j*sizeof(unsigned long)];
+
+    /* xor them together */
+    u ^= v;
+  }
+
+  /* get throw-away factors */
+  printf("\nEnter a throw-away factor: ");
+  gets(n);
+  ta = atoi(n);
+  printf("\nEnter a step factor: ");
+  gets(n);
+  b = atoi(n);
+
+  /* verbose */
+  if (vflag) {
+    fprintf(stderr, "text: %s\n", c);
+    fprintf(stderr, "garbled text: %ld\n", u);
+    fprintf(stderr, "elapsed: %ld\n", d);
+    fprintf(stderr, "time: %ld %ld\n", t.tv_sec, t.tv_usec);
+    fprintf(stderr, "pid: %d\n", getpid());
+    fprintf(stderr, "hostid: %d\n", gethostid());
+    fprintf(stderr, "throw-away factor: %d\n", ta);
+    fprintf(stderr, "step factor: %d\n", b);
+    fprintf(stderr, "generated seed: %ld\n", t.tv_usec ^ t.tv_sec ^ d ^ getpid() ^ gethostid() ^ u);
+  }
+
+  /* init random generator */
+  goodsrand(t.tv_usec ^ t.tv_sec ^ d ^ getpid() ^ gethostid() ^ u);
+  
+  /* open the file safely */
+  fd = opensafely(keyfile);
+
+  /* throw-away ta numbers */
+  for(i=0; i &lt; ta; i++)
+    (void)goodrand();
+
+  /* 
+     this actually writes sizeof(long) 
+     times too much data, but it does not
+     matter. 
+  */
+  for (i=0; i&lt;sizeof(des_cblock); i++) {
+
+    x = goodrand();
+    if (write(fd, &amp;x, sizeof(unsigned long)) != sizeof(unsigned long)) {
+      fprintf(stderr, 
+	      "Error: could not write '%s'. (errno=%d)\n", 
+	      keyfile, errno);
+      exit(1);
+    }
+
+    /* throw-away (step) b numbers */
+    for(j=0; j &lt; b; j++)
+      (void)goodrand();
+  }
+
+  /* close the file */
+  if (close(fd) == -1) {
+    fprintf(stderr, 
+	    "Error: could not close '%s'. (errno=%d)\n", 
+	    SECRETFILE, errno);
+    exit(1);
+  }
+  
+  /* 
+     reset times on file.
+     (ctime still shows the creation-time though) 
+  */
+  tm.actime = 0;
+  tm.modtime = 0;
+  if (utime(keyfile, &amp;tm) == -1) {
+    fprintf(stderr, "warning: could not reset times on file '%s'.\n", keyfile);
+    fprintf(stderr, "You should /bin/touch it manually at a later time!\n");
+  }
+
+  fprintf(stderr, "Secret written to '%s'.\n", keyfile);
+}
+
+void hidedate(char *file) {
+
+  if (chmod(file, 0) == -1) {
+    fprintf(stderr, "warning: could not chmod '%s'. (errno=%d)\n");
+  }
+  if (chmod(file, S_IRUSR) == -1) {
+    fprintf(stderr, "warning: could not chmod '%s'. (errno=%d)\n");
+  }
+}
+
+void usage(void) {
+
+  fprintf(stderr, "asadi v%d.%d\n", major, minor);
+  fprintf(stderr, "        generate a good random hexstring based on\n");
+  fprintf(stderr, "        a private secret as a seed. (This secret can\n");
+  fprintf(stderr, "        be the Kerberos ticket-file.) Could be used\n");
+  fprintf(stderr, "        for getting a good xauth-cookie, for example.\n\n");
+  fprintf(stderr, "Usage: asadi [-r] [-l n] [-v] [filename]\n");
+  fprintf(stderr, "       -r   -- generate a secret file (default: ~/.secret\n");
+  fprintf(stderr, "       -l n -- how many 8-byte blocks to output (default: 16)\n");
+  fprintf(stderr, "       -v   -- verbose, not very interesting.\n");
+  fprintf(stderr, "       filename -- name of secret file (default: Kerberos\n");
+  fprintf(stderr, "                   ticket file, or ~/.secret)\n");
+}
+
+int main(int argc, char *argv[]) {
+
+  int i;
+  int l;
+  int rflag = 0;
+  int gfn = 0;
+  des_cblock key;
+  des_cblock out;
+
+  /* Handle options */
+  for (i=1; i &lt; argc; i++) {
+    
+    if (argv[i][0] == '-') {
+      switch(argv[i][1]) {
+
+      case 'v':
+	vflag++;
+	break;
+
+      case 'l':
+	i++;
+	keylen = atoi(argv[i]);
+	break;
+
+      case 'r':
+	rflag++;
+	break;
+
+      case 'h':
+	usage();
+	return(1);
+	break;
+
+      default:
+	fprintf(stderr, "error: Unknown option '%s'.\n", argv[i]);
+	usage();
+	return(1);
+      }
+    }
+    else {
+      keyfile = argv[i];
+      gfn++;
+    }
+  }
+
+#ifdef USEKRB
+  if (!keyfile &amp;&amp; !rflag) {
+    keyfile = tkt_string();
+    gfn = 0;
+  }
+#endif
+  if (!keyfile) {
+    char *h;
+    if ((h = getenv("HOME")) == NULL) 
+      h = ".";
+    keyfile = malloc(sizeof(char) * strlen(h) + 2 + strlen(SECRETFILE));
+    strcpy(keyfile, h);
+    strcat(keyfile, "/");
+    strcat(keyfile, SECRETFILE);
+    gfn++;
+  }
+
+  /* Which mode are we in? */
+  if (rflag) {
+    gensecret(keyfile);
+    return(1);
+  }
+
+  /* hide creation-date */
+  if (gfn)
+    hidedate(keyfile);
+
+  /* calculate secret key from file */
+  calcsecretkey(keyfile, &amp;key);
+
+  /* show secret key, if verbose mode */
+  if (vflag) {
+    fprintf(stderr, "secret key: ");
+    printcblock(stderr, &amp;key);
+    fprintf(stderr, "\n");
+  }
+
+  /* init the DES random-generator */
+  des_init_random_number_generator(&amp;key);
+
+  /* remove traces of secret key */
+  DES_ZERO_CBLOCK(key);
+
+  /* generate output */
+  for(l=0; l &lt; keylen; l++) {
+    des_random_cblock(&amp;out);
+    printcblock(stdout, &amp;out);
+    DES_ZERO_CBLOCK(out);
+  }
+  printf("\n");
+
+  return(0);
+}
+
+
+----- ZZ: rand.c -----
+/*
+ * This program is public domain and was written by William S. England
+ * (Oct 1988).  It is based on an article by:
+ *
+ * Stephen K. Park and Keith W. Miller. RANDOM NUMBER GENERATORS:
+ * GOOD ONES ARE HARD TO FIND. Communications of the ACM,
+ * New York, NY.,October 1988 p.1192
+
+   From: wengland@stephsf.com (Bill England)
+   Newsgroups: alt.sources,comp.lang.c,rec.games.programmer,comp.os.msdos.programmer
+   Subject: Re: random number generator (random.c)
+   Date: 5 Jan 92 20:12:08 GMT
+   Organization: Stephen Software Systems Inc., Tacoma/Seattle, +1 800 829 1684
+
+Modifications;
+
+   Sun Feb 10 18:20:38 PST 1991
+    WSE, modified for replacement of random number object file
+    under unix and for use with Perl.
+
+ The following is a portable c program for generating random numbers.
+ The modulus and multipilier have been extensively tested and should
+ not be changed except by someone who is a professional Lehmer generator
+ writer.  THIS GENERATOR REPRESENTS THE MINIMUM STANDARD AGAINST WHICH
+ OTHER GENERATORS SHOULD BE JUDGED. ("Quote from the referanced article's
+ authors. WSE" )
+*/
+
+#include &lt;stdio.h&gt; 
+
+#define	m  (unsigned long)2147483647
+#define	q  (unsigned long)127773
+
+#define	a (unsigned int)16807
+#define	r (unsigned int)2836
+
+/*
+** F(z)	= (az)%m
+**	= az-m(az/m)
+**
+** F(z)  = G(z)+mT(z)
+** G(z)  = a(z%q)- r(z/q)
+** T(z)  = (z/q) - (az/m)
+**
+** F(z)  = a(z%q)- rz/q+ m((z/q) - a(z/m))
+** 	 = a(z%q)- rz/q+ m(z/q) - az
+*/
+
+/*
+**
+*/
+unsigned long seed;
+
+void goodsrand( /* unsigned long*/ initial_seed)
+unsigned long initial_seed;
+{
+    seed = initial_seed; 
+}
+/*
+**
+*/
+unsigned long goodrand(/*void*/){
+
+register
+int 	lo, hi, test;
+
+    hi   = seed/q;
+    lo   = seed%q;
+
+    test = a*lo - r*hi;
+
+    if (test &gt; 0)
+	seed = test;
+    else
+	seed = test+ m;
+
+    return seed;
+}
+
+#ifdef TEST1
+/*  
+**   The result of running this program should be
+**   1043618065.  If this program does not yeild this
+**   value then your compiler has not implemented this
+**   program correctly.
+*/
+
+main(/*void*/)
+{
+unsigned 
+long	n_rand;
+
+register int 	i;
+int	success = 0;
+
+    goodsrand(1);
+
+    for( i = 1; i &lt;= 10001; i++){
+        n_rand = goodrand();
+
+        if( i&gt; 9998)  
+	    printf("Sequence %5i, Seed= %10i\n", i, seed ); 
+
+	if( i == 10000) 
+	    if( seed == 1043618065 ) 
+		success = 1;
+    }
+
+    if (success){
+	printf("The random number generator works correctly.\n\n");
+	exit(0);
+    }else{
+	printf("The random number generator DOES NOT WORK!\n\n");
+	exit(1);
+    }
+}
+#endif
+/*
+-- 
+ +-  Bill England,  wengland@stephsf.COM -----------------------------------+
+ |   * *      H -&gt; He +24Mev                                                |
+ |  * * * ... Oooo, we're having so much fun making itty bitty suns *       |
+ |__ * * ___________________________________________________________________| 
+*/
+
+
+---- ZZ: Makefile ----
+
+#
+# Makefile for asadi.
+#
+
+CC=gcc
+CFLAGS=-g
+LIBS=-lkrb -ldes
+
+asadi: asadi.c rand.o
+	${CC} ${CFLAGS} -o asadi asadi.c rand.o ${LIBS}
+
+rand.o: rand.c
+	$(CC) -c rand.c
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01135" HREF="msg01135.html">Re: Netscape SSL implementation is broken!</A></STRONG>
+<UL><LI><EM>From:</EM> "Perry E. Metzger" &lt;perry@piermont.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01128.html">Re: Joe Sixpack and his TV</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01134.html">Re: Netscape SSL implementation cracked!</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01137.html">Re: Netscape SSL implementation cracked!</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01135.html">Re: Netscape SSL implementation is broken!</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01142"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01142"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

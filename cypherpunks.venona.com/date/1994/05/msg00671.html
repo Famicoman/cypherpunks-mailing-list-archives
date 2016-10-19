@@ -1,0 +1,179 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: 1024 limit... -->
+<!--X-From-R13: @nguna Zbbsobheebj <ybbsobheNpvf.buvb&#45;fgngr.rqh> -->
+<!--X-Date: Tue, 10 May 94 21:34:10 PDT -->
+<!--X-Message-Id: 199405110433.AAA06928@styracosaur.cis.ohio&#45;state.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9405102130.AA27830@bacon.imsi.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: 1024 limit...</TITLE>
+<LINK REV="made" HREF="mailto:loofbour@cis.ohio-state.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00666.html">Date Prev</A>][<A HREF="msg00672.html">Date Next</A>][<A HREF="msg00657.html">Thread Prev</A>][<A HREF="msg00646.html">Thread Next</A>][<A HREF="index.html#00671">Date Index</A>][<A HREF="threads.html#00671">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: 1024 limit...</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: 1024 limit...</LI>
+<LI><em>From</em>: Nathan Loofbourrow &lt;<A HREF="mailto:loofbour@cis.ohio%2Dstate.edu">loofbour@cis.ohio-state.edu</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 11 May 1994 00:33:34 -0400</LI>
+<LI><em>Cc</em>: <A HREF="mailto:rsaref%2Dadministrator@rsa.com">rsaref-administrator@rsa.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00657.html">9405102130.AA27830@bacon.imsi.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Perry E. Metzger writes:
+ &gt; &gt;- Number of bits allowed when generating keys limited to 1024, in line
+ &gt; &gt;  with the limits in RSAREF and BSAFE.  It used to be higher, but
+ &gt; &gt;  folks, if you think you need a key larger than that, do some research
+ &gt; &gt;  into the complexity of factoring.
+ &gt; 
+ &gt; I'm sure patches to fix this bit of fascism will show up soon.
+
+No sooner said... Ahem. The patches to both PGP 2.5 and RSAREF 2.0 are
+both obscenely trivial, actually, with the exception of the bug fix (!)
+to idea.c, which was obtained mere minutes after my bug report
+courtesy of jis@mit.edu himself.
+
+Should elegance be demanded, crypto.c and language.txt should both be
+patched to mention the new upper limit. With MAX_RSA_MODULUS_BITS out
+of the way, MAX_BIT_PRECISION is the next hard upper limit, defined as
+1280 bits. There isn't any glaring reason not to increase that
+constant as well... However, my goal for the nonce was to grandfather
+old 1024+ keys.  I don't see much point nowadays in generating a new
+key that a thousand other "stock" PGP users won't be able to utilize.
+
+In accordance with the terms of the RSAREF 2.0 license agreement, I am
+providing a copy of this modification by electronic mail (note CC:);
+they may have a perpetual, royalty-free license to the three bytes I
+changed :-)
+
+nathan
+
+
+Patches to PGP 2.5:
+-------------------
+
+*** keymgmt.c.dist	Sat May  7 21:15:18 1994
+--- keymgmt.c	Mon May  9 13:06:54 1994
+***************
+*** 2618,2625 ****
+--- 2618,2630 ----
+  #ifndef DEBUG
+  	/* minimum RSA keysize: */
+  	if (keybits &lt; 384) keybits=384;
++ #ifdef FASCIST
+  	if (keybits &gt; 1024)
+  		keybits = 1024;
++ #else
++ 	if (keybits &gt; MAX_BIT_PRECISION)
++ 		keybits = MAX_BIT_PRECISION;
++ #endif
+  #else
+  	if (keybits &gt; MAX_BIT_PRECISION)
+  		keybits = MAX_BIT_PRECISION;
+
+*** idea.c.orig	Sun May  8 21:18:59 1994
+--- idea.c	Tue May 10 14:22:48 1994
+***************
+*** 446,452 ****
+  	int bufleft = context-&gt;bufleft;
+
+  	if (bufleft) {
+! 		memcpy(context-&gt;iv+bufleft, context-&gt;iv, 8-bufleft);
+  		memcpy(context-&gt;iv, context-&gt;oldcipher+8-bufleft, bufleft);
+  		context-&gt;bufleft = 0;
+  	}
+--- 446,452 ----
+  	int bufleft = context-&gt;bufleft;
+
+  	if (bufleft) {
+! 		memmove(context-&gt;iv+bufleft, context-&gt;iv, 8-bufleft);
+  		memcpy(context-&gt;iv, context-&gt;oldcipher+8-bufleft, bufleft);
+  		context-&gt;bufleft = 0;
+  	}
+
+
+Patches to RSAREF 2.0:
+----------------------
+
+*** rsaref.h.dist	Fri Mar 25 14:01:49 1994
+--- rsaref.h	Mon May  9 12:49:59 1994
+***************
+*** 31,37 ****
+  /* RSA key lengths.
+   */
+  #define MIN_RSA_MODULUS_BITS 508
+! #define MAX_RSA_MODULUS_BITS 1024
+  #define MAX_RSA_MODULUS_LEN ((MAX_RSA_MODULUS_BITS + 7) / 8)
+  #define MAX_RSA_PRIME_BITS ((MAX_RSA_MODULUS_BITS + 1) / 2)
+  #define MAX_RSA_PRIME_LEN ((MAX_RSA_PRIME_BITS + 7) / 8)
+--- 31,37 ----
+  /* RSA key lengths.
+   */
+  #define MIN_RSA_MODULUS_BITS 508
+! #define MAX_RSA_MODULUS_BITS 2048
+  #define MAX_RSA_MODULUS_LEN ((MAX_RSA_MODULUS_BITS + 7) / 8)
+  #define MAX_RSA_PRIME_BITS ((MAX_RSA_MODULUS_BITS + 1) / 2)
+  #define MAX_RSA_PRIME_LEN ((MAX_RSA_PRIME_BITS + 7) / 8)
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00657" HREF="msg00657.html">1024 limit...</A></STRONG>
+<UL><LI><EM>From:</EM> perry@bacon.imsi.com (Perry E. Metzger)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00666.html">Re: PGP and Yarn (offline reader)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00672.html">PGP v2.5 update</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00657.html">1024 limit...</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00646.html">MBone map by Steve Casner...</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00671"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00671"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

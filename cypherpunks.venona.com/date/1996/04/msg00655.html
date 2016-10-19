@@ -1,0 +1,236 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Protocols at the Point of a Gun -->
+<!--X-From-R13: Epbgg Pevpxare <fwoNhavirefr.qvtrk.arg> -->
+<!--X-Date: Sat, 13 Apr 1996 08:19:18 +0800 -->
+<!--X-Message-Id: 199604121822.OAA01246@universe.digex.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199604111939.MAA14774@toad.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Protocols at the Point of a Gun</TITLE>
+<LINK REV="made" HREF="mailto:sjb@universe.digex.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00639.html">Date Prev</A>][<A HREF="msg00640.html">Date Next</A>][<A HREF="msg00549.html">Thread Prev</A>][<A HREF="msg00574.html">Thread Next</A>][<A HREF="index.html#00655">Date Index</A>][<A HREF="threads.html#00655">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Protocols at the Point of a Gun</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Bill Stewart &lt;<A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Protocols at the Point of a Gun </LI>
+<LI><em>From</em>: Scott Brickner &lt;<A HREF="mailto:sjb@universe.digex.net">sjb@universe.digex.net</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 12 Apr 1996 13:22:42 -0500</LI>
+<LI><em>cc</em>: <A HREF="mailto:shamrock@netcom.com">shamrock@netcom.com</A> (Lucky Green), <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>,       "Declan B. McCullagh" &lt;<A HREF="mailto:declan%2B@CMU.EDU">declan+@CMU.EDU</A>&gt;</LI>
+<LI><em>In-reply-to</em>: (Your message of Thu, 11 Apr 1996 12:32:52 PDT.)            &lt;<A HREF="msg00549.html">199604111939.MAA14774@toad.com</A>&gt; </LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Bill Stewart writes:
+&gt;There are serious technical problems with the suggestion that labelling packets
+&gt;as "Adult" or "Child" using IP options and filtering at ISPs for censorship.
+
+Few of the following are really *technical* problems.
+
+&gt;IP works on a per-machine basis (technically, a per-network-interface basis,
+&gt;though for most client machines that's the same thing.)  That means that a 
+&gt;web or nntp server including some "Adult" material and some "Child" material
+&gt;either needs
+&gt;a way for an application process to communicate this to the network drivers,
+&gt;or needs to label all packets as "Adult" to avoid the politically incorrect risk
+&gt;of mislabelling a packet as "Child" when it's not.  The standard TCP/IP API 
+&gt;programming interface software on Windows, Mac, and Unix machines doesn't
+&gt;provide 
+&gt;for applications to _tell_ the network drivers about IP options, so even if
+&gt;IPng had censorship features added, the applications couldn't use it.
+&gt;(There are a few military multi-level security versions of Unix that give
+&gt;you more flexibility for this sort of thing, but they tend to provide
+&gt;mandatory security so you _can't_ send a packet marked "UNCLASSIFIED" from a
+&gt;"TOP SECRET" session.)  
+
+This is more of an economic problem than a technical one.  By the
+"standard API" we usually mean "BSD sockets", which already has a
+"getsockopt()" and "setsockopt()" interface for the application to
+communicate this sort of thing.  Adding a SO_SECCLASS to change the
+setting from the system default would be pretty straightforward,
+technically.
+
+&gt;Another problem is that it only addresses single-user client machines,
+&gt;rather than multi-user operating systems such as Linux, which has a million
+&gt;or so
+&gt;users out there.  The model works fine when you treat a PC as a fancy version of
+&gt;a dumb terminal, but a machine shared by multiple users (whether many at one
+&gt;time,
+&gt;or one at a time) uses a single connection to support all of them - that
+&gt;means you
+&gt;can't have censored material available to the child and uncensored material
+&gt;available to the parent unless the networking software can pass the censorship
+&gt;labels on to the application program - but again, the standard operating system
+&gt;interfaces (developed over many years by thousands of The Free World's finest
+&gt;developers :-) don't have a way to implement it, because it was never a
+&gt;design goal.
+
+Actually, this is a bit of an "ivory tower" picture of the Internet.
+Conceptually, the protocols are purely peer-to-peer, but in the real
+world, those end-user Linux boxes go through an ISP.  The User to ISP
+link is governed by a contrac, which may specify filtering done at the
+ISP.  If you want to access "adult" material, but don't want your kid
+to be able to, you should get a separate filtered PPP account for the
+kid.
+
+&gt;Trying to implement censored sessions at a transport level instead has its
+&gt;own problems.
+&gt;First of all, TCP provides reliable sessions; censoring packets based on IP
+&gt;labels
+&gt;in the middle of a transaction means that TCP will retransmit until the
+&gt;packet gets
+&gt;through or it gives up and drops the connection, so any "Adult" packets would
+
+Not so.  If one end of the connection is discarding "adult" packets,
+the SYN packet attempting to establish the session will *also* be
+dropped, probably resulting in a "connection refused" (from a RST by
+the other side) or "destination unreachable" (from the IP module that
+discarded it).
+
+&gt;dump a Registered Child out of the browser, even if they were unintentional
+
+Dropped connections don't dump you out of the browser.  You just get
+a popup.  (If it *does* dump you out, get a new browser.)
+
+&gt;(e.g. from an Adult who labels all packets "Adult" to avoid being liable for
+&gt;mistakes,
+&gt;or packets from Europe that were default-labelled by a service provider to avoid
+&gt;having to read them all, or from the Library of Congress Online Edition if
+&gt;the Librarian
+&gt;labels each packet correctly.)
+
+Again, these aren't technical issues, they're social.  A European
+company who sends a dirty magazine to a sixteen year old American is
+violating existing non-CDA decency laws.
+
+&gt;On the other hand, UDP packet exchange,
+&gt;which doesn't
+&gt;use sessions, would require validating the user's ID and authorization on
+&gt;each packet.
+
+True, but this isn't a problem.  The "validation" is simply a matter of
+checking the "information level" in the packet with the "authorization
+level" of the user.  If the ISP is filtering adult packets, the "authorization
+level" is a constant per PPP connection.  If the ISP is inserting "information
+levels", it's still constant per PPP connection, but now the content provider
+needs to check if the request is permitted to be fulfilled.  In either case
+the test is trivial.  It's not like there has to be a key exchange and
+RSA exponentiation for each packet.
+
+&gt;Furthermore, if the censorship information is carried at the transport level,
+&gt;or at a higher level (i.e. headers in the message itself), the only way the
+&gt;ISP's routers, which work at the IP level, can censor packets is to perform the
+&gt;equivalent of the Post Office steaming open envelopes before delivering them
+&gt;to your house, and refusing to deliver them if there's a child living in the
+&gt;house
+&gt;and the letter either contains a bad word or is written in a language the
+&gt;Post Office doesn't understand, such as Finnish or Japanese or PGP.
+
+Agreed.  But the current discussion is about adding features to the network
+layer.
+
+&gt;If you create outgoing packets that are labelled "Minor", and contain
+&gt;"Restricted to Government-Certified Adults Only, and No Felons or
+&gt;Foreigners Allowed" material, you can get busted for it.
+&gt;So you have to either restrict all your outgoing packets to be labelled 
+&gt;"RtG-C Adults O,aNFoFA", or else make sure all the material you transmit
+&gt;passes the "Government-Approved-for-Minors, Foreigners, and Victorian
+&gt;ladies" filter.
+&gt;
+&gt;On the other hand, if you don't log in to your ISP with a
+&gt;"government-certified adult,
+&gt;non-felon, non-foreigner, politically stable, not-a-Commie-or-Jew" id,
+&gt;it'll block any packets not approved for you.  Any news or web server will also
+&gt;have refuse to send any "Adult"-labelled material to you if the requests
+&gt;arrived on a "Kid"-labelled connection - this means that either the server
+&gt;machine
+&gt;will have to only carry Kid-approved traffic, or only talk to Adults,
+&gt;or add an "Adult" label to all outgoing packets whether marked "Kid" or not,
+&gt;or else it will have to break protocol boundaries by passing IP-layer
+&gt;information
+&gt;up to the application.
+
+Regardless of whether information is added at the network layer to
+communicate the "adult/minor" information, knowingly sending web pages
+with adult material to a minor is illegal.  With current implementations,
+providers have the excuse that they have no way of knowing that the requester
+is a minor.  If the information is added to the protocols, they lose the
+excuse.  Again, this is a social matter, not a technical one.
+
+The point about breaking protocol boundaries is an interesting one, and
+as far as I am concerned, the *only* technical issue you raise.  I note
+that the IP layer's "Security Compartment" option, which is one I've
+suggested might be used to implement the censorship, already provides
+exactly this "violation".  The "Stream ID" option and "Type of Service"
+field are similar "violations".  The TCP layer gives the application
+layer the "Urgent" and "Push" flags, which are arguably similar
+"violations".
+
+Again, I'd like to emphasize that I think implementing this suggestion
+would be censorship, and do more harm than good.  I really hope someone
+can come up with a solid technical reason why doing this won't work,
+but the more I think about it, the more I think it *will* work.  I
+maintain that the CDA is bad socially, but that support for it at the
+network layer is technically possible.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00549" HREF="msg00549.html">Re: Protocols at the Point of a Gun</A></STRONG>
+<UL><LI><EM>From:</EM> Bill Stewart &lt;stewarts@ix.netcom.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00639.html">[NOISE] Why there are so many cluless people</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00640.html">Re: questions about bits and bytes</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00549.html">Re: Protocols at the Point of a Gun</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00574.html">Re: Protocols at the Point of a Gun</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00655"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00655"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

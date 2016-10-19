@@ -1,0 +1,197 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Java power -->
+<!--X-From-R13: Dncu Zrivra <encuNQE.Prexryrl.SRG> -->
+<!--X-Date: Thu, 19 Oct 95 15:02:37 PDT -->
+<!--X-Message-Id: 199510192201.PAA14221@kiwi.cs.berkeley.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Java power</TITLE>
+<LINK REV="made" HREF="mailto:raph@CS.Berkeley.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01606.html">Date Prev</A>][<A HREF="msg01607.html">Date Next</A>][<A HREF="msg02006.html">Thread Prev</A>][<A HREF="msg01671.html">Thread Next</A>][<A HREF="index.html#01598">Date Index</A>][<A HREF="threads.html#01598">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Java power</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:sami.shaio@eng.sun.com">sami.shaio@eng.sun.com</A></LI>
+<LI><em>Subject</em>: Java power</LI>
+<LI><em>From</em>: Raph Levien &lt;<A HREF="mailto:raph@CS.Berkeley.EDU">raph@CS.Berkeley.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 19 Oct 1995 15:01:48 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+   At the recent cypherpunks meeting about Java, I was fairly
+skeptical of its power, especially its ability to do anything useful
+towards interesting cypherpunk projects. I've been thinking about it a
+bit more, and I believe I was overly pessimistic.
+
+   My thinking problem was that I was envisioning Java as a
+replacement for ordinary HTTP server interaction (such as CGI
+scripts). I still believe that, absent HTTP server interaction, Java
+applets are quite limited. However, now that I've started thinking
+about systems that are built using a combination of Java and servers,
+the universe has expanded a lot.
+
+   I'm still unclear about the exact security policy implemented by
+Java browsers, but this is my understanding:
+
+   * No access to local files at all.
+
+   * Can only access URLs on same server as applet came from.
+
+   Actually, I'm pretty sure the latter is an oversimplification, that
+the applet can contact any socket as long as it is on the same IP host
+as the applet itself. However, since HTTP can do pretty much anything
+any other socket can, the only difference that makes is performance.
+
+   Here's the "big insight" I had: the server can make up _both_ of
+these deficiencies, by acting as a file server and communications
+proxy. Essentially what this architecture does is shift the security
+burden from the client to the server. In this way, the applet can
+become "net complete," rather than merely Turing complete.
+
+   I see one big drawback to this approach. Setting up a server like
+this is pretty expensive, and using it takes up precious resources.
+Not everyone has access to a fully scriptable server, which will limit
+a lot of people.
+
+   One concern is the "parasitic" use of file system resources on the
+server. However, there may be a certain amount of security through
+obscurity that makes this ok. If all Java browsers enforce the policy
+of only allowing connections to the home host of the applet, then you
+won't be getting connections from other, parasitic applets. The
+remaining danger is rogue Java browsers, and non-Java applications
+that talk to the server, pretending to be Java applets. Some form of
+authentication could be used to reduce the impact of these attacks.
+
+   I do see this kind of architecture used to supply services at, say,
+an organizational level. For example, the "scheduling" scenario could
+be implemented quite handily, including authentication of access to
+the schedules, and even distributed scheduling if the different
+servers are talking to each other.
+
+   Another scenario which works is email, even including transparent
+encryption. This one is interesting to me, so I'll go into a little
+more detail.
+   In this scenario, the server acts as a file server for keyrings
+(both public and secret) and mail spools. Here's a typical sequence of
+events for me getting my mail and replying to one message:
+
+1. I call up the JavaMail web page, which is just a wrapper for the
+JavaMail applet.
+
+2. The JavaMail applet starts with a forms-style login screen. I type
+my username.
+
+3. The applet asks the server for my mail spool (given the username
+and perhaps also a password for authentication).
+
+4. The applet displays my mail spool on the screen and lets me fiddle
+with it, scrolling through it, reading messages, etc.
+
+5. Let's say one of those messages is encrypted with my public key.
+The applet, recognizing that fact, queries the server for my secret
+key, encrypted of course (with a symmetric cypher).
+
+6. I type my password to the applet, which lets it decrypt the secret
+key.
+
+7. Now, that it has my secret key, the applet can RSA-decrypt the
+encrypted mail and show it to me.
+
+8. I want to reply to the message, so I hit 'r'. The applet gives me a
+window for typing my reply. When I'm done, I click "send". The applet
+queries the server for the recipient's public key.
+
+9. When the applet gets the public key, it RSA-encrypts the message
+and sends it to the server for delivery.
+
+10. When the mail has been delivered, the server notifies the applet
+of the fact.
+
+   To me, this is an exciting scenario. Note that, as long as you
+trust the browser, this lets you read your mail from anywhere.
+
+   I have no idea whether this scheme is practical. One temporary
+drawback is the speed of RSA operations. However, this will get fixed
+when there is native code generation or a bignum library, whichever
+comes first. Even before then, performance can still be good, using
+two techniques. First, implement a cache of decrypted session keys
+(also stored on the server in symmetrically encrypted form). Second,
+don't display a new email message until it's been decrypted. That way,
+the RSA operation affects only the latency of mail delivery, not the
+bandwidth of reading through messages. Of course, these techniques
+will also dramatically improve performance even for native code
+crypto.
+
+   I can see people setting up servers like this for themselves.
+However, here's an idea on how to set these servers up "for profit."
+In return for providing file system and mail communications services,
+the server would expect clients to search keyspaces during idle
+cycles. When Java goes native code, the computing power thus tapped
+could be quite substantial.
+
+   I'm interested to hear what people think about these proposals. Is
+this something that cypherpunks should be doing full steam ahead?
+
+Raph
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01671" HREF="msg01671.html">Re: Java power</A></STRONG>
+<UL><LI><EM>From:</EM> futplex@pseudonym.com (Futplex)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01606.html">Re: DalSemi: Add-Only Memory for Storage of Digital Cash (fwd)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01607.html">[NOISE] Re: Netscape rewards are an insult</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02006.html">Re: textbooks</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01671.html">Re: Java power</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01598"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01598"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

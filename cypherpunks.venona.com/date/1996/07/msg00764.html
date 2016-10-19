@@ -1,0 +1,276 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Execution of signed scripts received by e&#45;mail -->
+<!--X-From-R13: [ngg Qnecragre <zpnecragNRhfx.bofpher.arg> -->
+<!--X-Date: Sat, 13 Jul 1996 21:31:11 +0800 -->
+<!--X-Message-Id: 199607130841.DAA00240@Dusk.obscure.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Execution of signed scripts received by e-mail</TITLE>
+<LINK REV="made" HREF="mailto:mcarpent@Dusk.obscure.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00761.html">Date Prev</A>][<A HREF="msg00779.html">Date Next</A>][<A HREF="msg00761.html">Thread Prev</A>][<A HREF="msg00799.html">Thread Next</A>][<A HREF="index.html#00764">Date Index</A>][<A HREF="threads.html#00764">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Execution of signed scripts received by e-mail</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Execution of signed scripts received by e-mail</LI>
+<LI><em>From</em>: Matt Carpenter &lt;<A HREF="mailto:mcarpent@Dusk.obscure.net">mcarpent@Dusk.obscure.net</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 13 Jul 1996 03:41:00 -0500 (CDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A>, <A HREF="mailto:mcarpent@mailhost.tcs.tulane.edu">mcarpent@mailhost.tcs.tulane.edu</A></LI>
+<LI><em>Reply-to</em>: <A HREF="mailto:mcarpent@mailhost.tcs.tulane.edu">mcarpent@mailhost.tcs.tulane.edu</A></LI>
+<LI><em>Reply-to</em>: <A HREF="mailto:mcarpent@mailhost.tcs.tulane.edu">mcarpent@mailhost.tcs.tulane.edu</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+
+This is a rough description of a perl script I'm working on to allow the
+automated execution of PGP signed scripts received by e-mail.  I call it
+emscrypt.
+
+Right now it is in the volatile-ware stage.  Hopefully I'll have it tested
+enough to post here shortly, if I feel i can pull myself away from my
+research for a few hours.  But I thought I would post a description now to
+see if anyone can find any problems with the way I'm going about this or has
+any suggestions.
+
+I apologize for the possibly inscrutable descriptions; it's been a while
+since I last slept.  Let me know if anything needs clarification.
+
+
+First, a basic description of the idea:
+
+1. Write a script (perl, sh, etc.) to be executed on a remote machine.
+2. Sign the script with PGP.  It can also be encrypted using the public key
+   for the emscrypt installation on the remote machine.
+3. Mail the signed/encrypted script (a.k.a. emscrypted mail) to the
+   address where emscrypt is installed.
+4. The script is received and piped to emscrypt (using procmail or
+   something similar).
+5. Emscrypt checks the PGP signature on the message, and checks for replay
+   attacks based on the time stamp from the signature.
+6. Emscrypt executes the script, gets the results, encrypts them, and sends
+   them back to you.
+
+
+The install procedure:
+
+Create a directory to hold the PGP keyrings and the emscript temporary files.
+
+Generate a secret/public key pair for the emscrypt software and place in the
+emscrypt directory.  These need to be DIFFERENT for each installation of
+emscrypt.  Otherwise you are subject to a "same play" attack.  I suppose you
+could create two or more installations with the same key if you will ALWAYS
+be sending all the same scripts to every installation.
+
+Generate a public keyring in the emscrypt directory which has only the keys
+with which you want to be able to validate incoming scripts.  Make them
+"trusted" by the emscrypt key.
+
+Update the PGPPASS, PGPPATH, and emscryptPath variables in the emscrypt
+script.  This is very important since if the PGPPATH is pointing to your
+normal pubring ANYONE with a key in that ring would be able to run scripts
+on your system.  Actually only the keys which are "trusted", but there may be
+lots of "trusted" keys which you wouldn't trust to run arbitrary scripts on
+your computer. 
+
+Test the script to make sure it seems to work alright on your system.  After
+that, you can set it up to be automatically called when you receive e-mail
+with the magic subject line of your choosing (or in some other way I
+suppose).  I've been using something resembling the following procmail
+recipe:
+
+:0:
+* ^Subject.*SQUEAMISH OSSIFRAGE
+|/MY_PATH/emscrypt
+
+
+
+How emscrypt works:
+
+
+* Get input
+
+Get one input line at a time, and look for Reply-To: and From:  headers to
+get a reply address.  As we are slurping up lines, watch for '-----BEGIN
+PGP' lines.  If it is for encryption or a signed message (i.e. as long as it
+is not for a key block), get all the lines up to and including the
+appropriate '-----END PGP' line, and save them to a temp file.
+
+Note that several scripts can be batched together in a single input file.
+Just generate the scripts and sign them separately and the combine all the
+PGP messages into a single file.  Also, they may be signed with different
+keys.
+
+
+* Verify signature
+
+Run PGP on the temp file to verify/decrypt it.  Save the stderr results from
+the PGP process in another temporary file.  Get the verified(?)/decrypted
+output from a pipe, and save in memory.  
+
+(QUESTION: is it possible to have stderr redirected to a separate input pipe
+and avoid writing to disk?  How?  (This is in Perl.)  I was combining the
+the stderr and stdout from the PGP process into a single input pipe, but
+that may allow for leakage of PGP stderr output into the script we are
+verifying/decrypting if we aren't careful.)
+
+Search through the PGP process stderr output to look for important stuff
+like whether the signature was good, what the time stamp was, and what the
+key user string is.  I'm not real happy with this method.  Probably doesn't
+work well with versions other than 2.6.2 or non english language versions.
+I'm waiting for the signature code and such in the PGP library from
+Systemics (an announcement showed up here a couple days ago,
+<A  HREF="http://www.systemics.com/software/">http://www.systemics.com/software/</A> ) which will allow this to be much
+cleaner.
+
+(QUESTION: Any other ideas for handling this?)
+
+
+* Check for replay
+
+If the signature is good then we need to check for the dreaded replay
+attack.  This is how I have it working:  there is a separate file for each
+PGP public key which keeps track of the time stamp for the last executed
+script which was signed by that key.  Right now the file names are generated
+from the key ID string for the pgp key.  Mainly because we get that for free
+when we check the signature.  Will probably run 'pgp -kv "ID string"' so
+that I can get the hex key ID, since that would probably make a more
+reasonable file name.
+
+Besides the value saved to disk, we store a separate time stamp for this
+"batch" of messages in an associative array by key ID.  Each separate mail
+message is a batch, but we may have more than a single PGP signed script in
+each message.  So the batch time stamp is the stamp we read from a time
+stamp file for a key ID when we process the first message in a batch for
+that specific key ID.  The batch time stamp is then constant for the
+remainder of this run of the script.
+
+Anyway, we generate a file name based on the key ID, save it in an
+associative array by key ID for later use, and see if the file actually
+exists.
+
+If the file doesn't exist, create it and save the time stamp from the current
+signature to the file.  Put a timestamp of 100000000000 in an associative
+array by key ID for later use (this is the batch time stamp: the time stamp
+is formatted as YYYYMMDDHHmm.  I use 100000000000 here since I explicitly
+check the time stamp format each time to make sure it is composed of exactly
+12 digits.  Also, if the file doesn't exist, we need to use a batch time
+stamp that will be lower than that of any of the messages in the current
+batch for this key ID.  I suppose it might be better to generate a time
+stamp something like (CURRENT_TIME - (some reasonable amount of time)) to
+limit what is accepted.  I also plan to allow a limit for the amount of time
+which can elapse between the script being signed and being received by
+emscrypt for cases where the file does exist. 
+
+If the file did exist on disk, read the time stamp from the file and save in
+the batch time stamp associative array by key ID.
+
+So now we have a replay prevention time stamp to compare to the time stamp
+from this PGP signed script.  If the script stamp is more recent, then we can
+execute the script.  But first, check to see if the script stamp is more
+recent then the stamp saved in the file.  If it is, then replace the file
+time stamp with the script stamp, and update the associative array which
+keeps track of these values (this is the "most recent stamp" array, not the
+"batch stamp" array).
+
+* Execute the script
+
+Check the variable status to make sure that both the signature and time
+stamp were acceptable. If not, then generate an appropriate error message
+explaining why the script was rejected, include a copy of the script,
+encrypt the message using the submitter's public key, and mail it back.
+Then go back to the top of the loop to deal with the rest of the input.
+
+If it everything checks out, then prepare a file to receive the stderr
+output, save the script to a file, set the script to executable, and open
+(execute) it as an input pipe.  Get the results from stdout.  Open the
+stderr file, and get the stderr results.  Combine the stdout, stderr, and
+the script (with separators so we can tell what is what), encrypt the whole
+bundle with the submitter's public key and mail it off.  Repeat loop for
+rest of input.
+
+
+Problems?  Suggestions?  Let me know.
+
+
+Thanks,
+
+- --Matt
+
+- --
+mcarpent@mailhost.tcs.tulane.edu                   Finger for PGP public key.
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQEVAwUBMedc/SjtJAMyBnp9AQF83wf+J9P1Lmr8sca12R89LUYcFxRms1gJro/9
+E5Ni1kqivWKYJ+JP9geP+k7VLWbq5miby8RMfKemuz77BuK9UIQG1pd6bGNjlSg9
+O+XkiB5dbHX6+hZ23wPABzeuu6+3klLfNnzQEuNZ4/jxeNwFIIY3ifYglhWIPoeG
+a3kpd2DXY1HVjO674TQNGBYn6bnDPi5wMzYSTxJLukKHBzlgaLt4nssv/8N2jhcg
+XHWqEEvHc2lY0UvBk+wuqJHigzI03NzpFkh7mgF6ll5gEuG0qGgvLIKb+ir4vF1Q
+k46mNHq03M+Vc5/loLjFfQzcuu24GdjlFY2pHEpHz7rhYG25ONJeDg==
+=Lm22
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00799" HREF="msg00799.html">Re: Execution of signed scripts received by e-mail</A></STRONG>
+<UL><LI><EM>From:</EM> Steffen Zahn &lt;zahn@berlin.snafu.de&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00761.html">Re: Crypto-Activism &amp; PGP</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00779.html">Internet Relay Chat</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00761.html">Re: Crypto-Activism &amp; PGP</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00799.html">Re: Execution of signed scripts received by e-mail</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00764"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00764"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

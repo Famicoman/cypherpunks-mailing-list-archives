@@ -1,0 +1,146 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Encrypting block driver for Linux...need some advice -->
+<!--X-From-R13: Xbuanguna Qbetna <wpbetnaNnrvarg.pbz> -->
+<!--X-Date: Thu, 27 Jul 95 09:20:10 PDT -->
+<!--X-Message-Id: Pine.LNX.3.91.950727090405.104B&#45;100000@comet.aeinet.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199507261756.UAA13722@shadows.cs.hut.fi -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Encrypting block driver for Linux...need some advice</TITLE>
+<LINK REV="made" HREF="mailto:jcorgan@aeinet.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00941.html">Date Prev</A>][<A HREF="msg00943.html">Date Next</A>][<A HREF="msg00941.html">Thread Prev</A>][<A HREF="msg00907.html">Thread Next</A>][<A HREF="index.html#00942">Date Index</A>][<A HREF="threads.html#00942">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Encrypting block driver for Linux...need some advice</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Tatu Ylonen &lt;<A HREF="mailto:ylo@cs.hut.fi">ylo@cs.hut.fi</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Encrypting block driver for Linux...need some advice</LI>
+<LI><em>From</em>: Johnathan Corgan &lt;<A HREF="mailto:jcorgan@aeinet.com">jcorgan@aeinet.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 27 Jul 1995 09:19:15 -0800 (GMT-0800)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;199507261756.UAA13722@shadows.cs.hut.fi&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+On Wed, 26 Jul 1995, Tatu Ylonen wrote:
+
+&gt; How about using the md5 hash of the block number combined with some
+&gt; secret data; e.g, the md5 hash of the passphrase reversed (I would not
+&gt; want to use the password directly, as that might help in breaking the
+&gt; key; on the other hand, md5 of block number alone is not good because
+&gt; there is a very limited number of blocks (and the attacker knows which
+&gt; block is being attacked)).
+
+I guess my question is how does knowing the IV affect the security of CBC? 
+I assumed that it only needed to be different for each block so that
+identical plaintext encrypts to different ciphertext for different blocks.
+
+&gt; You might also want to support other algorithms, particularly IDEA
+&gt; (but beware, IDEA is patented and causes problems for commercial use -
+&gt; non-commercial use should be free).  Another algorithm to support
+&gt; might be Blowfish.
+
+Yes, I plan on it.  Originally, I just grabbed RSAREF for a quick and dirty
+drop in.
+
+&gt; Could you describe the implementation a little?  Does it use the nfs
+&gt; interface, or is it somewhere in the kernel file system code?  Or
+&gt; kernel block device code?  (User-level NFS servers may involve
+&gt; difficult security issues)
+
+The software is a block device driver.  To use it, a user will run an
+executable that will pass a filespec and key to the driver.  The driver then
+translates calls to its block interface into calls to lseek/read/write on
+the underlying inode.  Data is d(e)ncrypted on the fly during this process.
+
+The user can then do anything you would normally do with a block
+device--make a file system on it, tar files to it, use it for swap.  If the
+provided filespec is actually located remotely, and is accessed via NFS,
+SMB, or some other network protocol, then the benefit is that only
+ciphertext is passed on the wire.
+
+I'm stuck on figuring the the proper permissions for the device special
+file, the attachment executable, and how to deal with one user attaching the
+filespec to the driver, but allowing some predefined user list have access. 
+All potential users of the driver need to have rw permission to it, but in
+practice, the kernel module should only honor block read/write calls make by
+authorized user processes.
+
+I guess I need to step back and look a what types of threat models I should
+address, and go from there.  That, and get a good book on Unix security :)
+
+==
+Johnathan Corgan       "For the first time in history, it is possible to
+jcorgan@aeinet.com      have absolute privacy over arbitrary distances."
+PGP Key Fingerprint:    4F 28 69 B8 76 2E 42 3E  8B 4C 12 BB 3A 43 D4 07
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQEVAwUBMBfKaelPfVlQ1n99AQF7+gf+I+BV1EVPQhrT7FEygT7f8PC29kZuSseU
+/qDlVbBrwHfzXOMgEBEkG214p9Xv1cPFQ+IlGglo321/92pxZdModA45oM3cG1ic
+hv8oZ+KWIL6twhKX7M3aw5tYOBTTGcdyNqEosnntE1/eAnSEPaQgt8VLyoNBjSFN
+64FZvTtR7G8O2HL26SYS1PzhEl3aPRdKv3Qw+kgu1xW+VLC5DcJs34/f1Nta6xBu
+gFH9mfZZg4Y4VAMMyvQN+JAm7EmmIiCWAypqnwUt0SCgnpYub2EOfoKQOJ7e5hl5
+9qcaLzeJsHpLGybcfT6cSEKjJ+b9MdTXrHQRPPdr2ZehcmyVSSLA7A==
+=G47N
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00941.html">Re: Encrypting block driver for Linux...need some advice</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00943.html">Re: Full text of David Chaum's Congressional speech</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00941.html">Re: Encrypting block driver for Linux...need some advice</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00907.html">Banks and Crypto</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00942"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00942"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

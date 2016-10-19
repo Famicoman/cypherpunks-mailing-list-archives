@@ -1,0 +1,159 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: DES and RSA crypto hardware from the free world -->
+<!--X-From-R13: Brgre Uhgznaa <cthg001Npf.nhpxynaq.np.am> -->
+<!--X-Date: Fri, 14 Feb 1997 15:58:08 &#45;0800 (PST) -->
+<!--X-Message-Id: 199702142358.PAA18151@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>DES and RSA crypto hardware from the free world</TITLE>
+<LINK REV="made" HREF="mailto:pgut001@cs.auckland.ac.nz">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01179.html">Date Prev</A>][<A HREF="msg00741.html">Date Next</A>][<A HREF="msg02596.html">Thread Prev</A>][<A HREF="msg00785.html">Thread Next</A>][<A HREF="index.html#00784">Date Index</A>][<A HREF="threads.html#00784">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>DES and RSA crypto hardware from the free world</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cryptography@c2.net">cryptography@c2.net</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: DES and RSA crypto hardware from the free world</LI>
+<LI><em>From</em>: Peter Gutmann &lt;<A HREF="mailto:pgut001@cs.auckland.ac.nz">pgut001@cs.auckland.ac.nz</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 15 Feb 1997 11:05:17 (NZDT)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I've just got the details on two new crypto chips produced by the Dutch company
+Pijnenburg Custom Chips B.V.  These are the PCC 201 bignum coprocessor and the
+PCC 101 DES-with-everything processor (the official names are slightly
+different :-).  The PCC 101 sells for approximately US$27, the PCC 201 sells
+for approximately US$50 (for people who aren't familiar with the market for
+these things, these are very good prices, especially for the 201).
+ 
+The PCC 201 is officially a "Large number modular arithmetic coprocessor" which
+is designed to perform the operations:
+ 
+  A^x mod N
+  AB mod N
+  C mod n
+ 
+very quickly for quantities of up to 1024 bits.  Typical procesing times for
+1K-bit operands is 40ms, for 512 bits it's 12ms when clocked at 25 MHz.
+Unfortunately you can't directly chain them for larger operands, although it's
+possible to use two 201's and some software tricks for CRT decrypts to stretch
+the operand size to &gt; 1024 bits.
+ 
+The way the 201 works is that you load the fixed components (exponent and
+modulus for A^x mod N, modulus only for AB mod N and C mod N) into one of three
+sets of on-chip registers, and then use them to perform arbitrary numbers of
+operations on data.  This means that for something like a micropayment
+application you would load the necessary private key components once and then
+generate signatures at the (theoretical) rate of 25 a second.  To date the cost
+of this kind of hardware has been such that the most viable solution was to run
+racks full of cheap P5 boards booting a bare-bones RSA-processing application
+through a network card, but with the PCC 201 you could populate a board with
+201's and a few microcontrollers a la a Wiener machine and use these as a
+payment transaction processing engine.  They'd also make fairly cool SSL
+co-processors for web servers.
+ 
+The PCC 101, officially a "DES encryption device", does DES, 3DES (EDE with 2
+or 3 keys), and DESX in ECB, CBC, CFB, OFB, and MAC modes at a maximum rate of
+132 Mbits/s (16.5 Mbytes/sec) for single DES, or 1/3 that for 3DES, when
+clocked at 33 MHz.  It's possible to load either single or triple-DES encrypted
+keys which are then decrypted using onboard key encryption keys (KEKs).  The
+chip contains onboard storage for 24 keys, 3 KEKs, 4 IV's, and 2 DESX keys
+(pre/post-whitener).  Processing is done in a 3-stage pipeline, so once you
+feed in 3 64-bit blocks it churns out a new result every 16 clocks (this also
+allows overlapped I/O operation).  You can add an external battery to save the
+internal state when power is removed, so you could keep your keys permanently
+stored onboard (although given that these keys can be recovered given enough
+money and effort I'm not sure if this is a good thing).
+ 
+The PCC 101 is available in 44-pin PLCC/TQFP packages, the PCC 201 is available
+in 68-pin PLCC and 80-pin TQFP packages.   The PCC 201 contains a multiplexed
+address/data bus and a few control signals (most of the pins are unused), the
+PCC 101 contains data and address ports and a few control signals.  They look
+fairly easy to interface.  There's an ISA evaluation board available which
+contains the PCC 201 and the slightly older PCC 100 (predecessor of the 101)
+and some test software.  Note that this is an evaluation board only, Pijnenburg
+make the chips but don't sell general encryption cards.
+ 
+A fast PCI card containing these chips and drivers for various common operating
+systems and MSDOS is currently being designed by an international cabal.  This
+will be a PCI 2.1-compliant card containing a PCC101, an optional PCC201, and
+possibly a few other things (we're still arguing about the design).  I'll be
+writing DOS and Win16 drivers for it, and someone else will do an NT and
+possibly Linux driver (again, it's still at the design stage).  cryptlib
+(<A  HREF="http://www.cs.auckland.ac.nz/~pgut001/cryptlib.html">http://www.cs.auckland.ac.nz/~pgut001/cryptlib.html</A>) will probably end up
+having native support for it when it's ready.
+ 
+Pijnenburg don't have a web page yet but are working on it, I'll post the
+details here when it becomes available.  Until then you can contact them at
+asic@pijnenburg.nl.  The only slight problem is that they're subject to the
+Dutch governments export rules (the usual Wassenaar stuff) which means that if
+you're not using it for an authentication/integrity-only application or a
+financial application, you'll probably need to go through some paperwork to
+show that it's for your use only and you won't be passing it on to your friend
+Jose from Columbia.  Pijnenburg have a standard Statement of Application which
+people can use as to write their own statement for export approval.
+ 
+These chips look *very* promising.  Who needs Clipper, or HP's
+Clipper-under-another-name, when you can get triple DES from the free world at
+prices like this?
+ 
+Peter.
+ 
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01179.html">Re: Good Bye Cypherpunks!</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00741.html">Re:</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02596.html">Re: DES and RSA crypto hardware from the free world</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00785.html">DES and RSA crypto hardware from the free world</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00784"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00784"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

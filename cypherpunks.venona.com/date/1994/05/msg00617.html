@@ -1,0 +1,180 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Majordomo -->
+<!--X-From-R13: Qlore Qvgl <plore1Ne&#45;abqr.vb.bet> -->
+<!--X-Date: Tue, 10 May 94 00:05:44 PDT -->
+<!--X-Message-Id: 199405100705.DAA02514@r&#45;node.io.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Majordomo</TITLE>
+<LINK REV="made" HREF="mailto:cyber1@r-node.io.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00612.html">Date Prev</A>][<A HREF="msg00615.html">Date Next</A>][<A HREF="msg00726.html">Thread Prev</A>][<A HREF="msg00620.html">Thread Next</A>][<A HREF="index.html#00617">Date Index</A>][<A HREF="threads.html#00617">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Majordomo</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Majordomo</LI>
+<LI><em>From</em>: Cyber City &lt;<A HREF="mailto:cyber1@r%2Dnode.io.org">cyber1@r-node.io.org</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 10 May 1994 03:05:33 -0400</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I'm posting this from Toronto, and I have no direct knowledge of what
+took the Cypherpunks list down, but here's my guess:
+
+The CP list is run my "majordomo" [MJD], a group of Perl scripts.
+According to the MJD docs:
+
+"If you'd like a list with the absolute minimum of maintenance (but also
+ a minimum of security), you could create an "auto" list.  All
+ subscription or unsubscription requests will be honored without any
+ input from the list owner.  For example, anyone could unsubscribe
+ anyone else."
+
+ - unsubscribe list [address]
+
+ This unsubscribes the user (or "address") from "list".
+
+This means that anyone could write a message to majordomo@toad.com, with
+the following message:
+
+unsubscribe cypherpunks user1@some.org
+unsubscribe cypherpunks user2@some.org
+unsubscribe cypherpunks user3@some.org
+
+... and so on.  Forgery is unnecessary.
+
+MJD permits the use of a password by which the list owner can approve
+unsubscription requests, but Sendmail displays this password. See:
+
+telnet toad.com 25
+Trying 140.174.2.1...
+Connected to toad.com.
+220 toad.com Sendmail 4.1/Gnu-smail ready at Mon, 9 May 94 22:12:32 PDT
+VRFY owner-cypherpunks
+250 Eric Hughes &lt;"|/u/hughes/.bin/procmail"&gt;
+VRFY cypherpunks
+250 &lt;"|/u/majordom/bin/wrapper resend -p bulk \
+                                      -l cypherpunks -f owner-cypherpunks \
+                                      -h toad.com -s cypherpunks-outgoing"&gt;
+                                   *** password would be displayed here ***
+==== What it means ========================================================
+  -l &lt;list-name&gt;       list name
+  -h &lt;host-name&gt;       host name
+  -f &lt;from-addr&gt;       "sender" (default &lt;list-name&gt;-request)
+  -p &lt;precedence&gt;      add "Precedence: &lt;precedence&gt;" header
+  -I &lt;file-list&gt;       Bounce messages from users not listed in file
+                               in colon-separated &lt;file-list&gt; *
+  -a &lt;passwd&gt;          approval password **
+  -s                   enable "administrivia" checks
+
+ * Note that majordomo postings can be limited to those on an approved
+   list, but selected posters can not be excluded.  This is not
+   appropriate for the Cypherpunk list, due to anonymous remailers,
+   pseudonyms, etc.
+** Note that if there WAS an approval password, it would be visible.
+
+
+Fortunately, version 1.90 of MJD, which is now in beta, fixes this
+problem by putting the passwords in a configuration file.  It is
+available for ftp.GreatCircle.com.
+
+What to do about abusive posters?  How about reversing the function of
+the -I switch?
+
+=== Here's the PERL code for option -I from 1.90 beta: ===============
+
+if ( defined($opt_I) &amp;&amp; defined($from) &amp;&amp; ! defined($approved) ) {
+    local($infile) = 0;
+ 
+    @files = split (/[:\t\n]+/, $opt_I);
+ 
+    foreach $file (@files) {
+	if ($file !~ /^\//) {
+	    $file = "$listdir/$file";
+	}
+        if ( open (LISTFD, "&lt;${file}") != 0 ) {
+	    @output = grep (&amp;addr_match($from, $_), &lt;LISTFD&gt;);
+            close (LISTFD);
+   
+            if ( $#output != -1 ) {
+                $infile = 1;
+                last;
+            }
+        } else {
+	    die("resend: Can't open $file: $!");
+	}
+    }
+ 
+    if ( $infile == 0 ) {
+        &amp;bounce ("Non-member submission from [$from]");
+    }
+}
+
+=== Now, with minimal hacking, this can be reversed, so that if the user
+=== name is in the list, the incoming post is bounced to the list owner,
+=== who can approve it or junk it.
+
+
+So here is a technological fix, where we don't have to go bothering
+system administators if they have a troublesome user.
+
+--
+Alex Brock
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00612.html">Re: Patents on RSA will expire soon....</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00615.html">Re: This is an abstract from a talk at Cornell University...</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00726.html">Re: Patents on RSA will expire soon....</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00620.html">Party Announcement</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00617"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00617"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

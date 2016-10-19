@@ -1,0 +1,282 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Modified Vigenere encryption? -->
+<!--X-From-R13: fgvtNargpbz.pbz (Egvt) -->
+<!--X-Date: Fri, 28 May 93 23:03:42 PDT -->
+<!--X-Message-Id: 9305290603.AA16770@netcom.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9305280735.AA22115@malibu.sfu.ca -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Modified Vigenere encryption?</TITLE>
+<LINK REV="made" HREF="mailto:stig@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00544.html">Date Prev</A>][<A HREF="msg00555.html">Date Next</A>][<A HREF="msg00541.html">Thread Prev</A>][<A HREF="msg00542.html">Thread Next</A>][<A HREF="index.html#00554">Date Index</A>][<A HREF="threads.html#00554">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Modified Vigenere encryption?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:poier@sfu.ca">poier@sfu.ca</A> (Skye Merlin Poier), <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Modified Vigenere encryption?</LI>
+<LI><em>From</em>: <A HREF="mailto:stig@netcom.com">stig@netcom.com</A> (Stig)</LI>
+<LI><em>Date</em>: Fri, 28 May 1993 23:03:50 PDT</LI>
+<LI><em>In-Reply-To</em>: poier@sfu.ca (Skye Merlin Poier) (on May 28, 12:35am)      &lt;<A HREF="msg00541.html">9305280735.AA22115@malibu.sfu.ca</A>&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+I must've missed it.  Will some kind soul forward to me a description
+of Vigenere?
+
+
+
+
+&gt; 
+&gt; Also, what are the weaknesses of the Playfair cypher? My texts mention it, but
+&gt; don't say much of anything other than how it works...
+&gt; 
+
+Well, a while ago I saw a description of playfair in a novel and it
+was simple enough that I coded it...  I guess I had lots of free time.
+Don't pick on my code.  It's old.
+
+	Stig
+
+/**
+ * playfair.c -- implementation of the playfair cipher
+ * written by stig, 10-mar-91
+ * 
+ * --- TO COMPILE (put this in your makefile) ---
+ * unpf pf: playfair.c
+ * 	cc $(CFLAGS) -o pf playfair.c
+ * 	- rm unpf
+ * 	ln pf unpf
+ * 
+ * --- THIS PROGRAM works as a filter---
+ *         pf keyword &lt;message_file &gt;code_file
+ * 	unpf keyword &lt;code_file
+ * 
+ * --- THIS CIPHER uses a 5x5 alphabet square to encode letter pairs
+ * 
+ *      K E Y W O
+ *      R D a b c
+ *      f g h i l       (i and j are folded into each other)
+ *      m n p q s
+ *      t u v x z
+ * 
+ * 1) prepare the input by removing punctuation,
+ *    fold 'j' into 'i'
+ *    break up repeated letters with 'x' and/or 'z'
+ *    group letters into pairs
+ * 
+ *    My name is stig (or jonathan) ----&gt; my na me is xs ti go ri on at ha nz
+ * 
+ * 2) transform each letter pair using the alphabet square:
+ *    (i may be written as either i or j)
+ *      a) letters appear in the same row -- replace them with letters to
+ *         the right.  letter to right of rightmost letter is first letter
+ *         of the row. (hi -&gt; il (or jl))
+ *      b) letters appear in the same column -- replace them with letters
+ *         below. (ha -&gt; ph)
+ *      c) otherwise -- replace each letter with the letter occupying the
+ *         same row in the grid and the column of the other letter in the
+ *         pair. (my -&gt; pk)
+ * 
+ *    MY NA ME IS XS TI GO RI ON AT HA NZ
+ *    pk pd nk lq zq xf le bf es rv ph su 
+*/
+
+#include &lt;ctype.h&gt;
+#include &lt;strings.h&gt;
+#include &lt;assert.h&gt;
+#include &lt;stdio.h&gt;
+
+char *Key = 0;
+char  Square[26] = "                         ";	/* 25 spaces */
+
+#define pos(row,col)		Square[ (row)*5 + (col) ]
+#define findrow(c)	((int)(index(Square,c)-Square)/5)
+#define findcol(c)	((int)(index(Square,c)-Square)%5)
+#define jtoi(c)		(((c)=='j') ? 'i' : (c))
+
+#define ENCODE	1
+#define DECODE	4
+
+
+build_square()
+{
+    char *key = Key, c;
+    int   i = 0;
+
+    assert(key &amp;&amp; *key);
+
+    while (*key) {
+	*key = tolower(*key);
+	*key = jtoi(*key);
+	if (isalpha(*key) &amp;&amp; !index(Square, *key))
+	    Square[i++] = (*key);
+	++key;
+    }
+    for (c = 'a'; c &lt;= 'z'; ++c) {
+	if (c == 'j' || index(Square, c))
+	    continue;
+	Square[i++] = c;
+    }
+    assert(i == 25);
+}
+
+/* read stdin, place processed data in buf */
+prepare(buf, mode)
+char *buf;
+int   mode;
+{
+    int   c, last = 0;		/* last character */
+    char  splitter = 'x';	/* separates repeated letters, 'x' or 'z' */
+
+
+    while ((c = getchar()) != EOF) {
+	if (!isalpha(c))
+	    continue;
+	c = tolower(c);
+	c = jtoi(c);
+	if (c == last &amp;&amp; mode == ENCODE) {
+	    *buf++ = splitter;
+	    splitter = (splitter == 'x') ? 'z' : 'x';
+	}
+	last = c;
+	*buf++ = c;
+    }
+    *buf = 0;
+}
+
+extern long random();
+
+outchar(c, mode)
+char  c;
+int   mode;
+{
+    if (c == 'i' &amp;&amp; mode == ENCODE &amp;&amp; (random() &amp; 4))
+	c = 'j';
+    putchar(c);
+}
+
+
+transform(buf, ofs)
+char *buf;
+int   ofs;			/* 1 encodes, 4 decodes */
+{
+    int   r1, c1, r2, c2;
+
+    for (; *buf; buf += 2) {
+	r1 = findrow(buf[0]);
+	c1 = findcol(buf[0]);
+	if (!buf[1]) {
+	    buf[2] = 0;
+	    buf[1] = 'a'+(random()%26);
+	}
+	r2 = findrow(buf[1]);
+	c2 = findcol(buf[1]);
+	if (r1 == r2) {
+	    outchar(pos(r1, (c1 + ofs) % 5), ofs);
+	    outchar(pos(r2, (c2 + ofs) % 5), ofs);
+	} else if (c1 == c2) {
+	    outchar(pos((r1 + ofs) % 5, c1), ofs);
+	    outchar(pos((r2 + ofs) % 5, c2), ofs);
+	} else {
+	    outchar(pos(r1, c2), ofs);
+	    outchar(pos(r2, c1), ofs);
+	}
+    }
+    putchar('\n');
+}
+
+main(argn, argv)
+int   argn;
+char **argv;
+{
+    char  buf[BUFSIZ];
+    char *cmd;
+    int   mode;
+
+    srandom(getpid());
+    if (argn != 2) {
+	fprintf(stderr, "Playfair en/decoder\nusage:  %s keyword\n",
+		argv[0]);
+	exit(1);
+    }
+    Key = argv[1];
+
+    cmd = rindex(argv[0], '/');
+    cmd = (cmd) ? cmd + 1 : argv[0];
+    mode = (cmd[0] == 'u') ? DECODE : ENCODE;
+    if (mode == DECODE)
+	printf("NOTE:  'i' may be 'j', 'x' or 'z' may be extra.\n\n");
+
+    build_square();
+    prepare(buf, mode);
+    transform(buf, mode);
+
+    return (0);
+}
+
+
+
+/* Jonathan Stigelman, Stig@netcom.com, PGP public key by finger  */
+/* fingerprint = 32 DF B9 19 AE 28 D1 7A  A3 9D 0B 1A 33 13 4D 7F */
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00541" HREF="msg00541.html">Modified Vigenere encryption?</A></STRONG>
+<UL><LI><EM>From:</EM> poier@sfu.ca (Skye Merlin Poier)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00544.html">Data Insecurity Packages, etc.</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00555.html">CIPHERS: Dolphin Encrypt public review</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00541.html">Modified Vigenere encryption?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00542.html">Trust, Amateur/Professional, use of PRNGs</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00554"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00554"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

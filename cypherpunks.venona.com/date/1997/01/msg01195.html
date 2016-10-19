@@ -1,0 +1,205 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Algorithm Identifier for CDMF -->
+<!--X-From-R13: Dboreg Vrggvatn <enuNfuvcjevtug.pbz> -->
+<!--X-Date: Wed, 8 Jan 1997 11:02:02 &#45;0800 (PST) -->
+<!--X-Message-Id: v03007898aef99c6d0e1d@[139.167.130.248] -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Algorithm Identifier for CDMF</TITLE>
+<LINK REV="made" HREF="mailto:rah@shipwright.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01190.html">Date Prev</A>][<A HREF="msg01182.html">Date Next</A>][<A HREF="msg01190.html">Thread Prev</A>][<A HREF="msg01184.html">Thread Next</A>][<A HREF="index.html#01195">Date Index</A>][<A HREF="threads.html#01195">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Algorithm Identifier for CDMF</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Algorithm Identifier for CDMF</LI>
+<LI><em>From</em>: Robert Hettinga &lt;<A HREF="mailto:rah@shipwright.com">rah@shipwright.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 8 Jan 1997 13:50:10 -0500</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Grab your ankles, ladies and gents. This won't hurt a bit...
+
+Cheers,
+Bob Hettinga
+
+&lt;Wait, isn't that a freight train in the distance?&gt;
+
+--- begin forwarded text
+
+
+From: Bob Baldwin &lt;baldwin@rsa.com&gt;
+To: "'set-dev'" &lt;set-dev@terisa.com&gt;
+Subject: Algorithm Identifier for CDMF
+Date: Wed, 8 Jan 1997 09:41:08 -0800
+Mime-Version: 1.0
+Sender: owner-set-dev@terisa.com
+Precedence: bulk
+
+	The SET protocol needs an algorithm identifier
+for a 40 bit variant of des called CDMF for use
+with the AcqBackMsg.  This note defines the value for
+that identifier.
+		--Bob Baldwin
+
+--------------------------
+
+          ALGORITHM IDENTIFIER FOR IBM's CDMF ALGORITHM
+
+
+INTRODUCTION
+
+The Commercial Data Masking Facility (CDMF) is an
+application of DES that weakens the DES key from
+56 to 40 bits using a key shortening algorithm
+patented by IBM.  Licensing information for the CDMF
+patent is available from the Director of Licensing,
+IBM Corporation, 500 Columbus Avenue, Thornwood, NY 10594.
+
+This note defines the ASN.1 algorithm identifier and algorithm
+parameters for IBM's CDMF that has been registered by RSA Data
+Security Inc.
+
+RSA Data Security, Inc.'s Open Systems Interconnection (OSI) object
+identifier is 1.2.840.113549 (2a, 0x86, 0x48, 0x86, 0xf7, 0x0d in hex),
+as registered by the American National Standards Institute (ANSI).
+In the following, the prefix "rsadsi" refers to that object identifier.
+All object identifiers registered by RSA Data Security begin with this
+prefix.
+
+
+CDMFCBCPad
+
+This is a Cipher Block Chaining mode of operation with padding
+of a 40-bit variant of DES. It is defined in:
+
+  IBM Journal of Research and Development, "The Commercial Data
+  Masking Facility (CDMF) Data Privacy Algorithm", Volume 38,
+  Number 2, March 1994.
+
+Following the ASN.1 style of the "Agreements for Open Systems
+Interconnection Protocols: Part 12 OS Security", it is defined by:
+
+ALGORITHM MACRO ::=
+BEGIN
+ TYPE NOTATION ::= "PARAMETER" type
+ VALUE NOTATION ::= value(VALUE OBJECT IDENTIFIER)
+END -- of ALGORITHM
+
+IV8 ::= OCTET STRING (SIZE(8))
+
+CBC8Parameter ::= IV8
+
+CDMFCBCPad ALGORITHM
+ PARAMETER CBC8Parameter
+ ::= {iso(1) member-body(2) US(840) rsadsi(113549)
+      encryptionAlgorithm(3) 10}
+-- In hex, the CDMFCBCPad algorithm ID is:
+-- { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x03, 0x0A }
+
+The PARAMETER is needed to specify the Initialization Vector,
+which need not be kept secret. It is 8 octets long.
+
+This mode should be used to encrypt multiple blocks, where the
+full message is available. The random IV prevents codebook
+analysis of the start of the chain. The IV may be public.
+
+This mode will propagate a single bit error in one plaintext
+block into all succeeding blocks, and will propagate a single bit
+error in the ciphertext into a garbled plaintext block on
+decryption as well as a single bit error in the next plaintext
+block.
+
+The following padding mechanism should be used if the data
+to be encrypted is octet aligned, unless the security policy
+dictates otherwise:
+
+The input to the CDMF CBC encryption process must be padded to a
+multiple of 8 octet, in the following manner.  Let n be the
+length in octets of the input. Pad the input by appending 8-(n
+mod 8) octet to the end of the message, each having the value
+8-(n mod 8), the number of octets being added. In hexadecimal,
+the  possible paddings  are: 01,  0202, 030303,  04040404,
+0505050505, 060606060606, 07070707070707, and 0808080808080808.
+All input is padded with 1 to 8 octets to produce a multiple of 8
+octets in length. The padding can be removed unambiguously after
+decryption.
+
+Editor's Note - If adding the padding rules would cause
+existing implementations to break, this should be registered
+as a separate algorithm identifier.  Note, however, that
+[FIPS 81] specifies its own padding rules for padding binary
+data, in the absence of application-defined rules such as
+those above; those rules require an indication (which could
+be conveyed as an algorithm PARAMETER) of whether the data
+has been padded or not.
+
+--- end forwarded text
+
+
+
+-----------------
+Robert Hettinga (rah@shipwright.com), Philodox,
+e$, 44 Farquhar Street, Boston, MA 02131 USA
+"The cost of anything is the foregone alternative" -- Walter Johnson
+The e$ Home Page: <A  HREF="http://www.vmeng.com/rah/">http://www.vmeng.com/rah/</A>
+FC97: Anguilla, anyone? <A  HREF="http://offshore.com.ai/fc97/">http://offshore.com.ai/fc97/</A>
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01190.html">FC97: Anguilla, Anyone?, Part 2</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01182.html">RE: The FAGGOT list</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01190.html">FC97: Anguilla, Anyone?, Part 2</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01184.html">NEW SERVICE</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01195"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01195"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

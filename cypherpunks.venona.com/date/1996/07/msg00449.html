@@ -1,0 +1,146 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re:Pseudo&#45;DC&#45;net Project -->
+<!--X-From-R13: zppblNpbzzhavgvrf.pbz (Xvz [pQbl) -->
+<!--X-Date: Tue, 9 Jul 1996 11:10:45 +0800 -->
+<!--X-Message-Id: v02140b00ae07452b6958@[205.162.51.35] -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re:Pseudo-DC-net Project</TITLE>
+<LINK REV="made" HREF="mailto:mccoy@communities.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00440.html">Date Prev</A>][<A HREF="msg00459.html">Date Next</A>][<A HREF="msg00429.html">Thread Prev</A>][<A HREF="msg00450.html">Thread Next</A>][<A HREF="index.html#00449">Date Index</A>][<A HREF="threads.html#00449">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re:Pseudo-DC-net Project</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:janke@unixg.ubc.ca">janke@unixg.ubc.ca</A></LI>
+<LI><em>Subject</em>: Re:Pseudo-DC-net Project</LI>
+<LI><em>From</em>: <A HREF="mailto:mccoy@communities.com">mccoy@communities.com</A> (Jim McCoy)</LI>
+<LI><em>Date</em>: Mon, 8 Jul 1996 15:45:44 -0800</LI>
+<LI><em>Cc</em>: <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+janke@unixg.ubc.ca writes:
+&gt; I am working on a project to implement a variation of a DC-net to be run
+&gt; over the Internet. I am posting this summary to find out if it overlaps
+&gt; with projects others are working on; to see what members of the lists think
+&gt; of the general ideas for the network I have in mind; and to see if anyone
+&gt; is interested in helping me out.
+
+Short version:
+
+Your proposal will not work and is trivial for a TLA to break.
+
+Long version:
+
+There are two problems with this proposal, the star topology collapses the DC
+network into a two-party version of the DC-net protocol (in which collusion
+is trivial) and the shared PRNG allows _any_ participant to compromise a
+target member of the network (or evesdrop at the server and decode all
+traffic.)
+
+A simple example of such an attack would be for the TLA to register a host on
+the network and get the shared secret key for the PRNG.  The TLA then taps in
+
+either to the server's internet connection or any point in the network which
+divides the client graph into two parts, the server and a single client on
+one side and the remaining clients on the other.  The TLA then just XORs out
+the blinding data (which it knows because it is a member of the network) and
+it has all of the connections.  Additionally, having a MAC is just plain
+silly, the objective is to hide who is sending and having a MAC defeats the
+entire purpose of the proposal.
+
+You have basically created a simple packet anonymizer, which is not bad in
+and of itself, but it is not even close to a true DC-net (at least I am
+assuming so, based upon the initial description.) You have not mentioned
+whether or not all traffic exits the network at the server, if this is the
+case you are better off having each client establish a secure link to the
+server, running a PRNG constantly that is mirrored by the server, and XORing
+all of their traffic in to this stream.  The constant PRNG stream hides when
+the client is sending or receiving and the secure channel to the server
+discourages passive evesdropping. This does not defeat traffic analysis at
+the server, but then again neither does your proposal.
+
+Some other tips from someonw who has spent too much time thinking about
+DC-net implementations:
+
+        Ignore collision detection, just use ALOHA or a similar protocol.
+        Until you get up to serious bandwidth the computational cost is
+        not worth the effort.
+
+        Don't abandon the ring topology (this is where the DC-net gets its
+        security.)  Use multiple small (4-7 host) rings with overlap between
+        the rings, think of each ring as a LAN and hosts which are on
+        multiple rings as bridges/routers and you should get the picture...
+
+        Bandwidth economy will always suck, you can use hash trees to get
+        around a few of the problems but for the most part you have to accept
+        the costs and work around them in other areas.
+
+        You really, really need to read the 1987 Eurocrypt proceedings.
+
+
+jim
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00450" HREF="msg00450.html">Re: Pseudo-DC-net Project</A></STRONG>
+<UL><LI><EM>From:</EM> janke@unixg.ubc.ca</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00440.html">DIAL: directed information assembly line</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00459.html">Re: [RANT] Giving Mind Control Drugs to Children [RitalinPunks]</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00429.html">Pseudo-DC-net Project</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00450.html">Re: Pseudo-DC-net Project</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00449"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00449"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

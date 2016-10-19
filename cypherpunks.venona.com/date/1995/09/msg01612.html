@@ -1,0 +1,124 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: netscape bug -->
+<!--X-From-R13: Pvyy Ebzzresryq <fbzzresryqNbepuneq.zrqsbeq.zn.hf> -->
+<!--X-Date: Thu, 21 Sep 95 19:19:20 PDT -->
+<!--X-Message-Id: 199509220208.CAA00564@orchard.medford.ma.us -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199509212242.PAA04533@orac.engr.sgi.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: netscape bug</TITLE>
+<LINK REV="made" HREF="mailto:sommerfeld@orchard.medford.ma.us">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01613.html">Date Prev</A>][<A HREF="msg01614.html">Date Next</A>][<A HREF="msg01585.html">Thread Prev</A>][<A HREF="msg01624.html">Thread Next</A>][<A HREF="index.html#01612">Date Index</A>][<A HREF="threads.html#01612">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: netscape bug</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:tomw@cthulhu.engr.sgi.com">tomw@cthulhu.engr.sgi.com</A></LI>
+<LI><em>Subject</em>: Re: netscape bug </LI>
+<LI><em>From</em>: Bill Sommerfeld &lt;<A HREF="mailto:sommerfeld@orchard.medford.ma.us">sommerfeld@orchard.medford.ma.us</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 21 Sep 1995 22:08:25 -0400</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: Your message of "Thu, 21 Sep 1995 15:42:50 -0700 ."            &lt;<A HREF="msg01585.html">199509212242.PAA04533@orac.engr.sgi.com</A>&gt; </LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; I question the accuracy of this.  The fingerd bug was that a string in
+&gt; the static data area was read in with gets which could be overflowed.
+&gt; At some point in memory after this input buffer was the string constant
+&gt; that stored the name of the finger command.  What the Morris work did
+&gt; was to overflow the input buffer and replace the string constant
+&gt; "finger" with "csh".  When fingerd then exec'ed the command, that gave
+&gt; you a shell running on the machine.
+
+Nope, that wasn't it, either.
+
+See the Eichin/Rochlis "tour of the worm" paper.  
+
+I was visiting friends at MIT the night the worm hit.  After receiving
+some confused and unspecific reports that the worm was getting in
+through fingerd, I had a flash of insight as to how that might happen;
+as it turned out, this insight was correct, and shortly thereafter, I
+had reproduced a benign form of the fingerd attack.  As implemented by
+the worm, it only worked on vaxes, but it could have worked on other
+systems.
+
+The buffer in question was on the stack, not in static storage.
+
+The attacker wrote a long sequence of NOP's, followed by machine
+instructions which implemented the equivalent of exec("/bin/sh"),
+followed by the approximate stack address of the stack buffer; the
+last address was at the right place to overwrite the saved PC field in
+the stack frame.  When the routine "returned", it actually branched
+into the runway of NOP's, and then exec'ed "/bin/sh".
+
+Note that the actual stack address varied, as environment variables
+(which tend to vary from installation to installation) are located at
+the top of the stack.
+
+As it turned out, the attack did not work on most Athena systems,
+because the athena /etc/rc complex wound up using a large number of
+environment variables which pushed the location of the stack frame in
+question out of the range where the attack would have worked.
+
+					- Bill
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01585" HREF="msg01585.html">netscape bug</A></STRONG>
+<UL><LI><EM>From:</EM> tomw@orac.engr.sgi.com (Tom Weinstein)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01613.html">Re: real randomness for netscape - user clicking mouse</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01614.html">Re: "random" number seeds vs. Netscape</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01585.html">netscape bug</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01624.html">Re: netscape bug</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01612"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01612"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

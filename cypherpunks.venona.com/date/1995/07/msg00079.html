@@ -1,0 +1,170 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: general RC4 key searcher: optimisations anyone? -->
+<!--X-From-R13: "Xbanguna Eurxgre" <wfurxgreNnyvnf.pbz> -->
+<!--X-Date: Wed, 12 Jul 95 10:00:16 PDT -->
+<!--X-Message-Id: 9507121259.ZM1196@lennon.alias.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: general RC4 key searcher: optimisations anyone?</TITLE>
+<LINK REV="made" HREF="mailto:jshekter@alias.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00071.html">Date Prev</A>][<A HREF="msg00108.html">Date Next</A>][<A HREF="msg00060.html">Thread Prev</A>][<A HREF="msg00078.html">Thread Next</A>][<A HREF="index.html#00079">Date Index</A>][<A HREF="threads.html#00079">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: general RC4 key searcher: optimisations anyone?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: general RC4 key searcher: optimisations anyone?</LI>
+<LI><em>From</em>: "Jonathan Shekter" &lt;<A HREF="mailto:jshekter@alias.com">jshekter@alias.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 12 Jul 1995 12:59:03 -0400</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;/* RC4 Brute Force Key Searcher, by Andy Brown 1995
+&gt;
+&gt;This part of the package is meant to be portable between most systems
+&gt;so that Unix users can take part in the searching. After all, the
+&gt;kind of really high powered systems that can make a large dent in the
+&gt;key space are not running Windows NT. You will, however, require
+
+	Umm... ever hear of an Alpha? Besides which, this will compile on NT,
+and just about every other OS known to man, so it's a moot point.
+
+
+&gt;#define SwapByte(a,b) ((a)^=(b),(b)^=(a),(a)^=(b))
+
+	If the two values are in memory (which they are as you swap state
+vector elements) then this xor trick requires three read-modify-write cyles --
+slow on any architecture. Use a temp variable instead.
+
+&gt;/* prepare the key */
+&gt;
+&gt;for(counter=0;counter&lt;256;counter++)
+&gt;state[counter]=(unsigned char)counter;
+
+	This is bad. Use either a) memcpy as in bruterc4 or b) an unsigned
+long, starting at either 0x00010203 or 0x03020100 depending on endianness,
+ adding 0x04040404 at each iteration to generate four bytes per shot. Remember,
+on most machines a 32-bit store is the same speed as an 8-bit store. The fastes
+I have been able to do on this section was obtained by unrolling the loop
+manually, and using *two* long variables, alternating, to remove instruction
+dependancies.
+
+&gt;for(counter=0;counter&lt;256;counter++)
+&gt;
+&gt;index2=(key[index1]+state[counter]+index2) &amp; 0xFF;
+&gt;SwapByte(state[counter],state[index2]);
+&gt;
+&gt;if(++index1==keybytes)
+&gt;index1=0;
+
+1) This loop needs to be unrolled! Using direct array offsets instead of
+incrementing the counter is a speedup on many machines. Also, experiment with
+the unroll size. Making it larger increases performance until you get too big
+to fit in the cache, at which point it slows down. My experiments on a few
+different types of machines showed that unrolling the inner loop 16 or 32 times
+was usually about right. See the inner loop of bruterc4. Use macros to do the
+unrolling.
+
+2) You can avoid the if statement for checking for key wrap around as follows:
+in your initialization, construct an array as follows:
+
+for (i=0; i&lt;keysize-1; i++)
+  transtbl[i] = i+1;
+transtbl[i] = 0;
+
+Then, after each iteration:
+
+index1 = transtbl[index];
+
+Viola, no if statements, no divides or mods. On many architectures this is
+worth the trouble as branches are expensive. Obviously, though, test this
+
+
+
+&gt;/* do two RC4 operations as a preliminary test. If this fails then test
+&gt;the next one, then the rest. This should result in a lot of rejections
+&gt;before the rest of the loop is entered */
+
+	I like the early-out test.
+
+&gt;x=(x+1) &amp; 0xFF;
+&gt;y=(state[x]+y) &amp; 0xFF;
+&gt;SwapByte(state[x],state[y]);
+
+  Again, swapping with xor probably hurts you here. Use a register temp
+variable.
+
+
+	My personal keycracker accepts general length keys and is not too much
+ slower than bruterc4. So it can be done.
+
+
+	- Jonathan
+
+-- 
+    ____________________________________________________
+   /   Jonathan Shekter   /                            /
+  /   Graphics Hack      /   "Probability alone       /
+ /  Alias/Wavefront     /   dictates that I exist"   /
+/______________________/____________________________/
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00078" HREF="msg00078.html">Re: general RC4 key searcher: optimisations anyone?</A></STRONG>
+<UL><LI><EM>From:</EM> m5@dev.tivoli.com (Mike McNally)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00071.html">Re: Don't trust the net too much</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00108.html">Re: Why they can be sued... (Was: freedom of speech)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00060.html">general RC4 key searcher: optimisations anyone?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00078.html">Re: general RC4 key searcher: optimisations anyone?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00079"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00079"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

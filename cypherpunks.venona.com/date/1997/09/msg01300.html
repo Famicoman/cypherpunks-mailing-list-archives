@@ -1,0 +1,153 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Fwd: Re: Quor's cypher -->
+<!--X-From-R13: Oabalzbhf <abobqlNDSBZOK.QA[> -->
+<!--X-Date: Mon, 22 Sep 1997 06:08:35 +0800 -->
+<!--X-Message-Id: 199709212145.XAA07725@basement.replay.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Fwd: Re: Quor's cypher</TITLE>
+<LINK REV="made" HREF="mailto:nobody@REPLAY.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01294.html">Date Prev</A>][<A HREF="msg01286.html">Date Next</A>][<A HREF="msg01925.html">Thread Prev</A>][<A HREF="msg01791.html">Thread Next</A>][<A HREF="index.html#01300">Date Index</A>][<A HREF="threads.html#01300">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Fwd: Re: Quor's cypher</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Fwd: Re: Quor's cypher</LI>
+<LI><em>From</em>: Anonymous &lt;<A HREF="mailto:nobody@REPLAY.COM">nobody@REPLAY.COM</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 21 Sep 1997 23:45:08 +0200 (MET DST)</LI>
+<LI><em>Comments</em>: This message did not originate from the Sender address above.It was remailed automatically by anonymizing remailer software.Please report problems or inappropriate use to theremailer administrator at &lt;abuse@REPLAY.COM&gt;.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+This is a really nifty encryption program.  It runs about half the speed
+of rc4, but seems much more secure.
+
+
+--- Forwarded Message:
+
+From: quor@nym.alias.net
+Subject: Re: tell me what you think of this...
+
+[snip]
+
+---
+
+/* Stream ciphers are often used because of their speed and simplicity of
+implementation despite their inherent weakness against known-plaintext,
+ciphertext-modification, and key-reuse attacks.  The algorithm described
+below provides a more secure alternative for encrypting data eight bits
+at a time, which, while maintaining a simple self-inverting architecture,
+provides resistance to the aforementioned attacks, and features a large
+keyspace, small code size, back traffic protection, and resistance to
+timing attacks and differential cryptanalysis. */
+
+
+/* Qcypher.c */
+
+#include &lt;stdio.h&gt;
+
+unsigned char a,b,c,state[256];
+
+unsigned char q(unsigned char i)
+{
+  static unsigned char a0,a1,b0,b1,c1,c2,c3,c4,o,d1,d2,d3,d4;
+
+  a0=state[a];
+  a1=state[a0];
+  b0=state[b];
+  b1=state[b0];
+  c1=i^(0xAA&amp;state[(i&amp;0x55)^a]);
+  c2=c1^(0x55&amp;state[(c1&amp;0xAA)^b]);
+  c3=c2^(a+b)^(a0+b0);
+  c4=c3^(0x55&amp;state[(c3&amp;0xAA)^b]);
+  o=c4^(0xAA&amp;state[(c4&amp;0x55)^a]);
+  d1=i&amp;o;
+  d2=i^o;
+  d3=c2&amp;c3;
+  d4=c2^c3;
+  state[c&amp;=255]^=a^d4;
+  state[c^0x80]^=b^d4;
+  a+=d1+b1+1;
+  b^=d2^d3^a1;
+  c++;
+  return(o);
+}
+
+void setkey(unsigned char *key, int len)
+{
+  int x;
+  a=b=c=0;
+  for(x=256;x--;state[x]=0);
+  for(x=0;x&lt;len;x++) state[x&amp;255]^=key[x];
+  for(;len--;*(key++)=0) q(*key);
+  for(x=0;x&lt;256;q(x++));
+}
+
+void main(int ac,unsigned char **av)
+{
+  unsigned char byte;
+
+  setkey(av[1],strlen(av[1]));
+
+  while(fread(&amp;byte,1,1,stdin)&gt;0)
+    putchar(q(byte));
+}
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01294.html">Re: US Senate bans laptops</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01286.html">I`m back ;-)...</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01925.html">Webmasters Only!</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01791.html">Re: Fwd: Re: Quor's cypher</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01300"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01300"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

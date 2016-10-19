@@ -1,0 +1,137 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Trailing blanks in PGP -->
+<!--X-From-R13: Vny <74076.1041NQbzchEreir.QA[> -->
+<!--X-Date: Sat, 9 Jan 93 17:12:59 PST -->
+<!--X-Message-Id: 930110010447_74076.1041_DHJ70&#45;1@CompuServe.COM -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Trailing blanks in PGP</TITLE>
+<LINK REV="made" HREF="mailto:74076.1041@CompuServe.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00057.html">Date Prev</A>][<A HREF="msg00056.html">Date Next</A>][<A HREF="msg00049.html">Thread Prev</A>][<A HREF="msg00056.html">Thread Next</A>][<A HREF="index.html#00058">Date Index</A>][<A HREF="threads.html#00058">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Trailing blanks in PGP</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Cypherpunks &lt;<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>&gt;</LI>
+<LI><em>Subject</em>: Trailing blanks in PGP</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:74076.1041@CompuServe.COM">74076.1041@CompuServe.COM</A>&gt;</LI>
+<LI><em>Date</em>: 09 Jan 93 20:04:47 EST</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Edgar points out that PGP prepends a "- " string to every line that starts
+with "-", and suggests that it would not be much further to go to strip
+trailing blanks.
+ 
+While I sympathize with the problems Edgar and others have with trailing
+blanks messing up signature checking, it turns out that the "- " quoting is
+done at a different stage of the processing than signature checking.
+ 
+When a signed message is created, it is first "canonicalized", which
+presently means only that each line is made to end with a carriage return
+line feed.  The signature is then calculated on this form.  For the
+cleartext signature, the message is then wrapped in the "-----BEGIN PGP
+MESSAGE-----" lines, and the quoting of lines starting with "-" is done.  As
+Edgar surmises, this quoting is so that the end of the message can be
+accurately located, even if the message contains lines like "-----END PGP
+MESSAGE-----".
+ 
+On the receiving end, the message is first stripped of the -----BEGIN and
+-----END lines, and the "-" quoting is undone.  The resulting message is
+then canonicalized (so that lines end with CRLF's) and the signature is
+calculated and checked against that sent with the message.
+ 
+Space stripping could be done fairly easily in the "unwrapping" process, along
+with the "-" de-quoting, as Edgar suggests.  But it would still fail if the
+user signed a message which ended a line with a blank.  In fact, if he ever
+did sign such a message, and the de-quoting routine were enhanced to strip
+trailing blanks, the message would always fail the signature check, because
+that necessary trailing blank will be gone.
+ 
+What really needs to be done is to change the definition of a "canonical
+text" message.  Presently it only specifies CRLF line terminators.  It would
+have to be enhanced to specify also that no spaces precede any CRLF.  If
+this were done, then the canonicalizing process done at both ends would
+strip the trailing blanks before calculating the signature, and therefore
+trailing blanks would not affect the signature check.
+ 
+Presently, PGP "knows" that on a PC, canonical text form is the same as
+regular text form.  That is because CRLF is the normal line terminator on a
+PC.  So, canonicalizing is skipped on the PC, which speeds up signing and
+verification on this class of machines, which include some of the slowest on
+which PGP is run.  Adding blank-stripping to the definition of canonical
+text means that all messages will have to be canonicalized on PC's, thus
+adding an extra processing pass which is avoided now.  So there is some cost
+in doing this.
+ 
+There are also some compatibility problems, in that old signed messages
+which had trailing blanks would no longer signature-verify if we changed the
+definition of canonical text in this way.  However, there probably aren't
+that many such messages, so this may be a tolerable cost.
+ 
+I do think we should consider making this change, as many people have
+complained about it.
+ 
+Hal Finney
+74076.1041@compuserve.com
+
+
+
+Distribution:
+  Cypherpunks &gt;INTERNET:cypherpunks@toad.com
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00057.html">Cascading aliases</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00056.html">Politics of Rmailers</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00049.html">Delimiting text body in ARA</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00056.html">Politics of Rmailers</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00058"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00058"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

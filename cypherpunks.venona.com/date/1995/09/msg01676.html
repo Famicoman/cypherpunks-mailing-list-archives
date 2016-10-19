@@ -1,0 +1,154 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: SSL Man&#45;in&#45;the&#45;middle -->
+<!--X-From-R13: "Rnivq X. Pvnapb" <ovnapbNvgevor.arg> -->
+<!--X-Date: Fri, 22 Sep 95 07:10:59 PDT -->
+<!--X-Message-Id: 199509221407.KAA23176@gatekeeper.itribe.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>SSL Man-in-the-middle</TITLE>
+<LINK REV="made" HREF="mailto:bianco@itribe.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01674.html">Date Prev</A>][<A HREF="msg01677.html">Date Next</A>][<A HREF="msg01668.html">Thread Prev</A>][<A HREF="msg01774.html">Thread Next</A>][<A HREF="index.html#01676">Date Index</A>][<A HREF="threads.html#01676">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>SSL Man-in-the-middle</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: SSL Man-in-the-middle</LI>
+<LI><em>From</em>: "David J. Bianco" &lt;<A HREF="mailto:bianco@itribe.net">bianco@itribe.net</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 22 Sep 1995 10:10:42 -0400</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Has anyone given much thought to the feasability of a man-in-the-middle
+attack against an SSL (or other similar) transaction?  To me, the
+possibility seems obvious, so I figure it must have been discussed before,
+though I haven't seen it.
+
+The basic idea is pretty simple, really a flaw in the user interface of the
+browser more than a flaw in SSL.  Neither browsers nor servers routinely
+validate that they are communicating with the entity they think they are.
+ Sure, with netscape you can ask for the document information window, which
+shows the server's public key information, but this isn't a common action
+among users, and certainly isn't something you'd want to do for every page
+you viewed.
+
+The only readily accessible information about security is that blue key at
+the bottom of the netscape window.  Netscape docs tell you that if that key
+is blue, your transaction is "secure."  In reality, the only thing that key
+means is that you've negotiated a session key and are encrypting your
+communications.  It says nothing about the fact that you're actually
+communicating with the correct party.  Authentication is a large part of
+security, and Netscape doesn't make that information conveniently
+available.
+
+Consider the following example.  Bob wants to communicate securely with
+Alice.  He fires up his "secure" browser, looks up Alice's address in the
+DNS and makes a connection.  He then sends Alice a document and
+disconnects.
+
+Now consider the following attack on the scenario:  Bob still wants to
+ communicate with Alice.  He fires up his browser and looks up Alice in the
+DNS.  Mallet, who wants the information Bob's sending, has subverted
+Alice's DNS server and replaced Alice's IP address with his own, making a
+note of the proper value.  Thus, when Bob looks up Alice's address in DNS,
+he gets the wrong information and contacts Mallet instead.  Mallet performs
+the SSL protocol with Bob, pretending to be the server, and then with
+Alice, pretending to be the client.
+
+Since neither the browser nor the server perform any authentication checks,
+neither Bob nor Alice know they are really speaking to Mallet.  The best
+Alice can do is check the IP address of the client she's speaking to, but
+if Mallet has his own DNS, he can make the IP address map to whatever name
+he wants, including Bob, in order to fool alice.  Even if Alice doesn't
+depend on the DNS for IP resolution, probably doesn't know that the IP
+address in question is really Mallet's, since it looks just like any other
+IP address to her.
+
+In this scenario, Bob gets a warm fuzzy since his key is blue and he knows
+his information is being encrypted as it goes out.  Alice has a smaller
+fuzzy, since she believes the transaction is secure from prying eyes.
+ Mallet has a *really big* fuzzy, since he's able to read the data Bob
+sends, decrypt it, save it, then re-send it to Alice.
+
+I've read through the SSL spec, and it provides authentication for both the
+server and the client, but these features are rarely used, probably because
+they are somewhat inconvenient for the user.  A good first step would be to
+include the IP address of the server in the certificate signed by VeriSign.
+ In this way, browsers could perform automatic checks that the IP address
+in the certificate is actually the one that's being communicated with.
+ This does raise other questions (such as protecting from IP spoofing), but
+IMHO would be a good way of providing an automatic "first check" without
+inconveniencing users.  The added inconvenience of obtaining a new
+certificate when your server's IP address changes is fairly minor, and
+could be viewed as necessary overhead for doing secure transactions via the
+Net.
+
+
+
+--
+==========================================================================
+David J. Bianco			| Web Wonders, Online Oddities, Cool Stuff
+iTribe, Inc.			| Phone: (804) 446-9060 Fax: (804) 446-9061
+Suite 1700, World Trade Center	| email: &lt;bianco@itribe.net&gt;
+Norfolk, VA 23510		| URL  : <A  HREF="http://www.itribe.net/~bianco/">http://www.itribe.net/~bianco/</A>
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01869" HREF="msg01869.html">Re: SSL Man-in-the-middle</A></STRONG>
+<UL><LI><EM>From:</EM> Eric Young &lt;eay@mincom.oz.au&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01674.html">Re: Netscape closes up 1 3/8 today!</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01677.html">Re: Another Netscape Bug (and possible security hole)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01668.html">e$: Non-Repudiation</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01774.html">Re: SSL Man-in-the-middle</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01676"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01676"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

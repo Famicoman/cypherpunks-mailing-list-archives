@@ -1,0 +1,208 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Proposal: some more standard remailer features -->
+<!--X-From-R13: ewpNtah.nv.zvg.rqh (Dnl) -->
+<!--X-Date: Wed, 6 Apr 94 01:16:51 PDT -->
+<!--X-Message-Id: 9404060815.AA28162@geech.gnu.ai.mit.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Proposal: some more standard remailer features</TITLE>
+<LINK REV="made" HREF="mailto:rjc@gnu.ai.mit.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00228.html">Date Prev</A>][<A HREF="msg00229.html">Date Next</A>][<A HREF="msg00221.html">Thread Prev</A>][<A HREF="msg00238.html">Thread Next</A>][<A HREF="index.html#00232">Date Index</A>][<A HREF="threads.html#00232">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Proposal: some more standard remailer features</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Proposal: some more standard remailer features</LI>
+<LI><em>From</em>: <A HREF="mailto:rjc@gnu.ai.mit.edu">rjc@gnu.ai.mit.edu</A> (Ray)</LI>
+<LI><em>Date</em>: Wed, 6 Apr 94 04:15:40 -0400</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Hal writes:
+&gt; From: rjc@gnu.ai.mit.edu (Ray)
+&gt; &gt; with no spaces in it. A command block should end when two blank lines are
+&gt; &gt; encountered (which are stripped from the output) or a non-blank
+&gt; &gt; line that doesn't start with '::' is encountered.
+
+&gt; Why look for *two* blank lines to end a command block?  Why not just end a
+&gt; command block when you find a line not starting with ::?
+
+   Experience from the Extropians list. A large number of people
+made the mistake of inserting blank lines between commands and
+some people's mailers did it automatically (one of the more
+stupider one's actually removed a leading colon from the line
+changing ::exclude to :exclude) I got a lot of complaints, so I removed
+the restriction of single blank lines being able to terminate. In fact,
+the regular expression which parses lines looks like this:
+
+/^\s*::\s*(.*)$/
+
+  So that spaces are allowed before and after the '::'
+
+  On the extropians list, an arbitrary amount of whitespace is allowed
+because ':::' is used to separate command blocks from the body of
+messages.
+
+&gt; &gt; Message Encapsulation:
+&gt; &gt; 
+&gt; &gt;  I propose a standard format for recursively storing messages in
+&gt; &gt; envelopes with standard formats.  Each envelope should begin with the
+&gt; &gt; command "::envelope" followed by the envelope method, followed by the
+&gt; &gt; body. The end of the "envelope" is specified with ::end METHODNAME
+
+&gt; This is reminiscent of MIME.  Have you looked at that?  They already deal
+&gt; with encapsulation as well as message splitting, I think.  You could copy
+&gt; their message formats without committing to full MIME support.  Plus it
+&gt; might be possible to add encryption and remailing support to MIME mail user
+&gt; agents by using the hooks they already provide.
+
+   I thought of MIME, but I didn't know it was so popular (I last
+looked at it over a year ago). I just looked at the comp.mail.mime
+FAQ and the RFCs and I see that MIME is gaining momentum. Two problems
+instantly jumped out at me when reading the MIME documents:
+
+1) more than 2-level encodings are not supported (no recursion)
+2) no application/viewpgp  or transfer-encoding: pgp type
+
+   MIME actually takes care of the multipart issue nicely. I'm going to
+do some more research and I may end up scraping ::envelope if MIME's
+encapsulation is powerful enough for inter-remailer I/O. (the one
+pain in the butt is that now I will have to process the headers
+instead of throwing them away) Perhaps the PEM/MIME documents will be
+of help.
+
+&gt; The only thing that seems wrong about this is that the remailer apparently
+&gt; has to know whether it is sending to a person or another remailer.  I think
+&gt; you should follow instructions about pasting these header fields by what
+&gt; the user has requested rather than deciding for him.  Maybe I don't under-
+&gt; stand exactly how Ray is proposing that these commands be used.
+
+   Correct. You don't want headers to be visible during the chaining,
+and the remailers throw away incoming headers. Therefore, I felt
+that ::@ shouldn't be applied until the message is posted or
+sent to a real e-mail address. Any suggestions on a better
+method?
+
+&gt; This may sound crazy, but I am concerned about adding these features which
+&gt; make the system too easy to use.  It seems that at the limit a person can
+&gt; just put "::To: friend@college.edu#remailer1#remailer2#*#*#remailer3" at
+&gt; the top of his message and his mail goes zipping down this extremely com-
+&gt; plicated path.  But the problem is that this is really deceptive in
+&gt; terms of how secure it is.  All this ease of use is at the expense of having
+&gt; to put a lot more trust into one or a few remailer operators.
+
+   You could concentrate your trust on the first remailer in the chain.
+Once it goes through that remailer, it is now encrypted for the
+recipient and the source of the message is destroyed. Keep in mind,
+the other remailers in the chain can not snoop on the message because
+it is encrypted for the recipient automatically (if a key is present).
+The other remailers can do traffic analysis if the user doesn't
+use any wildcards ("*"), but this can be limited using recursion. e.g.
+
+::envelope PGP 
+::to remailer1
+::envelope PGP [for remailer 1]
+::to remailer2
+::envelope PGP [for remailer 2]
+::to remailer3
+::envelope PGP [for friend]
+::to friend@college.edu
+
+   I agree most of the power should be in the client (hopefully,
+my approach allows both a powerful client or simplemail use), but
+there also needs to be a "lowering of transaction costs" as Eric
+suggested. Many people don't have unix accounts and with the advent
+of Compuserve/Delphi/Genie/AOL internet gateways, some sort of
+server approach is required.
+
+   Part of the reason for including a socket-server in the remailer
+is to allow clients to hook into the network and get data fast.
+
+&gt; This kind of splitting would be more useful if it were carried through
+&gt; to the end user.  Otherwise the reassembled message is conveniently
+&gt; provided for inspection by the spooks as it goes to him.  Again, I think
+&gt; MIME may provide for reassembly at the end user.
+
+   If I understand correctly from my fast reading, it does: the
+multipart/partial content-type. (the comp.mail.mime faq is an example)
+The hurdle is getting a MIME type registered which can recognize
+pgp encrypted and/or signed messages.
+
+&gt; &gt;  I also propose ::route which would specify preferences preferred for
+&gt; &gt; remailers when searching for other remailers to chain your
+&gt; &gt; message to. e.g.
+
+&gt; Would this be used with the "*" remailer-chooses-remailer feature?  If the
+&gt; user specifies the path then presumably there is no provision for remailers
+&gt; to make choices like these.
+
+   Correct. It would be used with the "*" feature and also the
+auto-chaining. (if a user just says ::to friend@college.edu, the
+remailer may choose to chain this through several other remailers
+automatically)
+
+Thanks,
+
+-Ray
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00238" HREF="msg00238.html">PGP-MIME</A></STRONG>
+<UL><LI><EM>From:</EM> Alan Barrett &lt;barrett@daisy.ee.und.ac.za&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00228.html">Rubbish Lister</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00229.html">PGP Tools bug fixed</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00221.html">Re:  Proposal: some more standard remailer features</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00238.html">PGP-MIME</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00232"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00232"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

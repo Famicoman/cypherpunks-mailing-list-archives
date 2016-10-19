@@ -1,0 +1,196 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Some informed comments on RSA's S/MIME -->
+<!--X-From-R13: Dvpu Enym <efnymNbfs.bet> -->
+<!--X-Date: Fri, 15 Sep 95 04:18:35 PDT -->
+<!--X-Message-Id: 9509151118.AA07881@sulphur.osf.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Some informed comments on RSA's S/MIME</TITLE>
+<LINK REV="made" HREF="mailto:rsalz@osf.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00943.html">Date Prev</A>][<A HREF="msg00972.html">Date Next</A>][<A HREF="msg00965.html">Thread Prev</A>][<A HREF="msg00947.html">Thread Next</A>][<A HREF="index.html#00944">Date Index</A>][<A HREF="threads.html#00944">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Some informed comments on RSA's S/MIME</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Some informed comments on RSA's S/MIME</LI>
+<LI><em>From</em>: Rich Salz &lt;<A HREF="mailto:rsalz@osf.org">rsalz@osf.org</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 15 Sep 1995 07:18:05 -0400</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Date: Thu, 14 Sep 1995 08:39:49 -0700 (PDT)
+&gt;From: Ned Freed &lt;NED@innosoft.com&gt;
+Subject: Re: Re[2]: MOSS conformance testing
+Cc: pem-dev@TIS.COM
+Message-id: &lt;01HV9F2PHBSU8Y4Z8U@INNOSOFT.COM&gt;
+
+&gt; I just got wind of RSA's draft for Content-Type: application/x-pkcs7-mime.
+&gt; Has there been any discussion on this - comparison to PEM etc.? If so
+&gt; where's the list, URLs of archives....? Or did I just go "deaf" for a while
+&gt; here on thist list? (The last could of months have been caught up in
+&gt; changing companines...)
+
+S/MIME was developed privately by RSA in conjunction with a number of other
+companies. To the best of my knowledge all discussion has occurred on closed,
+private lists. As a potential customer of RSA I recently managed to get myself
+added to one of these lists (it may or may not be the only one where S/MIME is
+discussed) but I haven't had time to post anything there yet. I plan to post
+this message there in the next couple of days.
+
+I'm not saying this approach to protocol development is a good thing or a bad
+thing, but I do believe that it has led to the production of a specification
+that is seriously flawed, and that those flaws would have been detected and
+probably corrected had the discussion been more public.
+More on this below.
+
+&gt; I browsed through the IETF drafts &amp; personal contributions &amp; search tool...
+&gt; didn't find anything on RSA's "S/MIME".
+
+&gt; I did get the PostScript file from RSA's pages &amp; had a read....
+
+&gt; <A  HREF="http://www.rsa.com/pub/S-MIME/">http://www.rsa.com/pub/S-MIME/</A>
+
+The specification, at least, is public. Given the amount of press surrounding
+this proposal and the strong liklihood of it being widely used I strongly
+recommend that everyone who is interested in email security obtain a
+copy of the specification and read it.
+
+However, the proposal is simple enough that it can be summarized in just two
+paragraphs. S/MIME is based on PKCS #7, which in turn is based on classic PEM.
+The significant difference between PKCS #7 and PEM is that it uses an ASN.1
+encoding for the entire security object rather than the header/text encoding of
+RFC1421. In fact the specification states that mechanical conversion between
+RFC1421 formats and PKCS #7 should be possible as long as the proper set of
+algorithms are used. I think that mechanical conversion into and out of the
+PEM-derived subset of MOSS is also feasible but I haven't checked up on the
+specifics of this.
+
+S/MIME in turn is a simple encapsulation of PKCS #7 in MIME, consisting of  an
+application subtype label and an encoding of the PKCS #7 object using standard
+MIME encodings. The inner secured content is then seen as another MIME object.
+This is almost identical to Jeff Schiller's earlier proposal for embedding PEM
+in MIME. There is only one significant twist -- in the case of signed but not
+encrypted data the specification calls for the use of multipart/alternative,
+with the first part being an unsigned copy of the signed data and the second
+part being the PKCS #7 object, including the signed data.
+
+Two obvious flaws in this approach should be obvious from this description. The
+first is simply one of excessive overhead -- sending signed material in such a
+way that it can be read on vanilla email systems as well as with an S/MIME
+system introduces something on the order of 133% overhead.
+
+The second flaw is more serious. The data that a user without S/MIME reads is
+not signed. This opens the door to attacks where the unsigned version is
+tampered with but the signed version is left alone.
+
+This turns into a really insidious problem when you consider how privacy
+services are likely to be deployed in some environments. One model I expect to
+be rather popular is that of having a remote signature verification service
+within a secure enclave. That is, most of the user agents that people use won't
+have the ability to validate a signature. Users will, however, have secure
+access to an agent that will validate the signature on a message for them. (The
+service may well be a different application on the same machine.) They simply
+submit the message to this service and it tells them whether or not the
+signature matches.
+
+The problem, of course, is that the material the user of the unextended agent
+reads isn't what's signed. And in general there is no way to correlate this
+material with the signed copy -- since it was exposed to the message transport
+layer without any special tagging to indicate its signed nature the transport
+may well have changed it so its no longer a byte-for-byte copy of the signed
+version (which is inherently protected against such munging). 
+
+Comparing this approach with security multiparts is quite instructive. Security
+multiparts only introduces the overhead necessary to encode the single copy of
+the data -- at most 33% in the case of base64 -- plus of course the fixed
+overhead of the signature information. As such, it is far more efficient than
+S/MIME when it comes to signed but unencrypted material. Security multiparts
+can be processed in a single pass as well. I'm not sure this is true of S/MIME
+-- it depends on the specifics of the ASN.1 structure that's used. But by far
+the most important difference is that security multiparts do not suffer from
+this vulnerability when used in an environment with remote security servers. 
+
+You can of couse avoid this problem by not including the extra copy of the
+signed material. The problem with this approach is that you won't be able to
+read such a message on anything short of an agent that knows how to take apart
+a PKCS #7 structure.
+
+I note in passing that there was absolutely no reason why security multiparts
+could not have been used in S/MIME instead of the chosen encapsulation. PKCS #7
+explicitly provides a facility whereby the secured data is stored outside of
+the ASN.1 object. This then fits seamlessly into the security multiparts
+methodology.
+
+I do not propose to debate the relative merits of PKCS #7 versus MOSS. Modulo
+the MIME issues this is essentially the same as debating the merits of PEM
+versus MOSS, and I've had more of that than I care for. Besides, I think folks
+should use whatever security service they feel like using. I've maintained all
+along that my interest is primarily that of standardizing on a single embedding
+methodology for use with MIME. I'm very disappointed that S/MIME has seen fit
+to use what to my mind is a technically inferior embedding solution when
+compared to security multiparts, and I'd really like to try to get the S/MIME
+folks to switch to a security multiparts approach if its not too late for them
+to do so.
+
+I'm very interested in any and all comments on what I've written here. I intend
+to post them to the S/MIME list I'm now on.
+
+				Ned
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00943.html">Re: Linking = Showing = Transferring?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00972.html">Re: Linking = Showing = Transferring?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00965.html">Re: DD, pedophiles, and Terrorists, oh my</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00947.html">VIO_lat</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00944"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00944"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

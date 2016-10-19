@@ -1,0 +1,114 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: NIS library code exposure -->
+<!--X-From-R13: Buvy Yneygba <xneygbaNargfpncr.pbz> -->
+<!--X-Date: Wed, 27 Sep 95 21:02:43 PDT -->
+<!--X-Message-Id: 14539.812260953@ghoti.mcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>NIS library code exposure</TITLE>
+<LINK REV="made" HREF="mailto:karlton@netscape.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02082.html">Date Prev</A>][<A HREF="msg02083.html">Date Next</A>][<A HREF="msg02087.html">Thread Prev</A>][<A HREF="msg02097.html">Thread Next</A>][<A HREF="index.html#02081">Date Index</A>][<A HREF="threads.html#02081">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>NIS library code exposure</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: NIS library code exposure</LI>
+<LI><em>From</em>: Phil Karlton &lt;<A HREF="mailto:karlton@netscape.com">karlton@netscape.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 27 Sep 1995 21:02:33 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:karlton@netscape.com">karlton@netscape.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Once again I speak for myself and not Netscape.
+
+While investigating one of the crashes we ended up decompling some of
+the code in the C library. It turns out that in some UNIX systems, the
+code in gethostbyname_yp will copy the hostname argument onto a stack
+local buffer. That buffer appears to be of size MAXHOSTNAMELEN. [This
+is very efficient code at destroying the stack: it does not use strcpy
+or sprintf; there is an inline loop copying characters until it finds a
+NUL.]
+
+An unstated (in any documentaton I could find) limitation on calls to
+gethostbyname is that the "name" parameter must be a limited size
+string for it to work at all. I suspect this bug has been in the NIS
+(nee YP) code for some time.
+
+Do you have any daemons that run as root and do networking? Are you
+sure that all of them check the length of the host name before passing
+it to gethostbyname?
+
+[Avoid the fencepost error: MAXHOSTNAMELEN is really the size of the
+buffer and not the maximal string length. You need room for the
+trailing NUL.]
+
+We have not looked into the networking libraries that are typically
+found on a PC or Macintosh. The exposure may also be present there.
+
+PK
+--
+Philip L. Karlton			karlton@netscape.com
+Principal Curmudgeon			<A  HREF="http://www.netscape.com/people/karlton">http://www.netscape.com/people/karlton</A>
+Netscape Communications Corporation
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="02097" HREF="msg02097.html">Re: NIS library code exposure (Unix network exposure)</A></STRONG>
+<UL><LI><EM>From:</EM> cort &lt;cort@ecn.purdue.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02082.html">Re: [ PROPOSED NEW STANDARD ] "I-like-encrypted-mail" tag</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02083.html">Re: Using sound cards to accelerate RSA?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02087.html">Re: Patch release of Netscape available</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02097.html">Re: NIS library code exposure (Unix network exposure)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02081"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02081"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

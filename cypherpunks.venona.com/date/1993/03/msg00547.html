@@ -1,0 +1,441 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: alt.hackers post -->
+<!--X-From-R13: Sevp Vhturf <uhturfNfbqn.orexryrl.rqh> -->
+<!--X-Date: Sun, 28 Mar 93 09:26:28 PST -->
+<!--X-Message-Id: 9303282007.AA00701@soda.berkeley.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>alt.hackers post</TITLE>
+<LINK REV="made" HREF="mailto:hughes@soda.berkeley.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00546.html">Date Prev</A>][<A HREF="msg00548.html">Date Next</A>][<A HREF="msg00544.html">Thread Prev</A>][<A HREF="msg00548.html">Thread Next</A>][<A HREF="index.html#00547">Date Index</A>][<A HREF="threads.html#00547">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>alt.hackers post</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: alt.hackers post</LI>
+<LI><em>From</em>: Eric Hughes &lt;<A HREF="mailto:hughes@soda.berkeley.edu">hughes@soda.berkeley.edu</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 28 Mar 93 12:07:00 -0800</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Rusty Babani forwarded me my hackers postings from six months ago.
+
+Thanks!
+
+Here they are (in two messages).
+
+Eric
+-----------------------------------------------------------------------------
+From: hughes@soda.berkeley.edu (Eric Hughes)
+Newsgroups: alt.hackers
+Subject: Remailer that will run on a user account
+Date: 25 Sep 92 16:17:25 GMT
+Distribution: alt
+Organization: /accounts/hughes/.organization
+Lines: 347
+
+What follows are a couple of postings to the recently formed
+cypherpunks mailing list.  They are tutorial in form because
+the list is not entirely hackers.
+
+Enjoy and deploy.
+
+Eric
+
+=============================================================================
+
+How to Make an Automated Remailer in Your Copious Spare Time with Easy
+to Find and Inexpensive Software Tools You May Have Lying Around.
+
+&lt;reprinted from Popular Cryptography, September 1992. Used with permission&gt;
+
+
+The basic remailer illustrates how to hook in automated software
+processing into the Unix mail system.  Here are the basic elements.
+
+1. .forward
+2. slocal and .maildelivery
+3. remail.perl
+4. /usr/lib/sendmail
+
+--------------------------------------------
+1. .forward
+
+Unix mail provides a way to have accounts on many different machines
+but to receive all your mail in one place.  That facility is the
+.forward file, which resides in the home directory.  The file is one
+line long and contains the email address to which the mail will be
+forwarded.
+
+But the .forward file has another mode of operation.  If the string
+begins with the pipe character '|', the mail will be piped through the
+program listed.  Enclose the string with double quotes if you need
+spaces included.  Here is my .forward file:
+
+"| /usr/local/lib/mh/slocal -user hughes"
+
+Thus all my mail gets processed by the slocal program, described next.
+
+I don't know where the man page for .forward is.  Perhaps someone
+could provide a reference.
+
+---------
+
+2. slocal and .maildelivery
+
+The software system MH contains a bunch of useful tools for handling
+mail, only one of which we need.  For details on MH, do 'man mh'.
+
+MH has a nice little mail hook processor called slocal.  Its docs can
+be found by 'man mhook'.  slocal can conditionally perform operations
+on mail messages and consider them either delivered or not.  It allows
+multiple operations on individual mail messages.
+
+slocal reads the file .maildelivery when it starts up for
+instructions. Here is my .maildelivery file:
+
+#
+# field			pattern	action/	string 
+#				result	(quote included spaces)
+#
+Request-Remailing-To	""	pipe R	"perl remail.perl" 
+Request-Remailing-To	""	file R	archive.remailer
+
+The various pieces of the .maildelivery file are fully documented in
+the man page.  I'll just explain what mine does.  Each line describes
+one operation to be performed on each incoming mail message.  Fields
+are separated by whitespace, so if you need to include spaces, use
+quotes.
+
+The first field, labelled field, is the mail header field to look for.
+slocal can selectively process on any header line.  If the header line
+does not exist, then the mail does not match this line and no
+operation is performed.  If the header line does exist, processing
+continues.
+
+The second field, pattern, is a text string to match with the contents
+of that header line, i.e. with everything after the colon.  In my
+case, I put the empty string in, which matches everything.  You need
+the pair of quotes to have a placeholder for the field contents.
+
+The next field, action, tells what to do with the message.  'pipe'
+sends the message to the standard input of the named program.  'file'
+appends the message to an archive or log file.  A useful pipe command
+for testing is "tee foo", which makes a copy of the message in file
+foo, but does not append, so that you get an exact copy of what slocal
+is going to pass to your pipe.  This allows testing of the pipe
+program without sending yourself mail all the time.
+
+The next field, result, tells what to do with the message after
+processing.  I am currently using R for Regardless to indicate that
+this action should always be performed no matter what.  The code R
+indicates that the mail should be considered not delivered after
+processing; thus slocal writes the mail back into my local spool and I
+see it as normal.  Later, after I'm sick of looking at all the
+forwarded mail, I'll change this code to A, meaning if the processing
+succeeds, then the mail is considered delivered.  The archive file
+will always remain R.
+
+The last field, string, is the parameter to the action.  It is a file
+name or program.  Use quotes to include spaces.  The name of my mail
+processor is "perl remail.perl", which is to run the perl script
+remail.perl on the mail.
+
+The .maildelivery file is also the place to put encryption hooks to
+automatically decrypt the bodies of messages.  More on that in a
+future version.
+
+---------
+
+3. remail.perl
+
+Perl is a wonderful language for doing all sorts of useful work like
+processing mail headers.  Do 'man perl' for details, or get the
+O'Reilly book and really learn how to use it.
+
+The perl script, in summary, strips off the mail headers, saving the
+Subject: line, rewrites a new header, and appends the body of the
+previous message.  Here is the script:
+
+--------- cut here ---------
+while (&lt;&gt;) {
+	last if /^$/ ;
+	$subject = $_ if /^Subject:/ ;
+	if (/^Request-Remailing-To:/) {
+		chop ;
+		s/^.*:// ;
+		$addressee = $_ ;
+	}
+}
+
+#open( OUTPUT, "&gt;foo" ) || die "Cannot open 'foo'." ;
+open( OUTPUT, "| /usr/lib/sendmail " . $addressee ) ;
+select( OUTPUT ) ;
+
+print "To:" . $addressee . "\n" ;
+print "From: nobody\n" ;
+print $subject ;
+print "Remailed-By: Eric Hughes &lt;hughes@soda.berkeley.edu&gt;\n" ;
+print "\n" ;
+
+while (&lt;&gt;) {
+} continue {
+	print ;
+}
+--------- cut here ---------
+
+Here is a summary of the operation.  To really understand this, you'll
+have to learn perl.
+
+The while loop processes standard input.  'last' terminates the loop
+as soon as a blank line is seen.  A blank line separates the header
+from the body.  The subject line, if seen, sets the subject variable
+to the whole subject line.  The Request- header line has its final
+newline removed, the contents up to the colon substituted into
+nonexistence, and saves the rest in the addressee variable.
+
+Next the pipe to sendmail is opened and its output is selected so that
+all print commands will go to the pipe.  There is a comment for a
+different output channel to the file foo which can be commented in for
+testing.
+
+Next the remailed header is constructed out of print statements.
+
+Lastly the rest of the standard input is passed through unmodified to
+the output channel.  The while loop terminates when there is no more
+input.
+
+---------
+
+4. sendmail
+
+sendmail is the backend mailer; it expects complete mail messages and
+does not usually generate any line itself except for the first "From"
+(with no colon) line.  Any header you construct will thus get passed
+through mostly unmodified.  Hence you can put in any "From:" line you
+want and any other header info, such as my "Remailed-By:" line.
+
+sendmail expects the name of the addressee on its command line,
+otherwise it puts an "Apparently-To:" line in the header.
+
+Any mail processor which remails should probably go through sendmail,
+although it would also be possible to talk to an SMTP port directly,
+were you so motivated.  MH also has some remailing programs; see 'man
+mhook'.
+
+---------
+
+A few words for tinkerers.
+
+-- You can always send mail to yourself.  Especially after you've done
+one kind of mail processing and want to pass the mail through the
+filters again.
+
+-- When getting started, create an empty .maildelivery file first and
+then get your .forward file working.  Test it by sending messages to
+yourself.  If you're not getting them, they are going into the bit
+bucket.  All your other mail will as well, in this case, so if you
+can't afford to lose mail, do it right the first time or work on a
+spare account.  
+
+-- Any mail slocal does not process will get delivered as normal.
+Running a remailer will not interfere with your other work.
+
+-- Remember to use quote marks.
+
+-- You don't need to be a sysadmin to run this kind of remailer.
+There is nothing, however, to prevent a sysadmin from running this
+sofware under an alias.  The sysadmin is also a 'trusted user' to
+sendmail and can get rid of pesky "From"-no-colon lines.
+
+-- Perl has a random function which could be used to automatically
+choose various "From:" lines from a database.  Remember to include
+yeltsy@kremvax.rus.
+
+-- postnews or inews could be substituted for sendmail.  Different
+header lines would have to be created.  Such a service could run in
+parallel with a remailer.  You too can now repost to alt.sex.bondage!
+
+
+Enjoy.  And watch for interesting improvements like encryption.
+
+
+Eric
+=============================================================================
+
+The hopping remailer is finished.  I wrote it this morning.
+
+The change to make a hopping remailer is very easy.  Here's the new
+perl script:
+
+--------- cut here ---------
+while (&lt;&gt;) {
+	last if /^$/ ;
+	$subject = $_ if /^Subject:/ ;
+	if (/^Request-Remailing-To:/) {
+		chop ;
+		s/^.*:// ;
+		$addressee = $_ ;
+	}
+}
+
+#open( OUTPUT, "&gt;foo" ) || die "Cannot open 'foo'." ;
+open( OUTPUT, "| /usr/lib/sendmail " . $addressee ) ;
+select( OUTPUT ) ;
+
+print "To:" . $addressee . "\n" ;
+print "From: nobody\n" ;
+print $subject ;
+print "Remailed-By: Eric Hughes &lt;hughes@soda.berkeley.edu&gt;\n" ;
+
+#
+# check to see if there are header lines in the body to collapse 
+#   into the full header.
+#
+
+if ( $_ = &lt;&gt; ) {
+	if (/^##$/) {
+		# do nothing if the pasting token appears
+		# the rest of the body will be directly appended
+		# this allows for extra header lines to be added
+	} else {
+		# normal line
+		print "\n" ;
+		print $_ ;
+	}
+} else {
+	# empty body
+	exit ;
+}
+
+while (&lt;&gt;) {
+} continue {
+	print ;
+}
+--------- cut here ---------
+
+Short explanation.  The 'print "\n" ;' line was moved inside the new
+if statement.  The if statement reads a line of the body and stops the
+script if there is no body.  The line read is tested to see if it
+contains the two characters "##" alone on the line.  "##" is the ANSI
+C token pasting operator.  If there is no pasting, a blank line is
+printed to mark the end of the header and the first line of the body
+is printed.  If there is pasting, then the conditional does nothing,
+which has the effect that the body is appended directly onto the end
+of the header, allowing you to add more header lines after the header
+is rewritten.
+
+
+Here is a sample message that I sent myself after the new script was
+installed:
+
+--------- cut here ---------
+To: hughes
+Subject: multiple hops
+Request-Remailing-To: hughes
+
+##
+X-Hop: 1
+Request-Remailing-To: hughes
+
+##
+X-Hop: 2
+Request-Remailing-To: hughes
+
+##
+X-Hop: 3
+
+This is a test message of multiple hops.
+
+Eric
+--------- cut here ---------
+
+
+I received four pieces of mail after sending this to myself.  The
+first was the actual letter, which is still delivering normally and
+not being filtered.  The next two were the first and second
+remailings; they had X-Hop: 1 and 2.  The last message was the final
+one, had X-Hop: 3 in its header and was delivered normally.
+
+At each stage, the header got rewritten and a new
+Request-Remailing-To: line inserted.  When that mail got delivered, it
+was again rewritten, with a new remailing request.  This process is
+extensible up to the 50K or so practical limitatation on mail size.
+
+Note that this system is not at all secure by itself.  But if each
+message body were encrypted first, and the message first decrypted
+before the header re-write took place, the routing instructions as a
+whole would be hidden from prying eyes.
+
+That's the next project.
+
+Eric
+
+=============================================================================
+
+To be on the cyhperpunks mailing list, mail to 
+
+	cypherpunks-request@toad.com
+
+I'll put you on.
+
+Eric
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00546.html">REMAIL:  "Stealth" Remailers</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00548.html">alt.hackers post</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00544.html">ANON: real-person newsgroups</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00548.html">alt.hackers post</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00547"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00547"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

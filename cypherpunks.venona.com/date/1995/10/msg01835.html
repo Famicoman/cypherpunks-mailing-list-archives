@@ -1,0 +1,191 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Netscape Logic Bomb detailed by IETF -->
+<!--X-From-R13: Xnzvr Lnjvafxv <wjmNargfpncr.pbz> -->
+<!--X-Date: Tue, 24 Oct 95 05:19:44 PDT -->
+<!--X-Message-Id: 308CD9B4.23F20F8F@netscape.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199510240734.AAA23451@jobe.shell.portal.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Netscape Logic Bomb detailed by IETF</TITLE>
+<LINK REV="made" HREF="mailto:jwz@netscape.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01852.html">Date Prev</A>][<A HREF="msg01854.html">Date Next</A>][<A HREF="msg01828.html">Thread Prev</A>][<A HREF="msg01926.html">Thread Next</A>][<A HREF="index.html#01835">Date Index</A>][<A HREF="threads.html#01835">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Netscape Logic Bomb detailed by IETF</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Netscape Logic Bomb detailed by IETF</LI>
+<LI><em>From</em>: Jamie Zawinski &lt;<A HREF="mailto:jwz@netscape.com">jwz@netscape.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 24 Oct 1995 05:19:00 -0700</LI>
+<LI><em>Newsgroups</em>: mcom.list.cypherpunks</LI>
+<LI><em>Organization</em>: Netscape Communications Corporation, Mozilla Division</LI>
+<LI><em>References</em>: &lt;<A HREF="msg01828.html">199510240734.AAA23451@jobe.shell.portal.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+anonymous-remailer@shell.portal.com wrote:
+&gt; 
+&gt; &gt;Those of us who care run our postscript interpreters with all the
+&gt; &gt;dangerous commands stripped out,
+&gt; 
+&gt; Perry, I'll call you on that one, cause you simply can't do it.
+&gt; 
+&gt; Postscript isn't like any other language around.  Operator names have no
+&gt; special significance to the interpreter.  You can't just "strip out"
+&gt; dangerous commands.  They aren't "reserved" in the sense that operator
+&gt; names are in other languages, like COBOL or BASIC.
+
+You're talking about stripping them out *with PostScript code*, which
+is obviously a dangerous proposition (but is still possible if you do
+it right, and if systemdict is not read-only as it often is.)
+
+If you strip them out by taking the source to the interpreter and
+stripping them out there, then the PostScript code can be as malicious
+as it likes; if the interpreter has no access to disk file primitives,
+it can't read or write files, period.
+
+If you don't have source to your interpreter, or it your interpreter
+is deeply intertwingled with your OS or window system, obviously this
+will be harder to do.  So in that case, you can run a different, 
+smaller interpreter that you can isolate.  It's not like they aren't
+widely available.
+
+Of course, if the hypothetical cracker is going to take advantage of
+buffer-overflow bugs in the interpreter to do what they want, then it
+doesn't *matter* that it's a PostScript interpreter; at that point, 
+it's just another buggy program.
+
+&gt; In Postscript, operator names are simply keys into a LIFO dictionary.
+&gt; This makes Postscript different from other languages because you could
+&gt; redefine these names if you wanted to.  Stripping something from a
+&gt; dictionary doesn't matter because, the search sequence is top down.
+&gt; 
+&gt; If I rewrite an operator name, and put it at the top of the stack, there's
+&gt; not anything you can do.
+&gt; 
+&gt; Gee's Perry, even if you haven't stripped something out, I can rewrite it.
+&gt; And the interpreter will find the rewritten version before the version
+&gt; that's in your machine.
+
+I think it would be a really good trick to implement disk I/O in
+PostScript that will work in an interpreter which didn't provide any
+disk I/O routines in systemdict.
+
+&gt; And this is why the Request-For-Comments from the IETF warns:
+&gt; 
+&gt;    "Postscript is an extensible language, and many, if not most,
+&gt;     implementations of it provide their own extensions.  This document
+&gt;     does not deal with such extensions explicitly since they constitute
+&gt;     an unknown factor ..."
+&gt; 
+&gt; Is that clearer??  If you thought that you had "safety" cause you stripped
+&gt; your interpreter, then you're in trouble, cause that doesn't work.
+
+Of course it works -- if you know what extensions the interpreter you're
+running provides and if you've likewise turned off the dangerous ones.
+
+&gt; &gt; but given that Netscape doesn't supply postscript interpreters, its not
+&gt; &gt; really their fault or problem.
+&gt; 
+&gt; Well, that line might work on those who don't know any better, but that's
+&gt; also why the Internet Engineering Task Force (IETF) tries to protect the
+&gt; public by suggesting that implementors like Netscape not pass the ball:
+&gt; 
+&gt;     "The execution of general-purpose PostScript interpreters entails
+&gt;      serious security risks, and implementors are discouraged from simply
+&gt;      sending PostScript email bodies to "off-the-shelf" interpreters."
+&gt; 
+&gt; Netscape ignores this suggestion.
+
+How?
+
+As has been pointed out to you, repeatedly, we do not ship a PostScript
+interpreter, and Netscape does not come configured to *look* for a
+PostScript interpreter of any kind.  When you run it off-the-shelf, and
+hand it a PostScript file, it says "I've never heard of this.  What do
+you want to do with it?"
+
+Just like it would with a perl script.  Or an awk script.  Or an sh
+script.  Or a Microsoft Word document.  Or any other program capable
+of file I/O or network connections.
+
+The user picks the interpreter they want to hand the document to.
+If anyone ignores this advice you keep repeating, it's the user.
+Not us.
+
+&gt; I guess that Netscape simply knows more (or cares less??) than the entire
+&gt; collected wisdom of the International contributors who make up the IETF.
+
+Stop, I'm getting chills.
+
+&gt; Gee, there's lotsa wisdom over there at Netscape.
+
+I'm sure we all love you too.
+
+-- 
+Jamie Zawinski    jwz@netscape.com   <A  HREF="http://www.netscape.com/people/jwz/">http://www.netscape.com/people/jwz/</A>
+``A signature isn't a return address, it is the ASCII equivalent of a
+  black velvet clown painting; it's a rectangle of carets surrounding
+  a quote from a literary giant of weeniedom like Heinlein or Dr. Who.''
+                                                         -- Chris Maeda
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01828" HREF="msg01828.html">Re: Netscape Logic Bomb detailed by IETF</A></STRONG>
+<UL><LI><EM>From:</EM> anonymous-remailer@shell.portal.com</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01852.html">Re: Mark Twain Bank (was: Anonymity: A Modest Proposal) (fwd)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01854.html">Re: Verification of Registration</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01828.html">Re: Netscape Logic Bomb detailed by IETF</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01926.html">Re: Netscape Logic Bomb detailed by IETF</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01835"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01835"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

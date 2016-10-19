@@ -1,0 +1,140 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Public domain SHA&#45;1 in C -->
+<!--X-From-R13: Sevp Kbhat <rnlNzvapbz.bm.nh> -->
+<!--X-Date: Fri, 27 Sep 1996 13:28:21 +0800 -->
+<!--X-Message-Id: Pine.SOL.3.91.960927103628.11800D&#45;100000@orb -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.BSF.3.91.960926163530.518A&#45;100000@bitbucket.edmweb.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Public domain SHA-1 in C</TITLE>
+<LINK REV="made" HREF="mailto:eay@mincom.oz.au">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02376.html">Date Prev</A>][<A HREF="msg02363.html">Date Next</A>][<A HREF="msg02335.html">Thread Prev</A>][<A HREF="msg02428.html">Thread Next</A>][<A HREF="index.html#02409">Date Index</A>][<A HREF="threads.html#02409">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Public domain SHA-1 in C</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Steve Reid &lt;<A HREF="mailto:steve@edmweb.com">steve@edmweb.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Public domain SHA-1 in C</LI>
+<LI><em>From</em>: Eric Young &lt;<A HREF="mailto:eay@mincom.oz.au">eay@mincom.oz.au</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 27 Sep 1996 11:05:35 +1000 (EST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg02335.html">Pine.BSF.3.91.960926163530.518A-100000@bitbucket.edmweb.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+On Thu, 26 Sep 1996, Steve Reid wrote:
+&gt; I've written an implementation of SHA-1 in C. Public domain, so you can
+&gt; hack it to your hearts content and/or use it however you want. You can
+&gt; download it from
+&gt; <A  HREF="http://www.edmweb.com/steve/sha1.c">http://www.edmweb.com/steve/sha1.c</A>
+...
+&gt; It's reasonably fast (the 80 core SHA operations look good) but I'm
+&gt; certain that there's room for improvement. 
+
+Some times for this implementation
+
+sha1 over a ~ 6 meg file, sparc 10
+user time	5.23s 5.23s 5.14s
+
+Replace your 'getc() into 256 byte buffer' loop with a 'read 16k at a 
+time' (I actually put your functions into my sha1 digest program).
+user time	3.79s 3.75s 3.72s
+
+Use sha1 from SSLeay.
+user time	2.32s 2.34s 2.24s
+
+
+Using gcc -O3 -fomit-frame-pointer for all builds and I left out by 
+B_ENDIAN advisory define; all permutations 
+produced the same digest, so the 2 SHA1 implementations conform :-).
+
+The key thing that speeds up the SSLeay sha1 is the avoidance of copying
+in the SHA1Update() type function.  Have a look if you like 
+(crypto/sha/sha_dgst.c.  
+The actually SHA1 digesting on 64 bytes is probably identical.  For most 
+message digests, it appears the bigest problem is shoveling data into the 
+algorithm fast enough.
+
+eric
+
+PS 	The MD2, MD5, SHA1 etc implemented in SSLeay are all stand alone
+	functions/libraries than can be compiled and used outside of the
+	SSLeay library build environment.  This also applies to the IDEA,
+	DES (libdes), RC2 and RC4 cipher subroutines present in the library.
+
+For those on the cipherpunks list (which I don't frequent any-more), the
+current version is SSLeay 0.6.4, it can be built as a shared library under
+unix and will build as thread safe DLL's under Windows 3.1/95/NT.  It is 
+thread safe under unix as well (only really tested under Solaris 2.5.1).
+
+<A  HREF="http://www.psy.uq.oz.au/~ftp/Crypto">http://www.psy.uq.oz.au/~ftp/Crypto</A>
+<A  HREF="ftp://ftp.psy.uq.oz.au/pub/Crypto/SSL">ftp://ftp.psy.uq.oz.au/pub/Crypto/SSL</A>
+<A  HREF="ftp://ftp.psy.uq.oz.au/pub/Crypto/SSLapps">ftp://ftp.psy.uq.oz.au/pub/Crypto/SSLapps</A>
+
+--
+Eric Young                  | BOOL is tri-state according to Bill Gates.
+AARNet: eay@mincom.oz.au    | RTFM Win32 GetMessage().
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="02335" HREF="msg02335.html">Public domain SHA-1 in C</A></STRONG>
+<UL><LI><EM>From:</EM> Steve Reid &lt;steve@edmweb.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02376.html">Re: ssh - How widely used?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02363.html">Re: Hallam-Baker demands more repudiations or he'll write!</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02335.html">Public domain SHA-1 in C</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02428.html">Re: Public domain SHA-1 in C</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02409"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02409"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

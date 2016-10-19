@@ -1,0 +1,179 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Latency vs. Reordering (Was: Remailer ideas (Was: Re: Latency vs. Reordering)) -->
+<!--X-From-R13: uhturfNnu.pbz (Sevp Vhturf) -->
+<!--X-Date: Sat, 6 Aug 94 17:34:17 PDT -->
+<!--X-Message-Id: 9408070005.AA17290@ah.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 4087@aiki.demon.co.uk -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Latency vs. Reordering (Was: Remailer ideas (Was: Re: Latency vs. Reorde</TITLE>
+<LINK REV="made" HREF="mailto:hughes@ah.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00310.html">Date Prev</A>][<A HREF="msg00297.html">Date Next</A>][<A HREF="msg00301.html">Thread Prev</A>][<A HREF="msg00308.html">Thread Next</A>][<A HREF="index.html#00295">Date Index</A>][<A HREF="threads.html#00295">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Latency vs. Reordering (Was: Remailer ideas (Was: Re: Latency vs. Reordering))</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Latency vs. Reordering (Was: Remailer ideas (Was: Re: Latency vs. Reordering))</LI>
+<LI><em>From</em>: <A HREF="mailto:hughes@ah.com">hughes@ah.com</A> (Eric Hughes)</LI>
+<LI><em>Date</em>: Sat, 6 Aug 94 17:05:43 -0700</LI>
+<LI><em>In-Reply-To</em>: Jim Dixon's message of Sat, 06 Aug 94 18:27:51 GMT &lt;<A HREF="msg00301.html">4087@aiki.demon.co.uk</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+   In a system that is carrying continuous traffic, random packet delay
+   is functionally identical to packet reordering.
+
+OK.  Prove it.  Here are some difficulties I expect you'll find along
+the way.
+
+First, "continuous traffic" is the wrong assumption; some sort of
+multiple Poisson distribution for arrival times is.  This is by no
+means a hypothetical.  The backoff algorithms for TCP had to be
+developed because packet streams are not continuous, but bursty.
+There is such a thing as too many packets arriving at a router
+simultaneously.  Routers don't swap packets to disk when they run out
+of RAM; they drop them.  So given any relation between arrival
+interval, processing time, and machine capacity, there some
+_percentage_ of the time that the router is going to overflow exactly
+because the traffic is not continuous.
+
+Second, the beginnings and endings of operation are special.  The idea
+of "stochastic deconvolution" hits me immediately, throwing out
+completely any reasoning based only on steady state assumptions.
+
+Third, these two effects interfere with each other, as there are
+bursts of silence in Poisson arrival times which will tend to reset
+the deconvolution.
+
+Fourth, the problem is incompletely specified, since the distribution
+of random added latencies is not made specific.  If I assume a flat
+distribution over a given number of message intervals, that's not the
+same as assuming a geometrically decreasing distribution, or some
+other distribution.
+
+I'd guess there are more.
+
+   If messages are fragmented, random delays on sending packets out is
+   functionally identical to reordering.
+
+This is false; a system that concentrates on reordering has provably
+better average latency that one based only on adding latencies.
+Consider the following.  If I send out a message sometime between two
+messages, I've acheived no more reordering (the significant thing,
+remember) than if I sent out that same message immediately after the
+arrival of the first of the two bracketing messages.
+
+So I can take _any_ latency-adding system and reduce its average
+latency with minimal effect on reordering by the following
+modification.  When a message comes it, each message in the queue is
+tagged to go out at some time relative to present.  For each of these
+messages, I can calculate the probability that no other incoming
+message will arrive before a particular outgoing time.  Pick some
+probability bound close to 1, and send out all messages with
+probability greater than the cutoff _now_, before waiting for their
+time to be up.
+
+The decrease in reordering can be normalized to zero by lengthening
+the time scale of the added latencies.  You'll then find that the
+modified system shows lower latency.
+
+And that's only the first inequivalency.
+
+Latency-adding systems are less efficient at memory usage than
+reordering systems.  Reordering systems can get pretty close to 100%
+use, since the queue can be kept full, as in Hal's threshold sending
+scheme.  The random delays can't have full usage, because there's an
+maximum to memory; it can't be borrowed like money when you
+temporarily need more of it.  The analysis has similarities to
+gambler's ruin.
+
+Anyone else care to point out more inequivalencies?
+
+   More importantly, RemailerNet as described defeats traffic analysis by
+   more significant techniques than reordering.  Reordering is a weak
+   technique.  
+
+WHAT??
+
+Anyone else listening to this: I believe the above quoted two
+sentences to be distilled snake oil.
+
+   The introduction of noise, 'MIRV'ing of messages,
+   fragmentation of messages, random choice of packet routes, and
+   encyphering of all traffic are stronger techniques.
+
+Encyphering is necessary.  Reordering of quanta is necessary.
+
+"MIRV" messages may actually decrease security; multiple routes may
+decrease security; fragmentation may decrease security.  Noise
+messages may not be resource effective.  All the above claims require
+some justification, and I have seen nothing robust yet.
+
+Eric
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00308" HREF="msg00308.html">Re: Latency vs. Reordering (Was: Remailer ideas (Was: Re: Latency vs. Reordering))</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00301" HREF="msg00301.html">Re: Latency vs. Reordering (Was: Remailer ideas (Was: Re: Latency vs. Reordering))</A></STRONG>
+<UL><LI><EM>From:</EM> jdd@aiki.demon.co.uk (Jim Dixon)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00310.html">Remailer message bundling</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00297.html">&lt;null&gt;</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00301.html">Re: Latency vs. Reordering (Was: Remailer ideas (Was: Re: Latency vs. Reordering))</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00308.html">Re: Latency vs. Reordering (Was: Remailer ideas (Was: Re: Latency vs. Reordering))</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00295"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00295"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

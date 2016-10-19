@@ -1,0 +1,160 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Chaffing &#38; winnowing without overhead -->
+<!--X-From-R13: "[beqrpunv Aivgf" <zbivgfNflaqngn.pbz> -->
+<!--X-Date: Mon, 11 May 1998 09:08:09 &#45;0700 (PDT) -->
+<!--X-Message-Id: 35572194.51CDC872@syndata.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 35571323.D109A0D2@argo.es -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Chaffing &amp; winnowing without overhead</TITLE>
+<LINK REV="made" HREF="mailto:movits@syndata.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00118.html">Date Prev</A>][<A HREF="msg00119.html">Date Next</A>][<A HREF="msg00124.html">Thread Prev</A>][<A HREF="msg00128.html">Thread Next</A>][<A HREF="index.html#00122">Date Index</A>][<A HREF="threads.html#00122">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Chaffing &amp; winnowing without overhead</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "Jesús Cea Avión" &lt;<A HREF="mailto:jcea@argo.es">jcea@argo.es</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Chaffing &amp; winnowing without overhead</LI>
+<LI><em>From</em>: "Mordechai Ovits" &lt;<A HREF="mailto:movits@syndata.com">movits@syndata.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 11 May 1998 12:04:36 -0400</LI>
+<LI><em>CC</em>: <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:cryptography@c2.net">cryptography@c2.net</A>,       <A HREF="mailto:hacking@argo.es">hacking@argo.es</A>, <A HREF="mailto:teleco%2Dvigo@argo.es">teleco-vigo@argo.es</A>, <A HREF="mailto:cert%2Des@listserv.rediris.es">cert-es@listserv.rediris.es</A></LI>
+<LI><em>References</em>: &lt;<A HREF="msg00124.html">35571323.D109A0D2@argo.es</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Jesús Cea Avión wrote:
+&gt; 
+&gt; You can have chaffing &amp; winnowing without bandwidth overhead, but the
+&gt; resulting scheme hasn't the original "elegance" anymore. In particular,
+&gt; you don't send the plaintext on the clear.
+&gt; 
+&gt; The new schema is useful to cypher a document using any standard
+&gt; signature library, exportable by definition. Very nice :), since you can
+&gt; use, at last, strong crypto :).
+&gt; 
+&gt; a) When the connection starts, negociate an initial sequence number.
+&gt;    The sequence number mustn't be reused. We assume a ordered delivery,
+&gt;    like TCP.
+&gt; 
+&gt; b) Calculate the signature for:
+&gt; 
+&gt;    [sequence]0  -&gt;  MAC0
+&gt; 
+&gt;    and
+&gt; 
+&gt;    [sequence]1  -&gt;  MAC1
+&gt; 
+&gt; c) Compare both MACs and locate the first "different" bit,
+&gt;    from high to low bit or viceversa.
+&gt; 
+&gt; d) Send that bit from MAC0 if you want to send a "0" or from
+&gt;    MAC1 if you want to send a "1".
+
+On the contrary, it has an elegance all it's own :-).
+Since this idea has gone through several iterations, starting from Ron's original paper, I wanted to
+summarize in one place Jesus Cea Avion's idea.  All credit for the following technique goes to him.
+
+Alice does this:
+Mreal = MAC(serial number, message bit, key)
+Mfake = MAC(serial number, complement of message bit, key)
+In english:  She MACs both the bit she means, and then MACs the bit she does NOT mean.  She then compares
+the two MACs to find the first different bit.  Then she sends to Bob the bit from Mreal in the position of
+difference.
+
+When Bob gets the bit, he does this:
+Ma = MAC(serial number, 0, key)
+Mb = MAC(serial number, 1, key)
+He then compares Ma to Mb and finds the first difference.  The bit in the position of difference is the one
+that was sent to him by Alice.  He then knows whether Ma or Mb is correct.  If Ma is the correct one then
+the plaintext bit is 0, if Mb is the correct one then the plaintext bit is 1.
+Remember that there is no need to send the serial number, but you MUST use it in the MAC.  If you are using
+a reliable protocol like TCP, or storing it in a file, the serial number is implied by the order it was
+received/stored.
+
+However clever this technique is (and it *is* clever), it defeats the original purpose of Ron's idea.  The
+original reason Ron created chaffing and winnowing was to show that encryption laws are useless.  He
+demonstrated that you can use authentication technologies to create privacy.  Even more, even if the
+government demands that the plaintext be in the open, his original paper was set up to pass even that
+egregious requirement.  Think of what the govenrnment would see with this latest chaffing and winnowing. 
+Two people are send a bitstream that is unreadable without a secret key.  No plaintext is visible.  In
+fact, it bears very little resemblance to the name "chaffing and winnowing."  It would not matter to them
+wether you were using DES, IDEA, or C&amp;W.  If it looks like a duck, walks like a duck, and quacks like a
+duck...
+Another point of Ron's paper was that any technique the government tried to impose on C&amp;W would create
+unacceptable problems.  I dont think these problems would exist in this version of C&amp;W.  Anyone know
+better?
+
+-- 
+o Mordy Ovits
+o Programmer / Cryptographer
+o SynData Technologies Inc.
+o Download A Free Copy Of Our Software At:
+o <A  HREF="http://www.syncrypt.com">http://www.syncrypt.com</A>
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00128" HREF="msg00128.html">Re: Chaffing &amp; winnowing without overhead</A></STRONG>
+<UL><LI><EM>From:</EM> "Jesús Cea Avión" &lt;jcea@argo.es&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00121" HREF="msg00121.html">Re: Chaffing &amp; winnowing without overhead</A></STRONG>
+<UL><LI><EM>From:</EM> Bill Stewart &lt;bill.stewart@pobox.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00124" HREF="msg00124.html">Chaffing &amp; winnowing without overhead</A></STRONG>
+<UL><LI><EM>From:</EM> "Jesús Cea Avión" &lt;jcea@argo.es&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00118.html">Re: [Fwd: 3Com switches - undocumented access level.]</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00119.html">Last Chance</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00124.html">Chaffing &amp; winnowing without overhead</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00128.html">Re: Chaffing &amp; winnowing without overhead</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00122"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00122"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

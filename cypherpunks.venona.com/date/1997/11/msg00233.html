@@ -1,0 +1,328 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Request for expert opinion and Feedback -->
+<!--X-From-R13: [negva Bbby <zocNcunebf.pbz.nh> -->
+<!--X-Date: Tue, 4 Nov 1997 14:01:16 +0800 -->
+<!--X-Message-Id: Pine.LNX.3.95.971104153702.1151I&#45;100000@buffalo.pharos.com.au -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: v0300784cb079ec72e4ce@[207.94.249.37] -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Request for expert opinion and Feedback</TITLE>
+<LINK REV="made" HREF="mailto:mbp@pharos.com.au">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00209.html">Date Prev</A>][<A HREF="msg00210.html">Date Next</A>][<A HREF="msg00191.html">Thread Prev</A>][<A HREF="msg00207.html">Thread Next</A>][<A HREF="index.html#00233">Date Index</A>][<A HREF="threads.html#00233">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Request for expert opinion and Feedback</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Bill Frantz &lt;<A HREF="mailto:frantz@netcom.com">frantz@netcom.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Request for expert opinion and Feedback</LI>
+<LI><em>From</em>: Martin Pool &lt;<A HREF="mailto:mbp@pharos.com.au">mbp@pharos.com.au</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 4 Nov 1997 15:42:35 +1000 (EST)</LI>
+<LI><em>cc</em>: Joubin &lt;<A HREF="mailto:joubin@inch.com">joubin@inch.com</A>&gt;, "<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>" &lt;<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>&gt;,       John Gilmore &lt;<A HREF="mailto:gnu@toad.com">gnu@toad.com</A>&gt;</LI>
+<LI><em>In-Reply-To</em>: &lt;v0300784cb079ec72e4ce@[207.94.249.37]&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+On Mon, 27 Oct 1997, Bill Frantz wrote:
+
+&gt; &gt;c) Is there any benefit to implementing the random number generation
+&gt; &gt;   system in the Kernel?
+&gt; 
+&gt; Yes.  In the kernel, you have access to many more hard-to-guess physical
+&gt; inputs than an application level program
+
+Have a look at the implementation of the entropy device in Linux and
+some other open systems.  Introductory comments are quoted below.
+(Excuse the length, as the bishop said.)
+
+Isn't the idea of an 'entropy device' so trippy?
+
+--
+Martin Pool
+
+
+
+/*
+ * random.c -- A strong random number generator
+ *
+ * Version 1.00, last modified 26-May-96
+ * 
+ * Copyright Theodore Ts'o, 1994, 1995, 1996.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, and the entire permission notice in its entirety,
+ *    including the disclaimer of warranties.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. The name of the author may not be used to endorse or promote
+ *    products derived from this software without specific prior
+ *    written permission.
+ * 
+ * ALTERNATIVELY, this product may be distributed under the terms of
+ * the GNU Public License, in which case the provisions of the GPL are
+ * required INSTEAD OF the above restrictions.  (This clause is
+ * necessary due to a potential bad interaction between the GPL and
+ * the restrictions contained in a BSD-style copyright.)
+ * 
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * (now, with legal B.S. out of the way.....) 
+ * 
+ * This routine gathers environmental noise from device drivers, etc.,
+ * and returns good random numbers, suitable for cryptographic use.
+ * Besides the obvious cryptographic uses, these numbers are also good
+ * for seeding TCP sequence numbers, and other places where it is
+ * desirable to have numbers which are not only random, but hard to
+ * predict by an attacker.
+ *
+ * Theory of operation
+ * ===================
+ * 
+ * Computers are very predictable devices.  Hence it is extremely hard
+ * to produce truly random numbers on a computer --- as opposed to
+ * pseudo-random numbers, which can easily generated by using a
+ * algorithm.  Unfortunately, it is very easy for attackers to guess
+ * the sequence of pseudo-random number generators, and for some
+ * applications this is not acceptable.  So instead, we must try to
+ * gather "environmental noise" from the computer's environment, which
+ * must be hard for outside attackers to observe, and use that to
+ * generate random numbers.  In a Unix environment, this is best done
+ * from inside the kernel.
+ * 
+ * Sources of randomness from the environment include inter-keyboard
+ * timings, inter-interrupt timings from some interrupts, and other
+ * events which are both (a) non-deterministic and (b) hard for an
+ * outside observer to measure.  Randomness from these sources are
+ * added to an "entropy pool", which is mixed using a CRC-like function.
+ * This is not cryptographically strong, but it is adequate assuming
+ * the randomness is not chosen maliciously, and it is fast enough that
+ * the overhead of doing it on every interrupt is very reasonable.
+ * As random bytes are mixed into the entropy pool, the routines keep
+ * an *estimate* of how many bits of randomness have been stored into
+ * the random number generator's internal state.
+ * 
+ * When random bytes are desired, they are obtained by taking the MD5
+ * hash of the contents of the "entropy pool".  The MD5 hash avoids
+ * exposing the internal state of the entropy pool.  It is believed to
+ * be computationally infeasible to derive any useful information
+ * about the input of MD5 from its output.  Even if it is possible to
+ * analyze MD5 in some clever way, as long as the amount of data
+ * returned from the generator is less than the inherent entropy in
+ * the pool, the output data is totally unpredictable.  For this
+ * reason, the routine decreases its internal estimate of how many
+ * bits of "true randomness" are contained in the entropy pool as it
+ * outputs random numbers.
+ * 
+ * If this estimate goes to zero, the routine can still generate
+ * random numbers; however, an attacker may (at least in theory) be
+ * able to infer the future output of the generator from prior
+ * outputs.  This requires successful cryptanalysis of MD5, which is
+ * not believed to be feasible, but there is a remote possibility.
+ * Nonetheless, these numbers should be useful for the vast majority
+ * of purposes.
+ * 
+ * Exported interfaces ---- output
+ * ===============================
+ * 
+ * There are three exported interfaces; the first is one designed to
+ * be used from within the kernel:
+ *
+ * 	void get_random_bytes(void *buf, int nbytes);
+ *
+ * This interface will return the requested number of random bytes,
+ * and place it in the requested buffer.
+ * 
+ * The two other interfaces are two character devices /dev/random and
+ * /dev/urandom.  /dev/random is suitable for use when very high
+ * quality randomness is desired (for example, for key generation or
+ * one-time pads), as it will only return a maximum of the number of
+ * bits of randomness (as estimated by the random number generator)
+ * contained in the entropy pool.
+ * 
+ * The /dev/urandom device does not have this limit, and will return
+ * as many bytes as are requested.  As more and more random bytes are
+ * requested without giving time for the entropy pool to recharge,
+ * this will result in random numbers that are merely cryptographically
+ * strong.  For many applications, however, this is acceptable.
+ *
+ * Exported interfaces ---- input
+ * ==============================
+ * 
+ * The current exported interfaces for gathering environmental noise
+ * from the devices are:
+ * 
+ * 	void add_keyboard_randomness(unsigned char scancode);
+ * 	void add_mouse_randomness(__u32 mouse_data);
+ * 	void add_interrupt_randomness(int irq);
+ * 	void add_blkdev_randomness(int irq);
+ * 
+ * add_keyboard_randomness() uses the inter-keypress timing, as well as the
+ * scancode as random inputs into the "entropy pool".
+ * 
+ * add_mouse_randomness() uses the mouse interrupt timing, as well as
+ * the reported position of the mouse from the hardware.
+ *
+ * add_interrupt_randomness() uses the inter-interrupt timing as random
+ * inputs to the entropy pool.  Note that not all interrupts are good
+ * sources of randomness!  For example, the timer interrupts is not a
+ * good choice, because the periodicity of the interrupts is to
+ * regular, and hence predictable to an attacker.  Disk interrupts are
+ * a better measure, since the timing of the disk interrupts are more
+ * unpredictable.
+ * 
+ * add_blkdev_randomness() times the finishing time of block requests.
+ * 
+ * All of these routines try to estimate how many bits of randomness a
+ * particular randomness source.  They do this by keeping track of the
+ * first and second order deltas of the event timings.
+ *
+ * Ensuring unpredictability at system startup
+ * ============================================
+ * 
+ * When any operating system starts up, it will go through a sequence
+ * of actions that are fairly predictable by an adversary, especially
+ * if the start-up does not involve interaction with a human operator.
+ * This reduces the actual number of bits of unpredictability in the
+ * entropy pool below the value in entropy_count.  In order to
+ * counteract this effect, it helps to carry information in the
+ * entropy pool across shut-downs and start-ups.  To do this, put the
+ * following lines an appropriate script which is run during the boot
+ * sequence: 
+ *
+ *	echo "Initializing random number generator..."
+ *	# Carry a random seed from start-up to start-up
+ *	# Load and then save 512 bytes, which is the size of the entropy pool
+ * 	if [ -f /etc/random-seed ]; then
+ *		cat /etc/random-seed &gt;/dev/urandom
+ * 	fi
+ *	dd if=/dev/urandom of=/etc/random-seed count=1
+ *
+ * and the following lines in an appropriate script which is run as
+ * the system is shutdown:
+ * 
+ *	# Carry a random seed from shut-down to start-up
+ *	# Save 512 bytes, which is the size of the entropy pool
+ *	echo "Saving random seed..."
+ *	dd if=/dev/urandom of=/etc/random-seed count=1
+ * 
+ * For example, on many Linux systems, the appropriate scripts are
+ * usually /etc/rc.d/rc.local and /etc/rc.d/rc.0, respectively.
+ * 
+ * Effectively, these commands cause the contents of the entropy pool
+ * to be saved at shut-down time and reloaded into the entropy pool at
+ * start-up.  (The 'dd' in the addition to the bootup script is to
+ * make sure that /etc/random-seed is different for every start-up,
+ * even if the system crashes without executing rc.0.)  Even with
+ * complete knowledge of the start-up activities, predicting the state
+ * of the entropy pool requires knowledge of the previous history of
+ * the system.
+ *
+ * Configuring the /dev/random driver under Linux
+ * ==============================================
+ *
+ * The /dev/random driver under Linux uses minor numbers 8 and 9 of
+ * the /dev/mem major number (#1).  So if your system does not have
+ * /dev/random and /dev/urandom created already, they can be created
+ * by using the commands:
+ *
+ * 	mknod /dev/random c 1 8
+ * 	mknod /dev/urandom c 1 9
+ * 
+ * Acknowledgements:
+ * =================
+ *
+ * Ideas for constructing this random number generator were derived
+ * from the Pretty Good Privacy's random number generator, and from
+ * private discussions with Phil Karn.  Colin Plumb provided a faster
+ * random number generator, which speed up the mixing function of the
+ * entropy pool, taken from PGP 3.0 (under development).  It has since
+ * been modified by myself to provide better mixing in the case where
+ * the input values to add_entropy_word() are mostly small numbers.
+ * Dale Worley has also contributed many useful ideas and suggestions
+ * to improve this driver.
+ * 
+ * Any flaws in the design are solely my responsibility, and should
+ * not be attributed to the Phil, Colin, or any of authors of PGP.
+ * 
+ * The code for MD5 transform was taken from Colin Plumb's
+ * implementation, which has been placed in the public domain.  The
+ * MD5 cryptographic checksum was devised by Ronald Rivest, and is
+ * documented in RFC 1321, "The MD5 Message Digest Algorithm".
+ * 
+ * Further background information on this topic may be obtained from
+ * RFC 1750, "Randomness Recommendations for Security", by Donald
+ * Eastlake, Steve Crocker, and Jeff Schiller.
+ */
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00209.html">Re: Terrorism is a NON-THREAT (fwd)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00210.html">Re:</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00191.html">To TruthMonger</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00207.html">Funding Cypherpunks Action Projects</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00233"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00233"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

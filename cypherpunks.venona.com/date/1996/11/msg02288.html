@@ -1,0 +1,174 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: market for hardware RNG? -->
+<!--X-From-R13: wvz oryy <wvzoryyNcnpvsvre.pbz> -->
+<!--X-Date: Thu, 28 Nov 1996 23:07:06 &#45;0800 (PST) -->
+<!--X-Message-Id: 199611290706.XAA01029@mail.pacifier.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: market for hardware RNG?</TITLE>
+<LINK REV="made" HREF="mailto:jimbell@pacifier.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02297.html">Date Prev</A>][<A HREF="msg02296.html">Date Next</A>][<A HREF="msg02118.html">Thread Prev</A>][<A HREF="msg02308.html">Thread Next</A>][<A HREF="index.html#02288">Date Index</A>][<A HREF="threads.html#02288">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: market for hardware RNG?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:mjmiski@execpc.com">mjmiski@execpc.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: market for hardware RNG?</LI>
+<LI><em>From</em>: jim bell &lt;<A HREF="mailto:jimbell@pacifier.com">jimbell@pacifier.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 28 Nov 1996 22:59:26 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+At 12:12 PM 11/26/96 +0000, Matthew J. Miszewski wrote:
+
+&gt;&gt; 2.  Users of programs like PGP today already get at least a fairly decent 
+&gt;&gt; RNG already.  Would they want better?  (I'm not suggesting a total 
+&gt;&gt; replacement; I assume that the output of any hardware RNG would be hashed 
+&gt;&gt; with more "traditional" PC sources, like disk timings, keyboard timings, 
+&gt;&gt; etc, which should deter attempts to attack just the hardware part.)
+&gt;
+&gt;Why would you hash good RNG output? 
+
+Re-read (read?) Applied Cryptography.  Hardware RNG's contain biases, even 
+though they may only be tiny ones.  For example, a RNG based on radioactive 
+decay and a geiger counter has a certain minimum "dead time" between decays 
+that introduces a slight bias.  Most electronic circuits naively intended to 
+generate random numbers contain similar biases.  If I build a device to 
+generate ones and zeroes based on electronic noise, I must assume that there 
+there will be some non-randomness in the output, however small.  This is 
+somewhat equivalent to saying that there is somewhat less than 1.000000 bit 
+of entropy in each bit of the RNG output.  If I recall correctly, a data 
+stream with 0.5 bits of entropy per bit might be one that contains 
+uncorrelated bits which are "0" 3/4s of the time, "1" 1/4 of the time.  
+
+Fortunately, as I recall it is possible to, in effect, "distill" the 
+randomness of the sample using hashing.  Start out with 200 bits with 0.5 
+bits per bit of entropy, and you can produce 100 bits with 1.0000 bit per 
+bit of entropy.  (Condensing the thing even further can't put more than 1 
+bit of entropy into each bit; but what it does do is provide some margin for 
+entropy sources whose biases may vary somewhat.)  The advantage, however, is 
+that it is probably far easier to distinguish 0.2 bits per bit of entropy 
+from 0.1 bits, compared with distinguishing 0.99 bits from 1.000 bits.  If 
+you know you have at least 0.2 bits per bit, hashing down a factor of 10 
+would produce a solidly random output.
+
+If I understand the process correctly, this means that the "figure of merit" 
+of any RNG should be the number of bits of randomized output it can 
+successfully create per second.  100,000 bits per second of output with 0.5 
+bits of entropy per bit is, therefore, better than 10,000 bits with 1.000 
+bits per bit, because the former can be converted to 50,000 bits of unbiased 
+output per second.  This result may not be exactly counter-intuitive, but it 
+is at least NON-intuitive.   
+
+But what this does do is to provide an opportunity:  Build a circuit that 
+generates reasonably random output at 10x rate, hash it down to 1x, and you 
+can be reasonably certain that the result is cryptographically random.  The 
+software could monitor the input to ensure that it remains substantially 
+better than needed to guarantee random output.
+
+
+
+&gt;I understand your desire to 
+&gt;deter hardware only attacks.  I just think it might be an 
+&gt;overreaction.  Of course mine could be an under-reaction 8-)
+
+I think if the hardware RNG could be corrupted and that would compromise the 
+security appreciably, it WOULD be compromised in important-enough 
+situations.  However, adding hashing with more "traditional" sources of 
+randomness would make the job futile.  Corrupting the hardware RNG device 
+would merely make the system fall back to the current level of security.
+
+
+&gt;&gt; 3.    Even hardware RNG's aren't "perfect":  they could be subverted, 
+&gt;&gt; replaced, or perhaps influenced.  Would someone who was sufficiently 
+&gt;&gt; sophisticated as to recognize the need for it actually accept a real, 
+&gt;&gt; functioning device?
+&gt;
+&gt;It would have to go through rigorous testing in the crypto community. 
+&gt; RNGs v. PRNGs goes through a yearly debate here on cpunks.  There 
+&gt;have been some good discussions on the use of white noise and other 
+&gt;potential hardware sources.  Im not sure if hks is back up or not, 
+&gt;but you might look there.
+
+Well, we have a chicken-and-egg problem.  Until a commonly-used program 
+(like PGP, maybe) easily gives the public the option to include a hardware 
+RNG as part of its sources of randomness, few people will be inclined to 
+implement such devices and they will remain atrociously expensive...so 
+nobody will buy them.
+
+
+&gt;If an independant entity could certify the product with a good 
+&gt;reputation for dedication to the community, you would get much 
+&gt;milage.  PGP, Inc. might be interested for instance.  I mean I have 
+&gt;used PGP for years but have not had the time to go through the code, 
+&gt;etc.  I trust it because Phil's reputation precedes him.
+
+Well, with all due respect, if Phil hesitates to install a hardware random 
+source link into a piece of software simply because he thinks that to do so 
+puts his reputation on the line, he's placing a high hurdle in front of the 
+development of good, economical hardware randomizers.  There's plenty that 
+software can do to protect itself from a compromised hardware RNG; 
+monitoring the biases of the input and hashing it more than adequately is a 
+good start.  It should be possible to ensure that a hardware RNG can only 
+improve security, not reduce it.
+
+
+ 
+Jim Bell
+jimbell@pacifier.com
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02297.html">Re: Anon</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02296.html">Buy your COMPUTER parts direct from any wholesaler!</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02118.html">Re: market for hardware RNG?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02308.html">Re: market for hardware RNG?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02288"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02288"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

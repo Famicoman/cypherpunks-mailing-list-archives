@@ -1,0 +1,227 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: forward secrecy in mixmaster -->
+<!--X-From-R13: Znapr Qbggeryy <ybxvNvasbark.pbz> -->
+<!--X-Date: Sun, 8 Sep 1996 17:04:52 +0800 -->
+<!--X-Message-Id: v03007803ae5817d08aba@[206.170.115.3] -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199609061703.SAA00170@server.test.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: forward secrecy in mixmaster</TITLE>
+<LINK REV="made" HREF="mailto:loki@infonex.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00651.html">Date Prev</A>][<A HREF="msg00712.html">Date Next</A>][<A HREF="msg00548.html">Thread Prev</A>][<A HREF="msg00716.html">Thread Next</A>][<A HREF="index.html#00649">Date Index</A>][<A HREF="threads.html#00649">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: forward secrecy in mixmaster</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;, <A HREF="mailto:loki@obscura.com">loki@obscura.com</A></LI>
+<LI><em>Subject</em>: Re: forward secrecy in mixmaster</LI>
+<LI><em>From</em>: Lance Cottrell &lt;<A HREF="mailto:loki@infonex.com">loki@infonex.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 7 Sep 1996 23:42:09 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:remailer%2Doperators@c2.org">remailer-operators@c2.org</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00548.html">199609061703.SAA00170@server.test.net</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+At 10:03 AM -0700 9/6/96, Adam Back wrote:
+&gt;Since Peter Allen's discussion of mixmaster, I started doing something
+&gt;I'd been thinking of for a while, since noticing that it was on the
+&gt;mixmaster to-do list months ago (ie there is unfinished source to do
+&gt;this): direct socket connections and diffie-hellman key exchange for
+&gt;forward secrecy.
+
+The code is still out there to look at. I warn you though, it is steaming
+horse manure.  ;)
+
+
+&gt;I wrote the socket stuff yesterday evening, didn't take too long as
+&gt;socket programming is something I've done lots of.
+&gt;
+&gt;Now comes what do you actually send down the sockets.
+&gt;
+&gt;Question for Lance, and any others who were involved in mixmasters
+&gt;implementation: what did you have in mind as a way of negotiating the
+&gt;DH keys?
+&gt;
+&gt;I notice that mixmaster generates a DH key and stores it in file
+&gt;`DH.mix', but that this is not (as far as I can see from the source)
+&gt;included in the remailers public key block.
+
+No, it is not in the key block. It would be passed during the negotiation.
+
+&gt;(A couple of comments as an aside: I think that you should be able to
+&gt;have a much smaller generator without loss of security, this should
+&gt;reduce the overhead of a DH key exchange.  Using 3 even I think is
+&gt;safe, without any extra precautions on prime generation.  You can even
+&gt;go to 2, with a few precautions (PGPfone does this).  Comment #2 I
+&gt;think 1024 may be a bit small, I don't have any figures handy for
+&gt;relative security of DH key lengths, but PGPfone offers 4096 bit DH
+&gt;for instance.  Does rsaref have limits on prime lengths for DH, the
+&gt;same as it does for RSA?).
+
+Call me paranoid. After asking and reading around I decided I wanted to
+cover my bases. It looked like, in the future, it might be easier to break
+with small generators. This is not a critical decision though. I too would
+have liked it longer, but using RSAREF I am limited. That is one of the
+reasons I have each remailer creat its own DH modulus, and allow it to
+change it periodically.
+
+&gt;There are lots of options for DH public key negotiation.
+&gt;
+&gt;First option is whether you have a common prime and generator for all
+&gt;remailers or not.  If you have a common prime, accusations of the
+&gt;prime being `cooked' (chosen to have a weakness) can be mitigated by
+&gt;using a deterministic generation method based on the hash of a known
+&gt;phrase (a Jefferson quote perhaps), or PI or whatever.
+&gt;
+&gt;A common modulus may offer a fatter target for attack (for some
+&gt;precomputation attacks), but with large enough keys this probably
+&gt;isn't that bad, as there aren't that many mixmasters anyway.
+&gt;
+&gt;With a common modulus there is DH key negotiation needed, just include
+&gt;it with the source.
+
+You have spelled out why I like having each remailer use its own modulus.
+
+&gt;For different modulii for each remailer, there are more options:
+&gt;
+&gt;a) include the DH key signed by the RSA key in the remailers public key
+&gt;   (may break backwards compatibility with existing versions of
+&gt;   mixmaster)
+&gt;
+&gt;b) send the DH public key at the start of each session
+&gt;
+&gt;c) send the DH public key on request
+
+I chose C. The in protocol I developed the sending remailer (A) sends a
+hash of the DH modulus to the receiving remailer (B). If B has it, they use
+it. If not, A sends it. I use the modulus from A because it has the stake
+in privacy. B will take messages from anyone, but A wants to know the
+messages it has goes to the correct other remailer B.
+
+&gt;There is also a question of which key do you use, the sender remailers
+&gt;or the recipient remailers.
+&gt;
+&gt;Negotiating DH public keys during execution also opens the possibility
+&gt;for periodic re-keying.
+&gt;
+&gt;Thats the end of my thoughts on direct socket mixmaster.
+&gt;
+&gt;Next message is some thoughts on non-interactive forward secrecy
+&gt;protocols.
+&gt;
+&gt;Adam
+
+Here is a description of the protocol I wrote many months ago. The message
+assumed the above discussion of distributing the DH modulus.
+
+--------------Start Old Message--------------
+
+It is too bad that I was never able to debug my socket code. It is more or
+less all done. The advantage of the socket code is that it allows the
+message to be super-encrypted with a DH negotiated key which provides
+forward security for intercepted messages. There is a built in
+authentication for the DH (against MITM attacks) in the RSA key used to
+encrypt the remailer message to the next remailer. I can send the code I
+wrote to anyone on demand (within the US of course).
+
+This basically pushes the key authentication job onto the original sender
+where it belongs. The key ID (16 byte fingerprint) is visible in the clear
+in the header of the message remailer A is about to send to remailer B.
+Remailer A either has the key corresponding to that fingerprint, or it
+requires remailer B to send it the key. Remailer B must have the key or it
+would not be able to read the message any way. A different RSA key can not
+be sent because of the strength of the MD5 fingerprint.
+
+Remailer A sends its DH key half to B along with a challenge number, all
+encrypted under B's RSA key. Return of the challenge number along with B's
+DH key half, completes the authenticated exchange. The second half could
+also be encrypted with a 3DES key provided along with the challenge number
+if desired.
+
+The whole point of all this is that if the message is intercepted and
+presented to B with a demand to decrypt it, B will be unable to comply,
+even if it wished to.
+
+        -Lance
+
+--------------End Old Message--------------
+
+----------------------------------------------------------
+Lance Cottrell   loki@obscura.com
+PGP 2.6 key available by finger or server.
+Mixmaster, the next generation remailer, is now available!
+<A  HREF="http://www.obscura.com/~loki/Welcome.html">http://www.obscura.com/~loki/Welcome.html</A> or FTP to obscura.com
+
+"Love is a snowmobile racing across the tundra.  Suddenly
+it flips over, pinning you underneath.  At night the ice
+weasels come."
+                        --Nietzsche
+----------------------------------------------------------
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00716" HREF="msg00716.html">Re: forward secrecy in mixmaster</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Back &lt;aba@dcs.ex.ac.uk&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00548" HREF="msg00548.html">forward secrecy in mixmaster</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Back &lt;aba@dcs.ex.ac.uk&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00651.html">Re: talker [is illiterate...]</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00712.html">Re: LACC: Re: What is the EFF doing exactly?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00548.html">forward secrecy in mixmaster</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00716.html">Re: forward secrecy in mixmaster</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00649"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00649"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

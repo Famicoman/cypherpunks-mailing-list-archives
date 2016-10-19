@@ -1,0 +1,196 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Stealth PGP work -->
+<!--X-From-R13: nonNqpf.rkrgre.np.hx -->
+<!--X-Date: Fri, 16 Feb 1996 21:39:07 +0800 -->
+<!--X-Message-Id: 11009.9602141935@dart.dcs.exeter.ac.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199602141830.NAA02458@toxicwaste.media.mit.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Stealth PGP work</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.exeter.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01356.html">Date Prev</A>][<A HREF="msg01218.html">Date Next</A>][<A HREF="msg01202.html">Thread Prev</A>][<A HREF="msg02310.html">Thread Next</A>][<A HREF="index.html#01225">Date Index</A>][<A HREF="threads.html#01225">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Stealth PGP work</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:warlord@MIT.EDU">warlord@MIT.EDU</A></LI>
+<LI><em>Subject</em>: Re: Stealth PGP work </LI>
+<LI><em>From</em>: <A HREF="mailto:aba@dcs.exeter.ac.uk">aba@dcs.exeter.ac.uk</A></LI>
+<LI><em>Date</em>: Wed, 14 Feb 96 19:35:35 GMT</LI>
+<LI><em>Cc</em>: <A HREF="mailto:aba@dcs.exeter.ac.uk">aba@dcs.exeter.ac.uk</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01202.html">199602141830.NAA02458@toxicwaste.media.mit.edu</A>&gt; (message from Derek Atkins on Wed, 14 Feb 1996 13:30:16 EST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Derek Atkins &lt;warlord@mit.edu&gt; writes on cpunks:
+
+&gt; I'm not familiar with the exact details of what stealth does, which is
+&gt; why I asked for more details.  
+
+OK stealth is quite simplistic in the way it operates... neglecting
+the pgp conventional encrypt support, here's what it does...
+
+It takes a PGP message which looks like this (must be unarmored),
+
++---------+--------------------------------+----------+----------
+| rsa CTB | RSA encrypted IDEA session key | IDEA CTB | IDEA encrypted data ..
++---------+--------------------------------+----------+----------
+
+and outputs this:
+
++--------------------------------+---------------------+
+| RSA encrypted IDEA session key | IDEA encrypted data |
++--------------------------------+---------------------+
+
+(the point of stealth 2.01 is that the RSA encrypted session keys for
+a given user will be less than that users RSA modulus by definition,
+and hence not evenly distributed, and that this would be noticeable
+statistically after a few messages)
+
+So in stealth 2.01 the RSA encrypted IDEA session key is actually
+transformed by a function on stealthing, and the reverse of that
+transform is applied on unstealthing.  Before the transform:
+
+0 &lt; r &lt; n
+
+where r is the encrypted session key, and n is the users public key.
+
+The transform ensures that, f(r) is uniformly distributed in:
+
+0 &lt; f(r) &lt; 2^x 
+
+(x depends on a security parameter, higher security implies greater
+expansion, 2^x is of course greater than n, otherwise information
+would be lost)
+
+stealth 2.x requires n to perform the transform f, and the inverse f'.
+when stealthing the n chosen is that specified in the RSA header.
+
+on unstealth f' is used to recover, and n is again required, the n
+chosen must be either specified as a user id to look up, or all
+user-ids must be inspected.
+
+The unstealth operation re-constructs the headers.
+
+(One "feature" is that you can pad random junk after the stealthed
+message and the unstealth, pgp decrypt operation still seems to work
+because of the nested length bytes contained within IDEA encrypted and
+within compression packets.  This is useful as it allows you to pad
+your data to a fixed size in a similar way to mixmaster packets).
+
+&gt; The problem is that PGP API, when decrypting a message, keys off the
+&gt; PGP packet types in order to operate.
+
+Right, understood.  I would have thought it nice to add support for
+usage of the modules in the pipeline that you describe in an
+independent manner also, as building blocks?  Perhaps this is already
+catered for.  The problem with stealth from this point of view though
+is that there is no packet.  Perhaps you could prime the pipeline by
+prepending a dummy `stealthed' CTB, and a method to cope with this CTB?
+
+&gt; If stealth can work outside of PGP 2.6.2, then it should be possible
+&gt; to add it on to PGP 3, theoretically.
+
+Stealth can work outside of PGP, but it duplicates work - it looks up
+keys in the database to obtain the keyid to insert on unstealth (and
+in 2.01 it also needs to know the rsa modulus on stealth and
+unstealth).  The other functionality 2.01 duplicates is that it needs
+cryptographically strong random numbers, I have not resolved this
+satisfactorily, which is why stealth2.x has not be developed further
+than beta stage.
+
+The limitation of stealth is that it only supports a single recipient,
+in that it expects the data following the key to be the IDEA encrypted
+data.
+
+Possibly pgp3 will make this easier, will give access to the random
+number generator as an API call?
+
+Will it provide API calls to allow key lookup?
+
+(Maybe I should hold off more questions until you have the API ready
+for release).
+
+&gt; [...]  To add stealth, you just add a stealth module in there.
+&gt; However I can tell you now that we are not working on such a module
+&gt; for the PGP 3.0 release.
+&gt;
+&gt; I'll hopefully have the API Spec and Programmer's Guide in a state
+&gt; where I can let others see it in the near future.  But since I'm going
+&gt; to be off the net for about a week or two at the end of the month, it
+&gt; might have to wait until March unless a miracle happens in the next
+&gt; week.
+
+Perhaps you can accept a donated stealth module at a later stage, if I
+understand the API spec and prog guide well enough I might try to
+produce one of these .  I'm sure Colin &amp; yourself have lots to do as
+is.
+
+&gt; I hope this helps.
+
+Clarifies quite a few things, yes thanks,
+
+Adam
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01202" HREF="msg01202.html">Re: Stealth PGP work</A></STRONG>
+<UL><LI><EM>From:</EM> Derek Atkins &lt;warlord@MIT.EDU&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01356.html">Re: Online Zakat Payment: Religious tithe.</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01218.html">Re: Some thoughts on the Chinese Net</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01202.html">Re: Stealth PGP work</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02310.html">Re: [off-topic] how to access the net from a sailboat in the pacific?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01225"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01225"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

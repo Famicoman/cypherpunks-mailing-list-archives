@@ -1,0 +1,163 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: strengthening remailer protocols -->
+<!--X-From-R13: XbaIvraxNvk.argpbz.pbz -->
+<!--X-Date: Thu, 12 Sep 1996 16:18:39 +0800 -->
+<!--X-Message-Id: 199609120618.XAA27372@dfw&#45;ix12.ix.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9609101751.AA00594@ch1d157nwk -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: strengthening remailer protocols</TITLE>
+<LINK REV="made" HREF="mailto:JonWienk@ix.netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01033.html">Date Prev</A>][<A HREF="msg01026.html">Date Next</A>][<A HREF="msg00898.html">Thread Prev</A>][<A HREF="msg00125.html">Thread Next</A>][<A HREF="index.html#01028">Date Index</A>][<A HREF="threads.html#01028">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: strengthening remailer protocols</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: strengthening remailer protocols</LI>
+<LI><em>From</em>: <A HREF="mailto:JonWienk@ix.netcom.com">JonWienk@ix.netcom.com</A></LI>
+<LI><em>Date</em>: Wed, 11 Sep 1996 23:18:24 -0700</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00898.html">9609101751.AA00594@ch1d157nwk</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+On Tue, 10 Sep 96, Andrew Loewenstern &lt;andrew_loewenstern@il.us.swissbank.com&gt; 
+wrote:
+&gt;Wei Dai writes:
+&gt;&gt;  How about a combination of the two?  Suppose Alice wants to
+&gt;&gt;  anonymously post a message and get replies.  She generates a
+&gt;&gt;  new RSA key, signs her post with it, and asks readers to send
+&gt;&gt;  encrypted replies to a server.  Then periodicly she sends a
+&gt;&gt;  one-time reply block to the server to retrieve the accumulated
+&gt;&gt;  replies.
+&gt;
+&gt;I'd like to chime in and say that this is a really good idea.  Basically a  
+&gt;nymserver that holds onto incoming mail until an e-mail arrives from the nym  
+&gt;to retrieve it.
+
+Instead of that, how about this?
+
+1. Create a pool of N remailers, each with its own set of public/private key 
+pairs.  The public key(s) for each remailer are widely disseminated. Each 
+remailer also publishes a list of other remailers that it will poll for 
+messages. (More about this later.)
+
+2. Each remailer user MUST have at least 1 public/private key pair per nym.  The 
+public key should be widely available.
+
+3. Each message is encrypted with the intended recipient's (nym's) public key, 
+and then with each remailer's public key succesively, but in reverse order. (The 
+message is encrypted last with the public key of the first remailer in the 
+chain.)  The chain is determined by selecting some subset of N at random, with 
+the set growing as the need for security increases. Encryption is done a la PGP, 
+with a header prepended to the message containing the fingerprint of the public 
+key used to encrypt the session key used to encrypt the actual message. Each 
+layer of encryption encrypts the header of the previous layer of encryption as 
+well as the message, so only the last encryption is "visible", and it is not 
+feasible to detect the number of encryptions by examining the message.
+
+4. The multiply-encrypted message is sent to the first remailer in the chain.  
+The remailer decrypts the message with its private key, and at this point one of 
+two things can happen. If the decrypted message specifies an email address, the 
+remailer sends the message to the specified address. Otherwise, it posts it in a 
+publicly available database with 3 fields. 2 are public; one contains the key 
+fingerprint of the outermost public encryption key, and the other contains the 
+message itself.  The third, private field contains the date/time the record was 
+added to the database. Any appropriate techniques for reducing input/output 
+correlation can be used, such as delaying the decryption for random time 
+intervals, dummy messages between remailers, etc. Remailer-to remailer traffic 
+(or to any nym that gets a lot of traffic) should should be bundled together 
+(take a few hours worth of traffic going to a specific nym, ZIP it into one 
+large message, and re-encrypt using that nym's public key) to prevent a sender 
+from being able to recognize any of his messages in transit.
+
+5. Anyone can do lookups in the public fields of the message database by key 
+fingerprint. Remailer users do this to download their messages, and remailers 
+download messages from other remailers in this manner as well. Anyone can 
+download any message in the database; only the intended recipient will be able 
+to decrypt it. Messages are not deleted when they are downloaded; instead they 
+are kept for a fixed period of time (determined by the remailer operator) and 
+then deleted. If users are required to download other people's messages, tracing 
+a message to one specific person will be much more difficult.
+
+6. Steps 4 and 5 are repeated until the final recipient receives his message and 
+decrypts it, at which time crypto-anarchic utopia can resume.
+
+Randumb Thotz:
+Given an encryption program with a database of which remailers poll other 
+remailers, remailer chaining can be automated, and be done randomly.
+
+If 2 nyms can agree to poll a mutually known set of remailers, (such as via 
+anonymous Usenet/Blacknet postings) 2-way anonymous correspondence can occur 
+without either nym having to know the other nym's email address. The remailer 
+operators wouldn't know either, but they may be able to make reasonably informed 
+guesses at recipient-nym relationships via analysis of database browsing 
+patterns.  This is the the weakest part of the proposal, and suggestions for 
+preventing this would be appreciated.
+
+Remailers should use SSL or other encrypted communication protocols to ensure 
+that third parties cannot observe who is browsing what in the public message 
+databases.
+
+Jonathan Wienke
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00898" HREF="msg00898.html">Re: strengthening remailer protocols</A></STRONG>
+<UL><LI><EM>From:</EM> Andrew Loewenstern &lt;andrew_loewenstern@il.us.swissbank.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01033.html">Bubba Bottoming out on Cocaine Paranoia?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01026.html">Re: Erasing Disks</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00898.html">Re: strengthening remailer protocols</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00125.html">Censorpore as a Terror State</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01028"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01028"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

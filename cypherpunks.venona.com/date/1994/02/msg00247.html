@@ -1,0 +1,265 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Magic Money Digicash System -->
+<!--X-From-R13: abobqlNfuryy.cbegny.pbz -->
+<!--X-Date: Fri, 4 Feb 94 12:45:15 PST -->
+<!--X-Message-Id: 199402042044.MAA28800@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Magic Money Digicash System</TITLE>
+<LINK REV="made" HREF="mailto:nobody@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00260.html">Date Prev</A>][<A HREF="msg00261.html">Date Next</A>][<A HREF="msg00259.html">Thread Prev</A>][<A HREF="msg00251.html">Thread Next</A>][<A HREF="index.html#00247">Date Index</A>][<A HREF="threads.html#00247">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Magic Money Digicash System</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Magic Money Digicash System</LI>
+<LI><em>From</em>: <A HREF="mailto:nobody@shell.portal.com">nobody@shell.portal.com</A></LI>
+<LI><em>Date</em>: Fri, 4 Feb 1994 12:44:27 -0800</LI>
+<LI><em>Comments</em>: This message is NOT from the person listed in the Fromline.  It is from an automated software remailing service operating atthat address.  Please report problem mail to &lt;hfinney@shell.portal.com&gt;.</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Magic Money Digital Cash System
+Brought To You By Pr0duct Cypher
+Based on PGP Tools - The Crypto Construction Set
+Send to csn.org, should appear under /mpj somewhere
+
+Magic Money is a digital cash system designed for use over electronic mail.
+The system is online and untraceable. Online means that each transaction
+involves an exchange with a server, to prevent double-spending. Untraceable
+means that it is impossible for anyone to trace transactions, or to match
+a withdrawal with a deposit, or to match two coins in any way.
+
+The system consists of two modules, the server and the client. Magic Money
+uses the PGP ascii-armored message format for all communication between the
+server and client. All traffic is encrypted, and messages from the server
+to the client are signed. Untraceability is provided by a Chaum-style blind
+signature. Note that the blind signature is patented, as is RSA. Using it
+for experimental purposes only shouldn't get you in trouble.
+
+Digicash is represented by discrete coins, the denominations of which are
+chosen by the server operator. Coins are RSA-signed, with a different e/d
+pair for each denomination. The server does not store any money. All coins
+are stored by the client module. The server accepts old coins and blind-
+signs new coins, and checks off the old ones on a spent list.
+
+Suppose Alice wants to pay Bob some Magic Money. Alice uses her client
+module to extract some coins from her account (file). She then mails those
+coins to Bob, using a secure channel such as a PGP message. Bob runs his
+client module on the coins. The client module checks the signatures, and
+totals up the value of the coins. 
+
+It then prompts Bob to choose the values of new coins which total the same
+value as the old ones. For example, Alice sends Bob a 64-unit coin. Bob
+chooses a 32-unit and two 16-unit coins. The client module then generates
+proto-coins, which are blinded but unsigned. It produces an output file
+containing Alice's coins, and the new proto-coins.
+
+Bob mails this to the server. The server counts up Alice's coins, checks
+their signatures, and checks for double-spending. It puts the coins on the
+cancelled list, signs the proto-coins, and mails them back to Bob. Bob runs
+his client module on the reply message. It unblinds the signed coins and
+adds them to his coin file. This completes the transfer.
+
+The Magic Money server is a filter, accepting input from stdin and sending
+output to stdout. To set up a server, you first compile the server program
+and install it in its own directory. Dump some random junk in a file called
+rand.dat. This and the system clock is hashed to generate random numbers.
+
+Then execute "s i" to initialize the server. It will prompt you for some
+information. For the denominations, I would use powers of 2 (1, 2, 4, 8,
+16, 32, 64, 128...) because they minimize the number of coins needed to
+transfer any amount. The server will create a key and an e/d list. An
+ascii-armored copy of the server's public key is written to bank.asc. Users
+must have this key to use the server, so however you publicize your server,
+include the key.
+
+Set up the system so that, when a message comes in, the server is executed
+and the message (which need not be cleaned up first) is piped into stdin.
+The output from the server should be mailed back to the user. The server
+can be run through a remailer, if you don't want to reveal your location.
+This would be easiest through a penet-style remailer. Operating through a
+cypherpunks-style remailer would require an external mechanism to handle
+reply headers. However you do it, just see to it that messages go into the
+server and the output goes back to the right user.
+
+If you just want to experiment on one machine, put the server and client in
+different directories, to prevent their files from interfering with each
+other. Set up a shell script/batch file to feed the client's output into
+the server and return the server's reply.
+
+The server has the ability to include a message to the client. If the file
+msg.txt exists in the server's directory, it will be included in the
+server's replies, and the clients will display it. The client will wait for
+a keypress after displaying the message, so the last line should be "press
+any key to continue" or something similar. The message should not be longer
+than one screen, because there is no "more" in the client. The main use for
+the message is to warn users of expirations (see below), but you can send
+anything you want.
+
+To set up a client, compile the client module (unless the server operator
+was nice enough to provide a binary [hint]) and put it in its own
+directory. Put some random junk (for random numbers) into rand.dat, and put
+the server's ascii-armored key in bank.asc. Now execute "c -i" to
+initialize your client. It will create a key and generate "output.asc"
+which should be mailed to the server. When the reply comes back, save it
+in a file and run "c &lt;file&gt;". This will initialize your e-list and coin
+name files. If the server has a msg.txt, you will see it.
+
+Now get another user to send you some coins. Coins are binary, not ascii-
+armored, because we assume you will use a PGP message or other "envelope"
+to transport them. Execute "c &lt;file&gt;" to process your coins. The client
+will show the denominations as the signatures are checked. It will show the
+total, and allow you to choose denominations for the new coins you want to
+generate. Then it will generate a file "output.asc" which should be mailed
+to the server. Take the server's reply and run "c &lt;file&gt;" on it. It will
+extract and unblind the coins, displaying them as it does so. When it is
+done, you will have some coins to spend.
+
+To pay someone some coins, execute "c -p". The client will show a list of
+coins you have, and allow you to choose values to extract. These will be
+copied into "coins.dat", which you then mail to the person you want to pay.
+He does as above to deposit them. Do not lose "coins.dat" because the coins
+are removed from your file as they are extracted.
+
+Server maintenance and expirations: the server must keep track of all the
+coins which have ever been spent, at 16 bytes each. While the server uses
+an efficient hash file to maintain speed, the file will eventually grow to
+consume the entire filesystem of the host machine. There must be a way to
+clear it out eventually.
+
+The server operator executes "s n" to generate a new e/d list. The old list
+will be renamed. Old coins are still valid at this point. The server
+operator should put up a message warning users to exchange their old coins.
+The next time a user interacts with the server, his elist will be updated
+automatically, and the old one renamed. 
+
+The user can (and should be warned to) execute "c -x" to automatically
+exchange all his old coins for new ones. After a reasonable time, and
+plenty of warning (!) the server operator executes "s d" to delete the old
+spent list, efile, and dfile. Old coins are now worthless. The next time
+a user interacts with the server, his old elist will be deleted
+automatically by his client. Old coins will now show up as having zero
+value, and a "c -x" will discard them as "expired coins". If the user was
+dumb enough not to exchange his coins, too bad.
+
+The server will only sign as much value as it receives, so the amount of
+money in circulation remains constant. We have a chicken-and-egg problem:
+how is value created? The server operator has the magical ability to create
+new coins from thin air. He executes "s m &lt;x&gt; &lt;x&gt; &lt;x&gt;" where x is the
+denomination of the coins he wants. The result is a coins.dat file, which
+can be mailed to a user and processed by his client module. The server just
+signs the coins directly, without any blinding.
+
+Coins are represented by RSA integers in the normal PGP-signature format.
+The coin is 16 bytes, padded in the same way that PGP 2.3a pads a
+signature. The coin is stored signed, that is, raised to the d power. There
+is no hashing involved; RSA is used directly.
+
+To blind a coin, the client generates a blinding factor, a large random
+number. The random number is raised to the appropriate e power, modulo the
+server's n. It is then multiplied with the unsigned coin, generating a
+blinded "proto-coin", which is sent to the server. The server signs the
+blinded coin by raising to the power d. This "decrypts" the blinding factor
+at the same time as it signs the coin, because RSA is multiplicative. Then
+the client divides out the blinding factor, leaving the signed coin.
+
+How big should the blinding factor be? I am not sure. Right now, it is set
+to the modulus minus one byte. This is certainly secure, but it takes a
+long time to unblind because mp_inv is a slow operation. If you know how
+long it needs to be, feel free to change it.
+
+Now, if you're still awake, comes the fun part: how do you introduce real
+value into your digicash system? How, for that matter, do you even get
+people to play with it?
+
+What makes gold valuable? It has some useful properties: it is a good
+conductor, is resistant to corrosion and chemicals, etc. But those have
+only recently become important. Why has gold been valuable for thousands
+of years? It's pretty, it's shiny, and most importantly, it is scarce.
+
+Digicash is pretty and shiny. People have been talking about it for years,
+but few have actually used it. You can make your cash more interesting by
+giving your server a provocative name. Running it through a remailer could
+give it an 'underground' feel, which would attract people.
+
+Your digicash should be scarce. Don't give it away in large quantities. Get
+some people to play with your server, passing coins back and forth. Have
+a contest - the first person who (breaks this code, answers this question,
+etc.) wins some digital money. Once people start getting interested, your
+digital money will be in demand. Make sure demand always exceeds supply. 
+
+If some people get servers up and running, and if there is any interest,
+I can write an automatic client which will accept and pay out Magic Money
+without human intervention. Please let me know if you have an application
+for this, or any other ideas for the system.
+
+                                              Pr0duct Cypher
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a
+
+iQCVAgUBLVChQcGoFIWXVYodAQFDhAQAlOdUdnZZxarfxIbACZlHv+Hza+lLkaQl
+2eMBro4Bu/QV6wjnTPfw4AND8HbsgdCYjsh7B6XBkpLqVqSk0/fBkwrb4jmvG/bD
+sU2ccYm2Da9qShHaYWSqApugVA+0bPc9LSHxpbbrAfXIkMQvYqKQMjde6VW4zecZ
+fZAtf6J/7TY=
+=N7Kb
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00260.html">Re: Running regularly</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00261.html">Re: Running regularly</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00259.html">Re: Read-Once Messages?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00251.html">Re:  Magic Money Digicash System</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00247"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00247"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

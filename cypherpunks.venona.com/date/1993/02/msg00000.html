@@ -1,0 +1,265 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: mh wrappers for pgp. -->
+<!--X-From-R13: fuvcyrlNqvf.bet -->
+<!--X-Date: Mon, 1 Feb 93 04:30:16 PST -->
+<!--X-Message-Id: 9302011223.AA06080@merde.dis.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>mh wrappers for pgp.</TITLE>
+<LINK REV="made" HREF="mailto:shipley@dis.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[Date Prev][<A HREF="msg00001.html">Date Next</A>][Thread Prev][<A HREF="msg00001.html">Thread Next</A>][<A HREF="index.html#00000">Date Index</A>][<A HREF="threads.html#00000">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>mh wrappers for pgp.</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: mh wrappers for pgp.</LI>
+<LI><em>From</em>: <A HREF="mailto:shipley@dis.org">shipley@dis.org</A></LI>
+<LI><em>Date</em>: Mon, 01 Feb 93 04:23:04 -0800</LI>
+<LI><em>Phone</em>: (510) 849-2230</LI>
+<LI><em>Snail-Address</em>: 2560 Bancroft way #51;Berkeley CA 94704-1700</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+-----BEGIN PGP SIGNED MESSAGE-----
+
+
+
+
+#!/usr/local/bin/tperl4.010
+#!/usr/local/bin/perl
+
+# pgpedit V1.0
+# Mon Feb  1 04:10:42 PST 1993
+# Peter Shipley (shipley@utter.dis.org -or- shipley@berkeley.edu)
+
+# to install (mh instructions)
+# place this script in your path (eg ~/bin)
+# create few links:
+#
+#       ln -s /usr/local/mh/bin/repl ~/bin/pgprepl
+#       ln -s /usr/local/mh/bin/comp ~/bin/pgpcomp
+#
+# Add the following to your .mh_profile:
+#
+#       pgprepl: -editor pgpedit
+#       pgpcomp: -editor pgpedit
+#
+# To use just use the commands pgprepl or pgpcomp instead of repl or comp
+#
+
+
+
+require "sys/wait.ph";
+
+#custom stuff here
+
+#default editor
+$defaulteditor="/usr/ucb/vi";
+
+
+$pgpcommand="/usr/local/bin/pgp -sta +clearsig=on";
+
+$debug=0;
+
+#test the arg count
+    die "bad argument count" if ($#ARGV &gt; 0);
+
+#set the umask to something really paranoid
+    umask(07177);
+
+#set the path if there is not one
+    $ENV{'PATH'} = '/bin:/usr/ucp:/usr/bin' unless $ENV{'PATH'};
+
+# get the editor
+    if ($ENV{'VISUAL'}) {
+	$editor=$ENV{'VISUAL'} ;
+    } elsif ($ENV{'EDITOR'}) {
+	$editor=$ENV{'EDITOR'} ;
+    } else {
+	$editor = $defaulteditor;
+    }
+
+    $editor = $defaulteditor if $editor =~ /pgpedit/ ;
+
+# prepare the file.
+    &amp;prepfile($ARGV[0]);
+
+# run the editor
+    &amp;runeditor($ARGV[0]);
+
+# have pgp sign the file
+    &amp;SignMailFile($ARGV[0]);
+
+# the end
+    exit 0;
+
+
+
+sub SignMailFile {
+
+    local($INPUT) = @_;
+
+    local($BODY) = "/tmp/pgp$$.body";
+    local($PGPBODY) = "$BODY".".asc";
+
+
+    print "$INPUT \n" if ($debug);
+
+    open(INPUT, "+&gt;&gt;$INPUT" ) || die "failed to open $INPUT: $!\n";
+    seek(INPUT,0, 0);
+
+    open(BODY, "+&gt;$BODY") || die "failed to open $BODY: $!\n";
+    select(BODY); $| = 1; select(STDOUT);
+
+line:
+    while (&lt;INPUT&gt;) {
+	if (/^--------/) {
+	    $where = tell;
+	    last;
+	}
+    }
+
+
+    print STDERR "$BODY \n" if ($debug);
+
+    while (&lt;INPUT&gt;) {
+	print BODY $_;
+    }
+
+    print STDERR  "$pgpcommand $BODY\n" if ($debug);
+
+    `$pgpcommand $BODY`;
+
+    truncate(BODY, 0); unlink($BODY); close(BODY);
+
+
+    open(PGPBODY) || die "failed to open $PGPBODY: $!\n";
+
+    truncate(INPUT,$where) || warn "failed to truncate file $FILE: $!\n";
+    seek(INPUT,$where,0);
+
+    print INPUT "\n\n";
+
+    print INPUT &lt;PGPBODY&gt;;
+
+    truncate(PGPBODY, 0); unlink($PGPBODY); close(PGPBODY);
+
+    return;
+}
+
+
+
+sub prepfile {
+
+    local($FILE) = @_;
+    local(@data);
+
+
+    open(FILE, "+&gt;&gt;$FILE" ) || die "failed to open $FILE: $!\n";
+    seek(FILE, 0, 0);
+
+    while(&lt;FILE&gt;) { push (@data, $_); last if ( /^--------/ ); }
+
+#	push (@data, "\n\n\n");
+
+    while(&lt;FILE&gt;) { last if (/^-----BEGIN PGP SIGNED MESSAGE-----/); }
+
+    if( !eof(FILE) ) {
+
+	while(&lt;FILE&gt;) { 
+	    last if (/^-----BEGIN PGP SIGNATURE-----/);
+	    push (@data , $_); 
+	}
+
+	seek(FILE, 0, 0);
+	truncate(FILE, 0);
+
+	print FILE @data;
+
+    }
+    close(FILE);
+	
+    return;
+}
+
+
+sub runeditor {
+    local($file) = @_;
+    local($pid);
+
+FORK: {
+	if ($pid = fork) {
+		wait;
+	} elsif (defined $pid) { # $pid is zero here if defined
+		exec "$editor $file";
+	} elsif ($! =~ /No more process/) {     
+		# EAGAIN, supposedly recoverable fork error
+		sleep 5;
+		redo FORK;
+	} else {
+		# weird fork error
+		die "Can't fork: $!\n";
+	}
+}
+    return;
+}
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.1
+
+iQBFAgUBK20WHMhmn7GUWLLFAQFBawF6AuCjRKbZQcAM1NFXwrYO1MLmTvPcV7FC
+loRe/LqIoNwMST9sKfDFNSBoKmvCEaaB
+=Cjuz
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Next by Date:
+<STRONG><A HREF="msg00001.html">Eudora mail reader for the Macintosh</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00001.html">Eudora mail reader for the Macintosh</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00000"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00000"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,235 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Anonymous Encrypted Remailer Interface for Emacs -->
+<!--X-From-R13: zvpunry fuvcyrgg <zvpunry.fuvcyrggNhzvpu.rqh> -->
+<!--X-Date: Fri, 4 Mar 94 03:57:01 PST -->
+<!--X-Message-Id: 199403041156.GAA19523@totalrecall.rs.itd.umich.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Anonymous Encrypted Remailer Interface for Emacs</TITLE>
+<LINK REV="made" HREF="mailto:michael.shiplett@umich.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00246.html">Date Prev</A>][<A HREF="msg00229.html">Date Next</A>][<A HREF="msg00257.html">Thread Prev</A>][<A HREF="msg00229.html">Thread Next</A>][<A HREF="index.html#00232">Date Index</A>][<A HREF="threads.html#00232">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Anonymous Encrypted Remailer Interface for Emacs</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Anonymous Encrypted Remailer Interface for Emacs</LI>
+<LI><em>From</em>: michael shiplett &lt;<A HREF="mailto:michael.shiplett@umich.edu">michael.shiplett@umich.edu</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 04 Mar 1994 06:56:34 -0500</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Hello,
+
+  I finally wrote some code. This interface automates the wrapping of
+messages for use with the encrypted anonymous remailers--provided
+you're willing to enter into Emacs for the wrapping.
+
+  I've sent &amp; received several messages using it. Please let me know
+if you find any problems.
+
+enjoy,
+michael
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+;;; anon-remail.el v1.0, anonymous remailer interface
+;;; written by michael shiplett &lt;walrus@umich.edu&gt;
+;;; Any comments or suggestions welcomed.
+
+;;; License
+
+;;; No implied or expressed warranty nor any other guarantee.
+;;; Do what you want with this.
+
+
+;;; Anonymous Encrypted Remailer Interface
+
+
+;;; Usage:
+
+;;; You must set ar-remailer-list to a list of anonymous
+;;; remailer addresses. These must be in a valid mail ``To:''
+;;; format. The initial recipients address must also be in a valid
+;;; ``To:'' format; addresses depending on alias files will not
+;;; work because your mail program (MH, Elm, mail, etc.) will
+;;; not get a chance to process them before the message is wrapped.
+
+;;; After writing your message, invoke ar-wrap-message. If you
+;;; wish to sign the message, you should only sign the first
+;;; wrapping.
+
+;;; After the message has been wrapped, a list will appear in
+;;; the minibuffer--this is the route the message will take.
+
+;;; This package requires that you have mailcrypt configured
+;;; for use with pgp (unless you send to ripem remailers).
+
+
+;;; To Do:
+
+;;; Modify mc-encrypt to take a boolean argument for
+;;; signing the message.
+
+;;; Allow for different remailer lists based on whether
+;;; the transit delay one wants, e.g., fast, normal, or slow.
+
+
+(require 'mailcrypt)
+
+;; User Variables
+
+(defvar ar-remailer-list nil "*List of remailers from which to choose.")
+(defvar ar-hops 3 "*Number of remailers among which to pass message.")
+
+
+;; Hooks
+
+(defvar ar-start-hook nil)
+
+
+;; Functions
+
+(defun ar-wrap-message (&amp;optional hops)
+  "*Wrap the current message for a person and then wrap it for
+HOPS remailers. If HOPS is nil, use the value of `ar-hops'."
+  (interactive "P")
+  (run-hooks 'ar-start-hook)
+  (let ((remailer-path (list (mail-fetch-field "to" nil t))))
+    (ar-wrap-message-for-individual)
+    (if (not hops)
+	(setq hops ar-hops))
+    (while (&lt; 0 hops)
+      (let ((remailer (ar-choose-remailer)))
+	;; `remailer-path' is to prevent us
+	;; from sending to the same remailer twice
+	;; in a row.
+	;; It gives the path the message will take
+	;; beginning with `(car remailer-path)'
+	(while (string= remailer (car remailer-path))
+	  (setq remailer (ar-choose-remailer)))
+	(setq remailer-path (cons remailer remailer-path))
+	(ar-wrap-for-remailer remailer)
+	(setq hops (1- hops))))
+    (message "%s" remailer-path)))
+
+
+
+(defun ar-choose-remailer ()
+  "*Select a random remailer from `ar-remailer-list'."
+  (let (number-of-remailers remailer)
+    ;; Choose a remailer
+    (setq number-of-remailers (length ar-remailer-list))
+    (or number-of-remailers
+	(error "No remailers!"))
+    (nth (random number-of-remailers) ar-remailer-list)))
+
+
+
+(defun ar-wrap-for-remailer (remailer)
+  "*Wrap the current mail buffer for mailing to a specified remailer."
+  (let (recipient)
+    ;; Keep track of whom should receive the resent message
+    (setq recipient (mail-fetch-field "to" nil t))
+
+    ;; Add the magic redirection words
+    (goto-char (point-min))
+    (search-forward (concat "\n" mail-header-separator "\n"))
+    (setq start (point))
+    (insert "::\nRequest-Remailing-To: " recipient "\n\n")
+
+    ;; Wrap the message for the remailer
+    (mc-encrypt-message remailer nil)
+
+    ;; Add in the final magic remailer incantation
+    (goto-char start)
+    (insert "::\nEncrypted: PGP\n\n")
+
+    ;; Set the message to be sent to the remailer
+    (ar-set-recipient remailer)
+    ))
+
+
+
+(defun ar-wrap-message-for-individual ()
+  "*Does the initial wrap for a message not intended for a remailer"
+  ;; Figure out to whom the message is currently intended
+  (let (recipient)
+    (setq recipient (mail-fetch-field "to" nil t))
+    (mc-encrypt-message recipient nil)
+    ))
+
+
+
+(defun ar-set-recipient (recipient)
+  "*Set the ``To:'' field of a message. This will not work on
+a multi-line ``To:''."
+  (or recipient
+   (error "No recipient!"))
+
+  (goto-char (point-min))
+  (search-forward "To:")
+  (let ((beg (point)))
+    (end-of-line)
+    (delete-region beg (point)))
+  (insert " " recipient))
+
+
+(provide 'anon-remail)
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00246.html">How to do encrypted telnet without being root (tutorial, includes src)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00229.html">New fast cryptocomputer chip</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00257.html">Re: How to do encrypted telnet without being root (tutorial, includes src)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00229.html">New fast cryptocomputer chip</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00232"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00232"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

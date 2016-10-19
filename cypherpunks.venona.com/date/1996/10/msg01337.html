@@ -1,0 +1,164 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: DES cracker. -->
+<!--X-From-R13: Oaqernf Pbtx <naqernfNnegpbz.qr> -->
+<!--X-Date: Fri, 18 Oct 1996 01:47:20 &#45;0700 (PDT) -->
+<!--X-Message-Id: y8apw2gfyqr.fsf@hertie.artcom.de -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.3.89.9610172224.A7082&#45;0100000@netcom9 -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: DES cracker.</TITLE>
+<LINK REV="made" HREF="mailto:andreas@artcom.de">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01334.html">Date Prev</A>][<A HREF="msg01343.html">Date Next</A>][<A HREF="msg01309.html">Thread Prev</A>][<A HREF="msg01326.html">Thread Next</A>][<A HREF="index.html#01337">Date Index</A>][<A HREF="threads.html#01337">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: DES cracker.</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Lucky Green &lt;<A HREF="mailto:shamrock@netcom.com">shamrock@netcom.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: DES cracker.</LI>
+<LI><em>From</em>: Andreas Bogk &lt;<A HREF="mailto:andreas@artcom.de">andreas@artcom.de</A>&gt;</LI>
+<LI><em>Date</em>: 18 Oct 1996 10:44:12 +0200</LI>
+<LI><em>cc</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;, <A HREF="mailto:mac%2Dcrypto@thumper.vmeng.com">mac-crypto@thumper.vmeng.com</A>,       <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: Lucky Green's message of 18 Oct 1996 07:52:34 +0200</LI>
+<LI><em>References</em>: &lt;<A HREF="msg01309.html">Pine.3.89.9610172224.A7082-0100000@netcom9</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;&gt;&gt;&gt;&gt; "Lucky" == Lucky Green &lt;shamrock@netcom.com&gt; writes:
+
+    Lucky&gt; It would be best to attack something that has broader use
+    Lucky&gt; than just a single pin. At best, that would allow an
+    Lucky&gt; hostile to clean out a single account. A target that would
+    Lucky&gt; allow one to attack, say an account held *by* a bank would
+    Lucky&gt; be more attractive.
+
+The EC-Card system, the European standard for ATM cards, is based on
+DES. A single recovered key would suffice to calculate all PINs every
+current EC card, the number of which runs into the tens of millions.
+
+That would be especially interesting considering that peeple in
+Germany consistently lost suits against their banks in cases of stolen
+EC cards, the courts believed the banks' claim that DES is
+unbreakable.
+
+The PIN verification breaks down like this:
+
+On the card (which is a standard ISO magnetic stripe card with some
+bells and whistles to detect forgeries) are between others the
+following data:
+
+- the account number (10 digits)
+- the bank number (8 digits)
+- a card serial number (1 digit)
+- three offset values (4 digits each)
+
+The last five digits of the bank number, the account number and the
+serial number are concatenated. If I had an account at Deutsche Bank,
+this could look like this:
+
+- bank number: 10070000
+- account number 0004943918
+- serial number: 1 (it's my first card).
+
+Concatenation is: 7000000049439181. Now this number is viewed as a hex
+number and DES ECB encrypted: res = E(0x7000000049439181).
+
+The 3rd to 6th letter of the result viewed as hex is extracted:
+
+res == 0x8d6b477bd7a83b7c
+           vvvv
+	   6b47
+
+and every digit is taken modulo 10:
+
+           6b47
+           vvvv
+           6147
+
+This is basically the PIN, wich is requested from the user and
+compared to that value.
+
+Now things get a little complicated. There are different keys used in
+the DES encryption, institute keys and pool keys. Every ATM either
+tries the institute key, which is specific to the bank owning the ATM,
+or, if the card was given out by another bank, a pool key, which is
+common to all EC Card vendors. This latter case is where the offset
+fields come in play, the contents of the offset field is added to the
+encryption result before comparing to the entered PIN. 
+
+I'm citing all this from memory, and I'm a little unsure about the
+specific way the offset is added into the result, and about the
+presence of three different offset fields. My guess is that the pool
+key is changed every year, as the maximum validity for EC Cards is two
+years. I'll try to dig out all the details if you consider this target
+interesting.
+
+Andreas
+
+-- 
+Besides: Simulating reality creates too high a polygon count!
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01326" HREF="msg01326.html">Re: DES cracker.</A></STRONG>
+<UL><LI><EM>From:</EM> Lucky Green &lt;shamrock@netcom.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01309" HREF="msg01309.html">Re: DES cracker.</A></STRONG>
+<UL><LI><EM>From:</EM> Lucky Green &lt;shamrock@netcom.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01334.html">Re: "Stopping Crime" Necessarily Means Invasiveness</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01343.html">RE: Binding cryptography - a fraud-detectible alternative to  ke</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01309.html">Re: DES cracker.</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01326.html">Re: DES cracker.</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01337"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01337"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

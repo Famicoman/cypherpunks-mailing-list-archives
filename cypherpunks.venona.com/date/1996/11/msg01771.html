@@ -1,0 +1,394 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: FYI &#45; Anderson &#38; Kuhn's new "Improved DFA" paper -->
+<!--X-From-R13: [ngg Pynmr <znoNerfrnepu.ngg.pbz> -->
+<!--X-Date: Wed, 20 Nov 1996 11:36:32 &#45;0800 (PST) -->
+<!--X-Message-Id: 199611201934.OAA11249@nsa.research.att.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>FYI - Anderson &amp; Kuhn's new "Improved DFA" paper</TITLE>
+<LINK REV="made" HREF="mailto:mab@research.att.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01766.html">Date Prev</A>][<A HREF="msg01762.html">Date Next</A>][<A HREF="msg02239.html">Thread Prev</A>][<A HREF="msg01762.html">Thread Next</A>][<A HREF="index.html#01771">Date Index</A>][<A HREF="threads.html#01771">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>FYI - Anderson &amp; Kuhn's new "Improved DFA" paper</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: FYI - Anderson &amp; Kuhn's new "Improved DFA" paper</LI>
+<LI><em>From</em>: Matt Blaze &lt;<A HREF="mailto:mab@research.att.com">mab@research.att.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 20 Nov 1996 14:34:49 -0500</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+My appologies if this has been posted already.
+
+
+------- Forwarded Message
+From: Ross Anderson &lt;Ross.Anderson@cl.cam.ac.uk&gt;
+To: ccc-list@newton.cam.ac.uk
+Message-ID: &lt;E0vOSwQ-0000uc-00@heaton.cl.cam.ac.uk&gt;
+Subject: Research Announcement
+Sender: owner-ccc-list@newton.cam.ac.uk
+Precedence: bulk
+
+                   Improved Differential Fault Analysis
+
+                      Ross J Anderson, Markus G Kuhn
+
+In [1], Biham and Shamir announce an attack on DES based on 200 ciphertexts in
+which one-bit errors have been induced by environmental stress. Here we show an
+attack that requires less than ten ciphertexts. Furthermore, our attack is
+practical in that it uses a fault model that has been implemented in attacks on
+real smartcards.
+
+In [2], Biham and Shamir show how their method can be extended to reverse
+engineer algorithms whose structure is unknown. Our attack can also be extended
+to such cases and is more efficient there too. In [3], Boneh, De Millo and
+Lipton discuss how such techniques can be used to attack RSA. Again, their
+attack is theoretical only, We show how to do it in practice.
+
+
+Introduction
+
+A recent research announcement by Biham and Shamir shows that if DES is
+implemented in a tamper-resistant package, and this package has the property
+that by applying ionising radiation (or some other environmental stress) we can
+cause random one-bit errors in the round keys, then we can break DES. If we can
+get a series of ciphertexts, each generated from the same plaintext but with a
+different one-bit random round key error, then we will need about 200 faulty
+ciphertexts to recover the key. In a further announcement [2], they show how on
+a similar fault model, the structure of unknown Feistel ciphers can be deduced
+from an adequate number of faulty ciphertexts. In each case, the critical
+observation is that errors that occur in the last few round of the cipher leak
+information about the key, or algorithm structure, respectively.
+
+This work is inspired by a paper of Boneh, DeMillo and Lipton [3] who assume 
+(as Biham and Shamir do) that one-bit errors can be caused by radiation or
+other environmental stresses. That paper goes on to show that with this fault 
+model, RSA can be attacked.
+
+These results have been widely publicised in the press. A frequently voiced
+criticism is that the attacks are purely theoretical: no-one has demonstrated
+that single bit errors can actually be induced in a DES key schedule or an RSA
+computation in any fielded device. In fact, most smartcards hold keys in EEPROM
+which also contains much or all of the device's application software. Thus
+errors induced by ionising radiation would be much more likely to corrupt
+software, thus leading either to a system crash or to uninformative wrong
+answers.
+
+We show here that much faster, and completely practical, attacks are possible.
+The trick is to induce small changes in the code rather than trying to cause
+them in keys or other data.
+
+
+The Improved Attack Methodology
+
+In a note posted to relevant Internet newsgroups on the 7th November, one of us
+pointed out that using clock and power glitches gives a practical way of
+implementing the Lenstra variant of the Boneh attack. In this announcement, we
+will expand on the threat model, and also show how attacks using clock and
+power glitches can give attacks on DES that require many fewer ciphertexts -
+less than ten rather than the 200 or so previously required.
+
+In a paper on tamper resistance due to be published next week, we describe a
+number of techniques for attacking smartcards and other security processors
+[5]. This paper was written some time ago (the first results were presented at
+the Isaac Newton Institute, Cambridge, in June) but has been withheld by
+agreement with the manufacturer of one of the security processors we have
+attacked, so that banking industry clients had some time to take suitable
+precautions. Some of the attacks we describe in this paper are new, while
+others are already known in various small communities (such as hackers and chip
+testers) and are included for the benefit of the wider crypto and security
+communities.
+
+One of the latter type is that smartcards and other security processors can
+often be attacked using clock and power glitches. The application of a clock
+pulse that is much faster than normal, or of a transient in the power supply,
+can often cause faulty behaviour in a microprocessor, under which the program
+counter is incremented but the current instruction is executed either
+incorrectly or not at all. A standard version of this attack is to replace a
+single 5MHz clock pulse to a smartcard with four 20MHz pulses.
+
+We do not claim to have invented this attack; it appears to have originated in
+the pay-TV hacking community, which has known about it for at least a year. In
+that context, it has not been used for attacks on cryptographic algorithms, but
+in order to cause output loops to run for longer than the card's programmer
+intended, thus dumping key material to the output port.
+
+The glitch attack is described more fully in our tampering article, which will
+appear at next week's Usenix Electronic Commerce Workshop [5].
+
+In this note, we point out that attacks based on faulty instructions are not
+only proven practical, unlike the as yet undemonstrated fault model of random
+single bit errors induced by radiation. They also provide a much more powerful
+attack on many cryptographic algorithms. This holds both when we are seeking to
+recover a key for a known algorithm such as DES, and when we are trying to
+reverse engineer an unknown algorithm that has been provided in a smartcard or 
+other tamper resistant processor.
+
+
+Attacking RSA
+
+A simplified version of the Boneh-DeMillo-Lipton attack, due to Lenstra, is
+quoted in [3]: if a smart card computes an RSA signature S on a message M
+modulo n = pq by computing it modulo p and q separately and then combining them
+using the Chinese Remainder Theorem, and if an error an be induced in (say) the
+latter computation, then we can factor n at once as p = gcd(n,S^e-M) where e is
+the public exponent.
+
+This is absolutely ideal for a glitch attack. As the card spends most of its
+time calculating the signature mod p and mod q, and almost any glitch that
+affects the output will do, we do not have to be at all selective about where
+in the instruction sequence the glitch is applied. Since only a single
+signature is needed, the attack can be performed online: a Mafia eftpos
+terminal applies the glitch, factors the modulus, calculates what the correct
+signature should be, and sends this on to the bank. 
+
+Thus the Mafia can harvest RSA secret keys without the customer or his bank
+noticing anything untoward about the transaction he did at their shop. Given
+that implementers of the new EMV electronic purse system propose to have only
+10,000 different RSA secret keys per issuing bank, the Mafia will soon be able
+to forge cards for a substantial proportion of the user population.
+
+
+Attacking DES
+
+When we can cause an instruction of our choice to fail, then attacking DES is
+simple. We remove one of the xor operations that are used to combine the round
+keys with the inputs to the S-boxes from the last two rounds of the cipher, and
+repeat this for each of these key bytes in turn. The erroneous ciphertext
+outputs that we receive as a result of this attack will each differ from the
+genuine ciphertext in the output of usually two, and sometimes three, S-boxes.
+Using the techniques of differential cryptanalysis, we obtain about five bits
+of information about the eight keybits that were not xor'ed as a result of the
+induced fault. So, for example, eight faulty ciphertexts should give us about
+40 bits of the key, leaving a trivial keysearch.
+
+Thus DES can be attacked with about one correct and eight faulty ciphertexts.
+But how realistic is it to assume that we will be able to target particular
+instructions?
+
+In most smartcards, the manufacturer supplies a number of routines in ROM.
+Though sometimes presented as an `operating system', the ROM code is more of a
+library or toolkit that enables application developers to manage communications
+and other facilities. Its routines usually include the DES algorithm (or a
+proprietary algorithm such as Telepass), and by buying the manufacturer's
+smartcard development toolkit (for typically a few thousand dollars) an
+attacker can get full documentation plus real specimens for testing. In this
+case, individual DES instructions can be targeted.
+
+When confronted with an unfamiliar implementation, we may have to experiment
+somewhat (we have to do this anyway with each card in order to find the correct
+glitch parameters [5]). However the search space is relatively small, and on
+looking at a few DES implementations it becomes clear that we can usually
+recognise the effects of removing a single instruction from either of the last
+two rounds. (In fact, many of these instructions yield almost as much
+information when removed from the implementation as the key xor instructions
+do.) We will discuss this at greater length in a later paper.
+
+
+The ROM Overwrite Attack
+
+Where the implementation is familiar, there is yet another way to extract keys
+from the card - the ROM overwrite attack.
+
+Single bits in a ROM can be overwritten using a laser cutter, and where the DES
+implementation is well known, we can find one bit (or a small number of bits)
+with the property that changing it will enable the key to be extracted easily.
+The details will depend on the implementation but we might well be able, for
+example, to make a jump instruction unconditional and thus reduce the number of
+rounds in the cipher to one or two. Where the algorithm is kept in EEPROM, we
+can use two microprobing needles to set or reset the target bit [6].
+
+Where we have incomplete information on the implementation, ROM overwriting
+attacks can be used in other ways. For example, if the DES S-boxes in ROM, we
+can identify them using an optical microscope and use our laser cutter to make
+all their bits equal. This turns DES into a linear transfromation over GF(2),
+and we can extract the key from a single plaintext/ciphertext pair.
+
+Although ROM overwrite (unlike the other attacks suggested in this paper)
+involves access to the chip surface, it can be carried out using tools that are
+relatively cheap and widely available. So it may be used by attackers who do
+not have access to the expensive semiconductor test equipment that professional
+pirates use to extract keys directly from smartcards [5].
+
+Returning to the non-invasive attack model, we can always apply clock and power
+glitches until simple statistical tests suddenly show a high dependency between
+the input and output of the encryption function, indicating that we have
+succeeded in reducing the number of rounds. This may be practical even where
+the implementation details are unknown.
+
+
+Reverse Engineering an Unknown Block Cipher
+
+In [2], Biham and Shamir discuss how to identify the structure of an unknown
+block cipher in a tamper resistant package (e.g., Skipjack) using one-bit
+random errors. As before, they identify faults that affected only the last
+round or rounds; this can be done by looking for ciphertexts at a low Hamming
+distance from each other. They then identify which output bits correspond to
+the left and right halves, and next look at which bits in the left half are
+affected by one bit changes in the last-but-one right half. In the case of a
+cipher such as DES with S boxes, the structure will quickly become clear and
+with enough ciphertexts the values of the S-boxes can be reconstructed. They
+report that with 500 ciphertexts the gross structure can be recovered, and with
+about 10,000 the S-box entries themselves can be found.
+
+Our technique of causing faults in instructions rather than in data bits is
+more effective here too. We can attack the last instruction, then the second
+last instruction, and so on.
+
+We will give detailed estimates for DES in the final paper. Let us now consider
+an actual classified algorithm. `Red Pike' was designed by GCHQ for encrypting
+UK government traffic classified up to `Restricted', and the Department of
+Health wishes to use it to encrypt medical records. The British Medical
+Association, advised by one of us (Anderson) instead recommended that an
+algorithm be chosen that had been in the open literature for at least two years
+and had withstood attempts to find shortcuts (triple-DES, Blowfish, SAFER
+K-128, WAKE,...).
+
+In order to try and persuade the BMA that Red Pike was sound, the government
+commissioned a study of it by four academics [7]. This study states that Red
+Pike `uses the same basic operations as RC5' (p 4) in that the principal
+operations are add, exclusive or, and left shift. It `has no look-up tables,
+virtually no key schedule and requires only five lines of code' (p 4). Other
+hints include that `the influence of each key bit quickly cascades' (p 10) and
+`each encryption involves of the order of 100 operations' (p 19).
+
+We can thus estimate the effort of reverse engineering Red Pike from a tamper 
+resistant hardware implementation by considering the effort needed to mount a 
+similar attack on RC5.
+
+Removing the last operation - the addition of key material - yields an output
+in which the right hand side is different (it is (B xor A) shl A). This
+suggests, correctly, that the cipher is a balanced Feistel network without a
+final permutation. Removing the next operation - the shift - makes clear that
+it was a 32 bit circular shift but without revealing how it was parametrised.
+Removing the next operation - the xor - is transparent, and the next - the
+addition of key material in the previous round - yields an output with the
+values A and B in the above expression. It thus makes the full structure of
+the data-dependent rotation clear. The attacker can now guess that the
+algorithm is defined by
+
+          A = ((A xor B) shl B) op key
+          B = ((B xor A) shl A) op key
+
+Reverse engineering RC5's rather complex key schedule (and deducing that `op'
+is actually +) would require single-stepping back through it separately; but
+once we know that `op' is +, we can find the round key bits directly by working
+back through the rounds of encryption.
+
+So, apart from its key schedule, RC5 may be about the worst possible algorithm
+choice for secret-algorithm hardware applications, where some implementations
+may be vulnerable to glitch attacks. If Red Pike is similar but with a simpler
+key schedule, then it could be more vulnerable still. However, since the
+government plans to make Red Pike available eventually in software, this is not
+a direct criticism of the design or choice of that algorithm.
+
+It does all suggest, though, that secret-hardware algorithms should be more
+complex; large S-boxes kept in EEPROM (that is separate from the program
+memory) may be a sensible way of pushing up the cost of an attack. Other
+protective measures that prudent designers would consider include error
+detection, multiple encryption with voting, and designing the key schedule so
+that the key material from a small number of rounds is not enough for a break.
+
+
+Conclusion
+
+We have improved on the Differential Fault Analysis of Biham and Shamir. Rather
+than needing about 200 faulty ciphertexts to recover a DES key, we need less
+than ten. We can factor RSA moduli with a single faulty ciphertext. We can also
+reverse engineer completely unknown algorithms; this appears to be faster than
+Biham and Shamir's approach in the case of DES, and is particularly easy with
+algorithms that have a compact software implementation such as RC5.
+
+Finally, our attacks - unlike those of Biham, Shamir, Boneh, DeMillo and Lipton
+- - use a realistic fault model, which has actually been implemented and can be
+used against fielded systems.
+
+
+Acknowledgement
+
+Mike Roe pointed out that the glitch attack on RSA can be done in real time by
+a Mafia owned eftpos terminal.
+
+
+Bibliography
+
+[1] ``A New Cryptanalytic Attack on DES'', E Biham, A Shamir, preprint, 
+18/10/96
+
+[2] ``Differential Fault Analysis: Identifying the Structure of Unknown Ciphers
+Sealed in Tamper-Proof Devices'', E Biham, A Shamir, preprint, 10/11/96
+
+[3] ``On the Importance of Checking Computations'' D Boneh, RA DeMillo, RJ 
+Lipton, preprint
+
+[4] ``A practical variant of the Bellcore attack'', RJ Anderson, posted to
+sci.crypt as message ID &lt;55picf$dm3@lyra.csx.cam.ac.uk&gt;, 7/11/96
+
+[5] ``Tamper Resistance - A Cautionary Note'', RJ Anderson, MG Kuhn, to appear
+in Usenix Electronic Commerce workshop, 19/11/96
+
+[6] ``Hardwaresicherheit von Mikrochips in Chipkarten'', Osman Kocar,
+Datenschutz und Datensicherheit v 20 no 7 (July 96) pp 421--424
+
+[7] ``Red Pike --- An Assessment'', C Mitchell, S Murphy, F Piper, P Wild,
+Codes and Ciphers Ltd 2/10/96
+
+------- End of Forwarded Message
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01766.html">Re: Does John Gilmore ?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01762.html">Re: How to slow the animals ...</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02239.html">Re: COMPUTER THEFT, LOW-TECH STYLE</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01762.html">Re: How to slow the animals ...</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01771"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01771"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

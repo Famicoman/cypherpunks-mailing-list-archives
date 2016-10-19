@@ -1,0 +1,313 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Key Lookup Optimizations (Was: Re: D&#45;H Forward Secrecy for E&#45;Mail?) -->
+<!--X-From-R13: "Ivyyvnz V. Urvtre WWW" <jutvvvNvaijro.arg> -->
+<!--X-Date: Tue, 14 Oct 1997 06:53:00 +0800 -->
+<!--X-Message-Id: 199710132248.SAA27545@users.invweb.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Key Lookup Optimizations (Was: Re: D-H Forward Secrecy for E-Mail?)</TITLE>
+<LINK REV="made" HREF="mailto:whgiii@invweb.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00715.html">Date Prev</A>][<A HREF="msg00705.html">Date Next</A>][<A HREF="msg00695.html">Thread Prev</A>][<A HREF="msg00728.html">Thread Next</A>][<A HREF="index.html#00703">Date Index</A>][<A HREF="threads.html#00703">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Key Lookup Optimizations (Was: Re: D-H Forward Secrecy for E-Mail?)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@Algebra.COM">cypherpunks@Algebra.COM</A></LI>
+<LI><em>Subject</em>: Key Lookup Optimizations (Was: Re: D-H Forward Secrecy for E-Mail?)</LI>
+<LI><em>From</em>: "William H. Geiger III" &lt;<A HREF="mailto:whgiii@invweb.net">whgiii@invweb.net</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 13 Oct 97 15:52:11 -0500</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+
+In &lt;<A HREF="msg00713.html">199710131652.RAA02526@server.test.net</A>&gt;, on 10/13/97 
+   at 05, Adam Back &lt;aba@dcs.ex.ac.uk&gt; said:
+
+&gt;&gt; &gt;I also personally prefer people to send me keys in email, because the pay
+&gt;&gt; &gt;per second phone lines here at home mean that I tend want to avoid doing
+&gt;&gt; &gt;too many online key lookups, so I think this would be an individually
+&gt;&gt; &gt;useful feature.
+&gt;&gt; 
+&gt;&gt; I do my keylookups automatically durning the msg filtering process which
+&gt;&gt; is done in parallel to the message Dl's. 
+
+&gt;A clever optimisation to be sure.
+
+&gt;&gt; The outbound message lookups are a little more time consuming but is
+&gt;&gt; compensated by fewer keys to look for both because fewer messages on
+&gt;&gt; the outbound side and the use of key caches on the client machine
+&gt;&gt; for the most used keys for sig verification and encryption. 
+
+&gt;I don't have a key cache, and my keyring is only 216k.  But I'm curious
+&gt;about your automated process .. are you also checking all signatures that
+&gt;you can by downloading the keys and checking out the WoT for all received
+&gt;mailing list traffic etc?  This would cleary result in a much bigger key
+&gt;ring.
+
+For the inbound processing of mail I have the following automated
+processes:
+
+- -- Messages is downloaded and checked to see if it is a PGP Message (This
+is handled by the mailers filters).
+
+- -- If the message is signed the keyid of signature is extracted from the
+sig-block and a lookup is performed on the index table for both the users
+pubring &amp; sig_cache.
+
+- -- If the key is not found in either then the message is placed in a queue
+and a keylookup thread is spawned.
+
+- -- There is a setup for which servers and how many to try when doing the
+lookups.
+
+- -- If no key is found on the servers then a canned e-mail message is sent
+to the sender requesting his keys. The message is taken out of the queue,
+marked that no key was found and that a request had been sent out.
+
+- -- If a key is found it is added to the key cache (sig_cache.pgp). Then
+normal sig verification is performed.
+
+- -- After X amount of hits on a key in the cache the key is flagged as a
+commonly used key for the user so he can pursue authenticating the key (no
+sense in going through a lengthy authentication procedure for a key that
+is only used once).
+
+- -- Attached keys are detached from messages and stored in new.pgp keyring
+(auto adding of keys to ones keyring is a Badthing (TM) ).
+
+- -- Encrypted messages are decrypted.
+
+All PGP output is appended to the bottom of the message so the info is
+there when the user opens the message. If a message is in MIME format then
+the below is appended as MIME attachments using text/X-PGPCheck MIME type.
+A sample is provided below:
+
+- --------------------------------------------------------------------
+MR/2 PGP Signature Check  13 Oct 1997 12:19:55
+- --------------------------------------------------------------------
+
+
+File has signature.  Public key is required to check signature.
+
+Key matching expected Key ID 142DD151 not found in file
+'d:\pgp\pgp263a\pubring.pgp'.
+
+WARNING: Can't find the right public key-- can't check signature
+integrity.
+
+Plaintext filename: WHGIII\34425839
+
+- --------------------------------------------------------------------
+MR/2 PGP Signature Check [Secondary Keyring]  13 Oct 1997 12:19:55
+- --------------------------------------------------------------------
+
+
+File has signature.  Public key is required to check signature. .
+WARNING: Bad signature, doesn't match file contents!
+
+Bad signature from user "Ian Brown &lt;Ian.Brown@ncl.ac.uk&gt;".
+Signature made 1997/10/13 15:15 GMT using 1024-bit key, key ID 142DD151
+
+WARNING:  Because this public key is not certified with a trusted
+signature, it is not known with high confidence that this public key
+actually belongs to: "Ian Brown &lt;Ian.Brown@ncl.ac.uk&gt;".
+
+Plaintext filename: WHGIII\34425839
+
+PGPRC=1
+PGPRC2=1
+
+
+&gt;&gt; Also logging of e-mail addresses that do not use PGP cuts down on
+&gt;&gt; the number of lookups needed
+
+&gt;Good optimisation.  It sounds really as if your OS/2 setup is more
+&gt;advanced than a lot of other stuff around.
+
+- -- For the outbound messages the following procedures are in place:
+
+- -- All messages are signed with the user having an option of disabling
+this signature either on a per message basis (through the use of a message
+template at creation time) or default conditions can be set in the filter
+no to call the signing script (things like don't sign messages to
+majordomo, or messages going to remailers, ...ect)
+
+- -- Outbound messages can be flagged for encryption on a per message basis
+(through the use of a message template at creation time) or default
+conditions can be set in a special default.ndx file used by the encryption
+script.
+
+- -- The encryption script first extracts all the e-mail addresses from the
+To:, Cc:, &amp; Bcc: lines.
+
+- -- It then does a lookup on the default.ndx table. This is where several
+issues are resolved.
+
+    1) No key for address. An address can be flagged as a no-encrypt
+address. This is mostly for mailing lists and receivers that do not use
+PGP.
+
+    2) Default key for address. An address can be flagged as encrypt and
+the keyid for that address is included in the entry for that address. This
+handles things like userid does not match the e-mail address for the
+person you are sending to (change of address, ect...). Also the issue of
+multiple keys having the same e-mail address are handled (their can be 5
+keys all with the address john_doe@domain.com in the userid fields but
+only one is the real john_doe@domain.com that you are talking to).
+
+    3) Always encrypt flag. You can flag an address to alway encrypt too
+regardless of wether the message was flagged for encryption at creation
+time. (hmmmm starting to get into the realm of policy enforcement here
+&lt;g&gt;).
+
+- -- Unless an address is flagged as no-encrypt then a lookup on the keyring
+indexes for both the pubring and crypt_cache are performed.
+
+- -- If and address is not found then a keyring lookup is performed. A
+separate cache is kept for the encrypted keys and a similar process of
+flagging frequently used keys is in place as with the sig_cache.
+
+- -- now that all the addresses are processed 3 copies of the message are
+created:
+
+    1) Encrypted message. This message is sent to all the addresses where
+valid keys have been found.
+
+    2) Plain Text message. This message is sent to all addresses where
+they have been flagged no-encrypt in the default.ndx.
+
+    3) Error message. This message is returned to the message editor and
+the user is informed why the message could not be encrypted and then it is
+up to him to resolve the problem. Most common errors are no key found for
+the address and multiple keys with the same address found. Both these
+conditioned can be resolved by making the proper entries in the
+default.ndx file.
+
+        3A) There is a setting flag that tells the script not to split the
+message as above and error the complete message unless all addresses can
+be encrypted to.
+
+        3B) their is an exception option on 3A where a split message is
+not in error if the only addresses with no_keys are flagged as public
+distribution (mailing list, newsgroups, ...ect).
+
+    4) BCC messages. Bcc's create a unique problem to the encrypt to
+multiple recipients function. Because of the format of the encryption
+block the list of keys used to encrypt is known to all who care to look.
+This goes against the purpose of a BCC which is to hide a recipient from
+the rest. In this case I create a separate message for each BCC and
+encrypt that message with only the key for the BCC recipient.
+
+    5) All split messages contain a X-Distribution list containing all the
+e-mail addresses that the messages was sent to (minus the BCC's of
+course).
+
+I have allot more goodies implemented and/or working on but that should be
+enough for one message (direct keyring manipulation, remailer support,
+stamper support, PGP/MIME, balanced b-tree as keyring, ...ect). Much of
+the optimization work I have been doing is for server side processing
+useing very large keyrings (+20Mb) but that is another thread in itself.
+Plus I have a PGP GUI which has many other features for key management &amp;
+WOT not practical for the automated processing code.
+
+&gt;My setup is GNU emacs with Pat LoPresti's mailcrypt.el PGP and remailer
+&gt;support lisp extension for emacs RMAIL and emacs GNUS (newsreader).  I
+&gt;love it to bits.  It is totally excellent.  It doesn't have a couple of
+&gt;your optimisations, but other than that it's pretty good.  When you send
+&gt;messages, if you don't have the key it will fetch it for you by trying
+&gt;keyservers, then finger user@domain. It can snarf keys out of mail
+&gt;messages, paste keys into them, sign, encrypt, check signatures, use
+&gt;remailers (type I and mixmaster).
+
+Sounds good except the retrieval of keys from the finger. This is a
+serious weakpoint in your security. Say you have Adam who wishes to
+communicate with Mary. He get's Mary's key from her .plan file via finger.
+Eve has control of the server and replaces Mary's key with her own. Now
+you encrypt message to Mary but you are using Eve's key. Eve decrypts the
+message re-encrypts with Mary's and neither of you are the wiser. This is
+also a weakness in the distributed key approach as it presents a single
+source of failure unless some type of redundancy is built in. I know that
+there are many issues involved in this and probably should be spun off
+into a separate thread if you are interested in pursuing it (too many
+disjointed subjects in one thread tends to become confusing).
+
+- -- 
+- ---------------------------------------------------------------
+William H. Geiger III  <A  HREF="http://www.amaranth.com/~whgiii">http://www.amaranth.com/~whgiii</A>
+Geiger Consulting    Cooking With Warp 4.0
+
+Author of E-Secure - PGP Front End for MR/2 Ice
+PGP &amp; MR/2 the only way for secure e-mail.
+OS/2 PGP 2.6.3a at: <A  HREF="http://www.amaranth.com/~whgiii/pgpmr2.html">http://www.amaranth.com/~whgiii/pgpmr2.html</A>                        
+- ---------------------------------------------------------------
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.3a
+Charset: cp850
+Comment: Registered_User_E-Secure_v1.1b1_ES000000
+
+iQCVAwUBNEKmhI9Co1n+aLhhAQGgfQP/ZnRMzHAFSgfREts8Op5P+JHfRJHG5khl
+pUexNZh+VmGpuEkKVMCcIVvYJrICWop7XSYtnI6W0mKd3E2TppVgOplpOvnsHVCv
+cp1hS8a9MfkBns+Jf7xGG4Z2V3crqGP5ZpcF/PR8Yj8o9wHwx5YoqSLYnF5VTzVM
+OevaTH+8vJE=
+=VZeI
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00715.html">Re: typo &amp; too much time (Re: Stronghold)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00705.html">Re: Quantum Computing</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00695.html">InfoWar Epilogue 2 (Part III of 'The True Story of the InterNet')</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00728.html">Hmm</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00703"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00703"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

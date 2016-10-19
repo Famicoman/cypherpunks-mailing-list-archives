@@ -1,0 +1,237 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: REMAIL: new remailer -->
+<!--X-From-R13: Yney Zhv Pneehf <xyoneehfNbjyarg.evpr.rqh> -->
+<!--X-Date: Sun, 13 Feb 94 12:41:14 PST -->
+<!--X-Message-Id: 9402132035.AA19427@arcadien.owlnet.rice.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>REMAIL: new remailer</TITLE>
+<LINK REV="made" HREF="mailto:klbarrus@owlnet.rice.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00736.html">Date Prev</A>][<A HREF="msg00734.html">Date Next</A>][<A HREF="msg00736.html">Thread Prev</A>][<A HREF="msg00734.html">Thread Next</A>][<A HREF="index.html#00733">Date Index</A>][<A HREF="threads.html#00733">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>REMAIL: new remailer</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: REMAIL: new remailer</LI>
+<LI><em>From</em>: Karl Lui Barrus &lt;<A HREF="mailto:klbarrus@owlnet.rice.edu">klbarrus@owlnet.rice.edu</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 13 Feb 94 14:35:06 CST</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Cypherpunks,
+
+After reading Tim's ideas on second generations remailer, I decided to
+try coding a new experimental remailer which includes some of the
+features mentioned.  Because I am doing a couple of different things,
+I wrote the scripts from scratch since I need the familiarity with the
+code that comes from actually writing the whole thing yourself.
+However, I don't think it will be hard to add these features to Hal's
+code, if they are found desirable.  I've been testing for a while and
+it seems to work.
+
+* Send mail to barrus@tree.egr.uh.edu to enter the remailer.
+Ultimately, mail will be remailed from elee6ue@rosebud.ee.uh.edu.
+That is, there is a "mystery" processing point in between: mail -&gt;
+barrus@tree.egr.uh.edu -&gt; ? -&gt; elee6ue@rosebud.ee.uh.edu -&gt; wherever.
+I imagine it isn't difficult to figure out what the middle processing
+point is, but I thought I'd distribute things around a bit.  
+
+* Mail from ? to elee6ue@rosebud.ee.uh.edu will be encrypted, even if
+the mail sent to barrus@tree.egr.uh.edu isn't.  So mail with a latency
+delay will be encrypted as it sits at ?; mail with no latency will by
+encrypted before travelling to elee6ue@rosebud.ee.uh.edu.
+
+* The remailer elee6ue@rosebud.ee.uh.edu has been restored to normal.
+That is, the "digital cash" (random strings) features has been taken
+out.
+
+* The remailer figures out whether the message is encrypted (with PGP)
+or not.  So no encrypted pasting token; perhaps later I will add RIPEM
+capability.
+
+* Instructions to the remailer are of this form:
+
+&lt;instructions and stuff go here&gt;
+
+&lt;body of message goes here&gt;
+
+The instructions come first, then a space, then your message.  The
+original header of the message is thrown out (see *subject below).
+
+For example, a valid message with the new remailer is:
+
+- ----------8&lt; cut here &gt;8----------
+Anon-To:klbarrus@owlnet.rice.edu
+Subject:guess
+
+Gee, I think I figured out where ? is.
+- ----------8&lt; cut here &gt;8----------
+
+Of course, message body may be further encrypted with the public key
+of the remailed-to person, and the entire message (between the cut
+marks) may be encrypted with the public key of the remailer.
+
+* The following instructions are recognized:
+
+Anon-To:address
+Request-Remailing-To:address
+Cut:cutmarks
+Latent-Num:num1
+Subject:text
+
+	* Anon-To: and Request-Remailing-To: are really the same.
+	The address specified is where to send the body.  If the
+	address is /dev/null, whitehouse.gov, or null, the body is
+	dropped.  If you attempt to mail to an*@anon.penet.fi, the
+	address will be rewritten to na*@anon.penet.fi.
+
+	* Cut: allows you to specify cutmarks.  DO NOT PUT A SPACE
+	AFTER THE COLON UNLESS YOU WANT IT.  Thus
+
+	Cut:-- specifies the cutmarks to be '--' (beginning of line,
+	dash, dash, end of line) while
+
+	Cut: -- specifies the cutmarks to be ' --' (beginning of line,
+	SPACE, dash, dash, end of line), which is very different.
+
+	Sendmail is invoked with -oi so putting a lone period in the
+	first column should not end the message.
+
+	You can specify (nearly) arbitrary cutmarks, which are matched
+	against the body of your message.  If an exact match occurs,
+	the rest of the body is not sent.
+
+	If you specify cutmarks which also happen to be PERL
+	metacharacters, the cutmarks will be changed to the default
+	'--'.  I've tried to allow for the metacharacters to be
+	cutmarks, but it just won't go.  If you happen to know how to
+	do it, let me know.
+
+	Try the cutmarks feature out before depending on it to save
+	you.
+
+	* Subject:text allows you to specify your subject.  When mail
+	is received, the original header is thrown out.  After all,
+	you can pad and multiply hop your message all over but if the
+	subject remains "How I reverse engineered the Clipper chip"
+	throughout it's trip, then you lose some security.  If you do
+	not specify a subject, "Re: your mail" will be used.
+
+	* Latent-Num:num1 lets you specify how many messages must come
+	in (not necessarily be mailed out) before yours goes.  Pick a
+	reasonable number or your mail may sit there for a real long
+	time.
+
+* Logging: I'm only logging whether an arriving message was PGP
+encrypted or not, and the day of the month.  This is just to get an
+idea of usage.
+
+* I'll fill out Xenon's remailer disclosure list soon.  But this
+remailer involved three seperate account on three different machines
+so it might not fit into the current list very neatly ;)
+
+Here is the public key for the remailer:
+
+- -----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: 2.3a
+
+mQCNAi1al40AAAEEAJgl2BRKibTRuBPufnNwUnYWU8jyqHOeO5CvOCw8ZhVJm614
+Jaa134x8LgfjBRdU4eLMth3D6ldYhtJQ1k2UMHsx9QUAIWVY5mOn0o8wbQNjqAuv
+5SFUYBg8qS7U8pdl8Mr0v2Cmyeq9WeRSaoeYxf+D4hQIjMvnMMcTftZ/jd/BAAUR
+tCFyZW1haWxlciA8YmFycnVzQHRyZWUuZWdyLnVoLmVkdT6JAJUCBRAtXdAtg4Ds
+6kta1jMBAY+yA/9XDZZXgG8pTAKky4Zj8KxDSfPZIesXSEN9I/tsV4Zfak9mE8Oc
+aRs2Wphx6WcasX6/D9lgP8bT/Pnr9NDvqWLg0vC9yxk87D9ny8xNAreVTeH0+/HD
+7VaMhiQCEsADut+0FYFs/44N/IeQriOZS48kwM1PdUjVlc2aqMmobsk4SA==
+=XWIf
+- -----END PGP PUBLIC KEY BLOCK-----
+
+Other things I will be looking at implementing as time permits:
+
+* Digital Cash - hopefully with the Magic Money code.
+
+* Time Latency - letting a user specify when (timewise) before
+remailing a message is remailed.  I will possibly combine this feature
+with digital cash.
+
+* Avoiding Sendmail - using an SMTP package Peter Honeyman sent me.
+Maybe just telnetting to port 25 if that's good enough.
+
+* Padding - Hal sent me some code to pad inside PGP messages; upon
+decryption the padding is thrown away.
+
+* Other ways to receive mail - that is, something like an altered fsp,
+custom client/server code, or WWW in Nate's experiment.  Essentially
+materialize the file at the remailer (without mailing to the remailer)
+to be delivered later.  This will probably be undoable since I'm not
+root.
+
+Karl Barrus
+&lt;klbarrus@owlnet.rice.edu&gt;
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a
+
+iQCVAgUBLV6NgYOA7OpLWtYzAQF2JQP/YSrLjPbjPIzStLAwTcIazl9rPCr4O3if
+RWs8YUFJvt+1+2XGkPTdSd+poRykwN/x+9JNK2cCsy8MP4gd8hxOkpaFclAdFLO+
+X2e66Y3JVCbXWvGQEG3hUeWIcte2uc5WCXaXhG8FkU6Lhkw9XZFX7la4ZJ7bKmGo
+ExaTyCJVZu4=
+=B3D/
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00736.html">PGP Procmail</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00734.html">Re: a protocol (that doesn't work)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00736.html">PGP Procmail</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00734.html">Re: a protocol (that doesn't work)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00733"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00733"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

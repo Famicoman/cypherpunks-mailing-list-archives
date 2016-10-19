@@ -1,0 +1,171 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: J'accuse!: Whitehouse and NSA vs. Panix and VTW -->
+<!--X-From-R13: Xbua Pnfuvafxv <wonfuNpvfpb.pbz> -->
+<!--X-Date: Tue, 17 Sep 1996 11:32:38 +0800 -->
+<!--X-Message-Id: 199609162039.NAA10136@mort -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 2.2.32.19960916190033.010773d0@vertexgroup.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: J'accuse!: Whitehouse and NSA vs. Panix and VTW</TITLE>
+<LINK REV="made" HREF="mailto:jbash@cisco.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01319.html">Date Prev</A>][<A HREF="msg01357.html">Date Next</A>][<A HREF="msg01364.html">Thread Prev</A>][<A HREF="msg01387.html">Thread Next</A>][<A HREF="index.html#01331">Date Index</A>][<A HREF="threads.html#01331">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: J'accuse!: Whitehouse and NSA vs. Panix and VTW</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:jfricker@vertexgroup.com">jfricker@vertexgroup.com</A> (John F. Fricker)</LI>
+<LI><em>Subject</em>: Re: J'accuse!: Whitehouse and NSA vs. Panix and VTW</LI>
+<LI><em>From</em>: John Bashinski &lt;<A HREF="mailto:jbash@cisco.com">jbash@cisco.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 16 Sep 1996 13:39:35 -0700</LI>
+<LI><em>cc</em>: <A HREF="mailto:dilletante@cisco.com">dilletante@cisco.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-reply-to</em>: jfricker@vertexgroup.com's message of 16 Sep 96 19:00:33 GMT</LI>
+<LI><em>References</em>: &lt;<A HREF="msg01315.html">2.2.32.19960916190033.010773d0@vertexgroup.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; Well IPSec provides for authentication of endpoints which would identify the
+&gt; syn attacker.
+
+Only if the attacker were so stupid as to put in valid authentication
+data identifying herself. 
+
+I think IPSEC would allow you to throw away the SYNs without processing
+them and without putting anything in your incoming connection queue. On the
+other hand, you'd have to do all the authentication protocol and
+computation for each packet in order to determine that it was bogus. I can
+see where that could lead to a still worse denial-of-service attack if your
+IPSEC code wasn't properly written.
+
+&gt; What amazes me is that routers happily pass packets with foreign IP return
+&gt; addresses.
+
+Defining what a "foreign IP return address" is quickly becomes complicated.
+
+&gt; I guess there is some valid utility to being able to originate a
+&gt; connection that actually goes somewhere else for intiating a many to many
+&gt; protocol. But I can't think of any practical application that would
+&gt; necessarily be that way.
+
+As far as I know, nothing does that.
+
+&gt; So why do routers let packets leave local networks that do not appear to
+&gt; originate from said local network?
+
+Because routers don't know which networks are "local networks" and which
+networks are transit networks. When a router gets a packet from one of
+its interfaces, it has no way of knowing whether that packet originated
+on the local network, or was forwarded on by some other router... possibly
+from an original source a dozen network hops away.
+
+&gt; Doesn't routing work "both ways" so to speak?
+
+Um, "both ways"? No, not really, if you mean what I think you mean.  I
+think you're saying that, if a router receives a packet claiming to be from
+host A, and that packet doesn't come from the direction of host A, as
+defined by the direction in which the router itself would send a packet
+which was destined for host A, it should drop the packet.
+
+The problem with that is that, if host A sends a packet to host B, there's
+no guarantee that the path that packet takes is the same as the path a
+packet would take from host B to host A. It usually is, but not
+always. Transient routing assymetries are very common in routing protocols,
+and it's possible, and even occasionally useful, to set up networks where
+there are permanent asymmetries.
+
+It's a pretty basic part of the architecture of IP networks that routers
+forward based only on destination addresses. Changing this would break a
+lot of existing systems. Keeping both "to" and "from" route information
+for each destination would entail redesigning all the routing protocols now
+in use, as well as doubling the associated memory and computation
+requirements. It won't happen soon, if ever.
+
+It may happen that router vendors will start adding configurable options to
+discard suspicious packets in the (pretty common) case where routing is
+expected to be symmetric. Such options would have to be used with great
+care, by network administrators who were very sure they knew what they were
+doing. They couldn't be made the defaults without breaking the universe, so
+there'd always be people who should turn them on, but wouldn't.
+
+As it stands today, it's possibly to manually configure a router to reject
+packets that don't come from addresses expected on the interface the
+packets arrive on. Such filters are entirely static, and don't respond to
+changes in the network. It's reasonable to set them up on a "stub" link
+that forms the only path leading to a reasonably well-defined segment of
+the network...  like a LAN, or a small site. It's much less reasonable on a
+router in the middle of a complex network, and more or less impossible in
+Internet "core" routers... unless you can anticipate every possible dynamic
+network change, your filters are going to get it wrong sometimes.
+
+Myself, I always configure routers to filter out bogus source
+addresses... when they're being installed at points in the network where
+it's obvious which addresses those are. Most ISPs don't do it even when
+it's easy, and that's one of the sources of the problem.
+
+					-- John B. 
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01387" HREF="msg01387.html">Re: J'accuse!: Whitehouse and NSA vs. Panix and VTW</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Shostack &lt;adam@homeport.org&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01315" HREF="msg01315.html">Re: J'accuse!: Whitehouse and NSA vs. Panix and VTW</A></STRONG>
+<UL><LI><EM>From:</EM> jfricker@vertexgroup.com (John F. Fricker)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01319.html">Pro-CODE bill may not help much</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01357.html">Flamewars and events of the outside world</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01364.html">Re: J'accuse!: Whitehouse and NSA vs. Panix and VTW</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01387.html">Re: J'accuse!: Whitehouse and NSA vs. Panix and VTW</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01331"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01331"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

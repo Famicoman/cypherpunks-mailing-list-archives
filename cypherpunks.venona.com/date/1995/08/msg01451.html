@@ -1,0 +1,215 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Poisson numbers for random keyspace assignment -->
+<!--X-From-R13: gpznlNtbg.arg (Fvzbgul Q. [nl) -->
+<!--X-Date: Tue, 29 Aug 95 12:54:10 PDT -->
+<!--X-Message-Id: ac68b5601a0210040a9d@[205.199.118.202] -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Poisson numbers for random keyspace assignment</TITLE>
+<LINK REV="made" HREF="mailto:tcmay@got.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01459.html">Date Prev</A>][<A HREF="msg01450.html">Date Next</A>][<A HREF="msg01470.html">Thread Prev</A>][<A HREF="msg01526.html">Thread Next</A>][<A HREF="index.html#01451">Date Index</A>][<A HREF="threads.html#01451">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Poisson numbers for random keyspace assignment</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:Damien.Doligez@inria.fr">Damien.Doligez@inria.fr</A> (Damien Doligez), <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Poisson numbers for random keyspace assignment</LI>
+<LI><em>From</em>: <A HREF="mailto:tcmay@got.net">tcmay@got.net</A> (Timothy C. May)</LI>
+<LI><em>Date</em>: Tue, 29 Aug 1995 13:03:24 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+At 12:03 PM 8/29/95, Damien Doligez wrote:
+...
+&gt;But you fail to take into account the probability that the search will
+&gt;have to go that far.
+&gt;
+&gt;
+&gt;This is how I compute the expected cost of the random search.
+&gt;
+&gt;The probability of finding the key upon searching the k-th segment is:
+&gt;
+&gt;                  k-1
+&gt;  p(k) = (1 - 1/n)    . 1/n
+&gt;
+&gt;The expected cost is the sum of all possible costs, weighted by their
+&gt;probability:
+&gt;    ___                 ___
+&gt;    \                   \              i-1
+&gt;e =  &gt;  i p(i)    = 1/n  &gt;  i (1 - 1/n)
+&gt;    /__                 /__
+&gt;    i = 1..oo           i = 1..oo
+...
+
+I haven't checked Damien's notation and confirmed the results, but I have
+another way of looking at it, which I think produces the same results.
+
+Last night (but it didn't arrive at my site until moments ago, for some
+reason) I wrote:
+
+&gt;On the positive side, let everyone simply attack the keyspace as they see
+&gt;fit, picking random parts to attack. This should not be "worse" than a
+&gt;factor of several from a "perfectly coordinated" attack. (I haven't spent
+&gt;time calculating this, but my intuition is that a random attack, with
+&gt;overlapping keyspace, is not a lot less efficiently attacked than
+&gt;attempting to arrange for no overlaps...just based on my mental picture of
+&gt;dropping line segments randomly on some interval and figuring coverage of
+&gt;the line segment.)
+
+Here's what I meant, in more detail:
+
+Imagine the overall keyspace to be searched as a line segment of some length:
+
+[------------------------------------------------]
+
+Now imagine various people randomly picking starting points and doing some
+segment, depending on their compute power:
+
+   [---]
+                           [--]
+ [--------]
+            [------]
+                                 [-]
+                                   [--------]
+
+...and so on, with the various line segments scattered randomly. Some will
+overlap, meaning the same keyspace segment is being searched by two or more
+people.
+
+If the total length (summation) of these line segments is the same as the
+"brute force exhaustion" of the keyspace, we can do some interesting
+calculations.
+
+For example, the "expected" number of hits per point is "1". But some
+points will be hit 0 times, others will be once, twice, three times, etc.
+(This is in the nature of random processes, as each line segment is random
+and "independent" of what other people may have independently picked.)
+
+The Poisson distribution fits this situation exactly, with the _actual_
+number of hits computed by:
+
+P(s;m) = (e ^ -m) (m ^ s) / s!
+
+where s is the actual number of hits and m is the expected number. P(s;m)
+is the probability of seeing s hits when m are expected.
+
+s     m      P(s;m)
+
+0     1      1/e, or .368
+
+1     1      1/e, or .368
+
+2     1      .184
+
+etc.
+
+That is, with the "total exhaustion" amount of computation there will be
+36.8% of the keyspace left unsearched, simply because nobody's random
+segments landed on this fraction of the overall segment.
+
+If twice, three times, four times, etc. as much effort is put into it
+(enough to brute force the search space twice, using nonrandom assignment),
+then
+
+s     m       P(s;m)
+
+0     2       .135
+
+0     3       .0498
+
+0     4       .0183
+
+
+For s = 0,  P(s;m) = e ^ -m
+
+Several conclusions can be drawn. Here's what I conclude:
+
+* For opportunistic attacks on keys in challenges, the odds are 95% that a
+key will be found with only twice the total effort (or time) using a
+totally random method of picking up keyspace to search.
+
+* This is probably good enough. (And if one only wants to be 90% sure of
+finding the key, even less effort is needed.)
+
+* And this affects several of the "denial of service" attacks mentioned
+here by others, including finding the key but not reporting it (for
+whatever reasons), claiming too much keyspace, etc. This is because some of
+the same regions are actually being searched two or more times.
+
+* This of course gets rid of the assignment problems.
+
+* If the intent is to show that keys can opportunistically be found, the
+random assignment method works pretty well and is "good enough." If, for
+some reason, a key _had_ to found, then a more careful, nonrandom
+assignment method would be best.
+
+As assignment methods get better, a crossover will occur, and the random
+assignment method will lose its advantages.
+
+--Tim May
+
+
+---------:---------:---------:---------:---------:---------:---------:----
+Timothy C. May              | Crypto Anarchy: encryption, digital money,
+tcmay@got.net  408-728-0152 | anonymous networks, digital pseudonyms, zero
+Corralitos, CA              | knowledge, reputations, information markets,
+Higher Power: 2^756839      | black markets, collapse of governments.
+"National borders are just speed bumps on the information superhighway."
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01459.html">Re: Joel's RSA-t's</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01450.html">Re: A glance at the future of missing child identification</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01470.html">SSL keyspace etc.</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01526.html">Poisson numbers for random keyspace assignment</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01451"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01451"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

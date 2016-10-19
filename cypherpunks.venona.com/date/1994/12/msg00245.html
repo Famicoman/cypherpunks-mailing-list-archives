@@ -1,0 +1,217 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Interoperability, one&#45;use remailer tickets -->
+<!--X-From-R13: [vxr Watyr <[WYSW@UZSNqrycuv.pbz> -->
+<!--X-Date: Sun, 4 Dec 94 02:15:04 PST -->
+<!--X-Message-Id: 01HK8FKNB3LE90PJWN@delphi.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Interoperability, one-use remailer tickets</TITLE>
+<LINK REV="made" HREF="mailto:MIKEINGLE@delphi.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00230.html">Date Prev</A>][<A HREF="msg00247.html">Date Next</A>][<A HREF="msg00451.html">Thread Prev</A>][<A HREF="msg00249.html">Thread Next</A>][<A HREF="index.html#00245">Date Index</A>][<A HREF="threads.html#00245">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Interoperability, one-use remailer tickets</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Interoperability, one-use remailer tickets</LI>
+<LI><em>From</em>: Mike Ingle &lt;<A HREF="mailto:MIKEINGLE@delphi.com">MIKEINGLE@delphi.com</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 04 Dec 1994 05:14:50 -0500 (EST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+The remailers need a one-time reply mechanism.
+
+This would enable many other things, including "persistent" anonymous
+entities, without using broadcast techniques. The current remailers
+encourage hit-and-run anonymity, like the recent burst of anonymous
+nastiness, and discourage conversational anonymity and persistent
+anonymous entities. Sending a one-way message is easy and fairly secure.
+
+Creating a reply ticket is not very secure. The ticket can be replayed
+through the net to trace the path taken, and since the text following
+the ticket it sent in clear, it is easy to trace. The ticket can also
+be decrypted by coercion or hacking of the remailer machines. In general,
+there is enough persistent information available to trace any reply ticket.
+This is a bad thing.
+
+A one-shot reply ticket would be designed so that, after the ticket was used
+or a set time had passed, the ticket was no longer valid and the information
+needed to trace the path, partially stored in the remailers, was gone.
+
+One way to do this: each remailer has a list of secret (symmetric) keys.
+Each secret may have an expiration date. By some method (problem discussed
+later) the user and the remailer establish a shared secret, adding it to the
+list, while the remailer does not find out who the user is. The reply ticket
+contains a series of nested hops, each encrypted with that remailer's secret
+plus all the others after it.
+
+When the ticket is used, the remailer decrypts one layer of the ticket to
+obtain the next hop. It then encrypts the message with that secret key. Now
+it forgets the secret key (poof!) and passes the message and remainder of
+the ticket on to the next remailer.
+
+The ticket is getting decrypted at each hop, and the message is getting
+encrypted. Thus there is nothing recognizable between hops, and the trail is
+burning up as the message propagates. At the terminal end, the recipient
+applies all of the secret keys in the proper order to decrypt the message.
+Of course, an additional end-to-end public-key encryption is also an option.
+
+The catch: how do we establish a shared secret with the remailer, without
+identifying ourselves to it? If the first remailer (the one the replyer
+sends the ticket to) is corrupt, and it knows who established the secret
+contained in the ticket, it knows the end-to-end path of the message.
+
+Solution 1: each remailer has a public key. To establish shared secrets with
+a series of remailers, you send a normally-chained and nested message, using
+each remailer's public key. Each remailer decrypts a layer, stores the
+secret contained for it, and passes the message on. The first few remailers
+may not get secrets; they are just there to anonymize the message.
+
+  Problem: secret-establishing message is replayed, setting trail back up,
+  then reply ticket is replayed. Solution: when a secret is used, it is
+  one-way hashed, the hash stored, the secret forgotten. Secrets which have
+  already been used will not be accepted the second time. When the used
+  secrets list gets full, a new public/secret pair is generated and the old
+  one is forgotten, preventing any more replays. 
+
+    Problem: remailers are coerced or hacked to decrypt a captured secret-
+    establishing message, before the secret key is expired. Trail of a reply
+    ticket can then be followed. Solution: no good one that I can think of.
+
+Solution 2: establish a shared secret by a simple, direct Diffie-Hellman
+exchange with the remailer. You send a public-piece in a message, remailer
+sends you a public-piece, both sides compute the secret. If the remailer is
+corrupt, it now knows who you are. This is a level-1 secret.
+
+Use the level-1 secret as a reply ticket to establish a secret with another
+remailer. Message goes through a remailer, to the target you want to
+establish a secret with. Target replies using the level-1 secret. This is a
+level-2 secret; two remailers have to be corrupt to trace this secret to
+you. If you want, use the level-2 secret for another exchange to create a
+level-3 secret, and so on until your comfort zone is reached. An automatic
+program sits around stockpiling secrets for you. Problem: high bandwidth.
+
+Does anyone know of a better way to establish a shared secret in an
+untraceable way? Both of these methods have their problems.
+
+Given a secure two-way messaging mechanism, persistent anonymous identities
+are established using a "pigeonhole service". This is a service, with a
+publicized address, that will accept public-key encrypted mail and store it
+in a "pigeonhole". The owner of the pigeonhole anonymously sends a request
+(with authentication) and a reply ticket. The pigeonhole service sends the
+owner his mail using the ticket.
+
+Anonymous users would need a client that could set up trails, create
+tickets, request mail from the pigeonhole, etc. One nice feature of the
+system is that non-anonymous users could talk to anonymous users without
+having a client. The anonymous message would be of the form:
+
+--- BEGIN REPLY TICKET (LEAVE AT HEAD OF REPLY) ---
+(Reply ticket ciphertext)
+--- END REPLY TICKET ---
+Message text
+
+The non-anonymous user could reply with any mail reader, send the message
+back to the remailer that sent it to him, and the message would be
+transported securely back to the anonymous user that sent it.
+
+For something complex like this, we need a language with a little more
+leverage than C provides. For this and other complex protocols, I've ported
+RSAREF 2.0 to Perl. The interface does not require you to recompile Perl.
+It uses a C daemon and pipes. It provides symmetric encryption, public-key
+encryption, digital signatures, hashing, DH exchange, and ASCII armor.
+The algorithms used are MD5, MD2, DES, DESX, triple-DES, RSA, and DH.
+It has a good (eval/die) exception handling mechanism, and a very thorough
+regression testing script.
+
+For reliability in a large remailer network, end-to-end reliability is
+better than point-to-point reliability. Messages should be m-of-n secret
+shared before transmission, and reassembled at the terminal end. For
+clientless reception, the terminal node remailer could do the reassembly
+and splitting of replies.
+
+Code for secret sharing is available, but most secret-sharing algorithms
+create shadows each the size of the message. This can be avoided: use an
+error correcting code to add enough information to the original so the
+message can be recreated with any m of n pieces. Break into pieces, encrypt
+each piece, and secret-share the key. Where can I get an error correction
+algorithm that can do this? You should be able to increase a file's size by
+50% and then have any two of three pieces recreate it, for example.
+
+I want to add other algorithms to the Perl encryption package. The secret
+sharing, for one. A one-function call to gzip for compression. A blind
+signature if I could get patent permission (not from Chaum; how's Brands?)
+or perhaps just do it with a "research purposes only" disclaimer. Someone
+with Visual Basic experience could do a DOS/Windows VBX module to enable
+easy writing of PC clients for neat net-based servers written with the Perl
+encryption package.
+
+As Tim, Eric and others have pointed out, the problem of widespread, usable
+crypto is essentially the whole problem of interoperability across a
+network. Covering Unix for servers and Windows for clients would be a
+large step in the right direction. 
+
+						Mike
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00249" HREF="msg00249.html">Re: Interoperability, one-use remailer tickets</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00324" HREF="msg00324.html">Re: Interoperability, one-use remailer tickets</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00230.html">Re: How do *I* use PGP?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00247.html">Re: Brands excluded from digicash beta</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00451.html">Re: Moto Secure Clear digital?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00249.html">Re: Interoperability, one-use remailer tickets</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00245"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00245"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

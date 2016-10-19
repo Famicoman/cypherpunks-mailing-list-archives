@@ -1,0 +1,959 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Pentium optimizations for DES (BIG) -->
+<!--X-From-R13: trrznaNorfg.pbz -->
+<!--X-Date: Tue, 14 Jan 1997 00:19:49 &#45;0800 (PST) -->
+<!--X-Message-Id: 3.0.32.19970113220836.006ab2e4@best.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Pentium optimizations for DES (BIG)</TITLE>
+<LINK REV="made" HREF="mailto:geeman@best.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01563.html">Date Prev</A>][<A HREF="msg01566.html">Date Next</A>][<A HREF="msg01580.html">Thread Prev</A>][<A HREF="msg01577.html">Thread Next</A>][<A HREF="index.html#01559">Date Index</A>][<A HREF="threads.html#01559">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Pentium optimizations for DES (BIG)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, "Peter Trei" &lt;<A HREF="mailto:trei@process.com">trei@process.com</A>&gt;</LI>
+<LI><em>Subject</em>: Pentium optimizations for DES (BIG)</LI>
+<LI><em>From</em>: <A HREF="mailto:geeman@best.com">geeman@best.com</A></LI>
+<LI><em>Date</em>: Tue, 14 Jan 1997 00:35:24 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Here is some output of the static code analysis from
+Intel VTUNE of the win32.??? des crypt routine
+from LIBDES 4.0
+
+You'll have to fiddle with your text margins to get it looking
+right.
+
+Shown are the U and V pipes, clocks, and penalties for:
+* unpairable instructs (PU_Inst),
+* instructs dependent on previous results (Exp_Flow_Dep_???)
+* addresses dependent on previous instructs (Exp_AGI_???)
+
+and the %total time at the instruction, etc.
+based on a run of "speed.c" sampled at .25 millisec intervals
+
+A lot of the penalties are the "AGI" flavor, or "address generation interlock"
+as in:
+
+mov      bl, dl                                    1
+mov      cl, dh
+xor      esi, DWORD PTR [ebx+041a5a8h]             3      Exp_AGI_U_Pen:1
+&lt;&lt; penalty
+
+which **maybe** can be avoided by moving (in this example)
+the "mov bl,dl" to the earliest possible location where the
+algorithm semantics are unchanged.  But you have to be careful not to 
+kill some other pairing if you do.
+
+If I had more time I'd do it!  ;)  But I wonder if this isn't getting
+close to the point of diminishing returns ..... the overall stats for
+the encrypt routine showed about 85% pairing, and averaged out to just
+slightly less than 1 clock/instruction.
+   
+
+Just fyi, the total thruput on my system, a cyrix586 133, was just over 
+1M encrypts/sec, CBC.
+----------------------------------------------------------------------
+                      Address Label           Time     Instructions
+                             Clocks Penalties and Warnings Pairing Issues
+      W               0x103c  des_encrypt:    0.17%   push     ebp
+                             1                             Label
+             V        0x103d                  0.04%   push     ebx
+      U               0x103e                  0.05%   push     esi
+                             1
+             V        0x103f                  0.06%   push     edi
+      U               0x1040                  0.04%   mov      eax, DWORD
+PTR [esp+20]                   1
+      W             * 0x1044                  0.11%   mov      esi, DWORD
+PTR [eax]                      2      Exp_AGI_U_Pen:1        Exp_AGI
+             V        0x1046                  0.07%   mov      edi, DWORD
+PTR [eax+4]
+      U               0x1049                  0.04%   mov      eax, edi
+                             1
+      N               0x104b                  0.07%   shr      eax, 4
+                             1                             PU_Inst,
+Exp_Flow_Dep_eax, Exp_Output_Dep_eax
+      N               0x104e                  0.11%   xor      eax, esi
+                             1
+Exp_Flow_Dep_eax, Exp_Output_Dep_eax
+      N               0x1050                  0.05%   and      eax,
+0f0f0f0fh                            1
+Exp_Flow_Dep_eax, Exp_Output_Dep_eax
+      N               0x1055                  0.05%   xor      esi, eax
+                             1                             Exp_Flow_Dep_eax
+      N               0x1057                  0.05%   shl      eax, 4
+                             1                             PU_Inst
+      W               0x105a                  0.12%   xor      edi, eax
+                             1                             Exp_Flow_Dep_eax
+             V        0x105c                  0.06%   mov      eax, esi
+      U               0x105e                  0.06%   shr      eax, 16
+                             1
+      N               0x1061                  0.10%   xor      eax, edi
+                             1
+Exp_Flow_Dep_eax, Exp_Output_Dep_eax
+      N               0x1063                  0.05%   and      eax, 0ffffh
+                             1
+Exp_Flow_Dep_eax, Exp_Output_Dep_eax
+      N               0x1068                  0.06%   xor      edi, eax
+                             1                             Exp_Flow_Dep_eax
+      N               0x106a                  0.06%   shl      eax, 16
+                             1                             PU_Inst
+      W               0x106d                  0.11%   xor      esi, eax
+                             1                             Exp_Flow_Dep_eax
+             V        0x106f                  0.05%   mov      eax, edi
+      U               0x1071                  0.06%   shr      eax, 2
+                             1
+      N               0x1074                  0.10%   xor      eax, esi
+                             1
+Exp_Flow_Dep_eax, Exp_Output_Dep_eax
+      N               0x1076                  0.06%   and      eax,
+033333333h                           1
+Exp_Flow_Dep_eax, Exp_Output_Dep_eax
+      N               0x107b                  0.07%   xor      esi, eax
+                             1                             Exp_Flow_Dep_eax
+      N               0x107d                  0.04%   shl      eax, 2
+                             1                             PU_Inst
+      W               0x1080                  0.13%   xor      edi, eax
+                             1                             Exp_Flow_Dep_eax
+             V        0x1082                  0.06%   mov      eax, esi
+      U               0x1084                  0.04%   shr      eax, 8
+                             1
+      N               0x1087                  0.11%   xor      eax, edi
+                             1
+Exp_Flow_Dep_eax, Exp_Output_Dep_eax
+      N               0x1089                  0.06%   and      eax,
+0ff00ffh                             1
+Exp_Flow_Dep_eax, Exp_Output_Dep_eax
+      N               0x108e                  0.06%   xor      edi, eax
+                             1                             Exp_Flow_Dep_eax
+      N               0x1090                  0.07%   shl      eax, 8
+                             1                             PU_Inst
+      W               0x1093                  0.12%   xor      esi, eax
+                             1                             Exp_Flow_Dep_eax
+             V        0x1095                  0.04%   mov      eax, edi
+      U               0x1097                  0.05%   shr      eax, 1
+                             1
+      N               0x1099                  0.15%   xor      eax, esi
+                             1
+Exp_Flow_Dep_eax, Exp_Output_Dep_eax
+      N               0x109b                  0.05%   and      eax,
+055555555h                           1
+Exp_Flow_Dep_eax, Exp_Output_Dep_eax
+      N               0x10a0                  0.07%   xor      esi, eax
+                             1                             Exp_Flow_Dep_eax
+      N               0x10a2                  0.07%   shl      eax, 1
+                             1                             PU_Inst
+      N               0x10a4                  0.16%   xor      edi, eax
+                             1                             Exp_Flow_Dep_eax
+      N               0x10a6                  0.06%   rol      esi, 3
+                             1                             PU_Inst
+      W               0x10a9                  0.11%   rol      edi, 3
+                             1                             PU_Inst
+             V        0x10ac                  0.13%   xor      ebx, ebx
+      U               0x10ae                  0.05%   mov      eax, DWORD
+PTR [esp+28]                   1
+             V        0x10b2                  0.06%   xor      ecx, ecx
+      U               0x10b4                  0.04%   cmp      eax, 0
+                             1
+             V        0x10b7                  0.06%   mov      ebp, DWORD
+PTR [esp+24]
+      U               0x10bb                  0.09%   je
+des_encrypt+68a (16c6h)                   1
+      W               0x10c1  des_encrypt+85: 0.06%   mov      edx, DWORD
+PTR [ebp+4]                    1                             Basic_Block,
+Prev_PV/NP
+             V        0x10c4                  0.07%   mov      eax, DWORD
+PTR [ebp]
+      U               0x10c7                  0.05%   xor      edx, esi
+                             1
+             V        0x10c9                  0.06%   xor      eax, esi
+      U               0x10cb                  0.05%   ror      edx, 4
+                             1
+             V        0x10ce                  0.11%   and      eax, -03030304h
+      U               0x10d3                  0.06%   and      edx,
+-03030304h                           1
+             V        0x10d9                  0.05%   mov      bl, al
+      U               0x10db                  0.08%   mov      cl, ah
+                             1
+             V      * 0x10dd                  0.14%   xor      edi, DWORD
+PTR [ebx[des_SPtrans (10a8h)]] 3-1    Exp_AGI_V_Pen:1
+      U               0x10e3                  0.10%   shr      eax, 16
+                             1
+             V      * 0x10e6                  0.10%   xor      edi, DWORD
+PTR [ecx+041a2a8h]             3-1    Exp_AGI_U_Pen:1
+      U               0x10ec                  0.10%   mov      bl, al
+                             1
+             V        0x10ee                  0.06%   mov      cl, ah
+      U             * 0x10f0                  0.16%   xor      edi, DWORD
+PTR [ebx+041a4a8h]             3      Exp_AGI_U_Pen:1
+             V        0x10f6                  0.11%   mov      eax, DWORD
+PTR [ecx+041a6a8h]
+      U               0x10fc                  0.08%   mov      bl, dl
+                             1
+             V        0x10fe                  0.04%   mov      cl, dh
+      U             * 0x1100                  0.18%   xor      edi, DWORD
+PTR [ebx+041a1a8h]             3      Exp_AGI_U_Pen:1
+      W               0x1106                  0.11%   shr      edx, 16
+                             1                             PU_Inst
+             V        0x1109                  0.13%   xor      eax, DWORD
+PTR [ecx+041a3a8h]             2-1
+      U               0x110f                  0.11%   mov      bl, dl
+                             1
+             V        0x1111                  0.06%   mov      cl, dh
+      U             * 0x1113                  0.16%   xor      edi, DWORD
+PTR [ebx+041a5a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1119                  0.11%   xor      eax, DWORD
+PTR [ecx+041a7a8h]             2-1
+      U               0x111f                  0.09%   xor      edi, eax
+                             1
+             V        0x1121                  0.05%   mov      edx, DWORD
+PTR [ebp+12]
+      U               0x1124                  0.07%   mov      eax, DWORD
+PTR [ebp+8]                    1
+             V        0x1127                  0.05%   xor      edx, edi
+      U               0x1129                  0.05%   xor      eax, edi
+                             1
+      W               0x112b                  0.06%   ror      edx, 4
+                             1                             PU_Inst
+             V        0x112e                  0.11%   and      eax, -03030304h
+      U               0x1133                  0.06%   and      edx,
+-03030304h                           1
+             V        0x1139                  0.05%   mov      bl, al
+      U               0x113b                  0.07%   mov      cl, ah
+                             1
+             V      * 0x113d                  0.17%   xor      esi, DWORD
+PTR [ebx[des_SPtrans (10a8h)]] 3-1    Exp_AGI_V_Pen:1
+      U               0x1143                  0.11%   shr      eax, 16
+                             1
+             V      * 0x1146                  0.13%   xor      esi, DWORD
+PTR [ecx+041a2a8h]             3-1    Exp_AGI_U_Pen:1
+      U               0x114c                  0.11%   mov      bl, al
+                             1
+             V        0x114e                  0.05%   mov      cl, ah
+      U             * 0x1150                  0.17%   xor      esi, DWORD
+PTR [ebx+041a4a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1156                  0.11%   mov      eax, DWORD
+PTR [ecx+041a6a8h]
+      U               0x115c                  0.06%   mov      bl, dl
+                             1
+             V        0x115e                  0.05%   mov      cl, dh
+      U             * 0x1160                  0.16%   xor      esi, DWORD
+PTR [ebx+041a1a8h]             3      Exp_AGI_U_Pen:1
+      W               0x1166                  0.10%   shr      edx, 16
+                             1                             PU_Inst
+             V        0x1169                  0.13%   xor      eax, DWORD
+PTR [ecx+041a3a8h]             2-1
+      U               0x116f                  0.09%   mov      bl, dl
+                             1
+             V        0x1171                  0.06%   mov      cl, dh
+      U             * 0x1173                  0.19%   xor      esi, DWORD
+PTR [ebx+041a5a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1179                  0.13%   xor      eax, DWORD
+PTR [ecx+041a7a8h]             2-1
+      U               0x117f                  0.11%   xor      esi, eax
+                             1
+             V        0x1181                  0.06%   mov      edx, DWORD
+PTR [ebp+20]
+      U               0x1184                  0.06%   mov      eax, DWORD
+PTR [ebp+16]                   1
+             V        0x1187                  0.05%   xor      edx, esi
+      U               0x1189                  0.05%   xor      eax, esi
+                             1
+      W               0x118b                  0.07%   ror      edx, 4
+                             1                             PU_Inst
+             V        0x118e                  0.13%   and      eax, -03030304h
+      U               0x1193                  0.04%   and      edx,
+-03030304h                           1
+             V        0x1199                  0.07%   mov      bl, al
+      U               0x119b                  0.06%   mov      cl, ah
+                             1
+             V      * 0x119d                  0.16%   xor      edi, DWORD
+PTR [ebx[des_SPtrans (10a8h)]] 3-1    Exp_AGI_V_Pen:1
+      U               0x11a3                  0.11%   shr      eax, 16
+                             1
+             V      * 0x11a6                  0.11%   xor      edi, DWORD
+PTR [ecx+041a2a8h]             3-1    Exp_AGI_U_Pen:1
+      U               0x11ac                  0.11%   mov      bl, al
+                             1
+             V        0x11ae                  0.04%   mov      cl, ah
+      U             * 0x11b0                  0.18%   xor      edi, DWORD
+PTR [ebx+041a4a8h]             3      Exp_AGI_U_Pen:1
+             V        0x11b6                  0.10%   mov      eax, DWORD
+PTR [ecx+041a6a8h]
+      U               0x11bc                  0.08%   mov      bl, dl
+                             1
+             V        0x11be                  0.05%   mov      cl, dh
+      U             * 0x11c0                  0.17%   xor      edi, DWORD
+PTR [ebx+041a1a8h]             3      Exp_AGI_U_Pen:1
+      W               0x11c6                  0.11%   shr      edx, 16
+                             1                             PU_Inst
+             V        0x11c9                  0.13%   xor      eax, DWORD
+PTR [ecx+041a3a8h]             2-1
+      U               0x11cf                  0.09%   mov      bl, dl
+                             1
+             V        0x11d1                  0.06%   mov      cl, dh
+      U             * 0x11d3                  0.17%   xor      edi, DWORD
+PTR [ebx+041a5a8h]             3      Exp_AGI_U_Pen:1
+             V        0x11d9                  0.13%   xor      eax, DWORD
+PTR [ecx+041a7a8h]             2-1
+      U               0x11df                  0.08%   xor      edi, eax
+                             1
+             V        0x11e1                  0.06%   mov      edx, DWORD
+PTR [ebp+28]
+      U               0x11e4                  0.06%   mov      eax, DWORD
+PTR [ebp+24]                   1
+             V        0x11e7                  0.04%   xor      edx, edi
+      U               0x11e9                  0.06%   xor      eax, edi
+                             1
+      W               0x11eb                  0.05%   ror      edx, 4
+                             1                             PU_Inst
+             V        0x11ee                  0.11%   and      eax, -03030304h
+      U               0x11f3                  0.04%   and      edx,
+-03030304h                           1
+             V        0x11f9                  0.06%   mov      bl, al
+      U               0x11fb                  0.06%   mov      cl, ah
+                             1
+             V      * 0x11fd                  0.16%   xor      esi, DWORD
+PTR [ebx[des_SPtrans (10a8h)]] 3-1    Exp_AGI_V_Pen:1
+      U               0x1203                  0.12%   shr      eax, 16
+                             1
+             V      * 0x1206                  0.13%   xor      esi, DWORD
+PTR [ecx+041a2a8h]             3-1    Exp_AGI_U_Pen:1
+      U               0x120c                  0.12%   mov      bl, al
+                             1
+             V        0x120e                  0.05%   mov      cl, ah
+      U             * 0x1210                  0.19%   xor      esi, DWORD
+PTR [ebx+041a4a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1216                  0.12%   mov      eax, DWORD
+PTR [ecx+041a6a8h]
+      U               0x121c                  0.07%   mov      bl, dl
+                             1
+             V        0x121e                  0.05%   mov      cl, dh
+      U             * 0x1220                  0.18%   xor      esi, DWORD
+PTR [ebx+041a1a8h]             3      Exp_AGI_U_Pen:1
+      W               0x1226                  0.09%   shr      edx, 16
+                             1                             PU_Inst
+             V        0x1229                  0.12%   xor      eax, DWORD
+PTR [ecx+041a3a8h]             2-1
+      U               0x122f                  0.11%   mov      bl, dl
+                             1
+             V        0x1231                  0.06%   mov      cl, dh
+      U             * 0x1233                  0.17%   xor      esi, DWORD
+PTR [ebx+041a5a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1239                  0.11%   xor      eax, DWORD
+PTR [ecx+041a7a8h]             2-1
+      U               0x123f                  0.11%   xor      esi, eax
+                             1
+             V        0x1241                  0.05%   mov      edx, DWORD
+PTR [ebp+36]
+      U               0x1244                  0.06%   mov      eax, DWORD
+PTR [ebp+32]                   1
+             V        0x1247                  0.06%   xor      edx, esi
+      U               0x1249                  0.05%   xor      eax, esi
+                             1
+      W               0x124b                  0.06%   ror      edx, 4
+                             1                             PU_Inst
+             V        0x124e                  0.13%   and      eax, -03030304h
+      U               0x1253                  0.05%   and      edx,
+-03030304h                           1
+             V        0x1259                  0.06%   mov      bl, al
+      U               0x125b                  0.08%   mov      cl, ah
+                             1
+             V      * 0x125d                  0.17%   xor      edi, DWORD
+PTR [ebx[des_SPtrans (10a8h)]] 3-1    Exp_AGI_V_Pen:1
+      U               0x1263                  0.13%   shr      eax, 16
+                             1
+             V      * 0x1266                  0.10%   xor      edi, DWORD
+PTR [ecx+041a2a8h]             3-1    Exp_AGI_U_Pen:1
+      U               0x126c                  0.13%   mov      bl, al
+                             1
+             V        0x126e                  0.05%   mov      cl, ah
+      U             * 0x1270                  0.19%   xor      edi, DWORD
+PTR [ebx+041a4a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1276                  0.11%   mov      eax, DWORD
+PTR [ecx+041a6a8h]
+      U               0x127c                  0.08%   mov      bl, dl
+                             1
+             V        0x127e                  0.05%   mov      cl, dh
+      U             * 0x1280                  0.21%   xor      edi, DWORD
+PTR [ebx+041a1a8h]             3      Exp_AGI_U_Pen:1
+      W               0x1286                  0.12%   shr      edx, 16
+                             1                             PU_Inst
+             V        0x1289                  0.14%   xor      eax, DWORD
+PTR [ecx+041a3a8h]             2-1
+      U               0x128f                  0.09%   mov      bl, dl
+                             1
+             V        0x1291                  0.06%   mov      cl, dh
+      U             * 0x1293                  0.16%   xor      edi, DWORD
+PTR [ebx+041a5a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1299                  0.15%   xor      eax, DWORD
+PTR [ecx+041a7a8h]             2-1
+      U               0x129f                  0.10%   xor      edi, eax
+                             1
+             V        0x12a1                  0.07%   mov      edx, DWORD
+PTR [ebp+44]
+      U               0x12a4                  0.08%   mov      eax, DWORD
+PTR [ebp+40]                   1
+             V        0x12a7                  0.05%   xor      edx, edi
+      U               0x12a9                  0.04%   xor      eax, edi
+                             1
+      W               0x12ab                  0.06%   ror      edx, 4
+                             1                             PU_Inst
+             V        0x12ae                  0.14%   and      eax, -03030304h
+      U               0x12b3                  0.05%   and      edx,
+-03030304h                           1
+             V        0x12b9                  0.06%   mov      bl, al
+      U               0x12bb                  0.07%   mov      cl, ah
+                             1
+             V      * 0x12bd                  0.15%   xor      esi, DWORD
+PTR [ebx[des_SPtrans (10a8h)]] 3-1    Exp_AGI_V_Pen:1
+      U               0x12c3                  0.12%   shr      eax, 16
+                             1
+             V      * 0x12c6                  0.12%   xor      esi, DWORD
+PTR [ecx+041a2a8h]             3-1    Exp_AGI_U_Pen:1
+      U               0x12cc                  0.11%   mov      bl, al
+                             1
+             V        0x12ce                  0.04%   mov      cl, ah
+      U             * 0x12d0                  0.17%   xor      esi, DWORD
+PTR [ebx+041a4a8h]             3      Exp_AGI_U_Pen:1
+             V        0x12d6                  0.10%   mov      eax, DWORD
+PTR [ecx+041a6a8h]
+      U               0x12dc                  0.08%   mov      bl, dl
+                             1
+             V        0x12de                  0.05%   mov      cl, dh
+      U             * 0x12e0                  0.18%   xor      esi, DWORD
+PTR [ebx+041a1a8h]             3      Exp_AGI_U_Pen:1
+      W               0x12e6                  0.10%   shr      edx, 16
+                             1                             PU_Inst
+             V        0x12e9                  0.13%   xor      eax, DWORD
+PTR [ecx+041a3a8h]             2-1
+      U               0x12ef                  0.12%   mov      bl, dl
+                             1
+             V        0x12f1                  0.05%   mov      cl, dh
+      U             * 0x12f3                  0.16%   xor      esi, DWORD
+PTR [ebx+041a5a8h]             3      Exp_AGI_U_Pen:1
+             V        0x12f9                  0.13%   xor      eax, DWORD
+PTR [ecx+041a7a8h]             2-1
+      U               0x12ff                  0.11%   xor      esi, eax
+                             1
+             V        0x1301                  0.07%   mov      edx, DWORD
+PTR [ebp+52]
+      U               0x1304                  0.08%   mov      eax, DWORD
+PTR [ebp+48]                   1
+             V        0x1307                  0.04%   xor      edx, esi
+      U               0x1309                  0.05%   xor      eax, esi
+                             1
+      W               0x130b                  0.07%   ror      edx, 4
+                             1                             PU_Inst
+             V        0x130e                  0.14%   and      eax, -03030304h
+      U               0x1313                  0.04%   and      edx,
+-03030304h                           1
+             V        0x1319                  0.06%   mov      bl, al
+      U               0x131b                  0.09%   mov      cl, ah
+                             1
+             V      * 0x131d                  0.16%   xor      edi, DWORD
+PTR [ebx[des_SPtrans (10a8h)]] 3-1    Exp_AGI_V_Pen:1
+      U               0x1323                  0.13%   shr      eax, 16
+                             1
+             V      * 0x1326                  0.11%   xor      edi, DWORD
+PTR [ecx+041a2a8h]             3-1    Exp_AGI_U_Pen:1
+      U               0x132c                  0.12%   mov      bl, al
+                             1
+             V        0x132e                  0.05%   mov      cl, ah
+      U             * 0x1330                  0.19%   xor      edi, DWORD
+PTR [ebx+041a4a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1336                  0.11%   mov      eax, DWORD
+PTR [ecx+041a6a8h]
+      U               0x133c                  0.07%   mov      bl, dl
+                             1
+             V        0x133e                  0.05%   mov      cl, dh
+      U             * 0x1340                  0.18%   xor      edi, DWORD
+PTR [ebx+041a1a8h]             3      Exp_AGI_U_Pen:1
+      W               0x1346                  0.11%   shr      edx, 16
+                             1                             PU_Inst
+             V        0x1349                  0.14%   xor      eax, DWORD
+PTR [ecx+041a3a8h]             2-1
+      U               0x134f                  0.08%   mov      bl, dl
+                             1
+             V        0x1351                  0.06%   mov      cl, dh
+      U             * 0x1353                  0.16%   xor      edi, DWORD
+PTR [ebx+041a5a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1359                  0.13%   xor      eax, DWORD
+PTR [ecx+041a7a8h]             2-1
+      U               0x135f                  0.12%   xor      edi, eax
+                             1
+             V        0x1361                  0.05%   mov      edx, DWORD
+PTR [ebp+60]
+      U               0x1364                  0.07%   mov      eax, DWORD
+PTR [ebp+56]                   1
+             V        0x1367                  0.05%   xor      edx, edi
+      U               0x1369                  0.04%   xor      eax, edi
+                             1
+      W               0x136b                  0.06%   ror      edx, 4
+                             1                             PU_Inst
+             V        0x136e                  0.13%   and      eax, -03030304h
+      U               0x1373                  0.04%   and      edx,
+-03030304h                           1
+             V        0x1379                  0.06%   mov      bl, al
+      U               0x137b                  0.06%   mov      cl, ah
+                             1
+             V      * 0x137d                  0.17%   xor      esi, DWORD
+PTR [ebx[des_SPtrans (10a8h)]] 3-1    Exp_AGI_V_Pen:1
+      U               0x1383                  0.12%   shr      eax, 16
+                             1
+             V      * 0x1386                  0.11%   xor      esi, DWORD
+PTR [ecx+041a2a8h]             3-1    Exp_AGI_U_Pen:1
+      U               0x138c                  0.11%   mov      bl, al
+                             1
+             V        0x138e                  0.04%   mov      cl, ah
+      U             * 0x1390                  0.17%   xor      esi, DWORD
+PTR [ebx+041a4a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1396                  0.11%   mov      eax, DWORD
+PTR [ecx+041a6a8h]
+      U               0x139c                  0.07%   mov      bl, dl
+                             1
+             V        0x139e                  0.05%   mov      cl, dh
+      U             * 0x13a0                  0.16%   xor      esi, DWORD
+PTR [ebx+041a1a8h]             3      Exp_AGI_U_Pen:1
+      W               0x13a6                  0.09%   shr      edx, 16
+                             1                             PU_Inst
+             V        0x13a9                  0.13%   xor      eax, DWORD
+PTR [ecx+041a3a8h]             2-1
+      U               0x13af                  0.10%   mov      bl, dl
+                             1
+             V        0x13b1                  0.06%   mov      cl, dh
+      U             * 0x13b3                  0.18%   xor      esi, DWORD
+PTR [ebx+041a5a8h]             3      Exp_AGI_U_Pen:1
+             V        0x13b9                  0.14%   xor      eax, DWORD
+PTR [ecx+041a7a8h]             2-1
+      U               0x13bf                  0.09%   xor      esi, eax
+                             1
+             V        0x13c1                  0.05%   mov      edx, DWORD
+PTR [ebp+68]
+      U               0x13c4                  0.06%   mov      eax, DWORD
+PTR [ebp+64]                   1
+             V        0x13c7                  0.05%   xor      edx, esi
+      U               0x13c9                  0.06%   xor      eax, esi
+                             1
+      W               0x13cb                  0.07%   ror      edx, 4
+                             1                             PU_Inst
+             V        0x13ce                  0.11%   and      eax, -03030304h
+      U               0x13d3                  0.05%   and      edx,
+-03030304h                           1
+             V        0x13d9                  0.05%   mov      bl, al
+      U               0x13db                  0.07%   mov      cl, ah
+                             1
+             V      * 0x13dd                  0.15%   xor      edi, DWORD
+PTR [ebx[des_SPtrans (10a8h)]] 3-1    Exp_AGI_V_Pen:1
+      U               0x13e3                  0.13%   shr      eax, 16
+                             1
+             V      * 0x13e6                  0.11%   xor      edi, DWORD
+PTR [ecx+041a2a8h]             3-1    Exp_AGI_U_Pen:1
+      U               0x13ec                  0.11%   mov      bl, al
+                             1
+             V        0x13ee                  0.05%   mov      cl, ah
+      U             * 0x13f0                  0.18%   xor      edi, DWORD
+PTR [ebx+041a4a8h]             3      Exp_AGI_U_Pen:1
+             V        0x13f6                  0.11%   mov      eax, DWORD
+PTR [ecx+041a6a8h]
+      U               0x13fc                  0.07%   mov      bl, dl
+                             1
+             V        0x13fe                  0.05%   mov      cl, dh
+      U             * 0x1400                  0.18%   xor      edi, DWORD
+PTR [ebx+041a1a8h]             3      Exp_AGI_U_Pen:1
+      W               0x1406                  0.10%   shr      edx, 16
+                             1                             PU_Inst
+             V        0x1409                  0.13%   xor      eax, DWORD
+PTR [ecx+041a3a8h]             2-1
+      U               0x140f                  0.09%   mov      bl, dl
+                             1
+             V        0x1411                  0.06%   mov      cl, dh
+      U             * 0x1413                  0.17%   xor      edi, DWORD
+PTR [ebx+041a5a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1419                  0.14%   xor      eax, DWORD
+PTR [ecx+041a7a8h]             2-1
+      U               0x141f                  0.11%   xor      edi, eax
+                             1
+             V        0x1421                  0.06%   mov      edx, DWORD
+PTR [ebp+76]
+      U               0x1424                  0.08%   mov      eax, DWORD
+PTR [ebp+72]                   1
+             V        0x1427                  0.04%   xor      edx, edi
+      U               0x1429                  0.05%   xor      eax, edi
+                             1
+      W               0x142b                  0.04%   ror      edx, 4
+                             1                             PU_Inst
+             V        0x142e                  0.12%   and      eax, -03030304h
+      U               0x1433                  0.06%   and      edx,
+-03030304h                           1
+             V        0x1439                  0.06%   mov      bl, al
+      U               0x143b                  0.07%   mov      cl, ah
+                             1
+             V      * 0x143d                  0.15%   xor      esi, DWORD
+PTR [ebx[des_SPtrans (10a8h)]] 3-1    Exp_AGI_V_Pen:1
+      U               0x1443                  0.13%   shr      eax, 16
+                             1
+             V      * 0x1446                  0.12%   xor      esi, DWORD
+PTR [ecx+041a2a8h]             3-1    Exp_AGI_U_Pen:1
+      U               0x144c                  0.11%   mov      bl, al
+                             1
+             V        0x144e                  0.05%   mov      cl, ah
+      U             * 0x1450                  0.18%   xor      esi, DWORD
+PTR [ebx+041a4a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1456                  0.11%   mov      eax, DWORD
+PTR [ecx+041a6a8h]
+      U               0x145c                  0.07%   mov      bl, dl
+                             1
+             V        0x145e                  0.04%   mov      cl, dh
+      U             * 0x1460                  0.18%   xor      esi, DWORD
+PTR [ebx+041a1a8h]             3      Exp_AGI_U_Pen:1
+      W               0x1466                  0.09%   shr      edx, 16
+                             1                             PU_Inst
+             V        0x1469                  0.11%   xor      eax, DWORD
+PTR [ecx+041a3a8h]             2-1
+      U               0x146f                  0.11%   mov      bl, dl
+                             1
+             V        0x1471                  0.06%   mov      cl, dh
+      U             * 0x1473                  0.17%   xor      esi, DWORD
+PTR [ebx+041a5a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1479                  0.15%   xor      eax, DWORD
+PTR [ecx+041a7a8h]             2-1
+      U               0x147f                  0.11%   xor      esi, eax
+                             1
+             V        0x1481                  0.06%   mov      edx, DWORD
+PTR [ebp+84]
+      U               0x1484                  0.06%   mov      eax, DWORD
+PTR [ebp+80]                   1
+             V        0x1487                  0.04%   xor      edx, esi
+      U               0x1489                  0.05%   xor      eax, esi
+                             1
+      W               0x148b                  0.07%   ror      edx, 4
+                             1                             PU_Inst
+             V        0x148e                  0.10%   and      eax, -03030304h
+      U               0x1493                  0.05%   and      edx,
+-03030304h                           1
+             V        0x1499                  0.06%   mov      bl, al
+      U               0x149b                  0.09%   mov      cl, ah
+                             1
+             V      * 0x149d                  0.14%   xor      edi, DWORD
+PTR [ebx[des_SPtrans (10a8h)]] 3-1    Exp_AGI_V_Pen:1
+      U               0x14a3                  0.14%   shr      eax, 16
+                             1
+             V      * 0x14a6                  0.10%   xor      edi, DWORD
+PTR [ecx+041a2a8h]             3-1    Exp_AGI_U_Pen:1
+      U               0x14ac                  0.12%   mov      bl, al
+                             1
+             V        0x14ae                  0.06%   mov      cl, ah
+      U             * 0x14b0                  0.17%   xor      edi, DWORD
+PTR [ebx+041a4a8h]             3      Exp_AGI_U_Pen:1
+             V        0x14b6                  0.10%   mov      eax, DWORD
+PTR [ecx+041a6a8h]
+      U               0x14bc                  0.08%   mov      bl, dl
+                             1
+             V        0x14be                  0.07%   mov      cl, dh
+      U             * 0x14c0                  0.17%   xor      edi, DWORD
+PTR [ebx+041a1a8h]             3      Exp_AGI_U_Pen:1
+      W               0x14c6                  0.10%   shr      edx, 16
+                             1                             PU_Inst
+             V        0x14c9                  0.14%   xor      eax, DWORD
+PTR [ecx+041a3a8h]             2-1
+      U               0x14cf                  0.10%   mov      bl, dl
+                             1
+             V        0x14d1                  0.06%   mov      cl, dh
+      U             * 0x14d3                  0.16%   xor      edi, DWORD
+PTR [ebx+041a5a8h]             3      Exp_AGI_U_Pen:1
+             V        0x14d9                  0.12%   xor      eax, DWORD
+PTR [ecx+041a7a8h]             2-1
+      U               0x14df                  0.09%   xor      edi, eax
+                             1
+             V        0x14e1                  0.06%   mov      edx, DWORD
+PTR [ebp+92]
+      U               0x14e4                  0.07%   mov      eax, DWORD
+PTR [ebp+88]                   1
+             V        0x14e7                  0.06%   xor      edx, edi
+      U               0x14e9                  0.04%   xor      eax, edi
+                             1
+      W               0x14eb                  0.06%   ror      edx, 4
+                             1                             PU_Inst
+             V        0x14ee                  0.12%   and      eax, -03030304h
+      U               0x14f3                  0.05%   and      edx,
+-03030304h                           1
+             V        0x14f9                  0.06%   mov      bl, al
+      U               0x14fb                  0.07%   mov      cl, ah
+                             1
+             V      * 0x14fd                  0.14%   xor      esi, DWORD
+PTR [ebx[des_SPtrans (10a8h)]] 3-1    Exp_AGI_V_Pen:1
+      U               0x1503                  0.11%   shr      eax, 16
+                             1
+             V      * 0x1506                  0.12%   xor      esi, DWORD
+PTR [ecx+041a2a8h]             3-1    Exp_AGI_U_Pen:1
+      U               0x150c                  0.12%   mov      bl, al
+                             1
+             V        0x150e                  0.05%   mov      cl, ah
+      U             * 0x1510                  0.19%   xor      esi, DWORD
+PTR [ebx+041a4a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1516                  0.11%   mov      eax, DWORD
+PTR [ecx+041a6a8h]
+      U               0x151c                  0.07%   mov      bl, dl
+                             1
+             V        0x151e                  0.05%   mov      cl, dh
+      U             * 0x1520                  0.17%   xor      esi, DWORD
+PTR [ebx+041a1a8h]             3      Exp_AGI_U_Pen:1
+      W               0x1526                  0.10%   shr      edx, 16
+                             1                             PU_Inst
+             V        0x1529                  0.13%   xor      eax, DWORD
+PTR [ecx+041a3a8h]             2-1
+      U               0x152f                  0.10%   mov      bl, dl
+                             1
+             V        0x1531                  0.05%   mov      cl, dh
+      U             * 0x1533                  0.15%   xor      esi, DWORD
+PTR [ebx+041a5a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1539                  0.14%   xor      eax, DWORD
+PTR [ecx+041a7a8h]             2-1
+      U               0x153f                  0.10%   xor      esi, eax
+                             1
+             V        0x1541                  0.07%   mov      edx, DWORD
+PTR [ebp+100]
+      U               0x1544                  0.07%   mov      eax, DWORD
+PTR [ebp+96]                   1
+             V        0x1547                  0.04%   xor      edx, esi
+      U               0x1549                  0.04%   xor      eax, esi
+                             1
+      W               0x154b                  0.06%   ror      edx, 4
+                             1                             PU_Inst
+             V        0x154e                  0.11%   and      eax, -03030304h
+      U               0x1553                  0.04%   and      edx,
+-03030304h                           1
+             V        0x1559                  0.06%   mov      bl, al
+      U               0x155b                  0.08%   mov      cl, ah
+                             1
+             V      * 0x155d                  0.15%   xor      edi, DWORD
+PTR [ebx[des_SPtrans (10a8h)]] 3-1    Exp_AGI_V_Pen:1
+      U               0x1563                  0.12%   shr      eax, 16
+                             1
+             V      * 0x1566                  0.12%   xor      edi, DWORD
+PTR [ecx+041a2a8h]             3-1    Exp_AGI_U_Pen:1
+      U               0x156c                  0.14%   mov      bl, al
+                             1
+             V        0x156e                  0.04%   mov      cl, ah
+      U             * 0x1570                  0.18%   xor      edi, DWORD
+PTR [ebx+041a4a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1576                  0.11%   mov      eax, DWORD
+PTR [ecx+041a6a8h]
+      U               0x157c                  0.09%   mov      bl, dl
+                             1
+             V        0x157e                  0.06%   mov      cl, dh
+      U             * 0x1580                  0.17%   xor      edi, DWORD
+PTR [ebx+041a1a8h]             3      Exp_AGI_U_Pen:1
+      W               0x1586                  0.10%   shr      edx, 16
+                             1                             PU_Inst
+             V        0x1589                  0.14%   xor      eax, DWORD
+PTR [ecx+041a3a8h]             2-1
+      U               0x158f                  0.10%   mov      bl, dl
+                             1
+             V        0x1591                  0.05%   mov      cl, dh
+      U             * 0x1593                  0.17%   xor      edi, DWORD
+PTR [ebx+041a5a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1599                  0.13%   xor      eax, DWORD
+PTR [ecx+041a7a8h]             2-1
+      U               0x159f                  0.10%   xor      edi, eax
+                             1
+             V        0x15a1                  0.05%   mov      edx, DWORD
+PTR [ebp+108]
+      U               0x15a4                  0.06%   mov      eax, DWORD
+PTR [ebp+104]                  1
+             V        0x15a7                  0.05%   xor      edx, edi
+      U               0x15a9                  0.05%   xor      eax, edi
+                             1
+      W               0x15ab                  0.06%   ror      edx, 4
+                             1                             PU_Inst
+             V        0x15ae                  0.13%   and      eax, -03030304h
+      U               0x15b3                  0.05%   and      edx,
+-03030304h                           1
+             V        0x15b9                  0.05%   mov      bl, al
+      U               0x15bb                  0.06%   mov      cl, ah
+                             1
+             V      * 0x15bd                  0.14%   xor      esi, DWORD
+PTR [ebx[des_SPtrans (10a8h)]] 3-1    Exp_AGI_V_Pen:1
+      U               0x15c3                  0.12%   shr      eax, 16
+                             1
+             V      * 0x15c6                  0.11%   xor      esi, DWORD
+PTR [ecx+041a2a8h]             3-1    Exp_AGI_U_Pen:1
+      U               0x15cc                  0.11%   mov      bl, al
+                             1
+             V        0x15ce                  0.06%   mov      cl, ah
+      U             * 0x15d0                  0.18%   xor      esi, DWORD
+PTR [ebx+041a4a8h]             3      Exp_AGI_U_Pen:1
+             V        0x15d6                  0.10%   mov      eax, DWORD
+PTR [ecx+041a6a8h]
+      U               0x15dc                  0.08%   mov      bl, dl
+                             1
+             V        0x15de                  0.05%   mov      cl, dh
+      U             * 0x15e0                  0.19%   xor      esi, DWORD
+PTR [ebx+041a1a8h]             3      Exp_AGI_U_Pen:1
+      W               0x15e6                  0.09%   shr      edx, 16
+                             1                             PU_Inst
+             V        0x15e9                  0.14%   xor      eax, DWORD
+PTR [ecx+041a3a8h]             2-1
+      U               0x15ef                  0.09%   mov      bl, dl
+                             1
+             V        0x15f1                  0.06%   mov      cl, dh
+      U             * 0x15f3                  0.19%   xor      esi, DWORD
+PTR [ebx+041a5a8h]             3      Exp_AGI_U_Pen:1
+             V        0x15f9                  0.14%   xor      eax, DWORD
+PTR [ecx+041a7a8h]             2-1
+      U               0x15ff                  0.12%   xor      esi, eax
+                             1
+             V        0x1601                  0.07%   mov      edx, DWORD
+PTR [ebp+116]
+      U               0x1604                  0.07%   mov      eax, DWORD
+PTR [ebp+112]                  1
+             V        0x1607                  0.04%   xor      edx, esi
+      U               0x1609                  0.04%   xor      eax, esi
+                             1
+      W               0x160b                  0.06%   ror      edx, 4
+                             1                             PU_Inst
+             V        0x160e                  0.14%   and      eax, -03030304h
+      U               0x1613                  0.04%   and      edx,
+-03030304h                           1
+             V        0x1619                  0.06%   mov      bl, al
+      U               0x161b                  0.07%   mov      cl, ah
+                             1
+             V      * 0x161d                  0.15%   xor      edi, DWORD
+PTR [ebx[des_SPtrans (10a8h)]] 3-1    Exp_AGI_V_Pen:1
+      U               0x1623                  0.14%   shr      eax, 16
+                             1
+             V      * 0x1626                  0.12%   xor      edi, DWORD
+PTR [ecx+041a2a8h]             3-1    Exp_AGI_U_Pen:1
+      U               0x162c                  0.13%   mov      bl, al
+                             1
+             V        0x162e                  0.06%   mov      cl, ah
+      U             * 0x1630                  0.17%   xor      edi, DWORD
+PTR [ebx+041a4a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1636                  0.11%   mov      eax, DWORD
+PTR [ecx+041a6a8h]
+      U               0x163c                  0.07%   mov      bl, dl
+                             1
+             V        0x163e                  0.05%   mov      cl, dh
+      U             * 0x1640                  0.18%   xor      edi, DWORD
+PTR [ebx+041a1a8h]             3      Exp_AGI_U_Pen:1
+      W               0x1646                  0.09%   shr      edx, 16
+                             1                             PU_Inst
+             V        0x1649                  0.13%   xor      eax, DWORD
+PTR [ecx+041a3a8h]             2-1
+      U               0x164f                  0.09%   mov      bl, dl
+                             1
+             V        0x1651                  0.06%   mov      cl, dh
+      U             * 0x1653                  0.17%   xor      edi, DWORD
+PTR [ebx+041a5a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1659                  0.11%   xor      eax, DWORD
+PTR [ecx+041a7a8h]             2-1
+      U               0x165f                  0.10%   xor      edi, eax
+                             1
+             V        0x1661                  0.06%   mov      edx, DWORD
+PTR [ebp+124]
+      U               0x1664                  0.06%   mov      eax, DWORD
+PTR [ebp+120]                  1
+             V        0x1667                  0.05%   xor      edx, edi
+      U               0x1669                  0.04%   xor      eax, edi
+                             1
+      W               0x166b                  0.06%   ror      edx, 4
+                             1                             PU_Inst
+             V        0x166e                  0.13%   and      eax, -03030304h
+      U               0x1673                  0.04%   and      edx,
+-03030304h                           1
+             V        0x1679                  0.06%   mov      bl, al
+      U               0x167b                  0.07%   mov      cl, ah
+                             1
+             V      * 0x167d                  0.17%   xor      esi, DWORD
+PTR [ebx[des_SPtrans (10a8h)]] 3-1    Exp_AGI_V_Pen:1
+      U               0x1683                  0.11%   shr      eax, 16
+                             1
+             V      * 0x1686                  0.11%   xor      esi, DWORD
+PTR [ecx+041a2a8h]             3-1    Exp_AGI_U_Pen:1
+      U               0x168c                  0.11%   mov      bl, al
+                             1
+             V        0x168e                  0.05%   mov      cl, ah
+      U             * 0x1690                  0.18%   xor      esi, DWORD
+PTR [ebx+041a4a8h]             3      Exp_AGI_U_Pen:1
+             V        0x1696                  0.13%   mov      eax, DWORD
+PTR [ecx+041a6a8h]
+      U               0x169c                  0.07%   mov      bl, dl
+                             1
+             V        0x169e                  0.05%   mov      cl, dh
+      U             * 0x16a0                  0.16%   xor      esi, DWORD
+PTR [ebx+041a1a8h]             3      Exp_AGI_U_Pen:1
+      W               0x16a6                  0.10%   shr      edx, 16
+                             1                             PU_Inst
+             V        0x16a9                  0.12%   xor      eax, DWORD
+PTR [ecx+041a3a8h]             2-1
+      U               0x16af                  0.09%   mov      bl, dl
+                             1
+             V        0x16b1                  0.07%   mov      cl, dh
+      U             * 0x16b3                  0.18%   xor      esi, DWORD
+PTR [ebx+041a5a8h]             3      Exp_AGI_U_Pen:1
+             V        0x16b9                  0.12%   xor      eax, DWORD
+PTR [ecx+041a7a8h]             2-1
+      U               0x16bf                  0.09%   xor      esi, eax
+                             1
+             V        0x16c1                  0.06%   jmp
+des_encrypt+c8a (1cc6h)
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01563.html">Re: New US regs ban downloadable data-security software</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01566.html">Re: Newt's phone calls</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01580.html">Re: UnderNet:</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01577.html">Re: Pentium optimizations for DES (BIG)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01559"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01559"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

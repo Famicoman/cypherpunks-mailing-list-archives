@@ -1,0 +1,154 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Encrypting block driver for Linux...need some advice -->
+<!--X-From-R13: Xbuanguna Qbetna <wpbetnaNnrvarg.pbz> -->
+<!--X-Date: Wed, 26 Jul 95 10:03:19 PDT -->
+<!--X-Message-Id: Pine.LNX.3.91.950726091131.129A&#45;100000@comet.aeinet.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Encrypting block driver for Linux...need some advice</TITLE>
+<LINK REV="made" HREF="mailto:jcorgan@aeinet.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00917.html">Date Prev</A>][<A HREF="msg00906.html">Date Next</A>][<A HREF="msg00895.html">Thread Prev</A>][<A HREF="msg00950.html">Thread Next</A>][<A HREF="index.html#00894">Date Index</A>][<A HREF="threads.html#00894">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Encrypting block driver for Linux...need some advice</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Encrypting block driver for Linux...need some advice</LI>
+<LI><em>From</em>: Johnathan Corgan &lt;<A HREF="mailto:jcorgan@aeinet.com">jcorgan@aeinet.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 26 Jul 1995 10:02:41 -0800 (GMT-0800)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+All,
+
+I dropped off the face of the earth for a few months while fighting a 
+particularly *nasty* divorce, and to nurse my wounds, I immersed myself 
+in writing cypto-code :)
+
+What I've come up with is a loadable module block device driver for Linux 
+that implements transparent encryption/decryption (is there a generic 
+word that means both, like 'cryption' or some such?).
+
+The way it works is by 'attaching' a filespec to the block driver, and 
+translating block requests into read/write requests at the appropriate 
+offset in the file.  During the read or write, the data is transformed 
+with either DES or 3DES (RSAREF implementation).  The key is an MD5 hashed 
+passphrase entered by the user when attaching the filespec.  The key is 
+not stored anywhere, and there is no hidden structure to the ciphertext 
+(such as a header block.)
+
+The filespec can represent pretty much anything--another block device 
+such as a hard drive partition or floppy drive, a regular file, a remote 
+NFS exported file, CDROM, whatever.  If the file is remote, only ciphertext
+is transmitted on the wire.
+
+This part is working rather well at this point (as long as everything is 
+done as root), which brings me to the crux of my post.
+
+Being a Unix programming novice (lots of C experience on DOS/Windows), 
+I'm pretty clueless when it comes to Unix level security issues.  I need 
+to define and implement the appropriate behavior of the device when 
+dealing with access to the data by different users.  Ideally, I want 
+something infinitely flexible and configurable--why program in policy?--so 
+that the user/admin can deal with a variety of threat models.
+
+Another, more crypto related question--how to deal with IV's?  Right now, 
+I'm using 512 byte sectors with CBC.  For each sector, the IV is the 
+sector number.  This frustrates the known plaintext attack issue, but I'm 
+not sure if such a simple scheme is really effective.  Probably not.
+
+Then there is a whole host of issues relating to cryptographically 
+hygienic programming practices...of which I am also pretty ignorant 
+(especially on Unix.)
+
+I guess you could say the software is at the "proof of concept" stage, 
+and lacks all sorts of desirable features.  But it works (with many 
+bugs I'm sure)...and I have to give credit to the Linux effort:  so far I've 
+done this with nothing but the kernel source and the kernel hackers guide 
+as a reference.  I took a look at doing this with Windows 95 and didn't 
+even know where to start. (No, I'm not bashing Windows--I love Win95, use 
+it all day at the office and get loads of work done with it--but Linux 
+kernel hacking is much more fun.  An ideal world would have the Win95
+UI/Plug &amp; Play stuff coded on top of a Unix kernel :) 
+
+In any case, suggestions, criticism, and comments are welcome.  The software
+will eventually be GPL licensed when it is a bit more mature.
+
+==
+Johnathan Corgan       "For the first time in history, it is possible to
+jcorgan@aeinet.com      have absolute privacy over arbitrary distances."
+PGP Key Fingerprint:    4F 28 69 B8 76 2E 42 3E  8B 4C 12 BB 3A 43 D4 07
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBMBaCnU1Diok8GKihAQGyoQP+JAYyukotfejK84bm8olDs1GMd6zlwuXc
+S+91DwrPRb8pyciEC6lIoLNS3coMgPdGTEksNNJMbuIXupJNnXnSum9XrPkMzEkG
+gL/x6n6v4Jzm9B9IyvIV2R1UrIK893EGQbPKTIgGNNsvORJ/NB8nkoMfZalVlNnD
+Hl3z3vaYgtU=
+=grpJ
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00950" HREF="msg00950.html">Re: Encrypting block driver for Linux...need some advice</A></STRONG>
+<UL><LI><EM>From:</EM> Andy Brown &lt;asb@nexor.co.uk&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00917.html">Re: Crypto Law Survey</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00906.html">Re: Defcon agenda</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00895.html">Economist on Data Deluge (NewsClip)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00950.html">Re: Encrypting block driver for Linux...need some advice</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00894"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00894"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,233 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: MYK&#45;78 -->
+<!--X-From-R13: Oeguhe Ooenunz <n2Njryy.fs.pn.hf> -->
+<!--X-Date: Tue, 27 Apr 93 22:36:15 PDT -->
+<!--X-Message-Id: 199304280536.AA09155@well.sf.ca.us -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>MYK-78</TITLE>
+<LINK REV="made" HREF="mailto:a2@well.sf.ca.us">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00638.html">Date Prev</A>][<A HREF="msg00640.html">Date Next</A>][<A HREF="msg00598.html">Thread Prev</A>][<A HREF="msg00645.html">Thread Next</A>][<A HREF="index.html#00639">Date Index</A>][<A HREF="threads.html#00639">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>MYK-78</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: MYK-78</LI>
+<LI><em>From</em>: Arthur Abraham &lt;<A HREF="mailto:a2@well.sf.ca.us">a2@well.sf.ca.us</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 27 Apr 1993 22:36:01 -0700</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+I've been stalking Mykotronx with phone and smail since right
+after the announcement, and finally got through the guy who
+kept telling me that I'd undertand if I just knew a little
+more crypto, to the guy who really know what was going on and
+wanted to tell me.  This is what I found out: 
+
+Mykotronx MYK-78 has been identified as the Privacy "Clipper"
+chip.  The "Clipper" name comes from Washington, and the guys
+at Mykotronx know about the Intergraph chip.
+
+The data sheets, as those of you who have read them know, are
+confusing, incomplete and internally inconsistent.  This is
+evident even if you do not consider that they are to implement
+the social protocol described by Dorothy Denning (her
+19-Apr-93 paper, as published in Cypherpunks).
+
+After some discussions with Mykotronx, I was able to convince
+them of the truth of the last paragraph and to have them
+explain just what the chip was designed to do.  I would also
+like to emphasize that these discussions revealed that the
+poor quality of the documentation does not result from any
+attempt to obscure the operation of the chip, they were very
+forth coming and eager to discuss its operation.  The
+deficiencies result more from the nature of a military
+contractor's relationship to its one customer: the customer
+understands how to use the chip so there's no pressure to get
+it described carefully.  Going public was a bit of a surprise
+to them, in fact the announcement was made during their
+application engineer's vacation.  I am sure there is an
+interesting story in this timing, but the people I was talking
+to didn't seem to know it. 
+
+On to the chip: 
+
+You don't just hook up a clear-text bit stream to one end and
+get a Denning-stream out the other.  It needs a bit of care
+and feeding.
+
+At startup it requires a Random Seed (8 bytes/64-bits) and a
+crypto-variable CV (10 bytes/80-bits) for its DES-type
+algorithm.  This is Denning's "skipjack" algorithm and, like
+DES, is a symmetric key block cypher, which performs in all
+the DES modes:
+
+64-Bit Electronic Code Book (ECB)
+64-Bit Cypher Block Chaining (CBC)
+8/16/32/64 Bit Cypher Feedback
+64-Bit Output Feedback (OFB)
+
+In the last three modes the encryption of each block is
+dependent on the previous blocks.  (If you care to know more
+about DES modes, see FIPS-PUB 81 which is cited in the data
+sheets.)  
+
+One other thing about Skipjack: Denning describes it as having
+"32 rounds of scrambling" and this is supported by the data
+sheet's timing charts, which note 64 clocks cycles to complete
+an encryption.  Since this would operate on an 8-byte/64-bit
+block, with the 15MHz internal clock we appear to have roughly
+a 10M-bit/1.3MB transfer rate in encryption/decryption.  This
+is fast enough for the average telephone, or several
+telephones, or maybe a stereo CD.  It's probably just average
+performance for 1 micron technology and some units clock up to
+30MHz (they expect 0.8 micron eventually, with improved
+performance).
+
+Back to the Crypto-Variable, CV.  The CV is the session key,
+is selected off-chip, and must always be accompanied by a 3
+byte/24-bit checkword.  Where do you get the check word?...
+you ask the chip! If you load a CV with a bad checkword, the
+chip sets its ERROR line -- oh, sadness.  But then you can
+read out a good checkword, and subsiquently reload the same CV
+with the good checkword (happy now?).  The checkword is
+actually just the first three bytes from an application of
+Skipjack to the CV.
+
+Do all this and the chip is loaded and ready for plaintext. 
+You could just give it an Encryption command, and start
+pulling cyphertext out the other side, but who would
+understand it?  First you have to get the key information out
+of the chip and send it to the chip on the other side of the
+link.
+ 
+Skipjack is DES-like so to run a decryption mode on the other
+chip we're going to have to send it the session key, CV, and
+the Initial Vector, IV, which is the starting state of the
+stream for the non-ECB modes of operation.  We selected CV
+ourselves, and learned its checkword during the startup
+experience, but where's IV?
+
+Well, we generate it using "a feature not found in current DES
+chips" (data sheet, 1-3).  And quite a feature it is, too.  We
+use this command, Generate IV, and it makes all 8
+bytes/64-bits of the IV, based on the Random Seed... But
+That's Not ALL!
+
+You issue the Generate IV command three (3) times to get the
+full 24 byte/192-bit LEEF block.  LEEF = Law Enforcement
+Exploitation Field.  (I wrote this down very carefully to be
+sure I had it right.)  
+
+...Actually, you issue a Read Data command after each Generate
+IV command, but I won't bore you with details.  The first 8
+bytes/64-bits are called L1 or LEEF-1, the second 8
+bytes/64-bits are L2 or LEEF-2, and then here is the IV we've
+all been waiting for, in its full 8 byte/64-bit glory.  You
+probably noticed that LEEF is 24 bytes/192-bits long, and has
+the structure [L1,L2,IV].  Mykotronx is not supposed to tell
+us the structure of L1,L2.
+
+The interesting thing is that [CV,checkword,L1,L2,IV] is a
+self-checking unit.  The receiving chip checks it as it is
+loaded.  If something is wrong, the chip sets its ERROR line. 
+If CV is fermished, you have to get all the way to IV before
+you're rasberried.  In transmitting this we are advised to
+encrypt CV because it is, after all, the session key.  
+
+OK, so we are encrypting and the other chip is decrypting. 
+Suppose something happens and the other chip wants to talk to
+us, so that it encrypts and we decrypt.  It has all it needs
+to encrypt and we have all we need to decrypt, but one more
+thing has to be done.  We need to save the state of the
+chaining cypher so we can resume it at the same place in the
+chain when we return to encrypting.  Use the Save State
+command, which pops out 8 bytes/64-bits of Saved State, SS, or
+the current contents of the Skipjack encryption register.  To
+make this a bit clearer, if we pulled the Saved State right
+after Generate IV, we'd find SS = IV.
+
+The chip's serial number is 4-bytes/32-bits long, not the 3.75
+bytes/30-bits Denning reported, but don't worry, _you'll_
+never see it.  It and the family key are written in over pins
+Vpp1 and Vpp2, which are then burned out.  All chips are
+currently planned to have the same family key, but if you
+happen to meet a chip with a different family key and it sends
+you [CV,checkword,L1,L2,IV], you could understand it.  
+
+That's the main part of what's missing from the data sheets. 
+The rest works pretty much as described, and is at a level of
+detail too fine to interest anyone except a compulsive
+hardware wonk.  Oh, one more thing, on page 1-4 where the
+Configuration Register is shown with two "Arm CV" bits, the
+one at position D5 should be "Arm IV".
+
+-a2.
+
+ps: I will be at a meeting the rest of the week, so please
+don't expect me to respond to requests for clarification until
+I return.  Sorry.
+
+-a2.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00645" HREF="msg00645.html">MYK-78</A></STRONG>
+<UL><LI><EM>From:</EM> Eric Hughes &lt;hughes@soda.berkeley.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00638.html">So what was the point ?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00640.html">Re: MEETING SUMMARY: 4-24-93 Cypherpunks Meeting</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00598.html">MYK-78</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00645.html">MYK-78</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00639"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00639"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

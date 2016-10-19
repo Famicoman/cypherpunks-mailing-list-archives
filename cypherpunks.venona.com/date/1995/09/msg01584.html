@@ -1,0 +1,191 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Please send me SSL problems... -->
+<!--X-From-R13: Sevp Kbhat <rnlNzvapbz.bm.nh> -->
+<!--X-Date: Wed, 20 Sep 95 22:24:52 PDT -->
+<!--X-Message-Id: Pine.SOL.3.91.950921150731.23836F&#45;100000@orb -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: v02110104ac85a804545b@[204.179.132.1] -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Please send me SSL problems...</TITLE>
+<LINK REV="made" HREF="mailto:eay@mincom.oz.au">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01489.html">Date Prev</A>][<A HREF="msg01491.html">Date Next</A>][<A HREF="msg01454.html">Thread Prev</A>][<A HREF="msg01508.html">Thread Next</A>][<A HREF="index.html#01584">Date Index</A>][<A HREF="threads.html#01584">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Please send me SSL problems...</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "Erik E. Fair" &lt;<A HREF="mailto:fair@clock.org">fair@clock.org</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Please send me SSL problems...</LI>
+<LI><em>From</em>: Eric Young &lt;<A HREF="mailto:eay@mincom.oz.au">eay@mincom.oz.au</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 21 Sep 1995 15:09:23 +1000 (EST)</LI>
+<LI><em>Cc</em>: Jeff Weinstein &lt;<A HREF="mailto:jsw@netscape.com">jsw@netscape.com</A>&gt;, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01373.html">v02110104ac85a804545b@[204.179.132.1]</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+A few commnets from Tim Hudson who has put SSL into telnet and ftp, he is 
+not on this list but since he is my personal 'put SSL into applications' 
+person (I just write the library :-), I felt his comments would be better 
+than mine :-)
+
+On Wed, 20 Sep 1995, Erik E. Fair wrote:
+&gt; Jeff, the SSL specification has a severe *architectural* problem - it
+&gt; assumes that Internet Protocols are APIs - interface standards, and that
+...
+&gt; You can't fiddle with a communication protocol without getting agreement
+&gt; from everyone about the change, or extend it in a way that is compatible
+&gt; with the protocol you're modifying, on a per-protocol basis (e.g. adding a
+&gt; TELNET negotiation option to TELNET for encryption, an FTP command to FTP,
+&gt; etc). Otherwise, all you've done is made a private, non-interoperable
+
+[tjh]
+I agree with this statement - application of SSL at the TCP level for all
+communication is possible but *not* desirable in the general case - i.e.
+for internet communication.
+
+A much better approach (and the one that I have taken for adding SSL into
+TELNET and FTP) is to use *existing* negotiation mechanisms for dynamically
+switching on SSL for a given link based on determining dynamically if
+the server you are connecting to will support it.
+
+Naturally you want options at both the server and the client that enable
+you to:
+    - fall back to "normal/insecure" mode if SSL is not available
+    - drop the connection in the client if SSL is not negotiated
+    - drop the connection in the server if SSL is not negotiated
+
+My aim was when adding SSL (in the form of SSLeay) into an existing server
+was *always* to be able to run the *one* server for both the "old" and 
+the "new" protocol. I really was getting annoyed at seeing announcements
+of yet-another-security package that could be installed that provided 
+another potentially insecure access path into the system that only supported
+connecting to it with it's own fixed protocol.
+
+SSL can be seen in it simpliest form as just a nice mechanism for 
+dynamically negotiating a *cipher* - this is how I initially set things
+up so that the "normal" authentication mechanisms had to still be used
+for connection - i.e. SSLtelnet still required the normal account password
+to get access. This has since been "enhanced" so that you can switch on
+an option that uses a certificate exchange as the security 
+access mechanism (this is not switched on by default).
+
+For TELNET the "best" place to start seemed to be the work done with
+SRATELNET ... it already had all the hooks in the right places for 
+using the RFC-defined TELNET extensions that enabled negotiation of 
+authentication and encryption. (the documentation that came with SRAtelnet
+was also nice and clear too).
+
+For FTP there was a similar was of doing things so I used it too ... and
+FTP is a *great* example of a protocol where doing things at the TCP
+level (tranparently) would be "bad" - it used two ports ... one of which is
+usually dynamically allocated ... and you certainly don't want to 
+redo the initial SSL negotiation for each file that you transfer!
+(SSLftp reuses the session ID).
+
+Another thing that is worth noting (and worth looking at too) is the
+different API offered in SSLREF and SSLeay (... naturally I prefer SSLeay
+as I have influence over the author ;-) ... From what I know of the SSLREF
+API, it takes the approach of providing wrapper functions that you use
+*instead* of the "normal"  functions ... there is (not using the right
+names) SSLaccept and SSLconnect that you use that perform the accept() and
+connect() along with all the other things required in the SSL protocol
+being hidden which sounds nice until you want to do something like FTP ...
+where the connection for the DATA socket is formed in the opposite
+direction to the CONTROL socket - with SSLeay you do the accept() and
+connect() yourself ... as per normal and then run SSL_accept() or
+SSL_connect() which does the "logical" SSL stuff ... so in FTP I can do a
+connect() and then an SSL_accept() which looks funny but is the "right"
+thing to do.  SSLeay has only 2 function calls that operate on socket 
+file descriptors, a singe read() and a single write().  The most recent 
+version will handle non-blocking IO if the application passes a file 
+desciptor with it turned on.  SSLeay does not do a single 
+setsockopt(), ioctl(), fcntl(), accept(), bind(), select() etc. 
+
+If you haven't looked at SSLeay or looked and the SSL protocol itself then
+you really should grab it and have a read (while ignoring the politics   
+and the WWW hype over SSL).
+
+Tim
+
+[eay]
+While there are problems with certificate distribution, this will be 
+overcome.  Ever tried general inter-realm authentication with Kerberos?
+
+Both SSLref and SSLeay interoperate.  From what I know of the SSLref API, 
+our API's are quite different.  Just because SSLref may 'force' you 
+towards a particular style of SSL use does not mean the protocol forces 
+you to use it this way.
+
+eric
+Standard billboard
+
+<A  HREF="http://www.psy.uq.oz.au/~ftp/Crypto/">http://www.psy.uq.oz.au/~ftp/Crypto/</A>
+ftp.psy.uq.oz.au:/pub/Crypto/SSL/
+ftp.psy.uq.oz.au:/pub/Crypto/SSLapps/
+
+--
+Eric Young                  | Signature removed since it was generating
+AARNet: eay@mincom.oz.au    | more followups than the message contents :-)
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01373" HREF="msg01373.html">Re: Please send me SSL problems...</A></STRONG>
+<UL><LI><EM>From:</EM> "Erik E. Fair"  (Time Keeper) &lt;fair@clock.org&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01489.html">Re: Silly NetScape RND tricks...</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01491.html">Re: "random" number seeds vs. Netscape</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01454.html">Re: Please send me SSL problems...</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01508.html">Re: Please send me SSL problems...</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01584"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01584"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

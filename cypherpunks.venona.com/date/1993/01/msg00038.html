@@ -1,0 +1,142 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: mh wrapper -->
+<!--X-From-R13: fuvcyrlNzreqr.qvf.bet -->
+<!--X-Date: Wed, 6 Jan 93 20:25:15 PST -->
+<!--X-Message-Id: 9301070203.AA25280@merde.dis.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>mh wrapper</TITLE>
+<LINK REV="made" HREF="mailto:shipley@merde.dis.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00037.html">Date Prev</A>][<A HREF="msg00039.html">Date Next</A>][<A HREF="msg00035.html">Thread Prev</A>][<A HREF="msg00039.html">Thread Next</A>][<A HREF="index.html#00038">Date Index</A>][<A HREF="threads.html#00038">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>mh wrapper</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:toad.com%21cypherpunks@soda.berkeley.edu">toad.com!cypherpunks@soda.berkeley.edu</A></LI>
+<LI><em>Subject</em>: mh wrapper</LI>
+<LI><em>From</em>: <A HREF="mailto:shipley@merde.dis.org">shipley@merde.dis.org</A></LI>
+<LI><em>Date</em>: Wed, 06 Jan 93 18:03:54 -0800</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+
+
+
+
+here is my first pass (a 7min hack) at a wrapper for a pgp&lt;-&gt;mh use.
+the next verion will me a replacement for the editor to automaticly
+sign the body of a file (while leaving the header alone.
+
+===== CUT HERE ====
+#!/bin/sh
+
+#pgpcomp - pgp compose
+# Peter M. Shipley (Wed Jan  6 17:58:41 PST 1993)
+
+umask 7077
+
+TEMP=${TEMP-/tmp}
+EDITOR=${EDITOR-/usr/ucb/vi}
+
+whatnow=/usr/local/mh-6.7/bin/whatnow
+
+export TEMP EDITOR
+
+tempfile=$TEMP/pgp$$
+
+/bin/cat &lt;&lt; EEOOFF &gt; $tempfile
+To:
+cc:
+Fcc: +drafts
+Subject:
+Precedence: special-delivery
+- --------
+
+
+EEOOFF
+
+$EDITOR $tempfile
+
+/bin/sed  "/^--------/,$ d" &lt; $tempfile &gt; ${tempfile}.head
+/bin/sed  "1,/^--------/d" &lt; $tempfile &gt; ${tempfile}.body
+
+/usr/local/bin/pgp -sta +clearsig=on $tempfile.body -o $tempfile.signed
+
+/bin/mv ${tempfile}.head ${tempfile}
+/bin/cat &lt;&lt; EEOOFF &gt;&gt; ${tempfile}
+- --------
+
+EEOOFF
+/bin/cat &lt; $tempfile.signed.asc &gt;&gt; ${tempfile}
+
+/bin/rm -f ${tempfile}.*
+
+exec  $whatnow -prom "pgpsend&gt; " $tempfile
+===== CUT HERE ====
+
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.1
+
+iQBFAgUBK0uPgMhmn7GUWLLFAQH7MAF9EuCX3ZAauG771viwGmnyk4YaiNDFhpmr
+ann0Qvd6hVhTOnbSZNKet3Z9i0FUnDDu
+=40PL
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00037.html">Re: A solution remailer signature suppression</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00039.html">Russian analysis of PGP</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00035.html">RSAREF now available via anonymous FTP (fwd))</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00039.html">Russian analysis of PGP</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00038"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00038"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

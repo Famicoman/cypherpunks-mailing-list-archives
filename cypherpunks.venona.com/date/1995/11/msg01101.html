@@ -1,0 +1,228 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Design proposal: crypto&#45;capable generic interface -->
+<!--X-From-R13: Dncu Zrivra <encuNp2.bet> -->
+<!--X-Date: Thu, 23 Nov 1995 04:59:14 +0800 -->
+<!--X-Message-Id: Pine.SUN.3.91.951122111513.7498C&#45;100000@infinity.c2.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9511221840.AA24587@tis.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Design proposal: crypto-capable generic interface</TITLE>
+<LINK REV="made" HREF="mailto:raph@c2.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01117.html">Date Prev</A>][<A HREF="msg01105.html">Date Next</A>][<A HREF="msg01107.html">Thread Prev</A>][<A HREF="msg00904.html">Thread Next</A>][<A HREF="index.html#01101">Date Index</A>][<A HREF="threads.html#01101">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Design proposal: crypto-capable generic interface</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Carl Ellison &lt;<A HREF="mailto:cme@TIS.COM">cme@TIS.COM</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Design proposal: crypto-capable generic interface</LI>
+<LI><em>From</em>: Raph Levien &lt;<A HREF="mailto:raph@c2.org">raph@c2.org</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 22 Nov 1995 11:37:53 -0800 (PST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01107.html">9511221840.AA24587@tis.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+On Wed, 22 Nov 1995, Carl Ellison wrote:
+
+&gt; &gt;Date: Wed, 22 Nov 1995 10:11:00 -0800 (PST)
+&gt; &gt;From: Raph Levien &lt;raph@c2.org&gt;
+&gt; &gt;Subject: Re: Design proposal: crypto-capable generic interface
+&gt; &gt;Message-Id: &lt;<A HREF="msg01100.html">Pine.SUN.3.91.951122094209.29001A-100000@infinity.c2.org</A>&gt;
+&gt; 
+&gt; 
+&gt; 
+&gt; &gt;   In restrospect, "daemon" was a poor choice of words to describe my
+&gt; &gt;proposal. "Slave process" gets the idea across much better, 
+&gt; 
+&gt; I'm a great fan of programming by cooperating processes -- but I still
+&gt; worry when it comes to crypto.  What we need to do, if we want real
+&gt; security, is hold all the crypto secrets (therefore the crypto itself) in a
+&gt; device (PCMCIA card?)  in the physical posession of the user.  The
+&gt; cooperating-process model could make that easier -- but, if designed wrong,
+&gt; it could call for the device to give up a secret to be sent by IPC over to
+&gt; the slave process.
+
+   What I am getting from you is "worry." This does not convince me. I
+want solid technical criticism. Sorry for being so harsh, but that's how I
+feel. 
+
+   In fact, I propose that the security of the "slave process" model is
+_better_ than the realistic alternatives. Without it, the application
+stuff (for example, displaying pretty MIME content) and the crypto stuff
+must share an address space. A bug in the application stuff could corrupt
+or compromise the crypto data structures. As we have seen demonstrated
+several times, it is just not practical to build large, complex
+applications which are worthy of the highest level of trust. Factoring it 
+into two processes helps.
+
+   Tokens are nice, but I think there's a lot to be said for software 
+solutions as well. At the very least, I don't consider the existence of 
+tokens to be an argument that software crypto systems shouldn't be built.
+
+&gt; &gt;&gt; &gt;						 This requires that
+&gt; &gt;&gt; &gt;keys have some nonforgeable names, which is unfortunately not a
+&gt; &gt;&gt; &gt;feature of PGP 2.6.2. S/MIME will do it just fine, if you buy into the
+&gt; &gt;&gt; &gt;Certifcation Authority (&lt;wink&gt; at Nick Szabo).
+&gt; &gt;&gt; 
+&gt; &gt;&gt; Public keys, if that's what you're talking about, have perfectly good
+&gt; &gt;&gt; nonforgeable names -- themselves.  They are unique.  They are the proper
+&gt; &gt;&gt; name which can collect all the attributes of that key which are of interest
+&gt; &gt;&gt; (e.g., permission to spend $, name of a human who knows the private key,
+&gt; &gt;&gt; attributes about that human, etc.).
+&gt; &gt;
+&gt; &gt;   Ok. But public keys have one serious disadvantage: their size. 
+&gt; [...]
+&gt; 
+&gt; &gt;   I propose using the MD5 hash of the whitespace-free MOSS 
+&gt; &gt;representation of the public key, in hex. It's simple enough to be 
+&gt; &gt;described in one sentence, but does everything I want.
+&gt; 
+&gt; That sounds fine -- but why deal with a text MOSS representation?  It's the
+&gt; modulus which is unique -- so just hash the binary bytes of the modulus,
+&gt; MSB first.  There's no need to force anyone checking a key to have all the
+&gt; MOSS printing software in the loop.  You might also consider using SHA
+&gt; instead of MD5 -- but that adds to the character count on your business
+&gt; card.  [I printed up my own business cards with PGP fingerprints for my 2
+&gt; primary keys -- and it took up about 1/4 of the card, in a readable font.]
+
+   I would accept SHA as a reasonable alternative.
+
+   Using the modulus alone is not good enough. A bogus key with the same 
+modulus and a different exponent could be used to mount a 
+denial-of-service attack. Note that the PGP 2.6.2 key fingerprint scheme 
+suffers from a similar problem; since the sizes of the modulus and 
+exponent fields are not included in the hash, it is possible to generate 
+bogus keys with the same fingerprint. Specifying the key size and 
+fingerprint together is, however, unforgeable.
+
+I looked at the MOSS representation of the key (I'm talking PK's here
+only, not all the X.509 stuff). I don't think it would be that hard to
+code. 
+
+&gt; &gt;   Note that PGP 2.6.2 does _not_ allow the use of a public key as the 
+&gt; &gt;name of a public key, unless you do a horrible hack such as replace the 
+&gt; &gt;pubring.pgp file with the one public key of interest.
+&gt; 
+&gt; PGP keyring structures do use the key as its own name, I believe.  The
+&gt; UserID is a separate entity, associated with the stand-alone key.  A
+&gt; signature applies to a pair (UserID,Key).
+
+   I was referring to the interface that PGP presents to the outside 
+world, not its internal keyring structures. These issues come up whenever 
+using PGP from the command line, or trying to interface it with other 
+applications.
+
+&gt; If I could change the PGP keyring structure, I'd add a new entity -- an
+&gt; Attribute block -- a string and my key ID, with a signature on the
+&gt; Attribute+ObjectKey.  This can be done today with the UserID and signature
+&gt; -- and I've even tried it.  It works, but PGP is used to accessing keys by
+&gt; the text in a UserID field and that's not appropriate.  The Attribute would
+&gt; give a statement I'm prepared to stand by, giving testimony about the key
+&gt; being signed or the person who has demonstrated the ability to sign
+&gt; something I've verified with that key.
+
+   I understand that Matt Blaze's forthcoming "Policymaker" will do all 
+this and more.
+
+&gt; We might need to add something like MOSS's aliases, for my use only, to let
+&gt; me access keys.  If I know someone as Bobby -- that's an association in my
+&gt; own head -- not applicable to anyone else.  When I access him by that
+&gt; alias, that's for my use.  Therefore, only I should define it and only I
+&gt; should sign the association.  This is what I'd use instead of PGP's
+&gt; UserID blocks -- alias blocks.
+&gt; 
+&gt; I commend TIS/MOSS's aliases to people's study.  The MOSS guys have used
+&gt; the alias structure not only to define nicknames of importance only to me
+&gt; but also to define crypto-lists (like mailing lists).
+&gt; 
+&gt; Needless to say, the assignment of aliases needs to be protected.  An
+&gt; attacker mustn't be allowed to slip a new alias and/or new key into your
+&gt; ring -- especially if it's a crypto-list definition.
+
+   This is fine, but it's one more thing to manually maintain. How is the 
+user going to verify that the alias is really right? This is another 
+place where a 32- (or 40-) hex digit unique name would come in handy.
+
+&gt; &gt;   Thanks for the suggestion. However, my concerns are with 
+&gt; &gt;implementation and deployment, not research.  I am perfectly willing to 
+&gt; &gt;consider cryptographic algorithms to be black boxes that do what they say 
+&gt; &gt;they will. I think the charter exists to start a new list. John Gilmore 
+&gt; &gt;has already offered to start a "coderpunks" list on toad.com. Shall we 
+&gt; &gt;take him up on it?
+&gt; 
+&gt; My suggestion is that if you want this limited in content, it'll have to be
+&gt; moderated.
+
+   I agree that a moderated list would be better, but I do not have the
+time do it myself.
+   One suggestion that I think is very good is to moderate on the basis 
+on the basis of sender, rather than message. The best way to do this 
+would be to keep a keyring of "approved" senders, and match the signature 
+of each message against the keyring. As I say, I'm not volunteering, but 
+if somebody else was so moved, I think it would be a valuable service.
+
+Raph
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01107" HREF="msg01107.html">Re: Design proposal: crypto-capable generic interface</A></STRONG>
+<UL><LI><EM>From:</EM> Carl Ellison &lt;cme@TIS.COM&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01117.html">Re: PROPOSAL: cypherpunks-news@toad.com?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01105.html">Re: towards a theory of reputation</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01107.html">Re: Design proposal: crypto-capable generic interface</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00904.html">WRITTEN CODE</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01101"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01101"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

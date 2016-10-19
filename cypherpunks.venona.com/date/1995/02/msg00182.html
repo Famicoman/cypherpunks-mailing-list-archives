@@ -1,0 +1,198 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Remailer encryption module -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Sun, 5 Feb 95 21:35:07 PST -->
+<!--X-Message-Id: 199502060534.VAA26941@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Remailer encryption module</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00188.html">Date Prev</A>][<A HREF="msg00184.html">Date Next</A>][<A HREF="msg00063.html">Thread Prev</A>][<A HREF="msg00421.html">Thread Next</A>][<A HREF="index.html#00182">Date Index</A>][<A HREF="threads.html#00182">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Remailer encryption module</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Remailer encryption module</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 5 Feb 1995 21:34:25 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+From: eric@remailer.net (Eric Hughes)
+&gt; -- The RSA-encrypted session key does not have a flat representation
+&gt; over its multiword container.  This yields a statistical traffic
+&gt; analysis hole.  (This point is irrelevant without fixing 4.)  Hal and
+&gt; I completely solved this problem last year.
+
+For reference, here is that old message with an algorithm that produces an
+encrypted session key with a flat distribution over a specified number of
+bytes, along with a proof that it works.  The purpose of this is you
+could strip off the PGP header stuff and have a file which looked for all
+intents and purposes like totally random bytes, but if you knew the
+secret key then you could decrypt it just fine.
+
+(I recently took my CP archives and indexed them using Mark Zimmermann's
+(no relation to Phil, apparently) FreeText browser which lets me do
+keyword searches.  Pretty nice.)
+
+&gt; Date: Mon, 7 Mar 94 08:34:04 -0800
+&gt; From: hughes@ah.com (Eric Hughes)
+&gt; Message-Id: &lt;9403071634.AA10351@ah.com&gt;
+&gt; To: cypherpunks@toad.com
+&gt; In-Reply-To: Hal's message of Sun, 6 Mar 1994 11:22:17 -0800 &lt;199403061922.LAA26901@jobe.shell.portal.com&gt;
+&gt; Subject: Truly Stealthy PGP (algorithm)
+&gt; Sender: owner-cypherpunks@toad.com
+&gt; Precedence: bulk
+&gt; Status: RO
+&gt; 
+&gt; &gt;If I understand Eric's general idea, we would keep trying session keys
+&gt; &gt;under a set of rules which would lead to the desired statistical
+&gt; &gt;distribution of the encrypted key.  
+&gt;  
+&gt; I actually said nothing about how to get the particular distribution
+&gt; of keys specified, since that was another issue.  I was more concerned
+&gt; with just getting the one result across.
+&gt;  
+&gt; &gt;Here is an algorithm which would work.
+&gt;  
+&gt; It does work, and I'll put down a proof sketch below.
+&gt;  
+&gt; Notation alert:
+&gt; &gt;Let L be the next power of 256 above the modulus n.  Let t be the integer
+&gt; &gt;part of L/n, so that L = n*t + s with s in [0,n).  Call the PGP IDEA session
+&gt; &gt;key SK, and the encrypted version of that m = SK^e.  Now do these steps:
+&gt; 
+&gt; &gt;1) Pick a random SK in [0,n).
+&gt; 
+&gt; This random number in [0,n) is the wrong distribution, but that's OK,
+&gt; since we'll be throwing some numbers away.
+&gt;  
+&gt; &gt;2) RSA-encrypt it to form m = SK^e mod n.
+&gt;  
+&gt; RSA encryption is a bijection (an 1-1 map).  If it were not, there
+&gt; would be two or more possible decryptions for a given ciphertext.
+&gt; Therefore RSA encryption is a permutation, and a permutation of
+&gt; probabilities preserves expected values of functions of the
+&gt; probability, such as entropy.  Since we assume the entropy of the SK
+&gt; is maximal (probabilistic entropy), therefore the entropy of the m's
+&gt; is maximal.  So the m's have a flat distribution.
+&gt;  
+&gt; (As always, the above statements about bijection hold only if SK is
+&gt; multiple of one of the divisors of the modulus.  But then if you do
+&gt; find one of those, you've also factored the modulus and thus broken
+&gt; the key.  We assume this doesn't happen, since if it does little of
+&gt; this matters anyway.)
+&gt; 
+&gt; &gt;3) Choose a random k in [0,t].
+&gt; &gt;4) Calculate the "stegged" encrypted key as M = m + k*n.  
+&gt;  
+&gt; Hal now observes that M is uniformly distributed.  This is correct,
+&gt; and happens because m is in [0,n) and we are adding a multiple of n to
+&gt; m.  This means that each M has a unique represenative as some pair
+&gt; &lt;m,k&gt;.  Since both m and k are independently random (max entropy, flat
+&gt; distribution), so is M.
+&gt; 
+&gt; &gt;5) if M is not in [0,L) (i.e. if M &gt;= L) then go back to step 1.
+&gt; &gt;The idea is that once we get M uniform in [0,(t+1)*n) we can make it
+&gt; &gt;uniform in [0,L) simply by rejecting those candidates which were too high.
+&gt;  
+&gt; What we have here is a Markov chain.  We have accepting states and
+&gt; rejecting/retrying states.  Since the probabilities in the chain are
+&gt; independent of each other and are also time-invariant, the
+&gt; distribution of final probabilities is the same as the distribution of
+&gt; normalized accepting probabilities.
+&gt; 
+&gt; In simple terms, you can just retry until you get it right.  Since the
+&gt; probabilities are all the same before, they will all be the same
+&gt; after, only larger to account for the fact that some possibilities
+&gt; didn't work.
+&gt;  
+&gt; [re: rejection and retry]
+&gt; &gt;This will only happen if k=t and m&gt;=s.
+&gt; 
+&gt; That's right, and that means that for m &lt; s you have valid k in
+&gt; [0,t+1) and for m &gt;= s only for [0,t).  If you go back an look at the
+&gt; entropy expression, you'll see exactly this difference in relative
+&gt; probability for the two parts of [0,n).
+&gt;  
+&gt; &gt;Now, it seems to me that the worst case for rejection is when n=L-1, in
+&gt; &gt;which case t=1, s=1, and almost one-half of all initial SK choices will
+&gt; &gt;be rejected.  
+&gt; 
+&gt; Right, but the worst case for rejection is not the same as the worst
+&gt; case for entropy loss, which occurs at n=L/2+1 and s=t-1, i.e. at the
+&gt; other end of the spectrum entirely.
+&gt;  
+&gt; &gt;Following Eric's reasoning, this would be an effective loss
+&gt; &gt;of one bit of key length, from say 1024 to 1023, which is tolerable.
+&gt; 
+&gt; Actually not.  The loss of effective key length happens based on the
+&gt; posterior distribution of the session keys, not on the number of
+&gt; rejections that happen in the process.
+&gt;  
+&gt; &gt;Using this algorithm with the current Stealth PGP would produce a
+&gt; &gt;"truly stealthy" version which I think would be indistinguishable from
+&gt; &gt;random bytes without access to the receiver's private key.
+&gt; 
+&gt; Indeed.  Observe, though, that as far as deployment went, this would
+&gt; require modification to PGP itself for it to be anything like
+&gt; widespread.
+&gt;  
+&gt; Eric
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00188.html">Re: Here we go again...</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00184.html">Re:  finney's perl scripts</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00063.html">Re: Remailer encryption module</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00421.html">re: Remailer Encryption Module</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00182"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00182"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

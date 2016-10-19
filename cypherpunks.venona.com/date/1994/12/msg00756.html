@@ -1,0 +1,136 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Time to exhaustively break 40&#45;bit RC4? -->
+<!--X-From-R13: "Wna Tnedhune" <vnasNflqarl.ftv.pbz> -->
+<!--X-Date: Mon, 12 Dec 94 16:46:00 PST -->
+<!--X-Message-Id: 9412131131.ZM13269@wiley.sydney.sgi.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199412122330.PAA29185@netcom20.netcom.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Time to exhaustively break 40-bit RC4?</TITLE>
+<LINK REV="made" HREF="mailto:ianf@sydney.sgi.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00658.html">Date Prev</A>][<A HREF="msg00672.html">Date Next</A>][<A HREF="msg00766.html">Thread Prev</A>][<A HREF="msg00657.html">Thread Next</A>][<A HREF="index.html#00756">Date Index</A>][<A HREF="threads.html#00756">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Time to exhaustively break 40-bit RC4?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Time to exhaustively break 40-bit RC4?</LI>
+<LI><em>From</em>: "Ian Farquhar" &lt;<A HREF="mailto:ianf@sydney.sgi.com">ianf@sydney.sgi.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 13 Dec 1994 11:31:12 -0500</LI>
+<LI><em>In-Reply-To</em>: raph@netcom.com (Raph Levien)       "Time to exhaustively break 40-bit RC4?" (Dec 12,  3:30pm)</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00630.html">199412122330.PAA29185@netcom20.netcom.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+On Dec 12,  3:30pm, Raph Levien wrote:
+&gt; The key schedule operation in RC4 does 256 "swap" operations. Let's
+&gt; say it takes four instructions to do each swap. So, it's 2000
+&gt; instructions per key. A one-MIPS processor can search 500 keys a
+&gt; second. There are about 30 million seconds in a year, so that's 15
+&gt; billion keys a year. 40 bits is a trillion keys, so it works out to 66
+&gt; years, which is well within the Pentium-style accuracy of the
+&gt; calculations I've done.
+
+No, because as you're doing an exhaustive keysearch, you can "pipeline"
+the key generation process in software.  Each key requires 256 swaps,
+certainly, but there are only two swaps difference between the key
+for "0000000000" and "0000000001" (assuming a 40 bit key).  If you
+recursively generate keys, then you can generate successive keys
+like this:
+
+1. Copy the keystate from iteration n-1 (keep the partial keystates
+   on a stack).
+2. Do the swap for this portion of the key, and for 255 out of 256
+   keys, you will have a new one in 2 swaps.
+
+(In reality, it would be faster to undo the last swap rather than copying
+the key, and keeping the swaps on a stack rather than the keystate on
+a stack.  These are implementation issues I haven't given a huge amount
+of thought to as yet.)
+
+Unless there is some hidden complexity which I have overlooked - in which
+case I will be delighted to stand corrected - this will produce a key
+fast enough to allow an average workstation to search the 40-bit keyspace
+using a known plaintext attack in a couple of hours or less.  If this is
+the case, 40-bit RC4 might as well be crypt(1), and 48-bit RC4 looks
+pretty shakey too.
+
+I was planning to code this over the xmas break, dependent on whatever
+other commitments fall on me during that period.  I realised it was possible
+a couple of months ago after pondering ways of parallelising the RC4 key
+generation process in hardware.
+
+						Ian.
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00657" HREF="msg00657.html">Re: Time to exhaustively break 40-bit RC4?</A></STRONG>
+<UL><LI><EM>From:</EM> eric@remailer.net (Eric Hughes)</LI></UL></LI>
+<LI><STRONG><A NAME="00650" HREF="msg00650.html">Re: Time to exhaustively break 40-bit RC4?</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00649" HREF="msg00649.html">Re: Time to exhaustively break 40-bit RC4?</A></STRONG>
+<UL><LI><EM>From:</EM> raph@netcom.com (Raph Levien)</LI></UL></LI>
+<LI><STRONG><A NAME="01079" HREF="msg01079.html">Re: Time to exhaustively break 40-bit RC4?</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00630" HREF="msg00630.html">Time to exhaustively break 40-bit RC4?</A></STRONG>
+<UL><LI><EM>From:</EM> raph@netcom.com (Raph Levien)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00658.html">Re: Real-time surveillance of the police</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00672.html">Re: extra dashes in PGP-related blocks?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00766.html">Re: Time to exhaustively break 40-bit RC4?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00657.html">Re: Time to exhaustively break 40-bit RC4?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00756"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00756"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

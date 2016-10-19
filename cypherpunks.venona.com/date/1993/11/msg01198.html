@@ -1,0 +1,208 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: dithering, repudiable steganography -->
+<!--X-From-R13: wryNfhgeb.ETEG.SRG (Xbua S. Zrivar) -->
+<!--X-Date: Tue, 30 Nov 93 19:07:55 PST -->
+<!--X-Message-Id: 9312010302.AA05375@russian.SFSU.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>dithering, repudiable steganography</TITLE>
+<LINK REV="made" HREF="mailto:jel@sutro.SFSU.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01209.html">Date Prev</A>][<A HREF="msg01194.html">Date Next</A>][<A HREF="msg01207.html">Thread Prev</A>][<A HREF="msg01201.html">Thread Next</A>][<A HREF="index.html#01198">Date Index</A>][<A HREF="threads.html#01198">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>dithering, repudiable steganography</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: dithering, repudiable steganography</LI>
+<LI><em>From</em>: <A HREF="mailto:jel@sutro.SFSU.EDU">jel@sutro.SFSU.EDU</A> (John E. Levine)</LI>
+<LI><em>Date</em>: Tue, 30 Nov 93 19:02:59 PST</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+REPUDIABLE STEGANOGRAPHY
+
+I have a book (unfortunately not with me now) describing
+the format of data on music CDs.  It seems that there is
+a kind of objectionable, heard noise in digital
+recordings called granulation noise.  This is peculiar
+to digital; analog recording doesn't have this problem.
+Granulation noise manifests itself at low amplitudes,
+when the signal being represented is just at the
+resolution of the digital sampling.  For example, if the
+signal is a sinusoid with a peak-to-peak amplitude
+represented by just a little greater than one bit
+difference in each sample.  The problem is, the sampled
+sinusoid sounds just like a square wave when it is played
+back.
+
+Input, the signal:
+   +---------------------------------------------------------------------
+ 2 |
+   |        xxx                                 xxx
+   |      xx   xx                             xx   xx
+   |     x       x                           x       x
+ 1 |    x         x                         x         x
+   |   x           x                       x           x
+   |  x             x                     x             x
+   | x               x                   x               x
+ 0 +x-----------------x-----------------x-----------------x--------------
+   |                   x               x                   x
+   |                    x             x                     x
+   |                     x           x                       x
+-1 |                      x         x                         x         x
+   |                       x       x                           x       x
+   |                        xx   xx                             xx   xx
+   |                          xxx                                 xxx
+-2 |
+   +---------------------------------------------------------------------
+
+Output, the digitized, sampled signal:
+   +---------------------------------------------------------------------
+ 2 |
+   |
+   |
+   |                                        xxxxxxxxxxx
+ 1 |    xxxxxxxxxxx
+   |
+   |
+   |
+ 0 +xxxx-----------xxxx-----------------xxxx-----------xxxx--------------
+   |
+   |
+   |
+-1 |                   xxxx         xxxx                   xxxx
+   |
+   |
+   |
+-2 |                       xxxxxxxxx                           xxxxxxxxx
+   +---------------------------------------------------------------------
+
+This introduces (would introduce) lots of strong harmonics,
+making a very quiet flute, say, sound very unflutelike.  The
+people who make commercial CDs get around this problem with
+a technique called dithering.  They add to each sample a
+number from {-2, -1, 0, 1 2}, picked randomly.  I.e., they
+randomly scramble the low few bits of each sample.  The
+interesting thing about this is that, while it obviously
+degrades the signal, the result sounds better to human ears!
+It solves the problem of granulation noise.  (The noisy
+flute sounds better than the clear but mangled squarewave
+thing the flute sounds like through the granulation noise).
+Of course there is something like 93 db dynamic range on a
+CD, so the dither hardly makes a dent in the usual sound
+quality -- it's only there to solve the granulation noise
+problem, which is only a problem at very low signal
+strengths.
+
+The only requirement for the dither bits is that they be
+such that they sound random, like noise.  But any random
+source of bits with this property would work just as well
+for dithering.  In particular, let's suppose you have an
+encrypted file, represented as a sequence of symbols, each
+of which has exactly 5 values it can assume.  Musically,
+this would sound exactly like noise :-) .  So *this* file
+could be used to dither an audiofile, instead of the "real"
+random values currently used.
+
+I guess what I really mean to say is that this insures that
+the low bit in a dithered file is *really* random; hence
+could be replaced with a bit from your encrypted file.
+
+Moreover, such a dithered audio file has some nice steganographic
+properties.
+
+1) Repudiability.  Under the assumption that the encrypted file
+   cannot be cracked without the possession of the key to the file
+   (which the owner of the steganographically-injected audio file
+   has but claims ignorance of), the dither *really does* look like
+   genuine, random dither.  She can claim that the file is in fact
+   a recording of the minutes of the last cypherpunks meeting, or
+   a 3 hour concert that she taped off the radio, and no TLA can
+   prove otherwise.  Usually, a steganographically hidden datum
+   (a microdot, invisible ink, etc.) doesn't have this property.
+
+2) Zero storage requirements.  This follows from 1), really.  If
+   you hide data in the unused parts of the last blocks on disk
+   in a disk file, or in a hidden partition, the secrecy of the
+   data (the "steganographic integrity"?) depends on the enemy
+   not knowing or suspecting the existence of the data.
+
+
+PROBLEMS:
+
+You wouldn't be able to hide anything in your private copy of
+Michael Jackson's Thriller; the enemy could simply compare your
+copy with the standard copy, making the differences (the hidden
+file) stand out.  Unless you were Warner Brothers, in which case
+you could just steganographically-inject ALL copys of Thriller
+with the secret file.  This would make storage of the hidden file
+trivial.  You could get a copy from the nearest Wherehouse.  [I
+don't know if W.B in fact publishes Thriller; it's just an example]
+
+I wonder if CD pulishers know that they could make some money on
+the side by hiding data for people in their thousands of CDs?
+
+Anyway, while I don't know the format for DAT, I suspect there
+is some point where the sound signal is dithered to mask the
+granulation noise, and at this point Alice with information to
+hide could inject her file.
+
+Do digital pictures employ dithering to prevent aliasing?  I
+think so.
+
+--John.		jel@sutro.sfsu.edu
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01209.html">Statistics of Low-Order Bits in Images</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01194.html">Re: Statistics of Low-Order Bits in Images</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01207.html">Crypto Anarchy, the Gover</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01201.html">soundfile stego</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01198"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01198"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

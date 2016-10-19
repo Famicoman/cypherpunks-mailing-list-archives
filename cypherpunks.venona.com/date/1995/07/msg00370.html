@@ -1,0 +1,125 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Ssh "security hole": proposed fix -->
+<!--X-From-R13: Fngh Kybara <lybNpf.uhg.sv> -->
+<!--X-Date: Sat, 15 Jul 95 08:02:37 PDT -->
+<!--X-Message-Id: 199507151502.SAA01269@shadows.cs.hut.fi -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9507151255.AA12685@sulphur.osf.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Ssh "security hole": proposed fix</TITLE>
+<LINK REV="made" HREF="mailto:ylo@cs.hut.fi">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00366.html">Date Prev</A>][<A HREF="msg00352.html">Date Next</A>][<A HREF="msg00351.html">Thread Prev</A>][<A HREF="msg00378.html">Thread Next</A>][<A HREF="index.html#00370">Date Index</A>][<A HREF="threads.html#00370">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Ssh "security hole": proposed fix</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:mazieres@pa.dec.com">mazieres@pa.dec.com</A>, <A HREF="mailto:rsalz@osf.org">rsalz@osf.org</A></LI>
+<LI><em>Subject</em>: Ssh "security hole": proposed fix</LI>
+<LI><em>From</em>: Tatu Ylonen &lt;<A HREF="mailto:ylo@cs.hut.fi">ylo@cs.hut.fi</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 15 Jul 1995 18:02:11 +0300</LI>
+<LI><em>Cc</em>: <A HREF="mailto:ssh@clinet.fi">ssh@clinet.fi</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;9507151255.AA12685@sulphur.osf.org&gt; (rsalz@osf.org)</LI>
+<LI><em>Organization</em>: Helsinki University of Technology, Finland</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I am thinking about the following solution to the issues pointed out
+by David Mazieres.
+
+These changes propose solutions to the following problems:
+  - replay of password-authenticated sessions
+  - corrupt server can use RSA authentication to log into another server
+
+When the client receives SSH_SMSG_PUBLIC_KEY, it computes a 128 bit
+(16 byte) value by converting the modulus of the public key into a
+stream of bytes, msb first.  The cookie sent by the server is appended
+to this stream.  Both sides compute the MD5 of the resulting stream.
+This value will be called the "session id".
+
+In the SSH_CMSG_SESSION_KEY message, the first 16 bytes of the session
+key (before encryption) are xored with the 16 bytes of the session id.
+This does not reveal plain text from the RSA-encrypted part, but binds
+the encrypted session key to a specific cookie and server.  This
+should eliminate the possibility of replay, because the cookie is
+unique for each connection.
+
+In all SSH_CMSG_AUTH_RSA_RESPONSE messages (used both in user and
+client host authentication), append the session id to the decrypted
+challenge before computing MD5.  The MD5 is computed from the
+resulting 48 bytes.  This makes the response bound to the server
+cookie and the server key, and should elinate using the same response
+for another server.  (Faking the server key is hard, because the
+client verifies that it matches the one stored in its database.)
+
+If a server supports this revision of the protocol, it reports its
+protocol version as 1.1.  If the server protocol version is 1.0, the
+client displays a warning (recommending to update server software) and
+uses the old protocol for compatibility.  The client reports the
+protocol version that it will use.  The compatibility code will be
+removed in a later release.  (The changes are easy to implement
+compatibly.)
+
+I would like to receive comments on this.
+
+    Tatu
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00378" HREF="msg00378.html">Re: Ssh "security hole": proposed fix</A></STRONG>
+<UL><LI><EM>From:</EM> David Mazieres &lt;mazieres@pa.dec.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00366.html">Re: Root Causes</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00352.html">Mods to Dining Cryptographers: legal questions...</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00351.html">POX_usg</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00378.html">Re: Ssh "security hole": proposed fix</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00370"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00370"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

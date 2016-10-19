@@ -1,0 +1,128 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Simple Hardware RNG Idea -->
+<!--X-From-R13: abezNargpbz.pbz (@bezna Vneql) -->
+<!--X-Date: Fri, 6 Oct 95 03:28:38 PDT -->
+<!--X-Message-Id: ac9ab28c02021004ba9d@DialupEudora -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Simple Hardware RNG Idea</TITLE>
+<LINK REV="made" HREF="mailto:norm@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00612.html">Date Prev</A>][<A HREF="msg00638.html">Date Next</A>][<A HREF="msg00597.html">Thread Prev</A>][<A HREF="msg01547.html">Thread Next</A>][<A HREF="index.html#00613">Date Index</A>][<A HREF="threads.html#00613">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Simple Hardware RNG Idea</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Simon Spero &lt;<A HREF="mailto:ses@tipper.oit.unc.edu">ses@tipper.oit.unc.edu</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Simple Hardware RNG Idea</LI>
+<LI><em>From</em>: <A HREF="mailto:norm@netcom.com">norm@netcom.com</A> (Norman Hardy)</LI>
+<LI><em>Date</em>: Fri, 6 Oct 1995 03:29:59 -0800</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+At 8:20 PM 10/5/95, Simon Spero wrote:
+&gt;On Thu, 5 Oct 1995, Norman Hardy wrote:
+....
+&gt;&gt; You presumably use the oddness of the count for your random bit in some
+&gt;&gt; predetermined time interval. External radiation can change, but not bias
+&gt;&gt; the parity. If the counter saturates, the counter may be biased towards one
+&gt;
+&gt;Hmmm. But isn't this method slightly biased? If the probability of  N
+&gt;events &lt; the probability of N+1 events, wouldn't you need a large number
+&gt;of events per bit to make the bias insignificant?
+....
+What you really need is entropy (information). I propose concatenating
+several counts and sending them thru MD5. The counts are distributed the
+same way but are independent so that the entropy of the concatenation is
+the sum of the entropies. Each count has a Poisson distribution. That tells
+you how many bits of entropy there are in the input to the MD5. Take that
+many bits, rounded down, as your random bits.
+
+If there are an average of x bits in a time interval then the probability
+that the count will be exactly K is (x^K/(K!))exp(-x). That is the Poisson
+distribution. The entropy is then:
+
+- sum[i=0 to infinity]  (x^K/(K!))exp(-x)log( (x^K/(K!))exp(-x))
+= - sum[i=0 to infinity] (x^K/(K!))exp(-x)(log(x^K/(K!)) - x)
+= - sum[i=0 to infinity] (x^K/(K!))exp(-x)(K*log(x) - log(K!) - x)
+
+Here is a klutzy Scheme program to evaluate these:
+(define (sum g)(letrec ((ss (lambda (n)
+         (if (= n 0) (g 0) (+ (g n) (ss (- n 1)))))))
+           (ss 30)))
+(define (log2 x)(/ (log x)(log 2)))
+(define (fact n)(if (= n 0) 1 (* n (fact (- n 1)))))
+(define (p x k) (* (/ (expt x k)(fact k))(exp (- x))))
+(define (en n)(sum (lambda(x) (let ((c (p x n)))
+  (if (= c 0) 0 (* c (log2 c)))))))
+
+(en 1) =&gt; 2.07
+(en 3) =&gt; 2.92
+(en 10) =&gt; 3.73
+(en 15) =&gt; 4.0
+
+
+I.e. if 1 count is expected on average there are two bits of entropy
+in the count (supprising!) and if the count averages 10 then there
+are 3.7 bits worth. It goes up as the log.
+
+Before you bet your enterprise on this scheme consider that the math
+was done at 03:30 AM.
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00612.html">Re: Certificates, Attributes, Web of Trust</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00638.html">PCMCIA Crypto</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00597.html">Re: Simple Hardware RNG Idea</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01547.html">Re: Simple Hardware RNG Idea</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00613"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00613"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

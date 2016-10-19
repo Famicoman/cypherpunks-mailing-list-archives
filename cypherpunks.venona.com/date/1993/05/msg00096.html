@@ -1,0 +1,133 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: tripple des -->
+<!--X-From-R13: fzoNerfrnepu.ngg.pbz -->
+<!--X-Date: Tue, 4 May 93 15:42:26 PDT -->
+<!--X-Message-Id: 9305042242.AA00515@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: tripple des</TITLE>
+<LINK REV="made" HREF="mailto:smb@research.att.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00088.html">Date Prev</A>][<A HREF="msg00091.html">Date Next</A>][<A HREF="msg00088.html">Thread Prev</A>][<A HREF="msg00078.html">Thread Next</A>][<A HREF="index.html#00096">Date Index</A>][<A HREF="threads.html#00096">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: tripple des</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Timothy Newsham &lt;<A HREF="mailto:newsham@wiliki.eng.hawaii.edu">newsham@wiliki.eng.hawaii.edu</A>&gt;</LI>
+<LI><em>Subject</em>: Re: tripple des </LI>
+<LI><em>From</em>: <A HREF="mailto:smb@research.att.com">smb@research.att.com</A></LI>
+<LI><em>Date</em>: Tue, 04 May 93 18:37:49 EDT</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+	 
+	 Crypto question:
+	 why was the following chosen for tripple DES :
+	    EN(DE(EN(data,k1),k2),k3);   
+
+	 The encryption would involve passing data through IP,
+	 then doing 16 rounds forward with k1,
+	 (factoring out the IP-1 and IP)
+	 then doing 16 rounds backwards with k2
+	 (factoring out the next IP-1 and IP)
+	 then doing 16 rounds forward with k3
+	 then going through IP-1
+
+	 How would this compare with
+	    EN(EN(EN(data,k1),k2),k3);
+
+	 which goes through IP,  does 16 rounds each with k1, k2 then
+	 k3, then IP-1 ?
+
+	 The only difference is that the key scheduler rotates backwards
+	 (or another interpretation keys used in reverse order) for the
+	 second stage.
+
+	 Does anyone know the rationale behind this?
+
+First, it's usually done as
+
+	EN(DE(EN(data,k1),k2),k1)
+
+The middle step is a decryption for two reasons, one of which is no
+longer important for DES.  The reason that is still valid is that by
+setting k1==k2, you have compatibility with other implementations that
+only do single encryption.  (See the Garon and Outerbridge paper in
+the July '91 Cryptologia for why you want to triple-encrypt keys...)
+
+The second reason, no longer a concern for DES, is that it was feared
+that DES might be a group.  That is, given
+
+	E(E(data,k1),k2)
+
+it was feared that there might be a third key kx equivalent to encryption
+with k1 and k2.  It's recently been proved that DES is not a group.  That
+is, in general there is no such kx.  Conceivably, the problem could arise
+with other cryptosystems, such as Skipjack.  I haven't yet seen the proof
+about DES, and I don't know how much might transfer to other DES-like
+algorithms.  In any event, doing a decryption as the second operation
+was thought to dodge the whole question.
+
+Finally, even though triple encryption as I've defined it only has a key
+length of 112, it's still necessary to do three operations, rather than
+a simple double encryption; for the latter, there's a birthday attack
+in O(2^56) time, though it does require O(2^56) space as well, making its
+feasibility a bit dubious.
+
+
+		--Steve Bellovin
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00088.html">Re: tripple des</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00091.html">checks</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00088.html">Re: tripple des</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00078.html">Answer to 'vital wiretap chip article question'</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00096"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00096"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

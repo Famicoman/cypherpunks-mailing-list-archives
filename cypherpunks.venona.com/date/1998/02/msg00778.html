@@ -1,0 +1,188 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: description of my stream cipher -->
+<!--X-From-R13: abobqlNDSBZOK.QA[ (Oabalzbhf) -->
+<!--X-Date: Tue, 17 Feb 1998 19:04:31 &#45;0800 (PST) -->
+<!--X-Message-Id: 199802180304.EAA02881@basement.replay.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>description of my stream cipher</TITLE>
+<LINK REV="made" HREF="mailto:nobody@REPLAY.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00772.html">Date Prev</A>][<A HREF="msg00767.html">Date Next</A>][<A HREF="msg00771.html">Thread Prev</A>][<A HREF="msg00767.html">Thread Next</A>][<A HREF="index.html#00778">Date Index</A>][<A HREF="threads.html#00778">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>description of my stream cipher</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: description of my stream cipher</LI>
+<LI><em>From</em>: <A HREF="mailto:nobody@REPLAY.COM">nobody@REPLAY.COM</A> (Anonymous)</LI>
+<LI><em>Date</em>: Wed, 18 Feb 1998 04:04:14 +0100 (MET)</LI>
+<LI><em>Organization</em>: Replay Associates, L.L.P.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Subject:      description of my stream cipher
+From:         Jouni Vuorio &lt;Jouni.Vuorio@vtoy.fi&gt;
+Date:         1998/02/17
+Message-ID:   &lt;34E9D794.371@vtoy.fi&gt;
+Newsgroups:   sci.crypt
+
+[Subscribe to sci.crypt] 
+[More Headers]
+
+
+Here is description of my stream cipher, it operates one
+byte at time, instead of one bit at time.
+it´s key length is up to 255 bytes (2040 bits)
+
+im sure that there are no need for longer description,
+becourse that vb source code explanes details.
+only thing that could be difficult to understund is
+Asc(Mid(Text2, R2 - 1, 1)) that simppely means that
+take asci value from text (in this case string text2)
+starting from R2 - 1 and length of 1. i think that
+everyone understunds the rest.
+
+
+VB source code:
+
+Initializing the substitution-box
+On Error Resume Next
+
+D = Len(Key)
+R = 1
+
+For R2 = 1 To 256
+H1 = Asc(Mid(Text2, R2 - 1, 1))
+K1 = Asc(Mid(Text2, R, 1))
+K2 = Asc(Mid(Text2, D Mod Len(Text2), 1))
+K3 = Asc(Mid(Text2, D * R Mod Len(Text2), 1))
+K4 = Asc(Mid(Text2, R + D Mod Len(Text2), 1))
+
+R1 = ((R1 + R2 + K + 1) Xor (R1 * R2 + 1)) Mod 256
+R3 = ((R3 + R1 + 1) + R2 + (R1 * K + 1 Mod (R3 + R1 + 1))) Mod 256
+R4 = (R4 + R3 + R1 + 1) ^ 2 Mod 256
+
+R = R + 1
+If (R - 1) = Len(Text2) Then R = 1
+
+C = (C + (H1 + K1 + K2 + K3 + K4 + D + R1 + R3 + R4) Mod 256) Mod 256
+C = C Mod 256
+
+
+SBox = SBox &amp; Chr(C Mod 255 + 1)
+Next
+
+
+
+
+
+
+On Error Resume Next
+
+Key = Text2
+texti = Text1
+Text1 = ""
+
+
+R = 1
+S1 = Len(Key)
+S2 = 11
+For R2 = 1 To Len(texti)
+C = Asc(Mid(texti, R2, 1)) - 1
+K = (K + Asc(Mid(Key, R2 Mod Len(Key), 1))) Mod 256
+K = (K + Asc(Mid(SBox, (((K * R2 Mod 256) - 255) * -1) Mod 257, 1))) Mod
+256
+
+R1 = ((R1 + R2 + K) Xor (R1 * R2)) Mod 256
+R3 = ((R3 + R1) + R2 + (R1 * K Mod (R3 + R1))) Mod 256
+R4 = (R4 + R3 + R1) ^ 2 Mod 256
+
+
+F1 = (F1 + (Asc(Mid(SBox, R1 Mod 256, 1)) Mod 256) Mod 256)
+F2 = (F2 + (Asc(Mid(SBox, R2 Mod 256, 1)) Mod 256) Mod 256)
+F3 = (F3 + (Asc(Mid(SBox, R3 Mod 256, 1)) Mod 256) Mod 256)
+F4 = (F4 + (Asc(Mid(SBox, R4 Mod 256, 1)) Mod 256) Mod 256)
+F5 = (F5 + (Asc(Mid(SBox, K Mod 256, 1)) Mod 256) Mod 256)
+temp = F1 + F2 + F3 + F4 + F5 + M Mod 256
+F = (F + (Asc(Mid(SBox, temp, 1)) Mod 256) Mod 256)
+
+M = M + 1
+If M = 2 Then M = 0
+
+
+If M = 0 Then C = C Xor ((F + K) Mod 256)
+If M = 1 Then C = C Xor ((((F + K) Mod 256) - 255) * -1)
+
+
+C = (C Mod 256) + 1
+
+
+Mid(texti, R2, 1) = Chr(C)
+Next
+
+
+
+Text1 = texti
+
+-- 
+Jouni.vuorio@vtoy.fi             GSM 050-5456235
+PahaeNTeistä soNTaa viNTiöt peNTteihin aseNTavat...
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00772.html">No Subject</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00767.html">Handling spam</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00771.html">FREE Pentium II Computer!!!</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00767.html">Handling spam</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00778"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00778"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

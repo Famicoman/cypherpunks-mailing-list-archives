@@ -1,0 +1,820 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: verification of randomness -->
+<!--X-From-R13: qyiNojnyx.qz.pbz (Re. Rvzvgev Hhyvf) -->
+<!--X-Date: Mon, 5 Feb 1996 21:17:01 +0800 -->
+<!--X-Message-Id: X0qTiD60w165w@bwalk.dm.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: y8apwbulbrd.fsf@horten.artcom.de -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: verification of randomness</TITLE>
+<LINK REV="made" HREF="mailto:dlv@bwalk.dm.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00339.html">Date Prev</A>][<A HREF="msg00336.html">Date Next</A>][<A HREF="msg00390.html">Thread Prev</A>][<A HREF="msg00357.html">Thread Next</A>][<A HREF="index.html#00395">Date Index</A>][<A HREF="threads.html#00395">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: verification of randomness</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:andreas@artcom.de">andreas@artcom.de</A> (Andreas Bogk)</LI>
+<LI><em>Subject</em>: Re: verification of randomness</LI>
+<LI><em>From</em>: <A HREF="mailto:dlv@bwalk.dm.com">dlv@bwalk.dm.com</A> (Dr. Dimitri Vulis)</LI>
+<LI><em>Date</em>: Mon, 05 Feb 96 07:01:56 EST</LI>
+<LI><em>Comments</em>: #include &lt;standard.disclaimer&gt; || echo '+' &gt;$HOME/.rhosts</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00390.html">y8apwbulbrd.fsf@horten.artcom.de</A>&gt;</LI>
+<LI><em>Organization</em>: Brighton Beach Boardwalk BBS, Forest Hills, N.Y.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+andreas@artcom.de (Andreas Bogk) writes:
+&gt; I've built a random number generator based on the noise of a Zener
+&gt; diode. Now I'd like to verify it's correct operation. I'd be very
+&gt; grateful if someone could point me to existing software for randomness
+&gt; tests or additional tests not mentioned in Knuth.
+
+Dear Andreas,
+
+Here are a couple of tests:
+
+1. Maurer's test (very good, published later than Knuth)
+
+/************************************************************
+
+Ueli Maurer's randomness test
+(C) 1993 Dimitri Vulis, all rights reserved
+
+For details, see:
+Ueli M. Maurer. ``A Universal Statistical Test for Random Bit
+Generators.'' {\em Journal of Cryptology,\/} {\bf5} (1992), pp.~89--105.
+
+*************************************************************/
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;math.h&gt;
+
+void rndinit(void);
+unsigned char rndgetbyte(void);
+
+/*
+
+We produce a stream of random bits. We look at them in blocks of L
+bits at a time. Maurer uses 8-bit bytes  s_n, recommends 6 &lt;= L &lt;= 16.
+
+*/
+
+#define L 8
+/* 2**L */
+#define vv 256
+
+int main(void) {
+/*
+the count of s_n's random bytes
+*/
+long n=1;
+/*
+fTU is the average \log_2(a_n),
+where a_n is the number of bytes since the previous occurrence of the
+same value. a_n = n for first occurrence (hopefully skipped using Q below)
+*/
+double fTU=0.0;
+/*
+Every time we obtain a random byte, we save its position n here,
+so we can computer a_n, the number of bytes since last occurence
+*/
+static long lastseen[vv];
+/*
+the number of bytes to skip before computing
+compute the average, hoping that all possible byte values will
+occur and lastseen will be non-zero. M recommends Q &gt;= 10 * 2**L.
+*/
+long Q;
+/*
+the number of bytes to use to compute fTU.
+M recommends K as large as possible &gt;= 1000 * 2**L
+*/
+long K;
+/*
+E(L) is the expected value of fTU for a truly random sequence
+*/
+#define E 7.1836656
+/*
+V(L) is the variance of a_n for a truly random sequence (from M; table below)
+*/
+#define V 3.238
+/*
+If you decide to change L:
+L       E               V
+6       5.2177052       2.954
+7       6.1962507       3.125
+8       7.1836656       3.238
+9       8.1764248       3.311
+10      9.1723243       3.356
+11      10.170032       3.384
+12      11.168765       3.401
+13      12.168070       3.410
+14      13.167693       3.416
+15      14.167488       3.419
+16      15.167379       3.421
+*/
+/*
+c(L,K) from M (13)
+*/
+double C;
+/*
+standard deviation of a truly random sequence from M (14)
+*/
+double sigma;
+/*
+fTU's distance in sigmas from the expected value
+*/
+double y;
+/*
+rho is the rejection rate, the probability that a sequence is bad
+*/
+double rho;
+
+unsigned char r;
+
+printf("Enter Q&gt;=%-7ld:",10L*vv);   fflush(stdout); scanf("%ld",&amp;Q);
+printf("Enter K&gt;=%-7ld:",1000L*vv); fflush(stdout); scanf("%ld",&amp;K);
+
+C=0.7-0.8/L+(1.6+12.8/L)*pow(K,-4.0/L); /* (13) */
+/* M: C close to 0.6 for L=8 */
+sigma=C*pow(V/K,0.5);           /* (14) */
+/* M: grows as 1/\sqrt{K} */
+
+/* initialize lastseen to 0 */
+memset((void*)lastseen,0,sizeof(lastseen));
+
+rndinit();
+
+for (; n&lt;Q+K; n++) {
+ r=rndgetbyte();
+ if (n&gt;Q)
+  fTU+=log((double)(n-lastseen[r]));
+ lastseen[r]=n;
+ }
+
+/* compute the average and convert from natural log to log_2 */
+fTU/=K*log(2.0);
+y=fabs((fTU-E)/sigma);
+
+rho=erf(-y/sqrt(2.0))+1;
+
+printf("fTU=%lg, %lg*%lg from  e.v. %lg, rho=%lg --- %s\n",
+fTU,y,sigma,E,rho,
+(rho &lt; 0.0001 ? "unacceptable" :
+(rho &lt; 0.001 ?  "marginal" :
+"acceptable")));
+
+return(0);
+}
+
+/*
+Use C library's pseudo-random number generator
+*/
+
+void rndinit(void)
+{
+srand(1);
+}
+
+unsigned char rndgetbyte(void) {
+static unsigned state=0;
+static int rrr;
+
+if (state^=1) {
+ rrr=rand();
+ return(unsigned char)(rrr &amp; 0xff);
+ }
+else
+ return(unsigned char)((rrr&gt;&gt;8) &amp; 0xff);
+}
+
+2. You probably have this one:
+
+/* ***************************************************************
+ * chi.c --
+ *
+ * Copyright 1993 Peter K. Boucher
+ * Permission to use, copy, modify, and distribute this
+ * software and its documentation for any purpose and without
+ * fee is hereby granted, provided that the above copyright
+ * notice appear in all copies.
+ *
+ * Usage:  chi [input_file [output_file]]
+ *
+ * This program counts the occurances of each character in a file
+ * and notifies the user when a the distribution is too ragged or
+ * too uniform.
+ *
+ * Because the chance of getting byte B after byte A should be 1:256
+ * (for all A's and B's), the program also checks that the successors
+ * to each byte are randomly distributed.  This means that for each byte
+ * value (0 - 255) that occurs in the text, a count is kept of the
+ * byte value that followed in the text, and the frequency distribution
+ * of these succeeding bytes is also checked.
+ *
+ */
+
+#include &lt;stdio.h&gt;
+
+#define NUM_BYTES 256L
+#define BUFSIZE 8192
+#define min_nps 5.0
+#define min_testable (NUM_BYTES*min_nps)
+
+#define V01     (205.33) /*  1% chance it's less */
+#define V05     (219.09) /*  5% chance it's less */
+#define V25     (239.39) /* 25% chance it's less */
+#define V50     (254.33) /* 50% chance it's less */
+#define V75     (269.88) /* 75% chance it's less */
+#define V95     (293.16) /* 95% chance it's less */
+#define V99     (310.57) /* 99% chance it's less */
+
+#define min_chichi5 (20.0*min_nps) /* min prob. 5% */
+#define min_chichi3 (4.0*min_nps) /* min prob. 25% */
+
+#ifdef DEBUG
+#define CFNAME "chi.dat"
+#define min_chichi7 (100.0*min_nps) /* min prob. 1% */
+#endif
+
+#define AB(X)  (((X) &gt;= 0.0) ? (X) : -(X))
+
+double cnt[NUM_BYTES] = {0.0}; /* should be all zeros. */
+double successors[NUM_BYTES][NUM_BYTES] = {{0.0}}; /* should be all zeros. */
+
+static unsigned char buf[BUFSIZE];
+static FILE *ifp, *ofp;
+
+FILE *
+my_fopen(file, type)
+char *file, *type;
+{
+  FILE *fp;
+
+  if ((fp = fopen(file, type)) == NULL) {
+      (void)fprintf(stderr, "Can't open '%s' for '%s'\n", file, type);
+      exit(1);
+  }
+  return(fp);
+}
+
+double
+get_V(n,Y)
+double n;
+double *Y;
+{
+#define k (256)
+#define p (1.0/256.0)
+    double sum = 0.0;
+    double divider = (n*p);
+    double tmp;
+    long i;
+
+    for (i=0; i&lt;k; i++) {
+        tmp = Y[i]/divider;
+        sum += (tmp*Y[i]);
+    }
+    return( sum - n );
+}
+
+double
+chichi3(n,cgt_75,c50_75,c25_50,clt_25)
+double  n,cgt_75,c50_75,c25_50,clt_25;
+{
+    double sum = (cgt_75*cgt_75)/(0.25*n);
+    sum += (c50_75*c50_75)/(0.25*n);
+    sum += (c25_50*c25_50)/(0.25*n);
+    sum += (clt_25*clt_25)/(0.25*n);
+    return( sum - n );
+}
+
+int
+check_chichi3(n,cgt_75,c50_75,c25_50,clt_25)
+double        n,cgt_75,c50_75,c25_50,clt_25;
+{
+#define C3_01 0.1148
+#define C3_05 0.3518
+#define C3_25 1.213
+#define C3_75 4.108
+#define C3_95 7.815
+#define C3_99 11.34
+    double V3;
+    int check = 0;
+
+    if (n &lt; min_chichi3) {
+        return( 0 );
+    }
+    if ((V3 = chichi3(n,cgt_75,c50_75,c25_50,clt_25)) &gt; C3_75) {
+        check++;
+        if (V3 &gt; C3_95) {
+            check++;
+            if (V3 &gt; C3_99) {
+                check++;
+            }
+        }
+    } else if (V3 &lt; C3_25) {
+        check--;
+        if (V3 &lt; C3_05) {
+            check--;
+            if (V3 &lt; C3_01) {
+                check--;
+            }
+        }
+    }
+    return(check);
+}
+
+double
+chichi5(n,cgt_95,c75_95,c50_75,c25_50,c05_25,clt_05)
+double  n,cgt_95,c75_95,c50_75,c25_50,c05_25,clt_05;
+{
+    double sum = (cgt_95*cgt_95)/(0.05*n);
+    sum += (c75_95*c75_95)/(0.20*n);
+    sum += (c50_75*c50_75)/(0.25*n);
+    sum += (c25_50*c25_50)/(0.25*n);
+    sum += (c05_25*c05_25)/(0.20*n);
+    sum += (clt_05*clt_05)/(0.05*n);
+    return( sum - n );
+}
+
+int
+check_chichi5(n,cgt_95,c75_95,c50_75,c25_50,c05_25,clt_05)
+double        n,cgt_95,c75_95,c50_75,c25_50,c05_25,clt_05;
+{
+#define C5_01 0.5543
+#define C5_05 1.1455
+#define C5_25 2.675
+#define C5_75 6.626
+#define C5_95 11.07
+#define C5_99 15.09
+    double V5;
+    int check = 0;
+
+    if (n &lt; min_chichi5) {
+        return( check_chichi3(n,cgt_95+c75_95,c50_75,c25_50,c05_25+clt_05) );
+    }
+    if ((V5 = chichi5(n,cgt_95,c75_95,c50_75,c25_50,c05_25,clt_05)) &gt; C5_75) {
+        check++;
+        if (V5 &gt; C5_95) {
+            check++;
+            if (V5 &gt; C5_99) {
+                check++;
+            }
+        }
+    } else if (V5 &lt; C5_25) {
+        check--;
+        if (V5 &lt; C5_05) {
+            check--;
+            if (V5 &lt; C5_01) {
+                check--;
+            }
+        }
+    }
+    return(check);
+}
+
+#ifdef DEBUG
+double
+chichi7(n,cgt_99,c95_99,c75_95,c50_75,c25_50,c05_25,c01_05,clt_01)
+double        n,cgt_99,c95_99,c75_95,c50_75,c25_50,c05_25,c01_05,clt_01;
+{
+    double sum = (cgt_99*cgt_99)/(0.01*n);
+
+    sum += (c95_99*c95_99)/(0.04*n);
+    sum += (c75_95*c75_95)/(0.20*n);
+    sum += (c50_75*c50_75)/(0.25*n);
+    sum += (c25_50*c25_50)/(0.25*n);
+    sum += (c05_25*c05_25)/(0.20*n);
+    sum += (c01_05*c01_05)/(0.04*n);
+    sum += (clt_01*clt_01)/(0.01*n);
+    return( sum - n );
+}
+
+int
+check_chichi7(n,cgt_99,c95_99,c75_95,c50_75,c25_50,c05_25,c01_05,clt_01)
+double        n,cgt_99,c95_99,c75_95,c50_75,c25_50,c05_25,c01_05,clt_01;
+{
+#define C7_01 1.239
+#define C7_05 2.167
+#define C7_25 4.255
+#define C7_75 9.037
+#define C7_95 14.07
+#define C7_99 18.48
+    double V7;
+    int check = 0;
+
+    if (n &lt; min_chichi7) {
+        return( check_chichi5(n,cgt_99+c95_99,c75_95,c50_75,
+                                c25_50,c05_25,c01_05+clt_01) );
+    }
+    if ((V7=chichi7(n,cgt_99,c95_99,c75_95,c50_75,
+                      c25_50,c05_25,c01_05,clt_01)) &gt; C7_75) {
+        check++;
+        if (V7 &gt; C7_95) {
+            check++;
+            if (V7 &gt; C7_99) {
+                check++;
+            }
+        }
+    } else if (V7 &lt; C7_25) {
+        check--;
+        if (V7 &lt; C7_05) {
+            check--;
+            if (V7 &lt; C7_01) {
+                check--;
+            }
+        }
+    }
+    return(check);
+}
+#endif
+
+double
+fill_arrays()
+{
+   double size=0.0;
+   long ch,next,l,i;
+
+   if ((ch = getc(ifp)) != EOF) { /* prime the pump */
+       cnt[ch] = size = 1.0;
+       while ((l = fread(buf, 1, BUFSIZE, ifp)) &gt; 0) {
+           for (i=0; i&lt;l; i++) {
+               size++;
+               next = buf[i];
+               cnt[next]++;
+               successors[ch][next]++;
+               ch = next;
+           }
+       }
+   }
+   fclose(ifp);
+   return( size );
+}
+
+void
+chi_2_test()
+{
+   long         i;
+   double       suc_tests = 0.0;
+   double       suc_highest = -1.0;
+   double       suc_lowest = 1000000000.0;
+   double       suc_gt_99 = 0.0;
+   double       suc_95_99 = 0.0;
+   double       suc_75_95 = 0.0;
+   double       suc_50_75 = 0.0;
+   double       suc_25_50 = 0.0;
+   double       suc_05_25 = 0.0;
+   double       suc_01_05 = 0.0;
+   double       suc_lt_01 = 0.0;
+   double       V;
+   double       size;
+   char         *desc = NULL;
+#ifdef DEBUG
+   double       tocc_tests = 0.0;
+   double       tocc_highest = -1.0;
+   double       tocc_lowest = 1000000000.0;
+   double       tocc_gt_99 = 0.0;
+   double       tocc_95_99 = 0.0;
+   double       tocc_75_95 = 0.0;
+   double       tocc_50_75 = 0.0;
+   double       tocc_25_50 = 0.0;
+   double       tocc_05_25 = 0.0;
+   double       tocc_01_05 = 0.0;
+   double       tocc_lt_01 = 0.0;
+   double       tsuc_tests = 0.0;
+   double       tsuc_highest = -1.0;
+   double       tsuc_lowest = 1000000000.0;
+   double       tsuc_gt_99 = 0.0;
+   double       tsuc_95_99 = 0.0;
+   double       tsuc_75_95 = 0.0;
+   double       tsuc_50_75 = 0.0;
+   double       tsuc_25_50 = 0.0;
+   double       tsuc_05_25 = 0.0;
+   double       tsuc_01_05 = 0.0;
+   double       tsuc_lt_01 = 0.0;
+   FILE *chi_dat=fopen(CFNAME, "r");
+#endif
+
+   if ((size = fill_arrays()) &lt; min_testable) {
+       fprintf(ofp, "File too small (%.0f) to meaningfully analyze\n",
+               size);
+       exit(0);
+   }
+
+#ifdef DEBUG
+   if (chi_dat != NULL) {
+       char dummy[128];
+       fscanf(chi_dat, "%lf", &amp;tocc_tests);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tocc_highest);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tocc_lowest);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tocc_gt_99);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tocc_95_99);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tocc_75_95);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tocc_50_75);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tocc_25_50);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tocc_05_25);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tocc_01_05);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tocc_lt_01);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tsuc_tests);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tsuc_highest);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tsuc_lowest);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tsuc_gt_99);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tsuc_95_99);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tsuc_75_95);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tsuc_50_75);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tsuc_25_50);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tsuc_05_25);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tsuc_01_05);
+       fgets(dummy, 128, chi_dat);
+       fscanf(chi_dat, "%lf", &amp;tsuc_lt_01);
+       fgets(dummy, 128, chi_dat);
+       fclose(chi_dat);
+   }
+#endif
+
+   if ((V = get_V(size,cnt)) &gt; V99) {
+       desc = ": *******Non-random (hi)\n";
+#ifdef DEBUG
+       tocc_gt_99++;
+#endif
+   } else if (V &gt; V95) {
+       desc = ": Suspect (hi)\n";
+#ifdef DEBUG
+       tocc_95_99++;
+#endif
+   } else if (V &gt; V75) {
+       desc = ": Acceptible (hi)\n";
+#ifdef DEBUG
+       tocc_75_95++;
+#endif
+   } else if (V &gt; V50) {
+       desc = ": Excellent (hi) !!!!!!!\n";
+#ifdef DEBUG
+       tocc_50_75++;
+#endif
+   } else if (V &gt; V25) {
+       desc = ": Excellent (lo) !!!!!!!\n";
+#ifdef DEBUG
+       tocc_25_50++;
+#endif
+   } else if (V &gt; V05) {
+       desc = ": Acceptible (lo)\n";
+#ifdef DEBUG
+       tocc_05_25++;
+#endif
+   } else if (V &gt; V01) {
+       desc = ": Suspect (lo)\n";
+#ifdef DEBUG
+       tocc_01_05++;
+#endif
+   } else {
+       desc = ": *******Non-random (lo)\n";
+#ifdef DEBUG
+       tocc_lt_01++;
+#endif
+   }
+
+   fprintf(ofp, "Occurance  V = %.2f (n = %.0f)%s", V, size, desc);
+
+
+#ifdef DEBUG
+   tocc_tests++;
+   if (V &lt; tocc_lowest) tocc_lowest = V;
+   if (V &gt; tocc_highest) tocc_highest = V;
+#endif
+
+   for (i=0; i&lt;NUM_BYTES; i++) {
+       if (cnt[i] &gt;= min_testable) {
+           if ((V = get_V(cnt[i],successors[i])) &gt; V99) {
+               suc_gt_99++;
+           } else if (V &gt; V95) {
+               suc_95_99++;
+           } else if (V &gt; V75) {
+               suc_75_95++;
+           } else if (V &gt; V50) {
+               suc_50_75++;
+           } else if (V &gt; V25) {
+               suc_25_50++;
+           } else if (V &gt; V05) {
+               suc_05_25++;
+           } else if (V &gt; V01) {
+               suc_01_05++;
+           } else {
+               suc_lt_01++;
+           }
+           suc_tests++;
+           if (V &lt; suc_lowest) suc_lowest = V;
+           if (V &gt; suc_highest) suc_highest = V;
+       }
+   }
+   if (suc_tests &gt; 0.0) {
+       fprintf(ofp,
+               "Successor Vd = %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n",
+                suc_gt_99*100.0/suc_tests,
+                suc_95_99*100.0/suc_tests,
+                suc_75_95*100.0/suc_tests,
+                suc_50_75*100.0/suc_tests,
+                suc_25_50*100.0/suc_tests,
+                suc_05_25*100.0/suc_tests,
+                suc_01_05*100.0/suc_tests,
+                suc_lt_01*100.0/suc_tests);
+       fprintf(ofp,
+               "               deviation %d, (lowest = %.2f, highest = %.2f)\n",
+               check_chichi5(suc_tests,
+                             suc_gt_99+suc_95_99,suc_75_95,suc_50_75,
+                             suc_25_50,suc_05_25,suc_01_05+suc_lt_01),
+               suc_lowest, suc_highest);
+   }
+
+#ifdef DEBUG
+   tsuc_tests += suc_tests;
+   if (suc_lowest &lt; tsuc_lowest) tsuc_lowest = suc_lowest;
+   if (suc_highest &gt; tsuc_highest) tsuc_highest = suc_highest;
+   tsuc_gt_99 += suc_gt_99;
+   tsuc_95_99 += suc_95_99;
+   tsuc_75_95 += suc_75_95;
+   tsuc_50_75 += suc_50_75;
+   tsuc_25_50 += suc_25_50;
+   tsuc_05_25 += suc_05_25;
+   tsuc_01_05 += suc_01_05;
+   tsuc_lt_01 += suc_lt_01;
+
+   chi_dat = my_fopen(CFNAME, "w");
+   fprintf(chi_dat, "%-14.0f - Total number of occurance tests\n",
+           tocc_tests);
+   fprintf(chi_dat, "%-14.2f - Highest V from an occurance test\n",
+           tocc_highest);
+   fprintf(chi_dat, "%-14.2f - Lowest V from an occurance test\n",
+           tocc_lowest);
+   fprintf(chi_dat, "%-14.0f - Number of occurance tests above  %.2f\n",
+           tocc_gt_99, V99);
+   fprintf(chi_dat, "%-14.0f - Number of occurance tests %.2f - %.2f\n",
+           tocc_95_99, V95, V99);
+   fprintf(chi_dat, "%-14.0f - Number of occurance tests %.2f - %.2f\n",
+           tocc_75_95, V75, V95);
+   fprintf(chi_dat, "%-14.0f - Number of occurance tests %.2f - %.2f\n",
+           tocc_50_75, V50, V75);
+   fprintf(chi_dat, "%-14.0f - Number of occurance tests %.2f - %.2f\n",
+           tocc_25_50, V25, V50);
+   fprintf(chi_dat, "%-14.0f - Number of occurance tests %.2f - %.2f\n",
+           tocc_05_25, V05, V25);
+   fprintf(chi_dat, "%-14.0f - Number of occurance tests %.2f - %.2f\n",
+           tocc_01_05, V01, V05);
+   fprintf(chi_dat, "%-14.0f - Number of occurance tests below  %.2f\n",
+           tocc_lt_01, V01);
+   fprintf(chi_dat, "%-14.0f - Total number of successor tests\n",
+           tsuc_tests);
+   fprintf(chi_dat, "%-14.2f - Highest V from an successor test\n",
+           tsuc_highest);
+   fprintf(chi_dat, "%-14.2f - Lowest V from an successor test\n",
+           tsuc_lowest);
+   fprintf(chi_dat, "%-14.0f - Number of successor tests above  %.2f\n",
+           tsuc_gt_99, V99);
+   fprintf(chi_dat, "%-14.0f - Number of successor tests %.2f - %.2f\n",
+           tsuc_95_99, V95, V99);
+   fprintf(chi_dat, "%-14.0f - Number of successor tests %.2f - %.2f\n",
+           tsuc_75_95, V75, V95);
+   fprintf(chi_dat, "%-14.0f - Number of successor tests %.2f - %.2f\n",
+           tsuc_50_75, V50, V75);
+   fprintf(chi_dat, "%-14.0f - Number of successor tests %.2f - %.2f\n",
+           tsuc_25_50, V25, V50);
+   fprintf(chi_dat, "%-14.0f - Number of successor tests %.2f - %.2f\n",
+           tsuc_05_25, V05, V25);
+   fprintf(chi_dat, "%-14.0f - Number of successor tests %.2f - %.2f\n",
+           tsuc_01_05, V01, V05);
+   fprintf(chi_dat, "%-14.0f - Number of successor tests below  %.2f\n",
+           tsuc_lt_01, V01);
+   fprintf(chi_dat,
+           "Occurance Vd = %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f",
+            tocc_gt_99*100.0/tocc_tests,
+            tocc_95_99*100.0/tocc_tests,
+            tocc_75_95*100.0/tocc_tests,
+            tocc_50_75*100.0/tocc_tests,
+            tocc_25_50*100.0/tocc_tests,
+            tocc_05_25*100.0/tocc_tests,
+            tocc_01_05*100.0/tocc_tests,
+            tocc_lt_01*100.0/tocc_tests);
+   fprintf(chi_dat, " (deviation %d)\n",
+           check_chichi7(tocc_tests,
+                         tocc_gt_99,tocc_95_99,tocc_75_95,tocc_50_75,
+                         tocc_25_50,tocc_05_25,tocc_01_05,tocc_lt_01));
+   if (tsuc_tests &gt; 0.0) {
+       fprintf(chi_dat,
+               "Successor Vd = %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f",
+                tsuc_gt_99*100.0/tsuc_tests,
+                tsuc_95_99*100.0/tsuc_tests,
+                tsuc_75_95*100.0/tsuc_tests,
+                tsuc_50_75*100.0/tsuc_tests,
+                tsuc_25_50*100.0/tsuc_tests,
+                tsuc_05_25*100.0/tsuc_tests,
+                tsuc_01_05*100.0/tsuc_tests,
+                tsuc_lt_01*100.0/tsuc_tests);
+       fprintf(chi_dat, " (deviation %d)\n",
+               check_chichi7(tsuc_tests,
+                             tsuc_gt_99,tsuc_95_99,tsuc_75_95,tsuc_50_75,
+                             tsuc_25_50,tsuc_05_25,tsuc_01_05,tsuc_lt_01));
+   }
+   fclose(chi_dat);
+#endif
+}
+
+int
+main(argc,argv)
+int argc;
+char **argv;
+{
+   ifp = (argc &gt; 1) ? my_fopen(argv[1],"rb") : stdin;
+   ofp = (argc &gt; 2) ? my_fopen(argv[2],"w") : stdout;
+   chi_2_test();
+
+   return(0);
+}
+
+
+---
+
+&lt;a href="<A  HREF="mailto:dlv@bwalk.dm.com">mailto:dlv@bwalk.dm.com</A>"&gt;Dr. Dimitri Vulis&lt;/a&gt;
+Brighton Beach Boardwalk BBS, Forest Hills, N.Y.: +1-718-261-2013, 14.4Kbps
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00390" HREF="msg00390.html">verification of randomness</A></STRONG>
+<UL><LI><EM>From:</EM> andreas@artcom.de (Andreas Bogk)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00339.html">Turn yourself in!</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00336.html">Re: [noise] Re: Charter of PDX Cpunk meetings</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00390.html">verification of randomness</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00357.html">Re: verification of randomness</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00395"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00395"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

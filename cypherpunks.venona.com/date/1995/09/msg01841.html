@@ -1,0 +1,196 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Netscape "random" number seed generator code available -->
+<!--X-From-R13: xneygbaNarba.argfpncr.pbz (Buvy Yneygba) -->
+<!--X-Date: Sun, 24 Sep 95 19:39:47 PDT -->
+<!--X-Message-Id: 4454nu$da8@tera.mcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Netscape "random" number seed generator code available</TITLE>
+<LINK REV="made" HREF="mailto:karlton@neon.netscape.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01815.html">Date Prev</A>][<A HREF="msg01823.html">Date Next</A>][<A HREF="msg01832.html">Thread Prev</A>][<A HREF="msg01848.html">Thread Next</A>][<A HREF="index.html#01841">Date Index</A>][<A HREF="threads.html#01841">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Netscape "random" number seed generator code available</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Netscape "random" number seed generator code available</LI>
+<LI><em>From</em>: <A HREF="mailto:karlton@neon.netscape.com">karlton@neon.netscape.com</A> (Phil Karlton)</LI>
+<LI><em>Date</em>: 25 Sep 1995 02:38:54 GMT</LI>
+<LI><em>Newsgroups</em>: mcom.list.cypherpunks</LI>
+<LI><em>Organization</em>: Netscape Communications Corporation</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Once again I speak for myself and not Netscape.
+
+The random number seed generation code is now available for review:
+	<A  HREF="ftp://ftp1.netscape.com/pub/review/RNGsrc.tar.Z">ftp://ftp1.netscape.com/pub/review/RNGsrc.tar.Z</A>
+The README from that file is appended below.
+
+Netscape has fixed other less glaring but potentially interesting
+problems and those fixes will be included with the patch that goes out
+in the near future.
+
+As is mentioned in the README, more will need to be done to find more 
+bits of entropy. (Too much of a good thing is still not enough.) 
+However the security team believes that the RNG seed is no longer the 
+weak link and candidate for attack.  So I am personally volunteering 
+to have my had shaved if a discovered deficiency in this code results 
+in an easily attacked generated seed. [You will be expected to show 
+your work. :-)]
+
+
+============================== README ===========================
+
+This code represents the heart of Netscape's random number seed 
+generator. The initialization routines are called by the various 
+client front ends and servers and other Netscape software.  
+Furthermore, the server will be putting seed information into the 
+environment of each of the CGI invocations.
+
+Here's some things a client does:
+* Application specific files are passed to SEC_FileForRNG(). For the
+client this includes the global history file. 
+* The clients then read a portion of the screen depending upon the
+current state of the hash.
+* The Update functions feed into an MD5 hash. The MD5 code isn't ours
+to publish.
+* User input is used for server side key generation and in client 
+front ends for increasing RNG state entropy over time.
+
+This code needs to be portable. We can't access device specific
+registers that are not guaranteed to be on all relevant platforms.
+
+Recommendations to users of Netscape who rely on the security of
+their transactions:
+
+    If the attacker has physical access to your machine, security
+    cannot be assured.
+
+    Netscape continues to point out that if unwanted agents can log 
+    into your machine, little can be secure.  For secure servers, any 
+    insecure connection mechanism could be suspect.  Multi-user UNIX 
+    platforms will not be as secure as single-user machines. 
+
+	Details: Some of the system specific information that is used
+	in the seed generation is available to any user on that
+	system.
+
+	To help mitigate this, the entire user environment is passed
+	into the seed generation algorithm.  A wary user can alter his 
+	user environment before running Netscape software.
+
+	If someone can get root (superuser) access to your machine, 
+	they can pretty much do anything.
+
+    Netscape security could be weak if run on a platform emulator.
+    Use a version native to the platform on which you are running.
+
+	Details: Some of the usefulness of the seed generation depends
+	upon the unpredictability of the low order bits of various
+	clocks and timers. The clocks of many emulators may have 
+	much less entropy than the actual builtin clocks.
+
+    If you are running on a UNIX platform, make sure of the security
+    of your X server.  This is also true if the X connection is not to 
+    a local machine as all of the events and the data from the screen 
+    read may be captured from the ethernet.
+
+	Details: If the attacker is monitoring your user input then
+	its randomness is not useful.
+
+    It is better to perform some user action before connecting to a 
+    secure site.  This means you should not set your home page to a 
+    secure site or launch your client from a command line to a secure site.
+
+	Details: While navigating through menus or typing into various form 
+	fields, the Navigator uses the unpredictability of details of the 
+	user actions to increase the entropy of the RNG state.
+
+For this patch, proposed changes had to fit into the existing
+code and UI structure.  We will rely on the user interactions leading 
+to the initial secure page.
+
+In future versions, the Navigator will force the user to explicitly
+use the keyboard or mouse to help generate the initial seed before
+doing any secure transactions. That seed will be maintained across
+invocations of the Navigator.
+
+The files are not compilable as is. They have been extracted from the
+Netscape's cross platform build environment, and all of the headers
+needed to compile them are not included.  They should be compilable
+with some simple edits on their platforms (MFC on Windows, CodeWarrior 
+on Mac).
+=================================================================
+
+PK
+-- 
+--
+Philip L. Karlton			karlton@netscape.com
+Principal Curmudgeon			<A  HREF="http://www.netscape.com/people/karlton">http://www.netscape.com/people/karlton</A>
+Netscape Communications Corporation
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01848" HREF="msg01848.html">Re: Netscape "random" number seed generator code available</A></STRONG>
+<UL><LI><EM>From:</EM> jsw@neon.netscape.com (Jeff Weinstein)</LI></UL></LI>
+<LI><STRONG><A NAME="01849" HREF="msg01849.html">Re: Netscape "random" number seed generator code available</A></STRONG>
+<UL><LI><EM>From:</EM> jsw@neon.netscape.com (Jeff Weinstein)</LI></UL></LI>
+<LI><STRONG><A NAME="01864" HREF="msg01864.html">Re: Netscape "random" number seed generator code available</A></STRONG>
+<UL><LI><EM>From:</EM> "David J. Bianco" &lt;bianco@itribe.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01815.html">Re: Crypto in Wired</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01823.html">No Subject</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01832.html">Re: Netscape giving away T-shirts?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01848.html">Re: Netscape "random" number seed generator code available</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01841"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01841"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

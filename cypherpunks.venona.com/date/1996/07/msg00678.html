@@ -1,0 +1,121 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: rsync and md4 -->
+<!--X-From-R13: Pvyy Egrjneg <fgrjnegfNvk.argpbz.pbz> -->
+<!--X-Date: Fri, 12 Jul 1996 19:40:39 +0800 -->
+<!--X-Message-Id: 199607120654.XAA19128@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: rsync and md4</TITLE>
+<LINK REV="made" HREF="mailto:stewarts@ix.netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00668.html">Date Prev</A>][<A HREF="msg00669.html">Date Next</A>][<A HREF="msg00280.html">Thread Prev</A>][<A HREF="msg00005.html">Thread Next</A>][<A HREF="index.html#00678">Date Index</A>][<A HREF="threads.html#00678">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: rsync and md4</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: rsync and md4</LI>
+<LI><em>From</em>: Bill Stewart &lt;<A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 11 Jul 1996 23:51:29 -0700</LI>
+<LI><em>Cc</em>: Andrew Tridgell &lt;<A HREF="mailto:tridge@arvidsjaur.anu.edu.au">tridge@arvidsjaur.anu.edu.au</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+At 02:05 AM 7/1/96 -0400, "David F. Ogren" &lt;ogren@cris.com&gt; wrote:
+&gt;Irregardless, this argument is moot.  This thread is titled "rsync and 
+&gt;md4".  It is a discussion about which hash function suits this particular 
+&gt;purpose and he is not particularly concerned with resistance to deliberate 
+&gt;attack.  In this case MD4 will function adequately.
+
+There are three issues with MD4/5 relevant to rsync
+1) Collision probability - if you're concerned that a damaged packet
+will have the same hash as the original correct packet, that's 2^-128.
+If you're concerned that you may find a damaged packet with the same
+hash as _some_ correct packet out there, that's a birthday problem,
+and approaches 2^-64 if you've really got lots of packets that you
+can keep track of at once, but in reality the probability is much lower
+since you won't be keeping 2^64 packets around to collide with.
+
+2) Deliberate collisions, and 3) speed - If I understand the description
+of rsync, it needs a checksum to detect packets with different values
+so it can determine whether to send an update packet.  It's concerned with
+people changing _data_ in non-malicious ways that you want to detect,
+so the security issues about MD4 and MD5 aren't relevant, though 
+systematic changes to data resonating with the hash function are.
+You can use _much_ simpler hash functions than MD5 - go check out a book
+on error correcting codes and related math.  Most error detection 
+applications these days use 32-bit polynomials, since they're good detectors
+and can be implemented very efficiently on 32-bit hardware.  They're
+useless for security, since you can invert them, but that's irrelevant.
+If that's not reliable enough for you (and it may not be), 
+there are polymomials in lengths like 64 bits or 128 bits that should
+have good change detection, not be too sensitive to patterns in data, 
+and be _far_ faster than MD4 or MD5.  
+
+If I remember right, rsync was looking at using 16- and 32-bit checksums
+to get a quick probable result and MD4 as a backup; you can save yourself
+work by just calculating the 128-bit function and using the first 32 bits
+as a quick check.  If you're _sure_ you're not worried about birthday
+problems in your collisions, a 64-bit checksum is fine,
+and will be even faster.
+
+#				Thanks;  Bill
+# Bill Stewart +1-415-442-2215 stewarts@ix.netcom.com
+# <A  HREF="http://www.idiom.com/~wcs">http://www.idiom.com/~wcs</A>
+#				Re-delegate Authority!
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00668.html">Re: New Mac Web Server Security Hole Discovered</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00669.html">Re: Can the inevitability of Software privacy be used to	  defeat the ITAR?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00280.html">Re: rsync and md4</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00005.html">List of reliable remailers</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00678"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00678"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

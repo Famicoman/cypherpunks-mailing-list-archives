@@ -1,0 +1,175 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: SSL search attacks -->
+<!--X-From-R13: qbaNpf.olh.rqh -->
+<!--X-Date: Tue, 29 Aug 95 14:01:35 PDT -->
+<!--X-Message-Id: 199508292102.PAA01897@wero -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>SSL search attacks</TITLE>
+<LINK REV="made" HREF="mailto:don@cs.byu.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01454.html">Date Prev</A>][<A HREF="msg01463.html">Date Next</A>][<A HREF="msg01454.html">Thread Prev</A>][<A HREF="msg01472.html">Thread Next</A>][<A HREF="index.html#01458">Date Index</A>][<A HREF="threads.html#01458">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>SSL search attacks</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: SSL search attacks</LI>
+<LI><em>From</em>: <A HREF="mailto:don@cs.byu.edu">don@cs.byu.edu</A></LI>
+<LI><em>Date</em>: Tue, 29 Aug 1995 15:02:41 -0600</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+From: Scott Brickner &lt;sjb@austin.ibm.com&gt;
+
+&gt;We've identified several forms of "real-world retaliation:"
+&gt;
+&gt;1) "Result hoarding" - failure to report a found key
+&gt;2) "Segment hoarding" - requesting more segments than one can hope to search
+&gt;3) Denial of service - preventing access to the server
+
+&gt;The "random search" method eliminates all three of these at about 37%
+&gt;higher cost in search time, on the average.  I submit that if we
+&gt;*really* were trying to break something important, we could design a
+&gt;system which eliminated the first two and adequately limited the third,
+&gt;but at *much* less cost.
+&gt;
+&gt;The problems in the current system were to be expected of a first
+&gt;attempt.  In the future:  Only the server assigns segments, only the
+&gt;assignee may report the status of a segment, and after all segments are
+&gt;NAKed we know condition 1 has occurred, at which time we start over,
+&gt;but never assign the same segment to the same searcher.  Limit the
+&gt;number of segments which may be outstanding with one searcher at one
+&gt;time as a function of work rate.  Deploy redundant servers.
+
+BEAAAT STATE! Push 'em back.. WAAAAAAY BAAAACK. 
+(relevant comments follow)
+
+
+From: tcmay@got.net (Timothy C. May)
+
+&gt;An interesting question: Is it a valid approach for J. Random User to
+&gt;"claim" some chunk of keyspace to search?
+&gt;
+&gt;If the "reward" of finding the gold buried in the keyspace (a key that
+&gt;meets the  challenge) is high and the cost of claiming the keyspace is low
+&gt;(or nil), then game theory tells us that some folks will be tempted to
+&gt;claim a bigger chunk of keyspace than they can possibly process.
+&gt;
+&gt;What can be done to reduce this effect?
+
+
+In regard to both messages, I think that with sequentially allocated
+keyspace an attacker who knows the real key would have trouble getting the
+right segment unless s/he grabbed a big enough piece. If the search is
+restarted, we know something's up. Ensuring that nobody gets to search
+keyspace they searched before would be one improvement. A random (instead
+of sequential) allocation _by the keyserver_ (out of unallocated 
+piecemeal segments) would also take some work to implement. 
+
+
+&gt;On the negative side, ostracize or punish those who bite off more than they
+&gt;can chew. This approach is fraught with dangers.
+
+If the search wraps around to catch the UNACK'ed pieces, this type of
+oversight will only slow down the actual discovery of the key. Failure
+to report a found key, though, is a bit different. I would not be opposed
+to having my program report possible hits, with the server being what
+discovers if I've found it or not.
+
+&gt;On the positive side, let everyone simply attack the keyspace as they see
+&gt;fit, picking random parts to attack. This should not be "worse" than a
+&gt;factor of several from a "perfectly coordinated" attack. (I haven't spent
+&gt;time calculating this, but my intuition is that a random attack, with
+&gt;overlapping keyspace, is not a lot less efficiently attacked than
+&gt;attempting to arrange for no overlaps...just based on my mental picture of
+&gt;dropping line segments randomly on some interval and figuring coverage of
+&gt;the line segment.)
+
+Why not have a random backup-mode, in case someone does mount a denial of
+service attack. Or imploy a combination of the two modes. The machines
+running brloop can search sequentially (out of the middle 50%?) and the
+machines not connected search randomly (out of the outside 50%?). Or,
+venturing further into the I-wonder-who's-gonna-code-this world, log the
+random searches for possible conversion to an exhaustive search later. 
+
+It would be nice to be able to hit the emergency button and switch to
+random mode, but currently I don't think there's a need to actually
+use it.
+
+Don
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQB1AwUBMEN/U8La+QKZS485AQHNcgL+ItlNLYcsIjjlQPQJBxgts66GXPMs3ijb
+QIcqiAbrg4cq7F9xWNRvZa9LTvw75UUM1+PmItGkSUuqOqvJ9VkzaUp8/Sf5zuDs
+5XTlJLVhYa7qQzY4Ov4a3k0ora0SPvKh
+=wyzo
+-----END PGP SIGNATURE-----
+&lt;don@cs.byu.edu&gt;           fRee cRyPTo!   jOin the hUnt or BE tHe PrEY
+PGP key - <A  HREF="http://bert.cs.byu.edu/~don">http://bert.cs.byu.edu/~don</A>     or PubKey servers (0x994b8f39)
+  June 7&amp;14, 1995: 1st amendment repealed.  Death threats ALWAYS pgp signed
+* This user insured by the Smith, Wesson, &amp; Zimmermann insurance company *
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01472" HREF="msg01472.html">Re: SSL search attacks</A></STRONG>
+<UL><LI><EM>From:</EM> Scott Brickner &lt;sjb@austin.ibm.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01454.html">Reputation currency</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01463.html">Re: Florida Drivers Permits and a Hello</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01454.html">Reputation currency</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01472.html">Re: SSL search attacks</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01458"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01458"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

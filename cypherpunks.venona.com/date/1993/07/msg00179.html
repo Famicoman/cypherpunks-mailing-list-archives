@@ -1,0 +1,157 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: encrypted email software -->
+<!--X-From-R13: Fvzbgul @rjfunz <arjfunzNjvyvxv.rat.unjnvv.rqh> -->
+<!--X-Date: Sat, 10 Jul 93 12:26:47 PDT -->
+<!--X-Message-Id: 9307101926.AA08581@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9307100735.AA09015@triton.unm.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: encrypted email software</TITLE>
+<LINK REV="made" HREF="mailto:newsham@wiliki.eng.hawaii.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00184.html">Date Prev</A>][<A HREF="msg00180.html">Date Next</A>][<A HREF="msg00177.html">Thread Prev</A>][<A HREF="msg00173.html">Thread Next</A>][<A HREF="index.html#00179">Date Index</A>][<A HREF="threads.html#00179">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: encrypted email software</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:mdiehl@triton.unm.edu">mdiehl@triton.unm.edu</A> (J. Michael Diehl)</LI>
+<LI><em>Subject</em>: Re: encrypted email software</LI>
+<LI><em>From</em>: Timothy Newsham &lt;<A HREF="mailto:newsham@wiliki.eng.hawaii.edu">newsham@wiliki.eng.hawaii.edu</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 10 Jul 1993 09:24:58 -1000 (HST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00177.html">9307100735.AA09015@triton.unm.edu</A>&gt; from "J. Michael Diehl" at Jul 10, 93 01:35:28 am</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; 
+&gt; 
+&gt; Could someone tell me what an s-box is?  Thanx in advance.
+
+
+The Data Encryption Standard (any many other crypto systems devised
+since) use a process of substitutions (replacing one block of bits
+with another) and permutations (re-arranging the bits).  This process
+is iterated a number of times and the key is mixed in at different
+points.
+
+
+    This R                                               This L
+      |                                                      |
+      v                                                      |
+  [E Expansion]                                              |
+      |                                                      |
+      \                                                      |
+        XOR &lt;------------- key for this round (subkey)       |
+         |                                                   |
+     -----------------------------------                     |
+     |   |    |     |    |    |   |    |                     |
+     v   v    v     v    v    v   v    v                     |
+  =========================================                  |
+  | S1 | S2 | S3 | S4 | S5 | S6 | S7 | S8 |                  |
+  =========================================                  |
+     |   |    |    |    |    |    |    |                     |
+     -----------------------------------                    /
+                   |                                       /  
+               [P Permutation]                            /
+                   |                                     /
+                   \____________________________________/__ 
+                                       |               /   \
+                                       v              /     \
+                                      XOR &lt;-----------       |
+                                       v                     v
+                                     Next R                Next L
+
+This is the basic structure of DES (if I didnt make a mistake, this
+is from memory).  Anyway the basic idea is you take half the key
+(called L and R for Left and Right, but hey, I'm lysdexic).  You
+put it through an expansion, this just mixes up the order of the
+bits and duplicates a few of them.  Then you XOR it with the sub-key
+(the Key Generator is not shown).  Then you split it up into 8 6-bit
+chunks and do a table lookup in the S-boxes, each Sbox has 6 inputs
+and 4 outputs.  Then you re-arrange the bits in the P permutation.
+Finally you XOR that value with the L to get next R, and put the
+pre-XOR'ed value into the next L.
+
+This is 1 iteration and is done 16 times in DES, and 16*25 times in
+crypt(3).  Crypt(3) also has the salt values which cause the swapping
+of two bits in the E expansion for every salt bit that is set.  Before
+pulling apart the 64 bit input into 2 32 bit halfs (L and R) the data
+is passed through an Initial Permutation (IP), and at the end of the
+whole thing passed through (IP^-1) its inverse (this permutation isnt
+cryptographically that significant).  The subkeys are generated
+by taking the input 56 bits of key, mixing them up and then successively
+rotating those bits, and passing them through a permutation.  It outputs
+48 bits of key each iteration to match the 48 bits after the E expansion.
+
+I hope I didnt make too many mistakes in the above discussion, but
+you get the general idea.
+
+&gt; +-----------------------+-----------------------------+---------+
+&gt; | J. Michael Diehl ;-)  | I thought I was wrong once. | PGP KEY |
+&gt; | mdiehl@triton.unm.edu |   But, I was mistaken.      |available|
+&gt; | mike.diehl@fido.org   |                             | Ask Me! |
+&gt; | (505) 299-2282        +-----------------------------+---------+
+&gt; |                                                               |
+&gt; +------"I'm just looking for the opportunity to be -------------+
+&gt; |            Politically Incorrect!"   &lt;Me&gt;                     |
+&gt; +-----If codes are outlawed, only criminals wil have codes.-----+
+&gt; +----Is Big Brother in your phone?  If you don't know, ask me---+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00177" HREF="msg00177.html">Re: encrypted email software</A></STRONG>
+<UL><LI><EM>From:</EM> J. Michael Diehl &lt;mdiehl@triton.unm.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00184.html">unsubscribe</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00180.html">Re: Secure comm program, Sockets + LINK</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00177.html">Re: encrypted email software</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00173.html">Re: encrypted email software</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00179"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00179"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

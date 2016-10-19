@@ -1,0 +1,140 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re:  finney's perl scripts -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Sun, 5 Feb 95 22:04:34 PST -->
+<!--X-Message-Id: 199502060603.WAA00621@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re:  finney's perl scripts</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00182.html">Date Prev</A>][<A HREF="msg00195.html">Date Next</A>][<A HREF="msg00139.html">Thread Prev</A>][<A HREF="msg00144.html">Thread Next</A>][<A HREF="index.html#00184">Date Index</A>][<A HREF="threads.html#00184">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re:  finney's perl scripts</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re:  finney's perl scripts</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 5 Feb 1995 22:03:54 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+From: anonymous-remailer@shell.portal.com
+&gt; hal , gotta question regarding your perl scripts .
+&gt;  i ran em thru sh and d/l'd em , and here are the
+&gt; results of my tests . first , i pgp'd a file in
+&gt;  binary format , then ran " perl pgppadt.pl
+&gt; test.pgp 10 " . the error i got was " Couldn't
+&gt;  create test.pgp.pad " . so i renamed the file to
+&gt; " test " and tried again with good results ! i got
+&gt;  " Input file test has size 732 bytes 10 bytes 
+&gt; pgppad returns code -3 " . then , iran " perl 
+&gt;  pgppad.pl test 10 " and after the bit about perl
+&gt; running under dos/4gw protected mode , i get dropped
+&gt;  to my command prompt . i took a look at the file ,
+&gt; and it's size wasn't any different , so i renamed the
+&gt;  file to test.pgp and ran it again and got the same
+&gt; results . so i guess i'm wonderin' if it added the
+&gt;  padding , or what might be the problem ? for your
+&gt; info , i'm using perl 4.0.
+
+Unfortunately, my PC's disk died several months ago so I don't have one
+right now.
+
+pgppadt.pl sets the output file name with:
+open (OUT, "&gt;$ARGV[0].pad") || die ("Couldn't create $ARGV[0].pad\n");
+
+This doesn't work on DOS since it appends .pad to the input file name so
+it doesn't fit the 8.3 character format.
+
+The other errors you are getting are probably due to the difference
+between binary and ascii I/O mode on DOS.  I forgot about that
+in my test script.  Try this revision of pgppadt.pl, and let me know if
+it works on DOS:
+
+----------------------cut here------------------------------
+# Test program for pgppad.pl, showing how to use it.
+# Revised 2/5/95 for DOS legality
+# Usage: perl pgppadt.pl infile &lt;bytes-to-add&gt;
+# Output file is infile, stripped of extensions, with .pad appended.
+
+require 'pgppad.pl';
+ 
+open (IN, $ARGV[0]) || die ("Couldn't open $ARGV[0]\n");
+$outfile = $ARGV[0];
+$outfile =~ s/\..*//;
+open (OUT, "&gt;$outfile.pad") || die ("Couldn't create $outfile.pad\n");
+binmode IN;
+binmode OUT;
+
+$padding = $ARGV[1];
+ 
+@stat = stat(IN);
+$size = $stat[7];
+print "Input file $ARGV[0] has size $size bytes\n";
+print "Output file $outfile.pad will have size ",$size+$padding," bytes\n";
+ 
+if (($code = &amp;pgppad (IN, OUT, $size+$padding)) &lt; 0) {
+    die ("pgppad returns code $code\n");
+}
+ 
+close (IN);
+close (OUT);
+print ("Done\n");
+----------------------cut here------------------------------
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00182.html">Re: Remailer encryption module</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00195.html">New directions in anonymity (needed)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00139.html">finney's perl scripts</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00144.html">Vinge on PKE ?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00184"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00184"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

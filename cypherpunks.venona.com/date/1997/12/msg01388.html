@@ -1,0 +1,167 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: RE: [NTSEC] SKIPJACK / NT4.0 (SP3?) (fwd) -->
+<!--X-From-R13: Dnl Oenpuryvna <fhaqreNoenvayvax.pbz> -->
+<!--X-Date: Tue, 30 Dec 1997 03:27:03 +0800 -->
+<!--X-Message-Id: Pine.SUN.3.96.971229101829.4823B&#45;100000@beast.brainlink.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 01BD123E.5965AD70@pdc.mfn.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>RE: [NTSEC] SKIPJACK / NT4.0 (SP3?) (fwd)</TITLE>
+<LINK REV="made" HREF="mailto:sunder@brainlink.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01381.html">Date Prev</A>][<A HREF="msg01387.html">Date Next</A>][<A HREF="msg01305.html">Thread Prev</A>][<A HREF="msg01298.html">Thread Next</A>][<A HREF="index.html#01388">Date Index</A>][<A HREF="threads.html#01388">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>RE: [NTSEC] SKIPJACK / NT4.0 (SP3?) (fwd)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "J.A. Terranson" &lt;<A HREF="mailto:sysadmin@mfn.org">sysadmin@mfn.org</A>&gt;</LI>
+<LI><em>Subject</em>: RE: [NTSEC] SKIPJACK / NT4.0 (SP3?) (fwd)</LI>
+<LI><em>From</em>: Ray Arachelian &lt;<A HREF="mailto:sunder@brainlink.com">sunder@brainlink.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 29 Dec 1997 14:25:03 -0500 (EST)</LI>
+<LI><em>cc</em>: "'<A HREF="mailto:geeman@best.com">geeman@best.com</A>'" &lt;<A HREF="mailto:geeman@best.com">geeman@best.com</A>&gt;,       cypherpunks &lt;<A HREF="mailto:cypherpunks@Algebra.COM">cypherpunks@Algebra.COM</A>&gt;, <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A>,       <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:ntsecurity@iss.net">ntsecurity@iss.net</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01305.html">01BD123E.5965AD70@pdc.mfn.org</A>&gt;</LI>
+<LI><em>Reply-To</em>: Ray Arachelian &lt;<A HREF="mailto:sunder@brainlink.com">sunder@brainlink.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+Actually, a quick browse through several machines' registry revealed this
+key as well in a list of cyphers. 
+
+The bitch lives in:
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\Skipjack
+
+Along with shit like the following under Ciphers.
+
+Des40/56
+Des56/56
+Null
+RC2 128/128
+RC2 128/40
+RC4 128/128
+RC4 40/128
+RC4 64/128
+Skipjack
+Tripple DES 168/168
+
+Interestingly all the DES and RC2/RC4's have the same value (0xffffffff)
+for the enable key (including TrippleDES).  Skipjack, and RC4 64/128 have
+different values (0x30, and 0x3f respectively).  Null has an enable value
+of zero. 
+
+Adjacent to the ciphers key, there is a key for hashes listing MD5 and
+SHA, next to that is a KeyEXchangealgorithms key listing:
+Diffie-Hellman, PKCS, and Fortezza.  All of these except Fortezza use
+0xffffffff as the enable value.
+
+The Fortezza and Skipjack keys have the same "Enabled" key values! 
+Additionally there is a ServerHandshakeTimeout value on the Fortezza key
+of 60000. 
+
+Likely this "enabled" value is a link to some DLL that contains their
+code.
+
+There is also a key called Protocols listing: "Multi-Protocol
+Unified Hello", PCT 1.0, SSL 2.0, SSL 3.0, TLS 1.0.  All of these have
+subkeys of "Client" and "Server" with no values set.
+
+Adjacent to this key, is a key called Certification Authorities, showing
+shit like AT&amp;T, GTE, MCI, Keywitness Canada, Thwate, and of course
+Verisign.
+
+
+I've sniffed around schannel.dll and it is what builds or looks for these
+registry entries.  It also looks for rsabase.dll and crypto32.dll and
+cryptodlg.dll(?).  In schannel.dll there's a string that says: Fortezza
+(DSS/SHA).  So SHA is there.
+
+IMHO, From the looks of it, these are just stubbs without any code behind
+them since the RSA code contains the RC2/RC4, RSA, etc. code.  (Though I
+could be wrong.)
+
+
+It's not SP3.  I've got two servers with SP3 and IIS3.0with ASP and no
+Skipjack keys, so that leaves IE4 or IE3 as possible suspects (or some of
+the hotfixes.)  The non-Skipjack entry machines do have all the other
+cyphers, so something in ie4 and/or iis4 is what adds them in.
+Interestingly enough this entire subkey isn't in Nt5Beta1. :)
+
+
+&gt; to a Skipjack (ie. fortezza) site.  I doubt you have the code as it is
+&gt; classified and available (at this time) only in hardware.  Don't sweat it,
+&gt; it looks like it's just a hook or .....
+
+Yep.
+
+Likely what it could be is a hook to a device driver that talks to a PC
+Fortezza card or some such.
+ 
+=====================================Kaos=Keraunos=Kybernetos==============
+.+.^.+.|  Ray Arachelian    |Prying open my 3rd eye.  So good to see |./|\.
+..\|/..|sunder@sundernet.com|you once again. I thought you were      |/\|/\
+&lt;--*--&gt;| ------------------ |hiding, and you thought that I had run  |\/|\/
+../|\..| "A toast to Odin,  |away chasing the tail of dogma. I opened|.\|/.
+.+.v.+.|God of screwdrivers"|my eye and there we were....            |.....
+======================= <A  HREF="http://www.sundernet.com">http://www.sundernet.com</A> ==========================
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01305" HREF="msg01305.html">RE: [NTSEC] SKIPJACK / NT4.0 (SP3?) (fwd)</A></STRONG>
+<UL><LI><EM>From:</EM> "J.A. Terranson" &lt;sysadmin@mfn.org&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01381.html">Re: Abandonment of legal precedence... (fwd)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01387.html">Re: Abandonment of legal precedence... (fwd)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01305.html">RE: [NTSEC] SKIPJACK / NT4.0 (SP3?) (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01298.html">rduyh</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01388"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01388"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

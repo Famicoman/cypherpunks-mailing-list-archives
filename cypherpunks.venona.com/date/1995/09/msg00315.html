@@ -1,0 +1,302 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: the S&#45;1 Algorithm -->
+<!--X-From-R13: Pehpr Epuarvre <fpuarvreNjvagrearg.pbz> -->
+<!--X-Date: Wed, 6 Sep 95 07:09:33 PDT -->
+<!--X-Message-Id: 199509061409.JAA05371@subzero -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>the S-1 Algorithm</TITLE>
+<LINK REV="made" HREF="mailto:schneier@winternet.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00312.html">Date Prev</A>][<A HREF="msg00320.html">Date Next</A>][<A HREF="msg00319.html">Thread Prev</A>][<A HREF="msg00349.html">Thread Next</A>][<A HREF="index.html#00315">Date Index</A>][<A HREF="threads.html#00315">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>the S-1 Algorithm</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: the S-1 Algorithm</LI>
+<LI><em>From</em>: Bruce Schneier &lt;<A HREF="mailto:schneier@winternet.com">schneier@winternet.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 6 Sep 1995 09:09:17 -0500 (CDT)</LI>
+<LI><em>Posted-Date</em>: Wed, 6 Sep 1995 09:09:18 -0500</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+[I just posted this to sci.crypt.  I don't normally read Cypherpunks, so
+please forward any substantive replies directly to me.  Thanks.  -Bruce]
+
+
+I was in Europe while S-1 was posted, so I missed most of the
+discussion.  Better late than never....
+
+Over the last year, I have spent considerable effort collecting
+SKIPJACK information.  I have gone through the published
+literature, the rumors, and a large stack of documents received
+by EPIC through Freedom of Information Act (FOIA) lawsuits.
+
+At Crypto last week I gave a Rump Session talk entitled "Reverse
+Engineering SKIPJACK from Open Sources."  I prepared the slides
+before I left for Europe.  Here is what I said:
+
+     What the government told us:
+          Single-key block cipher.
+          Can be used in ECB, CBC, CFB, or OFB.
+          64-bit block size.
+          80-bit key size.
+
+     What the review committee told us:
+          32 rounds.
+          No weak keys (like DES has).
+          No key complementation property (like DES has).
+
+     What the hardware specifications tell us:
+          The latency of the Mykotronx chip has 64 clock cycles. 
+               This means two clock cycles per round.
+
+     Assorted rumors (excuse me if I don't reveal sources):
+          SKIPJACK does not have rounds in the same sense that
+               DES does: i.e., half of the text block is not
+               encrypted in each round.
+          SKIPJACK has half the total S-box data as DES.
+          SKIPJACK has a 48-bit internal structure analogous to a
+               32-bit internal structure in DES.
+          The masks for the Clipper/Capstone chip are
+               unclassified and the chips can be produced in an
+               unclassified foundry.  Part of the programming in
+               the secure vault includes installing part of the
+               SKIPJACK algorithm.  The part of the algorithm
+               installed in the secure vault are the "S-tables",
+               suggesting that perhaps unprogrammed Clipper chips
+               can be programmed to implement other 80-bit key,
+               32 round ciphers.
+
+Trying to puzzle out the meaning of the third rumor, Matt Blaze
+and I invented something called an Unbalanced Feistel Network. 
+These are Feistel networks where the source and target blocks are
+of different size.  For example, in each round 48 bits might be
+used as an input into the F function, and produce 16 output bits
+to be XORed with the remainder of the bits.  We called this a
+48:16 UFN, and we proposed a design at last year's Algorithms
+Workshop in Leuven.  Our design was broken, but I am still
+examining the structure.  A 48:16 UFN satisfies the first and
+third rumor above, and I think it as good a guess as any
+regarding SKIPJACK.
+
+A few months ago, I found some additional information in the form
+of documents released under FOIA.  One document was a Mykotronx
+design review for "Project Capstone" dated 10 December 1991.  The
+design review was unclassified.  Among the details about the
+modular multipliers and the SHA code was the following page about
+SKIPJACK:
+
+     ECB Processing Rate
+
+          2 clocks per G-Box operation
+          x 1 G-box per shift
+          x 32 shifts per ECB encryption
+          ______________________________
+          64 clocks per ECB
+
+     64 clocks per ECB / 64 bits out per ECB = 1 clock per bit
+     Yields 40 Mbit encryption using a 40 MHz clock.
+
+The only other thing I found was a SECRET memo.  The organization
+name (either from or to) is blacked out.  The date is 25 August
+1992.  The subject is "SKIPJACK Revision."  Paragraph 2 is
+blacked out, but paragraph 1 reads:
+
+     1.  (U) The enclosed Informal Technical Report revises the
+     F-table in SKIPJACK 3.  No other aspect of the algorithm is
+     changed.
+
+That's it.  Rounds are called "shifts," which seems to indicate
+that they are not "rounds" in the DES sense.  A shift consists of
+a "G-box" operation, which includes not only what we call the F-
+F-function but the XOR as well.  And there is something called an
+F-table, which could be a table of constants or perhaps a table
+of functions.  In any case, it is something that can be revised
+without changing the rest of the algorithm.
+
+Now let's look at S-1.  The most probable explanation is that it
+is a hoax.  But it is a very good hoax:
+
+     The hoaxer knew enough about algorithm design to make a
+          cipher that was not obviously lousy, while at the same
+          time not unduly complicated.  The hoaxer knew enough to
+          make a design that included three novel ideas not seen
+          anywhere else: S-boxes that are created according to no
+          known criteria, a G-table that chooses a rotation of
+          S-boxes to use in a given round, and a bizarre key
+          schedule.
+     The hoaxer knew enough about how algorithms are used in the
+          military to make a spookish interface.  I am
+          particularly interested in the "zeroize" function, the
+          separation of the key creation and key loading
+          functions, and the key masking.  Blaze said that the
+          interface was similar to the Fortezza interface, but
+          not the same.
+     The hoaxer knew about Blaze's and my MacGuffin paper and
+          that we thought SKIPJACK was a 48:16 UFN.  We made no
+          secret about this, and our paper is on Blaze's web
+          page.  The hoaxer knew to use the term F-table.  I
+          haven't shown many people what I found in EPIC's
+          documents, so the hoaxer either had to look through
+          them himself or get them by some other means (maybe an
+          independent FOIA request).
+
+It's not a perfect hoax, though.  The classification markings
+look odd: NSA algorithms are SECRET, not TOP SECRET, and the
+codeword restriction sentence is strange.  The key schedule is
+hopelessly flawed (David Wagner posted an attack to sci.crypt). 
+The coding style is amateurish, like it was translated from one
+language to another.  (Maybe this is clever on the hoaxer's
+part.)  And there's even a typo in the code.
+
+And maybe the hardware latency is wrong.  Clearly the design
+facilitates parallelization.  You can precompute all possible F-
+table outputs in previous shifts, and then use the G-table result
+to select between them; I am not sure you can get a shift down to
+two clock cycles.  I don't have the hardware background, and
+would appreciate comments from others.
+
+And why are there not bitwise permutations?  If SKIPJACK is
+designed for hardware, it makes sense to put them in.  They're
+free, after all.
+
+Anyway, it's a real good hoax.  Blaze estimated that he could
+have done it, but it would have taken him a month of effort.  I
+agree with his assessment: one man-month.  It's a lot of time to
+spend on a hoax, especially one where the hoaxer doesn't get any
+credit.
+
+So, maybe it's SKIPJACK.  It has a 64-bit block size and an 80-
+bit key size.  It's a 48:16 UFN with 32 rounds (or shifts, or
+whatever).  And it has an F-table.  This is really interesting,
+because the structure really is an S-box.  Everyone knows it's an
+S-box, and it makes no sense for a hoaxer to call it something
+else.  But in S-1 it's called an F-table.  (I think this is very
+significant, but others find it less convincing.)
+
+And the F-table has been revised at least once.  In the code it
+says that the F-table entries "differ in the S-2 version."  The
+code is dated 1 February 1989 and 31 July 1991, and I have a memo
+dated 25 August 1992 that says the F-table has been revised in
+"SKIPJACK 3."  Pretty convincing, I think.  (Of course this means
+that we can't confirm anything by testing the hardware, since the
+F-table entries are different.)
+
+Maybe there are no bit permutations because they make analysis
+harder, and perhaps they don't add all that much.  Maybe the
+algorithm was designed for both hardware and software, or maybe
+it was designed for specialized cryptographic hardware with
+several parallel microprocessors and some cryptographic
+primitives. 
+
+If it is real, we have a lot to learn about S-box design.  The S-
+boxes are not even balanced.  Maybe they are created just so to
+avoid some bizarre attack we can only dream about, but I kind of
+doubt it.
+
+But the key schedule is just plain wrong.
+
+So, here's a theory.  Let's assume the code is real.  (Not that
+it's SKIPJACK, but that it's a real algorithm from some military
+or some corporation.)  Clearly the code is not designed to test
+the cryptographic algorithm, but to simulate some kind of
+hardware interface: it's called a "software chip simulator."  If
+I were the NSA and I designed an algorithm whose security rested
+on some tables of constants, I might replace them with phony
+constants before giving them to another organization to test.  I
+might call the phony version S-1 and the real version S-2.
+
+Maybe the code was originally written in FORTRAN, and then
+translated into C.  (NSA doesn't use ADA.)
+
+NSA algorithms are classified SECRET, put perhaps algorithms in
+development are classified TOP SECRET.  (We know cryptanalytic
+techniques can be TOP SECRET, so perhaps commented code falls
+under that category as well.)
+
+And maybe the code originally didn't have an 80-bit key schedule.
+Maybe it had a longer key schedule.  The poster then modified
+this key schedule to make it look more like SKIPJACK.  (This
+might also explain the bug in the code, which might not be a bug
+if it still had the original key schedule.)
+
+Which leaves us precisely nowhere.  The most likely explanation
+is that it is a hoax, but I am hard-pressed to imagine a hoaxer
+with the requisite combination of skills, resources, and
+attitude.  I also don't believe that it is SKIPJACK.  It might be
+a preliminary design for SKIPJACK, but if both the key schedule
+and F-table entries are wrong, we really haven't learned
+anything.  If we suddenly discovered that unbalanced S-boxes are
+far superior to balanced ones, then all best are off.
+
+Bruce
+
+************************************************************************
+* Bruce Schneier            2,000,000,000,000,000,000,000,000,002,000,
+* Counterpane Systems       000,000,000,000,000,000,002,000,000,002,293 
+* schneier@counterpane.com  The last prime number...alphabetically!
+* (708) 524-9461            Two vigintillion, two undecillion, two 
+* 730 Fair Oaks Ave.        trillion, two thousand, two hundred and 
+* Oak Park, IL  60302       ninety three.
+************************************************************************
+
+From owner-cypherpunks  Tue Sep  5 17:00:40 1995
+Return-Path: &lt;owner-cypherpunks&gt;
+Received: by toad.com id AA01815; Tue, 5 Sep 95 17:00:40 PDT
+Received: from yarrina.connect.com.au by toad.com id AA01805; Tue, 5 Sep 95 17:00:25 PDT
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00312.html">Re: Another Son of Clipper discussion paper</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00320.html">Re: "This discussion is off-topic, please take it elsewhere"</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00319.html">Re: Searchable Crypto Paper Archive?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00349.html">Michael Moriarity in _Penthouse_ on Law Enforcer Power Expansion</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00315"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00315"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

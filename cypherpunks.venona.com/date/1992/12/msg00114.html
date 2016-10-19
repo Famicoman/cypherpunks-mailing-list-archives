@@ -1,0 +1,330 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: dc&#45;nets implementation (protocol spec) -->
+<!--X-From-R13: lnarxNabinink.abin.rqh (Knarx [negvafba) -->
+<!--X-Date: Sun, 13 Dec 92 11:35:50 PST -->
+<!--X-Message-Id: 9212131931.AA13443@novavax.nova.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>dc-nets implementation (protocol spec)</TITLE>
+<LINK REV="made" HREF="mailto:yanek@novavax.nova.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00113.html">Date Prev</A>][<A HREF="msg00120.html">Date Next</A>][<A HREF="msg00113.html">Thread Prev</A>][<A HREF="msg00120.html">Thread Next</A>][<A HREF="index.html#00114">Date Index</A>][<A HREF="threads.html#00114">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>dc-nets implementation (protocol spec)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: dc-nets implementation (protocol spec)</LI>
+<LI><em>From</em>: <A HREF="mailto:yanek@novavax.nova.edu">yanek@novavax.nova.edu</A> (Yanek Martinson)</LI>
+<LI><em>Date</em>: Sun, 13 Dec 92 14:31:35 EDT</LI>
+<LI><em>Cc</em>: rmsdell!ym</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I am writing a dc-net implementation.   What follows is some design 
+discussion, a protocol specification that defines the interaction,
+message format, and file formats, followed by notes, and plans for
+future enhancements.  A basic familiarity with the concept of dc-nets is
+assumed, for people new to this, see Chaums's article on the topic,
+posted here recently.
+
+I am assuming interaction through e-mail because this is, right now,
+the most accessible medium.  A more efficient approach would be to
+use a true broadcast media, such as coax cable, or satellite.  But
+coax only works for local areas, and not everyone has satellite uplink
+capability.
+
+In the future, I envision all or most local area networks running their
+own small dc-nets that use ethernet broadcast, these being linked
+hierarchically to medium-level dc-nets that use any internet type of
+communication medium (udp datagrams, tcp connections, smtp, usenet news,
+shared ftp space, etc) or other regional communication such as radio
+(amateur packet radio, spread-spectrum, or even CB) , and these finally
+being linked into global dc-nets that use satellite broadcast.  
+
+This type of system would achieve the truly anonymous global communication
+system, similar to what Vinge describes in True Names:
+
+      He dumped the last twenty-four hours of the world bulletin
+      board into his home memory space and began checking through
+      it.  The bulletin board was ideal for untraceable reception
+      of messages: anyone on Earth could leave a message [...] If 
+      a user copied the entire board, and /then/ searched it, there
+      was no outside record of exactly what information he was
+      interested in.  There were also simple ways to make nearly 
+      untraceable entries on the board.
+
+DC-nets will remove the "nearly" from the last sentence.
+
+The system I am writing is for research purposes only, I would like to 
+have about 6 to 8 people running it, and then observe it in action. 
+I am not aware of any existing, operational dc-net.  If you know of
+one, please let me know.  I would not like to develop a new, incompatible
+protocol if it is not fundamentally better than something existing.
+
+The dc-net system is independent of how the keys are distributed/created.
+This system assumes that there is already a key stream existing between
+any two users, that it can use.
+
+There are several methods by which keys can be distributed.  The most
+secure would probably be to use a hardware RNG to generate a one-time
+pad, which is then trasfered by some secure means (exchanged on floppies
+in person, or put on a 4GB DAT tape (4mm, $20 or less) and sent by
+some courier service, etc).  Another possibility is to use
+Diffie-Hellman protocol to agree on a set of keys.  The simplest method,
+and one I chose to use in this project, is to generate a random key
+stream, encrypt it with the other person's public key, sign it with
+yours, and send it through e-mail.  See the next message for details
+on message formats used for this.  
+
+Again, the core dc-net system described in this message is in no way
+dependent on this form of key exchange.  Any other key distribution
+method can be "dropped in" without changing anything.
+
+The design document follows:
+
+
+--------------------------------------------------------------------------
+ALGORITHM (pseudocode):
+
+This algorithm is executed independently by each participant.  The list
+of participants, RBSIZE, and MSGSIZE must be agreed on beforehand.  There
+must be an existing keystream, or a way to receive one.
+
+Begin Round (increment round number)
+
+Stage 1 (reservation):
+    Take RBSIZE bits off everyone's pad, xor all together.
+    For every message you need to send, reverse a random bit.
+    Sign with your public key, and transmit to all.
+    When received everyone's block, xor all together.
+    If result is all zeros, round ends.  Go on to the next round.
+
+Stage 2 (transmission):
+    For every '1' bit in reservation block:
+
+    Begin Message (increment message number)
+
+        Take MSGSIZE bits off everyone's pad, xor all together.
+        If the bit was reserved by you, xor with your message.
+        Sign with your public key, transmit to all.
+        When received everyone's block, xor all together, getting message.
+        If message was yours, verify it, mark it as sent.
+        If not, it is a message from someone else. Process as an incoming
+	message.
+
+    End Message (go to next set bit of reservation block if any)
+
+End Round (go to next round, optionally delay to save bandwidth)
+
+
+
+----------------------------------------------------------------------------
+MESSAGE FORMAT:
+
+(messages are sent as signed, armored, non-encrypted PGP messages)
+
+ Subject: dc-net transmission
+
+ DCNET &lt;network&gt;; ROUND &lt;round&gt;; PARTICIPANT &lt;userid&gt;; STAGE &lt;stage&gt; [MSG &lt;n&gt;]
+
+ &lt;binary data stream follows&gt;
+
+----------------------------------------------------------------------------
+FILE FORMATS:
+
+dcnet/&lt;netname&gt;/myname
+
+    your own participant name for that network
+
+
+dcnet/&lt;netname&gt;/participants       
+
+    list of participants and addresses in the following format:
+
+         &lt;userid&gt;:&lt;address&gt;
+
+
+dcnet/&lt;netname&gt;/pad/&lt;participant&gt;
+
+    one-time pad for the user, straight 8-bit binary data
+        optionally pgp-encrypted with your public key, signed to prevent
+        disclosure and tampering; these options not implemented yet
+
+
+dcnet/&lt;netname&gt;/spool/&lt;stage&gt;/&lt;participant&gt;
+
+        spool where you store responses received, until you receive
+        all of them.  Your own responses are stored there too
+
+
+dcnet/&lt;netname&gt;/outgoing/*
+
+        messages you need to send, one message per file.  
+        should be stored encrypted too. 
+
+
+dcnet/&lt;netname&gt;/incoming
+
+        program that will process any messages received from this 
+        network.  In the simplest case this would be a shell script
+        that puts the message to the user's mailbox.  But it could
+        also drop it into another net's outgoing directory if it
+        matches some criteria, or it could be posted to a newsgroup,
+        or anything else you want to do.
+
+
+dcnet/&lt;netname&gt;/log
+
+        this file contains log of transmissions received times and sizes.
+        it should only contain public information, so it can be posted
+        for analysis of net efficiency, bandwidth used, etc.
+
+
+------------------------------------------------------------------------
+NOTES:
+
+I must thank the ILF (Information Liberation Front) for their timely post
+of Chaum's article.  I had started with the two-person example provided
+in the cypherpunks glossary, and independently extended it to apply to
+any number of participants, and had progressed up to the idea of
+hierarchial dc-nets, and was struggling with the question of collision
+detection, when the article was posted.  Chaum's reservation blocks are
+an elegant and efficient solution.  His formal proof of security is
+also reassuring.
+
+RBSIZE is the number of bits in the reservation block.  This should be
+much larger than number of participants, to minimize the chance of
+two participants randomly reserving the same bit (in which case the
+transmission has to be retried in the next round).  A convenient number
+to use is 1024 bites (128bytes), if the number of users is small.
+
+When operating in idle mode (no messages to be sent), RBSIZE bits are
+sent to each participant each round. So the total bandwidth used is,
+assuming 1kbit RBSIZE, 25 participants, and two rounds an hour, about
+150 kilobytes per day sent and received by each participant, or about 14
+bits per second.  This is quite insignificant, considering today's 
+communication equipment.  
+
+MSGSIZE is the size of a message.  This should be about the size of an
+average message, not the largest one.  Making this too large will waste
+bandwidth.  I will use message size of 5kilobytes.  This is quite
+small, but enough for research purposes.  This will make the messages
+several screenfuls long.  Longer messages can be split into parts, and
+reassembled.  For example, this message would be split into two parts.
+
+For each message that is sent, the number of bytes that every every
+participant must send and receive is MSGSIZE times the number of 
+participants (using the above assumptions, 125 kilobytes).
+
+Using a true broadcast media would dramatically reduce these bandwidth
+requirements, making large-scale systems with many participants
+feasible.
+
+This implementation uses a &lt;netname&gt; to distinguish between separate
+dc-nets a user may be participating in.  A netname can be any string, 
+subject to filename limitations.  Keeping them alphanumeric and under 14
+chars should work on most machines.. They might also be case insensitive.
+
+Netnames do not have to be globally unique, one person just can not be on
+two nets of the same name.
+
+Persons are referenced to by &lt;participant&gt;, which would normally be the
+username but can be an arbitrary string subject to the same limitations.
+Two perople with the same participand name can not be on one dc-net.
+
+Are any of you amateur radio (HAM) operators?  I would be interested if
+this system could be run over packet radio.  Are there any regulations
+against encrypted traffic?  
+
+----------------------------------------------------------------------
+FUTURE ENHANCEMENTS:
+
+In addition to mail-based interaction, usenet newsgroups, ethernet broadcasts,
+shared ftp access, and tcp connections should be supported.  
+
+A protocol for dynamically adding participants to the net, removing
+oneself from the net, or changing the address should exist.
+
+A way to deal with malfunctions, such as not receiving a message from
+a participant.  Currently the net will wait forever, for that one message
+to arrive.  A time-out should probably established, after which everyone
+will re-send their contribution without including the missing person.
+This is potentially dangerous, since it is equivalent to disclosing that
+participant's key streams.  Since one-time pad is used, this will not
+compromise earlier communication, but the person must be notified if they
+ever come back on-line to not use that portion of key again.
+
+Support for encrypted and signed storage of keystreams and outgoing
+messages. 
+
+A protocol for routing messages between hierarchical dc-nets.
+
+Automatic splitting of messages longer than MSGSIZE.
+
+A way to indicate the message size in the allocation block, so
+communications would not be wasted on small messages, and large messages
+would not have to be split into pieces.
+
+-----------------------------------------------------------------------
+PLEASE send any comments, criticism, or ideas to:
+
+--
+Yanek Martinson    mthvax.cs.miami.edu!safe0!yanek     uunet!medexam!yanek
+this address preferred --&gt;&gt; yanek@novavax.nova.edu &lt;&lt;-- this address preferred
+Phone (305) 765-6300 daytime   FAX: (305) 765-6708  1321 N 65 Way/Hollywood
+      (305) 963-1931 evenings       (305) 981-9812  Florida, 33024-5819
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00113.html">Remailer problem at rebma fixed</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00120.html">Electronic P.O.Boxes</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00113.html">Remailer problem at rebma fixed</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00120.html">Electronic P.O.Boxes</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00114"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00114"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

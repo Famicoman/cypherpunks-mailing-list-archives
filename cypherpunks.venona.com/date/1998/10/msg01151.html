@@ -1,0 +1,222 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Shuffling (fwd) -->
+<!--X-From-R13: Xvz Qubngr <enintrNrvafgrva.ffm.pbz> -->
+<!--X-Date: Fri, 30 Oct 1998 08:42:36 +0800 -->
+<!--X-Message-Id: 199810300024.SAA21942@einstein.ssz.com -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Shuffling (fwd)</TITLE>
+<LINK REV="made" HREF="mailto:ravage@einstein.ssz.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01150.html">Date Prev</A>][<A HREF="msg01333.html">Date Next</A>][<A HREF="msg01189.html">Thread Prev</A>][<A HREF="msg01176.html">Thread Next</A>][<A HREF="index.html#01151">Date Index</A>][<A HREF="threads.html#01151">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Shuffling (fwd)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@einstein.ssz.com">cypherpunks@einstein.ssz.com</A> (Cypherpunks Distributed Remailer)</LI>
+<LI><em>Subject</em>: Re: Shuffling (fwd)</LI>
+<LI><em>From</em>: Jim Choate &lt;<A HREF="mailto:ravage@einstein.ssz.com">ravage@einstein.ssz.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 29 Oct 1998 18:24:43 -0600 (CST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Forwarded message:
+
+&gt; Date: Thu, 29 Oct 1998 19:22:52 +0100
+&gt; From: Anonymous &lt;nobody@replay.com&gt;
+&gt; Subject: Re: Shuffling
+
+&gt; For any N greater than two, the random-swap algorithm cannot produce
+&gt; a perfectly smooth randomization of A[N].
+
+If by 'perfectly smooth randomization of A[N]' you mean that any two
+members of A[N] have equaly likelyhood to be swapped, and hence any pattern
+of A[N] members being possible with equal odds then this is incorrect.
+
+For that arrangement to be relevant your (P)RNG function must choose any
+element from 0 to N with equal odds, it's probability curve must be a
+horizontal line at 1/n for each N. If it ain't you aren't going to randomly
+shuffle the elements of A[] since each element doesn't have the same odds of
+being selected in this (or every other) turn.
+
+&gt; A perfect randomization of A[N] would give equal probability to each of
+&gt; the N! (N factorial) possible rearrangements of A.
+
+Ah, but there aren't N! rearrangements of A if we are limited to only
+swapping two elements. There are at best n^2.
+
+Allow me to explain...
+
+&gt; Each iteration of the random-swap algorithm makes two choices of the N
+&gt; values to swap.  There are N^2 possible ways these two choices could go.
+
+Ok, we shoot off our first random number, 1/n. We then shoot off our second
+random number, also 1/n. The combination is 1/n * 1/n or 1/n^2. Now if we
+add the stipulation about the i'th and i+1'st numbers not being identical
+then the odds are 1/n * 1/n-1 (note that this boundary condition is
+artificial and may in fact be problematic, there is no logical reason to
+keep i and i+1 from being the same n if we want truly random behaviour).
+
+&gt; To calculate the probabilities after an iteration, we try all the N^2
+&gt; choices and count how many instances of each arrangement are produced.
+
+Huh? What probability are we calculating here, the odds of getting the
+particular pattern we have now generated? If so that is either 1/n^2 or
+1/n(n-1) depending on the boundary condition.
+
+&gt; This gives each possible arrangement a probability in the form of
+&gt; k/N^2, where k of the N^2 choices led to that arrangement.
+
+What arrangement, the one we start with before or after the swap? If we
+start with arrangement I and then swap two elements we get I+1. There are
+only two ways to get to any particular arrangment. An identical arrangement
+where we swap i with itself (ignoring the potential boundary condition)
+and the arrangement where the l'th and j'th elements are swapped. As long as
+we're only swapping two elements there can only be two possible parent
+patterns for any given resultant pattern. Now if we swap more than 2
+elements it gets big fast.
+
+I seem to be reading an implication that given a particular pattern, I, there
+is some rhyme or reason to the pattern of previous I's that got us here,
+there isn't. For any given pattern there is a infinite number of potential
+paths that would get to any particular.
+
+Let's say we have:
+
+[ 0  1  2  4  3 ]
+
+and we shuffle and get,
+
+[ 0  4  2  1  3 ]
+
+or,
+
+[ 0  1  2  4  3 ]
+
+Now if the question is how many possible ways could be have gotten to the
+original, [ 0  1  2  4  3 ], then there are two ways to calculate that,
+
+given no stipulation on reptitions we get:
+
+n^2
+
+given a stipulation for no repetitions we get:
+
+(n)(n-1)
+
+We can generalize this somewhat if we let s represent our current sequence
+and our goal is to determine the number of possible previous states the
+sequence could have held.
+
+s-1 = n^2
+
+or,
+
+s-1 = n(n-1)
+
+Now if we want to calculate the number of possible parent generations for
+s-1 *from the perspective of s0* we get:
+
+s-2 = (s-1)^2 = (n^2)^2
+
+or,
+
+s-2 = (s-1)((s-1)-1) = (n^2)((n^2)-1)
+
+Thus,
+
+s-3 = (s-2)^2 = ((s-1)^2)^2 = ((n^2)^2)^2
+
+or,
+
+s-3 = (s-2)((s-2)-1) = ( (n^2)((n^2)-1) )( ((n^2)((n^2)-1) )-1) =
+
+(n^4 - n^2)( (n^4 - n^2) - 1)
+
+for the second form only,
+
+s-4 = (s-3)((s-3)-1) = ((n^4-n^2)((n^4-n^2)-1))(((n^4-n^2)((n^4-n^2)-1))-1)
+
+    = ((n^4-n^2)^2 - (n^4-n^2)) (n^4-n^2)^2-(n^4-n^2))-1)
+
+(I'm going to stop here trying to resolve this equation, I don't have the
+time. Note that the relation is i(i-1) for each generation so we only
+need to affix a relation to i and the generation number. It's worth noting
+this can be resolved recursively.)
+
+These can be generalized for the first form to:
+
+C(s-i) = n^(2^i), where i is the number of generations going back.
+
+The inverse makes a handy measure of entropy as well as telling you the odds
+of selecting any particular path from one pattern to another pattern given
+the number of elements swaps that are allowed.
+
+
+    ____________________________________________________________________
+ 
+       To know what is right and not to do it is the worst cowardice.
+
+                                                     Confucius
+
+       The Armadillo Group       ,::////;::-.          James Choate
+       Austin, Tx               /:'///// ``::&gt;/|/      ravage@ssz.com
+       www.ssz.com            .',  ||||    `/( e\      512-451-7087
+                           -====~~mm-'`-```-mm --'-
+    --------------------------------------------------------------------
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01150.html">test</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01333.html">100S OF FREE PICS'N'LINKS EVERY DAY!</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01189.html">Re: Shuffling (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01176.html">Re: Shuffling (fwd)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01151"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01151"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

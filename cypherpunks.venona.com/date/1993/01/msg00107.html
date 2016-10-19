@@ -1,0 +1,131 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Details on return envelopes (padding) -->
+<!--X-From-R13: Sevp [rffvpx <revpNcnenyynk.pbz> -->
+<!--X-Date: Fri, 15 Jan 93 01:40:12 PST -->
+<!--X-Message-Id: 9301150753.AA29918@parallax.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Details on return envelopes (padding)</TITLE>
+<LINK REV="made" HREF="mailto:eric@parallax.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00106.html">Date Prev</A>][<A HREF="msg00113.html">Date Next</A>][<A HREF="msg00120.html">Thread Prev</A>][<A HREF="msg00113.html">Thread Next</A>][<A HREF="index.html#00107">Date Index</A>][<A HREF="threads.html#00107">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Details on return envelopes (padding)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Details on return envelopes (padding)</LI>
+<LI><em>From</em>: Eric Messick &lt;<A HREF="mailto:eric@parallax.com">eric@parallax.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 14 Jan 93 23:53:19 PST</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Hal writes:
+&gt; I did spot one possible problem.  Remailer &amp;V sends to &amp;W an address
+&gt; field that looks like:
+&gt; 
+&gt; Addr: w(B), w(Sw, Qw, C, &amp;X, x(C), x(...), pad)
+&gt; 
+&gt; but I don't think &amp;V has enough information to create the 2nd item here.
+&gt; The reason for the A, B, etc. keys is, I think, to allow new padding to
+&gt; be done as the message gets passed between each pair of remailers.
+&gt; I think that may need to be used here as well.  &amp;V can't put padding into
+&gt; the w(Sw,...) block.
+
+It may not be at all obvious or intuitive, but &amp;V *CAN* put padding
+into the w(...) block.  I'm no longer trying to do this (see my
+previous posting), but it could still be useful in some situations, so
+I'll try to explain it more clearly.
+
+PGP uses binary structures for all of this, but I'm going to pretend
+that it's all ascii, just so we can see what's going on easier.  That
+block w(...) looks something like this:
+
+CTB: RSA			&lt;-- that's *C*ypher *T*ype *B*yte
+Length: 12345 bytes
+Key_ID: w
+IDEA_key: RSA(w, random_key)
+CTB: IDEA
+Length: 12315
+	&lt;random initialization bytes and cypher check&gt;
+	CTB: Plain Text
+	Length: 12300
+	Here we have 12300 characters.  Note that all of the lines
+	that are indented are encrypted with random_key using
+	the IDEA cypher.
+	...End of the encrypted text.
+
+
+To add padding to this, simply append some cryptographically strong
+random bytes to the end, and adjust the unencrypted lengths by that
+much.  No one can tell that your new bogus lengths don't match the
+length on the plaintext packet without actually being able to see the
+plaintext packet length field.  The decryptor believes the plaintext
+packet length, and automatically throws away the bogus bytes that were
+decrypted.
+
+While writing this, I realized that when I tested this, I may have
+only changed the outermost length.  It is possible (but I think it is
+highly unlikely) that PGP would get sick if you changed the second
+length value.  Since I no longer need to do this, I don't have any
+incentive to check this out again.  It's not that difficult, but I
+hate editing binary files...
+
+
+-eric messick
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00106.html">Re: Details on return envelopes</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00113.html">need for more anon remailer sites</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00120.html">/usr/lib/newsbin/ctl/newgroup: `news@math.fu-berlin.de (Math Department)' tried (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00113.html">need for more anon remailer sites</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00107"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00107"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

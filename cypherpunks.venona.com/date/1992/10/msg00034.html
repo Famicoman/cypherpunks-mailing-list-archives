@@ -1,0 +1,252 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: The technical explanation of "::" incoming header pasting -->
+<!--X-From-R13: Sevp Vhturf <uhturfNfbqn.orexryrl.rqh> -->
+<!--X-Date: Fri, 9 Oct 92 09:43:05 PDT -->
+<!--X-Message-Id: 9210091650.AA12173@soda.berkeley.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>The technical explanation of "::" incoming header pasting</TITLE>
+<LINK REV="made" HREF="mailto:hughes@soda.berkeley.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00033.html">Date Prev</A>][<A HREF="msg00038.html">Date Next</A>][<A HREF="msg00033.html">Thread Prev</A>][<A HREF="msg00038.html">Thread Next</A>][<A HREF="index.html#00034">Date Index</A>][<A HREF="threads.html#00034">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>The technical explanation of "::" incoming header pasting</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: The technical explanation of "::" incoming header pasting</LI>
+<LI><em>From</em>: Eric Hughes &lt;<A HREF="mailto:hughes@soda.berkeley.edu">hughes@soda.berkeley.edu</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 9 Oct 92 09:50:08 -0700</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+There's a new feature in the remailing software.
+
+Some people can't add arbitrary header fields because of mailer or
+gateway restrictions.  This restricts them from using the remailer.  I
+have added a facility to allow new header fields to be pasted onto the
+end of a header when the mail arrives.  This effectively happens
+before processing by the remailer software.  These new fields exist
+during transit in the message body, where they remain untouched.  Only
+after the message is delivered to my account does this operator
+take effect.
+
+Syntax: If the first line of the body is the two characters "::", then
+the following lines are appended to the header, up to the next blank
+line.
+
+Here's how it works.
+
+First of all, here's my new .maildelivery file:
+
+------- cut here -------
+#
+# field			pattern	action/	string 
+#				result	(quote included spaces)
+#
+Request-Remailing-To	""	pipe R	"perl remailer/remail.perl" 
+Request-Remailing-To	""	file R	remailer/archive
+*			""	pipe R	"/usr/local/lib/mh/rcvtty -biff"
+*			""	pipe ?	"perl remailer/incoming.header.perl"
+------- cut here -------
+
+Comments are indicated by #.  The Request-Remailing-To lines have been
+there.  The second of the makes an archive for debugging purposes.  It
+will go eventually.  The third field, "*", indicates all fields, it
+runs 'rcvtty' on my mail; this replaces the function of biff, since
+mail is getting piped to slocal now, disabling biff.
+
+The last line is the important one.  It says "If the mail hasn't been
+delivered by now, run the incoming header rewrite script on it.  If
+that doesn't work, continue trying to deliver it."
+
+Now here's the trick.  slocal has no way of taking the output of the
+rewrite and continuing to process it.  (It should.  It would make this
+whole job easy.)  So in order to continue processing, you need to
+redeliver the mail.  You could invoke sendmail and mail it back to
+yourself, but that would mangle the existing header.  So the thing to
+do is to recursively invoke slocal from within the perl script.
+
+Here's the perl script to do all this:
+
+------- cut here -------
+  # First read in the whole header.
+  # We check for the Second-Pass: line to detect infinite loops.
+
+while (&lt;&gt;) {
+	last if /^$/ ;
+	exit 1 if /^Second-Pass:/ ;
+	$header .= $_ ;
+}
+
+  # We have just read the last line in the header.
+  # Now we check to see if there is a pasting operator.
+
+if ( ( $_ = &lt;&gt; ) &amp;&amp; /^::$/ ) {
+	while (&lt;&gt;) {
+		last if /^$/ ;
+		$header .= $_ ;
+	}
+} else {
+	# There is either an empty body or no pasting operator
+	#   Thus exit with a return code of 1 to indicate that
+	#   the mail has not been delivered.
+		exit 1 ;
+}
+
+# There was a header pasting operator.
+#   So we open 'slocal' as a pipe, effectively redelivering the mail
+#   back to ourselves.
+
+#open( OUTPUT, "&gt;foo" ) ;
+open( OUTPUT, "| /usr/local/lib/mh/slocal -user hughes" ) ;
+select( OUTPUT ) ;
+
+# print a "From " line to satisfy slocal
+
+@weekdays = ( "Sun","Mon","Tue","Wed","Thu","Fri", "Sat" ) ;
+@months = ( "Jan","Feb","Mar","Apr","May",
+	"Jun","Jul","Aug","Sep","Oct","Nov","Dec" ) ;
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime ;
+printf "From hughes  %s %s ", @weekdays[ $wday ], @months[ $mon ] ;
+printf "%2d %02d:%02d:%02d 19%d\n", $mday, $hour, $min, $sec, $year ;
+
+# Now just print out the message
+
+print $header ;
+print "Second-Pass:\n" ;
+print "\n" ; 
+while (&lt;&gt;) {
+} continue {
+	print ;
+}
+
+------- cut here -------
+
+Here's how the perl script works.
+
+The first loop reads lines from the existing header.  When it sees a
+blank line (regexp /^$/) it terminates the loop.  If it sees a field
+"Second-Pass", it knows it has filtered this message before and exits
+with a return code indicating that the mail has not been delivered.
+The variable $header is appended with the current header line.
+$header contains the whole header when the loop terminates.
+
+Properly speaking, the Second-Pass test is not necessary to detect
+infinite loops.  Since the pasting operator gets removed during the
+rewrite, the script won't return an exit status of 0 more times than
+the pasting operator appears.  But should something get screwed up,
+such as a different module adding pasting commands (how? I don't know),
+the Second-Pass test should prevent infinite recursion.
+
+The next statement reads another line from the input file.  This line
+is the first line of the message body.  If this line is the pasting
+operator, then header lines are accumulated in $header as before until
+a blank line.  The difference is that these header lines are being
+read from the body of the message.  If there is no pasting operator,
+the script exits undelivered.
+
+At this point we now have to redeliver the message back to ourselves.
+We first open slocal as the output pipe.
+
+The next section is a kludge.  It turns out that slocal strips off the
+out-of-band "From " (no colon) line that the mail delivery system
+uses.  In other words, the message which slocal pipes into its pipes
+is not identical to the message it itself received.  This means that
+slocal cannot be directly recursed.  What this section does is to
+create a "From " line to make slocal happy.  It calls localtime() and
+then formats those numbers into the proper form.
+
+It turns out that slocal will deliver this mail without the "From "
+line, even to /usr/spool/mail, but it doesn't do so properly.  On my
+system, in added some delimiters which I think I've tracked down to
+the 'mtstailor' file, namely mmdelivery1 and mmdelivery2.  Since these
+are not null on my system, there's some garbage added which screws up
+separation of the spool file into messages.  Adding a "From " line
+fixes that.  This misbehavior may not be so surprising, considering
+that slocal was "meant" to be invoked only in a .forward file.
+
+Now we print the variable $header which contains the whole header,
+including newlines.  Using a single string removes the need for an
+array.  We added the Second-Pass line and a blank line for the end of
+the header.  The final loop prints out the rest of the message body.
+
+There is another way to proceed to get the same functionality.  One
+could write a filter to translate the first occurrence only of
+\n\n::\n into \n. We could then pass the message through this filter
+before slocal saw it.  And for now, that would do the same thing.
+
+But suppose we want more that one rewrite rule active?  Then you would
+only be able to apply each rewrite rule exactly once in fixed order.
+You want to be able to rewrite a message and then apply all the
+rewrite rules again.  
+
+At least one other rewrite rule is planned: automatic decryption.
+Since decrypting a message will completely change the body, and since
+some of the header fields may need to be hidden, you have to be able
+to decrypt the body and then paste on header lines.  But since you
+need to indicate an encrypted body by a header line (well, not really,
+but it's more reliable), and since some people can't add these header
+lines, you need to paste lines before encryption as well.
+
+Thus the rewrite rules need to be applied asyncronously and hence I'm
+using a fairly complex slocal scheme to do a simple filter.
+Eventually I hope to write an equivalent to slocal which knows about
+message rewrites and simple filters, but that's for later.
+
+Eric
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00033.html">my key</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00038.html">+-=*^</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00033.html">my key</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00038.html">+-=*^</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00034"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00034"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

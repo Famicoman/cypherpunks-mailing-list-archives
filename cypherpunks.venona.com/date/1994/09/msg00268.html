@@ -1,0 +1,147 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Cracking MD5 for $10M -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Fri, 9 Sep 94 11:25:43 PDT -->
+<!--X-Message-Id: 199409091825.LAA00257@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9409091639.AA29959@mycroft.rand.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Cracking MD5 for $10M</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00266.html">Date Prev</A>][<A HREF="msg00277.html">Date Next</A>][<A HREF="msg00259.html">Thread Prev</A>][<A HREF="msg00283.html">Thread Next</A>][<A HREF="index.html#00268">Date Index</A>][<A HREF="threads.html#00268">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Cracking MD5 for $10M</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Cracking MD5 for $10M </LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 9 Sep 1994 11:25:11 -0700</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00259.html">9409091639.AA29959@mycroft.rand.org</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Jim Gillogly &lt;jim@rand.org&gt; writes:
+
+&gt;Hal discusses using the Distinguished Points method to find hash
+&gt;collisions presented by Michael Wiener with Paul van Oorschot at Rump
+&gt;Crypto '94, and lists two benefits:
+
+&gt;(1) saves space in searching for loops on a single processor;
+&gt;(2) allows parallel searches for collisions over multiple processors.
+
+&gt;I claim it's useful only for (2), because another algorithm dominates it
+&gt;for single processor loop detection... at least in storage space.
+&gt;["rho" method elided]
+
+Yes, this is a good point, the main advantage of the DP algorithm is
+that it parallelizes.  Rho does have the problem that you have to run
+3 MD5's for each step, but OTOH it does not have the overhead of saving
+and checking the distinguished points, so which one would be best on a 
+single processor would depend on the relative costs.
+
+&gt;Do you (Hal?) or anybody else know whether Wiener and van Oorschot were
+&gt;taking into account the contraction of the range each time you iterate
+&gt;MD5?  I think the size of the set of all numbers that are the result of
+&gt;MD5ing a 128-bit number is considerably smaller than 2^128... is it 1/e of
+&gt;that?  Anybody know about random mappings?
+
+They didn't mention anything about this, and I would think they would have
+if they had considered it.  My intuition was that x=MD5(x) would cover a
+large fraction of the 128 bit output space, but on further thought Jim
+appears to be right: with n input values into a random function (n would
+be 2^128 in this case), the chance of a particular output being missed for 
+any one input would be 1-1/n, and the chance of it being missed for all
+n inputs would be (1-1/n)^n.  Taking the limit as n approaches infinity
+gives 1/e as the fraction of values which would be missed.  This means
+that the fraction of hits would be 1 - 1/e, much lower than I had
+guessed.
+
+&gt;Subsequent iterations reduce
+&gt;it further, though of course not by 1/e each time, so that the set of
+&gt;numbers that are the result of iteratively MD5ing a number N times should
+&gt;be an appreciably smaller set to be groping around in.
+
+The way I figure it, if the fraction of the original n is f (which would be
+1 before the first iteration, and 1 - 1/e before the 2nd iteration based on
+the above), the chance of a point being missed is (1-1/n)^(nf), which is
+1/e^f.  So f would be found by f = 1 - 1/e^f, iterating once per MD5
+iteration and starting f at 1.  I just did an experiment of iterating this.
+After 100 times f was about .02; after 1000 times f was about .002,
+suggesting f = 2/iterations.  If this is right, you might be able to get
+a birthday match after only the cube root of n tries rather than the
+square root of n, or about 2^44 iterations or so rather than 2^64, because
+at that point you are only looking at 2^85 possible output values.
+
+This result is only really valid for serial machines; parallel ones
+search more per iteration so this would move you back towards the 2^64
+number.  It does imply that you don't really get k-fold speedup with k
+machines if you take this effect into consideration.
+
+&gt;	Jim Gillogly
+&gt;	18 Halimath S.R. 1994, 16:12
+
+Gee, my calendar must be off!
+
+Hal
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00259" HREF="msg00259.html">Re: Cracking MD5 for $10M</A></STRONG>
+<UL><LI><EM>From:</EM> Jim Gillogly &lt;jim@rand.org&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00266.html">Re: CONTROL FREAKS (nee, AIDs testing and privacy)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00277.html">Re: pgp key servers</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00259.html">Re: Cracking MD5 for $10M</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00283.html">Re: Cracking MD5 for $10M</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00268"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00268"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

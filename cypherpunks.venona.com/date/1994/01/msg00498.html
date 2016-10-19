@@ -1,0 +1,197 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: mailing list software -->
+<!--X-From-R13: ewpNtah.nv.zvg.rqh (Dnl) -->
+<!--X-Date: Mon, 24 Jan 94 00:26:34 PST -->
+<!--X-Message-Id: 9401240819.AA07102@churchy.gnu.ai.mit.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>mailing list software</TITLE>
+<LINK REV="made" HREF="mailto:rjc@gnu.ai.mit.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00497.html">Date Prev</A>][<A HREF="msg00500.html">Date Next</A>][<A HREF="msg00495.html">Thread Prev</A>][<A HREF="msg00525.html">Thread Next</A>][<A HREF="index.html#00498">Date Index</A>][<A HREF="threads.html#00498">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>mailing list software</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: mailing list software</LI>
+<LI><em>From</em>: <A HREF="mailto:rjc@gnu.ai.mit.edu">rjc@gnu.ai.mit.edu</A> (Ray)</LI>
+<LI><em>Date</em>: Mon, 24 Jan 94 3:19:07 WET</LI>
+<LI><em>Cc</em>: <A HREF="mailto:rjc@gnu.ai.mit.edu">rjc@gnu.ai.mit.edu</A> (Ray)</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+   If you really want to block posters and trap unsubscribe messages,
+cypherpunks is welcome to use the extropian's list software (by the
+end of next week it should be complete enough for someone else to run
+it without my help) Here's what it can do:
+
+Major:
+
+o modular design
+o mail delivered by custom "user agents" which can filter a user's mail
+  at the distribution site (``remote kill file'')
+o remote system administraion (optional)
+o password authentication (optional)
+o accounting system for commercial "pay for use" subscription mode (optional)
+o caches messages (user definable) so users who filter a thread can
+  retrieve it later
+o internalized cron for running time dependent activities
+  (right now, the utilities that come with it generate weekly
+   list statistics (with pretty ascii graphs), back up user list,
+   move and compress logs, send digests, filterlists, and more)
+o incoming filter interface for doing useful things like 
+  decrypting signed messages or remapping anonymous id's into real
+  e-mail addresses (``cryptofilt'' is a utility I wrote to try this out,
+    although it needs lots of work)
+o user controllable digestification - users can turn digest mode on or off
+  and alter the size of their digests
+o nightly filter list - when messages are filtered out by your filtering
+  agent, you still get a list of who and what was filtered incase something
+  was killed that you wanted to receive. You can then request to have it
+  resent
+o anti-spamming routines
+  * small messages can be configured to be trapped (such as 1 liner 
+	``unsubscribes'' which are then forwarded to the list administrator)
+  * large messages are truncated and stored for later retrieval for those
+      who request them (configurable, I have it set to 50k right now)
+  * blacklist - a regexp can be applied to incoming headers to prevent
+                certain addresses getting through
+  * ``members only mode'' - the list software rejects posts from those
+     who are not subscribed
+o duplicate messages trapped - the list software keeps a recent database
+  of message-ids and their header info
+o thread tracking via subject and ``in-reply-to:''
+o built in help system
+o automatic sending of welcome/goodbye messages for subscribe/unsubscribe
+o automated billing (part of the accounting system)
+o complete logging of almost every list transaction (optional)
+o cpu cost logging (in case the list is run from a commercial service
+   like the extropians where we have to pay to run the list)
+o distributed distribution - if your machine can't handle the mail bandwidth,
+    the list software packs up the message and the list of users it is
+    addressed to and sends it off to another machine for delivery
+
+The delivery agent which comes with the software supports the following:
+
+exclude messages by user
+exclude messages by thread
+include messages by user
+include messages by thread
+
+  Several people on Extropians leave their agent settings in ``exclude all''
+mode. They then view the list of filtered messages and include the
+threads which interest them. ``exclude user detweiler|sboxx'' would prevent
+Detweiler's posts from reaching you for example. (assuming he wasn't
+blacklist or he wasn't a subscriber and the list software was in 
+members only mode)
+
+Other agent commands:
+
+private - automatically deliver response to a list of users privately and
+set ``reply-to'' to point to you
+resend - grab ranges of messages or messages by thread from the message cache
+         sorts them into a digest and sends them to you
+search - performs an agrep on the cache and sends you a list of messages
+         that match
+
+
+The disadvantages of running it:
+
+o command syntax learning curve for new users
+o documentation sucks (virtually nonexistent)
+o code needs to be cleaned up a lot. I learned perl at the same
+  time I wrote it. Fortunately, perl is easy to learn and the greatest
+  language in the universe.
+o cpu hog (5-8 seconds to process a message, only a problem if your list
+    is high volume like extropian's which averages 50 messages per day)
+    (extropians runs multiple agents so our cpu is much higher)
+o complicated to set up (but easy to administrate)
+o a little bugged, because I keep extending it
+  however in the two weeks (before classes start) I have been doing nothing
+  but bug killing
+
+Requirements
+o perl
+o a good dbm library (normal dbm is a little tight, so users won't be
+  able to store that many exclude settings. about 10-15 is the max)
+  I personally recommend the berkeley db/hashing package. I recompiled
+    perl with it and the code is faster and the disk space used is a lot
+    less
+o about 4 megs disk space
+  * 1 meg for the message cache
+  * 1 meg for the code
+  * 1 meg for the recompiled perl with better libdbm
+  * 1 meg to hold the logs (although you can disable this)
+  you can get away with 2 megs of space or less
+ 
+o patience
+
+ 
+  I would consider leasing it (free) to cypherpunks. Other people will have to
+wait to get it. The reason is because I am not yet done developing it,
+documenting it, and I don't own it. (I developed it on a contract with
+Extropy Institute and they own it.) Cypherpunks has already been given
+permission to use it if they want (and I wish they would, or atleast
+run a digest list so I can resubscribe)
+
+-Ray
+
+
+-- Ray Cromwell        |    Engineering is the implementation of science;    --
+-- rjc@gnu.ai.mit.edu  |       politics is the implementation of faith.      --
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00497.html">Re: your mail</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00500.html">REMAILER ABUSE: Detweiler Accounts</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00495.html">Remailer Policies</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00525.html">Re: mailing list software</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00498"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00498"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

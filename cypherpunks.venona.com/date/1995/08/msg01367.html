@@ -1,0 +1,180 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: SSL trouble -->
+<!--X-From-R13: Bvrgr Pebbxf <Bvrgr.PebbxfNpy.pnz.np.hx> -->
+<!--X-Date: Sun, 27 Aug 95 12:21:34 PDT -->
+<!--X-Message-Id: "swan.cl.cam.:079000:950827192056"@cl.cam.ac.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199508271848.LAA18104@Csli.Stanford.EDU -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: SSL trouble</TITLE>
+<LINK REV="made" HREF="mailto:Piete.Brooks@cl.cam.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01350.html">Date Prev</A>][<A HREF="msg01357.html">Date Next</A>][<A HREF="msg01350.html">Thread Prev</A>][<A HREF="msg01354.html">Thread Next</A>][<A HREF="index.html#01367">Date Index</A>][<A HREF="threads.html#01367">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: SSL trouble</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Christian Wettergren &lt;<A HREF="mailto:cwe@Csli.Stanford.EDU">cwe@Csli.Stanford.EDU</A>&gt;</LI>
+<LI><em>Subject</em>: Re: SSL trouble</LI>
+<LI><em>From</em>: Piete Brooks &lt;<A HREF="mailto:Piete.Brooks@cl.cam.ac.uk">Piete.Brooks@cl.cam.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 27 Aug 1995 20:20:49 +0100</LI>
+<LI><em>Cc</em>: <A HREF="mailto:Damien.Doligez@inria.fr">Damien.Doligez@inria.fr</A> (Damien Doligez), <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>,       <A HREF="mailto:Piete.Brooks@cl.cam.ac.uk">Piete.Brooks@cl.cam.ac.uk</A></LI>
+<LI><em>In-Reply-To</em>: Your message of Sun, 27 Aug 1995 11:48:03 -0700. &lt;<A HREF="msg01350.html">199508271848.LAA18104@Csli.Stanford.EDU</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; And there is the third alternative, hierarchical search, which
+&gt; distributes the task of giving out keys. This is admittedly a
+&gt; little bit more involved, of course. The SKSP had provisions for
+&gt; doing it hierarchically, as far as I understood it, although
+&gt; I might be wrong.
+
+Indeed, it does, and we plan to provide a "local CPU farm" server
+which can be used when a number of machine are sharing the same ID.
+
+&gt; What I wonder is wheter the server congestion really showed that
+&gt; the protocol is flawed.
+
+No -- but that the early version of the code were buggy.
+
+As it is, 6 clients which are still running are managing to keep the
+server permanently busy.
+
+I think the protocol itself is OKish ..
+
+&gt; Handing out bigger blocks relieved the  situation.
+
+Not really.
+
+It did however mean that when a chunk was allocated, three times as
+much work was done !
+
+
+&gt; 1. The server knows approximately how many requests per second it 
+&gt; can take, and tells the clients this information.
+
+Hmm -- hard to tell -- the *server* can take lots, but if the
+*clients* have problems, things go wrong.
+
+A select/poll server is not going to be tried on the next one -- that'll only
+be used if that goes slow as well ...
+
+&gt; 2. The client initially does a testrun, and determines how fast it 
+&gt; runs.
+
+The latest version of brloop starts with a call of "brutessl -q -t 1"
+to decide how big the chunks should be ...
+
+&gt; 3. Each client is handed a block that, given the approximate number
+&gt; of currently pending and active blocks out there, together with the
+&gt; calculation time of the client, will give an acceptable number of 
+&gt; requests/time unit to the server.
+
+I suspect that figures would be too crude ...
+The server would have to keep track of clients and how long their
+sessions take ....
+Should a client which takes 20s for a session be given blocks that take
+20 times longer to process than one which manages it in 1s ?
+
+&gt; 4. The server acks (S-ACK) the block-ack to the client.
+
+Sorry -- what does that mean ?
+
+&gt; If the client doesn't get an ack (S-ACK) from the server for its ack (B-ACK),
+&gt; it keeps the ack around til the next block is calculated, and sends this 
+&gt; ack together with the new acks.
+
+Sorry -- I'm lost ...
+
+&gt; 5. The server can hand out allocated blocks to others, for those
+&gt; blocks that has not been acked in three times the estimated
+&gt; calculation time. 
+
+I've split allocation from ACKs.
+One server just doles out keys, the other just collects the ACKs.
+I don't want to add that sort of realtime feedback.
+
+What do you do about WWW clients ?
+
+What if someone grabe a big chunk, farms it out to several machines,
+and they ACK bits back ... ?
+
+
+&gt; 6. If a client is unable to get a key allocation after a number of 
+&gt; tries, it can chose a random block and search that. It can then be
+&gt; acked to the server. This may result in overlapping blocks, but this
+&gt; should not pose such a big problem, since most of the key space is
+&gt; searched in an orderly manner anyway.
+
+Again no realtime fedback from ACKs :-(
+
+&gt; It would be very interesting if detailed statistics or the logfile
+&gt; of the server could be published somewhere. How many machines were
+&gt; involved? etc...
+
+That'll come -- as the WWW pags says. pelase let me know what stats you'd like.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01354" HREF="msg01354.html">SSL ACKs vs. Anonymity (was Re: SSL trouble)</A></STRONG>
+<UL><LI><EM>From:</EM> Nathan Loofbourrow &lt;loofbour@cis.ohio-state.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01350" HREF="msg01350.html">Re: SSL trouble</A></STRONG>
+<UL><LI><EM>From:</EM> Christian Wettergren &lt;cwe@Csli.Stanford.EDU&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01350.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01357.html">Re: proliferation of voicesystems</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01350.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01354.html">SSL ACKs vs. Anonymity (was Re: SSL trouble)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01367"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01367"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

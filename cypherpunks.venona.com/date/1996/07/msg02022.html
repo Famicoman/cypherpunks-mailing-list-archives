@@ -1,0 +1,180 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: emscrypt 0.01 ALPHA -->
+<!--X-From-R13: [ngg Qnecragre <zpnecragNRhfx.bofpher.arg> -->
+<!--X-Date: Wed, 24 Jul 1996 19:57:28 +0800 -->
+<!--X-Message-Id: 199607240857.DAA06070@Dusk.obscure.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>emscrypt 0.01 ALPHA</TITLE>
+<LINK REV="made" HREF="mailto:mcarpent@Dusk.obscure.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02021.html">Date Prev</A>][<A HREF="msg01878.html">Date Next</A>][<A HREF="msg02021.html">Thread Prev</A>][<A HREF="msg01947.html">Thread Next</A>][<A HREF="index.html#02022">Date Index</A>][<A HREF="threads.html#02022">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>emscrypt 0.01 ALPHA</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: emscrypt 0.01 ALPHA</LI>
+<LI><em>From</em>: Matt Carpenter &lt;<A HREF="mailto:mcarpent@Dusk.obscure.net">mcarpent@Dusk.obscure.net</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 24 Jul 1996 03:56:35 -0500 (CDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A></LI>
+<LI><em>Reply-to</em>: <A HREF="mailto:mcarpent@mailhost.tcs.tulane.edu">mcarpent@mailhost.tcs.tulane.edu</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+
+I finally managed to find some time to do a little testing of emscrypt and
+make some of the changes that were suggested here earlier.  It is still
+rather ugly and I haven't added many of the features/capabilities I hope to
+eventually implement.  But I'm making it available so that people can play
+with it if they want.  It looks like I'm going to be very busy for at least
+the next month trying to finish up the work for my master's degree, so I
+probably won't be making any major changes for a while.
+
+emscrypt's purpose is to automatically run PGP signed scripts received by 
+e-mail and return the results to the submitter.  emscrypt is a heavily
+mutated version of morepgp, originally by Jason Steiner and modified by Greg
+Spencer.
+
+Please realize that this program has NOT undergone extensive testing, so you
+may encounter strange behaviour.  Make sure you read the documentation that
+exists.  Using this program may make your system insecure, especially
+if you don't follow the installation procedure carefully.  Use at your own
+risk.
+
+You should be able to find emscrypt and some documentation at:
+<A  HREF="http://www.bmen.tulane.edu/~carpente">http://www.bmen.tulane.edu/~carpente</A>
+
+Look under the "Other random projects or possibly useful stuff" heading.
+
+
+In order to try out emscrypt you need the following:
+
+* Perl -- emscrypt is written in Perl.
+
+* PGP 2.6.2 -- Other versions may work, but I haven't tested them and
+emscrypt relies strongly on knowing the format of the PGP output messages.
+
+* Procmail -- For passing incoming mail to emscrypt.  This can be accomplished
+in other ways, but at this point I haven't tried any of them.  If you don't
+have procmail you can still play with emscrypt by piping messages to it
+manually.  I strongly suggest you do this anyway, to make sure you trust
+emscrypt to answer incoming mail.
+
+
+
+Here are the major things that have changed with emscrypt since I described
+it here a while ago:
+
+There are now two required headers which must be included in the body of
+the signed message: 'Reply-To:' and 'PGP-Key-Fingerprint:'. Both must appear
+before the beginning of the script.  The beginning of the script is
+considered to be anything other than the above headers, blank lines, or
+lines that begin with '::' but that are otherwise empty.  Duplicate headers
+will generate an error and prevent the script from executing.  Case within
+the headers is not important.  (You are free to use eLiTE d00dz
+capitalization techniques, just don't try to use kRe8yv sP3lliNg5.)
+
+'Reply-To:' must be followed by a valid e-mail address, otherwise you won't
+get your results. (emscrypt will also recognize a 'Request-Remailing-To:'
+header in place of 'Reply-To:'.  I added this so that emscrypt could be
+treated as a "remailer".  The idea is that you could use software such as
+premail to automate the generation of messages going to emscrypt, so that
+you don't have to do the signing/encrypting manually.  Then you could just
+send a script to yourself, "chaining" it through your emscrypt "remailer".
+But I don't think this will work without slight modifications to the
+remailer message generating programs, since emscrypt requires the
+'Request-Remailing-To:' header within the signed body of a message (it would
+also be nice if the 'PGP-Key-Fingerprint' header could be automagically
+included)).
+
+The 'PGP-Key-Fingerprint:' header gives the fingerprint of the key used to
+sign the message and which will also be used to encrypt the results.  It
+must also be included within the signed body of the message.
+
+Most of the other changes involved minor debugging and general clean-up (not
+that I consider it clean now).  I also improved the error handling a little,
+but it needs more work, too.  Right now emscrypt generally tries to generate,
+encrypt, and mail an error report if things go wrong.  If that doesn't work,
+then it saves an error message to a log file.
+
+If you find any problems, please let me know. Comments, suggestions, 
+etc. are also welcome.
+
+
+Thanks,
+
+- --Matt
+
+- --
+mcarpent@mailhost.tcs.tulane.edu
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQEVAwUBMfXlaijtJAMyBnp9AQHAdAf+MQ/ZroKoLeYyQDYabVrIq1eLSQB6vpr+
+2tXu63wDbcUeFoeSFNx6Sar7DNtAJyJUlwVcVKlb5SOuYR/8aFDvAnIYuQLPfdXd
+xXjC4iv+Hh3hNx4ibeyAB4xbFmDYAMB19zEf6nhmJdxR03oFXP+Qfx2m/aN/LDKZ
+zVSjtOs/ujTa6ltP6r/9x1vdiqmSNuSCNLvL/f4YulfdzR8frF0uLyLmiDH6mUpm
+etKxSpIg4ZI+iy1YvvSd+FtA0F3XSziaLEepx4X8gYjZKP0YXPTEMGhTeWj1o6bP
+yl06KUIRTL5k56P0xnW2MezGN5c0Cz2W9TEa9NBbHxY1DgSTDWa3sg==
+=DTpY
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02021.html">Kids and Computer Privacy Was  Re: No more stupid gun thread ...</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01878.html">Re: Distributed DES crack</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02021.html">Kids and Computer Privacy Was  Re: No more stupid gun thread ...</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01947.html">the VTW---FBI Connection (fwd)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02022"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02022"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

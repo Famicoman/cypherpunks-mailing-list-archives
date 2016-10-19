@@ -1,0 +1,384 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: PGP math library -->
+<!--X-From-R13: usvaarlNfuryy.cbegny.pbz -->
+<!--X-Date: Fri, 26 Nov 93 11:30:15 PST -->
+<!--X-Message-Id: 9311261930.AA00750@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>PGP math library</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01000.html">Date Prev</A>][<A HREF="msg01009.html">Date Next</A>][<A HREF="msg01000.html">Thread Prev</A>][<A HREF="msg01001.html">Thread Next</A>][<A HREF="index.html#00998">Date Index</A>][<A HREF="threads.html#00998">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>PGP math library</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: PGP math library</LI>
+<LI><em>From</em>: <A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A></LI>
+<LI><em>Date</em>: Fri, 26 Nov 93 11:30:18 PST</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Here's a little document I threw together this morning to describe
+the PGP multi-precision routines.  After reading about Henry Strickland's
+work making TCL interfaces for various crypto functions, I've been
+putting together a similar interface for PGP's mp library.  This is mostly
+to teach myself TCL.  But I have developed some familiarity with PGP's
+mp library as a result, so here is some information that will hopefully
+be helpful.
+
+Hal
+--------------------------------------------------------------------------
+PGP Multi-Precision Library Functions			Nov 26, 1993
+
+Overview
+========
+
+PGP contains a multiple-precision math library to implement its
+cryptographic functions.  This library is largely self-contained
+and is suitable for use in other applications.
+
+PGP's library is quite portable, working on both big- and little-
+endian machines, as well as machines with both 16- and 32-bit integers.
+It can be compiled in a mode which relies only on C code, or it can
+be linked with an assembly language module customized for the particular
+target machine to provide higher speed.  Assembly language modules
+ship with PGP for a variety of targets.
+
+The library uses fixed-size buffers for its calculations.  This means
+there is a ceiling on the size of the numbers which can be used.  This
+ceiling is determined at compile time, though, so special applications
+can build the library with large ceilings if desired.
+
+PGP's library and its source code in general is not public domain; it is
+copyrighted by Philip Zimmermann, reachable at &lt;prz@acm.org&gt;.  PGP is
+released under licensing terms which, I believe, allow use of the source
+code for non-commercial purposes.  It would be a good idea to talk to Phil
+before using the code in any product destined for widespread release.
+
+The Library
+===========
+
+PGP's mp library is largely contained in the module mpilib.c.  This module
+requires mpilib.h, usuals.h, and platform.h when it compiles.  The simplest
+use of mpilib is to link it with your application, compiling with -D flag(s)
+appropriate for your target machine.  (More information on the choice of
+flags is below.)
+
+Any module which will use the mp functions should also include mpilib.h.
+All of these modules will also have to be compiled with the -D flag(s) used
+by mpilib.c.
+
+Compiling
+=========
+
+Compiling mpilib.c and other modules which include mpilib.h requires the
+proper choice of -D flags.  The simplest case is if the target machine is
+one of the ones for which explicit defines exist in platform.h.  In version
+2.3a, these are: MSDOS, VMS, VAXC, mips, i386, sparc, mc68000, mc68020.
+In each of these cases, an assembly-language module exists in the PGP
+distribution to implement selected mp functions.
+
+If you have one of these targets, add a -D flag for the symbol from the
+above list to your compile command line.  For example, on an MS-DOS machine,
+add -DMSDOS to the command line.  (Actually, in most cases these symbols
+will be automatically defined by the target's compiler or pre-processor.
+But it doesn't hurt to define them explicitly.)  Then you should also assemble
+the corresponding assembly language file.  For MS-DOS it is 8086.asm;
+the proper choice for the other targets should be obvious from the filenames.
+Link the assembly language object module along with mpilib's object module
+into your application.
+
+If you don't have one of these targets, mpilib.c can be built in a "portable"
+mode which will implement all functions in C.  To do this, define
+-DPORTABLE and -DMPORTABLE on the command line.  In addition, if you are on
+a big-endian machine (such as a sparc or 68000-based machine), you must
+define -DHIGHFIRST as well.  Little-endian machines don't need an explicit
+define for endianness.
+
+In portable mode, PGP will default to 16-bit units.  If your target has
+32-bit ints, you can define -DUNIT32 to get considerably more efficient
+code.
+
+Remember that these defines must be added to all modules which include
+mpilib.h, in addition to mpilib.c.  (Note: in the PGP makefile you may
+also see other defines, -DDYN_ALLOC and -DSMALL_MEM.  These are not relevant
+to the mp library and are not necessary for this application.)
+
+**** VERY IMPORTANT NOTE ****
+
+PGP has many alternate forms of multiple-precision multiplication and
+division; the appropriate one is chosen based on your particular machine.
+The default choice is SMITH, because that is usually the fastest.  However,
+the SMITH algorithm has the deficiency that it does not (in version 2.3a)
+work correctly for small numbers.  (This is not a problem for PGP because
+it works with large numbers of hundreds of bits.  But for a general-purpose
+library it is not adequate.)
+
+A better choice is UPTON for the purposes of a general-purpose library.
+You should edit mpilib.h to have it define UPTON instead of SMITH for your
+particular target architecture if you are using one of the pre-defined
+targets.  If you are building with -DPORTABLE, you can either edit mpilib.h
+to change the default choice, or you can define -DUPTON on the command line.
+
+Using the Library
+=================
+
+Before use, the MP library must be initialized.  Presently the only
+initialization needed is to set the precision value, which tells how many
+"units" (a unit is typically an int on the target machine) long the
+fixed-size mp buffers are.  This is done by calling:
+
+	set_precision (MAX_UNIT_PRECISION);
+
+To use the mp library, include mpilib.h in your module.  Multi-precision
+variables should be declared as follows:
+
+	unit temp[MAX_UNIT_PRECISION];
+
+This declares a variable "temp" suitable for holding a multi-precision
+value.  I like to do:
+
+	typedef unit unitarr[MAX_UNIT_PRECISION];
+	unitarr temp;
+
+which has the same effect.
+
+MP variables may either be declared locally or as global variables as with
+other types of C variables.
+
+PGP's mp library functions need to be called with the address of a mp
+variable.  Since mp variables are declared as arrays in C, this means
+you can just pass the variable name.  For example, to add x2 to x1, you
+could do:
+
+	unitarr x1, x2;
+	mp_add (x1, x2);
+
+mpilib.h defines unitptr as a pointer to a unit.  If you write functions
+which take MP values as parameters these should be declared as unitptr's.
+For example, a function to add three numbers and return a result might be:
+
+void mp_add3 (unitptr rslt, unitptr arg1, unitptr arg2, unitptr arg3)
+{
+	mp_move (rslt, arg1);
+	mp_add (rslt, arg2);
+	mp_add (rslt, arg3);
+}
+
+Make sure you don't make the mistake of declaring a local and global variables
+as unitptrs and passing them to mp functions.  You need to allocate space
+for them by declaring them as unit arrays.
+
+Library Functions
+=================
+
+Most of the library functions are conceptually simple.  The one exception
+is modular multiplication.  This performs the function A*B mod M.  PGP
+requires this to be done via two calls.  First you tell it the modulus
+M with the stage_modulus call.  Then you do the multiplication with
+mp_modmult.  This is code to do rslt = arg1*arg2 mod m:
+
+	unitarr rslt, arg1, arg2, m;
+	stage_modulus (m);
+	mp_modmult(rslt, arg1, arg2);
+
+If you are doing a series of multiplications with the same modulus you
+can call stage_modulus just once and then call mp_modmult repeatedly.
+Be aware that mp_modexp calls stage_modulus internally so that function
+will overwrite the saved modulus value.
+
+PGP is missing a few functions that you would expect.  It does not have
+modular addition and subtraction.  These should basically do A+B and then
+test for the range 0..(M-1), and if out of range add or subtract M once
+to bring it back into range.  Perhaps these will be added to a future version
+of PGP.
+
+Some mp functions have parameters that are both inputs and outputs (e.g.
+mp_inc(r) increments r).  In other cases, though, the inputs are separate
+from the outputs.  In those cases you should not pass the same variable
+as both an input and an output parameter.  For example, you should not do
+mp_mult (a, a, b) to get a *= b, because a is being used as both an input
+and an output parameter.  Instead, you should do mp_mult (temp, a, b) and
+then mp_move (a, temp).
+
+Here are some useful PGP mpilib functions and what they do.  The MP numbers
+are r, r1, r2, etc; non-MP integers are i, j, etc.
+
+
+Non-modular MP functions:
+
+mp_move(r1,r2)			r1 = r2
+
+mp_add(r1,r2) 			r1 += r2
+
+mp_sub(r1,r2)			r1 -= r2
+
+mp_compare(r1,r2)		-1,0,or 1 depending on (r1&lt;r2),(r1=r2),(r1&gt;r2)
+
+mp_mult(r1,r2,r3)		r1 = r2 * r3;
+
+mp_udiv(rem,rquot,rdend,rdor)	unsigned rdend/rdor;rem=remainder,rquot=quotient
+
+mp_div(rem,rquot,rdend,rdor)	signed rdend/rdor; rem=remainder, rquot=quotient
+
+mp_mod(rem,rdend,rdor)		rem = rdend % rdor  (unsigned)
+
+mp_abs(r)			r = absolute value of r
+
+mp_inc(r)			r += 1
+
+mp_dec(r)			r -= 1
+
+mp_neg(r)			r = -r
+
+mp_square(r1,r2)		r1 = r2 * r2
+
+msub(r,r1)			if (r&gt;=r1) r -= r1
+
+
+Modular mp functions:
+
+stage_modulus(rm)		set rm as modulus for mp_modmult
+
+mp_modmult(rslt,r1,r2)		rslt = r1 * r2 mod stage_modulus value
+
+mp_modsquare(r1,r2)		r1 = r2 * r2 mod stage_modulus value
+
+mp_modexp(rslt,r1,r2,rm)	rslt = (r1 to the power r2) mod rm
+
+
+MP/Integer interface functions:
+
+mp_init(r,i)			mp value r = integer value i
+
+mp_burn(r)			r = 0  (for erasing sensitive data in memory)
+
+testeq(r,i)			True if mp value r == integer value i
+
+testne(r,i)			True if mp value r != integer value i
+
+testge(r,i)			True if mp value r &gt;= integer value i
+
+testle(r,i)			True if mp value r &lt;= integer value i
+
+significance(r)			returns number of significant units in r
+
+mp_shortdiv(rquot,rdend,i)	rdend/i; rquot=quotient, returns int remainder
+
+mp_shortmod(rdend,i)		returns rdend % i  (unsigned)
+
+
+I/O of MP Values
+================
+
+The PGP module mpiio.c has some routines for I/O of mp values.  This module
+includes pgp.h (which includes a lot more files) but that is not really
+necessary.  I advise commenting out the include of pgp.h in that module.
+Then you will only need to add mpiio.c and mpiio.h to your program
+directory.
+
+To get access to the more general I/O functions in mpiio.c you must compile
+it with -DDEBUG.  This will allow you to call:
+
+str2reg(r,str)			Convert string str to mp value r
+
+The string passed to str2reg will be assumed to be in decimal.  To pass
+a hex string it must end in 'h'; binary strings should end in 'b', and
+octal strings in 'o'.  Decimal strings may optionally end in '.'.  (These
+terminating characters could be added by a pass before str2reg is called
+if you don't want to require them from the user or file.)
+
+display_in_base(str,r,irad)	Display string r in base irad, preceded by str
+
+This will print mp value r on standard out, using base irad.  It will
+precede it by the string str.
+
+mp_display(str,r)		Display string r in hex, preceded by str
+
+This always displays in hex, and is somewhat faster than display_in_base.
+
+One function which is lacking is something to convert an mp value to a
+string in memory.  display_in_base and mp_display always write to standard
+output.  These routines can be fairly easily modified to output to an
+incrementing pointer (*bp++) to get this effect if necessary. 
+
+Other PGP MP Functions
+======================
+
+The module genprime.c has several useful mp functions.  Unfortunately,
+since the focus of this module is generating PGP random keys, it has
+links to other parts of PGP, such as the random number generation.  It
+is probably best to extract source routines from this module on a
+selective basis.  Among the routines which would be of general use are:
+
+mp_gcd(rslt,r1,r2)		rslt = greatest common divisor of r1 and r2
+mp_inv(rslt,r1,r2)		Compute rslt such that rslt*r1 mod r2 is 1
+nextprime(r)			Finds the next prime above r, returns in r
+slowtest(r)			True if r is a probable prime
+primetest(r)			Sieve then slowtest r, true if probable prime
+
+nextprime is fast, using a combination of sieving and probabilistic
+primality testing.  It is what is used by PGP for its RSA key generation.
+slowtest is used by nextprime; it applies the Fermat test with the first
+four primes as test values.  primetest first checks r against a list of
+small primes for divisibility, then calls slowtest to test it.
+
+There are also some other calls in mpilib.c which I did not document
+above.  They are somewhat lower-level, mostly, but they might be useful
+for some purposes.  A little study of the code will reveal these routines.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01000.html">remove me</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01009.html">Re: Comments on NSA (was: "Pyrrhus Cracks RSA?")</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01000.html">remove me</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01001.html">Clipper update</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00998"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00998"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

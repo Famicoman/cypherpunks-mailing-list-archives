@@ -1,0 +1,186 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: SSL server experiment -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Mon, 19 Dec 94 22:25:03 PST -->
+<!--X-Message-Id: 199412200623.WAA11611@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>SSL server experiment</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01168.html">Date Prev</A>][<A HREF="msg01180.html">Date Next</A>][<A HREF="msg01200.html">Thread Prev</A>][<A HREF="msg01260.html">Thread Next</A>][<A HREF="index.html#01169">Date Index</A>][<A HREF="threads.html#01169">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>SSL server experiment</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: SSL server experiment</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 19 Dec 1994 22:23:29 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Here is a perl script which connects to a netscape-style "https" server.
+The results of running it with "https.pl home1.mcom.com 443" is:
+
+Attempting connection to 198.93.93.10
+Connected
+Sent message, length 40
+Received length = 502
+Message type = 4
+Session ID Hit flag = 0
+Certificate type = 1
+Server version = 2
+Certificate length = 472
+Cipher specs length = 3
+Conn ID length = 16
+Supported ciphers:
+        RC4_EXPORT40, 128 bits
+
+This way you can see which of the 5 cipher options (RC4 or RC2 in full
+and export versions, plus IDEA) are supported by any given server.  You
+always use port 443 and just specify the machine name.  I was a
+little surprised that Netscape's own server is only running the 40 bit
+version.  I hope the export restrictions will not prevent the use of
+full strength ciphers.
+
+Here is the script, which I call https.pl:
+
+#!/usr/local/bin/perl
+# Perl script to test connection to http ssl port
+# Usage: https machine port
+
+# Standard internet stuff
+$AF_INET = 2;
+$SOCK_STREAM = 1;
+($name, $aliases, $proto) = getprotobyname('tcp');
+$sockaddr = 'S n a4 x8';
+
+# Parse
+if (@ARGV == 2) {
+    ($them, $port) = @ARGV;
+} else {
+    die "Usage: $0 machine port\n";
+}
+
+select (S); $| = 1; select (STDOUT);
+socket (S, $AF_INET, $SOCK_STREAM, $proto) || die "socket: $!";
+
+($name, $aliases, $type, $len, $thataddr) = gethostbyname($them);
+$that = pack ($sockaddr, $AF_INET, $port, $thataddr);
+@thataddr = unpack('C4', $thataddr);
+$thataddr = join('.', @thataddr);
+print "Attempting connection to $thataddr\n";
+die $! unless connect (S, $that);
+print "Connected\n";
+
+$cli_hello = 1;
+$vers = 2;
+
+$msg = pack ("C n4", $cli_hello, $vers, 5*3, 0, 16);
+$challenge = pack ("d2", rand, rand);	#16 bytes
+$cspecs = pack ("Cn"x5, 1, 128, 2, 128, 3, 128, 4, 128, 5, 128);
+$len = 1+8+5*3+0+16 + 32768;
+
+$h = pack("n", $len);
+$totmsg = pack("a2 a9 a15 a16", $h, $msg, $cspecs, $challenge);
+print S $totmsg;
+print "Sent message, length ", $len-32768, "\n";
+
+# Now for the interesting part
+
+read (S, $phd, 2);
+($slen) = unpack ("n", $phd);
+
+print "Received length = ", $slen-32768, "\n";
+
+read (S, $pm1, 11);
+($smsg, $ssess, $scert, $sver, $sclen, $scspeclen, $scidlen) =
+	unpack ("C3 n4", $pm1);
+
+print "Message type = $smsg\n";
+print "Session ID Hit flag = $ssess\n";
+print "Certificate type = $scert\n";
+print "Server version = $sver\n";
+print "Certificate length = $sclen\n";
+print "Cipher specs length = $scspeclen\n";
+print "Conn ID length = $scidlen\n";
+
+if ($sclen) {
+	read (S, $scert, $sclen);
+}
+
+read (S, $pspecs, $scspeclen);
+
+$nscspecs = $scspeclen / 3;
+@scspecs = unpack ("Cn" x $nscspecs, $pspecs);
+
+@ciphernames = ( "(undefined)", "RC4", "RC4_EXPORT40", "RC2",
+		"RC2_EXPORT40", "IDEA" );
+
+print "Supported ciphers:\n";
+for ($i=0; $i&lt;$nscspecs; ++$i) {
+	printf ("\t%s, %d bits\n", @ciphernames[@scspecs[2*$i]],
+			@scspecs[2*$i+1]);
+}
+
+read (S, $scid, $scidlen);
+
+close S;
+
+exit 0;
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01168.html">Re: c'punks top 5</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01180.html">Re: Physical location of a machine</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01200.html">C code contest</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01260.html">Re: SSL server experiment</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01169"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01169"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

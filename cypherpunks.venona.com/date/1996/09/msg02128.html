@@ -1,0 +1,131 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Transforming variable&#45;length to fixed keys -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Wed, 25 Sep 1996 07:35:00 +0800 -->
+<!--X-Message-Id: 199609241547.QAA00089@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 84345225525232@cs26.cs.auckland.ac.nz -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Transforming variable-length to fixed keys</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02144.html">Date Prev</A>][<A HREF="msg02119.html">Date Next</A>][<A HREF="msg02000.html">Thread Prev</A>][<A HREF="msg02585.html">Thread Next</A>][<A HREF="index.html#02128">Date Index</A>][<A HREF="threads.html#02128">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Transforming variable-length to fixed keys</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:pgut001@cs.auckland.ac.nz">pgut001@cs.auckland.ac.nz</A></LI>
+<LI><em>Subject</em>: Re: Transforming variable-length to fixed keys</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 24 Sep 1996 16:47:12 +0100</LI>
+<LI><em>CC</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg02000.html">84345225525232@cs26.cs.auckland.ac.nz</A>&gt;(pgut001@cs.auckland.ac.nz)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Peter Guttmann &lt;pgut001@cs.auckland.ac.nz&gt; writes on cpunks:
+&gt; I posted this to sci.crypt recently but the response to it was rather
+&gt; underwhelming, so I thought I'd repost it here to see if anyone has any
+&gt; comments on it.  What it is is a scheme for transforming arbitrary user keys
+&gt; (typically a long passphrase) into a fixed-length key for a particular
+&gt; algorithm.  This has the following properties:
+
+&gt; 1. The user key 'userKey' is transformed into an algorithm-specific key 'key'
+&gt;    using a number of 'iterations' of a hash algorithm 'hash()'.
+&gt;
+&gt; 2. The transformation is strongly serialized so that any form of attack
+&gt;    involving parallelization or precomputation isn't possible.
+
+If the speed of your key generation is an issue, you could do
+something like:
+
+   key[] = { 0 };
+   const int nhashes = 4;
+   typedef void (*hashfnptr)(byte*, byte*, int);
+	/* array of hash functions */
+   hashfnptr hash[ nhashes ] = { md5, sha1, haval, ... };
+
+   state = hash[ 0 ]( algorithm, mode, parameters, userKey );
+
+   for count = 1 to iterations
+      for length = 1 to keyLength (in hash_output_size blocks)
+		/* selecting a hash function based on the state */
+         state = hash[ state % nhashes ]( state );
+         key[ length ] = hash[ state % nhashes]( state, userKey );
+
+This provides more expense in hardware for the same expense in
+software, so for the same CPU time you get more hardware expense, and
+could reduce the iterations for the same security.
+
+`nhashes' determined by the number of digest algorithms you consider
+trustworthy.
+
+(They need hardware for `nhashes' different digest algorithms).
+
+You need to do something about resolving the differing output and
+state sizes.
+
+Probably speed isn't an issue though.
+
+Adam
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="02000" HREF="msg02000.html">Transforming variable-length to fixed keys</A></STRONG>
+<UL><LI><EM>From:</EM> pgut001@cs.auckland.ac.nz</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02144.html">ICI_96x</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02119.html">Universal Avatar spec</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02000.html">Transforming variable-length to fixed keys</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02585.html">Re: Transforming variable-length to fixed keys</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02128"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02128"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

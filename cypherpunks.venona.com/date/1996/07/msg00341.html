@@ -1,0 +1,165 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Transforming variable&#45; to fixed&#45;length keys -->
+<!--X-From-R13: "Rrenatrq [hgnag" <IyxatAjyNhavk.nfo.pbz> -->
+<!--X-Date: Sun, 7 Jul 1996 05:15:29 +0800 -->
+<!--X-Message-Id: 199607061837.OAA19848@unix.asb.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Transforming variable- to fixed-length keys</TITLE>
+<LINK REV="made" HREF="mailto:WlkngOwl@unix.asb.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00340.html">Date Prev</A>][<A HREF="msg00327.html">Date Next</A>][<A HREF="msg00372.html">Thread Prev</A>][<A HREF="msg00580.html">Thread Next</A>][<A HREF="index.html#00341">Date Index</A>][<A HREF="threads.html#00341">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Transforming variable- to fixed-length keys</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:pgut001@cs.auckland.ac.nz">pgut001@cs.auckland.ac.nz</A></LI>
+<LI><em>Subject</em>: Re: Transforming variable- to fixed-length keys</LI>
+<LI><em>From</em>: "Deranged Mutant" &lt;<A HREF="mailto:WlkngOwl@unix.asb.com">WlkngOwl@unix.asb.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 6 Jul 1996 14:24:16 +0000</LI>
+<LI><em>CC</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Comments</em>: Authenticated sender is &lt;wlkngowl@unix.asb.com&gt;</LI>
+<LI><em>Organization</em>: What organization?</LI>
+<LI><em>Priority</em>: normal</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+On  7 Jul 96 at 1:47, pgut001@cs.auckland.ac.nz wrote:
+[..]
+&gt; I've run into a problem in writing a general-purpose n-byte input to m-byte
+&gt; output transformation function.  What this does is take an arbitrary-length
+&gt; user key and transform it to a fixed-length encryption key (for example an
+&gt; entered passphrase into a 112-bit triple-DES key).  The constraints on memory
+&gt; usage are:
+&gt;  
+&gt; - The input (user) key can't be altered (you can't change data passed in by the
+&gt;   caller)
+&gt; - The user key can't be copied to an internal buffer (it can be of arbitrary
+&gt;   length, and is sensitive material so shouldn't be copied elsewhere)
+&gt;  
+&gt; In other words there's no temporary storage available apart from what's
+&gt; provided in the output key.  This is almost always a different length from the
+&gt; input key.
+&gt;  
+&gt; Some other constraints are:
+&gt;  
+&gt; - The transformation must be algorithm-independant (it shouldn't, for example,
+[..]
+&gt; - The transformation must be able to be iterated to make a password-guessing
+&gt;   attack harder to perform.
+
+Hmm. What about the following:
+
+  Use a constant (non-weak) key for a cipher (perhaps the hash of 
+  the passphrase under certain circumstances?)
+
+  For iteration-0, CFB (or some other feedback mode)-encrypt the
+  passphrase from the input buffer   to the output buffer (assuming the
+  library doesn't require that the plaintext and ciphertext be in the same
+  buffer)
+
+  For following iterations, repeatedly CFB-encrypt the buffer,
+  using a counter in data bytes.
+
+This method could use hash algorithms in MDC or Luby-Rackoff forms
+as well as block ciphers (and perhaps some stream ciphers).
+
+Another method might be to seed a PRNG similar to that used in PGP 
+2.x with the passphrase, have it stir the bytes a number of times, 
+and then use the output as the key:
+
+  randPoolAddBytes(passphrase, passlen);
+  for(i=0;i&lt;iterationCount;i++) randPoolStir();
+  randPoolGetBytes(key, keylen);
+
+&gt; Here's my initial approach, if anyone has any comments to make on this or knows
+&gt; of a better way to do it, please let me know.
+[..]
+&gt; The first stage in the key hashing prepends the length of the string as a
+&gt; big-endian 16-bit count to the user key:
+&gt;  
+&gt;     +------+-------------------------------------------------------+
+&gt;     |Length|                      User Key                         |
+&gt;     +------+-------------------------------------------------------+
+&gt;  
+&gt; The aim of the hashing is to reduce this variable-length input string to a
+&gt; fixed-length key appropriate to the encryption algorithm being used.  This is
+&gt; done by treating the user encryption keys as circular buffers and repeatedly
+&gt; hashing chunks of the user key and xoring the result into the output buffer.
+[..]
+&gt; Since the input to the hash function is much larger than its output, a
+&gt; significant amount of the user key affects each chunk of the encryption key.
+&gt; The size of each "chunk" is determined by the hash function being used.  For
+&gt; example with the MD4 hash function, 64 bytes of user key affect each 16 bytes
+&gt; of encryption key.
+[..]
+
+Questions: Are you using the previous chaining-variables/hash for 
+each successive chunk?  How do you pad passphrases that are smaller 
+than the minimum input for a hash function?
+
+
+
+Rob.
+ 
+---
+No-frills sig.
+Befriend my mail filter by sending a message with the subject "send help"
+Key-ID: 5D3F2E99 1996/04/22 wlkngowl@unix.asb.com (root@magneto)
+        AB1F4831 1993/05/10 Deranged Mutant &lt;wlkngowl@unix.asb.com&gt;
+Send a message with the subject "send pgp-key" for a copy of my key.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00340.html">Re: Need PGP-awareness in common utilities</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00327.html">[RANT] Re: CWD -- Jacking in from the "Keys to the Kingdom" Port</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00372.html">Transforming variable- to fixed-length keys</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00580.html">Re: Transforming variable- to fixed-length keys</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00341"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00341"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

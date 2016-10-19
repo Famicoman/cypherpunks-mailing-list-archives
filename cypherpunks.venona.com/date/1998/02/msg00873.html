@@ -1,0 +1,201 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: DES, MMX, and FPGAs -->
+<!--X-From-R13: "Ferv, Brgre" <cgervNfrphevglqlanzvpf.pbz> -->
+<!--X-Date: Thu, 26 Feb 1998 13:08:43 &#45;0800 (PST) -->
+<!--X-Message-Id: 6B5344C210C7D011835C0000F8012766010035E1@exna01.securitydynamics.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>DES, MMX, and FPGAs</TITLE>
+<LINK REV="made" HREF="mailto:ptrei@securitydynamics.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00872.html">Date Prev</A>][<A HREF="msg00871.html">Date Next</A>][<A HREF="msg00869.html">Thread Prev</A>][<A HREF="msg00879.html">Thread Next</A>][<A HREF="index.html#00873">Date Index</A>][<A HREF="threads.html#00873">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>DES, MMX, and FPGAs</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>Subject</em>: DES, MMX, and FPGAs</LI>
+<LI><em>From</em>: "Trei, Peter" &lt;<A HREF="mailto:ptrei@securitydynamics.com">ptrei@securitydynamics.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 26 Feb 1998 16:10:26 -0500</LI>
+<LI><em>Cc</em>: "'<A HREF="mailto:ptrei@securitydynamics.com">ptrei@securitydynamics.com</A>'" &lt;<A HREF="mailto:ptrei@securitydynamics.com">ptrei@securitydynamics.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+
+In DES key search, the speed of a given machine is controlled by three
+main factors: clock speed, the algorithm used, and the availability of
+multiple issue (the last refers to perfoming 2 or more instructions in
+parallel).
+
+Clock speed can be easily factored out for comparison purposes.
+Algorithm is harder; a bitslice algorithm is a clear win on 64 bit
+machines with lots of registers, but is roughly equivalent to
+non-bitslice algorithms on 32 bit machines with a low register 
+count (eg, Intel processors, even using MMX).
+
+Multiple issue can greatly speed up a specificly tuned assembly
+language version. I can't speak for the non-intel processors below,
+but the Pentium code below is all tuned for the vanilla Pentium, and
+does not get a boost from the PPro or P2. 
+
+Let's do the numbers:
+
+d.net peak keys per second: 34,430,460,000
+
+cpk (clocks per key) = (equiv * clock speed)/34B
+
+Processor		clock (MHz)	equiv	cpk
+DEC Alpha 321064				 142	(4)
+DEC Alpha 21066					 220	(4)
+DEC Alpha 21064		533		11,264 	 176	(1)
+DEC Alpha 21164 (Deschall)			  94	(3)
+Sun Ultra I		167		15,316	  75	(1)
+SGI r10k					  69	(4)
+Macintosh PowerPC 604e  200		68,859	 403	(1)(2)
+Macintosh PowerPC 604e  200		         137	(4)
+Intel Pentium II        333		22,393   219	(1)(6)
+Intel Pentium Pro				 232	(4)(6)
+Intel Pentium           166		41,712   203	(1)
+Intal Pentium (Bryddes)				 195	(5)
+Intel 486DX2		 66	       399,374   775	(1)
+Intel 386SX		 20	     7,446,033  4380	(1)
+
+(1) D.net press release.
+
+(2) This figure comes from the press release. I don't believe it 
+for a moment. The next line gives a speed determined from a 
+posting to the d.net mailing list, and is much more believable - 
+if anything, it appears a little slow.
+
+(3) Deschall client
+
+(4) based on d.net mailing list posting.
+
+(5) Sven Mikkelsen's page.
+
+(6) I'm not aware of any fielded bitslice software for Intel MMX
+platforms. I suspect that it would not speed things up too much - 
+there are simply too few registers, and you'd spend a lot of time
+moving stuff in and out of cache. 
+
+I wouldn't be suprised if some of the figures above are incorrect,
+but it's clear that the best processors are getting down to 70-100
+clock cycles per key. 
+
+Wiener's keysearch engine unrolls the 16 rounds of DES, and is thus
+able to run in a similar way to an assembly line; once it's 'filled
+up' it tests 1 key per clock cycle. Any other version would run a 
+lot slower. 
+
+Some highly uninformed blather about FPGAs follows:
+
+Wiener's paper uses custom VLSI chips, and claims a need for
+26k "gates" or 78257 "sites". I'm not sure how this translates to
+silicon requirements in FPGAs - it seems that "gate" and "site" are
+nominal terms which are not directly equivalent to actual, physical
+gates. I've found one reference to a general DES FPGA implementation
+which requires 25k gates, though it's not clear if this reuses the
+round circuitry, or 'unrolls' it (I suspect the latter, which would
+be good).
+
+I'm also not certain if a FPGA running at, for example, 50 MHz, can
+actually run logic operations at that speed. Some things I've read
+suggest that FPGAs run ops at several clocks per operation - which
+is still a lot better than a general purpose microprocessor.
+
+The fastest and largest FPGAs I'm aware of are the Xilinx 4000
+series: The xc40125 has about 80,000 gates, and runs at around
+100 MHz (and costs $1500!!). 
+
+Suppose we use this chip, and everything works out optimally. We
+can fit 3 des engines per chip, and get 300 Mkeys/sec checked. To
+duplicate d.net's speed, we would need about 115 chips, or about
+$170k for the chips alone. 
+
+A better choice would be the Xilinx Spartan XL series. This might be
+in the $20 - $40 a chip, and would run at 80MHz, and would fit only
+one des engine. This would be around $9k - $17k, which is still 
+pretty high for an individual. 
+
+At this speed (34Gkey/sec), it would still take 12 days to search
+half the keyspace, and the prices quoted are for the chip alone, no
+boards, chassies, or SW, and the speeds are assumed to be 
+1 key/engine/clock, which is optomistic.
+
+On the plus side, implementing a DES cracker in an FPGA actually
+affords us some efficiency savings over a non-reconfigurable chip. The
+cipher and plaintexts can be compiled into the design, and if you're
+willing to reload the chip frequently, the slower-changing portions of
+the key can be built in as well. This cuts the gate count
+considerably.
+
+I'd really like to see the next DES challenge taken on by some
+organization with a few hundred under utilized FPGA boards.
+
+Peter Trei
+ptrei@securitydynamics.com
+
+
+
+
+
+
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00872.html">Re: DES search</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00871.html">Re: From Peter Gutmann  Re: So what *does* happen to a city  wit</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00869.html">bugging the swiss</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00879.html">Auction</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00873"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00873"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

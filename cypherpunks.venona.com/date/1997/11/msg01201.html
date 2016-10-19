@@ -1,0 +1,160 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Stylometry -->
+<!--X-From-R13: Dnaqnyy Tnezre <esnezreNVvIOOK.arg> -->
+<!--X-Date: Wed, 19 Nov 1997 12:11:17 +0800 -->
+<!--X-Message-Id: Pine.OSF.3.96.971118211117.5311A&#45;100000@fly.HiWAAY.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Stylometry</TITLE>
+<LINK REV="made" HREF="mailto:rfarmer@HiWAAY.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01180.html">Date Prev</A>][<A HREF="msg01210.html">Date Next</A>][<A HREF="msg01190.html">Thread Prev</A>][<A HREF="msg02017.html">Thread Next</A>][<A HREF="index.html#01201">Date Index</A>][<A HREF="threads.html#01201">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Stylometry</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:3umoelle@informatik.uni%2Dhamburg.de">3umoelle@informatik.uni-hamburg.de</A></LI>
+<LI><em>Subject</em>: Re: Stylometry</LI>
+<LI><em>From</em>: Randall Farmer &lt;<A HREF="mailto:rfarmer@HiWAAY.net">rfarmer@HiWAAY.net</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 18 Nov 1997 21:59:43 -0600 (CST)</LI>
+<LI><em>cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Reply-To</em>: Randall Farmer &lt;<A HREF="mailto:rfarmer@HiWAAY.net">rfarmer@HiWAAY.net</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Here (here being at the bottom of the message :) is the code for the stylometry
+program. Note that I specified that the stylometry also involved a calculator
+-- that's because the shell script only processes your data to get the numbers
+you need out; the tough part is still up to you. 
+
+After it runs, you have 
+
+A. a file, ./counts, containing wordcounts like so. (The first line is the
+ever-present quirk, which occurs because I have yet to master sed.)
+
+1689 
+ 550 THE
+ 344 AND
+ 316 TO
+...
+
+and B. Output to the screen, like so:
+
+[wc/uwc]
+      1738     12561     77775 &lt;-- Lines/words/bytes for the original file
+      2557      5113     31226 &lt;-- First part is the number of *different*
+                                   words used in the document, ignore the rest.
+[word counts] &lt;-- A juicy excerpt from the counts file
+ 550 THE
+ 344 AND
+ 316 TO
+ 271 A
+ 195 OF
+[punc frequency: comma/period/hyphen/quote/semi]
+584 &lt;-- Number of commas
+1536 &lt;-- Periods
+79 &lt;-- Dashes
+315 &lt;-- Double-quote marks
+10 &lt;-- Semicolons
+[and/or/but as sentence-splitters]
+24 &lt;-- Occurrences of "and," (including comma -- that's the point)
+12 &lt;-- "or,"
+7 &lt;-- "but,"
+
+There are too many things you can calculate from this output for me to
+enumerate (although the ratios of words to periods, commas, semicolons, and
+conjunctions as sentence splitters are rather useful...compare two or three of
+a known author's documents to find his/her characteristics, then compare that 
+to your unknown and see if you've got a match). 
+
+[Note that the whole sed mess is supposed to be one line]
+
+#!/bin/sh
+# prep: Prepares a text for analysis
+
+sed "y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/;s/[^A-Z']/ /g;s/  / /g;s/  / /g;s/  / /g;s/  / /g;s/  / /g;s/  / /g;s/  / /g;s/  / /g;s/  / /g;s/  / /g;s/  / /g;s/  / /g;s/  / /g;s/  / /g;y/ /\n/;"&lt;$1|sort|uniq -c|sort -rn&gt;./counts
+
+echo [wc/uwc]
+wc&lt;$1
+wc&lt;./counts
+echo [word counts]
+grep -wie "the" -e "and" -e "to" -e "a" -e "of" &lt; counts
+echo [punc frequency: comma/period/hyphen/quote/semi]
+grep -c ","&lt;$1
+grep -c "."&lt;$1
+grep -c "-"&lt;$1
+grep -c \"&lt;$1
+grep -c "\;"&lt;$1
+echo [and/or/but as sentence-splitters]
+grep -c "and,"&lt;$1
+grep -c "or,"&lt;$1
+grep -c "but,"&lt;$1
+
+---------------------------------------------------------------------------
+Randall Farmer
+    rfarmer@hiwaay.net
+    <A  HREF="http://hiwaay.net/~rfarmer">http://hiwaay.net/~rfarmer</A>
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="02017" HREF="msg02017.html">Doh! (Re: Stylometry)</A></STRONG>
+<UL><LI><EM>From:</EM> Randall Farmer &lt;rfarmer@HiWAAY.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01180.html">Re: Report on UN conference on Internet and racism</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01210.html">Re: export restictions and investments</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01190.html">Password Snarfing</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02017.html">Doh! (Re: Stylometry)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01201"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01201"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

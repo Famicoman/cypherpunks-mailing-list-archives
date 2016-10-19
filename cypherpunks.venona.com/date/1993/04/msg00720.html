@@ -1,0 +1,148 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: RE: Tough Choices: PGP vs. RSA Data Security -->
+<!--X-From-R13: jpfNnapube.ub.ngg.pbz -->
+<!--X-Date: Thu, 29 Apr 93 18:29:14 PDT -->
+<!--X-Message-Id: 9304300129.AA25758@anchor.ho.att.com -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>RE: Tough Choices: PGP vs. RSA Data Security</TITLE>
+<LINK REV="made" HREF="mailto:wcs@anchor.ho.att.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00715.html">Date Prev</A>][<A HREF="msg00714.html">Date Next</A>][<A HREF="msg00719.html">Thread Prev</A>][<A HREF="msg00714.html">Thread Next</A>][<A HREF="index.html#00720">Date Index</A>][<A HREF="threads.html#00720">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>RE: Tough Choices: PGP vs. RSA Data Security</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:pfarrell@cs.gmu.edu">pfarrell@cs.gmu.edu</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: RE: Tough Choices: PGP vs. RSA Data Security</LI>
+<LI><em>From</em>: <A HREF="mailto:wcs@anchor.ho.att.com">wcs@anchor.ho.att.com</A></LI>
+<LI><em>Date</em>: Thu, 29 Apr 93 21:29:24 EDT</LI>
+<LI><em>Original-From</em>: anchor.ho.att.com!wcs (Bill_Stewart(HOY002)1305) </LI>
+<LI><em>Original-To</em>: cs.gmu.edu!pfarrell, toad.com!cypherpunks </LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Pat Farrell writes:
+
+&gt; I'm writing a Windows-based POP client designed for folks that can't spell SLIP. 
+&gt; It should have strong encryption invisibly and automatically. 
+&gt; It won't until there is a legal encryption engine with at least the key 
+&gt; management of PGP.
+
+(I'm replying to cypherpunks, since other people may run into
+similar problems, and there *are* good ways to solve them.)
+Let's assume for the moment that you don't care about being exportable, 
+so "legal" only means "Ok with RSA".  RSAREF is ok with RSA for
+non-commercial, non-exportable use, and if you want to use it commercially
+they'll give you a price.  It's got most of the subroutines you need,
+and if some non-Yankee writes a version with a compatible interface
+(to avoid copyright problems; patents aren't an issue outside the US)
+they can probably use the non-RSA parts of your code.
+
+I'm not sure exactly which routines in RSAREF the license lets us use,
+(so I've written to RSA to ask them), but the ones that ARE clearly usable
+let you do Sign/Verify on a block, and DES-with-random-session-key-and-
+signature-with-RSA-session-key-encoding (aka R_SealPEMBlock/R_OpenPEMBlock.)
+This gives you all you need to build standalone systems (compatibility
+is another story), though sometimes it's a big and clunky approach
+when a simple RSAEncrypt/Decrypt would have done. 
+
+For example, your POP client needs to solve three main problems
+1) Login authentication
+2) Message encryption during transmission
+3) preventing bogus deletes or other problems if your session gets hijacked.
+3) probably isn't possible without changing the protocols or running over an
+	encrypted telnet-equivalent session, but that's not RSA's problem.
+	The POP3 RFC1225 explicitly recommends against including extra
+	data in the DELE messages, though I suppose you could use
+	an RSAREF signature as extra baggage anyway, including some
+	kind of timestamp or counter to prevent replay.
+1) The current POP protocols have the user send a USER message,
+	to which the system either sends a rejection or a positive
+	+OK response with arbitrary text to follow, and the user sends
+	a PASS message, with password in clear-text, which is not real swift.
+	This obviously needs to be replaced with some sort of challenge-
+	response method to prevent eavesdropping and replay.
+	A simple method using the block stuff is for the system's
+	+OK response to the user to contain a challenge-string,
+	and the user's PASS variable to be the challenge-string (or that+1)
+	with an RSA signature from R_SignPEMBlock().  If Diffie-Hellman
+	were included with RSAREF, the response could include a DH half-key.
+	Alternatively, the PASS variable could be an encrypted
+	R_SealPEMBlock() message containing the challenge and a session key,
+	encrypted using the server's public key and signed by the client.
+2) can either be accomplished by encrypting each message as with 
+	a new session key and RSA to encrypt the session key
+	(a bit slow, but each message is now self-contained,
+	which has some degree of elegance) or else by negotiating a session
+	key at the beginning (as discussed in the above) and using it for
+        each message.  The latter approach is obviously	faster.
+
+The main feature from PGP that this doesn't provide is authentication
+of public keys, but that's not really a problem in a POP environment -
+you have to deal with the administrator to set up your mailbox,
+so you can exchange keys at that time. 
+
+If you wanted to build a mechanism like PGP's web of trust for keys,
+it's not too hard, though the obvious approaches will probably have
+the painful slowness of PGP2.0 instead of the blazing speed of PGP2.2 :-)
+You've got a block signature routine, so you use messages saying
+	 "Keysig User KeyLen Key SignerUser SignerKeysig [SignerKey?]"
+with appropriate amounts of ASCII armoring and delimiters, and sign them.
+This would be a very practical addition to RIPEM, if anybody's in the mood;
+RIPEM's key server isn't integral to the package.
+
+			Bill Stewart wcs@anchor.att.com
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00715.html">Re: Tough Choices: PGP vs. RSA Data Security</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00714.html">Tough Choices: PGP vs. RSA Data Security</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00719.html">Re:  Tough Choices: PGP vs. RSA Data Security</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00714.html">Tough Choices: PGP vs. RSA Data Security</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00720"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00720"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

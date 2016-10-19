@@ -1,0 +1,162 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: GSM crypto upgrade? (was Re: Newt's phone calls) -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Sun, 19 Jan 1997 05:31:18 &#45;0800 (PST) -->
+<!--X-Message-Id: 199701161239.MAA00283@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 853575672.913148.0@fatmans.demon.co.uk -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>GSM crypto upgrade? (was Re: Newt's phone calls)</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01946.html">Date Prev</A>][<A HREF="msg01952.html">Date Next</A>][<A HREF="msg01866.html">Thread Prev</A>][<A HREF="msg01971.html">Thread Next</A>][<A HREF="index.html#01745">Date Index</A>][<A HREF="threads.html#01745">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>GSM crypto upgrade? (was Re: Newt's phone calls)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:paul@fatmans.demon.co.uk">paul@fatmans.demon.co.uk</A></LI>
+<LI><em>Subject</em>: GSM crypto upgrade? (was Re: Newt's phone calls)</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 16 Jan 1997 12:39:41 GMT</LI>
+<LI><em>CC</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg01866.html">853575672.913148.0@fatmans.demon.co.uk</A>&gt;(paul@fatmans.demon.co.uk)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Paul Bradley &lt;paul@fatmans.demon.co.uk&gt; writes:
+&gt; Adam Back &lt;aba@dcs.ex.ac.uk&gt; writes:
+&gt; &gt; encryption system.  Anyone know how modular the design is, for instance if
+&gt; &gt; it would be possible to give a GSM A5 based cell phone a crypto upgrade
+&gt; &gt; using published electrical interface standards?  (I want one of those -
+&gt; &gt; Nokia phone with IDEA + 2048 bit RSA signatures + DH forward secrecy!)
+&gt; 
+&gt; My guess is that this would not work.
+&gt; 
+&gt; Does anyone know if when you use a GSM phone to call a landline 
+&gt; number the cellphone&lt;-&gt; base station trafic is encrypted???
+&gt; 
+&gt; my guess is that only when you call GSM to GSM is the trafic 
+&gt; encrypted and even then I would imagine each phone agrees a key with 
+&gt; the base station for the network then the trafic between the base 
+&gt; stations is cleartext. The only way, if this were the case, would be 
+&gt; to write the code so that the headers and other network information 
+&gt; like SIM ID number etc... were cleartext or just A5 to the network as 
+&gt; standard and only the actual speech data was encrypted under 
+&gt; something stronger. This approach could become troublesome, 
+&gt; if I have time I`ll get hold of some GSM specifications and look at 
+&gt; it more closely.
+
+All you've got to do is super-encrypt the IDEA encrypted traffic with
+the standard A5 hardware - the base station won't notice the
+difference.
+
+Schematically, standard GSM hardware:
+
+                       +-------------+
+      +-----------+    | compress/   |        +------------+
+  &lt;--&gt;| A/D &amp; D/A |&lt;--&gt;| decompress  |&lt;------&gt;| A5 enc/dec |&lt;--&gt;
+      +-----------+    +-------------+        +------------+
+
+
+schematically, adding a super-encryption layer:
+
+                       +-------------+
+      +-----------+    | compress/   |        +------------+
+  &lt;--&gt;| A/D &amp; D/A |&lt;--&gt;| decompress  |&lt;-|  |-&gt;| A5 enc/dec |&lt;--&gt;
+      +-----------+    +-------------+  |  |  +------------+
+                                        v  v
+                                  +-------------+
+                                  | IDEA/RSA/DH |
+                                  +-------------+
+
+
+So the question was (addressed to anyone who knows anything about the
+electrical interfaces used in GSM) about standardisation of electrical
+interfaces -- for instace if the electrical interface between the
+voice compression/decompression IC and A5 IC were standardised, you
+could build a replacement voice codec IC which performed IDEA/RSA/DH
+as well as standard the voice codec function, and had the same pin
+out.  This IC would allow a wide range of GSM phones to be upgraded
+with minimal effort on the part of GSM phone manufacturers -- or even
+desoldered and replaced by end users, or crypto hardware company.
+
+However, there are several reasons why it would probably require
+proper integration into a GSM phone design:
+
+- keys tied to phone number memories
+- display of signature result on screen
+- PIN for phone's RSA signature keys
+- face to face key exchange
+- key revocation
+- generating new keys
+
+Adam
+--
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01971" HREF="msg01971.html">Re: GSM crypto upgrade? (was Re: Newt's phone calls)</A></STRONG>
+<UL><LI><EM>From:</EM> Bill Frantz &lt;frantz@netcom.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01866" HREF="msg01866.html">Re: Newt's phone calls</A></STRONG>
+<UL><LI><EM>From:</EM> paul@fatmans.demon.co.uk</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01946.html">Donna Rice, etc.</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01952.html">Re: Monitoring the monitors [Was: Gilmore and Sandfart suck big dicks]</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01866.html">Re: Newt's phone calls</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01971.html">Re: GSM crypto upgrade? (was Re: Newt's phone calls)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01745"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01745"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

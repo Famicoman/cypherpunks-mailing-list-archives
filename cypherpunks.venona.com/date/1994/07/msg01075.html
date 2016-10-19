@@ -1,0 +1,201 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Card Playing Protocol? -->
+<!--X-From-R13: Oefra Dnl Oenpuryvna <enenpuryNcevfz.cbyl.rqh> -->
+<!--X-Date: Wed, 20 Jul 94 20:41:06 PDT -->
+<!--X-Message-Id: Pine.3.05.9407202305.A10662&#45;d100000@prism.poly.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 940717.141117.4g3.rusnews.w165w@sendai.cybrspc.mn.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Card Playing Protocol?</TITLE>
+<LINK REV="made" HREF="mailto:rarachel@prism.poly.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01074.html">Date Prev</A>][<A HREF="msg01061.html">Date Next</A>][<A HREF="msg00946.html">Thread Prev</A>][<A HREF="msg01064.html">Thread Next</A>][<A HREF="index.html#01075">Date Index</A>][<A HREF="threads.html#01075">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Card Playing Protocol?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "Roy M. Silvernail" &lt;<A HREF="mailto:roy@sendai.cybrspc.mn.org">roy@sendai.cybrspc.mn.org</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Card Playing Protocol?</LI>
+<LI><em>From</em>: Arsen Ray Arachelian &lt;<A HREF="mailto:rarachel@prism.poly.edu">rarachel@prism.poly.edu</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 20 Jul 1994 23:13:08 +2000 (GMT-20:00)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:kentborg@world.std.com">kentborg@world.std.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;940717.141117.4g3.rusnews.w165w@sendai.cybrspc.mn.org&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+On Sun, 17 Jul 1994, Roy M. Silvernail wrote:
+
+&gt; -----BEGIN PGP SIGNED MESSAGE-----
+&gt; 
+&gt; &gt;       D1(E2(E1(Card,eK1),eK2),dK1) = E2(Card,eK2)
+&gt; 
+&gt; I think I see a problem with XOR here.  Seems to me that D and E are the
+&gt; same operation (DE == ED == D^2 == E^2 == 0).  So is this true?
+&gt; 
+&gt; E1(E2(Card,eK2),OldCardBeforeEncryption) == eK2
+&gt; 
+&gt; Looks like Alice can cheat pretty easily.  (if I'm wrong here, please
+&gt; let me know)
+
+Nope.  Alice's key is not Bob's key, so they can't cancel each other out.
+ie:  Say Alice's key is 3 and Bob's key is 7 and the plaintext to encrypt
+is 0.
+
+Alice encrypts with her key, you get 3.
+Bob encrypts with his key, you get 7.
+Both encrypt and you get 4.
+Bob decrypts the dualy encrypted message, and he gets 7 again.
+Alice decrypts the dualy encrypted message and she gets 3.
+
+But Bob doesn't know what the card is if its encrypted by Alice.
+alice doesn't know what card it is if it's encrypted by Bob.
+Only when the message is decrypted by one part can the other see it.  But
+since you're sending the whole deck, there's no way one of the could cheat.
+
+Now neither Bob nor Alice use XOR as a cypher.  They use a cypher such as
+DES or IDEA in a rng mode whose output they XOR to the deck of cards to
+encrypt or decrypt.
+
+&gt; Assuming your random number generator is good, this would be faster:
+&gt; 
+&gt; //shuffle the deck:
+&gt; for (i = (4*13+2) - 1; i &gt;= 0; i--)
+&gt;  {
+&gt;   c1=rand() % (i)   &lt;-- change % (i) into % 54 and I'll agree with you *;
+&gt;   swapcards(&amp;cards[c1],&amp;cards[i]);
+&gt;  }
+&gt; 
+&gt; This will randomize the whole deck in one pass.  Remember, though, that
+
+The reason I say this is that you're not really shuffling the cards very
+well.  If a card is at the front of the deck, the odds are that it will
+remain between the front of the deck and its relative position.  While
+larger cards at the back of the deck are likely to swap themselves with
+the ones in front just as likely as the ones in the back, this is a bit
+one sided.  This is off the top of the my head and what's obvious in crypto
+may not be actual, so Kent may want to test this out to see just how random
+the shuffle is.
+
+&gt; seasoned card players will notice that this deck doesn't act like a real
+&gt; deck.  This is because the traditional method of shuffling doesn't
+&gt; randomize the whole pack.  It performs a series of permutations with a
+&gt; small random content.  Although slower and far less random, it might be
+&gt; a plus to implement a realistic hand shuffle.  Here's a (really) rough
+&gt; 10-minute untested hack.  Feel free to optimize it!  :)
+&gt; 
+&gt; //hand-shuffle the deck
+&gt; #define DECK_END 53
+&gt; #define DECK_SIZE 54
+&gt; int     deck_split, tmp_index, left, right, x, y;
+&gt; cardtype    cards[DECK_SIZE], tmp[DECK_SIZE];
+&gt; 
+&gt; 
+&gt; 
+&gt; while(passess--) {
+&gt;     decksplit = (rand() % 10) + 22);  // split the deck within 10 card
+&gt;                                       // of the center.
+&gt;     left = 0;
+&gt;     right = decksplit;
+&gt;     tmp_index = 0;
+&gt;     while(left &lt; decksplit &amp;&amp; right &lt;= DECK_END) {
+&gt;         y = rand() % 4;
+&gt;         for(x = 0;x &lt; y;x++) {
+&gt;             if(left &gt;= decksplit) {
+&gt;                 break;
+&gt;             }
+&gt;             tmp[tmp_index++] = cards[left++];
+&gt;         }
+&gt;         y = rand() % 4;
+&gt;         for(x = 0;x &lt; y;x++) {
+&gt;             if(right &lt;= DECK_END) {
+&gt;                 break;
+&gt;             }
+&gt;             tmp[tmp_index++] = cards[right++];
+&gt;         }
+&gt;     }
+&gt;     for(x = 0;x &lt;= DECK_END;x++) {  // copy the deck back
+&gt;         cards[x] = tmp[x];
+&gt;     }
+&gt; }
+&gt; 
+&gt; This always drops the left hand cards first, which you might want to
+&gt; randomize too.  But if you watch people shuffling cards, you'll notice
+&gt; that a given player usually drops one side first.
+
+Yes, but the goal of shuffling is to randomize cards.  If you simulate it,
+you're giving seasoned players a bigger advantage with the "odds" :-)  Then
+again, the desireability of this is left to the implementor, so Kent you
+decide which you want to do.
+
+Seasoned players will prefer the second method, however, this may be less
+random, and may infact weaken the security given by the protocol and
+encrypting the deck because they may "guess" where the cards are likely to be.
+
+Other issues: should the deck be reshuffled after each hand is played, or
+should it continue to be used for the next few hands?  In "real" poker you
+reshuffle occasionaly (anyone know the actual "rule" for this?)
+
+Someone may build a good algorith to play poker.  You have no way of knowing
+that you're playing against a machine or a human.  However, in the least you
+can be sure that the machine can't cheat.  Though you could train it to be
+very smart and keep track of every card that's been played and have it
+calculate the odds for each next hand.  Casual players won't match this
+"skill" but pros will.
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01074.html">Re: Response to Duncan</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01061.html">Re: Response to Duncan</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00946.html">Re:  Card Playing Protocol?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01064.html">Re: Card Playing Protocol?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01075"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01075"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

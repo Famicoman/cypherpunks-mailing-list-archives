@@ -1,0 +1,165 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Why I have a 512 bit PGP key -->
+<!--X-From-R13: "Wna Tnedhune" <vnasNflqarl.ftv.pbz> -->
+<!--X-Date: Tue, 27 Dec 94 18:08:12 PST -->
+<!--X-Message-Id: 9412281256.ZM11042@wiley.sydney.sgi.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9412232039.AA03986@merckx.info.att.com -->
+<!--X-Reference: mab@research.att.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Why I have a 512 bit PGP key</TITLE>
+<LINK REV="made" HREF="mailto:ianf@sydney.sgi.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01392.html">Date Prev</A>][<A HREF="msg01364.html">Date Next</A>][<A HREF="msg01299.html">Thread Prev</A>][<A HREF="msg01365.html">Thread Next</A>][<A HREF="index.html#01393">Date Index</A>][<A HREF="threads.html#01393">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Why I have a 512 bit PGP key</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Why I have a 512 bit PGP key</LI>
+<LI><em>From</em>: "Ian Farquhar" &lt;<A HREF="mailto:ianf@sydney.sgi.com">ianf@sydney.sgi.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 28 Dec 1994 12:56:18 -0500</LI>
+<LI><em>In-Reply-To</em>: Matt Blaze &lt;mab@research.att.com&gt;       "Why I have a 512 bit PGP key" (Dec 23,  3:39pm)</LI>
+<LI><em>References</em>: &lt;<A HREF="msg01299.html">9412232039.AA03986@merckx.info.att.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+On Dec 23,  3:39pm, Matt Blaze wrote:
+&gt; essential services for me like taking backups.  This means that, no
+&gt; matter how hard I try, it's impossible for me to be sure that none of
+&gt; my files have been tampered with.
+
+Some time ago I looked at tripwire, and wondered if a personal version
+could be produced which would allow a similar function to be performed on a
+system which had a hostile sysadmin (a position I was in a few years ago,
+and it's not pleasant).
+
+The problem is that although you can protect the data file of hashes (by using
+a pass phrase to encrypt it), protecting the binary which does the checking
+is rather more difficult.  Sure, you can checksum it and lock that checksum
+in the encoded file, but a hostile attacker could make the self-check a
+special case which always returns good, and then snaffle the pass phrase.
+Once they had the pass phrase, the protection is dead.
+
+Over lunch (ie. warning, not a lot of thought given to this :), I wondered
+if you could do something like this:
+
+Have a simple bootstrap loader, and the encrypted main program.  The
+bootstrap loader asks for the pass phrase, and decrypts the main program
+and runs it.  The main program checks the loader for modification, and
+if there is a problem, refuses to go further with a indication to the
+original account owner (eg. overwrite the main program with one which
+simply prints "Main prog hacked at &lt;date/time&gt;".  If all is well, the main
+program asks for a further pass phrase to the data file, and goes off to
+check all of the files in the listed areas (for the moment, the details of
+how it does that is not particularly relevant - all I am concerned about in
+this post is the protection of the binary).
+
+Obvious Attacks:
+
+1. Attack the main program.  You can't, because it is encrypted (presumably
+   with some sort of hash in there too), and so you can only trash it.
+
+2. Attack the loader.  This is possible, because it is in plaintext form.
+
+   Dangers:
+
+   a. The attacker may get your pass phrase.  However, when the main
+      program then sums the original loader, it will notice that
+      it had changed and won't go further.  Your pass phrase for the
+      main program has been compromised, but the data file remains ok.
+   b. The attacker may get a copy of the main program.  That's fine,
+      because the main program won't run (see above), and the user
+      will be warned.
+   c. (The main danger).  The loader program loads the main program,
+      but before copying itself back it replaces the trojan version
+      with the original image (possibly even resetting the timestamp on
+      the file).  This is a problem.
+
+3. Attack the datafile.  Same a (1), really.
+
+4. Attack the running image.
+
+Both 2(c) and 4 are the main problems.  Using gcore or procfs the malicious
+system admin can grab a running copy of the binary, and do what they like.
+There are many tricks to avoiding the danger of 4 (which applies to all
+crypto code running on hostile systems), but all are just that: tricks.
+They can be overcome given enough time and motivation.
+
+But 2(c) is the hassle, as there is no obvious way around this, and it is
+quite easy to do.
+
+Anyone got any good ideas?  I have a lurking suspicion that there are no
+solutions to this problem, and we're down to the same issue of securing
+the transport system which delivers a binary (which is not possible in
+this case).
+
+Just an interesting diversion over a very boring lunch....
+
+							Ian.
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01365" HREF="msg01365.html">Re: Why I have a 512 bit PGP key</A></STRONG>
+<UL><LI><EM>From:</EM> eric@remailer.net (Eric Hughes)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01299" HREF="msg01299.html">Why I have a 512 bit PGP key</A></STRONG>
+<UL><LI><EM>From:</EM> Matt Blaze &lt;mab@research.att.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01392.html">Re: Making sure a program gets to the receiver intact</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01364.html">Re: Making sure a program gets to the receiver intact</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01299.html">Why I have a 512 bit PGP key</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01365.html">Re: Why I have a 512 bit PGP key</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01393"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01393"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

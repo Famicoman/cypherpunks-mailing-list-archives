@@ -1,0 +1,193 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Breaking DES anyone? (was: Breaking RC4&#45;40 for less) -->
+<!--X-From-R13: nonNqpf.rkrgre.np.hx -->
+<!--X-Date: Thu, 17 Aug 95 11:13:19 PDT -->
+<!--X-Message-Id: 8875.9508171811@exe.dcs.exeter.ac.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Breaking DES anyone? (was: Breaking RC4-40 for less)</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.exeter.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00790.html">Date Prev</A>][<A HREF="msg00757.html">Date Next</A>][<A HREF="msg00790.html">Thread Prev</A>][<A HREF="msg00757.html">Thread Next</A>][<A HREF="index.html#00785">Date Index</A>][<A HREF="threads.html#00785">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Breaking DES anyone? (was: Breaking RC4-40 for less)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:fc@all.net">fc@all.net</A> (Dr. Frederick B. Cohen)</LI>
+<LI><em>Subject</em>: Breaking DES anyone? (was: Breaking RC4-40 for less)</LI>
+<LI><em>From</em>: <A HREF="mailto:aba@dcs.exeter.ac.uk">aba@dcs.exeter.ac.uk</A></LI>
+<LI><em>Date</em>: Thu, 17 Aug 95 19:11:14 +0100</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:aba@dcs.exeter.ac.uk">aba@dcs.exeter.ac.uk</A></LI>
+<LI><em>In-Reply-To</em>: fc@all.net's message of 17 Aug 1995 12:44:47 -0400</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Fred Cohen &lt;fc@all.net&gt; wrote on cpunks:
+&gt; Since messages sent with netscape are fairly standard for the first
+&gt; so many bytes, why not make a 2^30 element table, store it on a few
+&gt; gigabytes of disk space, use a hash table on the message, and find
+&gt; the keys to one in every 1,000 messages about 1 time per second.  If
+&gt; this code is being used to send millions of credit transactions per
+&gt; day, we should be able decode thousands of credit card numbers per
+&gt; day for a one-time cost of about $5,00.
+
+Nice idea and one which works for pure RC4, but unfortunately not for
+128 bit, 88 bit known + 40 bit unknown "export" SSL.
+
+Netscape's SSL uses "40 bit keys" that are composed in a strange way:
+you are given 88 bits of known key, and this is combined with the 40
+bit key, to give a 128 bit key.  That key is used to do the
+encryption.  The problem is that this has a unix password salt like
+effect, only this time there are 88 bits of salt rather than 12 bits.
+So this means that you can't precompute anything on the 40 bits as the
+88 bits are randomly generated, and likely vary with each session.
+
+&gt; The $10,000 estimate of the cost of computing time is far too high
+&gt; for a production-based attack on the netscape codes.
+
+Agreed, it's too high for the other reason that lots of people have
+spare compute cycles.  Idle cycles have low to non-existant
+incremental cost, and there are plenty of them around in the world.
+
+Back to breaking crypto systems.
+
+There are a couple of things you can do, there is your pre-compute
+some proportion of the key space - so that you get some of them, this
+would work well for straight 40 bit RC4 - and there are quite probably
+such products around - microsoft has a number of "secure" [sic] things
+around the Microsoft Access we were looking at earlier, another system
+for doing remote access (modem) and having the sessions encrypted.
+
+The problem with micro$oft is they are a darn closed system, and
+no-one so far has invested the time to decode what they're doing with
+a debugger.  That was the reason for the failed brute RC4 a while back
+- no specs.
+
+So precompute regions of keys would work on pure RC4-40 as you
+describe.  It would be fast too - a disk seek time being the bounding
+factor - per key!
+
+Another approach is to do lots of keys simultaneously - so you set up
+this distributed effort which is continually re-sweeping the 40 bit
+keyspace, say every couple of days or whatever.  You can sweep for
+more than one key at once at very low incremental cost, an extra key
+costs close to nothing.  So say you are searching for 1000 keys at
+once - a dragnet approach - well keys just pop out at random as they
+are hit, maybe straight away maybe at worst case the sweeping
+roll-over time, but on average a key will fall out every 3 minutes.
+
+The same approach is applicable to 1 guy with 1 humble PC, it'll sweep
+the full keyspace it in a year or two, but what does he care if he
+gets a couple of keys a day, and they're all nice transactions he can
+pilfer / make nefarious use of.
+
+DES breaking schemes...
+
+Something similar applies to DES, I mean what's a piffling 56 bit
+keyspace if you don't really care *which* key of several thousand that
+you actually want.  There are bound to be a large enough supply of DES
+encrypted banking transactions flowing around the various financial
+networks in the US to make a nefarious breaking of them emminently
+possible.  It moves on the time for a complete sweep as you now have
+56 bits to contend with - but I think with a team of say 1024
+workstations like the one I am typing on (an SGI Indy ~$5k
+workstation) in a distributed effort, and a large supply of DES keys,
+you could get a workable break on *one* of those keys in a shortish
+time how long?  Well I'm not sure how fast DES can be made to go for
+these purposes, but 60k keys/sec is a figure I have for DES set_key
+(Eric Youngs code on a Sparc 20) I'm not too sure of the details of
+what you'd need to brute a DES key, but setting up the key, and
+presumably a small additional cost to test the first byte and every
+256 tries to test 2 bytes etc.  Anyone know if 60k keys/sec sounds
+reasonable for a DES brute?
+
+Anyway working on that, 1024 workstations, 60k keys/sec = 60 M
+keys/sec = 37 years!
+
+But (here's the saving bit) if you try say 64k keys *at once* so
+you've hoovered up a stack of keys (hypothetically - technically
+plausible too a tap on a banking network should yield you a whole load
+of them) *then* you can get much nicer figures:
+
+A DES key every 5 hours!  I'm thinking 1024 workstation equivalents
+shouldn't be insurmountable to organise - lots of people have faster /
+multiprocessor machines, and farms of workstations / PCs etc.
+
+Perhaps 64k keys is a bit generous, and 1024 keys would be a more
+sensible figure, even then that translates to 13 days expected.
+
+As some one said a while ago (breaking) Netscape is the big win!
+Breaking DES is *the* big win!
+
+Adam
+--
+HAVE *YOU* EXPORTED RSA TODAY? --&gt; <A  HREF="http://dcs.ex.ac.uk/~aba/rsa/">http://dcs.ex.ac.uk/~aba/rsa/</A>
+--rsa--------------------------8&lt;-------------------------------
+#!/bin/perl -s-- -export-a-crypto-system-sig -RSA-3-lines-PERL
+$m=unpack(H.$w,$m."\0"x$w),$_=`echo "16do$w 2+4Oi0$d*-^1[d2%Sa
+2/d0&lt;X+d*La1=z\U$n%0]SX$k"[$m*]\EszlXx++p|dc`,s/^.|\W//g,print
+pack('H*',$_)while read(STDIN,$m,($w=2*$d-1+length($n)&amp;~1)/2)
+-------------------------------8&lt;-------------------------------
+TRY: rsa -k=3 -n=7537d365 &lt; msg | rsa -d -k=4e243e33 -n=7537d365
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00757" HREF="msg00757.html">Re: Breaking DES anyone? (was: Breaking RC4-40 for less)</A></STRONG>
+<UL><LI><EM>From:</EM> fc@all.net (Dr. Frederick B. Cohen)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00790.html">Re:  Idle compute cycles [Re: Netscape's Offical Response]</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00757.html">Re: Breaking DES anyone? (was: Breaking RC4-40 for less)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00790.html">Re:  Idle compute cycles [Re: Netscape's Offical Response]</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00757.html">Re: Breaking DES anyone? (was: Breaking RC4-40 for less)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00785"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00785"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

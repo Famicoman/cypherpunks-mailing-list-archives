@@ -1,0 +1,180 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: REMAIL: standardized remailer syntax -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Sat, 2 Apr 94 17:34:50 PST -->
+<!--X-Message-Id: 199404030148.RAA10520@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>REMAIL: standardized remailer syntax</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00069.html">Date Prev</A>][<A HREF="msg00073.html">Date Next</A>][<A HREF="msg00072.html">Thread Prev</A>][<A HREF="msg00074.html">Thread Next</A>][<A HREF="index.html#00071">Date Index</A>][<A HREF="threads.html#00071">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>REMAIL: standardized remailer syntax</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: REMAIL: standardized remailer syntax</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 2 Apr 1994 17:48:07 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+From: nowhere@bsu-cs.bsu.edu (Chael Hall)
+&gt; Sameer writes:
+&gt; 
+&gt; &gt;	Here's my suggestion..
+&gt; &gt;
+&gt; &gt;	Header pasting:
+&gt; &gt;	The '::' header pasting syntax should be available-- i.e. when
+&gt; &gt;a message comes into a remailer with a body starting with '::' the
+&gt; &gt;lines following until a blank line are pasted into the header.
+&gt; &gt;
+&gt; &gt;	The '##' header pasting syntax-- when a remailer is sending
+&gt; &gt;out a message, if the body begins with a '##' line then the lines
+&gt; &gt;following that are pasted into the header of the outgoing message.
+
+I like Sameer's goal of standardized syntax, but I have to admit that I
+find the :: and ## bit confusing, and hard to explain.
+
+The way Eric Hughes' original remailer worked was that the "remailer
+commands" were in the message header, up with Subject and In-Reply-To and
+such.  However, many mailers won't let people put custom material there, so
+the "::" pasting token was invented to take the following lines and put
+them into the header before the remailer processed them.  The effect was
+that you could put remailer commands after "::" and they would work.
+
+But there were also some situations in which the user might want to
+control message headers as they *leave* the remailer.  For example,
+they might want to put a Reply-To to some anon pool so that they could
+receive reply messages.  So Eric created the "##" pasting token for
+those.  The remailers based on his scripts first look for "::" and add
+in any headers following it; then they process the message, looking for
+command lines in the header; then as they remail it they look for "##"
+and stick any following lines in the outgoing message header.
+
+This all makes sense but it makes for a complicated system.  I think people
+would find it easier to understand an approach in which they put remailer
+commands at the top of their message, marked in some way to separate them
+from the rest of the message.  "::" on a line by itself could indicate the
+beginning of a block of remailer commands, terminated by a blank line.
+Or, as an alternate syntax, each remailer command line could start with
+"::" followed by the text of the command.  Both approaches have been used
+by different software on the net and they could be considered two different
+ways of expressing the same thing.
+
+This would get away from the add-to-header/process-header/add-to-header
+approach of the current Perl remailer scripts and use a simple one-step
+"process remailer commands" approach which I think would be simpler.  You
+could still have all the functionality of the current approach (perhaps a
+paste-outgoing-header command could be used for the "##" functionality) in
+a package which is conceptually simpler (to me, at least).
+
+Another advantage of this approach is that you could make use of the order
+of the commands in the remailer block so that you could have finer control
+over what you are asking the remailer to do.
+
+&gt; &gt;	Header commands:
+&gt; &gt;	"Anon-To","Request-Remailing-To": strips headers and sends the 
+&gt; &gt;message to the specified recipient.
+ 
+I would suggest abandoning one of "Anon-To" or "Request-Remailing-To",
+as they are redundant.  I know above I suggested two redundant ways of
+specifying remailer commands; maybe that should be reduced to one, as well.
+
+&gt; 	1.  The bsu remailers no longer paste ANYTHING from a "::" header
+&gt; 	    into the header of the outbound message.
+
+Many of the remailers pass Subject lines.  I don't think they should.
+Chael's approach makes sense to me.  The best thing is to have a way to
+set the subject as the message leaves the last remailer in the chain.  (My
+"chain" program does this automatically.)
+
+&gt; 	3.  They also support multiple recipients.  You can place as many
+&gt; 	    "Request-Remailing-To:" lines in the headers as you wish and
+&gt; 	    it will individually address and send each one.
+
+I sent mail a few minutes ago (before seeing Chael's message) suggesting
+the danger of this in making it easy to create huge numbers of messages.
+
+&gt; 	4.  Full debug logging has been turned on until I can verify that
+&gt; 	    both remailers are acting as they should.  This form of logging
+&gt; 	    includes a mirror of the message as it is received and a
+&gt; 	    one-line message listing each recipient.
+
+We have had a lot of talk about logging.  My feeling is that one should get
+security in using the remailer network by going through a number of machines
+in widely different regions.  It should not, as was suggested here some time
+ago, be a matter of trusting any given remailer operator.  Privacy is not a
+gift being provided by remailer operators to their users.  It is still some-
+thing that the users must provide for themselves.  The remailers are just a
+tool to help achieve that.
+
+Thanks to Chael for re-kindling this discussion.
+
+Hal
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00074" HREF="msg00074.html">Re: REMAIL: standardized remailer syntax</A></STRONG>
+<UL><LI><EM>From:</EM> Sameer &lt;sameer@soda.berkeley.edu&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00076" HREF="msg00076.html">REMAIL: standardized remailer syntax</A></STRONG>
+<UL><LI><EM>From:</EM> jason.kwong@canrem.com (Jason Kwong)</LI></UL></LI>
+<LI><STRONG><A NAME="00079" HREF="msg00079.html">REMAIL: standardized remailer syntax</A></STRONG>
+<UL><LI><EM>From:</EM> hughes@ah.com (Eric Hughes)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00069.html">DEATH TO THE</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00073.html">Re:  tmp@netcom.com</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00072.html">REMAIL: standardized remailer syntax</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00074.html">Re: REMAIL: standardized remailer syntax</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00071"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00071"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

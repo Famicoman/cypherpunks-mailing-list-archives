@@ -1,0 +1,208 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: PGP progress report -->
+<!--X-From-R13: ""Z. Rrgjrvyre"" <yq231782Nybatf.ynapr.pbybfgngr.rqh> -->
+<!--X-Date: Thu, 22 Jul 93 17:45:15 PDT -->
+<!--X-Message-Id: 9307230043.AA02655@longs.lance.colostate.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>PGP progress report</TITLE>
+<LINK REV="made" HREF="mailto:ld231782@longs.lance.colostate.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00420.html">Date Prev</A>][<A HREF="msg00410.html">Date Next</A>][<A HREF="msg00420.html">Thread Prev</A>][<A HREF="msg00423.html">Thread Next</A>][<A HREF="index.html#00421">Date Index</A>][<A HREF="threads.html#00421">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>PGP progress report</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: PGP progress report</LI>
+<LI><em>From</em>: ""L. Detweiler"" &lt;<A HREF="mailto:ld231782@longs.lance.colostate.edu">ld231782@longs.lance.colostate.edu</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 22 Jul 93 18:42:26 -0600</LI>
+<LI><em>Cc</em>: <A HREF="mailto:ld231782@longs.lance.colostate.edu">ld231782@longs.lance.colostate.edu</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+A query was made about the Macintosh version of PGP and the bug fixes
+in 2.3.  There was a bug in random number generation routines
+apparently introduced in a recent version that caused some decrease in
+security of the process but nothing seriously weakening. The Macintosh
+version is developed mostly independently of the `official' PGP version
+and the bug is not present in the 2.3 release. The 2.3a PGP release
+fixes the bug. PRZ writes, `The security problem was mostly 
+theoretical, not a practical one for most scenarios.' (more information
+below).
+
+Queries were made about the effort to streamline the Macintosh user
+interface. In general, this has been underway for a long time in slow
+but consistent progress (the improvement from say 2.1 to 2.2 was
+significant). In MacPGP 2.3 a new online help system has been
+added based on Norstadt's excellent Disinfectant code (a system
+which exceeds the sophistication of many commercial software
+packages). There is an announcement currently on sci.crypt
+for the FTP site.
+
+All GUI versions of the PGP code are somewhat limited in
+sophistication by internal organization of PGP code toward the
+`teletype output' mindset. A major effort is underway to remodularize
+the code to internally encapsulate algorithms from the input &amp; output
+(user interface) to make future GUI versions more accessable to
+programmers, and ultimately with new versions for users.
+A Windows version is in the works.
+
+PGP-RSAREF negotiations are plodding along with J. Berman of EFF as 
+an intermediary. The developers are unsure of the reasons for the slow
+pace.  J. Bidzos is supposed to make a major public announcement on 
+this avenue very soon.
+
+Finally, some concern has been raised about bugs in the PGP code. The
+various developers are aware of the slightly disconcerting quality
+control on recent versions. One of the most direct ways that PGP users
+can help improve the quality of the software is to volunteer to
+beta-test versions on their platform in a timely manner at the release
+of new versions. Surprisingly few volunteers are available. If you
+would like to contribute in this area, please send mail to
+prz@acm.org.
+
+Following is information from Z. Fiedorwicz, the MacPGP developer.
+
+(Feel free to redistribute my message in its entirety.)
+
+===cut=here===
+
+Date: Wed, 21 Jul 1993 10:08:33 -0500
+From: Zbigniew Fiedorowicz &lt;fiedorow@math.ohio-state.edu&gt;
+Subject: MacPGP 2.3 randseed bug fix
+
+There is a small bug in MacPGP 2.2 and MacPGP 2.3 in the
+handling of the randseed.bin file used in the generation
+of the random session IDEA keys used to encrypt outgoing
+messages. (This bug is also present in the Unix and MS-DOS
+versions.) Due to this bug only the first four bytes of the
+24 byte randseed.bin file are ever read into memory.  Since
+MacPGP also uses keyboard and mouse timings to generate
+random bytes, this does not give rise to any predictability
+which could easily be exploited for cracking MacPGP messages.
+
+While a special bug fix version 2.3a was released for the
+Unix and MS-DOS versions of PGP, this was necessitated by the
+presence of several other bugs NOT present in MacPGP 2.3 (eg.
+verification of clear-signed messages didn't work).  Hence NO
+version 2.3a release of MacPGP is planned.
+
+If you are concerned by this bug, you can fix it by hand with
+ResEdit following the instructions below.  The usual precautions
+when using ResEdit apply: FIRST MAKE A BACKUP COPY OF MACPGP 2.3
+
+The patch: open the CODE 4 using the Hex Editor (under the Resource
+menu).  Then using the Find menu, find the following offsets in
+CODE 4 and apply the patches indicated:
+
+Offset
+0005E8   4878 0004 4878 0001
+              ^^^^
+              0018 &lt;--- replace 0004 by 0018
+
+0005F8   5980 4FEF 0010 640A
+         ^^^^
+         5180 &lt;--- replace 5980 by 5180
+
+Then choose "Save" under the File menu.
+
+Exactly the same instructions apply to MacPGP 2.2 as well.
+
+
+Technical Explanation:
+The bug is caused by a single line in the 
+  open_strong_pseudorandom(byte key[16], byte buf[24])
+function in the crypto.c module:
+  if (fread(buf,1,sizeof(buf),f) &lt; sizeof(buf))	/* empty file? */
+                  ^^^^^^^^^^^      ^^^^^^^^^^^
+Since buf is an argument to the function, it gets reinterpreted by
+the C compiler as simply 
+  char *buf
+and hence sizeof(buf) is taken to be 4 instead of 24 as intended.
+This line of C gets compiled into the following machine/assembly
+code:
+0005E6: 2F0C          MOVE.L    A4,-(A7)
+0005E8: 4878 0004     PEA       $0004
+0005EC: 4878 0001     PEA       $0001
+0005F0: 2F2E 000C     MOVE.L    $000C(A6),-(A7)
+0005F4: 4EAD 067A     JSR       $067A(A5)
+0005F8: 5980          SUBQ.L    #$4,D0
+0005FA: 4FEF 0010     LEA       $0010(A7),A7
+0005FE: 640A          BCC.S     *+$000C        ;
+
+The patch converts this to
+
+0005E6: 2F0C          MOVE.L    A4,-(A7)
+0005E8: 4878 0018     PEA       $0018
+0005EC: 4878 0001     PEA       $0001
+0005F0: 2F2E 000C     MOVE.L    $000C(A6),-(A7)
+0005F4: 4EAD 067A     JSR       $067A(A5)
+0005F8: 5180          SUBQ.L    #$8,D0
+0005FA: 4FEF 0010     LEA       $0010(A7),A7
+0005FE: 640A          BCC.S     *+$000C        ;
+
+which corresponds to
+  if (fread(buf,1,24,f) &lt; 8)
+This is of course still not quite right, but unfortunately there
+is no SUBQ.L #24,D0 instruction.  (SUB.L #24,D0 is a 4 byte
+instruction which would mess up relative offset references all
+over CODE 4.)  However the chances of this causing any problem are
+extremely small.
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00420.html">FAX on Internet</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00410.html">No Subject</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00420.html">FAX on Internet</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00423.html">Re: PGP progress report</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00421"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00421"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

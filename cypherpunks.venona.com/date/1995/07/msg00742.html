@@ -1,0 +1,161 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Netscape the Big Win -->
+<!--X-From-R13: Samb [vpurynatryv <rambNvzn.arg> -->
+<!--X-Date: Fri, 21 Jul 95 05:48:05 PDT -->
+<!--X-Message-Id: Pine.LNX.3.91.950721195913.32735G&#45;100000@ima.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199507201453.HAA19510@jobe.shell.portal.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Netscape the Big Win</TITLE>
+<LINK REV="made" HREF="mailto:enzo@ima.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00681.html">Date Prev</A>][<A HREF="msg00685.html">Date Next</A>][<A HREF="msg00620.html">Thread Prev</A>][<A HREF="msg00622.html">Thread Next</A>][<A HREF="index.html#00742">Date Index</A>][<A HREF="threads.html#00742">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Netscape the Big Win</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Netscape the Big Win </LI>
+<LI><em>From</em>: Enzo Michelangeli &lt;<A HREF="mailto:enzo@ima.net">enzo@ima.net</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 21 Jul 1995 20:42:54 +0800 (HKT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00605.html">199507201453.HAA19510@jobe.shell.portal.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+On Thu, 20 Jul 1995, Hal wrote:
+
+&gt; Note though that neither SSL or SHTTP requires that the certificates come
+&gt; from RSA.  However the current versions of Netscape's browser do require this.
+&gt; This has been the source of much complaint and Netscape has promised that
+&gt; they will have some mechanism in the future to allow the user to
+&gt; choose his certificate signers.  I am not sure how far RSA will let them
+&gt; off the leash, though.
+
+We may bypass them altogether (see below).
+
+&gt; Back to Perry:
+&gt; 
+&gt; &gt;Netscape is a closed system. You can't write code for it unless you
+&gt; &gt;work for Netscape.
+&gt; 
+&gt; That is why I am working on the proxy approach.  Any browser should be
+&gt; able to use enhancements supplied in this way.  Netscape is the big name
+&gt; this year, who knows who it will be next year.  As long as IP
+&gt; connectivity is available a proxy can get into the stream and apply
+&gt; enhancements.
+
+I still maintain that an approach based on SOCKS would be more flexible, 
+adaptable to any TCP-based application. Here's what I'm thinking about:
+
+1. Windows apps: a general purpose socksifier, intercepting Winsock API
+calls by *unmodified* applications and opening a single TCP connection to 
+the port 1080 of a sockd server. The good news is: some good folks at NEC 
+are already working at this project, and are looking for beta-testers.
+
+2. A "SOCKS en/decrypting relay": a sockd server that, on a 
+per-site/per-port basis depending on a configuration file, may either 
+ a) open TCP connections on behalf of its clients; 
+ b) relay a plain SOCKS connection to a remote peer;
+ c) open a SSL connection to a remote peer on, say, a port 1180 reserved
+    for "SSL-ized SOCKS" connections)
+Of course, that beast should also listen at the ports 1080 and 1180 and 
+take the same actions a) b) or c) as appropriate.
+
+The SOCKS en/decrypting relay could be written both as MS-Windows DLL and as 
+UNIX daemon. The chain would be:
+
+- From a Windows client machine:
+
+ Standard app -&gt; Socksifier DLL by NEC -&gt; encrypting relay -----&gt; 
+  ---&gt; Internet -----&gt; decrypting relay -&gt; server
+
+- From a Unix client machine:
+
+ Socksified (recompiled) app -&gt; encrypting relay ------&gt;
+  ---&gt; Internet -----&gt; decrypting relay -&gt; server
+
+I'm assuming here that the encrypting relay should live close to machine
+(the same, or, at least on the same network) as the client app, and the
+decrypting relay close to the server. A single daemon could do both jobs, 
+allowing chaining "a` la remailer", but I'm using here two different 
+names for sake of clarity. Besides, the Windows version probably wouldn't 
+need decrypting ability.
+
+Great advantage over Netscape: we could use EAY's free SSL implementation,
+and all the server administrators could generate and sign their own
+certificates. The present trouble with Netscape is that NS-Navigator
+refuses to accept certificates not signed as "Netscape compatible". Our
+en/decrypting relay could be more forgiving :-) As the SSL stuff built in
+Netscape would be unused, we could also improve the protocol (plugging
+security holes) ignoring compatibility issues. The administrators of
+secure servers should just advise the users to configure their local
+encrypting relays to pass through their decrypting relay (that would boil
+down to a line added to the encrypting relay configuration). 
+
+It would all be beautifully modular, relatively simple to code (as someone
+else has done, or is doing, most of the hard work) and independent from
+big-brother certifying authorities. 
+
+Comments?
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00605" HREF="msg00605.html">Re: Netscape the Big Win</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00681.html">Re: DOVE/Red Mercury doom U.S. Super State?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00685.html">Re: Netscape the Big Win</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00620.html">Re: Netscape the Big Win</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00622.html">Re: Netscape the Big Win</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00742"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00742"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

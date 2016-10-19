@@ -1,0 +1,188 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: "random" number seeds vs. Netscape -->
+<!--X-From-R13: "Breel S. [rgmtre" <creelNcvrezbag.pbz> -->
+<!--X-Date: Wed, 20 Sep 95 15:41:55 PDT -->
+<!--X-Message-Id: 199509202240.SAA05690@frankenstein.piermont.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 30609562.15FB@netscape.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: "random" number seeds vs. Netscape</TITLE>
+<LINK REV="made" HREF="mailto:perry@piermont.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01453.html">Date Prev</A>][<A HREF="msg01456.html">Date Next</A>][<A HREF="msg01453.html">Thread Prev</A>][<A HREF="msg01648.html">Thread Next</A>][<A HREF="index.html#01476">Date Index</A>][<A HREF="threads.html#01476">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: "random" number seeds vs. Netscape</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Phil Karlton &lt;<A HREF="mailto:karlton@netscape.com">karlton@netscape.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: "random" number seeds vs. Netscape </LI>
+<LI><em>From</em>: "Perry E. Metzger" &lt;<A HREF="mailto:perry@piermont.com">perry@piermont.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 20 Sep 1995 18:40:59 -0400</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: Your message of "Wed, 20 Sep 1995 15:27:46 PDT."            &lt;<A HREF="msg01453.html">30609562.15FB@netscape.com</A>&gt; </LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:perry@piermont.com">perry@piermont.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Phil Karlton writes:
+&gt; Perry E. Metzger wrote:
+&gt; &gt; This is true. However, you must get 128 bits of entropy into the MD5
+&gt; &gt; -- this can be accompanied by as much junk as you like, but if there
+&gt; &gt; are at least 128 bits of entropy fed in, the MD5 process will distil
+&gt; &gt; it into what you want.
+&gt; 
+&gt; My assumption ws that if we conservatively counted at least 300 bits
+&gt; of entropy, we would have 128 for sure. Not very scientific,
+
+Its not a bad way to go. You have to make sure that you have at least
+that many bits of ENTROPY, however. Stuff like keystroke timings
+should only be thought of as handing you a bit or so per click.
+
+&gt; &gt; You might want to read RFC 1750,
+&gt; 
+&gt; Did that. It talks about a lot of the pitfalls. Unfortunately it
+&gt; does not address (nor can it realistically be expected to address)
+&gt; details of what to look for on a particular version of an OS running
+&gt; on some particular platform.
+
+That is true. 
+
+&gt; &gt; PC timers inherently run at Mhz speed -- they interrupt every 100th of
+&gt; &gt; a second but you can get finer resolution by querying the clock
+&gt; &gt; chip. Does Windows let you do this?
+&gt; 
+&gt; I don't know, but I'll forward this on to our PC guys. It might be a
+&gt; portability problem.
+
+It actually shouldn't be -- every PC has the same timer chip or a
+compatible one. The real question is whether Windows lets you get the
+data out.
+
+&gt; &gt; I wouldn't do that, since it forces you to have a dependancy on
+&gt; &gt; executing a subprocess.
+&gt; 
+&gt; We try to be careful about dealing with the subprocess failing to run.
+
+Also be especially careful about how you run the thing! Don't use
+popen or anything like it!
+
+&gt; &gt; &gt;       System specific info such as hardware serial number or
+&gt; &gt; &gt;       system id.
+&gt; 
+&gt; &gt; By definition, that isn't random. Don't use it.
+&gt; 
+&gt; It doesn't hurt. It's also information that is not available to the external
+&gt; evesdropper. Other than execution time, why should I remove it from the list
+&gt; of bits being fed into the hash?
+
+You have to build to the model of someone who knows everything there
+is to know about the machine. Why? Well, many pieces of information
+can in fact be extracted -- license servers and SNMP agents are a way
+to extract things like system IDs. (Overly chatty SNMP extensions and
+similar stuff make me nervious about using too much ps based entropy,
+by the by.)
+
+If you put PROM ID into the hash, don't count it as a source of bits
+-- just think of it as something extra to throw in to make life harder
+-- and heavily comment that it is not to be counted in the magic 300
+bits you are trying to extract. Remember, plan for the worst, not the
+best, and you will never have trouble if the threat model gets worse.
+
+As a security consultant, I always emphasize to clients that you have
+to plan for worst case -- always. That way you can sleep at
+night. Always assume the adversary has a way to break the individual
+components of your system.
+
+When I build firewalls, I rig them so that both an outer filtering
+router, a tightened down application gateway, and an inner filtering
+router must all fail in order for people to break in. I build things
+on the assumption of maximum hostility on all points. Because of this,
+every time a security hole has been announced for the last couple of
+years -- in CISCO firmware, in Sendmail, in anything -- I've been able
+to sleep because I've known that only one of many layers of protection
+has been breeched and I have a few hours to fix the one layer that is
+broken.
+
+When building things like this, BUILD PARANOID. It never hurts.
+
+&gt; &gt; &gt;     Multi-user Unix machines present a special problem. There are those
+&gt; &gt; &gt;     at Netscape that argue that anybody who has login access to your
+&gt; &gt; &gt;     machine may as well be considered to have root access. There are
+&gt; &gt; &gt;     enough known attacks that this is true to a large extent.  However,
+&gt; &gt; &gt;     I think we can do better than just giving up.
+&gt; &gt; 
+&gt; &gt; I agree. Don't run on the assumption that everyone has root --
+&gt; &gt; otherwise you'll build something that produces less safety than it could.
+&gt; 
+&gt; I agree, but I have a hard arguing with those that asser that the security
+&gt; of UNIX is weak enough that given what we are doing for the patch it will
+&gt; be easier to become root from a logged in account than to hack the seed.
+
+Always build belt-and-suspenders around any security system. Try to
+make sure that there are as many ways as possible that things have to
+fail before you get nuked. Throwing an impediment in the way of
+non-root users is a good idea. You program it once and it protects
+forever -- an excellent investment.
+
+Perry
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01453" HREF="msg01453.html">Re: "random" number seeds vs. Netscape</A></STRONG>
+<UL><LI><EM>From:</EM> Phil Karlton &lt;karlton@netscape.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01453.html">Re: "random" number seeds vs. Netscape</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01456.html">Re:  RSA Prevails In Arbitration Against Cylink</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01453.html">Re: "random" number seeds vs. Netscape</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01648.html">RNG Resource FAQ (was Re: "random" number seeds vs. Netscape)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01476"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01476"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

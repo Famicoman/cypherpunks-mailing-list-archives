@@ -1,0 +1,169 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Cracking MD5 for $10M -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Fri, 9 Sep 94 08:40:00 PDT -->
+<!--X-Message-Id: 199409091539.IAA19642@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Cracking MD5 for $10M</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00265.html">Date Prev</A>][<A HREF="msg00258.html">Date Next</A>][<A HREF="msg00274.html">Thread Prev</A>][<A HREF="msg00259.html">Thread Next</A>][<A HREF="index.html#00255">Date Index</A>][<A HREF="threads.html#00255">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Cracking MD5 for $10M</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Cracking MD5 for $10M</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 9 Sep 1994 08:39:36 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I mentioned a few days ago that one of the "rump session" papers at the
+crypto conference claimed that a machine could be built which would find
+MD5 collisions for $10M in about 20 days.  I wanted to write a little
+more detail about how this attack could work.  It is similar to a "meet
+in the middle" (MITM) attack which Norm Hardy suggested here in July when
+we were discussing double DES:
+
+&gt;There may be more than one way that MITM (meet in the middle) may be used
+&gt;to attack Double block cyphers. I assume the following attack. You know
+&gt;some block of plain-text P and corresponding cypher text C. You believe
+&gt;that C = E(k, E(j, P)) where E(k, p) is the encypherment of p with key k.
+&gt;D(k, E(k, p)) = p. You need to find keys k and j. Classic MITM is to
+&gt;produce a file A with records: &lt;k, E(k, P)&gt; for each k, and file B with
+&gt;records &lt;j, D(j, C)&gt; for each j. Sort both A and B on the second field.
+&gt;Pass over the sorted files looking for a record from file A whose second
+&gt;field is the same as a record in file B.
+
+&gt;To substantially shorten the ammount of tape used by a factor 2^n at the
+&gt;expense of evaluating C and D 2^n more often do the following:
+
+&gt;For m from 0 to 2^n-1 Do
+&gt;  Produce file A with records: &lt;k, E(k, P)&gt; for each k where
+&gt;    (the right n bits of E(k, P)) = m. (discarding other records)
+&gt;  Produce file B with records &lt;j, D(j, C)&gt; for each j where
+&gt;    (the right n bits of D(j, C)) = m
+&gt;  Sort files A and B on second field.
+&gt;  Pass over files looking for records from A that match records from b in the
+&gt;  second field.
+&gt;Enddo.
+
+The idea of saving only outputs where certain bits are constant is the
+key to the "distinguished points" method which is used to save space with
+only a modest cost in time.  The other key idea is that instead of
+evaluating MD5(n) where n iterates on its own, you look for cycles in the
+recurrence x = MD5(x).  Any cycle which is found which does not include
+the x you start with will lead to a case where two values hash to the
+same MD5 value.
+
+For a trivial example, suppose the output of a formula like this consists
+of the values 1,4,5,2,7,8,5,2,7,8,5,2,7,8,....  Here we have a four
+element cycle which leads to two different predecessors for the value 5.
+
+The brute-force way to solve this would be to save all outputs from the
+formula, and with each new value to compare it with all earlier
+values.  With MD5, which has a presumably random structure and 128 bits
+of output, the birthday paradox suggests that you would have to create
+and save about 2^64 output values before finding a match.  Creating
+2^64 values might be possible today for the time and dollar values we
+are talking about, but storing them appears to be out of the question,
+as our earlier discussion of double DES (and other discussions of MITM
+here) have made clear.
+
+The distinguished points method reduces the space requirements by only
+saving a fraction of the output values.  For example, in the list above,
+we might only save multiples of 4.  This would lead to 4,8,8... and it
+is easy to discover the match without nearly as much storage.  Note,
+though, that 8 is not actually the value which has two predecessors, but
+that once this match is discovered, you can go back to the previous
+points (4 and 8 in this case) and run them forward more carefully,
+looking for a match.
+
+The other real advantage of the distinguished points method is that it
+parallelizes very nicely.  Several machines can run x=MD5(x) with
+different starting values, saving all of the distinguished outputs, and
+we can look for matches between machines as well as in one machine.
+Again, a match implies two different predecessors for the same value,
+which is an MD5 collision.
+
+With the size of MD5, suppose we generate 2^64 outputs but only save
+those for which the low-order 32 bits are 0 as our distinguished points.
+Only 1/2^32 of values will match, so we will end up with about 2^32
+outputs, probably a manageable amount.  Chances are there will be a match
+among that set.  We then go back to the previous distinguished points
+before the match and work forward carefully to look for the exact pair of
+values which lead to the same successor.  Distinguished points will be
+about 2^32 apart so this step is easy and quick.  If you want to speed it
+up still more you can do a recursive distinguished points pass for this
+step using maybe d.p.'s with the low-order 16-bits of 0 and do it in two
+steps that will both be very short.
+
+The net result is that we have taken virtually no more time (the 2^64
+creations of MD5 will dominate) and virtually no space (compared to 2^64
+stored values) and we get the effect of a birthday attack.  This is
+another cautionary data point about the risks of relying on space costs
+for security rather than time costs.
+
+Hal
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00259" HREF="msg00259.html">Re: Cracking MD5 for $10M</A></STRONG>
+<UL><LI><EM>From:</EM> Jim Gillogly &lt;jim@rand.org&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00265.html">Re: CONTROL FREAKS (nee, AIDs testing and privacy)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00258.html">Need ride from SF</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00274.html">Re: pgp key servers</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00259.html">Re: Cracking MD5 for $10M</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00255"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00255"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

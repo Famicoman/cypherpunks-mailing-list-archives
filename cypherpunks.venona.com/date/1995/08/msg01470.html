@@ -1,0 +1,243 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: SSL keyspace etc. -->
+<!--X-From-R13: imahevNargpbz.pbz (HmahevNargpbz.pbz) -->
+<!--X-Date: Wed, 20 Sep 95 16:25:29 PDT -->
+<!--X-Message-Id: 9509201546195281@ci.diamond&#45;bar.ca.us -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>SSL keyspace etc.</TITLE>
+<LINK REV="made" HREF="mailto:vznuri@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01432.html">Date Prev</A>][<A HREF="msg01468.html">Date Next</A>][<A HREF="msg01449.html">Thread Prev</A>][<A HREF="msg01451.html">Thread Next</A>][<A HREF="index.html#01470">Date Index</A>][<A HREF="threads.html#01470">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>SSL keyspace etc.</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: SSL keyspace etc.</LI>
+<LI><em>From</em>: <A HREF="mailto:vznuri@netcom.com">vznuri@netcom.com</A> (<A HREF="mailto:Vznuri@netcom.com">Vznuri@netcom.com</A>)</LI>
+<LI><em>Date</em>: Tue, 29 Aug 1995 19:40:08 GMT</LI>
+<LI><em>Organization</em>: City of Diamond Bar</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Date: Tue, 29 Aug 95 12:40:08 -0700
+From: "Vladimir Z. Nuri" &lt;vznuri@netcom.com&gt;
+
+regarding SSL challenge, I am not following this close enough 
+to understand completely, but I thought I would offer a few suggestions
+for tweaking the code:
+
+--
+
+the issue of grabbing keyspace has been raised. what if someone
+malicious just yanked huge areas of keyspace and didn't search them?
+it seems that the clients need to return to the server some evidence
+that they have searched their keyspace in question. the server could
+verify this evidence. for those that don't return the "evidence", that
+keyspace could be reallocated to other comers.
+
+the simple approach to all this, if you don't have "evidence", is to 
+just have the server keep reallocating the same space over and over
+to different crackers. hopefully eventually every part of the keyspace
+would be allocated to a "legitimate" worker.
+
+--
+
+the issue of efficiency is very fascinating for this project. essentially
+the server has no idea what the block size of key blocks it should dole
+out. obviously the server would want to try to dole out equal *processing
+chunks* such that the remote machine reports back in a certain amount
+of time, no matter what architecture. the problem of course is that remote
+machines all have different efficiency.
+
+two possibilities: a sort of "bogomip" calculation is done in the client,
+and its processor speed is reported to the server. the server uses
+this in a calculation to determine how much to dole out. it could try 
+to derive a best fit linear relationship between space covered and
+processor spead, or build up a table of results and interpolate for
+new requests.
+
+note that the efficiency issue also ties into "what if people take
+keys they don't solve". if the server knows roughly how long a client
+should take to report back, and it never reports back, it could then
+reallocate that key space.
+
+--
+
+another problem of efficiency is that the server is clearly a bottleneck
+for servicing requests. the question arises: suppose that the server
+could determine the precise interval between which machines would
+go back to it for new keys. what is the optimum interval over the
+whole project? in other words, give the number of machines participating,
+and their processor speeds, what size of key space should be parceled
+out to the next request so that the bottleneck at the server is
+minimized? this optimum interval must be very hard to derive, because
+it depends on the contention based on many incoming connections. it
+would involve some probabilistic approximations of the likelihood
+of collisions. 
+
+to model it, you might consider a request as taking [n] seconds of
+time, and consider that if any two requests are in contention, a 
+retry happens after [m] seconds. you could build up models that
+would try to minimize the time based on empirical simulations. 
+however I would be exceedingly impressed if someone could derive
+a formula for this, or give it from some textbook. 
+
+--
+
+adaptive algorithms for all these situations are possible. the server
+could use a "hypothesis" in the sense of partitioning out a starting
+size of keyspace, and then watch how long it took the client machine to respond
+and then assume a linear relationship or something to compute the size
+of the next keyspace to hand out to the machine. the server could continually
+watch how closely its "hypothesis" (i.e. its estimations of how long a
+given machine will take) match the actual returns.
+
+--
+
+more on the idea of evidence: we are working with a hashing algorithm,
+right? as evidence the client machines could return checksums of all
+the hashes of all the keyspace it searched. it could break up its
+own search space into blocks and return the checksums on the hashes
+for each block. the server, if it wanted to, could verify these blocks
+running its own computations. if it ever found a client was "unreliable",
+it could then diminish the keys sent to the unreliable client, or even
+send it areas of search space it didn't care about anymore (i.e. areas
+that have already been confirmed searched by a more "reliable" client).
+
+--
+
+in fact all this reminds me of the process of intelligence gathering
+by an agency, which could be formalized as follows: suppose that
+the agency wishes to identify "quality information". it has a set
+of sources, A,B,C,D....  now, it can send questions out to these
+sources and get information from them. some of them however would
+be "unreliable". the agency must devise some means by which it can
+weed out the unreliable sources. note that this may even involve
+sending them bogus instructions to keep them busy so they do not
+themselves suspect they have been "discovered" and then change
+their defective plans.
+
+obviously, one of the most important intelligence tools in this
+matter is that of *correlation*. you have to determine "truth"
+(or "quality information") via the correlation between answers that
+the different sources give you. also important to correlation is
+*redundancy*. you sometimes have to ask more than one source the
+same question, and test the answer. in this model, if A and B
+give different answers, you know that one of A or B is "unreliable".
+
+what is very interesting in our case of cracking keys is that the
+server can verify the information on its own. in other words, it
+has a *control* that it knows is correct that it can judge against
+the answers "out there". unfortunately, in contrast, real intelligence
+agencies are not always privy to this kind of certain "control" and
+in fact have to determine "truth" entirely from a set of sources,
+any of which might be unreliable. in this case one has to have
+a hypothesis about what is the "truth" and test it to see if it
+holds up consistently with all information.
+
+the approaches of attackers are obvious. the most obvious is that
+of collusion and infiltration. but I will save the rest for some
+NSA spook to elaborate. there are certainly enough colluding and
+infiltrating on this list &lt;g&gt;
+
+--
+
+one of the reasons all this interests me is that it really reminds me
+of some projects I have worked on in the past. in high school I wrote
+a network mandelbrot set program (client/host). the issue of contention
+arose and it appeared to me to look like an upside-down parabola after
+I plotted some points (curving up, that is). i.e. the optimum was at
+the pit of the parabola, and when too few or too many requests happened,
+the speed over the overall simulation was increased above the optimum.
+some very ingenious readers may actually be able to locate this 
+code, which I put in the public domain over 5 years ago.
+
+--
+
+another thing I worked on was trying to find the optimal block size
+of communications protocols such as Zmodem, which generally instead
+just pick arbitrary block sizes 2^n. I actually was able to attack
+this problem analytically through the observations of the properties
+of infinite series and calculus techniques. it is a similar problem
+but the idea of contention really complicates this issue. (for what
+I studied, there was only one client and one server, so to speak).
+
+I still have this paper in Latex format and if anyone is interested
+I would be happy to send it to you. it's a really nice example, IMHO,
+of how if you use your brain and some mathematics, you can really
+get a far more elegant approach than brute force, and know with 
+much greater certainty  that what you are doing makes sense 
+mathematically.
+
+an awful lot of programmer just tend to bang on the keyboard with out
+thinking of the theoretical implications of their work. this is
+understandable given that the theoretical implications of even trivial
+programs (such as the SSL client/server interactions) can be 
+mathematically extremely daunting, requiring even differential 
+equations to model fairly simple pieces of code.
+
+--
+
+well, that is my contribution of the moment into the cypherpunk 
+annals. one never knows what a little combination of boredom 
+and inspiration can lead to.
+
+--V.Z.Nuri
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01432.html">"CITIZEN-UNIT IDENTIFICATION" A RED HERRING</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01468.html">RE: FLORIDA DRIVERS PERMITS AND A HELLO</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01449.html">SSL keyspace etc.</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01451.html">Poisson numbers for random keyspace assignment</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01470"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01470"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

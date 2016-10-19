@@ -1,0 +1,276 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: IPG algorithim -->
+<!--X-From-R13: jvpuvgnNplorefgngvba.arg -->
+<!--X-Date: Wed, 11 Dec 1996 00:49:45 &#45;0800 (PST) -->
+<!--X-Message-Id: Pine.BSI.3.95.961211020454.11832D&#45;100000@citrine.cyberstation.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199611302118.NAA12825@slack.lne.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: IPG algorithim</TITLE>
+<LINK REV="made" HREF="mailto:wichita@cyberstation.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00641.html">Date Prev</A>][<A HREF="msg00655.html">Date Next</A>][<A HREF="msg00641.html">Thread Prev</A>][<A HREF="msg00674.html">Thread Next</A>][<A HREF="index.html#00651">Date Index</A>][<A HREF="threads.html#00651">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: IPG algorithim</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Eric Murray &lt;<A HREF="mailto:ericm@lne.com">ericm@lne.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: IPG algorithim</LI>
+<LI><em>From</em>: <A HREF="mailto:wichita@cyberstation.net">wichita@cyberstation.net</A></LI>
+<LI><em>Date</em>: Wed, 11 Dec 1996 02:49:33 -0600 (CST)</LI>
+<LI><em>cc</em>: <A HREF="mailto:ichudov@algebra.com">ichudov@algebra.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;199611302118.NAA12825@slack.lne.com&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+
+On Sat, 30 Nov 1996, Eric Murray wrote:
+
+
+Eric, unlike all the other forespeakers, I do appreciate the fact that
+you tried to understand the algorithm and implement it. However, you
+have several things wrong, the most important being that the PRNG
+produces ONLY a seed for the main algorithm and over short sequences, 
+for example 53^2, that is only slightly over  an average occurrence
+of 8 each for the 256 ASC II characters, and the seed streams are
+congruent. However, the algorithm uses a 3 dimensional table lookup to
+translate the numbers to the Encryptor stream. 
+
+I suggest that you get a free copy of the operating program, generate your
+own key, and then run the output through any meaningful test that you
+might desire. That would indeed establish whether or not our system does 
+what we claim it will do or not. It does, but neither my words or your
+partial tests prove anything. 
+
+The expected occurrence of an identical repeat, that is a where the same
+seed gives the same result is 1 in 2^36. Of course that does not mean that
+the same resultant encryptor character might not be generate because there
+are only 256 possibilities, so the same character would result from the
+same seed at least 1 in 256 times, and of course statistically more
+frequently than that, but the over sequence of events leading to the
+production of that character is different. 
+
+While I do appreciate your effort to understand and implement the
+algorithm, it would be helpful if you would contact me first and get a
+copy of the keys and everything detailed in the web site. I take it that
+you used the abbreviated version, or failed to read all the information etal.
+If you use the tables and so forth detailed at the web site and use the
+full algorithm, the results will be far different as you will find.
+
+   
+
+
+ &gt; &gt; 
+&gt; I have translated the IPG algorithim's "engine" to C, to generate
+&gt; some random values from it for testing purposes.  It does not
+&gt; look very random in either the xnoisesph program or the DIEHARD
+&gt; test battery.   However I may well have misinterprested Mr. Wood's
+&gt; description (his writing is, as Mr. Chudov points out, difficult to
+&gt; understand) or written my code incorrectly.  Here it is, play
+&gt; with it yourself.  To my untrained eye the lack of randomness
+&gt; in what's essentially a stream cipher would be disturbing.
+&gt; However I am not a cryptoanalysist so I do not know to
+&gt; what extent this weakens the cipher.
+&gt; 
+&gt; 
+&gt; The IPG description does not say (but implies to me) that
+&gt; the various tables that are to be filled in by "random" values must
+&gt; be filled in by PRNGs that are seeded with the same seeds by
+&gt; each of the party that knows the key.  Otherwise the "encryptor
+&gt; streams" that are generated will be unrelated and decryption will not
+&gt; be possible.  To make my test work I have used the simple rand()
+&gt; function to fill in the tables.
+&gt; 
+&gt; 
+&gt; Corrections are welcome.
+&gt; 
+&gt; 
+&gt; 
+&gt; #include &lt;stdio.h&gt;
+&gt; 
+&gt; /* a C translation of the IPG "EUREKA" algorithim's "engine".
+&gt; ** This is supposed to produce random numbers for the IPG
+&gt; ** "encryptor stream".
+&gt; ** See <A  HREF="http://www.netprivacy.com/">http://www.netprivacy.com/</A> for the original description.
+&gt; ** Eric Murray  ericm@lne.com  This code placed under GNU copyleft.  */
+&gt; 
+&gt; /* machine-dependent stuff, change to suit different platforms: */
+&gt; typedef unsigned char byte;
+&gt; typedef unsigned short uint16;
+&gt; 
+&gt; 
+&gt; /* tables: */
+&gt; uint16 A[53];
+&gt; uint16 B[53];
+&gt; uint16 C[53];
+&gt; 
+&gt; 
+&gt; int init_table(uint16*table, uint16 min, uint16 max)
+&gt; {
+&gt; 	/* IPG specifies no algorithim for producing the "random"
+&gt; 	** initial values in the ABC tables, but it's obvious that
+&gt; 	** it requires a PRNG that's somehow seeded from the "key".
+&gt; 	** I've just used rand() here.  In UNIX rand() called with no
+&gt; 	** seed is supposed to seed itself with 0. */
+&gt; 	int i;
+&gt; 	int count, r;
+&gt;
+Wrong - the algorithms are specified at the web site - look again. You
+cannot just use rand(). That is patently absurd.
+ 
+&gt; 	for(i = 0; i &lt; 53; i++) {
+&gt; 		table[i] = min + (rand() % (max - min));
+&gt; 	}
+&gt; }
+&gt; 
+&gt; main(int argc, char **argv)
+&gt; {
+&gt; 	uint16 jv;
+&gt; 	int argcnt, i, n, count, diehard, nelem;
+&gt; 
+&gt; 	diehard = 0;
+&gt; 	argcnt = 1;
+&gt; 	if (argc &gt;= 2) {
+&gt; 		if (strncmp(argv[argcnt],"-d") == 0) {
+&gt; 			diehard++;
+&gt; 			argcnt++;
+&gt; 		}
+&gt; 	}
+&gt; 	if (argc &gt; argcnt - 1 ) {
+&gt; 		n = atoi(argv[argcnt]);
+&gt; 		fprintf(stderr,"Generating %d values\n",n);
+&gt; 	}
+&gt; 	else {
+&gt; 		n = 2000;
+&gt; 	}
+&gt; 
+&gt; 	/* seed tables: */
+&gt; 	fprintf(stderr,"Seeding:  A");  fflush(stderr);
+&gt; 	init_table(A,0,65535);
+&gt; 	fprintf(stderr," B");  fflush(stderr);
+&gt; 	init_table(B,0,12227);
+&gt; 	fprintf(stderr," C");  fflush(stderr);
+&gt; 	init_table(C,16384,20361);
+&gt; 	fprintf(stderr,"\n");  fflush(stderr);
+&gt; 
+&gt; 	/* generate n values: */
+&gt; 	for(; n &gt; 0; n--) {
+&gt; 		/* jv is "random" (where's it seeded from?) */
+from the key 
+
+&gt; 		jv = (uint16)(rand() % 53);
+&gt; 
+&gt; 		/* count limits the number of traverses to 53^2 so we don't get stuck */
+&gt; 		for(count = 0; count &lt; 2809; count++) {
+&gt; 			jv++;
+&gt; 			if (jv == 53) jv = 0;
+&gt; 			A[jv] = (A[jv] + B[jv]) % C[jv];
+&gt; 			if (A[jv] &lt; 16384) break;
+&gt; 		}
+&gt; 		if (count == 2809) fprintf(stderr,"Oops.\n");
+&gt; 		else {
+&gt; 			if (!diehard) {
+&gt; 				printf("%d\n",A[jv]);
+&gt; 			}
+&gt; 			else {
+&gt; 				/* print output in DIEHARD required format:
+&gt; 				** actually since we have 16-bit ints and DIEHARD
+&gt; 				** wants 32-bit ints, we print 20 per line instead of 10 */
+&gt; 				if (nelem++ &gt; 19) {printf("\n"); nelem = 0;}
+&gt; 				printf("%4.4x",(unsigned int)A[jv]);
+&gt; 			}
+&gt; 		}
+&gt; 	}
+&gt; }
+&gt; 
+&gt; 
+&gt; 
+&gt; -- 
+But they do not reference the same table entries either as is plain to see.
+Your implementation, while appreciated, is plain flawed in many respects. We do not use any
+special As, Bs and Cs. Any selection will do.  
+
+If you are going to implement that algorithm, please use all of it, not
+just the seed generator. I grant you that with only 53 different
+equations, the resultant seed numbers do not give a random CHI square,
+especially over short frame sizes. Certainly over 53^2, it would give you
+staccato results. Not only that, but they are congruent. Nevertheless,
+this is more of the supercilious half ass crap that writers post. If you
+implement the rest  of the algorithm, you will find that it does always
+meet the Chi Square tests for randomness, not sometimes but always. I have
+posted  over 200 megabytes of data to our web site and it is still there.
+Pick any spot in the data, and run your chi squares tests on it. 
+
+If you are going to try to critiqued the IPG algorithm, please use the
+entire algorithm set out. There are so many things wrong with your
+implementation, that it would take me days to cover everything.
+I suggest that you get a sample copy of our operating program , generate
+your own Keys and then analyze the output data. Then if it does not
+perform as we have stated you can tear us apart. But your meaningless
+jabberwocky means nothing other than you have at least tried to understand
+the algorithm, which to repeat, we appreciate.
+ 
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00674" HREF="msg00674.html">Re: IPG algorithim</A></STRONG>
+<UL><LI><EM>From:</EM> ichudov@algebra.com (Igor Chudov @ home)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00641.html">[CRYPTO] Sphere packings</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00655.html">Re: Ignoramus Chewed-Off on IPG algorithm</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00641.html">[CRYPTO] Sphere packings</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00674.html">Re: IPG algorithim</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00651"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00651"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

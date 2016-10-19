@@ -1,0 +1,149 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux] -->
+<!--X-From-R13: [nex [heenl <znexNtebaqne.mn> -->
+<!--X-Date: Wed, 1 Nov 1995 07:12:33 +0800 -->
+<!--X-Message-Id: 199510312115.XAA06361@grumble.grondar.za -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux]</TITLE>
+<LINK REV="made" HREF="mailto:mark@grondar.za">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00236.html">Date Prev</A>][<A HREF="msg00263.html">Date Next</A>][<A HREF="msg00250.html">Thread Prev</A>][<A HREF="msg00252.html">Thread Next</A>][<A HREF="index.html#00264">Date Index</A>][<A HREF="threads.html#00264">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux]</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "Theodore Ts'o" &lt;<A HREF="mailto:tytso@MIT.EDU">tytso@MIT.EDU</A>&gt;</LI>
+<LI><em>Subject</em>: Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux] </LI>
+<LI><em>From</em>: Mark Murray &lt;<A HREF="mailto:mark@grondar.za">mark@grondar.za</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 31 Oct 1995 23:15:30 +0200</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;  In a 386 or a 486 (under FreeBSD at least) there is a 1Mhz clock available.
+&gt;  How would _this_ be? On the Pentium there is the &lt;whatsit?&gt; register
+&gt;  which will give the board's oscillator (or 90 MHz) I believe.
+&gt; 
+&gt; What's HZ set at for FreeBSD?  Most of the x86 Unixes have generally
+&gt; used HZ set at 100, because the interrupt overhead on a x86 isn't cheap,
+&gt; and so you want to limit the number of clock interrupts.
+
+There are two interrupts 100Hz and the other 128Hz (The second gets pushed
+into the +-1K region during profiling.
+
+&gt; You can sample the timing clock, but it turns out to be rather expensive
+&gt; to do so; several I/O instructions, which will require several delays if
+&gt; they have to go through your 8 MHz ISA bus.  We've moved away from using
+&gt; the hardware clock on the 386 because of the overhead concerns.  On the
+&gt; Penitum, we use the clock cycle counter.
+
+Drat. Methinks I need to follow suit, but I value that 1Mhz...
+
+&gt; Well, verifiable randomness really is like gold.  It's a valuable
+&gt; resource.  On a time-sharing system, where you really want to equitably
+&gt; share *all* system resources perhaps there should be a quota system
+&gt; limiting the rate from which a user is allowed to "consume" randomness.
+
+True. VMS could probably do this. &lt;Ducks bricks&gt;
+
+&gt; On the other hand, most Unix systems *aren't* great at doing this sort
+&gt; of resource allocation, and there are enough other ways of launching
+&gt; denial of service attacks.  "while (1) fork();" will generally bring
+&gt; most systems to their knees, even in spite of limitations of the number
+&gt; of processes per user.  Most Unix systems don't protect against one user
+&gt; grabbing all available virtual memory.  And so on....
+
+Getting there (I think).
+
+&gt; There's nothing special about /dev/random in this sense; it's just
+&gt; another system resource which can be abused by a malicious user, just
+&gt; like virtual memory or process table slots.
+
+True. Good policing never hurt.
+
+&gt;    This is a strong argument for some form of specialised noise source.
+&gt;    I have read of methods of getting this from turbulent air flow in a hard
+&gt;    drive (an RFC, I believe).
+&gt; 
+&gt; Yes, ultimately what you need is a good hardware number generator.
+&gt; There are many good choices; from radioactive decay, noise diodes, etc.
+
+The idea that I like the most so far is to generate noise, but filter
+it through an LPF to get frequencies less than (say) 500Khz. Put that
+through schmitt trigger to get decent squarewaves and then into an
+N-bit hardware shift register with some XOR feedbacks to mix this.
+Voila! Nice numbers on demand. Shouldn't cost more than a few &lt;shekels&gt;...
+
+&gt; Short of good hardware sources, the other really good choice is
+&gt; unobservable inputs.  Hence, the Linux driver is hooked into the
+&gt; keyboard driver, and the various busmice drivers.  Those are really
+&gt; wonderful sources of randomness, since they're generally not observable
+&gt; by an adversary, and humans tend to be inherently random.  :-)
+
+Doesn't work on servers in locked rooms... :-(
+With those, as long as the machines are secure, (ie plebs cannot watch
+and time raw packets) the network card is OK. The server may not be on
+transit ethernet AT ALL.
+
+M
+--
+Mark Murray
+46 Harvey Rd, Claremont, Cape Town 7700, South Africa
++27 21 61-3768 GMT+0200
+Finger mark@grumble.grondar.za for PGP key
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00236.html">Cryto article in SJ Mercenary</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00263.html">Re: Keyed-MD5, ITAR, and HTTP-NG</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00250.html">Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux]</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00252.html">Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux]</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00264"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00264"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

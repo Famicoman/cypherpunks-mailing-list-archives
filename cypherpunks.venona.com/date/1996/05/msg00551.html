@@ -1,0 +1,1378 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: remailer&#45;in&#45;a&#45;box -->
+<!--X-From-R13: Pra Vbyvqnl <apbtavgbNtngr.arg> -->
+<!--X-Date: Fri, 10 May 1996 23:35:20 +0800 -->
+<!--X-Message-Id: Pine.A32.3.93.960509105054.31020A&#45;100000@hopi.gate.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: adb5ec01090210047acd@[206.170.115.3] -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: remailer-in-a-box</TITLE>
+<LINK REV="made" HREF="mailto:ncognito@gate.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00577.html">Date Prev</A>][<A HREF="msg00582.html">Date Next</A>][<A HREF="msg00484.html">Thread Prev</A>][<A HREF="msg00494.html">Thread Next</A>][<A HREF="index.html#00551">Date Index</A>][<A HREF="threads.html#00551">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: remailer-in-a-box</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Lance Cottrell &lt;<A HREF="mailto:loki@infonex.com">loki@infonex.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: remailer-in-a-box</LI>
+<LI><em>From</em>: Ben Holiday &lt;<A HREF="mailto:ncognito@gate.net">ncognito@gate.net</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 9 May 1996 11:19:47 -0400 (EDT)</LI>
+<LI><em>cc</em>: <A HREF="mailto:anonymous%2Dremailer@shell.portal.com">anonymous-remailer@shell.portal.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00484.html">adb5ec01090210047acd@[206.170.115.3]</A>&gt;</LI>
+<LI><em>Reply-To</em>: Ben Holiday &lt;<A HREF="mailto:ncognito@gate.net">ncognito@gate.net</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; At 3:51 PM 5/7/96, anonymous-remailer@shell.portal.com wrote:
+&gt; &gt;No one answered me.
+&gt; &gt;What's the best remailer-in-a-box.
+&gt; &gt;I'd like to run one.  I would think people would be falling
+&gt; &gt;over eachother to tell me.
+&gt; 
+&gt; The reason for the quiet may be twofold. First, I and many others delete
+&gt; unread list messages with out subjects. 
+
+Aye..
+
+&gt;Second, remailer-in-a-box does not
+&gt; really exist. Mixmaster, and most of the other remailers are fairly easy to
+&gt; set up for anyone with UNIX experience. I run Mixmaster + Ghio + reorder
+&gt; scripts.
+
+I wrote a one part shell script which will run on most unix systems. It
+will install a working type-1 ghio remailer on most shell accounts in
+about 20seconds. It wont do reordering or Mix but its effortless &lt;shrug&gt;.
+
+Below is the readme and the shell script.. if you just want a remailer and
+you want it NOW, export this message, cut this text and the text of the
+readme file out, and then follow the directions below. Yippy.
+
+--Ben
+
+__________________________________
+REAME.build-remailer
+__________________________________
+
+This is the 10 second remailer package. The idea is from Sameer, and the 
+C source is from Matt Ghio. This script will install a bare-bones 
+cypherpunk style remailer on your shell account.  Making it work is simple:
+
+1) Type:      chmod 700 build-remailer
+
+2) Type:      build-remailer
+
+3) Enter the email address of the remailer. This is optional. You may use 
+   any address you like, or you may enter none at all. If you don't enter an
+   email address here the address "nobody@foo.com" will appear in all 
+   outbound mail from the mailer, and also in the mailers help files. 
+
+4) If no errors are generated, then your all set. Send some mail to
+   yourself to test that it is working. Refer to the remailers help file
+   for details.
+
+
+___________________________
+build-remailer
+---------------------------
+
+----CUT HERE----CUT HERE----CUT HERE----CUT HERE----CUT HERE----
+
+echo "Warning: This will DESTROY your existing .forward file."
+echo "Type CTRL-C Now To Abort. I'll wait 10 Seconds For You."
+sleep 10s
+echo "Ok, here we go."
+echo -e "\n"
+echo "Getting Variables:"
+xspool=$MAIL
+echo "Found Mailspool as: $xspool"
+xsendmail=`which sendmail`
+echo "Found Sendmail as: $xsendmail"
+xls=`which ls`
+echo "Found ls as: $xls"
+xdir=$HOME/.mailx
+echo "Installing in: $xdir"
+mkdir $xdir
+echo "Enter the email address of the mailer now."
+echo "You can leave this blank if you want."
+read xaddr
+if [ `echo $xaddr | wc -w` -eq 0 ]
+then
+xaddr="nobody@nowhere.com"
+fi
+cd $xdir
+&gt; remailer.c
+echo "Building C Source."
+echo "
+#define DIR \"$xdir\"
+#define ANONFROM \"From: $xaddr (Anonymous)\\n\"
+#define REMAILERFROM \"From: $xaddr (Remailer)\\n\"
+#define REMAILERADDRESS \"$xaddr\"
+#define RETURN \"xaddr\"
+#define DISCLAIMER \"Comments: Please report misuse of this automated remailing service to &lt;$xaddr&gt;\\n\"
+#define NONANONDISC \"Comments: This message was forwarded by an automated remailing service.  No attempt was made to verify the sender's identity.  Please report misuse to &lt;$xaddr&gt;\\n\" 
+#define SPOOL \"$xspool\"
+#define SPAM_THRESHOLD 25
+#define WAIT_SEC 30
+#define DEFAULT_LATENCY 0
+
+#define PGP \"/usr/local/bin/pgp\"
+#define PGPPASS \"password\"
+#define PGPPATH DIR
+#define INEWS \"/usr/lib/news/inews\"
+#define NNTPSERVER \"127.0.0.1\"
+#define LS \"$xls\"
+#define SENDMAIL \"$xsendmail\"
+
+#define BLOCKFROM \"source.block\"
+#define BLOCKTO \"dest.block\"
+#define INQUEUE \"in.queue\"
+#define OUTQUEUE \"out.queue\"
+#define TEMPDIR \"temp\"
+#define HELPFILE \"remailer-help\"
+#define STATSDATA \"statsdata\"
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;signal.h&gt;
+#include &lt;time.h&gt;
+#include &lt;sys/time.h&gt; /* some os need this one also */
+/*File io stuff:*/
+#include &lt;sys/types.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;fcntl.h&gt;
+
+
+FILE *infile;
+FILE *outfile;
+FILE *tempfile;
+FILE *file2;
+char from[256]=\"\";
+char from_address[256]=\"\";
+char cutmarks[256]=\"\";
+int anon_flag=0;
+int help_flag=0;
+int stat_flag=0;
+int pgp_flag=0;
+char replykey[80]=\"\";
+char idbuf[17];
+int idcount=0;
+struct timeval tp;
+unsigned long latime;
+int blockflag;
+
+void getfrom(char *input){
+  int x=0,y=0;
+  while(input[x]!=':'){x=x+1;}
+  x=x+1;
+  while(input[x]&lt;=32){x=x+1;}
+  while(input[x]&gt;32){
+    from_address[y]=input[x];
+    x=x+1;y=y+1;
+  }
+  from_address[y]=0;
+  x=0; /* look for &lt;address&gt; */
+  while(input[x]&gt;31&amp;&amp;input[x]!='&lt;'){x=x+1;}
+  if(input[x]=='&lt;'){
+    y=0;x=x+1;
+    while(input[x]&gt;32&amp;&amp;input[x]!='&gt;'){
+      from_address[y]=input[x];
+      x=x+1;y=y+1;
+    }
+    from_address[y]=0;
+  }
+}
+
+void block_addr(char address[],char *file) {
+  char input[256];
+  int match=0;
+  int x,y,z;
+  int exclude;
+
+  FILE *killfile;
+
+  chdir(DIR);
+  if(killfile=fopen(file,\"r\")){
+    while(fscanf(killfile,\"%s\",input)&gt;0) {
+      if (input[0]!='#'&amp;&amp;input[0]&gt;32) {
+        x=0;exclude=0;z=0;
+        if (input[0]=='!') {exclude=1;z++;} 
+	while(address[x]!=0) {
+          y=0;
+          while ((address[x+y]|32)==(input[y+z]|32)&amp;&amp;input[y+z]!='*'
+              &amp;&amp;input[y+z]!=0&amp;&amp;address[x+y]!=0) {
+            y++;
+	  }
+          if (input[y+z]==0) match=(1^exclude);
+          if (input[y+z]=='*') {z=z+y+1;x=x+y;}
+          else x++;
+        }
+      }
+    }
+    fclose(killfile);
+  }
+  if (match==1) address[0]=0;
+}
+
+int search(char str1[],char str2[]) {
+  int x=0;
+  int y=0;
+  int match=0;
+
+  while(str2[x]!=0) {
+    y=0;
+    while ((str2[x+y]==str1[y]||str2[x+y]==(str1[y]-32))&amp;&amp;str2[x+y]!=0) {
+      y++;
+      if (str1[y]==0) match=1;
+    }
+    x++;
+  }
+  return(match);
+}
+
+void scanline(char input[],char resend_address[]) {
+  int x,y,z;
+  int resend_flag=0;
+  int cutmarks_flag=0;
+  int post_flag=0;
+  int latent_plusflag;
+  int latent_randflag;
+  int latent_h;
+  int latent_m;
+  int latent_s;
+
+  /* Pass thru Subject, Content-Type, and In-Reply-To lines */
+  if ((input[0]=='S'||input[0]=='s')&amp;&amp;input[1]=='u'&amp;&amp;input[2]=='b') {
+     /* if the subject line is blank, drop it */
+    if (input[8]!=0&amp;&amp;input[9]!=0) fprintf(outfile,\"%s\",input);
+     /* and handle special case subjects for help and stats */
+    if (search(\"remailer-stat\",input)) {
+      latime=tp.tv_sec; /* No latency */
+      stat_flag=1;
+    }
+    if (search(\"remailer-help\",input)||search(\"remailer-info\",input)) {
+      latime=tp.tv_sec; /* No latency */
+      help_flag=1;
+    }
+  }
+  if ((input[0]=='C'||input[0]=='c')&amp;&amp;input[1]=='o'&amp;&amp;input[2]=='n') {
+    fprintf(outfile,\"%s\",input);
+  }
+  if ((input[0]=='I'||input[0]=='i')&amp;&amp;input[1]=='n'&amp;&amp;input[2]=='-') {
+    fprintf(outfile,\"%s\",input);
+  }
+  
+  /* Save the from line in case non-anonymous posting is requested */
+  if ((input[0]=='F'||input[0]=='f')&amp;&amp;input[1]=='r'&amp;&amp;input[2]=='o') {
+    getfrom(input);block_addr(from_address,BLOCKFROM);
+    if(from_address[0]==0) blockflag=1; /* Source block */
+    block_addr(input,BLOCKTO);
+    strcpy(from,input);
+  }
+
+/* Fuzzy Match headers */
+  x=0;
+  /* Remail-To? */
+  while (input[x]!=0&amp;&amp;(input[x]!=32||x&lt;=2)&amp;&amp;input[x]!=10&amp;&amp;x&lt;256) {
+    if (input[x]=='R'||input[x]=='r') {
+      while (input[x]!=0&amp;&amp;input[x]!=32&amp;&amp;input[x]!=10&amp;&amp;x&lt;256) {
+        if (input[x]=='M'||input[x]=='m') {
+          while (input[x]!=0&amp;&amp;input[x]!=10&amp;&amp;x&lt;256) {
+            if ((input[x]=='T'||input[x]=='t') &amp;&amp;
+              (input[x+1]=='O'||input[x+1]=='o')) {
+              while (input[x]!=0&amp;&amp;input[x]!=':'&amp;&amp;input[x]!=32
+                     &amp;&amp;input[x]!=10&amp;&amp;x&lt;256) x++;
+              if (input[x]==':') {
+                resend_flag=1;
+                anon_flag=1;
+                x=256;
+              }
+            } else x++;
+          }
+        } else x++;
+      }
+    } else x++;
+  }
+
+  /* Anon-To? */
+  x=0;
+  while (input[x]!=0&amp;&amp;(input[x]!=32||x&lt;=2)&amp;&amp;input[x]!=10&amp;&amp;x&lt;256) {
+    if (input[x]=='A'||input[x]=='a') { x++;
+      if (input[x]=='N'||input[x]=='n') {
+        while (input[x]!=0&amp;&amp;input[x]!=10&amp;&amp;x&lt;256) {
+          if ((input[x]=='T'||input[x]=='t') &amp;&amp;
+              (input[x+1]=='O'||input[x+1]=='o')) {
+            while (input[x]!=0&amp;&amp;input[x]!=':'&amp;&amp;input[x]!=32
+                   &amp;&amp;input[x]!=10&amp;&amp;x&lt;256) x++;
+            if (input[x]==':') {
+              resend_flag=1;
+              anon_flag=1;
+            }
+            x=256;
+          } else x++;
+        }
+      }
+    } else x++;
+  }
+
+  /* Post? */
+  x=0;
+  while (input[x]!=0&amp;&amp;input[x]!=32&amp;&amp;input[x]!=10&amp;&amp;x&lt;256) {
+    if (input[x]=='P'||input[x]=='p') { x++;
+      if (input[x]=='O'||input[x]=='o') { x++;
+        if (input[x]=='S'||input[x]=='s') {
+          post_flag=1;
+          /* Post-To ? */
+          while (input[x]!=0&amp;&amp;input[x]!=32&amp;&amp;input[x]!=10&amp;&amp;x&lt;256) {
+            if (input[x]=='T'||input[x]=='t') { x++;
+              if (input[x]=='O'||input[x]=='o') { x++;
+                if (input[x]==':') {
+                  resend_flag=1;
+                }
+              }
+            } else x++;
+          }
+          x=256;
+        }
+      }
+    } else x++;
+  }
+
+  /* soda.berkeley style Send-To ? */
+  x=0;
+  while (input[x]!=0&amp;&amp;input[x]!=32&amp;&amp;input[x]!=10&amp;&amp;x&lt;256) {
+    if (input[x]=='S'||input[x]=='s') { x++;
+      if (input[x]=='E'||input[x]=='e') { x++;
+        if (input[x]=='N'||input[x]=='n') { x++;
+          if (input[x]=='D'||input[x]=='d') {
+            while (input[x]!=0&amp;&amp;input[x]!=32&amp;&amp;input[x]!=10&amp;&amp;x&lt;256) {
+              if (input[x]=='T'||input[x]=='t') { x++;
+                if (input[x]=='O'||input[x]=='o') { x++;
+                  if (input[x]==':') resend_flag=1;
+                }
+              } else x++;
+            }
+          }
+        }
+      }
+    } else x++;
+  }
+
+/* Check for PGP...   I got a little sloppy here...ohwell*/
+  if(input[0]=='E'&amp;&amp;input[1]=='n'&amp;&amp;input[2]=='c'
+     &amp;&amp;input[3]=='r'&amp;&amp;input[4]=='y'&amp;&amp;input[5]=='p'
+     &amp;&amp;input[6]=='t'&amp;&amp;input[7]=='e'&amp;&amp;input[8]=='d') {
+    resend_flag=0;
+    pgp_flag=1;
+  }
+  if(input[0]=='E'&amp;&amp;input[1]=='n'&amp;&amp;input[2]=='c'
+     &amp;&amp;input[3]=='r'&amp;&amp;input[4]=='y'&amp;&amp;input[5]=='p'
+     &amp;&amp;input[6]=='t'&amp;&amp;input[7]=='-') {
+    x=0;y=0;
+    while(input[x]!=':'){x=x+1;}
+    x=x+1;
+    if(input[x]==32){x=x+1;}
+    z=x;
+    while(input[x]&gt;32){
+      replykey[y]=input[x];
+      x=x+1;y=y+1;
+    }
+    replykey[y]=0;
+  
+  }
+  if(input[0]=='C'&amp;&amp;input[1]=='u'&amp;&amp;input[2]=='t') {
+    cutmarks_flag=1;
+  }
+
+  if(resend_flag){
+    x=2;y=0; /* x=2 in case Extropians-style ::Header */
+    while(input[x]!=':'){x=x+1;}
+    x=x+1;
+    while(input[x]&lt;=32){x=x+1;}
+    z=x;
+    if (post_flag==0) {
+      while(input[x]&gt;32){
+        resend_address[y]=input[x];
+        x=x+1;y=y+1;
+      }
+      resend_address[y]=0;
+      x=0; /* look for &lt;address&gt; */
+      while(input[x]&gt;31&amp;&amp;input[x]!='&lt;'){x=x+1;}
+      if(input[x]=='&lt;'){
+        y=0;x=x+1;
+        while(input[x]&gt;32&amp;&amp;input[x]!='&gt;'){
+          resend_address[y]=input[x];
+          x=x+1;y=y+1;
+        }
+        resend_address[y]=0;
+      }
+      /* Print out new To: line */
+      fprintf(outfile,\"To: \");
+      while(input[z]&gt;0){
+        fprintf(outfile,\"%c\",input[z]);
+        z=z+1;
+      }
+      block_addr(resend_address,BLOCKTO);
+    }
+    if (post_flag) {
+      fprintf(outfile,\"Newsgroups: \");
+      while(input[z]&gt;0){
+        fprintf(outfile,\"%c\",input[z]);
+        z=z+1;
+      }
+      resend_address[0]='p';
+      resend_address[1]='o';
+      resend_address[2]='s';
+      resend_address[3]='t';
+      resend_address[4]=0;
+      block_addr(input,BLOCKTO);if (input[0]==0) resend_address[0]=0;
+    }
+  }
+
+  if(cutmarks_flag){
+    x=0;y=0;
+    while(input[x]!=':'){x=x+1;}
+    x=x+1;
+    if(input[x]==32){x=x+1;}
+    z=x;
+    while(input[x]&gt;32){
+      cutmarks[y]=input[x];
+      x=x+1;y=y+1;
+    }
+    cutmarks[y]=0;
+  }
+
+  if((input[0]|32)=='l'&amp;&amp;(input[1]|32)=='a'&amp;&amp;(input[2]|32)=='t') {
+    x=0;
+    while(input[x]!=':'){x=x+1;}
+    x=x+1;
+    if(input[x]==32){x=x+1;}
+
+    latent_plusflag=0;latent_randflag=0;
+    latent_h=0;latent_m=0;latent_s=0;
+
+    while((input[x]&lt;'0'||input[x]&gt;'9')&amp;&amp;input[x]&gt;=32) {
+      if (input[x]=='+') latent_plusflag=1;
+      if ((input[x]=='r')||(input[x]=='R')) latent_randflag=1;
+      x++;
+    }
+    while (input[x]&gt;='0'&amp;&amp;input[x]&lt;='9') {
+      latent_h=(latent_h*10)+(input[x]-48);
+      x++;
+    }
+    if(input[x]==':') {
+      x++;
+      while (input[x]&gt;='0'&amp;&amp;input[x]&lt;='9') {
+        latent_m=(latent_m*10)+(input[x]-48);
+        x++;
+      }
+      if(input[x]==':') {
+        x++;
+        while (input[x]&gt;='0'&amp;&amp;input[x]&lt;='9') {
+          latent_s=(latent_s*10)+(input[x]-48);
+          x++;
+        }
+      }
+    }
+    while(input[x]&gt;=32) {
+      if (input[x]=='+') latent_plusflag=1;
+      if ((input[x]=='r')||(input[x]=='R')) latent_randflag=1;
+      x++;
+    }
+
+    latime=(latent_h*3600+latent_m*60+latent_s);
+
+    if(latent_plusflag==0) {
+      /* Not Supported - Is this really necessary? */
+    }
+
+    if(latent_randflag&amp;&amp;(latime&gt;1)) {
+      /* Simple randomizer */
+      latime=abs((tp.tv_sec^latime)+tp.tv_usec+(getpid()*latime))%(latime+1);
+    }
+
+    latime+=tp.tv_sec;
+  }
+}
+
+char* genid() { /* Generate ascii id from process id and time with shuffle */
+  unsigned long int id1,id2;
+  int x=0;
+  
+  id1=getpid()|(idcount&lt;&lt;16);
+  id2=tp.tv_sec;
+  idcount++;
+  
+  for(x=32;x--;){
+    id1+=1234567890;
+    id1^=0xABCDEF12;
+    id1=(id1&lt;&lt;1)|(id1&gt;&gt;31);
+    id2^=id1;
+    id2+=0x12345678;
+    id2^=0x9ABCDEF0;
+    id2=(id2&lt;&lt;31)|(id2&gt;&gt;1);
+    id1^=id2;
+  }
+  for(x=0;x&lt;8;x++) {
+    idbuf[x]=65+(id1&amp;15);
+    id1=id1&gt;&gt;4;
+  }
+  for(x=8;x&lt;16;x++) {
+    idbuf[x]=65+(id2&amp;15);
+    id2=id2&gt;&gt;4;
+  }
+  idbuf[16]=0;
+  return(idbuf);
+}
+
+/* Re-encrypt messages for use with reply-blocks */
+void reencrypt(){
+  char input[256];
+  int pipefd[2];
+  int pipe2fd[2];
+
+  input[255]=0;
+  pipe(pipefd);
+  pipe(pipe2fd);
+  if(!fork()) {
+    dup2(pipefd[0],0);
+    dup2(pipe2fd[1],1);
+    close(pipefd[1]);
+    close(pipe2fd[0]);
+    chdir(DIR);
+    execl(PGP,\"pgp\",\"-fcta\",\"+BATCHMODE\",\"+ARMORLINES=0\",\"-z\",replykey,(char *)0);
+  }
+  close(pipefd[0]);close(pipe2fd[1]);
+  file2=fdopen(pipefd[1],\"w\");
+  while(fgets(input,255,infile)) {
+    fprintf(file2,\"%s\",input);
+  }
+  fclose(file2);
+  file2=fdopen(pipe2fd[0],\"r\");
+  while(fgets(input,255,file2)) {
+    fprintf(outfile,\"%s\",input);
+  }
+  fclose(file2);
+}
+
+void updatestats(int inccnt,int incpgp,int inclat,int incpost) {
+  int m[24];
+  int ccm=0;
+  int p[24];
+  int ccpgp=0;
+  int l[24];
+  int ccl=0;
+  int u[24];
+  int ccnews=0;
+  char month[24][5];
+  int date[24];
+  int hour=0;
+  int currenthour;
+  FILE *datafile;
+  int x;
+  int y;
+  struct tm *timestr;
+
+  timestr=localtime(&amp;(tp.tv_sec));
+
+  if(datafile=fopen(STATSDATA,\"r\")){
+    fscanf(datafile,\"%d\",&amp;hour);
+    fscanf(datafile,\"%d %d %d %d\",&amp;ccm,&amp;ccpgp,&amp;ccl,&amp;ccnews);
+    for(x=0;x&lt;24;x++) {
+      fscanf(datafile,\"%s %d %d %d %d %d\",
+             month[x],&amp;date[x],&amp;m[x],&amp;p[x],&amp;l[x],&amp;u[x]); }
+    fclose(datafile);
+  }else{
+    for(x=0;x&lt;24;x++) {
+      strcpy(month[x],\"---\");
+      date[x]=0;m[x]=0;p[x]=0;l[x]=0;u[x]=0;
+    }
+  }
+  currenthour=(*timestr).tm_hour;
+  x=hour%24;
+  while (x!=currenthour) {
+    if (x&gt;0) {
+      strcpy(month[x],month[x-1]);
+      date[x]=date[x-1];
+    }else{
+      if((*timestr).tm_mon==0) strcpy(month[0],\"Jan\");
+      if((*timestr).tm_mon==1) strcpy(month[0],\"Feb\");
+      if((*timestr).tm_mon==2) strcpy(month[0],\"Mar\");
+      if((*timestr).tm_mon==3) strcpy(month[0],\"Apr\");
+      if((*timestr).tm_mon==4) strcpy(month[0],\"May\");
+      if((*timestr).tm_mon==5) strcpy(month[0],\"Jun\");
+      if((*timestr).tm_mon==6) strcpy(month[0],\"Jul\");
+      if((*timestr).tm_mon==7) strcpy(month[0],\"Aug\");
+      if((*timestr).tm_mon==8) strcpy(month[0],\"Sep\");
+      if((*timestr).tm_mon==9) strcpy(month[0],\"Oct\");
+      if((*timestr).tm_mon==10) strcpy(month[0],\"Nov\");
+      if((*timestr).tm_mon==11) strcpy(month[0],\"Dec\");
+      date[0]=(*timestr).tm_mday;
+    }
+    m[x]=0;
+    p[x]=0;
+    l[x]=0;
+    u[x]=0;
+    x++;if (x&gt;23) x=0;
+  }
+
+  if (hour!=currenthour) {
+    m[hour]=ccm;
+    p[hour]=ccpgp;
+    l[hour]=ccl;
+    u[hour]=ccnews;
+    ccm=0;
+    ccpgp=0;
+    ccl=0;
+    ccnews=0;
+  }
+
+  ccm+=inccnt;
+  ccpgp+=incpgp;
+  ccl+=inclat;
+  ccnews+=incpost;
+
+  if(datafile=fopen(STATSDATA,\"w\")){
+    fprintf(datafile,\"%d\\n\",currenthour);
+    fprintf(datafile,\"%d %d %d %d\\n\",ccm,ccpgp,ccl,ccnews);
+    for(x=0;x&lt;24;x++) {
+      fprintf(datafile,\"%s %d %d %d %d %d\\n\",
+              month[x],date[x],m[x],p[x],l[x],u[x]);
+    }
+    fclose(datafile);
+  } else fprintf(stderr,\"remailer: can't write file %s\\n\",STATSDATA);
+}
+
+void viewstats() {
+  int m[24];
+  int ccm;
+  int p[24];
+  int ccpgp;
+  int l[24];
+  int ccl;
+  int u[24];
+  int ccnews;
+  char month[24][5];
+  int date[24];
+  int hour;
+  int currenthour;
+  FILE *datafile;
+  int x;
+  int y;
+
+  datafile=fopen(STATSDATA,\"r\");
+
+  fscanf(datafile,\"%d\",&amp;hour);
+  fscanf(datafile,\"%d %d %d %d\",&amp;ccm,&amp;ccpgp,&amp;ccl,&amp;ccnews);
+  for(x=0;x&lt;24;x++) {
+    fscanf(datafile,\"%s %d %d %d %d %d\",
+           month[x],&amp;date[x],&amp;m[x],&amp;p[x],&amp;l[x],&amp;u[x]); }
+  fclose(datafile);
+
+  fprintf(outfile,\"Subject: Re: Remailer Statistics\\n\");
+  fprintf(outfile,\"\\n\");
+  fprintf(outfile,\"Statistics for last 24 hours from anonymous remailer at\\n\");
+  fprintf(outfile,\"e-mail address: %s\\n\",REMAILERADDRESS);
+  fprintf(outfile,\"\\n\");
+  fprintf(outfile,
+    \"Number of messages per hour from %s %d %d:00 to %s %d %d:59\\n\",
+    month[23],date[23],hour,month[0],date[0],(hour+23)%24);
+  fprintf(outfile,\"\\n\");
+  for(x=0;x&lt;24;x++) {
+    fprintf(outfile,\" %2d:00 (%2d) \",x,m[x]);
+    if (m[x]&gt;0) {
+      y=0;while((y&lt;m[x])&amp;&amp;(y&lt;66)) {
+        fprintf(outfile,\"*\");
+        y++;
+      }
+      ccm+=m[x];
+      ccpgp+=p[x];
+      ccl+=l[x];
+      ccnews+=u[x];
+    }
+    fprintf(outfile,\"\\n\");
+  }
+  fprintf(outfile,\"\\n\");
+  fprintf(outfile,\"Total messages remailed in last 24 hours: %d\\n\",ccm);
+#ifdef PGP
+  fprintf(outfile,\"Number of messages encrypted with PGP: %d\\n\",ccpgp);
+#endif
+  fprintf(outfile,\"Number of messages queued with latency: %d\\n\",ccl);
+#ifdef INEWS
+  fprintf(outfile,\"Number of posts to usenet: %d\\n\",ccnews);
+#endif
+}
+
+void main(int argc,char *argv[]) {
+  char input[256];
+  char resend_address[256]=\"\";
+  int stop;
+  int x;
+  pid_t mypid,otherpid;
+  char filename[256];
+  char filename2[256];
+  int pipefd[2];
+  int pipe2fd[2];
+  char envstr[256];
+
+  gettimeofday(&amp;tp,0);
+  if(chdir(DIR))
+   {fprintf(stderr,\"remailer: Fatal Error: can't chdir to %s\\n\",DIR);exit(1);}
+  mkdir(INQUEUE,0700); /* Create it if it doesn't exist */
+  mkdir(TEMPDIR,0700); /* And the temp dir */  
+  /* Create a temporary file in TEMPDIR */
+  strcpy(filename,TEMPDIR);
+  strcat(filename,\"/\");
+  strcat(filename,genid());
+  if((outfile=fopen(filename,\"w\"))==0){
+    fprintf(stderr,\"remailer: Fatal Error: can't create temporary file\\n\");
+    exit(1);
+  }
+  while(fgets(input,255,stdin)) fprintf(outfile,\"%s\",input);
+  fclose(outfile);
+  strcpy(filename2,INQUEUE);
+  strcat(filename2,\"/\");
+  strcat(filename2,genid());
+  if(rename(filename,filename2)){
+    fprintf(stderr,\"remailer: Fatal Error: can't move %s to %s\\n\",
+      filename,filename2);
+    exit(1);
+  }
+
+  mypid=getpid();otherpid=0;
+  if(infile=fopen(\"pid\",\"rb\")) {
+    fread(&amp;otherpid,sizeof(pid_t),1,infile);
+    fclose(infile);
+  }
+  /* If there is a remailer process already running, leave the message
+     in in.queue and exit */
+  if(otherpid) {
+    if(kill(otherpid,SIGCONT)==0) exit(0); }
+  if(outfile=fopen(\"pid\",\"wb\")) {
+    fwrite(&amp;mypid,sizeof(pid_t),1,outfile);
+    fclose(outfile);
+  } else fprintf(stderr,\"remailer: can't write pid file\\n\");
+
+in_loop:
+
+  /* Open an input file from in.queue */
+  chdir(DIR);chdir(INQUEUE);
+  pipe(pipefd);
+  filename[0]=0;
+  if(!fork()) {
+    dup2(pipefd[1],1);
+    close(pipefd[0]);
+    execl(LS,\"ls\",\"-1\",(char *)0);
+  }
+  x=0;close(pipefd[1]);
+  infile=fdopen(pipefd[0],\"r\");
+  while(fgets(filename,256,infile)) x++;
+  fclose(infile);
+  if(filename[0]==0) exit(0);
+#ifdef SPAM_THRESHOLD
+  if(x&gt;SPAM_THRESHOLD) exit(0);
+#endif
+  for(x=0;filename[x]&gt;32;x++){} filename[x]=0;
+  if(!(infile=fopen(filename,\"r\"))){}
+  
+  /* Open the output file */
+  chdir(DIR);
+  mkdir(OUTQUEUE,0700); /* Create it if it doesn't exist */
+  if(chdir(OUTQUEUE))
+    {fprintf(stderr,\"remailer: Error - can't chdir to %s\\n\",OUTQUEUE);exit(1);}
+  if(!(outfile=fopen(filename,\"w\")))
+    {fprintf(stderr,\"remailer: can't write output file, message left in %s\\n\",INQUEUE);exit(1);}
+
+  /* Create blank space for fields in output file */
+  latime=0;resend_address[0]=0;resend_address[255]=0;
+  fwrite(&amp;latime,sizeof(long),1,outfile);
+  fwrite(resend_address,256,1,outfile);
+
+  /* Initialize latency time &amp; misc */
+  latime=tp.tv_sec;
+  from[0]=0;cutmarks[0]=0;replykey[0]=0;
+  anon_flag=0;help_flag=0;stat_flag=0;pgp_flag=0;blockflag=0;
+
+#ifdef DEFAULT_LATENCY
+  /* Randomly reorder messages if DEFAULT_LATENCY is set */
+  if(DEFAULT_LATENCY&gt;1) {
+    latime=tp.tv_sec+abs(tp.tv_sec+tp.tv_usec+getpid())%(DEFAULT_LATENCY+1);
+  }
+#endif
+
+  /* Scan headers */
+  fgets(input,255,infile);
+  while(input[0]!=10) {
+    scanline(input,resend_address);
+    input[0]=10;input[1]=0;
+    fgets(input,255,infile);
+  }
+  fgets(input,255,infile); /* end of headers, skip a line */
+  
+  /* if first line is blank, skip it and look for a :: on the next line */
+  if(resend_address[0]==0&amp;&amp;input[0]&lt;32) fgets(input,255,infile);
+  /* Also skip \"blank\" lines with a space in them: */
+  if(resend_address[0]==0){
+    for(x=0;(input[x]&lt;=32)&amp;&amp;(input[x]);x++){}
+    if(input[x]==0) fgets(input,255,infile);
+  }
+
+  /* Scan :: headers, if applicable */
+  if(input[0]==':'&amp;&amp;input[1]==':') {
+    while(input[0]!=10) {
+      scanline(input,resend_address);
+      input[0]=10;input[1]=0;
+      fgets(input,255,infile);
+    }
+    fgets(input,255,infile);
+  }
+
+  /* or scan for headers anyway for idiots who forget the double colon */
+  if(resend_address[0]==0) {
+    scanline(input,resend_address);
+    if(resend_address[0]!=0) {
+      fgets(input,255,infile);
+      while(input[0]!=10) {
+        scanline(input,resend_address);
+        input[0]=10;input[1]=0;
+        fgets(input,255,infile);
+      }
+    }
+    fgets(input,255,infile);
+  }
+
+  /* Exec PGP? */
+  if (pgp_flag) {
+    fclose(outfile);
+    chdir(DIR);chdir(OUTQUEUE);
+    unlink(filename);
+    pipe(pipefd);
+    pipe(pipe2fd);
+    if(!fork()) {
+      dup2(pipefd[0],0);
+      dup2(pipe2fd[1],1);
+      close(pipefd[1]);
+      close(pipe2fd[0]);
+      chdir(DIR);
+#ifdef PGPPATH
+      strcpy(envstr,\"PGPPATH=\");
+      strcat(envstr,PGPPATH);
+      putenv(envstr);
+#endif
+      execl(PGP,\"pgp\",\"-f\",\"-z\",PGPPASS,(char *)0);
+    }
+    close(pipefd[0]);close(pipe2fd[1]);
+    fseek(infile,0,0);
+    outfile=fdopen(pipefd[1],\"w\");
+    while((fgets(input,255,infile)&gt;0)
+         &amp;&amp;(strcmp(input,\"-----BEGIN PGP MESSAGE-----\\n\")!=0)) {}
+    fprintf(outfile,\"%s\",input);
+    while(fgets(input,255,infile)
+         &amp;&amp;(strcmp(input,\"-----END PGP MESSAGE-----\\n\")!=0)) {
+      fprintf(outfile,\"%s\",input);
+    }
+    fprintf(outfile,\"%s\",input);
+    fclose(outfile);
+    file2=fdopen(pipe2fd[0],\"r\");
+    chdir(DIR);chdir(INQUEUE);
+    outfile=fopen(genid(),\"w\");
+    fprintf(outfile,\"\\n\");
+    while(fgets(input,255,file2)) {
+      fprintf(outfile,\"%s\",input);
+    }
+    fclose(file2);
+    /* Append rest of message to decrypted reply-block */
+    while(fgets(input,255,infile)) {
+      fprintf(outfile,\"%s\",input);
+    }
+    fclose(infile);fclose(outfile);
+    unlink(filename);/* Remove the original message from in.queue */
+    chdir(DIR);
+    updatestats(0,1,0,0);
+    goto in_loop;
+  }
+
+  if (from[0]==0) anon_flag=1;
+
+  if (anon_flag) {
+    fprintf(outfile,ANONFROM);
+    fprintf(outfile,DISCLAIMER);
+  }else{
+    fprintf(outfile,\"%s\",from);
+    fprintf(outfile,NONANONDISC);
+  }
+
+  /* Paste in ## headers if present */
+  if(input[0]=='#'&amp;&amp;input[1]=='#') {
+   /* Kill Reply-To lines with blocked addresses to prevent
+      mailbombs via alt.test */
+    while(fgets(input,255,infile)&gt;0&amp;&amp;input[0]&gt;31) {
+      if ((input[0]=='R'||input[0]=='r')&amp;&amp;input[1]=='e'&amp;&amp;input[2]=='p') {
+        block_addr(input,BLOCKTO);if (input[0]!=0) fprintf(outfile,\"%s\",input);
+      /* Block ## pasted Newsgroups: */
+      }else if((input[0]|32=='n')&amp;&amp;input[1]=='e'&amp;&amp;input[2]=='w'&amp;&amp;input[3]=='s')
+      {
+        block_addr(input,BLOCKTO);if (input[0]!=0) fprintf(outfile,\"%s\",input);
+      }else fprintf(outfile,\"%s\",input);
+    }
+    fprintf(outfile,\"\\n\");
+  }else{
+    fprintf(outfile,\"\\n%s\",input);
+    if(replykey[0]&gt;0&amp;&amp;input[0]=='*'&amp;&amp;input[1]=='*') {
+      reencrypt();
+    }
+  }
+
+  /* Copy message */
+  stop=0;
+  while(fgets(input,255,infile)&gt;0&amp;&amp;(!stop)) {
+    if (cutmarks[0]!=0) {
+      x=0;
+      while(cutmarks[x]==input[x]&amp;&amp;input[x]!=0&amp;&amp;cutmarks[x]!=0) {
+        x++;
+      }
+      if (cutmarks[x]==0) stop=1;
+    }
+    if (!stop) fprintf(outfile,\"%s\",input);
+    if(replykey[0]&gt;0&amp;&amp;input[0]=='*'&amp;&amp;input[1]=='*') {
+      reencrypt();
+    }
+  }
+  
+  /* If help or stats were requested, set destination address to reply
+     to sender */
+  if((resend_address[0]==0)&amp;&amp;(help_flag||stat_flag)){
+    strcpy(resend_address,from_address);
+  } else {help_flag=0;stat_flag=0;}
+
+  /* Save time and destination address in binary data table at
+     begining of file */
+  if (blockflag) resend_address[0]=0;
+  fseek(outfile,0,0);
+  fwrite(&amp;latime,sizeof(long),1,outfile);
+  fwrite(resend_address,256,1,outfile);
+  if(help_flag||stat_flag){
+    chdir(DIR);
+    fprintf(outfile,\"%s\",REMAILERFROM);
+    if(help_flag) {
+      if(file2=fopen(HELPFILE,\"r\")){
+        while(fgets(input,255,file2)){
+          for(x=0;input[x];x++){
+            if(input[x]=='['&amp;&amp;input[x+1]=='a'&amp;&amp;input[x+2]=='d'
+               &amp;&amp;input[x+3]=='d'&amp;&amp;input[x+4]=='r'&amp;&amp;input[x+5]==']')
+            {
+              fprintf(outfile,\"%s\",REMAILERADDRESS);x=x+5;
+            }
+            else
+            {
+              fprintf(outfile,\"%c\",input[x]);
+            }   
+          }
+        }
+        fclose(file2);
+      } else resend_address[0]=0;
+    }
+    if(stat_flag) {viewstats();}
+  }
+  fclose(outfile);
+
+  chdir(DIR);chdir(INQUEUE);
+
+  /* Second message?  Put message following cutmarks into inqueue */
+  if (stop==1&amp;&amp;input[0]==':'&amp;&amp;input[1]==':') {
+    outfile=fopen(genid(),\"w\");
+    fprintf(outfile,\"\\n::\\n\");
+    while(fgets(input,255,infile)&gt;0) {
+      fprintf(outfile,\"%s\",input);
+    }
+    fclose(outfile);
+  }
+
+  /* Write non-remailer messages into operator's mailbox */
+  if (resend_address[0]==0&amp;&amp;from[0]!=0){
+    fseek(infile,0,0);
+    outfile=fopen(SPOOL,\"a\");
+    while(fgets(input,255,infile)) {
+      fprintf(outfile,\"%s\",input);
+    }
+    fclose(infile);
+    fprintf(outfile,\"\\n\");
+    fclose(outfile);
+    unlink(filename);
+    chdir(DIR);chdir(OUTQUEUE);
+    unlink(filename);
+  }else{
+    fclose(infile);
+    unlink(filename);
+    if(strcmp(resend_address,\"null\")==0
+     ||strcmp(resend_address,\"/dev/null\")==0) resend_address[0]=0;
+    if(resend_address[0]==0){ /* drop empty messages */
+      chdir(DIR);chdir(OUTQUEUE);
+      unlink(filename);
+    }else{
+      chdir(DIR);
+      if((latime-tp.tv_sec)&gt;2) updatestats(0,0,1,0);
+      updatestats(1,0,0,0); /* Add one remailed message to stats */
+    }
+  }
+
+  /* Deliver messages in out.queue */
+  gettimeofday(&amp;tp,0);
+  chdir(DIR);chdir(OUTQUEUE);
+  pipe(pipefd);
+  filename[0]=0;
+  if(!fork()) {
+    dup2(pipefd[1],1);
+    close(pipefd[0]);
+    execl(LS,\"ls\",\"-1\",(char *)0);
+  }
+  x=0;close(pipefd[1]);
+  file2=fdopen(pipefd[0],\"r\");
+  while(fgets(filename,256,file2)&amp;&amp;filename[0]!=0) {
+    for(x=0;filename[x]&gt;32;x++){} filename[x]=0;
+    if(infile=fopen(filename,\"r\")){
+      fread(&amp;latime,sizeof(long),1,infile);
+      fread(resend_address,256,1,infile);
+      if (latime&lt;=tp.tv_sec) {
+        pipe(pipe2fd);/*pipe(pipe3fd);*/
+        if(!fork()) {
+          /*Child*/
+          dup2(pipe2fd[0],0);close(pipe2fd[1]);
+          /*dup2(pipe3fd[1],1);close(pipe3fd[0]);*/
+          if(strcmp(resend_address,\"post\")){
+            execl(SENDMAIL,SENDMAIL,
+#ifdef RETURN
+                                    \"-f\",RETURN,
+#endif
+                                                resend_address,(char *)0);
+            exit(0);
+          }else{
+#ifdef INEWS
+#ifdef NNTPSERVER
+            strcpy(envstr,\"NNTPSERVER=\");
+            strcat(envstr,NNTPSERVER);
+            putenv(envstr);
+#endif
+            execl(INEWS,\"inews\",\"-h\",(char *)0);
+#endif
+            exit(0);
+          }
+        }else{
+          /*Parent*/
+          close(pipe2fd[0]);/*close(pipe3fd[1]);*/
+          outfile=fdopen(pipe2fd[1],\"w\");
+          if(strcmp(resend_address,\"post\")){
+            /* We are talking to sendmail */
+            while(fgets(input,255,infile)&gt;0) {
+              fprintf(outfile,\"%s\",input);
+            }
+            fclose(outfile);
+            /* At this point, it's a safe bet that sendmail will deliver
+               the message, so the remailer can delete its copy.  If
+               sendmail execution had failed for some reason, this
+               process would have been killed by a SIGPIPE */
+            unlink(filename);
+          }else{
+            /* We are talking to inews */
+#ifdef INEWS
+            while(fgets(input,255,infile)&gt;0) {
+              fprintf(outfile,\"%s\",input);
+            }
+            /* There should be a way to analyze the response from inews
+               and requeue messages that could not be posted due to server
+               failure.  Now, the messages just get deleted :( */
+            unlink(filename);
+#else
+            /* If posting is not allowed, delete the failed message */
+            unlink(filename);
+#endif
+          }
+        }
+#ifdef WAIT_SEC
+        sleep(WAIT_SEC);
+#endif
+        gettimeofday(&amp;tp,0);
+      }
+      fclose(infile);
+    }
+  }
+  fclose(file2);
+
+  goto in_loop;
+}
+" | tee -a remailer.c &gt; /dev/null
+echo "Spawning compile in background."
+gcc -o RM remailer.c 2&gt; /dev/null &amp;
+echo "Building help-file."
+echo "
+Subject: Instructions for using anonymous remailer
+
+This message is being sent to you automatically in response to the message
+you sent to $xaddr with subject \"remailer-help\".
+
+I have an automated mail handling program installed here which will take
+any message with the proper headers and automatically re-send it anonymously.
+You can use this by sending a message to $xaddr, with the
+header Anon-To: containing the address that you want to send anonymously to.
+(Only one recipient address is permitted.)  If you can't add headers to your
+mail, you can place two colons on the first line of your message, followed
+by the Anon-To line.  Follow that with a blank line, and then begin your
+message.  For Example:
+
+&gt; From: joe@site.com
+&gt; To: $xaddr
+&gt; Subject: Anonymous Mail
+&gt;
+&gt; ::
+&gt; Anon-To: beth@univ.edu
+&gt;
+&gt; This is some anonymous mail.
+
+The above would be delivered to beth@univ.edu anonymously.  All headers in
+the original message are removed, with the exception of the Subject (and
+Content-Type, if present).  She would not know that it came from Joe, nor
+would she be able to reply to the message.
+
+However, if Beth suspected that Joe had sent the message, she could compare
+the time that the message was received with the times that Joe was logged
+in.  However, this problem can be avoided by instructing the remailer to
+delay the message, by using the Latent-Time header:
+
+&gt; From: joe@site.com
+&gt; To: $xaddr
+&gt; Subject: Anonymous Mail
+&gt;
+&gt; ::
+&gt; Anon-To: beth@univ.edu
+&gt; Latent-Time: +1:00
+&gt;
+&gt; This is some anonymous mail.
+
+The above message would be delayed one hour from when it is sent.  It is also
+possible to create a random delay by adding an r to the time (ie +1:00r),
+which would have the message be delivered at a random time, but not more
+than an hour.
+
+Another problem is that some mailers automatically insert a signature file.
+Of course, this usually contains the senders email address, and so would
+reveal their identity.  The remailer software can be instructed to remove
+a signature file with the header \"Cutmarks\".  Any line beginning with the
+same text at in the cutmarks header, and any lines following it will be
+removed.
+
+&gt; From: sender@origin.com
+&gt; To: $xaddr
+&gt; Subject: Anonymous Mail
+&gt;
+&gt; ::
+&gt; Anon-To: recipient@destination.com
+&gt; Cutmarks: --
+&gt;
+&gt; This line of text will be in the anonymous message.
+&gt; --
+&gt; This line of text will not be in the anonymous message.
+
+The remailer can also be used to make posts to usenet.  To do this, use
+Anon-Post-To.  Non-Anonymous posts can be made by using Post-To.
+
+&gt; From: poster@origin.com
+&gt; To: $xaddr
+&gt; Subject: Anonymous Post
+&gt;
+&gt; ::
+&gt; Anon-Post-To: alt.test
+&gt;
+&gt; This is an anonymous message
+
+When posting test messages, please use the appropriate newsgroups (alt.test,
+misc.test).
+
+You can add additional headers to the output message by preceeding them
+with ##
+
+&gt; From: chris@nifty.org
+&gt; To: $xaddr
+&gt; Subject: Nifty Anon Msg
+&gt;
+&gt; ::
+&gt; Anon-To: andrew@hell.edu
+&gt;
+&gt; ##
+&gt; Reply-To: acs-314159@chop.ucsd.edu
+&gt;
+&gt; A Message with a reply address.
+
+By seperating messages with cutmarks, you can send more than one message
+at once:
+
+&gt; From: me@mysite
+&gt; To: $xaddr
+&gt; Subject: message 1
+&gt;
+&gt; ::
+&gt; Anon-To: recipient1@site1.org
+&gt; Cutmarks: --
+&gt; 
+&gt; Message one.
+&gt; --
+&gt; ::
+&gt; Anon-To: recipient2@site2.org
+&gt; 
+&gt; ##
+&gt; Subject: message 2
+&gt; 
+&gt; Message two.
+
+The two messages will be delivered seperately.
+
+For added security, you can encrypt your messages to the remailer with PGP.
+The remailer software will decrypt the message and send it on.  Here is the
+remailer's public key:
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: 2.3a
+
+mQCKAi3vhFUAAAED6KSE5JwFAstBYAUEASfQCEr1wA+1YsWZl7nlNBA8Xq4YSwl
+eLCy9oiTDisxsxxxcbQdMtBTFcgQ2GVq7NhhjCEQkRzFRzPOG87T+0aUSufqD2R
+PYnwacPDpiTUe/TobHMs/Ov+yDuji0bIacveflubU8DvHLjHgI58Jgk1AAURtCR
+bm9ueW1vdXMgUmVtYWlsZXIgPGdoaW9Aa2Fpd2FuLmNvbT=
+=v5cv
+-----END PGP PUBLIC KEY BLOCK-----
+
+To utilize this feature, create a message with two colons on the first line,
+then the Anon-To line, then any other headers, such as cutmarks or latency,
+then a blank line, and then the message.  Encrypt this with the remailer's
+public key.  Then send it to the remailer, adding the header \"Encrypted: PGP\".
+If you forget this, the remailer won't know that it needs to be decrypted.
+Also be sure to use the -t option with PGP, or the linefeeds might not be
+handled properly.
+
+&gt; To: $xaddr
+&gt; From: me@mysite.org
+&gt;
+&gt; ::
+&gt; Encrypted: PGP
+&gt;
+&gt; -----BEGIN PGP MESSAGE-----
+&gt; Version: 2.3a
+&gt;
+&gt; hIkCuMeAjnwmCTUBA+dfWcFk/fLRpm4ZM7A23iONxkOGDL6D0FyRi/r0P8+pH2gf
+&gt; HAi4+1BHUhXDCW2LfLfay5JwHBNMtcdbgXiQVXIm0cHM0zgf9hBroIM9W+B2Z07i
+&gt; 6UN3BDhiTSJBCTZUGQ7DrkltbgoyRhNTgrzQRR8FSQQXSo/cf4po0vCezKYAAABP
+&gt; smG6rgPhdtWlynKSZR6Gd2W3S/5pa+Qd+OD2nN1TWepINgjXVHrCt0kLOY6nVFNQ
+&gt; U7lPLDihXw/+PPJclxwvUeCSygmP+peB1lPrhSiAVA==
+&gt; =da+F
+&gt; -----END PGP MESSAGE-----
+
+Any unencrypted text after the PGP message is also remailed.  This is to
+allow sending to someone who is anonymous.  If you create a PGP-encrypted
+message to yourself via my remailer, and then you give it to someone, they
+can send you a message by sending the encrypted message to the remailer.
+The remailer will then decrypt it and send it to you.  The message gets
+anonymized in the process, so the sender will need to include a return
+address if he wants a reply.
+
+Messages sent this way can be encrypted using the Encrypt-Key: feature.
+Any text following a line beginning with ** will be encrypted with this
+key.  For example, if you put in your PGP message:
+
+&gt; ::
+&gt; Anon-To: you@yourhost.org
+&gt; Encrypt-Key: your_password
+&gt; 
+&gt; **
+
+The appended message after the ** will be encrypted with the key 
+\"your_password\", using PGP's conventional encryption option.  
+
+
+Abuse Policy:
+I consider the following to be inappropriate use of this anonymous remailer,
+and will take steps to prevent anyone from doing any of the following:
+- Sending messages intended primarilly to be harassing or annoying.
+- Use of the remailer for any illegal purpose.
+If you don't want to receive anonymous mail, send me a message, and I will
+add your email address to the block list.
+
+You can get a list of statistics on remailer usage by sending mail to
+$xaddr with Subject: remailer-stats
+" | tee -a remailer-help &gt; /dev/null
+
+cd $HOME
+echo "|$xdir/RM" &gt; .forward
+echo -e "\n"
+echo "
+Ok, i've installed a very basic type one remailer.
+If you want to support Mixmaster, PGP, or other 
+features, check the source code in $xdir/remailer.c 
+and make appropriate changes, then type:
+
+ \"gcc -o RM remailer.c\"
+
+If you don't care to support these features, then your 
+remailer should now be fully functional.
+"
+
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00484" HREF="msg00484.html">Re: remailer-in-a-box</A></STRONG>
+<UL><LI><EM>From:</EM> loki@infonex.com (Lance Cottrell)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00577.html">Re: Mandatory Voluntary Self-Ratings</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00582.html">Re: PGP, Inc.</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00484.html">Re: remailer-in-a-box</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00494.html">Re: remailer-in-a-box</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00551"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00551"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

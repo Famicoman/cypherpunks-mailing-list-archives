@@ -1,0 +1,190 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: help file for remailing script -->
+<!--X-From-R13: Yney Z. Pneehf <oneehfNgerr.rte.hu.rqh> -->
+<!--X-Date: Wed, 13 Jan 93 17:46:04 PST -->
+<!--X-Message-Id: 9301140145.AA05184@tree.egr.uh.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>help file for remailing script</TITLE>
+<LINK REV="made" HREF="mailto:barrus@tree.egr.uh.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00090.html">Date Prev</A>][<A HREF="msg00089.html">Date Next</A>][<A HREF="msg00090.html">Thread Prev</A>][<A HREF="msg00089.html">Thread Next</A>][<A HREF="index.html#00091">Date Index</A>][<A HREF="threads.html#00091">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>help file for remailing script</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: help file for remailing script</LI>
+<LI><em>From</em>: Karl L. Barrus &lt;<A HREF="mailto:barrus@tree.egr.uh.edu">barrus@tree.egr.uh.edu</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 13 Jan 93 19:45:12 -0600</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+And here is a short help file I've written.  I will try to write
+another version of this script (maybe in perl or something) and submit
+everything to be placed on the ftp site.  To cut down on mail, I won't
+be mailing further versions, etc. to the list, so request it from me
+or get it via ftp (once I get around to submitting it).
+
+------------------------------
+
+hop.mail is a shell script that automates the process of using the
+cypherpunk cryptographically protected remailers.  Briefly, it has two
+modes of operation: one is to send a file, the other is to create a
+header which can be used by someone else to send a file to you.
+
+WHAT YOU NEED TO HAVE
+
+Well, you need to have PGP installed.  Also, you'll need the public
+keys of the various remailers on your keyring.
+
+SENDING A FILE
+
+Create the message you want to mail, and save it as a file.
+
+To send a file, choose option 1.  You will then be prompted for the
+final destination of the file you would like to send (by final
+destination I mean email address).  After that, the script will
+continue prompting you for routing information.  Each remailer you
+specify routes your mail through that particular remailer.
+
+Note: due to the way the remailing headers are built up, the path your
+file will actually take is the reverse of what you specify.  That is,
+the first remailer you route through will be the one you file will
+appear to come from.  The last remailer you specify is actually the
+first hop in the chain.  
+
+After routing your mail through as many remailers as you want (keep in
+mind that your mail will arrive slower the more hops you take), enter
+'q' to exit.
+
+After you have set up your mail route, the script will ask what file
+you wish to send.  The file is simply appended on to the header, and
+the whole thing is sent off.  No encryption of the file takes place.
+If you wish, you may encrypt the file you want to mail with your
+destination's public key or some other encryption scheme.  The
+advantage of not encrypting the message in with the remailing header
+is that you can use this script to mail to people who don't use pgp.
+
+CREATING A HEADER
+
+Create the message you wish to send and save it as a file.
+
+Choose option 2 to create a header.  The steps are similar to sending
+a file, except remember that someone will use this to reply to you, so
+type in the address you want them to respond to.  This can be your
+real mail address, or an anonymous id on one of the various anonymous
+services, or anything else.  Route your mail like you want, and enter
+'q' to exit.
+
+At this point, you will be prompted for a file to append to (the
+message you created).  Enter the file you want the remailing header
+appended to.  Now you have a file which contains the message you
+typed, as well as instructions on how whoever you mail it to can use
+the included header to reply to you.  If you wish, you may mail this
+file via option 1!
+
+NOTES
+
+My first attempt at this script simply built each header separately.
+This worked, but was vulnerable: simply save each piece in a separate
+file, run pgp on them, and you will be told which remailer the header
+is encrypted for!
+
+This version nests the encryption, so that only the next destination
+is revealed to the current remailer.  That is, the structure of the
+header is:
+
+encrypt1(address2, encrypt2(address3, encrypt3(message)))
+
+So when your file arrives at remailer1, the header is decrypted to
+reveal the next hop, and the rest of the header is mailed off the
+remailer2, where it is decrypted to reveal the next hop, etc.
+
+As I said above, the file you send is not encrypted.  If it bugs you
+that your file is mailed plain text, then encrypt it first if the
+person you are sending to can decrypt.  I purposely did not encrypt
+the file you want to send so you can use this procedure with people
+who don't have pgp.  Or you can post to usenet via a email-to-usenet
+gateway.  Or whatever.
+
+Also, the remailer at extropia is not supported yet.  Not because I
+don't like it, but because encryption must be used there.  This isn't
+bad or anything, but it causes difficulty building the remailing
+header separately.  Extropia will not allow you to mail plain text
+through it, you must encrypt it with extropia's public key.  So if you
+do that, then you should be able to use extropia, and you'll need to
+go through and uncomment the appropriate lines.
+
+Finally, the mail command I used in the script is 
+	mail -s "anonymous mail" 
+Make the appropriate changes if you want to use another mailer or
+change the subject line 
+
+BUGS
+
+Ug.  :-)  Send reports of problems to elee9sf@menudo.uh.edu, or
+barrus@tree.egr.uh.edu, and I'll look into them!  Or, send any
+comments you might have.
+
+
+/-----------------------------------\
+| Karl L. Barrus                    |
+| elee9sf@menudo.uh.edu             | &lt;- preferred account
+| barrus@tree.egr.uh.edu (NeXTMail) |
+\-----------------------------------/
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00090.html">new remailing script</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00089.html">Details on return envelopes</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00090.html">new remailing script</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00089.html">Details on return envelopes</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00091"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00091"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

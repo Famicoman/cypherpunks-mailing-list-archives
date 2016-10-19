@@ -1,0 +1,166 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: ArcotSign -->
+<!--X-From-R13: Oabalzbhf <abobqlNercynl.pbz> -->
+<!--X-Date: Tue, 22 Sep 1998 13:22:23 +0800 -->
+<!--X-Message-Id: 199809221821.UAA24448@replay.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: ArcotSign</TITLE>
+<LINK REV="made" HREF="mailto:nobody@replay.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01104.html">Date Prev</A>][<A HREF="msg01108.html">Date Next</A>][<A HREF="msg01098.html">Thread Prev</A>][<A HREF="msg01139.html">Thread Next</A>][<A HREF="index.html#01133">Date Index</A>][<A HREF="threads.html#01133">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: ArcotSign</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A>, <A HREF="mailto:cryptography@c2.net">cryptography@c2.net</A></LI>
+<LI><em>Subject</em>: Re: ArcotSign</LI>
+<LI><em>From</em>: Anonymous &lt;<A HREF="mailto:nobody@replay.com">nobody@replay.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 22 Sep 1998 20:21:17 +0200</LI>
+<LI><em>Comments</em>: This message did not originate from the Sender address above.It was remailed automatically by anonymizing remailer software.Please report problems or inappropriate use to theremailer administrator at &lt;abuse@replay.com&gt;.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Greg Broiles writes:
+&gt; I'm certainly not a cryptographer, but I'm somewhat at a loss in trying to
+&gt; understand the purpose of using public-key (or asymmetric key)
+&gt; cryptography within a policy/technology system which won't allow the use
+&gt; of the strengths of asymmetric key crypto. As I understand the paper you
+&gt; reference above, to implement this system the public key must be kept
+&gt; confidential, and signed documents must also be kept confidential, or the
+&gt; system of the security as a whole is at risk. With those constraints, why
+&gt; bother with the overhead (computationally/technically/legally) of
+&gt; asymmetric key crypto at all? 
+
+Based on <A  HREF="http://www.arcot.com/camo2.html">http://www.arcot.com/camo2.html</A>, the idea is to defend against
+an attacker who manages to steal a copy of the secret key file, and who
+then tries to guess the passphrase which protects it.  The file data
+is encrypted in an unstructured generic manner so that all decryptions
+look like random data, even the correct one.  This gives the attacker
+no information about when he has guessed the correct passphrase.
+
+For this to work, the public key has to be kept secret(!).  Otherwise the
+right passphrase could be discovered by testing the decrypted private key
+against the public key.  Arcot suggests that this would be appropriate
+for an environment where only one or a few trusted servers need to
+authenticate users.  These servers would be the only ones which have
+copies of the public keys.  (It is not necessary that signed documents be
+kept confidential, however a randomized signing algorithm must be used.)
+
+As Greg points out, much the same could be accomplished simply by having
+the servers share secret 3DES keys with their users, each user having his
+own private 3DES key.  The users could encrypt messages using their 3DES
+key and the server would decrypt using the appropriate key, which would
+also serve to authenticate the user.
+
+The Arcot people suggest that an advantage over this scheme is that
+servers don't have to store information on all clients.  But much the same
+thing could be done with symmetric cryptography.  In the Arcot system,
+the client sends his public key certificate, encrypted to the server,
+along with his request.  The server receives the cert and uses it to
+verify/decrypt the message.  With symmetric cryptography, the client
+could have the shared 3DES key encrypted using the server's public key,
+and send that along with his message in a similar way.
+
+The confusing thing about the Arcot system is this: how sensitive is the
+public key?  Is it as sensitive as a shared secret key?  Superficially
+not, since in order to exploit the public key you also have to steal the
+private key file and then guess the passphrase.  But on the other hand,
+if this is more than security through obscurity, you have to treat
+it in many ways as equally sensitive.  Users of the Arcot system,
+believing that they are safe because their public keys are secret,
+may become casual about revealing their private key files and choosing
+easy to guess passphrases.  They might even send the files around via
+insecure channels.  With this kind of usage, the public key does become
+just as sensitive as a shared secret key would be.
+
+In that case, not only the servers, but all parts of the PKI must be
+brought inside the trust boundary.  They are all holding material which,
+if revealed, would compromise the security around which the system
+is built.  You end up with trust relationships more similar to those in
+a system like Kerberos than in a normal PKI.
+
+&gt; Is it really necessary/useful to call the scheme "software smart cards"?
+&gt; If it were called "An improved system for user authentication", I don't
+&gt; think it would make people nearly so suspicious. From my perspective, one
+&gt; of the advantages of smart card technology is that I can carry my
+&gt; authentication material with me; a system which puts it on my hard disk is
+&gt; less attractive. Floppies are portable, but not durable. 
+
+The analogy with smart cards is that these cards protect your private key.
+With a perfect smart card, an attacker can't do any better than chance
+guessing of your private key.  With the Arcot system, the same is true.
+Decrypting the private key file gives no information about its content,
+because pure random data is encrypted.  Therefore with their system the
+attacker also can't do better than chance guessing.
+
+However this ignores the cost of the system, discarding many of the
+advantages of public key cryptography.  You don't have to do that if you
+use smart cards.
+
+&gt; I didn't understand the relationship between this scheme and Rivest's
+&gt; chaffing and winnowing which you note was cited as a reference in the SSC
+&gt; paper - would you (or someone else) mind explaining the connection?
+
+Yes, this seems obscure.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01139" HREF="msg01139.html">Re: ArcotSign</A></STRONG>
+<UL><LI><EM>From:</EM> Lucky Green &lt;shamrock@cypherpunks.to&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01104.html">Re: Stego-empty hard drives... (fwd)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01108.html">Re: Stego-empty hard drives... (fwd)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01098.html">IP: Dead Men Tell No Tales</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01139.html">Re: ArcotSign</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01133"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01133"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,204 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: No Subject -->
+<!--X-From-R13: Brgre fuvcyrl <fuvcyrlNzreqr.qvf.bet> -->
+<!--X-Date: Fri, 9 Jul 93 10:42:12 PDT -->
+<!--X-Message-Id: 9307082128.AA02549@merde.dis.org -->
+<!--X-Content-Type: multipart/mixed -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>No Subject</TITLE>
+<LINK REV="made" HREF="mailto:shipley@merde.dis.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00149.html">Date Prev</A>][<A HREF="msg00158.html">Date Next</A>][<A HREF="msg00005.html">Thread Prev</A>][<A HREF="msg00158.html">Thread Next</A>][<A HREF="index.html#00130">Date Index</A>][<A HREF="threads.html#00130">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>No Subject</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Mike Rose &lt;<A HREF="mailto:mrose@stsci.edu">mrose@stsci.edu</A>&gt;</LI>
+<LI><em>From</em>: Peter shipley &lt;<A HREF="mailto:shipley@merde.dis.org">shipley@merde.dis.org</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 08 Jul 1993 14:28:15 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Phone</em>: (510) 849-2230</LI>
+<LI><em>Snail-Address</em>: 2560 Bancroft way #51;Berkeley CA 94704-1700</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+
+
+
+I suppose this should be added to the the ftp site on soda.
+
+
+		-Pete
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3
+
+iQBVAgUBLDyRNHynuL1gkffFAQGWigH6A6/aLAoAtJElN++r0qyMyD+aWQTVr7FH
+gGb8C+4wNozzPAmr+wIpN0oBW7Cti7U1+G4oOW+FMQKdOljAyLJxQA==
+=cinp
+-----END PGP SIGNATURE-----
+</PRE>
+<PRE>
+
+;;
+;; 
+;; From: mpf@theory.lcs.mit.edu (Michael P. Frank)
+;; A quick summary:
+;; 
+;; Key	  Command name		Notes
+;; -------	  ------------------	----------------
+;; C-c p e   pgp-encrypt-region	Prompts for recipient's ID.
+;; C-c p d pgp-decrypt-region	The first time, prompts for your pass phrase.
+;; C-c p s	  pgp-sign-region	       Ditto. Uses CLEARSIG.
+;; C-c p S	  pgp-sign-and-encrypt-region  Doesn't use CLEARSIG. Encrypts also.
+;; C-c p v	  pgp-verify-region	       Checks signature (in a new window).
+;; C-c p p	  pgp-set-passphrase	Sets or changes PGP pass phrase.
+;; C-c p c	  pgp-clear-passphrase	Erases pass phrase.
+;; 
+;; Thanks are due to Bob Anderson &lt;bs891@cleveland.Freenet.Edu&gt; for
+;; writing a very helpful explanation of how to do the guts of these
+;; commands.  However, any bugs are my own.
+;; 
+;; Enjoy!
+;; 
+;; -Mike
+;; 
+;;;
+;;; Emacs Support for PGP
+;;;
+;;; People can see your PGP passphrase if:
+;;; * They watch over your shoulder as you type it. (It's not invisible.)
+;;; * They do "ps auxww" (SunOS) on your machine while you're
+;;;     decrypting/signing.
+;;; * They type C-h v *pgp-passphrase* in your emacs after you've
+;;;     entered your passphrase.
+;;;
+;;; Plus the system suffers from all the normal Unix and X-windows
+;;; security holes.
+;;; 
+
+(defun pgp-set-passphrase (arg)
+  "Prompts for PGP pass phrase."
+  (interactive "sPGP pass phrase: ")
+  (setq *pgp-passphrase* arg))
+
+(defun pgp-clear-passphrase ()
+  "Clears the PGP pass phrase."
+  (interactive)
+  (makunbound '*pgp-passphrase*))
+
+(defun pgp-encrypt-region (start end pgp-user-id &amp;optional flag)
+  "Encrypt the region using PGP. Prompts for a PGP user ID.
+With prefix arg, puts result in serparate window.
+Noninteractive args are START, END, PGP-USER-ID, and optional FLAG."
+  (interactive "r\nsUser ID to encrypt to: \nP")
+  (shell-command-on-region start end (concat "pgp -fea " pgp-user-id)
+			   (not flag)))
+
+(defun pgp-decrypt-region (start end &amp;optional flag)
+  "Decrypt the region using PGP. Prompts for the user's pass phrase,
+if not already known.  With prefix arg, puts result in separate window.
+Noninteractive args are START and END and optional FLAG."
+  (interactive "r\nP")
+  (if (not (boundp '*pgp-passphrase*))
+      (call-interactively 'pgp-set-passphrase))
+  (shell-command-on-region start end
+			   (concat "pgp -f -z \"" *pgp-passphrase*
+				   "\"")
+			   (not flag)))
+
+(defun pgp-sign-and-encrypt-region (start end pgp-user-id &amp;optional flag)
+  "Sign and encrypt the region using PGP. Prompts for a user to
+encrypt to and a pass phrase, if not already known.
+With prefix arg puts result in separate window. 
+Noninteractive args are START, END, and PGP-USER-ID, and optional FLAG."
+  (interactive "r\nsUser ID to encrypt to: \nP")
+  (if (not (boundp '*pgp-passphrase*))
+      (call-interactively 'pgp-set-passphrase))
+  (shell-command-on-region start end (concat "pgp -safe " pgp-user-id
+					     " -z \"" *pgp-passphrase*
+					     "\"") (not flag)))
+
+(defun pgp-sign-region (start end &amp;optional flag)
+  "Sign the region using PGP. Prompts for a pass phrase, if not already
+Known. With prefix arg puts result in separate window.
+Noninteractive args are START and END and optional FLAG."
+  (interactive "r\nP")
+  (if (not (boundp '*pgp-passphrase*))
+      (call-interactively 'pgp-set-passphrase))
+  (shell-command-on-region start end (concat "pgp -saft +clearsig=on"
+					     " -z \"" *pgp-passphrase* "\"")
+			   (not flag)))
+
+(defun pgp-verify-region (start end)
+  "Verify the signature on the text in the given region using PGP."
+  (interactive "r")
+  (shell-command-on-region start end "pgp -f"))
+
+(global-set-key "\C-cpp" 'pgp-set-passphrase)
+(global-set-key "\C-cpc" 'pgp-clear-passphrase)
+(global-set-key "\C-cpe" 'pgp-encrypt-region)
+(global-set-key "\C-cpd" 'pgp-decrypt-region)
+(global-set-key "\C-cps" 'pgp-sign-region)
+(global-set-key "\C-cpS" 'pgp-sign-and-encrypt-region)
+(global-set-key "\C-cpv" 'pgp-verify-region)
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00158" HREF="msg00158.html">emacs stuff</A></STRONG>
+<UL><LI><EM>From:</EM> eichin@cygnus.com (Mark Eichin)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00149.html">Re: Encrypted postings.</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00158.html">emacs stuff</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00005.html">No Subject</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00158.html">emacs stuff</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00130"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00130"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

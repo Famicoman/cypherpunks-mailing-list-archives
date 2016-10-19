@@ -1,0 +1,151 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: SSL trouble -->
+<!--X-From-R13: Quevfgvna Irggretera <pjrNQfyv.Egnasbeq.SRG> -->
+<!--X-Date: Sun, 27 Aug 95 11:48:30 PDT -->
+<!--X-Message-Id: 199508271848.LAA18104@Csli.Stanford.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9508261034.AA15406@couchey.inria.fr -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: SSL trouble</TITLE>
+<LINK REV="made" HREF="mailto:cwe@Csli.Stanford.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01353.html">Date Prev</A>][<A HREF="msg01367.html">Date Next</A>][<A HREF="msg01313.html">Thread Prev</A>][<A HREF="msg01367.html">Thread Next</A>][<A HREF="index.html#01350">Date Index</A>][<A HREF="threads.html#01350">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: SSL trouble</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:Damien.Doligez@inria.fr">Damien.Doligez@inria.fr</A> (Damien Doligez)</LI>
+<LI><em>Subject</em>: Re: SSL trouble </LI>
+<LI><em>From</em>: Christian Wettergren &lt;<A HREF="mailto:cwe@Csli.Stanford.EDU">cwe@Csli.Stanford.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 27 Aug 1995 11:48:03 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: Your message of Sat, 26 Aug 1995 12:34:10 +0200.            &lt;<A HREF="msg01311.html">9508261034.AA15406@couchey.inria.fr</A>&gt; </LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+| Let us call "sequential search" an algorithm that remembers which keys were
+| tried and avoids trying them again, and "random search" an algorithm that
+| just tries keys at random without bothering to check.
+|  
+| The sequential search has the following problems:
+|  
+| 1. The server is badly overloaded.
+| It is vulnerable to a variety of active attacks:
+| 2. "result hoarding" attacks: finding the result and reporting it "not foun
+d".
+| 3. "dilution" attack: allocating some search space and not sweeping it.
+| 4. plain old "denial of service" attack: deliberately overloading the serve
+r
+|    with bogus communications.
+| 5. And of course all of the above in their "buggy software or hardware"
+|    versions.
+
+And there is the third alternative, hierarchical search, which
+distributes the task of giving out keys. This is admittedly a
+little bit more involved, of course. The SKSP had provisions for
+doing it hierarchically, as far as I understood it, although
+I might be wrong.
+
+What I wonder is wheter the server congestion really showed that
+the protocol is flawed. Handing out bigger blocks relieved the 
+situation. I think this can be further improved if you do a couple 
+more things.
+
+1. The server knows approximately how many requests per second it 
+can take, and tells the clients this information.
+
+2. The client initially does a testrun, and determines how fast it 
+runs.
+
+3. Each client is handed a block that, given the approximate number
+of currently pending and active blocks out there, together with the
+calculation time of the client, will give an acceptable number of 
+requests/time unit to the server.
+
+4. The server acks (S-ACK) the block-ack to the client. If the client 
+doesn't get an ack (S-ACK) from the server for its ack (B-ACK), it 
+keeps the ack around til the next block is calculated, and sends this 
+ack together with the new acks.
+
+5. The server can hand out allocated blocks to others, for those
+blocks that has not been acked in three times the estimated
+calculation time. 
+
+6. If a client is unable to get a key allocation after a number of 
+tries, it can chose a random block and search that. It can then be
+acked to the server. This may result in overlapping blocks, but this
+should not pose such a big problem, since most of the key space is
+searched in an orderly manner anyway.
+
+It would be very interesting if detailed statistics or the logfile
+of the server could be published somewhere. How many machines were
+involved? etc...
+
+/Christian
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01367" HREF="msg01367.html">Re: SSL trouble</A></STRONG>
+<UL><LI><EM>From:</EM> Piete Brooks &lt;Piete.Brooks@cl.cam.ac.uk&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01311" HREF="msg01311.html">SSL trouble</A></STRONG>
+<UL><LI><EM>From:</EM> Damien.Doligez@inria.fr (Damien Doligez)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01353.html">this is getting silly (was Re: C2.ORG REMAILER)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01367.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01313.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01367.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01350"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01350"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

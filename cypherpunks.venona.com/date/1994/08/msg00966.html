@@ -1,0 +1,195 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Brands cash -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Mon, 22 Aug 94 22:10:25 PDT -->
+<!--X-Message-Id: 199408230510.WAA13076@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199408201652.JAA29752@jobe.shell.portal.com -->
+<!--X-Reference: 199408222317.QAA07557@jobe.shell.portal.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Brands cash</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00971.html">Date Prev</A>][<A HREF="msg00933.html">Date Next</A>][<A HREF="msg00955.html">Thread Prev</A>][<A HREF="msg01135.html">Thread Next</A>][<A HREF="index.html#00966">Date Index</A>][<A HREF="threads.html#00966">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Brands cash</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Brands cash</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 22 Aug 1994 22:10:09 -0700</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00848.html">199408201652.JAA29752@jobe.shell.portal.com</A>&gt; &lt;<A HREF="msg00955.html">199408222317.QAA07557@jobe.shell.portal.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+OK, for those who have stuck with me so far, I will describe a slightly
+simplified version of Brands' off-line cash.  Users' anonymity is protected
+unless they double spend.  (At last we are departing from Chaum and
+getting into some of the territory blazed by Brands.)
+
+The first thing that is done is that the value which is signed by the
+cash issuer in the creation of the cash encodes some information which
+represents the identity of the user.  Let's call the user Irving, and
+the number which encodes his identity (it might just be his bank account
+number in this case) we will call I.  The rule is that the issuer will
+only sign values which are of the form d*g1^I, where d is a fixed number
+used in the cash system, and g1 is another fixed value which is used
+here similarly to the g of the signature protocol itself.  (d can actually
+encode the denomination by having a few different d values that are used,
+or else denominations can be encoded by different secret-key x values of
+the bank as is done in Chaum's cash.)
+
+As in a simplified version of the on-line cash, the signature is blinded to
+m' by raising it to the power s (we don't multiply by g^t here), getting a
+number m' of the form (d^s)*g1^(I*s) for random s.  This totally masks
+Irving's I so it is not revealed in normal use.
+
+Now, the next new step is that Irving divides this m' value into two
+parts, called A and B, such that A*B equals m'.  This can only be
+done (due to the discrete log problem) by having A=(d^x1)*(g1^y1) and
+B=(d^x2)*(g1^y2) such that s=x1+x2 and I*s=y1+y2.  In other words, the
+exponents on d and g1 are split randomly into two parts and these used
+to form A and B.
+
+If anyone can find out s and I*s after the cash is spent, they can learn
+Irving's identity.  They know m', A, and B, because they get revealed
+when Irving spends (as shown below).  But this is not enough to learn
+s &amp; I*s.  If you find out x1, x2, y1, and y2, though, this allows s and
+I*s to be deduced, and therefore also breaks the anonymity.
+
+In spending the cash, Irving must reveal the signed m', along with A
+and B.  (B can actually be deduced as m'/A.)  Then, the store comes up
+with a challenge c (this is a different c than in the withdrawal protocol).
+Irving has to reply with two numbers: x1+c*x2, and y1+c*y2.  This
+is pretty scary!  He's really putting his cojones on the line, here.
+s(=x1+x2) and s*I(=y1+y2) will give him away, and here he's revealing a
+simple linear combination of x1&amp;x2, and y1&amp;y2.
+
+But he's actually safe in doing so - as long as he doesn't double-spend.
+x1+c*x2 still perfectly blinds x1 and x2, since nothing is known about
+these values, and likewise for y1 and y2.  Just like in the original
+signature protocol where Paul gave away c*x+w, x his secret key, this is
+safe.  (Well, it does appear that he should make sure c!=1.  Then he
+would be telling x1+c*x2 = x1+x2, which is what he doesn't want to give
+away!)
+
+Irving might be tempted to lie about x1+c*x2 and y1+c*y2, but if he does
+he will be caught. The shop calculates A*(B^c), and this should be equal
+to d^(x1+c*x2)*g1^(y1+c*y2).  Once this is verified, the shop, having
+checked the signature on m', accepts the cash.
+
+Now consider what happens if Irving tries to spend the cash again.  This
+second shop will produce a different c challenge; call it c'.  Again
+Irving must respond with x1+c'*x2 and y1+c'*y2.  But now his goose is
+cooked.  Once the bank gets the information from both shops it knows both
+x1+c*x2 and x1+c'*x2, and it knows c and c', so it can deduce x1 and x2.
+Likewise it can calculate y1 and y2.  Adding these up gives s and I*s, and
+dividing these gives Irving's identity I.  He's caught.
+
+There is one significant complication I have skipped over here, and that
+is the possibility that Irving could choose different A and B values
+(always with A*B=m') each time he spends.  Then the x's &amp; y's would be
+different each time and he wouldn't get caught.  This is avoided by making
+a small change to the signature-checking algorithm.  Earlier recall that a
+non-interactive signature on m' was defined by (MX',GW',MW',r'), and that it
+was checked by setting c'=Hash(m',MX',GW',MW'), and doing the special
+calculation with c' and r'.
+
+For this off-line cash we make a small change, which is that the hash
+function is calculated as c'=Hash(m',MX',GW',MW',A,B).  We include the A
+and B in calculating the hash function.  The bank never sees A and B, just
+like it never sees any of the other values in the hash function, but c'
+depends on them.  If Irving tries to change A and B, then the c' which the
+shop calculates (using this longer hash formula) will be different, and it
+won't work with the r' that Irving got back from the bank.  So by including
+more terms in the hash input we in effect get those things signed as well
+in a blinded way by the bank.  (I think a similar hashing trick is how Schnorr
+signatures work, BTW).
+
+Once again, this protocol looks complicated, but compare it with Chaum's
+original off-line cash: there is no cut and choose, and the amount of
+data exchanged at each step is not very large, a few multi-precision values.
+I wrote up a long description of Chaum's off-line cash at a similar level
+of detail to this one, and I really think Brands' cash is far superior.
+
+Hal Finney
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a
+
+iQCVAgUBLllXXKgTA69YIUw3AQHdFQP7BNop9S9RihTKEyBZCEvB7JD7SkGth+uk
+eftNFTjjGyKsxFeeyE1wK14G5N/55I7g7ADhSO36BRPrj0Wyv8Z9lpWP0fLA02Ga
+mCJnaspPN8oF29Jd/uuA7Sqa62FkIUW0MolWLIcqCshmrL6fG0dOZrhh34fBi/+o
+cOjp8H17ziM=
+=CVfC
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01135" HREF="msg01135.html">Re: Brands cash</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00848" HREF="msg00848.html">Brands cash</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00955" HREF="msg00955.html">Re: Brands cash</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00971.html">Why to define "government" generously</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00933.html">Re: Nuclear Weapons Material</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00955.html">Re: Brands cash</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01135.html">Re: Brands cash</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00966"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00966"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

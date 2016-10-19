@@ -1,0 +1,234 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: forward secrecy in mixmaster -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Mon, 9 Sep 1996 09:08:34 +0800 -->
+<!--X-Message-Id: 199609081829.TAA00310@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: v03007803ae5817d08aba@[206.170.115.3] -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: forward secrecy in mixmaster</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00699.html">Date Prev</A>][<A HREF="msg00714.html">Date Next</A>][<A HREF="msg00649.html">Thread Prev</A>][<A HREF="msg00724.html">Thread Next</A>][<A HREF="index.html#00716">Date Index</A>][<A HREF="threads.html#00716">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: forward secrecy in mixmaster</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:loki@infonex.com">loki@infonex.com</A></LI>
+<LI><em>Subject</em>: Re: forward secrecy in mixmaster</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 8 Sep 1996 19:29:58 +0100</LI>
+<LI><em>CC</em>: <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:remailer%2Doperators@c2.org">remailer-operators@c2.org</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg00649.html">v03007803ae5817d08aba@[206.170.115.3]</A>&gt; (message from LanceCottrell on Sat, 7 Sep 1996 23:42:09 -0700)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Lance Cottrell &lt;loki@infonex.com&gt; writes on several lists:
+&gt; &gt;I wrote the socket stuff yesterday evening, didn't take too long as
+&gt; &gt;socket programming is something I've done lots of.
+&gt; &gt;
+&gt; &gt;Now comes what do you actually send down the sockets.
+&gt; &gt;
+&gt; &gt;Question for Lance, and any others who were involved in mixmasters
+&gt; &gt;implementation: what did you have in mind as a way of negotiating the
+&gt; &gt;DH keys?
+&gt; &gt;
+&gt; &gt;I notice that mixmaster generates a DH key and stores it in file
+&gt; &gt;`DH.mix', but that this is not (as far as I can see from the source)
+&gt; &gt;included in the remailers public key block.
+&gt; 
+&gt; No, it is not in the key block. It would be passed during the negotiation.
+
+Well the first DH parameter set (in a series of re-keyed DH
+parameters) could just as easily go in the public key block.  If you
+were not doing rekeying, it would make sense to put the public DH
+parameters in the key block, as it would remove the need to negotiate
+these parameters, and simplify the protocol.  As you're doing
+rekeying, putting the parameters in the public key block makes a less
+orthogonal protocol, adds nothing, and has the negative effect of
+breaking compatibility with previous public key blocks.  In short for
+a rekeying protocol I agree :-)
+
+&gt; &gt;[bigger keys!]
+&gt; 
+&gt; Call me paranoid. After asking and reading around I decided I wanted to
+&gt; cover my bases. It looked like, in the future, it might be easier to break
+&gt; with small generators. 
+
+Fair enough.
+
+&gt; This is not a critical decision though. I too would have liked it
+&gt; longer, but using RSAREF I am limited. 
+
+I suspected RSAs weird license might be the problem.  (Given the
+situation with PGP 2.x, I presume that the license does not permit you
+to increase the max arithmetic precision.)
+
+&gt; That is one of the reasons I have each remailer creat its own DH
+&gt; modulus, and allow it to change it periodically.
+
+Each remailer with it's own prime doesn't buy you a whole lot of
+entropy because there aren't many mixmaster remailers, 4 bits
+currently?.  The entropy from having rekeying every day instead of say
+every year, another 9 bits, 13 bits tops?  I'm not sure what the
+precise entropy increase is from going to 1024 to 4096, but it's got
+to be many orders of magnitude better than 13 bits.
+
+I'd say junk RSAREF for the DH operations, use one of the other libs.
+(You can do this for DH, without violating patents, right?  But not
+for RSA, so I guess if you care about the patent/license agreement
+mess, you've got to use RSAREF for RSA signatures at least).  Or maybe
+you could just wait for PGP 3.0 which uses El Gamal, for sigs and pk
+encryption, and presumably will have less restrictive key sizes.
+
+So as well as having bigger signing keys, for the sake of paranoia
+(it's contagious), as you were saying, I guess you may gain some
+security by not having a common modulus, and making the protocol allow
+re-keying.
+
+If you used a different password for RSA and DH keys, and your machine
+is compromised, you can sign a new DH key with RSA, and use El Gamal
+signatures with the DH key normally.  Hows that for paranoid :-)
+
+(Or another temporary RSA key, and RSA sigs, rather than El Gamal
+sigs, whatever.  You sign by proxy, that is the receiver mixmaster
+gets a the temporary key signed by the long term RSA key, checks the
+signature on the temporary key, and then checks the signature made by
+the temporary key on the object in question).
+
+Greatly reduces the risk of having the password in the binary.  You'd
+need to manually type the RSA keys password to rekey, or if you were
+real paranoid, you could keep the RSA key on your laptop, and copy the
+new signed DH public key on to the remailer.  Do this once a month, or
+as often as you wish.
+
+This is a similar approach to that taken by people who have a huge
+signing only PGP key, which they are careful to keep only on machines
+they physically control, and have smaller keys which they use on
+multi-user systems.
+
+This also formalizes the situation where remailers have been
+compromised, or suffered disk crashes.  The operator says, "sorry
+folks new type2 key for mixmaster@xyz.org", and if you're lucky signs
+his post, and also his post of the original key, so that you know it's
+not a hijacker, and if you're even more lucky, the user was around
+when the first post was made, or searches through the archives for it,
+and checks that the sigs show a persistent identity for the operator.
+An improvement right?  The remailers keep both their signing keys, and
+their temporary signing keys available by request, the signing key
+should not change through the remailers life-time.
+
+&gt; &gt;A common modulus may offer a fatter target for attack (for some
+&gt; &gt;precomputation attacks), but with large enough keys this probably
+&gt; &gt;isn't that bad, as there aren't that many mixmasters anyway.
+&gt; &gt;
+&gt; &gt;With a common modulus there is DH key negotiation needed, just include
+&gt; &gt;it with the source.
+&gt; 
+&gt; You have spelled out why I like having each remailer use its own modulus.
+
+yeah, ok, I agree no common modulus.  And rekeying.
+
+&gt; &gt;a) include the DH key signed by the RSA key in the remailers public key
+&gt; &gt;   (may break backwards compatibility with existing versions of
+&gt; &gt;   mixmaster)
+&gt; &gt;
+&gt; &gt;b) send the DH public key at the start of each session
+&gt; &gt;
+&gt; &gt;c) send the DH public key on request
+&gt; 
+&gt; I chose C. The in protocol I developed the sending remailer (A) sends a
+&gt; hash of the DH modulus to the receiving remailer (B). If B has it, they use
+&gt; it. If not, A sends it. I use the modulus from A because it has the stake
+&gt; in privacy. B will take messages from anyone, but A wants to know the
+&gt; messages it has goes to the correct other remailer B.
+
+sounds fine.
+
+Also, you might want to migrate to SHA1 in place of MD5, at some
+point.  Or to one of those megahashes like
+
+	SHA1(MD5(x))||MD5(SHA1(x))
+
+Also mixmaster has capabilities like type 1 remailers right?  If so
+you would presumably add a capability indicating that the remailer
+supports direct socket delivery.  And another capability for forward
+secrecy (the other thread "non-interactive forward secrecy" discusses
+ways to retro-fit a less interactive forward secrecy mechanism into
+email delivered mixmaster packets).
+
+The socket capability presumably would be useful to know that it is
+likely to react more quickly.  Forward secrecy is obviously nice to
+know about for other reasons.
+
+Adam
+--
+#!/bin/perl -sp0777i&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;j]dsj
+$/=unpack('H*',$_);$_=`echo 16dio\U$k"SK$/SM$n\EsN0p[lN*1
+lK[d2%Sa2/d0$^Ixp"|dc`;s/\W//g;$_=pack('H*',/((..)*)$/)
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00724" HREF="msg00724.html">Re: forward secrecy in mixmaster</A></STRONG>
+<UL><LI><EM>From:</EM> Lance Cottrell &lt;loki@infonex.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00649" HREF="msg00649.html">Re: forward secrecy in mixmaster</A></STRONG>
+<UL><LI><EM>From:</EM> Lance Cottrell &lt;loki@infonex.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00699.html">Re: talker (fwd)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00714.html">Re: Los Angeles Times article on Helsingius and anon.penet.fi</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00649.html">Re: forward secrecy in mixmaster</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00724.html">Re: forward secrecy in mixmaster</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00716"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00716"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

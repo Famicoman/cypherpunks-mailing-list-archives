@@ -1,0 +1,191 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: RE: Passwords (fwd) -->
+<!--X-From-R13: Oeguhe Qunaqyre <neguhepNpey.pbz> -->
+<!--X-Date: Thu, 14 Oct 93 21:17:05 PDT -->
+<!--X-Message-Id: Pine.3.05.9310142114.A1012&#45;d100000@crl.crl.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>RE: Passwords (fwd)</TITLE>
+<LINK REV="made" HREF="mailto:arthurc@crl.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00667.html">Date Prev</A>][<A HREF="msg00673.html">Date Next</A>][<A HREF="msg00674.html">Thread Prev</A>][<A HREF="msg00726.html">Thread Next</A>][<A HREF="index.html#00672">Date Index</A>][<A HREF="threads.html#00672">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>RE: Passwords (fwd)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: RE: Passwords (fwd)</LI>
+<LI><em>From</em>: Arthur Chandler &lt;<A HREF="mailto:arthurc@crl.com">arthurc@crl.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 14 Oct 1993 21:06:14 -0700 (PDT)</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+  There's a thread on MOO-Cows -- a list primarily for folks interested in
+the technical side of maintaining MOO databases (new releases of the core,
+bugs in current core, questions about MOO-coding, etc.) -- that has to do
+with passwords and encryption. It's been the fond hope of many people in
+the MOO world that someone will come up with a kind of gateway that will
+let players move from one MOO to another. There are lots of problems --
+different ID numbers for the (essentially) same objects in each MOO,
+different criteria for membership in different MOOs, etc. But one really
+fundamental issue is: how can you use the same password to move from MOO
+to MOO?
+  I'm forwarding the essentials of the thread, plus one ambitious proposal
+for solving the dilemma. Anyone here got any thoughts on the problem
+and/or its solution(s)?
+
+
+
+---------- Forwarded message ----------
+Date: Thu, 14 Oct 1993 09:07:31 PDT
+From: Off-path travel kills plants 14-Oct-1993 1122 &lt;callas@eris.enet.dec.com&gt;
+To: "uso01@mailhost.unidata.com"@us2rmc.enet.dec.com
+Cc: moo-cows.parc@xerox.com
+Subject: RE: Passwords
+
+    Somebody I know is trying to figure out a secure way to handle passwords in
+    a MOO-to-MOO connection system.  The idea is to set it up so players can
+    "walk" from MOO to MOO without worrying that their passwords are
+    compromised.
+
+    Something that occurred to me is that perhaps the first MOO could take the
+    already-encrypted password of the player, and pass it to the second MOO. 
+    Then a simple comparison to see if the encrypted passwords match.
+
+    Does this work?
+
+No!!!! It does not work, and as a matter of fact, it is worse than sending a
+plaintext password.
+
+The reason is that not only is your plaintext password a piece of valuable
+information, but the encrypted password is, too. Possibly more valuable.
+
+If you *merely* send the encrypted password, and then merely compare it against
+what's in the database on the other side, then what you've done is manage to
+reduce the problem of encrypted passwords to the previously solved problem of
+plaintext passwords. All you're doing with the "encryption" is transforming the
+plaintext password "alacazam" into "p9&amp;5kgwqp%$3=l" which is less human
+readable, but once snarfed off the net by an interloper, all they have to do is
+hack up a client to send MOO2 a connect that says, "Hi, I'm an inter-MOO
+connection, here's the encrypted password for Soandso." Poof, they're in.
+
+If you want to have a secure login system you have to go to a little more work.
+I'll describe a mechanism that is actually in place in a business oriented MUD
+called "Meeting Space" today.
+
+(1) Get yourself a 1-way hash algorithm. MD5 is good one. If you need MD5, send
+me mail, I'll dredge it up for you. It's stuffed on my cognitive prosthesis
+somewhere.
+
+(2) The client to your MOO sends the server a message. The message says, "Hi, I
+want to log in as Soandso."
+
+(3) The server has in its database Soandso's password. The password has been
+munched up with MD5 and also some random stuff, called "salt" in the trade.
+It's there to simply make it harder for someone to grind up /etc/passwd and do
+simple comparisons. The server sends back a message to the client that says,
+"Cool. Do this for me. take the salt characters "fnord" and the string
+"172355555" and grind them all up together, and send me back the answer. The
+latter string is a quasi-random, non-repeating message. The easiest way to get
+one of those is to call time() and turn it into a string. If you want to get
+fancy, toss in some things like the number of pagefaults the system has done,
+concatenated with the number of times that you've authenticated someone today,
+and so on. The time is really good enough as it is, though tossing in the
+number of times you've played this game makes it foolproof. The real point is
+that you can't *ever* use this query again. How you construct such a message is
+up to you. What you're doing is making a "one-time pad" in the lingo. 
+
+(4) The client does all of this, using MD5 to grind up the plaintext password,
+and the extra stuff (the client doesn't really need to know what the meaning of
+the extra stuff is, it just has to grind it all up), and sends the server back
+the result.
+
+(5) The server mixes up the extra stuff with its already-hashed password and
+compares the result to what the client sent. If they match, the client gets in.
+If not, the server sends back a message that says, "No, sorry."
+
+There are many other possible algorithms. The trick in thinking about them is
+to assume that there are other people are listening. In our case, assume
+there's an eavesdropper, with total knowledge of the algorithm. What have they
+learned? Well, they learned what the system time on the server was. No harm in
+that. They learned the client's password's salt. This is mildly irksome, but
+only mildly. This potentially makes it easier for them to use a dictionary-
+attack on the password, but not really. For anything that's really useful, it's
+*far* easier for them to figure out how to hijack the whole database. All they
+really know is that every time you log in, the magic question is going to have
+a constant in it. Big deal.
+
+Note that while not perfect, all forms of attack on this system involve both
+hacking up a client and stealing the server's database. While not an
+unattainable task, an authentication system like this is *more* secure than the
+authentication system used to let you log into a privileged account on the host
+operating system, even ones as reasonably secure as unix and VMS.
+
+How's this, clear as mud?
+
+
+Unsolved problems (left as an exercise to the reader):
+
+(1) Securely changing Soandso's password in the presence of eavesdroppers.
+	(very hard without a pubic-key crypto system)
+(2) Managing the plaintext password on the client system (which is required
+	here) so that it isn't compromised. (rather easy)
+
+	Jon
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00667.html">Re: Spread-spectrum net (vulnerability of)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00673.html">Re: Spread-spectrum net (vulnerability of)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00674.html">Spread Spectrum Net</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00726.html">RE: Passwords (fwd)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00672"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00672"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

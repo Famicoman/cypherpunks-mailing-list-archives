@@ -1,0 +1,246 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Public key Steganography? -->
+<!--X-From-R13: Dnl Oenpuryvna <fhaqreNnznaqn.qbefnv.bet> -->
+<!--X-Date: Wed, 25 Oct 95 13:03:23 PDT -->
+<!--X-Message-Id: Pine.SUN.3.91.951025155533.6824J&#45;100000@amanda.dorsai.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Public key Steganography?</TITLE>
+<LINK REV="made" HREF="mailto:sunder@amanda.dorsai.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02034.html">Date Prev</A>][<A HREF="msg02023.html">Date Next</A>][<A HREF="msg00026.html">Thread Prev</A>][<A HREF="msg02023.html">Thread Next</A>][<A HREF="index.html#02035">Date Index</A>][<A HREF="threads.html#02035">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Public key Steganography?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Public key Steganography?</LI>
+<LI><em>From</em>: Ray Arachelian &lt;<A HREF="mailto:sunder@amanda.dorsai.org">sunder@amanda.dorsai.org</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 25 Oct 1995 15:59:06 -0400 (edt)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+The following are bits and pieces of a message I've sent to someone 
+inquiring about stego...  It brought back the old idea I had about 
+expanding WNS to do public key....  Would something like this be 
+feasable?  the beginning of this is a description of what WNS does, 
+followed by the public key idea...
+
+---------- Forwarded message ----------
+
+&lt;&lt;I am researching Steganography and related topics of a security course at 
+George Mason University.  As part of my research, I am reviewing PC 
+products that provide such services.  White Noise Storm (tm) which you 
+developed in one such product.  I am interested in the kind of research 
+you did to develop it (publications, readings, inspiration).  If you 
+could point me to any documents I would be grateful.&gt;&gt;
+
+Hi there,
+
+Anyway to answer your questions, the idea of WNS came to me from the idea of
+spread spectrum technology and frequency hopping, however, I added several
+twists to it in order to improve security.  Instead of just having X channels
+of communication which are multiplexed or changed with a fixed formula and
+passkey, I have eight channels which are spread within a number of 8 bits*W
+bytes channels.  W here represents a random sized window of W bytes.  Each of
+these eight channels represents one single bit out of a whole byte, so each
+Window holds one byte plus a bunch of unused bits.  These channels rotate
+amongs themselves, for instance bit 1 might be swapped with bit 7, or all the
+bits may rotate positions at once.  Further, these bits change location
+within the window on the byte level.  The rules for these swaps (similar to
+the substitution boxes in other cyphers) are dictated not only by your
+passphrase - which is unlimited in length, but also by the previous window's
+random data.   
+
+This means that if you encrypt message M with key K two times, you get two
+different cyphertexts, C.  C1 and C2 may be different, however, decrypted
+with key K, both will yield the original message M.  This makes cryptanalysis
+very hard because the same message will give you different cyphertexts each
+time, thus making known cyphertext atacks useless.  (Of course if you don't
+use random numbers, but rather the LSB's in an image, the same passphrase and
+the same window size, you'll get the same cyphertext each time you run it -
+which is one of the reasons you should destroy the original picture after
+injecting it.  More about this later.)
+
+Since the window size changes with each window, the bits both rotate among
+themselves, and within the data window, it is close to impossible for an
+attacker to guess where there is cyphertext data versus where there is random
+data, which bit in that cyphertext represents what bit value, and in which
+byte it is located in. 
+
+The unused bits are actually random data when WNS is used by itself generated
+by either a hardware random number generator, or by your compiler's random
+functions which addmitedly aren't all that great.  However, if you are using
+WNS for steganography, that random data is actually the least significant
+bits of your original file, be it sound, or a picture or whatever.  An
+injector is included for the PCX format because that is a format I am most
+familiar with, however you may write your own for other media.
+
+The reason I'm using live data out of the file you want to hide a message in
+is so that the cyphertext produced by WNS closely matches the natural, native
+LSB's of that file.  Also, WNS, when used with a large enough maximum window
+size will give you a very secure stego channel since it will be very hard to
+dected that 1 in say, 500 bits has been altered.  That's a bit extreme and
+will waste a lot of data, but for small messages stored in very large
+complex, noisy files, will look very much like the original image.
+
+Another thing to throw off the attacker is that statistical fixing.  If WNS
+writes a 1 bit over a 0 bit of an LSB file, it will look for an unused 1 bit
+to write a zero over.  This balances the distribution of 0 and 1 bits to
+match that of the original file as closely as possible, so that you cannot
+use statistical analysis to even detect the presence of steganography, much
+less break it.
+
+Additionally, WNS's schema of steganography does give you a very strong
+advantage: your recipient does not need to have the original picture or sound
+in order to extract the hidden message.  There is a huge concern about this
+since if, as some other algorithms require, your recipient needed to have the
+original picture, you can bet that the bad guys would also have it and
+compare the two and also be able to extract the message.  It is a good idea
+for nobody to have the original image, not even you.  That is, scan something
+in, inject your message in it, and destroy the original.   If the bad guys
+search your hard drive and find the original picture, they can compare it to
+the one you've sent which contains the data, thus they are able to find out
+which bits WNS has changed, and possibly analyze the algorithm to see which
+passphrases would generate such bits, extract the passphrase and then the
+message.
+
+With the original pre-WNS210 version, it was possible to break an encrypted
+message by decoding it repeatedly with the same password while changing one
+bit at a time in a window so as to find out which bits WNS wrote and which
+were random, however this brute force method is a lot worse than most brute
+force methods because given a stream of bits, and an unlimited password size
+you have numbits^numpasswords combinations to work with - a very huge space
+size for bruting, even for small messages.
+
+However, this version uses not only the previous window's plain-text, but the
+current window's unused random data bits to form the next window, that is in
+a sense the algorithm is recursive.  (Not that the encryption function calls
+itself, but rather it uses the previous window to form the next.)
+
+Keep in mind that no-one, to my knowledge has done a differential
+cryptanalysis or any other formal attempt to break this code.  It is possible
+that the boys at the NSA would attempt this if they thought it was a threat
+to them, but I haven't seen anyone report any weaknesses in this algorithm.
+ This is why I suggest that whatever you send with WNS be compressed and then
+encrypted with something like PGP first.  That extra bit of entropy generated
+by first compressing, and then by encrypting with RSA and IDEA will increase
+the entropy in your cyphertext even if the LSB's from the host picture aren't
+all that random.
+
+Related subjects from which I was inspired to write WNS: random numbers, the
+sliding window protocols such as Zmodem which change their window size
+depending on how noisy the channel is - WNS changes the window size to
+improve security, not to help against noise - in fact, if you change a single
+byte in a WNS cyphertext, the rest of the message gets garbled completly.
+ Spread spectrum and channel hopping radio communications, finite state
+machine automatons, steganography and stealth in general, etc.
+
+At the time I wrote this, I did not have any papers I used to write this
+code, only my own knowledge of the above topics, things I learned in school
+about automatons and spread spectrum, the Zmodem protocol description of DSZ,
+etc.
+
+I would like to sometime in the future expand WNS to use a public key system
+instead of a symmetric key, but I haven't yet found a feasable way to do
+this.  As is, you'd have to know your recipient's private key in order to
+encrypt something to send them.  If you do, it beats the whole point of
+public key encryption.  If you use their public key, everyone has access to
+it, so it's a kind of a catch 22 here.
+
+Using their public key as the inital WNS key, then using an RSA encrypted
+block to send the session key for WNS will produce the RSA encrypted block -
+while this is fairly strong, RSA might have some tell-tale signs that would
+give away the presence of steganography in the message?  I'm not sure how
+insecure or secure this would be, but so far it is the only idea I have.
+
+This would basically work like this:
+
+  1. pick a randomly generated session key for the IDEA cypher, call this K1
+  2. pick a randomly generated session key for the 2nd part of the WNS
+session, call this K2.
+  3. Use the recipient's public key Pub for an RSA or Diffie-Hillman session
+key exchange.
+  4. Encrypt Sessionkey=RSA(K1+K2,Pub)
+  5. Encrypt Sessionblock=WNS(Sessionkey,randomnumbers,Pub) and merge with
+random numbers generating a random sized block.
+  6. First encrypt blocks of your plaintext with idea using
+cyphertext1=IDEA(plaintextblock,K1)
+  7. Then encrypt and write cyphertext2=WNS(cyphertext1,randomnumbers,K2) to
+the output file.
+  8. Go to 6 until no more data to write.
+
+To decrypt ( you are the recipient):
+
+  1.  Set the session key to your public key Pub.
+  2.  Decrypt the start of the stegoed picture using WNS and your public key
+to get K1 and K2:
+       K1+K2=WNSDecrypt(cyphertext2,Pub) -&gt; here cyphertext2 comes from the
+file
+  3.  Decrypt next block of code using cyphertext1=WNSDecrypt(cyphertext2,K2)
+  4.  Decrypt the cyphertext1 with IDEA
+  plaintext=IDEADecrypt(cyphertext1,K1)
+  5.  Goto 3 until no more data.
+
+Problem is, how much does it weaken WNS to use your recipient's RSA's public
+key as the initial WNS key not only in terms of security, but also in terms
+of allowing the attacker to detect the presence of stego'ed data in your host
+image?
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02034.html">Re: CJR returned to sender</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02023.html">Re: Privacy Marketing</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00026.html">Re: Welcome to cypherpunks</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02023.html">Re: Privacy Marketing</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02035"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02035"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

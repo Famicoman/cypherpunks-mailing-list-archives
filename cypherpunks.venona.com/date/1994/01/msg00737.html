@@ -1,0 +1,306 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: PGP Function Library -->
+<!--X-From-R13: pngnylfg&#45;erznvyreNargpbz.pbz -->
+<!--X-Date: Fri, 28 Jan 94 21:38:26 PST -->
+<!--X-Message-Id: 199401290536.VAA01003@mail.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>PGP Function Library</TITLE>
+<LINK REV="made" HREF="mailto:catalyst-remailer@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00738.html">Date Prev</A>][<A HREF="msg00743.html">Date Next</A>][<A HREF="msg00736.html">Thread Prev</A>][<A HREF="msg00741.html">Thread Next</A>][<A HREF="index.html#00737">Date Index</A>][<A HREF="threads.html#00737">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>PGP Function Library</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: PGP Function Library</LI>
+<LI><em>From</em>: <A HREF="mailto:catalyst%2Dremailer@netcom.com">catalyst-remailer@netcom.com</A></LI>
+<LI><em>Date</em>: Fri, 28 Jan 1994 21:36:36 -0800</LI>
+<LI><em>Comment</em>: This message is NOT from the address on the 'From:' line; it is from an anonymous remailing service.  Please report problem mail to catalyst@netcom.com.</LI>
+<LI><em>Remailed-By</em>: Remailer &lt;catalyst-remailer@netcom.com&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+mpj@csn.org wrote:
+
+(offered to put crypto code on his site)
+
+I've sent him PGP Tools by email. Please put it on csn and also on soda.
+This is the readme file for the package. PGP Tools is a set of functions 
+which allow easy integration of PGP into other applications. This package 
+supports all PGP functions, including key generation, key management, and 
+trust update.
+
+                                          Pr0duct Cypher
+
+===========================================================================
+
+PGP Tools Version 1.0 - The Crypto Construction Set
+Brought To You By Pr0duct Cypher
+
+What is PGP Tools?
+
+PGP Tools is a set of functions which allows you to easily write PGP-
+compatible encryption programs. It will make it easy to write graphical-
+interface versions of PGP for Windows, Macintosh, X, and other GUIs, as
+well as to integrate encryption into applications. A few possible
+applications include point-and-click PGP, all-in-one secure mail programs,
+newsreaders with digital signature capability, keyservers, digital cash
+servers, and login authentication.
+
+The toolkit allows you to do almost everything PGP does. The user interface
+and program design are up to you. PGP Tools uses a system of dynamically-
+allocated FIFO buffers for all operations. These FIFOs can exist either in
+memory or on disk. Small amounts of data can be processed entirely in
+memory, with no disk access or risky temporary files. It is easy to
+manipulate PGP packets directly, if you need to construct anything not
+already implemented.
+
+The toolkit has functions to RSA encrypt and decrypt, sign and check
+signatures, process plaintext and IDEA ciphertext, take MD5 hashes, perform
+ZIP compression and decompression, create and extract ASCII armor, and
+perform all types of key management. Keys can be generated, signatures
+checked, and trust parameters updated, using simple function calls.
+
+There is no console I/O built into the library, and all file I/O is
+concentrated in fifo.c. In those cases where I/O is necessary, such as in
+the keyring trust update, the user provides a function pointer. There was
+a problem with stack space under DOS, so most of the functions were changed
+to avoid storing large objects on the stack.
+
+Most of the documentation is in the .h files. If you aren't sure how to use
+a function, look at PTD or at the function code itself.
+
+The mini-application PTDEMO is included as a demonstration and debugging
+aid. It will encrypt, sign, decrypt, check signatures, display keyrings,
+add keys to a keyring, and perform keyring maintenance. It also has the -x
+option which displays a list of packets in any PGP-format file. You will
+find this useful in debugging your programs. It is not a full PGP, but it
+does attempt to test all the functions in the library. The coding in PTDEMO
+is admittedly horrible. PTDEMO was not systematically written; it just grew
+as needed to test the rest of the code.
+
+FIFO contains the fifo system. PGPMEM has safemalloc(), and a hash table
+for storing keys in memory. The crypto functions are in PGPTOOLS. Key
+management, with the exception of the trust update, is in PGPKMGT. PGPKTRU
+contains code to do a keyring trust update. PGPARMOR does ASCII armor,
+PGPKGEN generates keys, and FIFOZIP performs compression.
+
+How Does It Work?
+
+Everything is done with FIFOs, which take the place of temporary files. You
+access a fifo using a pointer (struct fifo *). You can create a fifo in
+memory or on disk. Memory and disk fifos are similar with only a few
+exceptions, and all the PGP functions work with either type transparently.
+
+You create a memory fifo by calling fifo_mem_create, which returns a
+pointer to a new, empty fifo. Then you can use fifo_put to put bytes into
+the fifo, and fifo_get to read bytes out. Naturally, the first byte put in
+is the first one read out. Fifo_aput and fifo_aget allow you to put or get
+an array in one operation. Fifo_length will return the length of a fifo.
+
+A fifo is represented in memory as a linked list of fixed size blocks. Each
+fifo structure points to a first and last fifo_block structure. All fifos,
+even empty ones, have at least one fifo_block and one fifo_data. Each
+fifo_block structure points to a fifo_data structure, and to the next
+fifo_block in the chain. Memory is automatically allocated as characters
+are put into a fifo, and freed as characters are read out. This means that
+in most cases there is only one copy of an object in memory. For example,
+if you use pgp_create_idea to encrypt some data, the memory used by the
+plaintext is being freed as the ciphertext is being created.
+
+Fifo_copy is used to duplicate a fifo. It does not actually make a copy of
+the data, except for the last fifo_data block. Instead, it creates new
+fifo_blocks which point to the existing fifo_datas. The fifo_data structure
+has a links field which keeps track of how many fifo_blocks point to it.
+This is incremented when a fifo is copied and decremented when a fifo_block
+is freed. When it goes to zero, the fifo_data is freed. Two fifos can
+remain logically independent while sharing a common portion of memory.
+
+Fifo_destroy is used to deallocate a fifo. Some functions (generally those
+which are guaranteed to use up their input) do this automatically. Others
+(those which may leave some data in the input) do not. Abandoning a fifo
+without destroying it will cause a memory leak. Destroying or otherwise
+accessing a fifo which does not exist will crash the system. A fifo is not
+automatically destroyed when its length reaches zero. An empty fifo can
+have more data put into it, if it has not been destroyed.
+
+There are several more functions which work with fifos. Fifo_append adds
+one fifo to the end of another, destroying the second one. Fifo_rget allows
+you to "look ahead" non-destructively. Fifo_rput is used to update keyring
+trust parameters on disk. If they are copies of a fifo, they will change
+when fifo_rput is used. Do not use with memory fifos if there are copies.
+
+Disk fifos are used to access files. You can create one with
+fifo_file_create, by passing it a FILE pointer. Disk fifos behave much like
+memory fifos, except that they access files. Fifo_get will read bytes
+starting at the beginning of the file. Fifo_put will put bytes onto the
+end. Fifo_length will return the length, equal to the size of the file
+minus the number of bytes read. Fifo_copy makes a copy of the fifo. If you
+need to use two copies of a disk fifo simultaneously, you should call
+fifo_clearlac to reset the file pointers for each one, before using it and
+after accessing the other one. Files should be opened with appropriate
+modes for the use intended. Fifo_destroy gets rid of the fifo, but does not
+close the file.
+
+The fifo system provides a convenient and memory-efficient way to work with
+PGP packets. Generally, to create (encrypt/sign) a PGP message, you take
+the plaintext and build up the message from it. To extract, you check the
+input fifo to see which type a packet is, and call the appropriate extract
+function to recover the data.
+
+Some of the key-management functions are high-level, such as checking all
+the signatures on a key, merging a set of new keys with the keyring, and
+updating the trust parameters for a keyring. Others allow the low-level
+manipulation of keyrings. See PTDEMO for examples of their use. A good
+description of the PGP file formats can be found in PGFORMAT.DOC in the PGP
+source distribution.
+
+Most of the extract functions do not perform error checking on the incoming
+packets. Instead, there is a separate pgp_check_packets function which
+checks a series of packets for proper format, version, length, etc. This
+should be used on any input whose integrity is untrusted.
+
+The random-number generator, pgp_randombyte, is initialized by an input
+fifo which contains random data. This can be the plaintext file you are
+encrypting, characters and timing from random keypresses, or anything else
+which is random. This data is put into a buffer to create a seed. Random
+numbers are generated by MD5ing the seed and a counter. The counter is
+incremented after each MD5, and is initialized by time(). Pgp_randombyte
+can be replaced by any good random number generator. The random number
+source will depend on your application. The random generator must be
+initialized before calling any function which uses it.
+
+Memory allocation (except within the ZIP compression) goes through
+safemalloc(), which calls out_of_memory() if it can't allocate. You should
+put in your own out of memory handler, because the default one just prints
+an error and exits. There is also an error bailout in the ZIP routines,
+although I've never seen it happen. The ZIP functions need more cleaning
+up to prevent these bailouts.
+
+There are several more features I'd like to add. Some systems, such as
+digital cash banks, will involve servers, possibly accessing thousands of
+keys. The sequential PGP key is too slow for this. Servers could use a
+separate hash file, taking the least significant bits of the key id as the
+hash value. This file would provide pointers into the keyring for fast
+access by keyid. Fast access by userid is hard, because userids are looked
+up by substrings. If anyone knows of a file format which allows fast
+substring searches, without a huge index, please let me know.
+
+PTDEMO has been tested under DOS and Unix. Endian() is used for endian
+swapping. On a big-endian machine, defining HIGHFIRST will define out
+endian. This should work, but I don't have a big-endian machine to test it.
+
+Some of this code, including the MPI library, the key generation, the ZIP
+routines, and some of the ASCII-armoring functions, was written by others
+for PGP, and they own that code. The parts I wrote (everything which isn't
+in PGP) are not copyrighted and may be used for any purpose, commercial or
+otherwise. I don't care how it is used, as long as it helps to make public-
+key cryptography more readily available.
+
+Unlike some people, I'm not out to get PKP. If they would sell, for a
+reasonable price, a personal RSA license, I would buy one. This license
+would allow you to use RSA yourself and to share source code for the use
+of other licensed people, but not to sell commercial software without
+royalties. If they would agree to allow free non-commercial use, I would
+continue to write code, which would simplify commercial implementations.
+This would make money for PKP in the long run.
+
+The problem is that every available RSA implementation has strings
+attached: you are forced to use DES or ask their specific permission to do
+otherwise (RSAREF/RIPEM), to get keys or signatures from RSADSI, to buy a
+new key after a mandatory expiration date (DSS), are not allowed to see the
+source code to verify the security (ViaCrypt), etc. My interest is in
+promoting the use of cryptography. If PKP makes a reasonable profit along
+the way, that's okay with me.
+
+I would like to ask PKP's permission up front to release this library, in
+the hope of legitimizing PGP-compatible encryption. Unfortunately, the
+present grey-area status of PGP, and the oppressive environment created by
+the Phil Zimmermann investigations, prevent me from doing so.
+
+I will read and possibly participate in any discussions of this library on
+alt.security.pgp, so if you have any ideas, post them there. Any messages
+from me will be signed with my key:
+
+Type bits/keyID   Date       User ID
+pub  1024/558A1D 1994/01/10  Pr0duct Cypher &lt;alt.security.pgp&gt;
+Key fingerprint =  9D AF 6D 4D 8E 64 43 FC  D5 CB 9C 7A 36 C7 6D B9
+
+- -----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: 2.3a
+
+mQCNAi0xHTIAAAEEAKeIU9S010e1AxYy2R379ptHunqM0kRMgWnOwfCnVets8jTh
+r7B87pzFNVj6kBs8F9TKQdk62JR5Kiq2rVODFSLmN2JThnhfDu/tAYAz8fJsWkxG
+n5IhcjxkQpfb2LDs4EBJgWhI9HxIfCvhSkFdrFe9JBfm0KKB5sGoFIWXVYodAAUT
+tCFQcjBkdWN0IEN5cGhlciA8YWx0LnNlY3VyaXR5LnBncD4=
+=j/dW
+- -----END PGP PUBLIC KEY BLOCK-----
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a
+
+iQCVAgUBLUi6vsGoFIWXVYodAQGe1AP8CxrG/imw282QbXWvSTtFDWhNYto2Ms8d
+aTbxLsbNddqFXtTnVmNAMu0BPGs1P3KQzb1aH8dTAyCmfL7QvjCOG95fsiWrqipX
+PQS1asCNd9nUqXUEnJVRKaJdP0aAO1q/hDSq0Jl2RlHKIvw/7Em2MXpls360nwlQ
++bshHX6x4Ew=
+=QwJD
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00738.html">Re:  2-way anonymous via SASE</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00743.html">Re: Random remailing script had. Help.</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00736.html">Put me down as a loony</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00741.html">Cypherpunks Virtual Meeting at BayMOO</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00737"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00737"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

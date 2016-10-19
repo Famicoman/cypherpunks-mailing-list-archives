@@ -1,0 +1,619 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: (fwd) Random Numbers &#45; CHIKSN.FOR -->
+<!--X-From-R13: Xvz pubngr <enintrNotn.pbz> -->
+<!--X-Date: Thu, 7 Jul 94 13:10:58 PDT -->
+<!--X-Message-Id: 199407072010.PAA29167@ivy.bga.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>(fwd) Random Numbers - CHIKSN.FOR</TITLE>
+<LINK REV="made" HREF="mailto:ravage@bga.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00377.html">Date Prev</A>][<A HREF="msg00380.html">Date Next</A>][<A HREF="msg00377.html">Thread Prev</A>][<A HREF="msg00394.html">Thread Next</A>][<A HREF="index.html#00379">Date Index</A>][<A HREF="threads.html#00379">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>(fwd) Random Numbers - CHIKSN.FOR</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: (fwd) Random Numbers - CHIKSN.FOR</LI>
+<LI><em>From</em>: Jim choate &lt;<A HREF="mailto:ravage@bga.com">ravage@bga.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 7 Jul 1994 15:10:38 -0500</LI>
+<LI><em>Newsgroups</em>: sci.stat.math,sci.math,sci.math.num-analysis</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Newsgroups: sci.stat.math,sci.math,sci.math.num-analysis
+Path: bga.com!news.sprintlink.net!news.onramp.net!convex!cs.utexas.edu!swrinde!ihnp4.ucsd.edu!library.ucla.edu!csulb.edu!csus.edu!netcom.com!deleyd
+From: deleyd@netcom.com
+Subject: Random Numbers - CHIKSN.FOR
+Message-ID: &lt;deleydCsIBAp.KuF@netcom.com&gt;
+Organization: NETCOM On-line Communication Services (408 261-4700 guest)
+Date: Wed, 6 Jul 1994 06:56:49 GMT
+Lines: 526
+Xref: bga.com sci.stat.math:1316 sci.math:15354 sci.math.num-analysis:3355
+
+{Approx. 520 lines}
+
+C CHIKSN.FOR
+C
+C This is the program which impliments the chi-square test used to test
+C random number generators.  Presented here if you would wish to play
+C with it yourself, maybe do some testing of your own.  See the paper
+C "Computer Generated Random Numbers" sections 4 and 6 for an explanation
+C of what this program does.
+C
+C This is not polished code you put on a shelf and admire, this is code
+C you dig your hands into and work with to make it do what you want it to.
+C
+C The main routine is the one to tinker with.  This code is meant to be
+C modified to suit your needs.  The goal is to fill up the bins with
+C balls.  Here's a brief outline:
+C
+C        1. ASK USER INPUT:
+C           a.  Number of dimensions?  NDIM
+C           b.  Number of bins per dimension?  NBINSPD
+C           c.  Total number of balls to throw at bins?  NBALLS
+C           d.  Number of tests to run?  NCHITESTS
+C           e.  Random number generator to use (if more than one defined)
+C           f.  SEED value to initialize generator with
+C
+C        2. CREATE ARRAY BINS and ZERO ARRAY
+C
+C        3. THROW THE BALLS AT THE BINS and CALCULATE PROBABILITY:
+C
+C              LOOP (do CHITEST=1 to NCHITESTS)
+C                 zero BIN array
+C                 LOOP (do J=1 to NBALLS)
+C                    get random numbers r1,r2,...,rn)
+C                    increment BIN(r1,r2,...,rn)
+C                 ENDLOOP
+C                 CALL CHSONE to calculate chi-square probability
+C              ENDLOOP
+C              CALL KSONE to calculate Kolmogorov-Smirnov probability
+C
+C The main routine here is where you put a call to your random number
+C generator, or for speed you can attempt a direct implimentation of your
+C random number generator to save the overhead of a call.  (It can make a
+C difference when you call the random number generator 100 million times
+C in one test).
+C
+C The main routine defines a large one-dimensional array called BINS, the
+C maximum size of which would depend on your account quotas and machine
+C specific limitations.  The array BINS keeps track of how many balls have
+C fallen into each bin.  The size of array BINS determines the maximum
+C number of bins a user may select for a test.  (10,000,000 bins is a
+C typical number you may want to use if possible.)
+C
+C So steps are:
+C
+C     1.  Check definition of one-dimensional array NBINS
+C         that it's not too large for your account quotas
+C         or system limitations.
+C
+C     2.  Place your random number generator to be tested where it
+C         bluntly says "PLACE YOUR RANDOM NUMBER GENERATOR HERE".
+C         The output is an integer IRANDOM between 0 and NBINS-1
+C         (NBINS is the number of bins chosen by the user).
+C
+C         Currently the program is set up to use subroutine RAN1, a portable
+C         random number generator from the book "NUMERICAL RECIPES: The Art
+C         of Scientific Computing".  I've had trouble on our UNIX system
+C         not making array R(97) static even though the code says to.
+C         Compiling with the -static qualifier works.
+C
+C The random number generator being tested is used to "randomly" select a
+C bin for the ball to fall in, and the counter for that bin is
+C incremented.  Note for a multi-dimensional test we calculate the
+C appropriate index into the linear array BINS by hand.  After all the
+C balls are thrown we call the subroutines to do the heavy math.
+C
+C All the subroutines should be fairly standard FORTRAN-77 modified
+C versions of routines from the book "NUMERICAL RECIPES: The Art of
+C Scientific Computing" by William H. Press, Brian P.  Flannery, Saul A.
+C Teukolsky, and William T. Vetterling, and you should look there for
+C further reference as to what the routines are doing.  (Note: the book
+C comes in several programming language forms including C, PASCAL, BASIC,
+C as well as FORTRAN, so you can take your pick and rewrite this code in
+C any language you please.)
+C
+C Note:
+C    CHIKSN.FOR is currently set up to be run by a process with a very
+C    large page file quota (pgflquo).  If you get a 'exceed quota' error
+C    attempting to run this then all you need to do is change the line
+C    which reads:
+C
+C       	INTEGER*2 BINS(20 000 000)	!The bins.
+C
+C    to something smaller like:
+C
+C    	INTEGER*2 BINS(1 000 000)	!The bins.
+C
+C
+C To compile:
+C      $ FORTRAN CHIKSN
+C      $ LINK CHIKSN
+C or
+C     % f77 chiksn.f      !(Some UNIX F77 compilers require -save option)
+C
+C Sample run:
+C   Test MTH$RANDOM in 3-D with 10 bins per dimension and 10 balls per bin:
+C
+C      $ RUN CHIKSN
+C      Input number of dimensions NDIM: 3
+C      Input number of bins per dimension NBINSPD: 10
+C      Total number of bins = NBINSPD**NDIM =         1000
+C      Minimum number of balls = 5*NBINS =         5000
+C      Input total number of balls NBALLS: 10000
+C      Input number of Chi-Square tests NCHITESTS (min=2) : 2
+C      Choose random number generator to test
+C        (1) MTH$RANDOM,
+C        (2) RANDU,
+C        (3) ANSI C,
+C        (4) Microsoft C
+C        (5) Turbo Pascal
+C        (6) DES
+C        : 1
+C      Input starting SEED value: 1
+C
+C      BALLS=       10000   CHISQ=    993.0002441   PROB=      0.4524292
+C      BALLS=       10000   CHISQ=    974.0001831   PROB=      0.2915459
+C      KS D=      0.5475708  PROB=      0.5863269
+C
+C-----------------------------------------------------------------------
+	PROGRAM CHIKSN
+C  Perform a CHI-SQUARE test on a sequence of sets of N random numbers
+C  NDIM      = number of dimensions
+C  NBINSPD   = number of bins per dimension
+C  NBINS     = total number of bins.  NBINS = NBINSPD**NDIM
+C  NBALLS    = total number of balls.  Should be at least 5*(NBINS**NDIM)
+C  NCHITESTS = Number of chi-square tests to do.  Must be 2 or more.
+C  EBINS     = Expected value for each bin.  EBINS = NBALLS/NBINS
+C  SEED      = Initial seed value for random number generator
+C
+C Note 1:  The maximum size of array NBINS may be determined by the users
+C          page file quota (pgflquo in AUTHORIZE).  Also, it is recommended
+C          the user have a very large working set quota (wsquo,wsextent)
+C          to reduce page faulting.  This can greatly improve speed.
+C          We use INTEGER*2 array here to save space.
+C
+C Note 2:  The maximum number of Chi-Square tests that can be saved is
+C          arbitrary (array SAVEPROB).  The user may choose any value.
+C
+C Note 3:  The user may choose any starting seed value.  Some restrictions
+C          may apply depending upon the particular random number generator
+C          being used.  For example, RANDU should always be started with
+C          an odd value of SEED.  MTH$RANDOM may be started with any value
+C          of SEED.
+C
+C Note 4:  The MTH$RANDOM generator is used by the VAX FORTRAN intrinsic
+C          function RAN and the VAX BASIC function RND.  It is defined as:
+C
+C               SEED = 69069*SEED + 1 mod 2**32
+C               X = SEED/2**32
+C
+C Note 5:  The RANDU generator is obsolite due to very strong correlation
+C          in 3d space.  ( Prove to yourself using 65539 = 2**16 + 3 that
+C          SEED[i+2] = 6*SEED[i+1] - 9*SEED[i] ).  It is defined as:
+C
+C               SEED = 65539*SEED mod 2**31
+C               X = SEED/2**31
+C
+C          The RANDU generator should be started with an odd value of SEED.
+C
+C Note 6:  The C standard library function rand() is defined as:
+C
+C               SEED = 1103515245*SEED + 12345 mod 2**32
+C	        IX = SEED mod 2**31
+C
+C          This standard random number generator is defined in the book:
+C               The C Programming Language
+C               Brian W. Kernighan and Dennis M. Ritchie
+C               Prentice Hall, 1978
+C
+C          The same generator is defined in the ANSI C version by the same
+C          authors above, and the same generator is used in VAX C.
+C
+C Note 7:  The Microsoft C version 4.0 library function rand() impliments
+C          the following:
+C
+C               SEED = 214013*SEED + 2531011 mod 2**32
+C               IX = bits 16-31 of SEED
+C
+C Note 8:  The Turbo Pascal version 6.0 function impliments the following:
+C
+C               SEED = 134775813*SEED + 1 mod 2**32
+C               IX = bits 16-32 of SEED
+C
+	IMPLICIT NONE
+	INTEGER NDIM			!Number of dimensions
+	INTEGER NBINS			!Number of bins
+	INTEGER NBINSPD			!Number of bins per dimension
+	INTEGER NBALLS			!Number of random numbers per
+					!chi-square test.
+	INTEGER NCHITESTS		!Number of chi-square tests to do
+
+C	INTEGER*2 BINS(20 000 000)	!The bins. (see note 1)
+	INTEGER*2 BINS(200 000)		!Less bins. (see note 1)
+	REAL EBINS			!Expected number of balls per bin
+
+	REAL SAVEPROB(100)		!Array to save results of
+					!chi-square tests (see note 2)
+	INTEGER*4 SEED(2)		!Only SEED(1) result is ever used.
+	INTEGER*2 W(4)			!Seeds for RANDU
+	EQUIVALENCE(SEED,W)		!for RANDU
+	COMMON / SEEDSTORE / SEED
+
+	INTEGER I,J,K,MRANDO,NBYTES,CLEAR,CHITEST,INDEX,IRANDOM,NCLEAR
+	REAL*4 FRANDOM, RRANDOM
+	CHARACTER*8 TIMEBUF
+	EQUIVALENCE (IRANDOM,FRANDOM)
+	REAL FOR$IRAN			!The RANDU random number generator
+	REAL RAND			!UNIX rand()
+	INTEGER*4 xrand			!BSD random()
+	REAL RAN1			!test generator supplied
+	REAL D
+	INTEGER JISHFT,IRANDOM2,COUNT
+	REAL RANDES			!DES FUNCTION (not supplied)
+	INTEGER KEY(2)
+	REAL CHSQ,PROB			!Chi-square value,
+					!chi-square probability
+	REAL*4 FNBINSPD			!float(NBINSPD)
+	REAL*4 TWO31F
+	REAL*4 TWO16F
+	REAL*4 TWO15F
+	TWO31F = 2.0**31.0
+	TWO16F = 2.0**16.0
+	TWO15F = 2.0**15.0
+C*DES	KEY(1) = 12345		!Choose any number you want
+C*DES	KEY(2) = 678901		!to initialize DES with
+C*DES	CALL DES_INIT(KEY)	!DES code not included.
+
+104     FORMAT(' Input number of dimensions NDIM: ',$)
+100	FORMAT(' Input number of bins per dimension NBINSPD: ',$)
+105	FORMAT(' Total number of bins = NBINSPD**NDIM = ',I)
+106	FORMAT(' Minimum number of balls = 5*NBINS = ',I)
+101	FORMAT(' Input total number of balls NBALLS: ',$)
+103	FORMAT(' Input number of Chi-Square tests NCHITESTS (min=2) : ',$)
+102	FORMAT(' Choose random number generator to test'/,
+	1	'       /*(1)*/ xrand(),'/
+	1	'       /*(2)*/ UNIX rand(),'/
+	1	'       /*(3)*/ MTH$RANDOM,'/
+	2	'       /*(4)*/ RANDU,'/
+	3	'       /*(5)*/ ANSI C,'/
+	4	'       /*(6)*/ Microsoft C'/
+	5	'       /*(7)*/ Turbo Pascal'/
+	7	'       /*(8)*/ DES'/
+	8	'  (9) another random number generator (choose this one)'/
+	6	'   : ',$)
+107	FORMAT(' Input starting SEED value: ',$)
+200	FORMAT(BN,I)
+
+C ***GET USER INPUT***
+10	WRITE(6,104)			!Input number of dimensions
+	READ(5,200) NDIM
+	WRITE(6,100)			!Input number of bins per dimension
+	READ(5,200) NBINSPD
+	FNBINSPD = FLOAT(NBINSPD)
+	NBINS = NBINSPD**NDIM		!Calculate total number of bins
+	WRITE(6,105) NBINS		!Total number of bins is...
+	WRITE(6,106) 5*NBINS		!Minimum number of balls is...
+	WRITE(6,101)			!Input total number of balls
+	READ(5,200) NBALLS
+	WRITE(6,103)			!Input number of chi-square tests to do
+	READ(5,200) NCHITESTS
+	WRITE(6,102)			!Choose random number generator to test
+	READ(5,200) MRANDO
+	WRITE(6,107)			!Starting SEED value
+	READ(5,200) SEED(1)
+	SEED(2) = 1			!Used only if random number generator
+					!uses bigger than 32 bits
+
+C INITIALIZE GENERATOR IF NEEDED
+C*XRAND	CALL sxrand(SEED(1))		!Initialize xrand()
+	CALL RAN1(-SEED(1))		!Initialize RAN1 generator
+
+C Calculate expected average number of balls for each bin
+	EBINS = FLOAT(NBALLS)/FLOAT(NBINS)
+C	CALL TIME(TIMEBUF)
+C	WRITE(6,201) TIMEBUF
+C201	FORMAT(1X,A8)
+
+	DO CHITEST=1,NCHITESTS
+C         *** ZERO BIN ARRAY ***
+	      DO I=1,NBINS
+	        BINS(I) = 0
+	      ENDDO
+C*VMS	  !Quickly set BINS(k) = 0, k=1,...NBINS
+C*VMS	  !Does the equivalent of above
+C*VMS	  !but a lot faster.
+C*VMS	  K = 1
+C*VMS	  NBYTES = NBINS*2		!total number of bytes to zero
+C*VMS	  DO WHILE (NBYTES .GT. 0)
+C*VMS	    IF (NBYTES .LE. 65534) THEN	!maximum number of bytes we can clear
+C*VMS	      NCLEAR = NBYTES		!in one call to LIB$MOVC5 is 65535
+C*VMS	    ELSE
+C*VMS	      NCLEAR = 65534		!max that LIB$MOVC3 can do in one call
+C*VMS	    ENDIF  !(make nclear an even number so we can divide evenly by 2)
+C*VMS	    CALL LIB$MOVC5(0,0,0,NCLEAR,BINS(K))  !Clear a block of memory
+C*VMS	    NBYTES = NBYTES - NCLEAR	!Number of bytes still left to clear
+C*VMS	    K = K + NCLEAR/2		!Number of bytes cleared so far + 1
+C*VMS	  ENDDO
+
+C Main Loop
+	  DO J=1,NBALLS
+	    INDEX = 1
+	    DO I=0,NDIM-1
+
+C             ***PLACE YOUR RANDOM NUMBER GENERATOR HERE***
+C             Set IRANDOM using whatever random number generator you choose
+C	      IRANDOM = integer between 0 and NBINS-1
+c	      IF     (MRANDO .EQ. 1) THEN
+c	        IRANDOM = INT( ( float( xrand() ) /TWO31F ) *FNBINSPD)
+c	      ELSEIF (MRANDO .EQ. 2) THEN
+c	        IRANDOM = INT( RAND(SEED(1)) *FNBINSPD)	      !UNIX rand()
+c	      ELSEIF (MRANDO .EQ. 3) THEN
+c	        IRANDOM = INT( RAN(SEED(1)) *FNBINSPD)	      !VMS mth$random
+c	      ELSEIF (MRANDO .EQ. 4) THEN
+c	        IRANDOM = INT( FOR$IRAN(W(2),W(1)) *FNBINSPD) !Infamous randu
+c	      ELSEIF (MRANDO .EQ. 5) THEN
+c	        CALL LIB$EMUL(1103515245,SEED,12345,SEED)	!ANSI C
+c	        IRANDOM = SEED(1) .AND. '7FFFFFFF'X
+c	        IRANDOM = INT( FLOAT(IRANDOM)/(TWO31F) *FNBINSPD)
+c	      ELSEIF (MRANDO .EQ. 6) THEN
+c	        CALL LIB$EMUL(214013,SEED,2531011,SEED)	!Microsoft C 4.0
+c	        IRANDOM = W(2) .AND. '7FFF'X
+c	        IRANDOM = INT( FLOAT(IRANDOM)/(TWO15F) *FNBINSPD)
+c	      ELSEIF (MRANDO .EQ. 7) THEN
+c	        CALL LIB$EMUL(134775813,SEED,1,SEED)	!Turbo Pascal 6.0
+c	        IRANDOM = SEED(1) .AND. 'FFFF0000'X
+c	        IRANDOM = JISHFT(IRANDOM,-16)
+c	        IRANDOM = INT( FLOAT(IRANDOM)/(TWO16F) * FNBINSPD)
+c	      ELSEIF (MRANDO .EQ. 8) THEN
+c	        IRANDOM = INT( RANDES() * FNBINSPD )	!DES (not supplied)
+c	      ELSEIF (MRANDO .EQ. 9) THEN
+	        IRANDOM = INT( RAN1(SEED(1)) * FNBINSPD )
+c	      ENDIF
+
+C	      Calculate index by hand.
+	      INDEX = INDEX + IRANDOM*(NBINSPD**I)
+	    ENDDO
+
+	    BINS(INDEX) = BINS(INDEX) + 1	!ball fell in this bin
+C	    IF ( MOD(J, 1 000 000) .EQ. 0 ) THEN
+C	       CALL TIME(TIMEBUF)
+C	       WRITE(6,302) J, TIMEBUF
+302	       FORMAT(1X,'AT BALL:',I,3X,'TIME=',A8)
+C	        WRITE(6,303) SEED(2), SEED(1)
+303		FORMAT(1X,'HEX: SEED(2)= ',Z,' SEED(1)= ',Z)
+C		WRITE(6,304) SEED(2), SEED(1)
+304            FORMAT(1X,'DEC: SEED(2)= ',I,' SEED(1)= ',I)
+C	    ENDIF
+
+
+  	  ENDDO
+
+400	  CALL CHSONE(BINS,EBINS,NBINS,CHSQ,PROB)
+	  SAVEPROB(CHITEST) = PROB
+	  WRITE(6,1) NBALLS,CHSQ,PROB
+1	  FORMAT(' BALLS=',I,'   CHISQ=',F,'   PROB=',F)
+
+	ENDDO
+
+C Now see if all the chi-square values are chi-square distributed:
+	IF (NCHITESTS .GT. 1) THEN
+	CALL KSONE(SAVEPROB,NCHITESTS,D,PROB)
+	WRITE(6,2) D,PROB
+2	FORMAT(1X,'KS D=',F,'  PROB=',F)
+	ENDIF
+	END
+C============================================================================
+C  From book NUMERICAL RECIPES: The Art of Scientific Computing
+C  Here for demonstration purposes
+C  Replace this with whatever random number generator you want to test
+C  Initialize with negative number
+      FUNCTION RAN1(IDUM)
+      REAL R(97)
+      SAVE R	!(Some UNIX F77 compilers require -save option on compile)
+      PARAMETER (M1=259200,IA1=7141,IC1=54773,RM1=3.8580247E-6)
+      PARAMETER (M2=134456,IA2=8121,IC2=28411,RM2=7.4373773E-6)
+      PARAMETER (M3=243000,IA3=4561,IC3=51349)
+      DATA IFF /0/
+      IF (IDUM.LT.0.OR.IFF.EQ.0) THEN
+        IFF=1
+        IX1=MOD(IC1-IDUM,M1)
+        IX1=MOD(IA1*IX1+IC1,M1)
+        IX2=MOD(IX1,M2)
+        IX1=MOD(IA1*IX1+IC1,M1)
+        IX3=MOD(IX1,M3)
+        DO 11 J=1,97
+          IX1=MOD(IA1*IX1+IC1,M1)
+          IX2=MOD(IA2*IX2+IC2,M2)
+          R(J)=(FLOAT(IX1)+FLOAT(IX2)*RM2)*RM1
+11      CONTINUE
+        IDUM=1
+      ENDIF
+      IX1=MOD(IA1*IX1+IC1,M1)
+      IX2=MOD(IA2*IX2+IC2,M2)
+      IX3=MOD(IA3*IX3+IC3,M3)
+      J=1+(97*IX3)/M3
+      IF(J.GT.97.OR.J.LT.1)PAUSE
+      write(1,100) R
+      write(1,102) R(J)
+100   format(f)
+102   format(1x,'RAN1 = ', F)
+      RAN1=R(J)
+      R(J)=(FLOAT(IX1)+FLOAT(IX2)*RM2)*RM1
+      RETURN
+      END
+C----------------------------------------------------------------------------
+
+C CALCULATE THE CHI-SQUARE PROBABILITY.  SINCE NBINS IS LARGE, IT IS JUST
+C THE CUMULATIVE GAUSSIAN DISTRIBUTION AFTER WE NORMALIZE THE VARIABLES.
+C OR ERROR FUNCTION.
+
+	FUNCTION CHIPROB(NBINS,CHISQ)
+C       Formula is the inverse of one given in Knuth for going the other way.
+	INTEGER NBINS,DF
+	REAL*4 CHISQ,Z
+	DF = NBINS-1
+        Z = ( SQRT(24.0*CHISQ - 6.0*DF + 16.0) - 3*SQRT(2.0*DF) ) / 4.0
+	CHIPROB = ERF(Z)
+	RETURN
+	END
+
+      FUNCTION ERF(X)
+C     Return approximation to the complimentary error function erfc(X).
+C     Return is not normalized err function.  See book for details.
+C     Adapted from book NUMERICAL RECIPES: The Art of Scientific Computing
+C     Modified to return normalized error function erf(X)
+C     (It's a polynomial approximation)
+      REAL ERFCC,Z,T
+      Z=ABS(X/1.414213)	!Normalize
+      T=1./(1.+0.5*Z)
+      ERFCC=T*EXP(-Z*Z-1.26551223+T*(1.00002368+T*(.37409196+
+     *    T*(.09678418+T*(-.18628806+T*(.27886807+T*(-1.13520398+
+     *    T*(1.48851587+T*(-.82215223+T*.17087277)))))))))
+      IF (X.LT.0.) ERFCC=2.-ERFCC
+      ERF = 1.0 - ERFCC/2.0	!Normalize and compliment
+      RETURN
+      END
+
+C----------------------------------------------------------------------------
+C THE FOLLOWING SUBROUTINES CALCULATE THE CHI-SQUARE VALUE:
+
+      SUBROUTINE CHSONE(BINS,EBINS,NBINS,CHSQ,PROB)
+C  Adapted from book NUMERICAL RECIPES: The Art of Scientific Computing
+      INTEGER NBINS
+      INTEGER*2 BINS(NBINS)
+      REAL EBINS,CHSQ,PROB
+      CHSQ=0.
+      IF(EBINS.LE.0.) PAUSE 'CHSONE: EBINS must be &gt; 0'
+      DO 11 J=1,NBINS
+        CHSQ=CHSQ+(BINS(J)-EBINS)**2/EBINS
+11    CONTINUE
+      PROB=CHIPROB(NBINS,CHSQ)
+      RETURN
+      END
+C============================================================================
+C  THE FOLLOWING SUBROUTINES CALCULATE THE KOLMOGOROV-SMIRNOV PROBABILITY
+
+      SUBROUTINE KSONE(DATA,N,D,PROB)
+C  Adapted from book NUMERICAL RECIPES: The Art of Scientific Computing
+C  DF - degrees of freedom.  Passsed to FUNC
+      INTEGER N
+      REAL DATA(N)
+      REAL D,PROB
+      CALL PIKSRT(N,DATA)
+      EN=N
+      D=0.
+      FO=0.
+      DO 11 J=1,N
+        FN=J/EN
+        FF=DATA(J)
+        DT=AMAX1(ABS(FO-FF),ABS(FN-FF))
+        IF(DT.GT.D)D=DT
+        FO=FN
+11    CONTINUE
+      PROB=PROBKS(SQRT(EN)*D)
+      RETURN
+      END
+C----------------------------------------------------------------------------
+      FUNCTION PROBKS(ALAM)
+C  Adapted from book NUMERICAL RECIPES: The Art of Scientific Computing
+C  Note the routine in the Numerical Recipes book erronously returns
+C  1 instead of 0 for large values of ALAM.
+      PARAMETER (EPS1=0.001, EPS2=1.E-8)
+      A2=-2.*ALAM**2
+      FAC=2.
+      PROBKS=0.
+      TERMBF=0.
+      DO 11 J=1,100
+        TERM=FAC*EXP(A2*J**2)
+        PROBKS=PROBKS+TERM
+C       Error in Numerical Recipes book.  Terminate if TERM underflows.
+C**     IF(ABS(TERM).LT.EPS1*TERMBF.OR.ABS(TERM).LT.EPS2*PROBKS)RETURN
+        IF(ABS(TERM).LE.EPS1*TERMBF.OR.ABS(TERM).LE.EPS2*PROBKS)RETURN
+        FAC=-FAC
+        TERMBF=ABS(TERM)
+11    CONTINUE
+      PROBKS=1.0
+      RETURN
+      END
+C----------------------------------------------------------------------------
+      SUBROUTINE PIKSRT(N,ARR)
+C  Adapted from book NUMERICAL RECIPES: The Art of Scientific Computing
+C  See book for details.
+      INTEGER N
+      REAL ARR(N)
+      DO 12 J=2,N
+        A=ARR(J)
+        DO 11 I=J-1,1,-1
+          IF(ARR(I).LE.A)GO TO 10
+          ARR(I+1)=ARR(I)
+11      CONTINUE
+        I=0
+10      ARR(I+1)=A
+12    CONTINUE
+      RETURN
+      END
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00394" HREF="msg00394.html">Re: (fwd) Junk</A></STRONG>
+<UL><LI><EM>From:</EM> Joseph Block &lt;jpb@gate.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00377.html">(fwd) Random Numbers - Results of testing BSD random()</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00380.html">(fwd) Random Numbers - CORELA.FOR</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00377.html">(fwd) Random Numbers - Results of testing BSD random()</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00394.html">Re: (fwd) Junk</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00379"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00379"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

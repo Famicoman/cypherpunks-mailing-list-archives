@@ -1,0 +1,153 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Probabilistic Encryption -->
+<!--X-From-R13: fbyznaN[WF.SRG -->
+<!--X-Date: Fri, 15 Jul 94 00:29:12 PDT -->
+<!--X-Message-Id: 9407150728.AA13894@ua.MIT.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9407141627.AA17963@snark.imsi.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Probabilistic Encryption</TITLE>
+<LINK REV="made" HREF="mailto:solman@MIT.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00737.html">Date Prev</A>][<A HREF="msg00732.html">Date Next</A>][<A HREF="msg00708.html">Thread Prev</A>][<A HREF="msg00705.html">Thread Next</A>][<A HREF="index.html#00736">Date Index</A>][<A HREF="threads.html#00736">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Probabilistic Encryption</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:perry@imsi.com">perry@imsi.com</A></LI>
+<LI><em>Subject</em>: Re: Probabilistic Encryption </LI>
+<LI><em>From</em>: <A HREF="mailto:solman@MIT.EDU">solman@MIT.EDU</A></LI>
+<LI><em>Date</em>: Fri, 15 Jul 94 03:28:40 EDT</LI>
+<LI><em>Cc</em>: <A HREF="mailto:gtoal@an%2Dteallach.com">gtoal@an-teallach.com</A> (Graham Toal), <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: Your message of Thu, 14 Jul 94 12:27:11 -0400.            &lt;<A HREF="msg00708.html">9407141627.AA17963@snark.imsi.com</A>&gt; </LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; Graham Toal says:
+&gt; &gt;&gt;&gt; How secure do you guys think Probabilistic encryption using a BBS
+&gt; &gt;&gt;&gt; generator is? It looks like its every bit as good for key
+&gt; &gt;&gt;&gt; exchanges as RSA and somewhat better because of its speed.
+
+&gt; &gt;&gt; The technique you mention is not one I've heard of. What is a BBS
+&gt; &gt;&gt; generator? Could you please explain?
+
+&gt; &gt; BBS is Blum-Blum-Shub, a cryptographically strong RNG I believe.
+
+&gt; Ah, the Blum-Blum-Shub generator is familiar to me. However, how can
+&gt; you possibly use this for key exchange?
+
+&gt; &gt; How he plans using this in some way to get the effect of an RSA
+&gt; &gt; public key system I have no idea.  I hope we're not about to get the
+&gt; &gt; usual kiddy PRNG exor encryption lecture.
+
+&gt; Ditto.
+
+Well it is based on a PRNG exor, but the hardness of the encryption is
+based on the hardness of factoring the modulus used in the BBS RNG so I
+don't think you need to give me a "kiddy" lecture. (And I'm not using it
+for authentication, something which I belive is necessarily weak in any
+cypher being encrypted and decrypted via exor)
+
+I first saw a useful version of this in Schneier although I had previously
+seen versions that generated ciphers twice as large as the plaintext (which
+are uninteresting to me since I'm working ona VERY bandwidth conscious 
+application).
+
+Here is how it works:
+
+First, choose two large prime numbers that are one less than a multiple of
+four. Since the security of this algorithm is based on the difficulty of
+factoring, I guess hard primes would be nice but I don't know if it really
+matters.
+
+Next choose a random number. Since you only need one random number, you
+probably don't need it to be very secure, but just in case its a good
+idea.
+
+In each iteration of a BBS you modify the seed by the following operation:
+seed(new) = (seed(old))^2 mod n [n is the product of your primes].
+
+Throw your seed in there, if you question its security iterate it once
+before using any numbers.
+
+If your seed has 2^n bits, the lowest n bits will be randomly generated
+bits that are sufficiently secure for any cryptographics application you
+can think off. Exor the the stream of random bits with the stream of
+plaintext and append the final seed and you get your cyphertext.
+
+NOW, in order to remove the cypher, you need to figure out what the initial
+seed was. For a BBS generator, the only way you can do that is by factoring
+the modulus. The private key then, is the two factors. The public key is the 
+modulus n. Clearly you can't authenticate by this, but there are much better 
+algorithms for that anyway. What this provides is a public key system based
+on the hardness of factoring that is faster than RSA and apparently not
+covered by the RSA patent. (although I've asked for opinions on this last
+point in another post)
+
+I really believe that this is secure, but I wanted opinions before I
+implemented it as the algorithm users can use when they want to say
+"screw you RSADSI".
+
+Cheers,
+
+Jason W. Solinsky
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00708" HREF="msg00708.html">Re: Probabilistic Encryption</A></STRONG>
+<UL><LI><EM>From:</EM> "Perry E. Metzger" &lt;perry@imsi.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00737.html">Re: Key length security (calculations!)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00732.html">Where do Extropians live?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00708.html">Re: Probabilistic Encryption</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00705.html">Probabilistic Encryption</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00736"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00736"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

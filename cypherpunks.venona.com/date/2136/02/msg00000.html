@@ -1,0 +1,139 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: A brief comparison of email encryption protocols -->
+<!--X-From-R13: Sevp [heenl <revpzNyar.pbz> -->
+<!--X-Date: Fri, 8 Mar 1996 01:38:03 +0800 -->
+<!--X-Message-Id: 203602070728.XAA19559@slack.lne.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199603050003.TAA04555@homeport.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: A brief comparison of email encryption protocols</TITLE>
+<LINK REV="made" HREF="mailto:ericm@lne.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[Date Prev][Date Next][Thread Prev][Thread Next][<A HREF="index.html#00000">Date Index</A>][<A HREF="threads.html#00000">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: A brief comparison of email encryption protocols</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:adam@lighthouse.homeport.org">adam@lighthouse.homeport.org</A> (Adam Shostack)</LI>
+<LI><em>Subject</em>: Re: A brief comparison of email encryption protocols</LI>
+<LI><em>From</em>: Eric Murray &lt;<A HREF="mailto:ericm@lne.com">ericm@lne.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 6 Feb 136 23:28:05 -0800 (PST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:ericm@lne.com">ericm@lne.com</A>, <A HREF="mailto:perry@piermont.com">perry@piermont.com</A>, <A HREF="mailto:cme@cybercash.com">cme@cybercash.com</A>, <A HREF="mailto:warlord@mit.edu">warlord@mit.edu</A>,       <A HREF="mailto:lgl@qualcomm.com">lgl@qualcomm.com</A>, <A HREF="mailto:Cypherpunks@toad.com">Cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;199603050003.TAA04555@homeport.org&gt; from "Adam Shostack" at Mar 4, 96 07:03:48 pm</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Adam Shostack writes:
+&gt; 
+&gt; Leaving it out may be ok because we can define a standard location by
+&gt; key type: 
+&gt; 
+&gt; key://slack.lne.com/~ericm/key.asc
+&gt; key://slack.lne.com/~ericm/key.x509
+&gt; 
+&gt; key://slack.lne.com/~ericm/x509/key.cert
+&gt; key://slack.lne.com/~ericm/pgp/key.asc
+&gt; 
+&gt; I have no objection to defining a shorter URL, but would want some
+&gt; indicator that we're in user space, not host/domain/realm space.  A
+&gt; ~username serves that purpose as well as /u/ and is a more common
+&gt; usage.
+
+Ok.  Sounds good, for user-maintained keys like PGP anyhow.
+More hierarchical keys, like X.509, could be maintained
+by a CA that also maintains the server... some people who
+could use encryption don't know, and don't want to know, enough
+about it to even be willing to hold their own certificates.  They
+want it to "just work".  I think that this scheme should be flexable
+enough to be able to support a CA maintaining user's certificates
+for them.  Note that this doesn't mean that the CA/key server
+would know the keys, i.e. this should not support GAK*.
+ 
+&gt; My last comment is that if we define a URN scheme for keys, we should
+&gt; force a dependable structure on it, so that its predictable where to
+&gt; find a users PGP key from an email address, without having to check 6
+&gt; locations.  Nothing is there now, we should require order to make
+&gt; everyones life easier.
+
+Along those lines, I was envisioning adding a KEY RR type to
+DNS, and using it to maintain pointers to keyservers.
+
+I.e.  my keyserver would be on my machine slack.lne.com, and there
+would be a DNS record
+
+; name    class record  version  keyserver host
+
+*.lne.com.  IN	  KEY     1      slack.lne.com.
+
+that points all key lookups for *.lne.com to the keyserver
+running on a well-known port on slack.lne.com.
+
+This sounds so obvious that I'm sure that I'm not the first
+or even the tenth person to think of it, and in fact I
+see a KEY RR type defined in the BIND 4.9.3BETA17 source.  But
+there's just a type there, nothing else to support it.
+Anyone know what it's for?
+
+I don't have the time at the moment to research this, but it sounds
+pretty interesting and fairly easy to do.  All
+that's left, conceptually anyhow, is to come up with two protocols-
+one for keyserver&lt;=&gt;keyserver communication, one for client&lt;=&gt;keyserver
+communication.  I'm thinking of following the DNS (and a bunch of
+other protocols) model and have servers cache key info, take requests
+from clients, and exchange key info amongst themselves.
+Simplest would be for the local server to merely cache key info
+and pass it along to the client, who validates it in whichever
+way it sees fit.
+
+
+*-along the lines of not supporting GAK, I hope that the protocol
+will pretty much require the use of keyservers on a one-per-domain
+basis.  If there's just a few of them, those sites become easier targets
+for various legal/illegal pressure.
+
+-- 
+Eric Murray  ericm@lne.com  ericm@motorcycle.com  <A  HREF="http://www.lne.com/ericm">http://www.lne.com/ericm</A>
+PGP keyid:E03F65E5 fingerprint:50 B0 A2 4C 7D 86 FC 03  92 E8 AC E6 7E 27 29 AF
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00000"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00000"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

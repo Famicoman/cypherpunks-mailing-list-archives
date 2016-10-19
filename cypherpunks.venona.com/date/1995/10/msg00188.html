@@ -1,0 +1,185 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux] -->
+<!--X-From-R13: "Furbqber Ff'b" <glgfbN[WF.SRG> -->
+<!--X-Date: Tue, 31 Oct 1995 07:10:10 +0800 -->
+<!--X-Message-Id: 9510302119.AA24959@dcl.MIT.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199510301925.VAA27116@grumble.grondar.za -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux]</TITLE>
+<LINK REV="made" HREF="mailto:tytso@MIT.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00178.html">Date Prev</A>][<A HREF="msg00211.html">Date Next</A>][<A HREF="msg00200.html">Thread Prev</A>][<A HREF="msg00207.html">Thread Next</A>][<A HREF="index.html#00188">Date Index</A>][<A HREF="threads.html#00188">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux]</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Mark Murray &lt;<A HREF="mailto:mark@grondar.za">mark@grondar.za</A>&gt;</LI>
+<LI><em>Subject</em>: Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux]</LI>
+<LI><em>From</em>: "Theodore Ts'o" &lt;<A HREF="mailto:tytso@MIT.EDU">tytso@MIT.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 30 Oct 1995 16:19:27 -0500</LI>
+<LI><em>Address</em>: 1 Amherst St., Cambridge, MA 02139</LI>
+<LI><em>Cc</em>: "Theodore Ts'o" &lt;<A HREF="mailto:tytso@MIT.EDU">tytso@MIT.EDU</A>&gt;, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: Mark Murray's message of Mon, 30 Oct 1995 21:25:50 +0200,&lt;<A HREF="msg00200.html">199510301925.VAA27116@grumble.grondar.za</A>&gt;</LI>
+<LI><em>Phone</em>: (617) 253-8091</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+   Date: Mon, 30 Oct 1995 21:25:50 +0200
+   From: Mark Murray &lt;mark@grondar.za&gt;
+
+   Version 0.92 21st Sept 1995.
+
+Yup, there's a more recent version in the Linux tree at this point.
+
+   Something I didn't mention earlier; we felt that letting the unwashed
+   masses read /dev/*random was not a good idea, as they could deplete
+   the pool of entropy all to easily for attack purposes. 
+
+That should be a system administration issue.  If someone wants to make
+/dev/random readable only by root at their site, that's their business.
+I don't see any point in trying to enforce that in the kernel code.
+
+I don't agree that restricting read access is useful.  First of all, if
+the pool of entropy is depleted, someone who tries to obtain entropy by
+reading /dev/random will know that they didn't get enough entropy.  So
+assuming a program that actually checks return values from system calls,
+this is at worse a denial of service attack, and there are much easier
+ways of performing those srots of attacks: "while (1) fork()", for
+example.
+
+Secondly, making /dev/random only readable by "privileged programs"
+means that people won't be able to compile their own version of PGP that
+can take advantage of the random number generator.  Instead, they would
+have to use a setuid version of PGP, and I'm quite sure PGP wasn't
+written such that it would be safe to turn on its setuid bit.  
+
+Finally, even if you did have trustworthy applications which you could
+setuid and only allow those programs to have access to /dev/random,
+someone who repeatedly ran those applications could still end up
+depleteing the pool of entropy.
+
+So in the general case I would advise that /dev/random be left world
+readable, since you *do* want general user programs to have access to
+high quality random numbers.  
+
+   For the same (or similar) reason, giving the said unwashed masses
+   _write_ privelige might allow them to set /dev/*random to a known
+   state. You've probably already thought of this, but I just had to say
+   it :-).
+
+Again, /dev/random can be set to whatever permissions the system
+administrator wants.  Secondly, writing to /dev/random merely adds
+randomness to the pool, via the mixing algorithm.  It won't actually
+permit people to *set* the state of the pool, and assuming that the
+state of the pool is not known before the write operation, writing to it
+won't allow the user to know what the state is after the write
+operation.
+
+The ioctl() which sets the entropy estimate, however, *does* need to be
+runnable only by the superuser, however, since that does represent an
+attack path.
+
+And, for race condition reasons, something which I need to implement
+soon is an ioctl(), usuable only by root, that simultaneously updates
+the entropy estimate *and* submits data to be mixed into the pool.  (Why
+this is necessary should be obvious after a few minutes thought.)
+
+   &gt; For example, although it
+   &gt; may not be obvious, the network interrupt may not be a good choice,
+   &gt; since an adversary who is monitoring the ethernet cable can make a
+   &gt; pretty good guess about the timing of your network interrupts, and hence
+   &gt; what the likely inputs are to the random number pool might be.
+
+   Are you sure about this? The stochastisity if this would be pretty
+   hefty. Not only would our attacker have to get the _time_ that the
+   interrupt occurred (if it interrupted our machine), he would then have
+   to process in brute-force mode all possible times in his error range.
+   What is more, more interrupts are coming in...
+
+I didn't say that it would be trivial for an attacker to do this, but
+it's certainly *doable*.  Some of the network traffic analyzers that
+have been made available (I think Sandia National Labs has one that does
+this), records down to millisecond accuracy when a packet was sniffed on
+the network.  
+
+For this reason, people shouldn't really trust initializing PGP's random
+number generator over a network connection, since it is possible for an
+adversary to obtain very high quality timings of when your telnet or
+rlogin packets appeared on the network, and hence be able to guess
+(within some error range) what the interkeyboard timings which PGP used
+to initialize its random number generator.
+
+The adversary might have to try a large number of possibilities, but if
+the number of possibilities is less than a brute-force search, you
+definitely have a weakness --- a fact which Netscape learned to its
+embarassment a few weeks ago.
+
+   Hokay! Please also send me _your_ latest. (BTW - did Linus put it in
+   his latest kernel?)
+
+Yup.  1.1.34 and higher has most of my changes.  (I'm still making
+changes which are still in development, though.  Mostly incremental
+improvements of one sort or another.)
+
+							- Ted
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00200" HREF="msg00200.html">Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux]</A></STRONG>
+<UL><LI><EM>From:</EM> Mark Murray &lt;mark@grondar.za&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00178.html">Re:  Keyed-MD5, ITAR, and HTTP-NG</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00211.html">Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux]</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00200.html">Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux]</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00207.html">Re: /dev/random for FreeBSD [was: Re: /dev/random for Linux]</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00188"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00188"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

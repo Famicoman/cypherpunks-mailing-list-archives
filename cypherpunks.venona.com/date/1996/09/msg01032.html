@@ -1,0 +1,583 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: [Long] A history of Netscape/MSIE problems -->
+<!--X-From-R13: cthg001Npf.nhpxynaq.np.am -->
+<!--X-Date: Thu, 12 Sep 1996 05:40:35 +0800 -->
+<!--X-Message-Id: 84245818912499@cs26.cs.auckland.ac.nz -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>[Long] A history of Netscape/MSIE problems</TITLE>
+<LINK REV="made" HREF="mailto:pgut001@cs.auckland.ac.nz">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00976.html">Date Prev</A>][<A HREF="msg00962.html">Date Next</A>][<A HREF="msg01130.html">Thread Prev</A>][<A HREF="msg01037.html">Thread Next</A>][<A HREF="index.html#01032">Date Index</A>][<A HREF="threads.html#01032">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>[Long] A history of Netscape/MSIE problems</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: [Long] A history of Netscape/MSIE problems</LI>
+<LI><em>From</em>: <A HREF="mailto:pgut001@cs.auckland.ac.nz">pgut001@cs.auckland.ac.nz</A></LI>
+<LI><em>Date</em>: Thu, 12 Sep 1996 04:09:49 (NZST)</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:pgut001@cs.auckland.ac.nz">pgut001@cs.auckland.ac.nz</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I've been putting together a writeup on problems in web browsers, mainly the 
+history of the Netscape RC4/40 break, random number bugs, and problems with 
+Java, as part of a longer paper I'm doing on crypto from a non-US perspective. 
+A lot of the information in this section of the paper has come from this list, 
+so I thought I'd post it for comment and in case anyone found it interesting 
+(please don't post it to web sites or anything until the paper is actually 
+published).  If anyone has anything to add, corrections to make, etc, please 
+let me know.
+ 
+Peter.
+ 
+The Netscape SSL Break and its Implications
+-------------------------------------------
+
+The Secure Socket Layer (SSL) protocol, after a somewhat shaky start (version 1
+was broken within 10 minutes of being unveiled [Hallam-Baker 1996]), and an
+attempt by Microsoft to promote a similar but competing protocol [Benaloh
+1995], has more or less edged out any other protocols to become the standard
+for securing HTTP sessions (an overview of SSL and various other proposed WWW
+security mechanisms is given in [Reif 1995a]).  SSL uses a combination of RSA
+and, usually, a proprietary (until it was reverse-engineered, of which more
+later) algorithm called RC4 to provide confidentiality, data integrity, and
+authentication.  Since it was built into what was by far the most popular web
+browser, and because of Netscape's policy of giving away the software, it
+immediately gained widespread popularity.  No details on RC4 were published,
+but the fact that it was designed by a very good cryptographer was enough to
+reassure most people.  RC4 is used in dozens of commercial products including
+Lotus Notes, a number of Microsoft products such as Windows for Workgroups,
+Windows 95, Windows NT, and Access, Apple's AOCE, and Oracle Secure SQL.
+
+The main criticism of SSL (apart from a few protocol flaws which were fixed in
+later versions) was the fact that RC4 used a key of only 40 bits, making it
+susceptible to a brute-force attack.  The reason for the 40-bit key and
+(according to RSADSI, the company that developed RC4) the reason why details on
+it were kept secret was that these conditions were required under an agreement
+between the Software Publishers Association (SPA) and the US government which
+gave special export status to the RC4 algorithm and a companion algorithm
+called RC2.  Implementations of RC2 and RC4 which are restricted to a 40-bit
+key get automatic export approval provided the implementations work correctly
+with a set of test vectors supplied by the NSA.  Provided the results are as
+expected, export approval is granted within a week.
+
+The weakness of the encryption in US-exportable SSL implementations even led
+the French government, which normally bans all non-government-approved use of
+encryption (the "decret du 18 avril 1939" defines 8 categories of arms and
+munitions from the most dangerous (1st category) to the least dangerous (8th
+category), the "decret 73-364 du 12 mars 1973" specifies that encryption
+belongs to the second category, and the "loi 90-1170 du 29 decembre 1990"
+states that use of encryption equipment must be approved by the French
+government), to approve the use of Netscape in France [Vincent-Carrefour 1996],
+presumably because the French government has no problems in breaking it.
+
+The first step in attacking SSL was to find out how RC4 worked.  Since it was
+in widespread use, it was only a matter of time before someone picked the code
+apart and published the algorithm.  RSADSI sell a cryptographic toolkit called
+BSAFE [BSAFE 1994] which contains RC4, and this seems a likely source for the
+code (the Windows password encryption code is also a good source, and the
+algorithm can be extracted in an hour or two).  The results were posted to
+mailing lists and the Internet [Anon 1994a].  Someone with a copy of BSAFE
+tested it against the real thing and verified that the two algorithms produced
+identical results [Rescorla 1994], and someone else checked with people who had
+seen the original RC4 code to make sure that it had been (legally)
+reverse-engineered rather than (illegally) copied [Anon 1994b].
+
+The RC2 code was disclosed in a similar manner in 1996, but after problems with
+legal threats during the RC4 disclosure process it was handled more formally:
+First an RC2 implementation was reverse-engineered [Anon 1996], then a
+specification for the algorithm was written based on the reverse-engineered
+code [Gutmann 1996], and finally a new implementation based on the
+specification was written by someone who had never seen the reverse-engineered
+RC2 code [Vogelheim 1996].  No legal threats were ever issued over RC2.
+
+The RC4 code was immediately subject to intense analysis in various
+cryptography-related fora.  RC4 has two parts, the initialization phase, and
+the random number generation phase used for the encryption itself.  An array is
+initialized to be a random permutation using the user's key.  The random number
+generator then mixes the permutation and reports values looked up
+pseudorandomly in that permutation.
+
+Among various RC4 problems which were discussed are that the likelihood that
+during the initialization phase small values will remain in small positions in
+the initial permutation is too high; user keys are repeated to fill 256 bytes,
+so 'aaaa' and 'aaaaa' produce the same permutation; results are looked up at
+pseudorandom positions in the array, and if some internal state causes a
+certain sequence of positions to be looked up, there are 255 similar internal
+states that will look up values in the same sequence of positions (although the
+values in those positions will be different), from which it can be shown that
+cycles come in groups of 2^n, where all cycles in a group have the same length,
+and all cycles are of an odd length * 256 unless they are in a group of 256;
+there is a bias in the results so that, for example, the pattern "a a" is too
+likely and the pattern "a b a" is too unlikely, which can be detected only
+after examining about 8 trillion bytes; the internal state is not independent
+of the results, so that with a given result there are two patterns in the
+internal state that appear 1/256 times more often than they ought to; at least
+two seperate methods exist for deducing the internal state from the results in
+around 2^900 steps; and under certain special circumstances the initial byte of
+the pseudo-random stream generated by RC4 is strongly correlated with only a
+few bytes of the key.
+
+All of these "weaknesses" except for the last one are purely theoretical in
+nature, and even the last one can only occur under special circumstances (it
+doesn't affect SSL implementations since they hash the key with MD5 rather than
+using it directly, which avoids the problem).  Overall, the cryptographic
+community agreed that RC4, when used correctly, was a sound cipher.
+
+Unfortunately, due to the US export restrictions, RC4 couldn't be used
+correctly.  Although Netscape negotiated a 128-bit key to protect each session,
+it sent 88 of those 128 bits in the clear so that only 40 bits of the key were
+actually kept secret.  Now that RC4 was known, SSL became a prime target for
+attack.  An initial attempt at breaking RC4 was made in July 1995 using
+encrypted data from a Microsoft Access database [Back 1995a].  This attempt
+involved 89 contributors and took about a week using idle computing time on
+workstations and PC's, with around 80% of the work being done by the top 19
+contributors.  Due to logistical problems, human error, and buggy software, the
+attempt ultimately failed, but the stage had been set for an attack on SSL.  On
+14 July 1995, an SSL challenge message containing an encrypted (fake) credit
+card order transmitted to one of Netscapes own computers was posted to mailing
+lists and the Internet by Hal Finney [Finney 1995a].  The challenge message was
+independantly broken by two groups, the first to announce success in breaking
+it was a French researcher using idle time on a collection of 120 computers and
+workstations over 8 days [Doligez 1995a] [Doligez 1995b].  The 40-bit secret
+part of the key was 7E F0 96 1F A6, and was found after scanning just over half
+the key space.  The average search speed was about 850,000 keys/s, with a peak
+of 1,350,000 keys/s.  A second group had broken it two hours earlier, but
+announced their success a day later [Back 1995b].  The event immediately
+attracted international media attention, including newspaper, radio, and
+television coverage (although many reports were rather garbled) in France
+[Munger 1995], Germany [Reif 1995b], Japan [NewsBytes 1995], the UK [Arthur
+1995], and the US [Beck 1995] [Sandberg 1995].
+
+A second challenge was posted on 19 August 1995 [Finney 1995b] and an attack by
+a `Brute Squad' of 201 Internet-connected volunteers began at 1800 GMT on 24
+August 1995.  The attack involved greatly improved software with automatic
+communication between client workstations attacking the encryption and a
+central server which doled out sections of keyspace to search [Brooks 1995].
+This setup took 31.8 hours to find the key, 96 36 34 0D 46.  Congestion on the
+server being used to coordinate the attack meant that most of the machines
+involved were idle for perhaps 3/4 of their available time, so in theory the
+attack could have been completed in only 8 hours.  Both the client and server
+software was continually upgraded during the duration of the attack.
+
+The attacks, which used only unused processing capacity on the machines, were
+essentially "free", and could easily be mounted using the spare processing
+capacity available in companies, businesses, universities, and foreign
+governments.  By breaking a brute-force attack into a number of independant
+sections, as many machines as are needed can be applied to the problem, so that
+each doubling of the amount of hardware applied to the problem halves the time
+required to find the solution.  Although the total investment will have
+doubled, the cost per recovered key is kept constant since twice as many keys
+can now be found in the same time.
+
+Another possibility which has been suggested is the creation of an RC4-breaking
+screen saver for networked Windows machines which performs key searches during
+the (often prolonged) periods in which machines are left idle. One experiment
+in performing this kind of attack took 2 weeks using relatively slow 486/50's
+and Sparc 20's, with noone the wiser that the machines were being used
+overnight for this purpose [Young 1996].  Another attack involved a networked
+Windows screen saver where the client software was activated whenever a machine
+was otherwise idle and communicated its results to a central server on a
+network with around 100 PC's.  By now, breaking the Netscape encryption had
+become a kind of processor benchmark, with one manufacturer rating the speed of
+their system based on how long it took to break RC4 - 8 hours on one computer
+[ICE 1996].
+
+Further improvements to the attack were proposed.  The most important one was
+to move from attacking one message at a time to attacking entire collections of
+messages.  Instead of generating a key and testing it against a single message,
+it could be tested against 100 messages, so that in average one key could be
+found in 1/100th the time it took for a single message.  Unfortunately in the
+case of SSL this wasn't possible, since although only 40 bits of key are kept
+secret, there are still a total of 128 unique key bits for each message, making
+it impossible to attack more than one message at a time.  In effect the
+remaining 88 bits of key act as a `salt' in the same way the Unix password salt
+works.  However a more simplistic implementation which uses only 40 bits of key
+could be attacked in this manner.
+
+The attacks on RC4 are a prime example of a publicity attack.  They were
+carried out by volunteers using borrowed machine time, noone (apart from
+Netscapes stock prices) was harmed, and they achieved a great deal of
+publicity.  The intended goal - of proving that the restricted encryption
+allowed by the US government could be broken - was achieved.  This fuelled
+intense debate within the US about the need to lift the export restrictions in
+order to facilitate electronic commerce.  Virtually every article covering the
+encryption debate would eventually refer to the ease with which the 40-bit keys
+of the form used in SSL could be broken (see for example [Ante 1996]).  The
+fact that it was completely uneconomical to mount a criminal attack on 40-bit
+SSL keys was mostly ignored (except in Netscape press releases).  The
+enthusiasm for Internet commerce, especially commerce protected by SSL, was
+severely dented, and companies began to adopt a more cautious attitude in
+deploying commercial services over the net.
+
+
+[Anon 1994a] `David Sterndark' (an alias), "RC4 Algorithm revealed", posting to
+sci.crypt newsgroup, message-ID &lt;sternCvKL4B.Hyy@netcom.com&gt;, 14 September
+1994.
+
+[Anon 1994b] Anonymous, "`Alleged RC4' not real RSADSI code", posting to
+sci.crypt newsgroup, message-ID &lt;9409250900.AA17035@ds1.wu-wien.ac.at&gt;, 25
+September 1994.
+
+[Anon 1996] Anonymous, "RC2 source code", posting to sci.crypt newsgroup,
+message-ID &lt;4ehmfs$6nq@utopia.hacktic.nl&gt;, 29 January 1996.
+
+[Ante 1996] Spence Ante, "Everything You Ever Wanted To Know About Cryptography
+Legislation. . .(But Were Too Sensible to Ask)", PC World, May 1996.
+
+[Arthur 1995] Charles Arthur, "Internet's 30bn Pound Secret Revealed", UK
+Indpendent, 17 August 1995.
+
+[Back 1995a] Adam Back, "Announce: Brute force of RC4, 40 bits all swept",
+posting to sci.crypt newsgroup, message-ID &lt;DC08Dz.LwG@exeter.ac.uk&gt;, 20 July
+1995.
+
+[Back 1995b] Adam Back, "Another SSL breakage...",. posting to cypherpunks
+mailing list, 17 August 1995.
+
+[Beck 1995] Alan Beck, "Netscape's Export SSL Broken by 120 Workstations and
+One Student", HPCwire, 22 August 1995.
+
+[Benaloh 1995] Josh Benaloh, Butler Lampson, Daniel Simon, Terence Spies, and
+Bennet Yee, "The Private Communication Technology Protocol (PCT)", Microsoft
+Corporation, October 1995.
+
+[Brooks 1995] Piete Brooks, "Cypherpunks `brute' key cracking ring",
+<A  HREF="http://www.brute.cl.cam.ac.uk/brute/">http://www.brute.cl.cam.ac.uk/brute/</A>.
+
+[BSAFE 1994] BSAFE 2.1 software, RSA Data Security Inc, 1994.
+
+[Doligez 1995a] Damien Doligez, "SSL challenge -- broken!", posting to
+sci.crypt newsgroup, message-ID &lt;40sajr$sps@news-rocq.inria.fr&gt;, 16 August
+1995.
+
+[Doligez 1995b] Damien Doligez, "SSL challenge virtual press conference",
+<A  HREF="http://pauillac.inria.fr/~doligez/ssl/press-conf.html">http://pauillac.inria.fr/~doligez/ssl/press-conf.html</A>.
+
+[Finney 1995a] Hal Finney, "SSL RC4 Challenge", posting to sci.crypt newsgroup,
+message-ID &lt;3u6kmg$pm4@jobe.shell.portal.com&gt;, 14 July 1995.
+
+[Finney 1995b] Hal Finney, "SSL Challenge #2", posting to cypherpunks mailing
+list, message-ID &lt;199508191525.IAA16294@jobe.shell.portal.com&gt;, 19 August 1995.
+
+[Gutmann 1996] Peter Gutmann, "Specification for Ron Rivests Cipher No.2",
+posting to sci.crypt newsgroup, message-ID &lt;4fk39f$f70@net.auckland.ac.nz&gt;, 11
+February 1996.
+
+[Hallam-Baker 1996] Phill Hallam-Baker, "A problem with Navigator's cache
+-Reply", posting to www-security mailing list, 25 August 1996.
+
+[ICE 1996] Integrated Computing Engines, "MIT Student Uses ICE Graphics
+Computer To Break Netscape Security in Less Than 8 Days", 10 January 1996.
+
+[Munger 1995] Benoit Munger, "Cachez ces mots que je ne saurais lire", Le
+Devoir, 28 August 1995.
+
+[NewsBytes 1995] "Netscape Encrypted Data Cracked", NewsBytes, Tokyo, Japan, 18
+August 1995.
+
+[Sandberg 1995] Jared Sandberg, "French Hacker Cracks Netscape Code, Shrugging
+Off U.S. Encryption Scheme", The Wall Street Journal, 17 August 1995, p.B3.
+
+[Reif 1995a] Holger Reif, "Netz ohne Angst: Sicherheitsrisiken des Internet",
+c't Magazine, September 1995, p.174.
+
+[Reif 1995b] Holger Reif, "Peinliche Panne: Netscape gibt ernsthafte
+Sicherheitslu"cken zu", c't Magazine, November 1995, p.26.
+
+[Rescorla 1994] Eric Rescorla, "RC4 compatibility testing", posting to
+cypherpunks mailing list, message-Id &lt;9409140137.AA17743@eitech.eit.com&gt;, 13
+September 1994.
+
+[Trei 1995] Peter Trei, "Netscape's SSL security has been compromised", posting
+to comp.security.misc newsgroup, message-ID &lt;40t4ti$b8s@iii1.iii.net&gt;, 16
+August 1995.
+
+[Vincent-Carrefour 1996] Jacques Vincent-Carrefour, "Autorisation de fourniture
+et d'utilisation generale de moyens de cryptologie No.2500", 509/DISSI dossier
+numero 950038, 7 November 1995.
+
+[Vogelheim 1996] Daniel Vogelheim, "RRC.2 implementation available", posting to
+sci.crypt newsgroup, message-ID &lt;4g5u20$e4k@news.rwth-aachen.de&gt;, 19 February
+1996.
+
+[Young 1996] Eric Young, "Bank transactions on Internet", posting to
+cypherpunks mailing list, message-ID
+&lt;Pine.SOL.3.91.960409104403.28771C-100000@orb&gt;, 9 April 1996.
+
+
+(In)Secure Internet Electronic Commerce
+---------------------------------------
+
+After the RC4 attacks, researchers looked for other weaknesses in Netscape.  In
+September 1995 it was discovered that Netscape didn't check the amount of input
+it was fed, leading to internal buffers being overrun [Green 1995] [Neumann
+1995].  This bug also existed in other browsers such as Mosaic and IBM's
+WebExplorer.  By carefully adjusting the data fed to the browser, it was
+possible to force a victims PC to execute arbitrary code simply by selecting a
+URL.  This problem has occurred in the past in a number of other programs such
+as fingerd (where it was exploited by the Internet worm [Spafford 1988]), the
+CERN and NCSA httpd's (as explained below in the section [!!!!]), and recently
+splitvt, syslog, and mount/umount, leading one exasperated mailing-list
+moderator to wonder how many more times he'd see this problem [Bloodmask 1996].
+The flaw in question can be exploited by ensuring that the code to be executed
+is located in the URL at a point where it overflows the end of the buffer.  A
+URL can contain almost any data value except for a few characters which have
+special significance and a binary zero, a restriction which can easily be
+bypassed by selecting alternative encodings for any instructions which cause
+problems.  The browser stack looks as follows:
+
+[Diagram: URL buffer, other data, callers saved program counter]
+
+It is therefore possible, by making the URL long enough to overwrite the other
+data and saved program counter, to force a jump to an attackers code rather
+than returning to the calling routine, allowing an attacker to force the
+execution of arbitrary code on the victims machine.  Although this exploit is
+machine and browser-specific, by targetting the most common architecture
+(Windows on an Intel processor) and browser (Netscape), a reasonable chance of
+success can be obtained.
+
+At about the same time the stack overwrite problem was discovered, a basic flaw
+was found in Netscape's SSL implementation which reduced the time to break the
+encryption from hours to minutes.  Despite an existing body of literature
+covering the need for carefully selected random-number generation routines for
+cryptographic applications [Eastlake 1994] [IEEE 1995] [Robertson 1995], one of
+which even included ready-to-use code [Plumb 1994], Netscape used fairly simple
+methods which resulted in easy-to-guess encryption keys [Goldberg 1995]
+[Goldberg 1996].  It was found that, under Unix, Netscape used a combination of
+the current time in seconds and microseconds and the process ID of the current
+and parent process to initialise the random number generator which produced
+master encryption keys. The time can be determined to a reasonable degree of
+accuracy from the message being sent, the process ID's can be determined using
+standard Unix utilities (by people using the same machine that Netscape is
+running on), or by using other tricks such as the fact the an approximate
+process ID can often be obtained by observing the output of other
+network-related programs on the machine, and the parent process ID is often 1
+(for example when Netscape is started from an X-windows menu) or close to the
+process ID.  Under Windows the implementation was similarly flawed.
+
+The resulting number of values to search are smaller than the number of
+combinations in a 40-bit key, and much smaller than the number of combinations
+in the 128-bit key in the export-restricted version. Since Netscape never
+reseeds its internal random number generator, subsequent connections are
+relatively easy to break once the first one is broken.  The researchers who
+discovered this problem released a program, unssl [unssl 1995] which would
+break Netscape's encryption (both the weak exportable version and the strong
+export-restricted version) in about a minute on an average workstation.
+Although one of the researchers classed it as "a silly bug", it received large
+amounts of media attention, including front-page coverage in the New York Times
+[Markoff 1995] and coverage in the Wall Street Journal [Sandberg 1995] and
+Daily Telegraph [Uhlig 1995].
+
+Attempts to fix this problem introduced yet more problems.  Under Windows the
+browser and server code, which appear to share the same random number code,
+don't close some of the file handles they use.  While this has no serious
+effect on the client software (which doesn't run over extended periods of
+time), it does effect the server, which after a period of time runs out of file
+handles so that a number of calls related to gathering random data (some of
+them not apparently file-related) quietly fail, significantly weakening the
+random-number generation process [RingZero 1995].  The problem of insecure
+random number generation was not unique to Netscape, and has in the past beset
+XDM (which generates weak xauth keys), Netrek (a network game which generates
+guessable RSA private keys), an earlier version of the SecuDE security toolkit
+(which again generated guessable RSA keys), and Sesame (a european Kerberos
+clone) which uses it to generate DES keys.
+
+Significant security holes are also opened up through the use of Java, which
+allows arbitrary programs downloaded from the net to run in a (supposedly)
+controlled environment on a host PC.  By breaking out of this controlled
+environment, Java applets can act as trojan horse programs on the PC, bypassing
+normal security measures.  The consequences of these security problems have
+been widely reported and include the destruction of data [Clark 1996], the
+ability to access arbitrary files on the system [Felten 1996b], the ability to
+forward sensitive information to arbitrary machines on the net (bypassing
+firewalls and similar measures, since the "attack" comes from a trusted machine
+inside the security perimeter) [Williams 1996] [Markoff 1996], or even run
+arbitrary native code on the machine [Felten 1996a] [Hopwood 1996] [Kennedy
+1996].  This last class of flaws are the most serious, since they allow any
+code to be executed on a victims machine.  The problem was in the class loading
+code for the browser and affected all then available browsers rather than just
+Netscape, and could be carried out simply by a victim viewing a web page
+containing the hostile Java applet.
+
+Java problems can be combined with other attacks such as DNS spoofing (in which
+a fake address for a target machine is advertised), allowing a Java applet to
+connect to a normally disallowed target machine since the Java security manager
+thinks it is connecting to a safe system [Mueller 1996].  Other problems are
+less subtle, and can crash the browser (and, under some versions of Windows,
+the operating system as well) simply by connecting to a web page [Ref:
+Browser-crashing pages].  One report comes to the conclusion that "because of
+the wonderful power of the Java language, security problems are likely to
+continue" [Neumann 1996].
+
+These problems are not unique to Java.  Microsoft's ActiveX has experienced
+similar troubles, exemplified by a sample application which shuts down the
+machine, and even turns off the power on systems which support this
+functionality [McLain 1996].  The problems extend beyond Java and ActiveX to
+other kinds of embedded executable content as well.  For example the ability to
+embed macros in documents viewed and downloaded by a browser, in combination
+with security holes in the browser, allows an attacker to execute arbitrary
+code on a victims system whenever they view the attackers web page [Felten
+1996c].  Although this was subsequently fixed, the solution was to issue
+warnings for all local files as well as remote downloads, so that after the
+first dozen or so messages the user was likely to simply automatically click
+"OK" whenever another warning popped up [Walsh 1996].  In addition a hostile
+application could access the Windows registry (the system-wide database of
+configuration options) to quietly disable the warnings.  This creates a nice
+niche for "espionage-enabling" viruses which disable or patch various security
+features in operating systems or application software to allow later attacks.
+At least one security organisation already uses such a program, a modified
+stealth virus, for this purpose.
+
+-&gt; Mention that these are all seperate problems, not the same ref over and
+   over.
+
+
+[Clark 1996] Don Clark, "Researchers Find Big Security Flaw In Java Language"
+The Wall Street Journal, 26 March 1996, p.B4.
+
+[Bloodmask 1996] `Bloodmask', "Vulnerability in ALL linux distributions",
+posting to linux-alert mailing list, 30 July 1996.
+
+[Eastlake 1994] Donald Eastlake, Stephen Crocker, Jeffrey Schiller, "Randomness
+Recommendations for Security", RFC 1750, December 1994.
+
+[Felten 1996a] Ed Felten, "Security Flaw in Netscape 2.02", Risks-Forum Digest
+Vol.18, Issue 13, 17 May 1996.
+
+[Felten 1996b] Ed Felten, "Java security update", Risks-Forum Digest, Vol.18,
+Issue 32, 13 August 1996.
+
+[Felten 1996c] Ed Felten "Internet Explorer Security Problem", Risks-Forum
+Digest, Vol.18, Issue 36, 21 August 1996.
+
+[Goldberg 1995] Ian Goldberg, "Netscape SSL implementation cracked!", posting
+to cypherpunks mailing list, message-ID:
+&lt;199509180441.VAA16683@lagos.CS.Berkeley.EDU&gt;, 18 September 1995.
+
+[Goldberg 1996] Ian Goldberg and David Wagner, "Randomness and the Netscape
+Browser", Dr.Dobbs Journal, January 1996, p.66.
+
+[Green 1995] Heather Green, "Netscape Says Hackers Uncover 3rd Flaw in Its
+Internet Software", The New York Times, 25 Sep 1995.
+
+[Hopwood 1996] David Hopwood, "Another Java security bug", posting to
+comp.lang.java newsgroup, message-ID &lt;4orf1q$t6f@news.ox.ac.uk&gt;, 2 June 1996.
+
+[IEEE 1995] IEEE P1363 Appendix E, "Cryptographic Random Numbers", Draft
+version 1.0, 11 November 1995.
+
+[Kennedy 1996] David Kennedy, "Another Netscape Bug US$1K", Risks-Forum Digest,
+Vol.18, Issue 1422, May 1996.
+
+[Markoff 1995] John Markoff, "Security Flaw Is Discovered In Software Used in
+Shopping", The New York Times, 19 September 1995, p.A1.
+
+[Markoff 1996] John Markoff, "New Netscape Software Flaw Is Discovered", The
+New York Times, 18 May 1996, p.31.
+
+[McLain 1996] Fred McLain, "ActiveX, or how to put nuclear bombs in web pages",
+<A  HREF="http://www.halcyon.com/mclain/ActiveX/">http://www.halcyon.com/mclain/ActiveX/</A>.
+
+[Mueller 1996] Marianne Mueller, "Java security", Risks-Forum Digest,  Vol.17,
+Issue 79 23 February 1996.
+
+[Neumann 1995] Peter Neumann, "Third Netscape weakness found", Risks-Forum
+Digest, Vol.17, Issue 36, 27 September 1995.
+
+[Neumann 1996] Peter Neumann, "More Java, JavaScript, and Netscape problems",
+in "Security Risks in Computer-Communication Systems", ACM SIGSAC Review,
+Vol.14, No.3 (July 1996), p.22.
+
+[Plumb 1994] Colin Plumb, "Truly Random Numbers", Dr.Dobbs Journal, November
+1994, p.113.
+
+[RingZero 1995] `RingZero', "NEW Netscape RNG hole", posting to cypherpunks
+mailing list, message-ID &lt;9510080732.AA14015@anon.penet.fi&gt;, 8 October 1995.
+
+[Robertson 1995] Richard Robertson, "Random Number Generators Draft", IEEE
+P1363 Random Number Generators Review Group, May 1995.
+
+[Sandberg 1995] Jared Sandberg, "Netscape's Internet Software Contains Flaw
+That Jeopardizes Security of Data", The Wall Street Journal, 19 September 1995.
+
+[Spafford 1988] Gene Spafford, "The Internet Worm: Crisis and Aftermath",
+Communications of the ACM, Vol.32, No.6 (June 1989), p.678.
+
+[Uhlig 1995] Robert Uhlig, "Security threat to Internet shopping", Daily
+Telegraph, Daily Telegraph (paper edition), 3 October 1995, p.12.
+
+[unssl 1995] <A  HREF="ftp://ftp.csua.berkeley.edu/pub/cypherpunks/cryptanalysis/unssl.c">ftp://ftp.csua.berkeley.edu/pub/cypherpunks/cryptanalysis/unssl.c</A>.
+
+[Walsh 1996] Mike Walsh, "Microsoft's warning", Risks-Forum Digest, Vol.18,
+Issue 38, 26 August 1996
+
+[Williams 1996] Eric Williams, "New Netscape 2.0/2.01 Security Issue (Java
+Sockets)", posting to comp.lang.java newsgroup, message-ID
+&lt;4jppdt$ake@sky.net&gt;, 1 April 1996.
+
+[WSJ 1996] The Wall Street Journal, "Princeton Team Finds Bug In Part Of
+Netscape Program", 20 May 1996. 
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01037" HREF="msg01037.html">Re: [Long] A history of Netscape/MSIE problems</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Back &lt;aba@dcs.ex.ac.uk&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00976.html">Re: 'robert' and his 'hipcrime' web site</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00962.html">Re: (Fnord) Edupage, 10 September 1996</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01130.html">Re: Child Porn and Thought Crime</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01037.html">Re: [Long] A history of Netscape/MSIE problems</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01032"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01032"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

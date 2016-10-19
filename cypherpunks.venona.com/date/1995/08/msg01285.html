@@ -1,0 +1,204 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Cryptanalysis of S&#45;1 -->
+<!--X-From-R13: qnjntareNghpfba.Bevaprgba.SRG (Rnivq O. Intare) -->
+<!--X-Date: Fri, 25 Aug 95 12:26:54 PDT -->
+<!--X-Message-Id: 41l6u3$852@cnn.Princeton.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Cryptanalysis of S-1</TITLE>
+<LINK REV="made" HREF="mailto:dawagner@tucson.Princeton.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01271.html">Date Prev</A>][<A HREF="msg01272.html">Date Next</A>][<A HREF="msg01299.html">Thread Prev</A>][<A HREF="msg01272.html">Thread Next</A>][<A HREF="index.html#01285">Date Index</A>][<A HREF="threads.html#01285">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Cryptanalysis of S-1</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:sci%2Dcrypt%2Dresearch@uunet.uu.net">sci-crypt-research@uunet.uu.net</A></LI>
+<LI><em>Subject</em>: Cryptanalysis of S-1</LI>
+<LI><em>From</em>: <A HREF="mailto:dawagner@tucson.Princeton.EDU">dawagner@tucson.Princeton.EDU</A> (David A. Wagner)</LI>
+<LI><em>Date</em>: 25 Aug 1995 19:05:39 GMT</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Newsgroups</em>: sci.crypt.research</LI>
+<LI><em>Organization</em>: Princeton University</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I just got back from vacation in time to see the brouhaha over S-1.
+My, my.  So I'll describe an attack on S-1 which takes 2^32 known
+plaintexts and 2^64 operations, assuming that F, G, clear_family,
+and cipher_family are known (but arbitrary).  Tradeoffs are possible:
+a similar attack breaks S-1 with 2^48 known plaintexts and 2^48 operations.
+
+This adds weight to the hypothesis that S-1 is a hoax (assuming that
+the NSA was trying to design a strong cipher!)...
+
+I should point out that this attack works for an arbitrary number
+of rounds.  It shows that increasing the number of rounds will never
+make S-1 secure.  To fix S-1, the key schedule must be repaired.
+
+
+
+Anyhow, here's the attack.  Several people have noted that the
+S-1 round keys repeat every 5 rounds.  I'll take advantage of this
+with an attack reminiscent of related-key techniques (but I don't
+need any related-keys, Mind you!).
+
+If P is a known plaintext, let P_i denote the intermediate block
+after i rounds.  I'm going to look for a pair of matching plaintexts
+P,Q: a pair for which P_5 = Q_0.  Then we'll have P_{5+j} = Q_j
+for all j.  Pictorially:
+
+	P_0
+	P_1
+	P_2
+	P_3
+	P_4
+	P_5	Q_0
+	P_6	Q_1
+	...	...
+	P_31	Q_26
+	P_32	Q_27
+		Q_28
+		Q_29
+		Q_30
+		Q_31
+		Q_32
+	
+The birthday paradox says that with 2^32 known plaintexts, there
+should be at a matching pair P,Q.  If I can recognize it, I can
+exploit it as follows.  Note that (P_0,Q_0) and (P_32,Q_32) are
+two known plaintext-ciphertext pairs for 5-round S-1.  These two
+known plaintexts for 5-round S-1 are enough to find the 5 round
+subkeys by standard methods (since we know the inputs and outputs
+to almost all the F boxes in these two examples).
+
+Thus, each pair P,Q will suggest one key value, and the right
+(matching) pair will suggest the correct key value (which can be
+easily recognized with one trial decryption).  I don't know how
+to recognize matching pairs directly, but I can try all 2^32 * 2^32
+possible pairs, and I'm guaranteed to find the matching plaintext
+pair if there is one after 2^64 trial decryptions.
+
+
+That's the basic attack.  Here's a sketch of how to trade off
+known plaintexts for time.  I'd really like to be able to detect
+matching pairs easily, because then I'd be able to use a hash
+table (or sorted list) to find a matching pair more efficiently.
+
+So I'll note that I can detect matching pairs pretty accurately
+if P,Q are in a particular form.  I'll construct an oracle which
+can quickly tell if two plaintext-ciphertext pairs (X,Y) (X',Y')
+for 5-round S-1 were enciphered with the same key, if they're in
+a special form.
+
+Let A,A' be the 32 bits from X,X' entering the F boxes in round 2;
+let B,B' be the 16 bits output from the F boxes in round 2;
+let C,D,C',D' be the 16 bits affected by the F boxes in round 2
+from X,Y,X',Y' -- so that
+
+	D = C ^ B = C ^ f(A ^ K_2)
+	D' = C' ^ B' = C' ^ f(A' ^ K'_2).
+
+If K_2 = K'_2 and A = A', then D ^ C should equal D' ^ C'.
+So this is how I'll construct the oracle: it insists that (X,Y)
+(X',Y') be of a form so that A = A', and it reports that (X,Y)
+(X',Y') were enciphered with the same key when D ^ C = D' ^ C'.
+The oracle will always answer correctly if they were enciphered
+with the same key, and will answer incorrectly 2^{-16} of the
+time when the were enciphered with different keys.
+
+So now we are considering (X,Y) = (P_0,P_5) = (P_0,Q_0) and
+(X',Y') = (Q_27,Q_32) = (P_32,Q_32).  The oracle's precondition
+means that 32 bits of P_0 equal a corresponding 32 bits of P_32.
+
+The tradeoff attack follows from this.  Get 2^48 known plaintexts.
+Consider only those known plaintext-ciphertext pairs (P_0,P_32)
+which meet the 32 bit oracle precondition as possibilities for P.
+There will be 2^16 possibilities for P.  Let Q range over all 2^48
+possibilities.  Then we expect there to be some right matching pair
+P,Q: the oracle is guaranteed to detect it, and also another 2^48
+wrong pairs.  Each possible pair P,Q will suggest a key value,
+so the wrong pairs can be filtered out with a total of 2^48 trial
+encryptions, leaving only the right pair and the right key value.
+
+This would seem to require 2^16 * 2^48 oracle computations since
+there are 2^16 values for P and 2^48 possibilities for Q.  But
+wait: the oracle can be implemented more efficiently as a table
+lookup.  Store all 2^16 possibilities for P in a lookup table,
+keyed on the 16 bit value D^C used by the oracle.  For each Q,
+calculate the 16 bit value D' ^ C' and search in the table for
+a matching D ^ C value (which gives you a possible matching pair
+P,Q).
+
+This technique requires a total of 2^48 table lookups, 2^48 trial
+decryptions, 2^16 space, and 2^48 known plaintexts.  Further tradeoffs
+between # of known plaintexts and time appear to be possible...
+
+I've ignored the issue of the G box throughout.  Actually, it does
+change the number a little bit -- but just by random luck, the two
+G box outputs should match 1 in 2^2 times, so we only need to increase
+the complexity of this attack by about 2^2 to account for the G box.
+The G box didn't add much strength.
+
+-------------------------------------------------------------------------------
+David Wagner                                             dawagner@princeton.edu
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01272" HREF="msg01272.html">Re: Cryptanalysis of S-1</A></STRONG>
+<UL><LI><EM>From:</EM> hallam@w3.org</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01271.html">SOLVED: Re: for perl experts: brclient problem</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01272.html">Re: Cryptanalysis of S-1</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01299.html">Re: ssl challenge</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01272.html">Re: Cryptanalysis of S-1</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01285"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01285"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

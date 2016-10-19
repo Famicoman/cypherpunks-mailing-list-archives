@@ -1,0 +1,178 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: No Subject -->
+<!--X-From-R13: abobqlNfuryy.cbegny.pbz -->
+<!--X-Date: Wed, 6 Apr 94 11:21:22 PDT -->
+<!--X-Message-Id: 199404061820.LAA29011@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>No Subject</TITLE>
+<LINK REV="made" HREF="mailto:nobody@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00246.html">Date Prev</A>][<A HREF="msg00247.html">Date Next</A>][<A HREF="msg00243.html">Thread Prev</A>][<A HREF="msg00254.html">Thread Next</A>][<A HREF="index.html#00239">Date Index</A>][<A HREF="threads.html#00239">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>No Subject</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>From</em>: <A HREF="mailto:nobody@shell.portal.com">nobody@shell.portal.com</A></LI>
+<LI><em>Date</em>: Wed, 6 Apr 1994 11:20:21 -0700</LI>
+<LI><em>Comments</em>: This message is NOT from the person listed in the Fromline.  It is from an automated software remailing service operating atthat address.  Please report problem mail to &lt;hfinney@shell.portal.com&gt;.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Since people are talking about new remailer features, can I suggest
+another one - how about single-use (or limited use) anonymous return
+addressess (ARAs) ? There are quite a few situations I can envisage where 
+I might want to give an anonymous return address to someone that could
+only be used a limited number of times, or for a limited period of
+time (e.g. in the medium term, buying something over the network from a 
+company with digicash, but not wanting to receive junk mail from them
+afterwards).
+
+How I'd see it working is this : You'd send a message to a remailer
+requesting an anonymous address token, along with the email address
+to send to, the number of uses you want and the time period (perhaps 
+up to some maximum set by the operator of the remailer). In the future, 
+you'd also send some digicash in payment for the token, the value based 
+on the number of uses and time limit.
+
+The remailer would then create an encrypted token containing an id
+number and the address, either signed or with an attached random
+number. The id, number of uses and expiry date would be stored in a
+database, along with the random number if you were using that for
+authentication. The remailer would then mail the token (probably
+using an anonymous return address) to the requester. The database
+shouldn't need to be very large if only details of the outstanding
+tokens are stored.
+
+BEGIN NOTES 
+  I'm not sure whether it would be better to store the address in
+  the token or in the database, but I suspect that storing it in
+  the token is better since it avoids the possibility of anyone
+  getting hold of a copy of the database and reading all the addresses
+  stored in there. However, if it's in the token then if all keys of
+  all remailers used are compromised, you can follow the entire chain
+  even after the token is used up, whereas if it was deleted from the
+  database the chain would be broken forever. Perhaps a mixture of 
+  mechanisms in the remailers would be best. 
+
+  Another option might be to keep the address completely seperate, so
+  the token would merely indicate whether the message should be sent
+  to the address specified in the ARA, not for a specific address that
+  the token was requested for.
+END NOTES
+
+After the ARA had been sent to someone and they used it to reply to
+the sender, the remailer would recognize the token, and decrypt it
+to get the real address, database id and authentication. If the 
+authentication was valid and the time/usage limit not exceeded, then it
+would forward the message to the email address enclosed (which
+presumably could be another ARA), otherwise it would just ignore the
+message.
+
+Obviously using only a single remailer would require you to trust the
+operator to limit usage correctly, however chaining several limited
+use addresses will solve any problems if one remailer is trustworthy.
+
+
+Example:
+
+Message to remailer might be something like (comments in {}, -- shows
+begining and end of messages) :
+
+--
+Request-Token 5 {uses} 14 {days} ARA {or email address}
+
+{ standard PGP-encrypted ARA goes in here }
+
+Request-Token-End
+
+::
+Request-Remailing-To: remail@foo.com
+
+{ARA to send token to via remail@foo.com goes here}
+--
+
+The remailer would create something like :
+
+--
+Limited-Use-Token: 00000001/F4870921 (ID/random authentication)
+
+{ARA or Request-Remailing-To: goes here}
+--
+
+This would then be encrypted with the remailer's public key, attached to
+the end of the original message (after the Request-Token line was stripped
+off), then fed into the remailer as usual. The sender would create the ARA
+using this token, and forward it to whoever they wanted to communicate 
+with.
+
+When a message using the ARA came back, it would be decrypted as usual, 
+and if the token line was valid the database would be checked for 
+timed expiry, updated to indicate another use, then if valid, after 
+the token line was stripped off the message would be remailed as usual.
+
+If noone else does this in the next few months then I may hack it into
+a remailer once I have my own machine to run one off.
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00254" HREF="msg00254.html">Re: your mail</A></STRONG>
+<UL><LI><EM>From:</EM> Sameer &lt;sameer@soda.berkeley.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00246.html">Re: PGP mail disabled ???</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00247.html">Remailer Help please?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00243.html">Reporting the RSA129 story</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00254.html">Re: your mail</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00239"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00239"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

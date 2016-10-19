@@ -1,0 +1,162 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Crypto Sync Issue -->
+<!--X-From-R13: tuvbNhgbcvn.unpxgvp.ay ([nggurj Uuvb) -->
+<!--X-Date: Fri, 22 Sep 95 10:59:07 PDT -->
+<!--X-Message-Id: m0swC6B&#45;0012rZC@myriad -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199509191846.LAA24272@netcom4.netcom.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Crypto Sync Issue</TITLE>
+<LINK REV="made" HREF="mailto:ghio@utopia.hacktic.nl">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01707.html">Date Prev</A>][<A HREF="msg01710.html">Date Next</A>][<A HREF="msg01271.html">Thread Prev</A>][<A HREF="msg01291.html">Thread Next</A>][<A HREF="index.html#01705">Date Index</A>][<A HREF="threads.html#01705">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Crypto Sync Issue</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Crypto Sync Issue</LI>
+<LI><em>From</em>: <A HREF="mailto:ghio@utopia.hacktic.nl">ghio@utopia.hacktic.nl</A> (Matthew Ghio)</LI>
+<LI><em>Date</em>: Fri, 22 Sep 95 13:41 EDT</LI>
+<LI><em>References</em>: &lt;<A HREF="msg01271.html">199509191846.LAA24272@netcom4.netcom.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Tom Rollins &lt;kelso@netcom.com&gt; wrote:
+
+&gt; I am interested in encrypting a SLIP link between my
+&gt; PC (running Linux) and my Netcom shell account (running
+&gt; SLIRP).
+&gt; 
+&gt; My question has to do with error conditions on the line.
+&gt; If I drop a character or packet, the two sides will loose
+&gt; crypto sync and result in things scrambled from then on.
+&gt; The modems will fix most of the low level problems.
+&gt; However, Murphy's Law has not been repealed. :)
+&gt; 
+&gt; Are there any standard methods to provide the SYNC between
+&gt; the sender(encryption) and the receiver(decryption) on
+&gt; an Async connection ?
+&gt; 
+&gt; Since Slip uses IP packets, I was planning on an encryption
+&gt; of the data portion of the IP packets (leaving the header
+&gt; alone).
+
+A better approach would be to encrypt the entire IP packets and leave the
+framing bytes alone.  
+
+But this is what I do:
+
+I use regular unencrypted SLIP (slirp) between here and netcom.
+Also install copies of slirp in all your other unix accounts, plus your
+favorite session encryption daemon (deslogin, ctcp, ssh, esm, etc).
+Then make some script files like this.  For this example I use deslogin
+to establish a secure session with utopia.hacktic.nl.
+
+/root/dialup:
+
+#!/bin/csh
+dip /root/netcom.dip
+/sbin/agetty 38400 ttyqf -l /root/utopiadeslogin &amp;
+dip /root/utopia.dip
+
+/root/utopiadeslogin:
+
+#!/bin/csh
+exec /usr/local/bin/deslogin ghio@utopia.hacktic.nl
+
+/root/utopia.dip:
+
+port ptyqf
+wait ogin: 60
+send anything\n
+wait d: 5
+send password\n
+wait ] 5
+send \n
+send exec slirp-0.9o/src/slirp\n
+get $rmtip 10.0.2.42
+get $locip 10.0.2.16
+mode CSLIP
+
+
+Add to /etc/hosts:
+
+10.0.2.42       utopia-secure
+
+
+Then I can do: telnet utopia-secure
+and everything is encrypted.
+
+I got deslogin from utopia's anon-ftp dir.
+A 3DES version would be nice tho.
+
+When you want to hangup, use this to kill all of the dip processes:
+
+#!/bin/csh
+ps -ua|grep " pQf "|awk '{print "kill " $2}'|csh
+ps -ua|grep " pS1 "|awk '{print "kill " $2}'|csh
+
+
+To do this for more hosts, just pick any available IP addresses
+in 10.0.2.x and a free tty (ttyq* are usually unused).
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01271" HREF="msg01271.html">Crypto Sync Issue</A></STRONG>
+<UL><LI><EM>From:</EM> kelso@netcom.com (Tom Rollins)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01707.html">Re: Another Netscape Bug (and possible security hole)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01710.html">Worms and New Netscape Bug</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01271.html">Crypto Sync Issue</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01291.html">Encryption algorithms used in PrivaSoft</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01705"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01705"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,205 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Brute Force DES -->
+<!--X-From-R13: Dlna Dhffryy/EKPOES <Dlna.DhffryyNflonfr.pbz> -->
+<!--X-Date: Wed, 24 Jul 1996 09:17:07 +0800 -->
+<!--X-Message-Id: 9607231746.AA26532@notesgw2.sybase.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Brute Force DES</TITLE>
+<LINK REV="made" HREF="mailto:Ryan.Russell@sybase.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02006.html">Date Prev</A>][<A HREF="msg01917.html">Date Next</A>][<A HREF="msg01908.html">Thread Prev</A>][<A HREF="msg01962.html">Thread Next</A>][<A HREF="index.html#01895">Date Index</A>][<A HREF="threads.html#01895">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Brute Force DES</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "Peter Trei" &lt;<A HREF="mailto:trei@sybase.com">trei@sybase.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Brute Force DES</LI>
+<LI><em>From</em>: Ryan Russell/SYBASE &lt;<A HREF="mailto:Ryan.Russell@sybase.com">Ryan.Russell@sybase.com</A>&gt;</LI>
+<LI><em>Date</em>: 23 Jul 96 10:46:39 EDT</LI>
+<LI><em>Cc</em>: frissell &lt;<A HREF="mailto:frissell@sybase.com">frissell@sybase.com</A>&gt;, cypherpunks &lt;<A HREF="mailto:cypherpunks@sybase.com">cypherpunks@sybase.com</A>&gt;,       trei&lt;<A HREF="mailto:trei@sybase.com">trei@sybase.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+How about harder logistical problem?
+
+I had considered the possibility of cracking DES
+once and for all (I was specifically thinking of
+crypt(3), but it applies just as well for
+DES in general..) and instead of trying up a bunch
+of computers for however many months it took to crack 
+a single key...  Let's tie up everyone's extra storage
+and store the results as each key is generated..
+
+Yes, I realize that it's a rather large amount of storage...
+
+Then key lookups could be done at will, reverse DNS
+style..
+
+    Ryan
+
+---------- Previous Message ----------
+To: frissell, cypherpunks, trei
+cc: 
+From: trei @ process.com ("Peter Trei") @ smtp
+Date: 07/22/96 04:55:17 PM
+Subject: Re: Brute Force DES
+
+&gt; Peter wrote:
+&gt; &gt;Any one up for a distributed brute force attack on single DES? My 
+&gt; &gt;back-of-the-envelope calculations and guesstimates put this on the
+&gt; &gt;hairy edge of doability (the critical factor is how many machines can
+&gt; &gt;be recruited - a non-trivial cash prize would help). 
+
+Duncan wrote: 
+&gt; I volunteer my 120 MHZ Pentium.  A lot more Pentiums are out there now than
+&gt; a year ago.  That makes it more feasible.  A lot more people with full net
+&gt; connections.  Like most Americans, I have a flat rate net connection and a
+&gt; flat rate local phone connection so could run a cracking session permanently
+&gt; (as long as no one tells my ISP).  We need a full test of the Winsock
+&gt; cracking client in any case.  It wasn't working very well last time.
+&gt; 
+&gt; DCF
+
+&lt;back-of-envelope&gt;
+
+In my terminology, 'hairy edge of doability" means we have a shot
+at success, but I wouldn't bet the farm on it.
+
+I thought that I might bet a couple hundred bucks, though.
+
+Sadly, after further calculation, I'm not so sure if it's doable just yet.
+
+What I'm looking at is a known plaintext attack on single ECB DES, 
+using a brute-force test to cycle through the key space. People 
+would get chunks of keyspace to test from a central server or 
+servers, and would be motivated to take part by a cash prize for
+the lucky person who finds the key.
+
+Lets do  the numbers:
+
+Single DES has the security of 56 bits of key - there are 64 bits in the
+keys, but 8 of them are parity bits which add nothing to security.
+
+2^56  = 7.205e16 keys (which is a whopping big number)
+
+Let's guess that we can recruit the equivalent of full-time on 1000
+machines.
+
+7.205e13 keys/machine.
+
+Let's guess that we have about a month before people start to lose 
+interest - so we want to be more than 1/2 done by then. Lets say
+we want to sweep the whole space in 40 days.
+
+1.8e12 keys/machine/day 
+
+~21,000,000 keys/machine/second
+
+The fastest general purpose, freely available des implementation I'm
+aware of is libdes. by Eric Young. With this, I can do a set_key in 
+15.8 us, and an ecb_encrypt in 95 us/block. That adds up to 
+about 9,000 keytests/sec (this is on a 90 MHz P5, running NT).
+
+I'm looking at ideas to speed up DES - if I'm willing to use
+honking great lookup tables, the permutation steps  can be done 
+more quickly than libdes. I'm also looking at implementing the
+algolrithm in hand-optimized P5 assembler.  (It's been years since
+I've done a major assembler project - the P5 has some truely weird
+features to be considered, but also has (some) internal 64 bit
+registers to play with).
+
+Let's guess that I can speed up a key-test up by a factor of 10. (This is
+not a slur on Eric's code - it's extremely clever, but not optimized
+for any particular processor, or for key-testing.  Note that the keytest 
+described above takes about 10,000 cycles/test.)
+
+That gets my workstation up to about 90,000 keys a second, which is
+still almost a factor of 250 too slow. 
+
+I'm going ahead with my work on a faster DES keytester, but unless
+optimizing gives an astounding win, I now think a distributed bruting 
+effort is a bit pre-mature.
+
+What will make this brute doable, if not now, then in the near future?
+
+1. Faster Processors - Moore's Law is still holding. A year ago, my
+90 MHz Pentium was one of the faster machines taking part in the
+40-bit RC4 crack. Now, it's passe.
+
+2. More processors. The number of people on the internet continues
+to grow rapidly.
+
+3. More interest - Crypto awareness has greatly increased in the
+last year, and a real cash prize (say, over $500) will generate both
+publicity and interest.
+
+These factors all multiply together. The number of cycles that could
+probably be recruited is increasing at a fast rate. A major part of the
+work will be a keyspace distribution mechanism which can handle
+the load (this was a major stumbling block last year). 
+
+&lt;/back-of-envelope&gt;
+
+Peter Trei
+trei@process.com
+
+Disclaimer: This has nothing to do with my employer.
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02006.html">NOISE NOISE NOISE: Ayn Rand's sexual pecadillos and the value of her ideas</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01917.html">Re: No more stupid gun thread ...</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01908.html">Re: Brute Force DES</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01962.html">RE: Brute Force DES</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01895"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01895"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

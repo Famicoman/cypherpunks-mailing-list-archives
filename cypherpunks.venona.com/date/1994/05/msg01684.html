@@ -1,0 +1,298 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Magic Money 1.1/AutoClient -->
+<!--X-From-R13: pngnylfg&#45;erznvyreNargpbz.pbz -->
+<!--X-Date: Mon, 30 May 94 23:42:37 PDT -->
+<!--X-Message-Id: 199405310642.XAA12123@netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Magic Money 1.1/AutoClient</TITLE>
+<LINK REV="made" HREF="mailto:catalyst-remailer@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01683.html">Date Prev</A>][<A HREF="msg01685.html">Date Next</A>][<A HREF="msg01675.html">Thread Prev</A>][<A HREF="msg01685.html">Thread Next</A>][<A HREF="index.html#01684">Date Index</A>][<A HREF="threads.html#01684">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Magic Money 1.1/AutoClient</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Magic Money 1.1/AutoClient</LI>
+<LI><em>From</em>: <A HREF="mailto:catalyst%2Dremailer@netcom.com">catalyst-remailer@netcom.com</A></LI>
+<LI><em>Date</em>: Mon, 30 May 1994 23:42:35 -0700</LI>
+<LI><em>Comment</em>: This message is NOT from the address on the 'From:' line; it is from an anonymous remailing service.  Please report problem mail to catalyst@netcom.com.</LI>
+<LI><em>Remailed-By</em>: Remailer &lt;catalyst-remailer@netcom.com&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Magic Money V1.1 with AutoClient and MultiServer Capability
+Uploaded to csn.org, should be available soon. Read README.MPJ in /mpj
+This is the automatic client I described a couple of weeks ago.
+
+This is a new version of Magic Money. It is compatible with V1.0 in both
+directions. The major improvements are:
+
+* Automatic Client allows software-automated services to accept and
+  pay out Magic Money.
+
+* Coin files contain the keyid of the server that created the coins.
+  This allows the Automatic Client to accept money from multiple servers.
+
+* New fifo.c fixes a memory-freeing bug in fifo_destroy. This fix was
+  previously posted on csn.org as pgptlupd.zip
+
+The keyid is appended to the end of the coin file with a new packet
+type number preceding it. These coin files will be accepted by the V1.0
+client. V1.0 coin files will also be accepted by the V1.1 clients.
+See the README10.DOC file for more general instructions about how to
+use Magic Money. This file concentrates on the changes.
+
+The Automatic Client performs the same functions as the manual client,
+except that it has no user interface. It is designed to be controlled by
+software (PERL scripts or C programs). The program is controlled by
+command-line arguments and information piped into stdin. All output is
+written to files or sent to stdout. Compiling AC.C with MM.C and the
+appropriate PGPTools files produces the Automatic Client. If you are using
+a PC, it is worthwhile to get the 8086.ASM file from PGP2.3a and use it.
+Define MSDOS, SMALL_MEM, DYN_ALLOC, and UPTON for the MS/DOS version with
+8086.ASM. These defines work for both the normal and automatic clients.
+
+Automatic Client Commands
+
+The automatic client accepts one option, and zero, one, or two filenames.
+If run with no options or filenames, it will print a help screen.
+
+ac -[option] [inputfile] [outputfile]
+
+- -k display bank's keyid and client's keyid
+This prints the keyid of the bank on the first line, and the keyid of
+the client on the second line, as 8-byte hex strings.
+
+- -k [inputfile] display keyid of bank which made this coins.dat file,
+   or the keyid needed to decrypt an ascii-armored pgp message.
+If the file is a coins.dat-type file produced by a client, this will
+produce the keyid of the bank that created it. If it is a PGP message,
+such as a reply from a server, it will produce the keyid the message
+is encrypted with. In either case, it returns an 8-byte hex string.
+If the file is from a 1.0 client, there is no keyid so you will get
+a NO_DATA error. There is a 1/256 chance that the byte at offset 9
+from the end of file will match the identifier byte. In this case, you
+may get a no-good server id. If you get a server id but do not recognize
+it, assume this has happened.
+
+- -d list coin denominations
+Prints the available denominations of coins from the elist file, one
+denomination per line. These are all the possible denominations, and their
+presence here does not mean you have any coins of that denomination.
+
+- -i [outputfile] initialize client (key length, key name from stdin)
+This initializes the client, producing the initialization message
+(which must be sent to the server) in the specified file. The bank.asc
+file must be present before running this. It creates a key to communicate
+with the server. The key length in bits, and the name for the key, are
+read from stdin. They should be on separate lines.
+
+- -l list all coins in allcoins.dat
+Lists all available coins as a stream of numbers, one coin per line.
+
+- -l [inputfile] print total value of a coins.dat (client output) file.
+   Checks signatures and rejects if signature bad
+Prints one number, the total value of the coins.dat file specified. If
+any signatures are bad, or coins have unknown exponents, the program
+terminates with a BADSIG or BADEXP error.
+
+- -p [inputfile,outputfile] process a coins.dat file for exchange with
+   the server. Reads from stdin a list of coin denominations to create,
+   terminated by 0. Writes to stdout a 128-bit transaction identifier.
+Before running this, you must have used the -l above and decided what
+denominations to create. Then run this to process the coins and prepare
+a message for the server. Feed the denominations you want into stdin, one
+number per line, terminated by a zero. There is no checking here. If you
+specify less value than you are turning in, you will lose value. If you
+specify more, the server will throw out the transaction and you will lose
+all the coins you are depositing. This function writes out one value to
+stdout: a 128-bit hex identifier. This is an xor of the coinids of all of
+the new protocoins created. This allows your script to identify this
+transaction when it comes back from the server.
+
+- -r [outputfile] Reinitialize (generate init packet)
+This generates a new client initialization packet. If your system is
+inactive for a while, do this, send it in, and run -s on it. This will
+check for a coin expiration and update your elist if necessary.
+
+- -s [inputfile] Process a response from the server. Outputs the 128-bit
+   transaction identifier, followed by total value, followed by any
+   message from the server.
+This takes a reply from the server (ascii-armored) and processes it,
+adding new coins to your allcoins.dat file and removing the corresponding
+protocoins. The output is: on the first line, the same 128-bit identifier
+generated by -p when this transaction was prepared. On the second line,
+the total value added to your coin file (same as the value of the coins
+you created in the -p). Following that, any message from the server, if
+there is one. If -s is run on a response to a -i or -r initialization, it
+will return 00..00 for the identifier and 0 for the value, because no
+coins were processed.
+		     
+- -w [outputfile] Withdraws coins for payment. Accepts a list of coin
+   values from stdin, terminated by a zero.
+Extracts coins from your allcoins.dat file and writes them to the output
+file. Send to stdin a list of values to create, followed by a zero to
+terminate. The output file can then be processed by another client.
+
+- -x Returns the total value of any old coins (in danger of expiration)
+Checks for old coins that are in danger of expiring. Outputs the total
+value of all old coins, or zero if there aren't any.
+
+- -x [outputfile] Exchanges old coins. Accepts a list of denominations
+   and generates an identifier like -p
+This is like -p for old coins. Run -x above first, decide what denomin-
+ations you want to create, and run this. Feed in the denominations, term-
+inated by a zero, and send the output file to the server to exchange your
+old coins for new ones. If you have expired coins (you didn't exchange
+them in time) this will throw them out.
+
+Error codes (from MM.H) These are returned by exit(code) when the
+program ends. A 0 is good, anything else is bad. The only errors
+that are not included here are out-of-memory and missing rand.dat
+file. These will still print English messages, however, if the system
+is correctly set up, they should not happen.
+
+#define MMAC_OK 0                 /* Normal exit */
+#define MMACERROR_BADCOMMAND 1    /* Bad command */
+#define MMACERROR_NOFILE 2        /* File not found or inaccessible */
+#define MMACERROR_NODATA 3        /* Data such as a key not found */
+#define MMACERROR_BADSIG 4        /* Coin/file has bad signature */
+#define MMACERROR_BADEXP 5        /* Coin has unknown exponent */
+#define MMACERROR_NOCOIN 6        /* Tried to use nonexistent coin */
+#define MMACERROR_NOPROTO 7       /* No protocoin in file */
+
+Using the Automatic Client
+
+Ok, that's great, but how do I use it? For an automatic service, you want 
+to receive coins, process them, get the response back from the server, and 
+then perform some service. You may optionally want to send some coins back 
+to the person. So first, when a message comes in, you have to decrypt it 
+or dearmor it or uudecode it, or whatever is necessary to get a binary 
+coins.dat file. Then run -l [file] to check its value. If you get a value
+and not an error, figure out what denominations you want. -d will list all
+possible denominations. Now run -p [file] [output file] and send it your
+list of denominations. Record the transaction id output from the client,
+along with whatever information you need to keep about the service the
+customer wants. Mail the output file off to the server, and go on to the
+next problem.
+
+When the message comes back from the server (-k [file] and compare with -k
+to verify it is encrypted for your client) run -s [file] on it to deposit
+the coins in your allcoins.dat file. The output from the client gives you
+the transaction id, value, and any message. Use the transaction id to
+look up the information you recorded earlier, and deliver the service to
+the customer. The value can be verified if you want, and the message
+should probably be saved in a file for later reading. You can check each
+new message against the last one and only save it if it has changed.
+
+Occasionally run a -x to see if you have any old coins. If so, figure out
+what denominations you want to trade them for, and run -x [file] to
+exchange them. You can probably do this part by hand, since coin
+expirations are pretty rare.
+
+To pay out money, do a -l to find the denominations to extract, then do
+a -w to withdraw them into a coins.dat file.
+
+Handling Multiple Servers
+
+You can run a service that accepts coins from multiple servers. To do
+this, you have to keep a separate client directory for each server. When
+a coin file comes in, run -k [file] to determine which server it is for.
+Using the server id as the directory name would make life much simpler.
+Then CD into that directory and process the coins from there. If you get
+coins from a 1.0 client (which has no server id), you will have to go
+into each directory in turn and try a -l [file] on the coins. You will
+get an error return on each one until you find the right directory. If 
+messages are coming back from multiple servers, using -k [file] on the 
+incoming message will tell you which client's key it is encrypted with. 
+Running -k will tell you the key of that client (on the second line). 
+- From this, you can determine which client should process that server's 
+reply. This is probably easier than using the from line in the email.
+
+Ideas for Automated Magic Money Applications
+
+Currency Exchange - Accept one currency and return another, skimming off
+a profit. Find the correct exchange rates where the same amount of each
+currency is coming in and going out.
+
+Pay-For-Use System - Accept Magic Money to pay for remote access to a
+machine, use of a MUD, remailer, news posting service, etc.
+
+Gambling - Accept bets on sports, the stock market, horses, etc.
+
+This is the MGMNY11A release. That means it might have bugs. If you find
+any, please post them on Cypherpunks@toad.com or alt.security.pgp. These 
+are also good places to announce your service, or to contact me.
+
+					  Pr0duct Cypher
+
+			  "One line of code is worth a thousand rants."
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a
+
+iQCVAgUBLerF1MGoFIWXVYodAQFtVAQAn7HOBDX4bg6MZv6uAgr3KhDfpTsAF1Te
+i8C9WjWGgPlqv6wJz+uACBo9dKnT5oP3u7foz3rB7GRp8UHHGBs2u8TjvTeedrQ4
+wUit6Bb3LcmwRPjQ8MfLK3cam8EeNsy9Hn9hqw9fm7xs4jwgaqsZU8dslthSEdh4
+lab6JYE0vWM=
+=7QpT
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01683.html">IMP (was Re: ecash-info (fwd))</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01685.html">Seattle Times cpunks article, 5/27/94</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01675.html">PGP 2.6/Turbo C</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01685.html">Seattle Times cpunks article, 5/27/94</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01684"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01684"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

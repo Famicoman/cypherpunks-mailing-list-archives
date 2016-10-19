@@ -1,0 +1,199 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Remailer REORDER not DELAY -->
+<!--X-From-R13: sareqNfzqf.pbz (Thgher@req Egrir Ivgunz) -->
+<!--X-Date: Mon, 13 Jun 94 14:12:21 PDT -->
+<!--X-Message-Id: 9406132058.AA15661@smds.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Remailer REORDER not DELAY</TITLE>
+<LINK REV="made" HREF="mailto:fnerd@smds.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00565.html">Date Prev</A>][<A HREF="msg00559.html">Date Next</A>][<A HREF="msg00629.html">Thread Prev</A>][<A HREF="msg00471.html">Thread Next</A>][<A HREF="index.html#00566">Date Index</A>][<A HREF="threads.html#00566">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Remailer REORDER not DELAY</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Remailer REORDER not DELAY</LI>
+<LI><em>From</em>: <A HREF="mailto:fnerd@smds.com">fnerd@smds.com</A> (FutureNerd Steve Witham)</LI>
+<LI><em>Date</em>: Mon, 13 Jun 94 16:58:06 EDT</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+i wrote-
+
+&gt; &gt; Delay--time--isn't what matters.  It's confusion about which message is
+&gt; &gt; which that matters.  So if I get 10 messages in one minute, I can scramble
+&gt; &gt; the order and send them out the next minute, and I've done my job--at
+&gt; &gt; least the order-scrambling part.  (You also need to pad or packetize
+&gt; &gt; messages.)
+&gt; &gt; 
+&gt; &gt; So use serial numbers, not times!  Send a message for every one you get, 
+&gt; &gt; keep a fixed number of messages queued, and add dummies if necessary
+&gt; &gt; to keep things moving.
+
+Jim replies.
+&gt; Wrongo...the random time stamp does randomly re-order then. As to bogus
+&gt; messages, not on my system you won't....
+
+Okay, first I'll go over the case where delay without dummies does NOT
+reorder.  Then I'll go over the case where delay simply adds needless,
+well, delay.  Then I'll talk about the cost of dummy messages.
+
+Assumption: Your remailer assigns each message a number from 0 to 59 and 
+            remails it at that minute of the hour.  Whether it's hours in 
+            the day, minutes in the hour or seconds in the minute only 
+            changes which of the following two cases is more likely:
+
+Case 1: The remailer receives no messages for 61 minutes, then one message,
+        then no messages for 61 minutes.
+Result: In the hour following receipt of that one message, only one 
+        message is sent.  Guess which message it was.
+
+Case 2: 60 messages arrive in one minute.
+Result: The last one(s) go out about an hour later.  They could have
+        all been sent in the next minute with equivalent reordering.
+        P.s., if 60 messages arrive *every* minute, under the assumption
+        above, you have to save an average of 3600 messages.
+
+So, with this method, you can adjust the delay time down to guarantee
+delivery time, or up to make reordering *more likely*, but you can't
+guarantee reordering.  If you want 1/N reordering to be likely, you need 
+to set the response time to N times the inter-arrival time for the 
+*quietest* traffic periods.
+
+To guarantee reordering you have to either wait indefinitely for enough
+messages, or after a while insert some of your own.  To get over the
+problem of needless delay, you either need to invent some kind of 
+tricky variable-delay scheme, or turn your attention away from clock 
+time and focus on ordering.
+
+&gt; I have a system which runs of a SLIP feed and bandwidth is sacrosanct.
+&gt; If you would like to pay for an additional line to handle the added 
+&gt; load then fine but my pocket book won't support it. 
+
+Say the worst turnaround you want is 24 hours, and you want to get 1-out-
+of-10 reordering.  Then on a day where you receive only one message (for 
+this you got a SLIP connection?) you would need to generate 9 dummies.
+Assuming 10Kbyte messages, the bandwidth required is... 10.4 baud.
+
+For a turnaround of 2.4 hours ... 104 baud.
+                   15 minutes ... 1040 baud.
+
+And remember, you generate only enough dummies to keep up the minimum
+*total* traffic, so in reasonable-traffic periods, you generate no
+dummies and the amount of real traffic you can handle isn't affected.
+
+&gt; the consideration of the future where there will be many small systems
+&gt; with minimal bandwidth and monetary resources then I realy doubt they 
+&gt; will be interested in any system which slows down or otherwise wastes
+&gt; a precious and critical resource.
+
+I guess this sentence, which you quote, wasn't clear:
+
+&gt; &gt; Plus, if the remailers only generate
+&gt; &gt; dummies when necessary, the total dummy traffic is self-regulating, since
+&gt; &gt; multi-hop dummies are x-lax for every remailer they pass through.
+
+In other words, in a world of communicating forwarders, a dummy message
+from one just looks like regular traffic to any others it goes through,
+and serves to keep their traffic levels up--the more remailers the
+fewer dummy messages each remailer has to generate.
+
+&gt; I also oppose the implied synchronicity of your methods as well. I am 
+&gt; looking at a resonably secure asynchronouse method of making the 
+&gt; traffic analysis difficult (the real reason for all this mumbo jumbo
+&gt; in the first place).
+
+Traffic analysis is difficult when the order of messages is sufficiently
+scrambled.  If you don't reorder, then delay doesn't help.  If you do
+reorder, then added delay doesn't help.  Whether one message is
+"synchronized" or not with a random other message isn't useful 
+information to an outsider.
+
+&gt; Why should I provide a potential monitor with the
+&gt; information that a certain amount of information going out will be 
+&gt; bogus?
+
+How might this information help analyze traffic?
+
+Also, as I mentioned, if you send your dummies to yourself indirectly,
+then pretty soon the level of input will match the level of output,
+and the ratio of bogus to real messages *won't* be visible.
+
+As far as I can see, dummy messages are simply necessary if you want to
+guarantee both reordering and response time.  Please explain if you
+believe differently.
+
+&gt; You obviously don't pay all the costs for your feed or else you are very 
+&gt; rich...
+
+Are you  charged per byte or just a flat rate?
+
+-fnerd
+- - - - - - - - - - - - - - -
+the snack that eats like a food
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a
+
+aKxB8nktcBAeQHabQP/d7yhWgpGZBIoIqII8cY9nG55HYHgvt3niQCVAgUBLMs3K
+ui6XaCZmKH68fOWYYySKAzPkXyfYKnOlzsIjp2tPEot1Q5A3/n54PBKrUDN9tHVz
+3Ch466q9EKUuDulTU6OLsilzmRvQJn0EJhzd4pht6hSnC1R3seYNhUYhoJViCcCG
+sRjLQs4iVVM=
+=9wqs
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00565.html">Telco snooping ... (fwd) "every time you fire up a modem" ??</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00559.html">Re: Anon posts (was irritating posts...)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00629.html">Re: Remailer REORDER not DELAY</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00471.html">Re: Cops on the net</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00566"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00566"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

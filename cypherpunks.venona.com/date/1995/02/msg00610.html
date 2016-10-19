@@ -1,0 +1,233 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Factoring &#45; State of the Art and Predictions -->
+<!--X-From-R13: zcqNargpbz.pbz ([vxr Rhibf) -->
+<!--X-Date: Sun, 12 Feb 95 18:19:13 PST -->
+<!--X-Message-Id: 199502130218.SAA00223@netcom3.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: m0rdnqt&#45;000k5xC@mailbox.mcs.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Factoring - State of the Art and Predictions</TITLE>
+<LINK REV="made" HREF="mailto:mpd@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00616.html">Date Prev</A>][<A HREF="msg00618.html">Date Next</A>][<A HREF="msg00616.html">Thread Prev</A>][<A HREF="msg00618.html">Thread Next</A>][<A HREF="index.html#00610">Date Index</A>][<A HREF="threads.html#00610">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Factoring - State of the Art and Predictions</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:schneier@chinet.chinet.com">schneier@chinet.chinet.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Factoring - State of the Art and Predictions</LI>
+<LI><em>From</em>: <A HREF="mailto:mpd@netcom.com">mpd@netcom.com</A> (Mike Duvos)</LI>
+<LI><em>Date</em>: Sun, 12 Feb 1995 18:18:59 -0800 (PST)</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00605.html">m0rdnqt-000k5xC@mailbox.mcs.com</A>&gt; from "schneier@chinet.chinet.com" at Feb 12, 95 05:29:53 pm</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+schneier@chinet.chinet.com writes:
+
+ &gt; ((Comments are appreciated.  -Bruce))
+
+Ok.
+
+[Nice historical presentation of factoring snipped]
+
+ &gt; A new factoring algorithm has taken over from the quadratic
+ &gt; sieve: the general number field sieve. In 1989
+ &gt; mathematicians would have told you that the general number
+ &gt; field sieve would never be practical.
+
+ &gt; In 1992 they would have told you that it was practical, but
+ &gt; only faster than the quadratic sieve for numbers greater
+ &gt; than 130-150 digits or so. Today it is known to be faster
+ &gt; than the quadratic sieve for numbers well below 116 digits.
+
+ &gt; The general number field sieve can factor a 512-bit number
+ &gt; over 10 times faster than the quadratic sieve.
+
+The GNFS situation is a little bit more complicated than that.
+Today's factoring algorithms work by finding distinct square
+roots of the same quadratic residue modulo the number to be
+factored.  Each such discovery yields an approximately 50% chance
+of factoring the number using Euclid's GCD algorithm.
+
+Since searching directly for a congruence of squares would be
+grossly inefficient, one sieves for relations involving arbitrary
+powers of numbers from a set called the "factor base", and after
+collecting an overdetermined number of such relations, finds
+their null space modulo two in huge matrix operation.  This
+yields a relation whose powers are all even, from which a
+congruence of squares may be constructed in an obvious manner.
+
+Most popular factoring methods including NFS, GNFS, and numerous
+flavors of QS utilize this general scheme, and differ only in the
+numbers to which they are applicable and in the methods that they
+use to fish for relations in more densely populated mathematical
+waters.
+
+GNFS uses a particularly cute trick, which is to express the
+number being factored as a polynomial with small coefficients,
+evaluated at a small argument.  On can then construct a
+homomorphism from a ring of algebraic integers into Z/nZ. This
+permits sieving to be conducted in a particularly efficient
+fashion.
+
+Finding such a polynomial, unfortunately, is a far from
+straightforward task.  Current state of the art is to start with
+a guess, and flog it to death on a workstation for several days,
+attempting some sort of stepwise refinement.  Although the
+problem is mathematically rich, no systematic method currently
+exists to pick the "best" polynomial, and the problem of doing so
+may be of a difficulty comparable to factoring.
+
+The speed with which GNFS runs and the degree to which it
+outperforms QS is extremely sensitive to the polynomial chosen,
+so the blanket statement that GNFS outperforms QS by a factor of
+10 on 512 bit numbers is in my opinion, a bit of an
+oversimplification.
+
+GNFS is one of the most complicated computer algorithms to be
+constructed, sieving and factoring simultaneously in both a ring
+of algebraic integers and in Z/nZ. The algorithm has been known
+to experience "cycle explosions" in which unexpectly large
+amounts of raw data are produced from relatively small numbers.
+It is certainly not something that can be regularly run in
+"production mode" and it requires a skilled operator (currently
+its creator) to help it coast smoothly through its various
+stages.
+
+I don't think GNFS is going to be available in shrink-wrapped
+form for quite some time. :)
+
+ &gt; A related algorithm, the special number field sieve, can
+ &gt; already factor numbers of a certain specialized
+ &gt; form--numbers not generally used for cryptography--must
+ &gt; faster than the general number field sieve can factor
+ &gt; general numbers of the same size.
+
+NFS and GNFS are essentially the same algorithm.  NFS is simply a
+special case where a particularly simple polynomial is known,
+Z[a] is a unique factorization domain, and some other nice
+algebraic properties are present.  In the case of a general
+integer, and a more complex polynomial, some things get messier.
+
+ &gt; It is not unreasonable to assume that the general number
+ &gt; field sieve can be optimized to run this fast; it is
+ &gt; possible that the NSA already knows how to do this.
+
+I think this is unlikely.  The difference in speed is due to the
+fact that NFS only factors specially chosen simple numbers, and
+GNFS factors anything.  That is not something that is likely to
+be optimized away.
+
+Also, I think we make far to much of the magical ability of the
+NSA to do things.  At the present point in time, most of the
+cryptomathematical expertise in the world is external to the NSA.
+The NSA didn't invent GNFS, or for that matter, public key
+cryptography.
+
+ &gt; Making predictions beyond the near future is even more
+ &gt; foolish. Who knows what kind of advances in computing,
+ &gt; networking, and mathematics are going to happen by 2020?
+ &gt; However, if you look at the broad picture, in every decade
+ &gt; we can factor numbers twice as long as in the previous
+ &gt; decade.
+
+GNFS probably represents the final step in the evolution of the
+"combination of congruences" factoring methods.  Further
+refinements would probably be such complicated algorithms as to
+be inpractical to program.
+
+Additional improvements in our ability to break RSA will probably
+come via some new factoring scheme that we are presently unaware
+of, or via a method of computing the inverse of the encryption
+permutation used by RSA which does not require explicit formation
+of the factors of the modulus.
+
+ &gt;          Table 5:  Long-range factoring predictions
+
+ &gt;          Year     Key length (in bits)
+ &gt;          1995     1024
+ &gt;          2005     2048
+ &gt;          2015     4096
+ &gt;          2025     8192
+ &gt;          2035     16,384
+ &gt;          2045     32,768
+
+I think factoring technology may reach its "Omega Point" long
+before 2045.  Twenty years from now, we might be able to factor
+anything.  I think predictions past ten years are pure
+speculation.
+
+ &gt; There is always the possibility that an advance in
+ &gt; factoring will surprise me as well, but I think that
+ &gt; unlikely.
+
+I expect to be surprised by an advance in factoring momentarily.
+You are far too pessimistic. :)
+
+-- 
+     Mike Duvos         $    PGP 2.6 Public Key available     $
+     mpd@netcom.com     $    via Finger.                      $
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00618" HREF="msg00618.html">The NSA (Was Re: Factoring - State of the Art and Predictions )</A></STRONG>
+<UL><LI><EM>From:</EM> "Perry E. Metzger" &lt;perry@imsi.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00605" HREF="msg00605.html">Factoring - State of the Art and Predictions</A></STRONG>
+<UL><LI><EM>From:</EM> schneier@chinet.chinet.com</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00616.html">Re: Factoring - State of the Art and Predictions</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00618.html">The NSA (Was Re: Factoring - State of the Art and Predictions )</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00616.html">Re: Factoring - State of the Art and Predictions</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00618.html">The NSA (Was Re: Factoring - State of the Art and Predictions )</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00610"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00610"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

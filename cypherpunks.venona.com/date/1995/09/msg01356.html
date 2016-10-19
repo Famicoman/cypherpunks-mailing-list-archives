@@ -1,0 +1,177 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: netscape's response -->
+<!--X-From-R13: Quevfgvna Irggretera <pjrNQfyv.Egnasbeq.SRG> -->
+<!--X-Date: Wed, 20 Sep 95 00:29:33 PDT -->
+<!--X-Message-Id: 199509200729.AAA24565@Csli.Stanford.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 43oa83$nhm@tera.mcom.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: netscape's response</TITLE>
+<LINK REV="made" HREF="mailto:cwe@Csli.Stanford.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01357.html">Date Prev</A>][<A HREF="msg01372.html">Date Next</A>][<A HREF="msg01375.html">Thread Prev</A>][<A HREF="msg01365.html">Thread Next</A>][<A HREF="index.html#01356">Date Index</A>][<A HREF="threads.html#01356">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: netscape's response</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:jsw@neon.netscape.com">jsw@neon.netscape.com</A> (Jeff Weinstein)</LI>
+<LI><em>Subject</em>: Re: netscape's response </LI>
+<LI><em>From</em>: Christian Wettergren &lt;<A HREF="mailto:cwe@Csli.Stanford.EDU">cwe@Csli.Stanford.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 20 Sep 1995 00:29:11 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: Your message of 20 Sep 1995 05:53:07 GMT.            &lt;<A HREF="msg01375.html">43oa83$nhm@tera.mcom.com</A>&gt; </LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+|   Of course none of this reduces the magnitude of the screw up/bug/design
+| flaw/whatever.  I really can't say which of these it was since I wasn't
+| around at the time that this code was being written.  I must admit that
+| the RNG seed code was not an area that I thought to examine when I took
+| over our security library.
+
+It isn't really easy. I guess you were around to see the pointer to
+RFC 1750, approx "Security Randomness reqs"?
+
+|   This was a bad mistake on our part, and we are working hard to fix it.
+| We have been trying to identify sources of random bits on PCs, Macs, and
+| all of the many unix platforms we support.  We are looking at stuff that
+| is system dependent, user dependent, hardware dependent, random external
+| sources such as the network and the user.  If anyone has specific
+| suggestions I would love to hear them so that we can do a better job.
+
+* I think you should use as much user-generated randomness as possible,
+  like the mouse movement patterns, interarrival times of events from
+  the user interface etc.
+
+* You can also gather statistics from the networking card, like number
+  of collisions, packets in/out, number of passing packets etc.
+
+* Measuring the interarrival times of requests/responses from a remote
+  server should also be a good one, I guess. I depends on the network
+  in between, the actual processes executing on it, the scheduling
+  algorithm etc.
+
+* And finally, insert some sampling of the noise in the sound blaster.
+
+* And try to reseed it, as often as possible and convenient. Make it 
+  depend on the previous value of the random generator seed, somehow.
+
+The difficult part is to verify the quality of the random seeding and
+reseeding. How does it behave on a unloaded system? Could someone put
+your system under some strain, and hence affect the random generator
+to lock down into a small subspace or even onto a fixed value?
+
+How independant are the values anyway? And when you start to talk
+about ergodity etc, I'm lost anyway. :-)
+
+I think it is important to bring together factors of the user _and_
+the environment, preferrable an environment that reaches as far from
+the local site as possible. This makes "jamming" of the random seed
+selection process harder. 
+
+The other problem in gathering random bits for a seed is that most
+bits are visible by someone else close enough within your environment.
+Interarrival times of packets are fine, but anyone can observe them
+with quite a good accuracy. How do you escape the "local environment
+problem"? 
+
+                              . - .
+
+One wild idea that I just got was to have servers and clients exchange
+random numbers (not seeds of course), in a kind of chaining way. Since
+most viewers connect to a number of servers, and all servers are
+connected to by many clients, they would mix "randomness sources" with
+each other, making it impossible to observe the local environment
+only. And the random values would of course be encrypted under the
+session key, making it impossible to "watch the wire".
+
+Problems:
+* watch out for "multiply by zero" attacks by a rogue server/client.
+* watch out for "almost singular values" in the same way.
+* only let one source contribute a certain amount of randomness, like
+  (key length)/(aver # of peers).
+* never reveal your current seed, only a non-trivially derived random 
+  value from it. (of course)
+* make sure your initial seed is good enough, or the whole thing is
+  broken.
+* perhaps save part of the previous session state into a protected
+  file, to be able to keep up the quality of the initial seed.
+
+I think I like it, perhaps not from a practical point of view as much
+as the 'non-attackability' of it. Its quite cypher-a. 
+
+But I bet someone has already done this a long time ago. My usual
+luck! :-(
+
+If not, I want a 'I saved Netscape!' t-shirt from you, Jeff! 
+ 
+/Christian
+
+PS. I'm a Swede, I don't know if I'm allowed to reveal these state
+secrets. So please shut your eyes, ok?
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01582" HREF="msg01582.html">Exchange random numbers (was: Re: netscape's response)</A></STRONG>
+<UL><LI><EM>From:</EM> Jiri Baum &lt;jirib@cs.monash.edu.au&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01375" HREF="msg01375.html">Re: netscape's response</A></STRONG>
+<UL><LI><EM>From:</EM> jsw@neon.netscape.com (Jeff Weinstein)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01357.html">Netscape sub rosa?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01372.html">Re: SSL implementation problem at Netscape</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01375.html">Re: netscape's response</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01365.html">Re: netscape's response</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01356"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01356"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

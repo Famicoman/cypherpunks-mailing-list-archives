@@ -1,0 +1,350 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: GPS&#45;based authentication -->
+<!--X-From-R13: "Brgre Ferv" <gervNcebprff.pbz> -->
+<!--X-Date: Fri, 12 Apr 1996 06:59:05 +0800 -->
+<!--X-Message-Id: 199604111525.IAA09240@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>GPS-based authentication</TITLE>
+<LINK REV="made" HREF="mailto:trei@process.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00568.html">Date Prev</A>][<A HREF="msg00514.html">Date Next</A>][<A HREF="msg00767.html">Thread Prev</A>][<A HREF="msg00616.html">Thread Next</A>][<A HREF="index.html#00539">Date Index</A>][<A HREF="threads.html#00539">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>GPS-based authentication</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:denning@cs.cosc.georgetown.edu">denning@cs.cosc.georgetown.edu</A>, <A HREF="mailto:pmacdorn@isrinc.com">pmacdorn@isrinc.com</A></LI>
+<LI><em>Subject</em>: GPS-based authentication</LI>
+<LI><em>From</em>: "Peter Trei" &lt;<A HREF="mailto:trei@process.com">trei@process.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 11 Apr 1996 11:33:31 -6</LI>
+<LI><em>CC</em>: <A HREF="mailto:trei@process.com">trei@process.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Comments</em>: Authenticated sender is &lt;trei@popserver&gt;</LI>
+<LI><em>Organization</em>: Process Software Corporation</LI>
+<LI><em>Priority</em>: normal</LI>
+<LI><em>Reply-to</em>: <A HREF="mailto:trei@process.com">trei@process.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Ms Denning, Mr. MacDoran
+
+I've read with interest your proposed GPS-based authentication 
+mechanism (it was posted to the cypherpunks mailing list). Can you
+confirm that you wrote this? Some people on the list think it may be
+a forgery.
+
+The participants of the list have noted some apparent vulnerabilities
+in the system, and I am curious as to how you address them. If you
+respond to me and give permission, I'll forward your response to the
+list.
+
+The problems are two-fold:
+
+1. The system is easily spoofed.
+2. It leaks sensitive location data.
+
+You say:
+
+" The signature ... is formed from bandwidth compressed raw 
+observations of all the GPS satellites in view."
+
+" The location signature is virtually impossible to forge at the required 
+accuracy. This is because the GPS observations at any given time are 
+essentially unpredictable to high precision due to subtle satellite orbit 
+perturbations, which are unknowable in real-time, and intentional 
+signal instabilities  (dithering) imposed by the U.S. Department of 
+Defense selective availability (SA)."
+
+Could you substantiate this claim? Is there any reason a spoofer
+could not do the following?
+
+1. Set up a receiver near (within a 1000 miles or so) of the site he
+is trying to spoof (he needs to be able to see roughly the same
+satellites as the spoofed site).
+
+2. Extract from the signal he receives the psudo-random sequence
+sent from each satellite.
+
+3. Buffer the sequence  from each satellite for a brief period (the extreme
+case is 42 msec, the time it takes light to travel the diameter of the
+earth).
+
+4. Re-assemble the aggregate signal with the appropriate delays for the
+location he is trying to spoof. These delays can be pre-computed.
+
+5. Modulate a simulated 17 cm carrier appropriately to produce a synthesized 
+signal, identical to that received at the location to be spoofed, and use
+that to fake his location.
+
+I note that there is commercially available test equipment to simulate
+GPS satellites, which transmit a signal appropriate for any location you 
+dial into them (btw, setting one of these up near a location using your
+protocol  leads to an interesting denial-of-service attack, since you
+can overwhelm the satellite signal with a false one giving a bogus
+location).
+
+Even if the spoofer has to extract sequence data from the real satellites,
+the storage requirement is not  onerous, since he already knows just
+how long he has to delay each satellite's signal, and need buffer only
+the appropriate chunk for each satellite.
+
+While this *does* result in a slight delay while the sequence data for
+each satellite is gathered, the extreme case is 42 ms. Internet
+transmission delays on the order of 100 ms are common, so your
+system will have to accept location data which is this old.
+
+The computational load neccesary to spoof the signal is not excessive -
+it's essentially the reverse of that used to extract location data from the
+aggregate  signal, a process which is not a one-way function.
+
+Thus, the signal can be spoofed.
+
+Second, your system broadcasts potentially sensitive location data.
+Your protocol will be a gold mine for the traffic analysts  The
+data can be used for later spoofing attacks, or, in an 
+operational situation, to target munitions.
+
+While encrypting the link can protect this data, if you can use encryption,
+you can also use digital signatures  for authentication.
+
+Finally, GPS receivers don't work too well in steel-framed 
+buildings. There are substantial shielding and multipath problems
+( for your system to work, the antenna needs to be near
+the originating node, not on the roof). You do not appear to address
+these problems. 
+
+Peter Trei
+trei@process.com
+
+--------------------------------------------------------
+I append the original article, as it appeared on the
+list on April 10th.
+--------------------------------------------------------
+
+
+Location-based System Delivers User
+Authentication Breakthrough
+
+By Dorothy E. Denning and Peter F. MacDoran
+Copyright(c), 1996 - Computer Security Institute - All Rights Reserved
+Top - Help
+
+
+
+Existing user authentication mechanisms are based on information the user
+knows (e.g., password or PIN), possession of a device (e.g, access token or
+crypto- card), or information derived from a personal characteristic
+(biometrics). None of these methods are foolproof. Passwords and PINs are
+often vulnerable to guessing, interception or brute force search. Devices
+can be stolen. Biometrics can be vulnerable to interception and replay.
+
+A new approach to authentication utilizes space geodetic methods to form a
+time- dependent location signature that is virtually impossible to forge.
+The signature is used to determine the location (latitude, longitude and
+height) of a user attempting to access a system, and to reject access if the
+site is not approved for that user. With location-based controls, a hacker
+in Russia would be unableto log into a funds transfer system in the United
+States while pretending to come from a bank in Argentina.
+
+Location-based authentication can be used to control access to sensitive
+systems, transactions or information. It would be a strong deterrent to many
+potential intruders, who now hide behind the anonymity afforded by their
+remote locations and fraudulent use of conventional authentication methods.
+If the fraudulent actors were required to reveal their location in order to
+gain access, their anonymity would be significantly eroded and their chances
+of getting caught would increase.
+
+Authentication through geodetic location has other benefits. It can be
+continuous, thereby protecting against channel hijacking. It can be
+transparent to the user. Unlike most other types of authentication
+information, a user's location can serve as a common authenticator for all
+systems the user accesses. These features make location-based authentication
+a good technique to use in conjunction with single log-on. Another benefit
+is there is no secret information to protect either at the host or user end.
+If a user's authentication device is stolen, use of the device will not
+compromise the system but only reveal the thief's location. A further
+benefit of geodetic-derived location signatures is that they provide a
+mechanism for implementing an electronic notary function. The notary could
+attach a location signature to a document as proof that the document existed
+at a particular location and instant in time.
+
+The use of geographic location can supplement or complement other methods of
+authentication, which are still useful when users at the same site have
+separate accounts and privileges. Its added value is a high level of
+assurance against intrusion from any unapproved location regardless of
+whether the other methods have been compromised. In critical environments,
+for example, military command and control, telephone switching, air traffic
+control, and banking, this extra assurance could be extremely important in
+order to avoid a potential catastrophe with reverberations far beyond the
+individual system cracked.
+
+How it works
+
+International Series Research (Boulder, CO) has developed a technology for
+achieving location-based authentication. Called CyberLocator, the technology
+makes use of the microwave signals transmitted by the twenty-four satellite
+constellation of the Global Positioning System (GPS). Because the signals
+are everywhere unique and constantly changing with the orbital motion of the
+satellites, they can be used to create a location signature that is unique
+to a particular place and time. The signature, which is computed by a
+special GPS sensor connected to a small antenna, is formed from bandwidth
+compressed raw observations of all the GPS satellites in view. As currently
+implemented, the location signature changes every five milliseconds.
+However, there are options to create a new signature every few microseconds.
+
+When attempting to gain access to a host server, the remote client is
+challenged to supply its current location signature. The signature is then
+configured into packets and transferred to the host. The host, which is also
+equipped with a GPS sensor, processes the client signature and its own
+simultaneously acquired satellite signals to verify the client's location to
+within an acceptable threshold (a few meters to centimeters, if required).
+
+For two-way authentication, the reverse process would be performed. In the
+current implementation, location signatures are 20,000 bytes. For continuous
+authentication, an additional 20 bytes per second are transferred. Re-
+authorization can be performed every few seconds or longer. The location
+signature is virtually impossible to forge at the required accuracy. This is
+because the GPS observations at any given time are essentially unpredictable
+to high precision due to subtle satellite orbit perturbations, which are
+unknowable in real-time, and intentional signal instabilities  (dithering)
+imposed by the U.S. Department of Defense selective availability (SA)
+security policy. Further, because a signature is invalid after five
+milliseconds, the attacker cannot spoof the location by replaying an
+intercepted signature, particularly when it is bound to the message (e.g.,
+through a checksum or digital signature). Continuous authentication provides
+further protection against such attacks.
+
+Conventional (code correlating and differential) GPS receivers are not
+suitable for location authentication because they compute latitude,
+longitude and height directly from the GPS signals. Thus, anyone can report
+an arbitrary set of coordinates and there is no way of knowing if the
+coordinates were actually calculated by a GPS receiver at that location. A
+hacker could intercept the coordinates transmitted by a legitimate user and
+then replay those coordinates in order to gain entry. Typical code
+correlating receivers, available to civilian users, are also limited to 100
+meter accuracy. The CyberLocator sensors achieve meter (or better) accuracy
+by employing differential GPS techniques at the host, which has access to
+its own GPS signals as well as those of the client. DGPS methods attenuate
+the satellite orbit errors and cancel SA dithering effects.
+
+Where it works
+
+Location-based authentication is ideal for protecting fixed sites. If a
+company operates separate facilities, it could be used to restrict access or
+sensitive transactions to clients located at those sites. For example, a
+small (7 cm x 7 cm) GPS antenna might be placed on the rooftop of each
+facility and connected by cable to a location signature sensor within the
+building. The sensor, which would be connected to the site's local area
+network, would authenticate the location of all users attempting to enter
+the protected network. Whenever a user ventured outside the network, the
+sensor would supply the site's location signature. Alternatively, rather
+than using a single sensor, each user could be given a separate device,
+programmed to provide a unique signature for that user. Location-based
+authentication could facilitate telecommuting by countering the
+vulnerabilities associated with remote access over dial-in lines and
+Internet connections. All that would be needed is a reasonably unobstructed
+view of the sky at the employee's home or remote office. Related application
+environments include home banking, remote medical diagnosis and remote
+process control. Although it is desirable for an antenna to be positioned
+with full view of the sky, this is not always necessary. If the location and
+environment are known in advance, then the antenna can be placed on a window
+with only a limited view of the sky. The environment would be taken into
+account when the signals are processed at the host.
+
+For remote authentication to succeed, the client and host must be within
+2,000 to 3,000 kilometers of each other so that their GPS sensors pick up
+signals from some of the same satellites. By utilizing a few regionally
+deployed location signature sensors (LSS), this reach can be extended to a
+global basis. For example, suppose that a bank in Munich needs to conduct a
+transaction with a bank in New York and that a London-based LSS provides a
+bridge into Europe. Upon receiving the location signatures from London and
+Munich, the New York bank can verify the location of the Munich bank
+relative to the London LSS and the London LSS relative to its own location
+in New York.
+
+The technology is also applicable to mobile computing. In many situations,
+it would be possible to know the general vicinity where an employee is
+expected to be present and to use that information as a basis for
+authentication. Even if the location cannot be known in advance, the mere
+fact that remote users make their locations available will substantially
+enhance their authenticity. In his new book, The Road Ahead, Bill Gates
+predicts that wallet PCs, networked to the information highway, will have
+built-in GPS receivers as navigational assistants. With the CyberLocator
+technology, these PC receivers can also perform authentication while being a
+factor of ten less expensive than conventional code correlating receivers
+(most of the processing is executed in the host rather than the remote
+units), which only achieve 100 meter accuracy, and a factor of a hundred
+less expensive than conventional DGPS receivers. Location-based
+authentication is a powerful new tool that can provide a new dimension of
+network security never before possible. The CyberLocator technology is
+currently operational in a portable demonstration.
+
+
+Dorothy E. Denning is professor of computer science at Georgetown
+University (Washington, D.C.) and consultant to ISR. She can be reached at
+202-687-5703 or denning@cs.georgetown.edu. Peter F. MacDoran is president
+and CEO of International Series Research, Inc. (Boulder, CO). He can be
+reached at 303-447- 0300 or pmacdorn@isrinc.com.
+
+$0$AD
+
+Peter Trei
+Senior Software Engineer
+Purveyor Development Team                                
+Process Software Corporation
+<A  HREF="http://www.process.com">http://www.process.com</A>
+trei@process.com
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00568.html">Re: WWW User authentication</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00514.html">Re: No matter where you go, there they are.</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00767.html">Re: RC4 on FPGAs (Was: Bank transactions on Internet)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00616.html">Re: GPS-based authentication</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00539"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00539"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,210 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Threats in real life &#45; what are we worried about? -->
+<!--X-From-R13: [ngg Pynmr <znoNerfrnepu.ngg.pbz> -->
+<!--X-Date: Fri, 20 Jan 95 00:34:57 PST -->
+<!--X-Message-Id: 9501200836.AA19977@merckx.info.att.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Threats in real life - what are we worried about?</TITLE>
+<LINK REV="made" HREF="mailto:mab@research.att.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00980.html">Date Prev</A>][<A HREF="msg00983.html">Date Next</A>][<A HREF="msg00889.html">Thread Prev</A>][<A HREF="msg00890.html">Thread Next</A>][<A HREF="index.html#00984">Date Index</A>][<A HREF="threads.html#00984">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Threats in real life - what are we worried about?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Threats in real life - what are we worried about? </LI>
+<LI><em>From</em>: Matt Blaze &lt;<A HREF="mailto:mab@research.att.com">mab@research.att.com</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 20 Jan 95 03:36:17 -0500</LI>
+<LI><em>Posted-Date</em>: Fri, 20 Jan 95 03:36:17 -0500</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I wrote:
+&gt;	
+&gt;	Given existing crypto tools (PGP, etc), what are the top ten
+&gt;	practical attacks against the privacy of stored data and
+&gt;	electronic mail?  Who are the bad guys? What tools do we need
+&gt;	to limit these threats?
+&gt;
+&gt;I'll post my own thoughts later.
+&gt;
+
+
+Matt's Top Ten Underappreciated Threats to Privacy on the Internet
+==================================================================
+
+1.  The sorry state of software.  Everyone knows that nobody knows how
+to write software.  Modern systems give hundreds of thousands of lines
+of code the chance to violate security policy.  How can we be sure
+that the software we trust does the right thing?  How can we reduce
+the opportunities for problems?
+
+2.  Ineffective protection against denial of service attacks.  While
+not a direct threat to privacy, the ease with which almost anyone can
+mount effective denial of service attacks threatens the ability to
+deploy anonymous services.  You'll note that no one worries very much
+about the millions of anonymous entry points to more robust networks
+like the telephone system or the postal service, where it's relatively
+hard (and expensive) for an individual to cause large-scale service
+disruption.  How can we make the 'net robust enough to withstand
+mailbombs and newsgroup spamming?
+
+3.  Poor secret storage on networked computers.  Cryptosystems allow
+you to manage large secrets by protecting smaller ones (keys).
+Unfortunately, modern computers are awful at protecting even the
+smallest secrets.  Multi-user networked workstations can be broken
+into and their memories compromised.  Standalone, single-user
+machines can be stolen or compromised through viruses that leak
+secrets asynchronously.  What are the right mechanisms for storing
+and managing keys on various platforms?  Remote servers, where there
+may be no user available to enter a passphrase (but see threat #5,
+below), are an especially hard problem.
+
+4.  Poorly understood random number generation techniques.  Keys and
+session variables need good sources of unpredictable bits.  Currently
+used techniques (like event inter-arrival times) are only marginally
+well understood and depend to a great deal on low-level
+characteristics of the platforms on which they are run.  We need a
+wider range of techniques (especially ones that work without relying
+on user input), and to better understand their risks and failure
+modes.  Some interesting ideas have been proposed that deserve further
+study.  At CRYPTO '94 there was an interesting paper on using disk
+airflow variation to get random bits.  Another interesting technique,
+first proposed by Don Mitchell, involves exploiting clock skew.  Here's
+a C program that seems to produce one pretty random bit per second on
+most platforms.  How good are the bits?  Can we get more bandwidth out
+of it?
+
+#include &lt;stdio.h&gt;
+#include &lt;signal.h&gt;
+int count=0;
+void printbit()
+{
+	signal(SIGALRM,printbit);
+	alarm(1);
+	printf("%1d",count&amp;01);
+	fflush(stdout);
+}
+main()
+{
+	signal(SIGALRM,printbit);
+	alarm(1);
+	while (1)
+		count++;
+}
+
+5.  Weak passphrases.  Most crypto software addresses the key storage
+and key generation problems by relying on user-generated passphrase
+strings, which are presumed to contain enough entropy to produce good
+key material and are also easy enough to remember that they do not
+require secure storage.  While dictionary attacks are a well known
+problem with short passwords, much less is known about lines of attack
+against user- selected passphrase-based keys.  Shannon tells us that
+English text has just over 1 bit of entropy per character, which would
+seem to leave most passphrases well within reach of brute-force
+search.  Less is known, however, about good techniques for enumerating
+passphrases in order to exploit low entropy.  Until we have a better
+understanding of how to attack passphrases, we really have no idea how
+weak or strong they are.
+
+6.  Limited support for remote trusted agents.  Almost all currently
+available cryptographic software assumes that the user is in direct
+control over the systems on which they run and has a secure path to
+it.  For example, the interfaces to programs like PGP and CFS assume
+that their input is comes from the user over a secure path like the
+local console.  This is not always the case, of course; consider the
+problem of reading your mail remotely when logged in over the
+Internet.  We need better mechanisms for transferring the trusted
+operations to the local trusted machine while keeping the logical
+operations (like where the mail is) where they logically belong.
+
+7.  Poorly understood protocol and service interactions.  Features
+frequently come back to bite us, and its hard to know even where to
+look.  The Internet worm was propagated via an obscure and
+innocent-looking feature in sendmail; how many more features in how
+many more programs have unexpected consequences just waiting to be
+discovered?  Is the conventional wisdom of hiding behind firewalls
+and turning off services really the only answer?
+
+8.  Lack of scalable security infrastructure.  No comment...
+
+9.  Poorly understood "out of band" attack risks.  Security people
+tend to focus on what's easy to model.  Unfortunately, attackers focus
+on what's easy to exploit.  We need a better understanding of just how
+easy some non-traditional attacks are.  Most of the answers are
+probably too scary to think about.  How long do our keys need to be in
+the face of electromagnetic radiation, physical monitoring, Trojan
+horses, social engineering, and so on and so on?
+
+10. No broad-based demand for security.  This is a well-known problem
+among almost everyone who has tied his or her fortune to selling
+security products and services.  Until there is widespread demand for
+transparent security, the tools and infrastructure needed to support
+it will be expensive and inaccessible to many applications.  This is
+partly a problem of understanding the threats and risks in real
+applications, and of building systems that include security as a basic
+feature rather than as a later "add on".
+
+There's a lot missing from this list, and a lot you can disagree with
+among the things that are on it.
+
+Flame away...
+
+-matt
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00980.html">Re: Remailer-on-a-CD</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00983.html">RE: ELECTRONIC CASH ILLEG</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00889.html">Threats in real life - what are we worried about?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00890.html">Good "Economist" article on Cyberspace</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00984"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00984"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

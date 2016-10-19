@@ -1,0 +1,421 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Educational cryptanalysis competition (small prize) -->
+<!--X-From-R13: crgre.nyynaNnrng.pb.hx (Brgre [ Oyyna) -->
+<!--X-Date: Thu, 18 Jul 1996 16:23:10 +0800 -->
+<!--X-Message-Id: 9607171243.AA26209@clare.risley.aeat.co.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Educational cryptanalysis competition (small prize)</TITLE>
+<LINK REV="made" HREF="mailto:peter.allan@aeat.co.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01128.html">Date Prev</A>][<A HREF="msg01133.html">Date Next</A>][<A HREF="msg02058.html">Thread Prev</A>][<A HREF="msg01246.html">Thread Next</A>][<A HREF="index.html#01090">Date Index</A>][<A HREF="threads.html#01090">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Educational cryptanalysis competition (small prize)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Educational cryptanalysis competition (small prize)</LI>
+<LI><em>From</em>: <A HREF="mailto:peter.allan@aeat.co.uk">peter.allan@aeat.co.uk</A> (Peter M Allan)</LI>
+<LI><em>Date</em>: Wed, 17 Jul 96 13:43:09 BST</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+
+
+Educational Cryptanalysis Competition  (opened 17 July 1996)
+=====================================
+
+Cypherpunks teach.  Here's your chance.
+
+I have a piece of code I wrote ages ago, before reading Schneier.
+
+Despite identifying these points as weaknesses I still cannot
+break it.
+
+    weak keys
+    rapid collapse in the case of chosen text attack
+    reduced-round versions have a correlation attack
+
+Obviously my crytanalysis needs some serious help.
+
+
+
+The aim of this competition is:
+    to show how to find AND EXPLOIT weaknesses in this cypher.
+    Answers resembling "That's junk - use XXXXX." score zero.
+    Well-prepared comprehensive answers could score highly.
+
+- - Entries will be judged on educational grounds as well as on raw results.
+
+- - All entries are placed by the entrant in the public domain, and there
+  may be a compilation of good answers come out of this.
+  (With entrants' names except where they state a prefernce for anonymity. )
+
+- - Entries by teams are allowed.
+
+- - The number of entries is unlimited.
+
+- - The closing date is 30 Sept 1996.
+
+- - The judge is Peter Allan. (me)
+
+- - There is one prize (a box of chocolate coffee beans).
+
+
+  
+A full pair of programs using this code can be collected
+from my mail filter.
+
+    echo  rlprm_2.0 | mail -s send_goodies peter.allan@aeat.co.uk
+
+
+
+Peter Allan   peter.allan@aeat.co.uk
+
+#define RPT        15
+#define CRYPT_DEPTH 4  
+/**********************************/
+mkkey(origpass, key)
+/***
+****  The pass (a text string) is used to produce
+****  a key.  Chars used as int. Details in docs.
+****  200000 passwords all gave different keys in my test.
+***/
+char origpass[9];
+unsigned char key[8];
+{
+
+	char clearpass[9];
+	int  i, j, k, l, m, ten;
+
+ /***  make the key from the clearpass ***/
+ /***  unsigned char[8] from char[9] ***/
+
+	ten = FALSE;
+	k = l = m = 0;
+	strcpy(clearpass, origpass);
+
+
+	for (i = 0; i &lt; 8; i++) {
+		if (clearpass[i] == '\n')
+			ten = TRUE;
+		if (ten)
+			clearpass[i] = '\0';
+	}
+	clearpass[8] = '\0';
+
+
+	for (i = 0; i &lt; 8; i++)
+		key[i] = (unsigned char) i;
+	for (j = 1; j &lt; 256; j++) {
+		for (i = 0; i &lt; 8; i++)
+			key[i] = key[i] + clearpass[i] + j;
+	/* swap bytes */
+		k = key[j % 8] % 8;
+		l = key[k] % 8;
+
+		m = key[k];
+		key[k] = key[l];
+		key[l] = m;
+
+/** this loop is redundant if chars are 8 bits
+***  and for all I know they are everywhere **/
+
+		for (i = 0; i &lt; 8; i++)
+			key[i] = key[i] % 256;
+
+		m = m % 8;
+		key[m] = 256 - key[m];
+	}
+
+
+/****
+	for (i = 0; i &lt; 8; i++)
+		printf("%d ", key[i]);
+	puts(" ");
+****/
+
+}
+
+
+/**********************************/
+sym_encrypt(abpos, key, authbuf, cipherbuf)
+int  abpos;
+unsigned char key[8];
+unsigned char authbuf[ABLEN];
+unsigned char cipherbuf[MESSLEN];
+{
+	int  i, j, k, ptr1, ptr2, rpt;
+	int  ka1, ka2, kk;
+	unsigned char smoke[CRYPT_DEPTH][8];
+	unsigned char tmp;
+
+
+/***
+****  From the key, make a set of keys to
+****  be used in order.
+***/
+
+	for (j = 0; j &lt; 8; j++)
+		smoke[0][j] = key[j];
+
+	for (i = 1; i &lt; CRYPT_DEPTH; i++) {
+		for (j = 0; j &lt; 8; j++)
+			smoke[i][j] = smoke[i - 1][j];
+
+		for (j = 0; j &lt; 8; j++) {
+			if (j % 2) {
+				smoke[i][j] = (smoke[i][j]) * 3;
+			}
+			else {
+				smoke[i][j] = ((smoke[i][j]) * 3) / 4;
+			}
+		}
+	}
+
+
+
+#ifndef NOCRYPT
+/***
+****     see the tech waffle file for details
+***/
+
+	for (rpt = RPT; rpt; rpt--) {
+		if (cl_debug)
+			printf("encryption repeat count is %d \n", rpt);
+		for (i = 0; i &lt; CRYPT_DEPTH; i++) {
+/**swap driven by values **/
+
+			for (k = 0; k &lt; abpos - 1; k += 2) {
+				kk = authbuf[k] ^ authbuf[k + 1];
+				ka1 = kk / 16;
+				ka2 = kk % 16;
+				kk = ka1 ^ ka2;
+				if ((kk == 1) || (kk == 2) || (kk == 4) || (kk == 8) ||
+				    (kk == 14) || (kk == 13) || (kk == 11) || (kk == 7)) {
+					kk = authbuf[k];
+					authbuf[k] = authbuf[k + 1];
+					authbuf[k + 1] = kk;
+				}
+
+			}
+
+/** xor with key **/
+			for (k = 0; k &lt; abpos; k++)
+				authbuf[k] ^= (key[k % 8]);
+
+/**rotation **/
+			kk = authbuf[abpos - 1] / 32;
+			ka1 = 0;
+			for (k = 0; k &lt; abpos; k++) {
+				ka2 = authbuf[k] / 32;
+				authbuf[k] = (authbuf[k] * 8) + ka1;
+				ka1 = ka2;
+			}
+			authbuf[0] += kk;
+/**swap driven by key **/
+
+			if (cl_debug)
+				printf("   depth is %d \n", i);
+			for (j = 0; j &lt; 8; j = j + 2) {
+				ptr1 = smoke[i][j] % abpos;
+				ptr2 = smoke[i][j + 1] % abpos;
+
+				tmp = authbuf[ptr1];
+				authbuf[ptr1] = authbuf[ptr2];
+				authbuf[ptr2] = tmp;
+			}
+		}
+	}
+#endif
+
+
+
+ /***   Now that it has been encrypted it should
+ ****   be stored as 'hexabetical'  [A-P].
+ ***/
+	for (i = 0; i &lt; abpos; i++) {
+		cipherbuf[i * 2] = (authbuf[i] % 16) + 'A';
+		cipherbuf[i * 2 + 1] = (authbuf[i] / 16) + 'A';
+	}
+	cipherbuf[abpos * 2] = '\0';
+}
+
+/********************************/
+
+sym_decrypt(abpos, key, authbuf, cipherbuf)
+int  abpos;
+unsigned char key[8];
+unsigned char authbuf[ABLEN];
+unsigned char cipherbuf[MESSLEN];
+{
+	int  i, j, k, ptr1, ptr2, rpt;
+	int  ka1, ka2, kk;
+	unsigned char smoke[CRYPT_DEPTH][8];
+	unsigned char tmp;
+
+
+	for (i = 0; cipherbuf[i]; i = i + 2) {
+		cipherbuf[i] = cipherbuf[i] - 'A';
+		cipherbuf[i + 1] = cipherbuf[i + 1] - 'A';
+		authbuf[i / 2] = cipherbuf[i] +
+			cipherbuf[i + 1] * 16;
+	}
+
+/***
+****  From the key, make a set of keys to
+****  be used in order.
+***/
+
+	for (j = 0; j &lt; 8; j++)
+		smoke[0][j] = key[j];
+
+	for (i = 1; i &lt; CRYPT_DEPTH; i++) {
+		for (j = 0; j &lt; 8; j++)
+			smoke[i][j] = smoke[i - 1][j];
+
+		for (j = 0; j &lt; 8; j++) {
+			if (j % 2) {
+				smoke[i][j] = smoke[i][j] * 3;
+			}
+			else {
+				smoke[i][j] = (smoke[i][j] * 3) / 4;
+			}
+		}
+
+	}
+
+#ifndef NOCRYPT
+/***
+****  repeat suitable number of times:
+****     first swap bytes in the authbuf
+****     then cycle bits round to prevent some swaps undoing others
+***/
+	if (abpos == 0)
+		return RUBBISH;	/** zerodivide detected-avoided **/
+
+	for (rpt = RPT; rpt; rpt--) {
+	/* printf("encryption repeat count is %d \n", rpt); */
+		for (i = CRYPT_DEPTH - 1; i &gt; -1; i--) {
+			for (j = 6; j &gt; -1; j = j - 2) {
+/*** key-driven swap  ***/
+				ptr1 = smoke[i][j] % abpos;
+				ptr2 = smoke[i][j + 1] % abpos;
+
+				tmp = authbuf[ptr1];
+
+				authbuf[ptr1] = authbuf[ptr2];
+				authbuf[ptr2] = tmp;
+			}
+/**rotation **/
+			kk = authbuf[0] % 8;
+			ka1 = 0;
+			for (k = abpos - 1; k &gt;= 0; k--) {
+				ka2 = authbuf[k] % 8;
+				authbuf[k] = (authbuf[k] / 8) + ka1;
+				ka1 = ka2 * 32;
+			}
+			authbuf[abpos - 1] += (kk * 32);
+
+
+/** xor with key **/
+			for (k = 0; k &lt; abpos; k++)
+				authbuf[k] ^= (key[k % 8]);
+
+
+/*** value-driven swap  ***/
+
+			for (k = 0; k &lt; abpos - 1; k += 2) {
+				kk = authbuf[k] ^ authbuf[k + 1];
+				ka1 = kk / 16;
+				ka2 = kk % 16;
+				kk = ka1 ^ ka2;
+				if ((kk == 1) || (kk == 2) || (kk == 4) || (kk == 8) ||
+				    (kk == 14) || (kk == 13) || (kk == 11) || (kk == 7)) {
+					kk = authbuf[k];
+					authbuf[k] = authbuf[k + 1];
+					authbuf[k + 1] = kk;
+				}
+
+			}
+
+		}
+	}
+#endif
+
+}
+
+/**********************/
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.3i
+Charset: noconv
+
+iQCVAgUBMezfIB98EdWB2LS9AQFbwgP+Oq8zBlI5d1comIQ5S2+ysnSDLAN5W/L2
+UgQyrYZ/Cchn9I8CEFn9UDevmInpABSL8yNQWUHrb4cvWxiTGNnFz54gicaPT7Ki
+qVETDC5o7nxWOT8qhWmGNTApJC8RBjEkY+90HyYKf2sLEd8hkGLwOGSAF/YWxqkY
+TKqYWVNKCjA=
+=3qEU
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01246" HREF="msg01246.html">Re: Educational cryptanalysis competition (small prize)</A></STRONG>
+<UL><LI><EM>From:</EM> daw@cs.berkeley.edu (David Wagner)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01128.html">Responding to Pre-dawn Unannounced Ninja Raids</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01133.html">Re: An interesting instance of poltical anonymnity, now revealed</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02058.html">Re: Responding to Pre-dawn Unannounced Ninja Raids</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01246.html">Re: Educational cryptanalysis competition (small prize)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01090"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01090"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

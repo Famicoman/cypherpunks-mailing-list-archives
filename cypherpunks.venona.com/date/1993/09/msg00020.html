@@ -1,0 +1,351 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: general purpose telnet bouncer. -->
+<!--X-From-R13: [nex <znexNpbbzof.nah.rqh.nh> -->
+<!--X-Date: Wed, 1 Sep 93 20:36:49 PDT -->
+<!--X-Message-Id: mark.746940062@coombs.anu.edu.au -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>general purpose telnet bouncer.</TITLE>
+<LINK REV="made" HREF="mailto:mark@coombs.anu.edu.au">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00015.html">Date Prev</A>][<A HREF="msg00016.html">Date Next</A>][<A HREF="msg00015.html">Thread Prev</A>][<A HREF="msg00016.html">Thread Next</A>][<A HREF="index.html#00020">Date Index</A>][<A HREF="threads.html#00020">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>general purpose telnet bouncer.</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: general purpose telnet bouncer.</LI>
+<LI><em>From</em>: Mark &lt;<A HREF="mailto:mark@coombs.anu.edu.au">mark@coombs.anu.edu.au</A>&gt;</LI>
+<LI><em>Date</em>: 2 Sep 93 03:21:02 GMT</LI>
+<LI><em>Newsgroups</em>: alt.sources</LI>
+<LI><em>Organisation</em>: Wassat?!</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Several people have expressed interest in a utility such as this. It's
+existed for several years but Ive recently decided to fix it up into a
+releasable condition.
+
+Share and enjoy.
+flames to /dev/null
+
+Mark
+mark@cairo.anu.edu.au
+---------------------- cut here ----------------------------
+/* Name: ts2.c */
+/* Author: Hal-9000, Richard Stevens, Xanadude, Avalon, Mark */
+/* Distribution: Public */
+/* Copyright: Held by the respective contributors */
+/* Posted to USENET 1st September '93 by Mark mark@cairo.anu.edu.au */
+
+/* This file was telserv.c, part of the Telnet Server package v. 1.0,
+     written by "Hal-9000". Much of that package was developed by Richard
+     Stephens and his thanks go to "Xanadude" for providing him with that
+     section. Performance fix by Darren Reed. */
+
+/* Reworked to add concurrency, password checking and destination selection
+   on the fly. - Mark 31st Aug 93
+
+   Compiled and tested on:
+       HPUX 9.01 9000/700 series        NeXTStep 3.1 NeXT 68040
+	   OSx Pyramid 90x BSD universe     SunOS 5.2 sun4c
+	   Ultrix 4.3 DEC RISC
+
+   To compile, type "cc -O -s ts2.c -o ts2".
+
+   MY_PASSWORD and SERV_TCP_PORT are all that is required to be altered. */
+
+#define    MY_PASSWORD    "pass"
+#define    SERV_TCP_PORT  12345    /* port I'll listen for connections on */
+
+#include &lt;stdio.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;sys/time.h&gt;
+#include &lt;sys/resource.h&gt;
+#include &lt;sys/wait.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;errno.h&gt;
+#include &lt;netinet/in.h&gt;
+#include &lt;netdb.h&gt;
+#include &lt;arpa/inet.h&gt;
+#include &lt;sys/ioctl.h&gt;
+
+#define    QLEN           5
+
+char sbuf[2048], cbuf[2048];
+extern int errno;
+extern char *sys_errlist[];
+void reaper();
+int main();
+void telcli();
+
+int main(argc, argv)
+int argc;
+char *argv[];
+{
+    int srv_fd, rem_fd, rem_len, opt = 1;
+    struct sockaddr_in rem_addr, srv_addr;
+
+    bzero((char *) &amp;rem_addr, sizeof(rem_addr));
+    bzero((char *) &amp;srv_addr, sizeof(srv_addr));
+    srv_addr.sin_family = AF_INET;
+    srv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    srv_addr.sin_port = htons(SERV_TCP_PORT);
+    srv_fd = socket(PF_INET, SOCK_STREAM, 0);
+    if (bind(srv_fd, (struct sockaddr *) &amp;srv_addr, sizeof(srv_addr)) == -1) {
+        perror("bind");
+        exit(-1);
+    }
+    listen(srv_fd, QLEN);
+    close(0); close(1); close(2);
+#ifdef TIOCNOTTY
+    if ((rem_fd = open("/dev/tty", O_RDWR)) &gt;= 0) {
+        ioctl(rem_fd, TIOCNOTTY, (char *)0);
+        close(rem_fd);
+    }
+#endif
+    if (fork()) exit(0);
+    while (1) {
+    rem_len = sizeof(rem_addr);
+        rem_fd=accept(srv_fd, (struct sockaddr *) &amp;rem_addr, &amp;rem_len);
+        if (rem_fd &lt; 0) {
+            if (errno == EINTR) continue;
+            exit(-1);
+        }
+        switch(fork()) {
+        case 0:                             /* child process */
+            close(srv_fd);                  /* close original socket */
+            telcli(rem_fd);                 /* process the request */
+            close(rem_fd);
+            exit(0);
+            break;
+        default: 
+            close(rem_fd);                  /* parent process */
+            if (fork()) exit(0);            /* let init worry about children */
+            break;
+        case -1:
+            fprintf(stderr, "\n\rfork: %s\n\r", sys_errlist[errno]);
+            break;
+        }
+    }
+}
+
+void telcli(source)
+int source;
+{
+    int dest;
+    int found;
+    struct sockaddr_in sa;
+    struct hostent *hp;
+    struct servent *sp;
+    char gethost[100];
+    char getport[100];
+    char string[100];
+
+    bzero(gethost, 100);
+    sprintf(string, "Password: ");
+    write(source, string, strlen(string));
+    read(source, gethost, 100);
+    gethost[(strlen(gethost)-2)] = '\0'; /* kludge alert - kill the \r\n */
+    if (strcmp(gethost, MY_PASSWORD) != 0) {
+        sprintf(string, "Wrong password, got %s.\n", gethost);
+        write(source, string, strlen(string));
+        close(source);
+        exit(0);
+    }
+    do {
+		found = 0;
+		bzero(gethost,100);
+        sprintf(string, "Host: ");
+        write(source, string, strlen(string));
+        read(source, gethost, 100);
+        gethost[(strlen(gethost)-2)] = '\0';
+        hp = gethostbyname(gethost);
+        if (hp) {
+            found++;
+#if !defined(h_addr)        /* In 4.3, this is a #define */
+#if defined(hpux) || defined(NeXT) || defined(ultrix) || defined(POSIX)
+            memcpy((caddr_t)&amp;sa.sin_addr, hp-&gt;h_addr_list[0], hp-&gt;h_length);
+#else
+            bcopy(hp-&gt;h_addr_list[0], &amp;sa.sin_addr, hp-&gt;h_length);
+#endif
+#else /* defined(h_addr) */
+#if defined(hpux) || defined(NeXT) || defined(ultrix) || defined(POSIX)
+            memcpy((caddr_t)&amp;sa.sin_addr, hp-&gt;h_addr, hp-&gt;h_length);
+#else
+            bcopy(hp-&gt;h_addr, &amp;sa.sin_addr, hp-&gt;h_length);
+#endif
+#endif /* defined(h_addr) */
+            sprintf(string, "Found address for %s\n", hp-&gt;h_name);
+            write(source, string, strlen(string));
+        } else {
+            if (inet_addr(gethost) == -1) {
+                found = 0;
+                sprintf(string, "Didnt find address for %s\n", gethost);
+                write(source, string, strlen(string));
+            } else {
+                found++;
+                sa.sin_addr.s_addr = inet_addr(gethost);
+            }
+        }
+    } while (!found);
+    sa.sin_family = AF_INET;
+    sprintf(string, "Port: ");
+    write(source, string, strlen(string));
+    read(source, getport, 100);
+    gethost[(strlen(getport)-2)] = '\0';
+    sa.sin_port = htons((unsigned) atoi(getport));
+    if (sa.sin_port == 0) {
+        sp = getservbyname(getport, "tcp");
+        if (sp)
+            sa.sin_port = sp-&gt;s_port;
+        else {
+            sprintf(string, "%s: bad port number\n", getport);
+            write(source, string, strlen(string));
+            return;
+        }
+    }
+    sprintf(string, "Trying %s...\n", (char *) inet_ntoa(sa.sin_addr));
+    write(source, string, strlen(string));
+    if ((dest = socket(AF_INET, SOCK_STREAM, 0)) &lt; 0) {
+        perror("telcli: socket");
+        exit(1);
+    }
+    connect(dest, (struct sockaddr *) &amp;sa, sizeof(sa));
+    sprintf(string, "Connected to %s port %d...\n", inet_ntoa(sa.sin_addr),
+                                                          ntohs(sa.sin_port));
+    write(source, string, strlen(string));
+#ifdef FNDELAY
+    fcntl(source,F_SETFL,fcntl(source,F_GETFL,0)|FNDELAY);
+    fcntl(dest,F_SETFL,fcntl(dest,F_GETFL,0)|FNDELAY);
+#else
+    fcntl(source,F_SETFL,O_NDELAY);
+    fcntl(dest,F_SETFL,O_NDELAY);
+#endif
+    communicate(dest,source);
+    close(dest);
+    exit(0);
+}
+
+communicate(sfd,cfd)    {
+    char *chead, *ctail, *shead, *stail;
+    int num, nfd, spos, cpos;
+    extern int errno;
+    fd_set rd, wr;
+
+    chead = ctail = cbuf;
+    cpos = 0;
+    shead = stail = sbuf;
+    spos = 0;
+    while (1) {
+        FD_ZERO(&amp;rd);
+        FD_ZERO(&amp;wr);
+        if (spos &lt; sizeof(sbuf)-1) FD_SET(sfd, &amp;rd);
+        if (ctail &gt; chead) FD_SET(sfd, &amp;wr);
+        if (cpos &lt; sizeof(cbuf)-1) FD_SET(cfd, &amp;rd);
+        if (stail &gt; shead) FD_SET(cfd, &amp;wr);
+        nfd = select(256, &amp;rd, &amp;wr, 0, 0);
+        if (nfd &lt;= 0) continue;
+        if (FD_ISSET(sfd, &amp;rd)) {
+            num=read(sfd,stail,sizeof(sbuf)-spos);
+            if ((num==-1) &amp;&amp; (errno != EWOULDBLOCK)) return;
+            if (num==0) return;
+            if (num&gt;0) {
+                spos += num;
+                stail += num;
+                if (!--nfd) continue;
+            }
+        }
+        if (FD_ISSET(cfd, &amp;rd)) {
+            num=read(cfd,ctail,sizeof(cbuf)-cpos);
+            if ((num==-1) &amp;&amp; (errno != EWOULDBLOCK)) return;
+            if (num==0) return;
+            if (num&gt;0) {
+                cpos += num;
+                ctail += num;
+                if (!--nfd) continue;
+            }
+        }
+        if (FD_ISSET(sfd, &amp;wr)) {
+            num=write(sfd,chead,ctail-chead);
+            if ((num==-1) &amp;&amp; (errno != EWOULDBLOCK)) return;
+            if (num&gt;0) {
+                chead += num;
+                if (chead == ctail) {
+                    chead = ctail = cbuf;
+                    cpos = 0;
+                }
+                if (!--nfd) continue;
+            }
+        }
+        if (FD_ISSET(cfd, &amp;wr)) {
+            num=write(cfd,shead,stail-shead);
+            if ((num==-1) &amp;&amp; (errno != EWOULDBLOCK)) return;
+            if (num&gt;0) {
+                shead += num;
+                if (shead == stail) {
+                    shead = stail = sbuf;
+                    spos = 0;
+                }
+                if (!--nfd) continue;
+            }
+        }
+    }
+}
+----------- end of file ------ cut here -------
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00015.html">Info Security News article on Clipper (fwd)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00016.html">NSA response to EFF Clipper Q's</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00015.html">Info Security News article on Clipper (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00016.html">NSA response to EFF Clipper Q's</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00020"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00020"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

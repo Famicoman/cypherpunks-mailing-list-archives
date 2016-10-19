@@ -1,0 +1,269 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: my improved anonymous remailer -->
+<!--X-From-R13: ewpNtah.nv.zvg.rqh (Dnl) -->
+<!--X-Date: Tue, 15 Mar 94 17:18:18 PST -->
+<!--X-Message-Id: 9403160118.AA25354@geech.gnu.ai.mit.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>my improved anonymous remailer</TITLE>
+<LINK REV="made" HREF="mailto:rjc@gnu.ai.mit.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00654.html">Date Prev</A>][<A HREF="msg00687.html">Date Next</A>][<A HREF="msg00652.html">Thread Prev</A>][<A HREF="msg00659.html">Thread Next</A>][<A HREF="index.html#00657">Date Index</A>][<A HREF="threads.html#00657">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>my improved anonymous remailer</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: my improved anonymous remailer</LI>
+<LI><em>From</em>: <A HREF="mailto:rjc@gnu.ai.mit.edu">rjc@gnu.ai.mit.edu</A> (Ray)</LI>
+<LI><em>Date</em>: Tue, 15 Mar 94 20:18:02 WET</LI>
+<LI><em>Cc</em>: <A HREF="mailto:rjc@gnu.ai.mit.edu">rjc@gnu.ai.mit.edu</A> (Ray), <A HREF="mailto:exi@panix.com">exi@panix.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+  Cypherpunks,
+
+    Seeing as how everyone else is announcing their anonymous remailers,
+I may as well announce mine which is nearing completion. The remailer
+is written in Knuth's WEB using Perl so there is nice documentation.
+The remailer includes among other things, virtual addresses (handles),
+padding/packetizing messages (splitting them up and sending pieces through
+multiple remailer chains), chaining, mixing, a key-server, a list of
+remailers server, a socket-server to bypass the sendmail queue and
+get immediate error return, a stealth mode (delivery via direct SMTP or
+socket instead of through the local sendmail), secure remailer network
+(remailers sign and encrypt chained messages between each other), 
+fake remailer traffic, and other small features. The virtual handles are 
+fairly secure. They can be stored in the database as either plaintext real 
+email addresses, virtual addresses located elsewhere on the remailer network, 
+or SAEE cypherpunk remailer blocks (self-addressed encrypted envelope)
+
+   The following text is taken from the WEB document and contains some
+addition information. Send any comments you have to me, 
+rjc@gnu.ai.mit.edu
+
+-Ray
+p.s. I expect that it will be ready for beta release in about two weeks.
+At that point, I would need some beta testers to set up a remailer network
+to make sure the socket-based and e-mail based networking works
+(especially the packetizing)
+
+p.p.s. e-mail commands are of the same form as the extropian's mailing
+list, backwards compatibility with the cypherpunks pasting token is not
+supported. Why? All headers in the message are ignored (and in socket-mode,
+there is no header anyway) and the prefered mode of operation is to encrypt 
+the body and the commands so no outside eyes can see the remail request
+destination nor the message subject.
+
+------------------------------CUT HERE---------------------------------------
+\documentstyle{article}
+\title{Remailer 2.0 \\ An Improved Anonymous Remailer}
+\author{Ray Cromwell \\ rjc@@gnu.ai.mit.edu}
+\date{March 1, 1994}
+
+%$Id: remailer.w,v 0.2 94/03/01 03:22:27 rcromw1 Exp $
+
+\newcommand{\rem}{{\tt Remailer 2.0\ }}
+\begin{document}
+\maketitle
+\tableofcontents
+
+\section{Introduction}
+
+  The following text describes an improved anonymous remailer based on
+suggestions Tim May made on the cypherpunks\footnote{Send subscription
+requests to cypherpunks-request@@toad.com} mailing list a few weeks ago.
+I was stuck in the middle of school work and the {\em Extropians List
+Software} when Tim made the anouncement, but I had plenty of ideas on
+how to implement and improve remailers. So here at last is the result of
+my hacking.
+
+\begin{center}
+{\Large Remailer Improvement Principles}
+\begin{itemize}
+\item Secure Virtual Addresses
+\item Chaining
+\item Mix Delays
+\item Fake Remailer Traffic
+\item Padding/Packetizing Messages
+\item Builtin Remailer List Generation
+\item Builtin Public Key Server
+\item Socket Operation
+\item Stealth on Multiuser Systems
+\item Open Design
+\item Simple ``.forward'' Mode Operation
+\end{itemize}
+\end{center}
+
+[...]
+\subsubsection{Socket Mode}
+
+  Socket mode provides a more secure form of operation by bypassing the
+standard sendmail delivery mechanism allowing a message to be
+piped directly to the remailer. In addition, the socket mode remailer
+functions as an information server allowing clients to request
+a publically networked list of public keys and up-to-date list of
+\rem servers. The port number can be anything but I'm suggesting we all 
+agree to use port 2258.
+
+  Upon connection to the remailer port, a greeting message will be sent to you
+of the following form. On the first line is a general greeting message
+which can be any string. On the next line is status information separated
+by ``/''. The status information in order is: \verb|remailer_name|,
+version, administrator e-mail address, and finally a list of flags.
+The flags are single character upper case letters specifying
+the following options. {\bf P} to specify that the machine is 
+privately owned and single-user, {\bf M} for mixing enabled, {\bf C} for 
+chaining, {\bf K} if the keyserver is turned on, {\bf E} if this remailer
+only accepts encrypted messages, and {\bf S} if stealth mode is on.
+
+
+\begin{center}
+\begin{verbatim}
+Example:
+telnet remailer.nsa.gov 2258
+Connected to remailer.nsa.gov
+Escape character is '^]'
+Greetings, Welcome to Billy Bob Jake's Super Deluxe Remailer!
+bob_remailer/Version 1.1/bob@@remailer.nsa.gov/PMCKESF
+\end{verbatim}
+\end{center}
+
+  While connected, entering {\bf list} for example, would get you a list of 
+remailers, or {\bf keys} for an index of keys. You can also remail at this 
+point and even get an error status.
+
+[...]
+
+\subsection{Reading and Writing the Remailer List}
+   The remailer list is a simple text file which consists of a list
+of lines each containing a \verb|remailer_name|, ':', the e-mail address
+of the remailer, the flags for that remailer, and a timestamp
+recording the last time a response was received from this remailer. Each
+field is separated by a comma. `\#' Comments and null lines are allowed.
+A visible comment can be attached to a remailer by using the form
+``\verb|remailer_name|\%comment string'' Additional comments to the
+same \verb|remailer_name| are concatenated.
+
+[...]
+
+\begin{verbatim}
+Example:
+ann's remailer: ann_remailer@@host.domain,PKCMS,77676734
+ann's remailer% My remailer is special because my machine has
+ann's remailer% TEMPEST shielding around it. It can also self destruct
+ann's remailer% in the event of an NSA raid.
+\end{verbatim}
+
+\subsection{Database Functions}
+
+  \rem uses a dbm database to record information neccessary to implement
+``Virtual Addresses'' These are penet\footnote{`penet' refers to the anonymous
+posting service running at \verb|anon.penet.fi|. Send mail to 
+\verb|help@@anon.penet.fi| for information.} style handles used by the 
+anonymous remailer network to allow easy addressibility to anonymous
+recipients without the complication of anonymous encrypted return
+address blocks.
+
+  Each record in the virtual database is keyed by the handle in the virtual 
+address itself. A record contains 3 fields right now. The first is the
+storage method, the second is the user address connected with the handle.
+The third is a timestamp revealing the last time this address was
+used. Later, a fourth record might be added for electronic postage.
+
+[...]
+
+\subsubsection{Virtual Addresses, A Side Note}
+
+   Virtual Addresses consist of a {\bf user handle} and an optional 
+{\bf remailer name} separated by `{\bf \#}' I used `\#' because I wanted
+to differentiate virtual addresses from internet style addresses.
+An example of a virtual address is ``darkmodem\#deepanon'' which
+means that the message should be sent to the user connected with the
+handle ``darkmodem'' through the remailer named ``deepanon'' You can
+chain your own remailers by simply adding multiple remailer names to the
+virtual address. For example, ``user\#remailer1\#remailer2\#remailer3''
+which will send the message first through remailer1, then remailer2,
+then remailer 3, and finally to whoever happens to be connected with
+``user''. A special remailer name ``*'' is provided. Each instance of
+``*'' in a remailer chain will be replaced by a random remailer.
+For example, ``darkmodem\#*#*#deepanon'' will first chain the message
+through two random remailers and then finally to deepanon. The random
+remailers chosen are not guaranteed to be unique.
+
+[...]	
+\section{Change History}
+\begin{verbatim}
+$Log:	remailer.w,v $
+Revision 0.2  94/03/01  03:22:27  rcromw1
+prerelease
+
+\end{verbatim}
+\section{Identifier Index}
+@u
+\end{document}
+
+
+-----------------------------------------------------------------------------
+
+
+
+
+-- Ray Cromwell        |    Engineering is the implementation of science;   --
+-- rjc@gnu.ai.mit.edu  |       politics is the implementation of faith.     --
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00654.html">Re: PowerMacPGP</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00687.html">Re: spyproofing your house/work building</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00652.html">Loompanics: SECRETS OF A SUPER HACKER</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00659.html">NTIA on NII</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00657"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00657"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

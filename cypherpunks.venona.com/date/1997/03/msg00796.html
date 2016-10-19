@@ -1,0 +1,236 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: [ANNOUNCE] hash cash postage implementation -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Sat, 29 Mar 1997 08:56:45 &#45;0800 (PST) -->
+<!--X-Message-Id: 199703291432.OAA00597@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9703281824.ZM5275@razor.engr.sgi.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: [ANNOUNCE] hash cash postage implementation</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00795.html">Date Prev</A>][<A HREF="msg00803.html">Date Next</A>][<A HREF="msg00776.html">Thread Prev</A>][<A HREF="msg00767.html">Thread Next</A>][<A HREF="index.html#00796">Date Index</A>][<A HREF="threads.html#00796">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: [ANNOUNCE] hash cash postage implementation</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:das@razor.engr.sgi.com">das@razor.engr.sgi.com</A></LI>
+<LI><em>Subject</em>: Re: [ANNOUNCE] hash cash postage implementation</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 29 Mar 1997 14:32:22 GMT</LI>
+<LI><em>CC</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg00776.html">9703281824.ZM5275@razor.engr.sgi.com</A>&gt; (das@razor.engr.sgi.com)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Anil Das &lt;das@razor.engr.sgi.com&gt; writes:
+&gt; 	How does Dr. Bernstein's announcement of finding
+&gt; a 56 bit collision in md5 using a few hours on a Pentium
+&gt; affect this scheme? It was not clear from his post whether
+&gt; he was looking for a collision with a known hash, or just
+&gt; two different strings with a collision of the given length.
+
+It is interesting that you should reference Dan Berstein's sci.crypt
+post of a couple of days ago, as his post is what started me thinking
+about using partial hash collisions as an anti-spam postage system
+which preserves anonymity.  Also Rivest and Shamir have a system which
+I was aware of called "MicroMint" which makes more complex use of
+k-way hash collisions as the basis for a complete micro-payment
+system.  Hal Finney described their system in outline a few days ago
+on cypherpunks, and pointed out the similarity.
+
+For remailers and spam control, the requirement is for a function
+which is expensive to compute, but easy to verify.  The partial hash
+collision satisfies this and can be arbitrarily expensive (1/100
+second to 100s of MIPs years), and yet can be verified instantly.  The
+hashcash proposal uses this function as the basis of a decentralised
+approach to reduce abuse of non-metered internet resources.  
+
+There are no banks, brokers or any other legally targetable entities
+which will get shutdown, or coerced into adding identity escrow if
+used for postage in anonymous communication.  As a result of this, the
+recipient (an anonymous remailer, or private user) of the cash gains
+no value which can be converted into other currencies, but rather the
+assurance that the sender has spent more computing resources preparing
+the message than he will in processing the mail request.
+
+I'm fairly sure that Dan Bernstein was talking about a birthday
+attack, as he was referring to the fact that he had used some
+technique to keep the storage requirement down, and suggested that
+those who claimed birthday attacks required high storage where wrong.
+
+I think he was found an arbitrary 2-way collision.
+
+Arbitrary in the sense that you don't care where the bits that collide
+are in the hash outputs.
+
+And 2-way in the sense that you are trying to find a hash collision of
+any message texts (you don't care what), ie in:
+
+	X = H( M )
+	Y = H( N )
+
+you are trying to find an M and N such that the bits of X and Y are
+the same in n bit locations for an n-bit collision.
+
+If you accept arbitrary collisions it makes the job easier (few of the
+arbitrary collisions you find will have thier bits in your chosen
+location if you specify restrictions on acceptable locations for the
+colliding bits).
+
+Hashcash does not accept arbitrary collisions, the only collisions
+considered accepted by the client must be in the n MSbits.
+
+Hashcash is trying to find a collision to a specific string, so it
+does not involve the storage complexities of finding birthday attacks,
+or the methods of finding them with lower storage requirments traded
+for higher overhead.
+
+Specifically, the hashcash client it is trying to find an n-MSbit
+collision on the hash of M:
+
+	M = day | resource-name
+	X = H( M ) = H( day | resource-name )
+
+The client looks for collisions on texts of the form:
+
+	M' = M | counter = day | resource-name | counter
+	X' = H( M' ) = H( day | resource-name | counter )
+
+So, it's algorithm in finding hash collisions is incredibly simple:
+
+	1. calculate X = H( day | resource-name )
+	2. counter = random-start-point
+	3. calculate X' = H( day | resource-name | counter )
+	4. if the first n-bits of X and X' are equal STOP
+	5. counter = counter + 1 
+	6. goto 3.
+
+The hash collision postage is M' = day | resource-name | counter.
+
+And there is no easier way to find collisions if the hash function H
+is one way and collision resistant, as the output bits can for these
+purposes be treated as individual random variables having value 0 or 1
+with 50% probability.  It is basically like tossing n coins in a row
+seeing if the coins are all equal to your chosen set of outputs (head
+= 0, tail = 1).
+
+Funcion H in the hashcash implementation is SHA1.  The actual hash
+used in effect is the short hash formed by discarding the remaining
+160 - n bits of the 160 bit SHA1 output.
+
+
+The hashcash client includes the "day" which is the days since 1 Jan
+1970 to allow validity periods to be determined by acceptors of ecash,
+or expiry dates for services charged for in hashcash.
+
+The main purpose of the day field being hashed in is to allow the
+hashcash acceptor to limit the size of his double spending database.
+
+The purpose of the "resource-name" is to ensure that cash can not be
+double spent by spending at different remailers, or different email
+recipients.  The resource has a name (the email address, short
+remailer name, whatever), and anyone who chooses a non-unique name
+opens themselves up to double spending.  So the cash is recipient
+specific.
+
+
+You could if you wished use the hashcash client to implement a
+centralised double spending database, and provide online verification
+so that service providers can check for double spending.
+
+This gives the advantage that the user can create some collisions
+without having to decide on who to spend them on in advance.
+
+For email I don't think it's worth it because the main intention is to
+force the spammer to bear higher computer resource overheads than the
+innocent by-standers (remailers, and recipients of unsolicited mass
+mailings).
+
+&gt; &gt; (Also I have not tested my SHA1 implementation on a big endian machine, it
+&gt; &gt; auto-detects byte endian-ness, theoretically).
+&gt; 
+&gt; % ./sha1test
+&gt; test 1
+
+Good, my bigendian check works.
+
+&gt; SHA1("abc") =
+&gt;         a9993e364706816aba3e25717850c26c9cd0d89d test ok
+&gt;
+&gt; % ./hashcash -t -22
+&gt; speed: 70921 hashes per sec
+&gt; find: 22 bit partial sha1 collision
+&gt; estimate: 30 seconds
+
+Envious of your compute power -- about 10x my 120Mhz 486 linux based
+system :-)
+
+Adam
+
+-- 
+Have *you* exported RSA today? --&gt; <A  HREF="http://www.dcs.ex.ac.uk/~aba/rsa/">http://www.dcs.ex.ac.uk/~aba/rsa/</A>
+
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00776" HREF="msg00776.html">Re: [ANNOUNCE] hash cash postage implementation</A></STRONG>
+<UL><LI><EM>From:</EM> das@razor.engr.sgi.com (Anil Das)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00795.html">RE: Hard to Tax Scenario</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00803.html">RE: Hard to Tax Scenario  (fwd)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00776.html">Re: [ANNOUNCE] hash cash postage implementation</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00767.html">Accounts payable</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00796"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00796"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

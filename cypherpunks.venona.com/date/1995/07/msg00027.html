@@ -1,0 +1,202 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Speedup of bruterc4.c -->
+<!--X-From-R13: "Fvzbgul Z. @nyv" <ga0f+Nnaqerj.pzh.rqh> -->
+<!--X-Date: Tue, 11 Jul 95 18:48:06 PDT -->
+<!--X-Message-Id: 4k0ma8K00iWS06o=cO@andrew.cmu.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9507111715.AA20916@netmail2.microsoft.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Speedup of bruterc4.c</TITLE>
+<LINK REV="made" HREF="mailto:tn0s+@andrew.cmu.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00019.html">Date Prev</A>][<A HREF="msg00028.html">Date Next</A>][<A HREF="msg00069.html">Thread Prev</A>][<A HREF="msg00140.html">Thread Next</A>][<A HREF="index.html#00027">Date Index</A>][<A HREF="threads.html#00027">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Speedup of bruterc4.c</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Speedup of bruterc4.c</LI>
+<LI><em>From</em>: "Timothy L. Nali" &lt;<A HREF="mailto:tn0s%2B@andrew.cmu.edu">tn0s+@andrew.cmu.edu</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 11 Jul 1995 21:46:48 -0400 (EDT)</LI>
+<LI><em>In-Reply-To</em>: &lt;9507111715.AA20916@netmail2.microsoft.com&gt;</LI>
+<LI><em>References</em>: &lt;9507111715.AA20916@netmail2.microsoft.com&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+For linux boxes (or perhaps 486 and pentium machines in general), try
+adding the flag -funroll-all-loops to the compile line.
+
+    gcc -O2 -funroll-all-loops -m486 -o brute bruterc4.c
+
+
+Here are my results on a Linux 486/33
+Original code (Adam+Tatu)                               : 5405 keys/sec
+
+Original code with -funroll-all-loops                   : 5991 keys/sec
+
+Original code with Russell's changes                
+and a couple of my own and -funroll-all-loops           : 6393 keys/sec
+
+
+
+Here are the changes I made:
+
+If we assume that the length of the cyphertext and known text is less
+than 256 bytes, then the following works.  This gives you a whopping 40
+additional keys/sec.
+
+---------------------------------------------------------------------------
+int rc4_eq(unsigned char *buffer_ptr, 
+           unsigned char *known, 
+           unsigned char *cypher_txt,
+           int buffer_len, rc4_key *key)
+{
+  unsigned int t;
+  unsigned int y = 0;
+  unsigned char* state;
+  unsigned int xorIndex;
+  unsigned int counter;
+
+  
+  state = &amp;key-&gt;state[0];
+
+  for(counter=0;counter &lt; buffer_len;counter++)
+  {
+    y = (state[counter+1] + y) &amp; 0xFF;
+    swap_byte(state[counter+1], state[y]);
+    xorIndex = (state[counter+1] + state[y]) &amp; 0xFF;
+    buffer_ptr[counter] ^= state[xorIndex];
+    if (known[counter] != buffer_ptr[counter])
+    {
+      memcpy(buffer_ptr,cypher_txt,counter+1);
+      return 0;
+    }
+  }
+  return 1;
+}
+--------------------------------------------------------------------------
+
+Also, I could not get Russell's changes to work exactly as he posted
+them (I suspect it's because I'm using a very old linux system).  Here's
+my prepare_key function. I basically took out the counter++ parts.
+
+--------------------------------------------------------------------------
+/* excellent optimised prepare key by Tatu Ylonen ylo@cs.hut.fi */
+
+void prepare_key(unsigned char *key_data_ptr, int key_data_len, rc4_key *key)
+{
+  unsigned int t;
+  unsigned int index2;
+  unsigned char* state;
+  unsigned int counter;
+  unsigned int k0, k1, k2, k3, k4;
+
+  state = &amp;key-&gt;state[0];
+  memcpy(state,sequence,256);
+
+  index2 = 0;
+  k0 = key_data_ptr[0];
+  k1 = key_data_ptr[1];
+  k2 = key_data_ptr[2];
+  k3 = key_data_ptr[3];
+  k4 = key_data_ptr[4];
+  for(counter = 0; counter &lt; 255; counter+=5)
+  {
+    t = state[counter];
+    index2 = (index2 + k0 + t) &amp; 0xff;
+    state[counter] = state[index2];
+    state[index2] = t;
+
+
+    t = state[counter + 1];
+    index2 = (index2 + k1 + t) &amp; 0xff;
+    state[counter + 1] = state[index2];
+    state[index2] = t;
+
+    t = state[counter + 2];
+    index2 = (index2 + k2 + t) &amp; 0xff;
+    state[counter + 2]  = state[index2];
+    state[index2] = t;
+
+
+    t = state[counter + 3];
+    index2 = (index2 + k3 + t) &amp; 0xff;
+    state[counter + 3] = state[index2];
+    state[index2] = t;
+
+
+    t = state[counter + 4];
+    index2 = (index2 + k4 + t) &amp; 0xff;
+    state[counter + 4]  = state[index2];
+    state[index2] = t;
+
+  }
+  t = state[255];
+  index2 = (index2 + k0 + t) &amp; 0xff;
+  state[255] = state[index2];
+  state[index2] = t;
+
+}
+------------------------------------------------------------------------
+
+_____________________________________________________________________________
+ 
+ Tim Nali            \  "We are the music makers, and we are the dreamers of
+ tn0s@andrew.cmu.edu  \   the dreams" -Willy Wonka and the Chocolate Factory
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00019.html">Re: Moby ints [Re: Num Rat]</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00028.html">Re: RACIST MILITIA: ATF</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00069.html">Re: My Experience with Moderated Lists and Groups</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00140.html">Re: Speedup of bruterc4.c</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00027"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00027"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

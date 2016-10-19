@@ -1,0 +1,163 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: New Remailers? -->
+<!--X-From-R13: fgrjnegfNvk.argpbz.pbz -->
+<!--X-Date: Tue, 17 Sep 1996 11:03:18 +0800 -->
+<!--X-Message-Id: 199609161835.OAA01049@attrh1.attrh.att.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: New Remailers?</TITLE>
+<LINK REV="made" HREF="mailto:stewarts@ix.netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01347.html">Date Prev</A>][<A HREF="msg01354.html">Date Next</A>][<A HREF="msg01308.html">Thread Prev</A>][<A HREF="msg01317.html">Thread Next</A>][<A HREF="index.html#01312">Date Index</A>][<A HREF="threads.html#01312">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: New Remailers?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:an401dws@gold.ac.uk">an401dws@gold.ac.uk</A> (Doug)</LI>
+<LI><em>Subject</em>: Re: New Remailers?</LI>
+<LI><em>From</em>: <A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A></LI>
+<LI><em>Date</em>: Mon, 16 Sep 1996 11:36:13 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Original-From</em>: Bill Stewart &lt;stewarts@ix.netcom.com&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+At 10:53 AM 9/16/96 BST, you wrote:
+&gt;I recently secured an account with anon.penet and then a few days later got
+&gt;a post informing me that the servive was now terminated. Anybody out there
+&gt;know of any remailers where you dont have to have a Phd in computer science
+&gt;and a thorough working knowledge of PGP in order to operate?
+
+Raph Levien's remailer list lives at
+        <A  HREF="http://www.cs.berkeley.edu/~raph/remailer-list.html">http://www.cs.berkeley.edu/~raph/remailer-list.html</A>
+Most of the remailers on it are the one-way variety - you can send
+mail to someone anonymously, but you don't get an address for
+people to reply to you.  They're easy to use.
+
+Some of them also support anonymous reply blocks,
+which are a somewhat difficult-to-use feature - you basically PGP-encrypt
+your return address (in the correct syntax), and tell anybody who wants
+to reply to you to include the block at the beginning of their mail.
+
+There have been some pseudonym servers besides anon.penet.fi,
+which provide higher security, and are easier to use than anonymous
+reply blocks, once you set them up (which generally involves creating
+anonymous reply blocks :-)  Two of them have been spammed to death,
+but the cyber remailer at alias@alias.cyberpass.net is still up.
+Send it a request for help to get information.  Raph has a new system
+coming soon; see his remailer list for details.
+
+Private Idaho is Joel McNamara's friendly user interface for
+remailers and PGP.  <A  HREF="http://www.eskimo.com/~joelm/pi_list.html">http://www.eskimo.com/~joelm/pi_list.html</A> .
+Runs on MSWindows.  It made it _much_ easier to use the alpha nymserver
+while that was still alive; don't know if the new version supports
+cyber yet or not.
+
+Remailer security depends on encryption - otherwise wiretappers
+can watch mail going into the remailer and know where it's going.
+So you'll need to learn to use PGP, but it's pretty straightforward,
+and Private Idaho makes it more convenient.
+
+The Mixmaster remailers provide higher security remailing,
+also with no reply capability; you need to get special client software,
+which I think isn't ported to Windows yet?
+
+
+&gt;Also, are there any remailers which will accept binary attachments?
+
+There are three popular ways to do binary attachments -
+1) MIME-encoding (uses MIME headers and maybe a 7-bit content transfer
+encoding.)
+2) UUENCODE (simple-minded header and 7-bit ASCII.)
+3) Mail-handler-specific headers with binary stuff following
+
+Uuencode is a no-brainer - just stick the uuencoded binary after
+the remailer headers.  As far as I know, none of the remailers are
+particularly MIME-aware, but they do glue headers together.
+So you could probably start sticking MIME headers after the remailer
+headers and try a few times to get it to work.
+
+Mail-handler-specific behaviour is, of course, mail-handler-specific :-)
+You can try it and see, and remember that the person at the other end
+may not have the same kind of mail handler you do, so even if you sent
+the mail directly instead of through a remailer, it might not work.
+You may have trouble getting your mail client to do what you want
+for sending the message (e.g. if you use Cc:Mail or MSMail.)
+
+I looked at the code for my remailer, which is a modified Ghio2,
+though I don't think I modified this part, and it'll trash binaries.
+The problem is that, after processing headers, it shoves the rest
+of the input stream into the output file by a loop of
+        fgets()
+        check for cutmarks
+        fprintf()
+which will trash anything that contains nulls, and may not do
+the right thing for newlines either, though it won't bother high-bits.
+I suppose it wouldn't be too hard to write a getchar/putchar loop
+that checks for cutmarks while transferring data safely
+(this would be easier if cutmark behaviour includes outputting the cutmark.)
+However, the remailer uses the native mail program (e.g. sendmail)
+to forward the mail, so if your sendmail trashes binaries,
+or does annoying vestigial things like changing "From " to "&gt;From "
+at the beginnings of lines, it'll still lose.
+
+#			Thanks;  Bill
+# Bill Stewart, +1-415-442-2215 stewarts@ix.netcom.com
+# &lt;A HREF="<A  HREF="http://idiom.com/~wcs">http://idiom.com/~wcs</A>"&gt; 	
+# You can get PGP software outside the US at ftp.ox.ac.uk/pub/crypto
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01347.html">Spam blacklist project</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01354.html">Re: Excite Live!</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01308.html">New Remailers?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01317.html">IBM_gak</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01312"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01312"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

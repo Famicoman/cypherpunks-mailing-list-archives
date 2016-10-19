@@ -1,0 +1,462 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: CDR design document -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Wed, 22 Oct 1997 06:06:55 +0800 -->
+<!--X-Message-Id: 199702212255.WAA01213@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>CDR design document</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00001.html">Date Prev</A>][Date Next][<A HREF="msg00001.html">Thread Prev</A>][Thread Next][<A HREF="index.html#00002">Date Index</A>][<A HREF="threads.html#00002">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>CDR design document</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>Subject</em>: CDR design document</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 21 Feb 1997 22:55:37 GMT</LI>
+<LI><em>Cc</em>: <A HREF="mailto:ietf%2Dopen%2Dpgp@imc.org">ietf-open-pgp@imc.org</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+Here is a proposal for consideration for inclusion in the OpenPGP
+standard:
+
+	<A  HREF="http://www.dcs.ex.ac.uk/~aba/cdr/">http://www.dcs.ex.ac.uk/~aba/cdr/</A>
+
+(Also attached text version below [1])
+
+It describes a mechanism for commercial data recovery which attempts
+to minimise the security risks inherent in allowing disaster recovery
+of stored encrypted documents.  The CDR design also avoids the
+security risks in building systems which send recovery information
+over open communications networks, as the CMR proposal currently does.
+
+The CDR design offers the option of more ergonomic recovery from
+forgotten passphrase.  CDR allows for more secure use to be made of
+the existing pgp5.0 key expiry functionality when applied to
+communications-only keys because they can be deleted with out loss of
+data-availability, providing a form of PFS which is backwards
+compatible with pgp5.0 and pgp5.5 clients.
+
+Comments?
+
+The only change addition to the standard required is to create a
+distinction between a storage only key and a communications only key.
+This distinction could be made via the use of an extra flag, ideally
+so that keyrings can remain standardised and interchangeable between
+different implementations.
+
+The document can also be viewed as a recommendation to implementors of
+how to avoid security risks (and related government abuse risks) in
+implementing data recovery systems.
+
+I would like to see the OpenPGP standard accomodate both the CMR and
+CDR design so that each can fly on it's technical merits.  (And
+political merits, cryptography being a highly political field, a
+politically unpopular design may suffer for other than technical
+reasons).
+
+Adam
+
+
+[1]	<A  HREF="http://www.dcs.ex.ac.uk/~aba/cdr/">http://www.dcs.ex.ac.uk/~aba/cdr/</A>
+==============================8&lt;==============================
+Commercial Data Recovery
+
+This document describes a mechanism, Commercial Data Recovery (CDR), to
+allow companies to recover stored encrypted information as part of a
+disaster recovery plan.
+
+Introduction
+
+This document is centered around the OpenPGP standard, and therefore
+explores first what is possible within the existing standard. Several of the
+CDR variants presented can be achieved entirely within the pgp5.0 standard
+without adding any new functionality.
+
+Commercial disaster recovery requirement
+
+PGP is commonly used for two purposes: file encryption, and encryption of
+email communications. The situation arises in a commercial setting that
+individuals are protecting information which the company would like to be
+able to recover in the event of disaster: in the event of the user
+forgetting his passphrase, or in the event of the unexpected death of the
+employee. Stored files which the company may require the ability to recover
+include encrypted files stored in the files system, on backup tapes, or on
+floppy disks; and encrypted sent and recieved emails stored in mail client
+folders.
+
+Security vs Availability
+
+There is a security risk in adding data recovery mechanisms: the additional
+risk that recovery procedure is used by other than the owners of the data to
+recover plaintext.
+
+A central goal of the CDR design described in this document is to minimise
+this security risk. Keys used to encrypt email which is transmitted over the
+Internet are more valuable to an attacker than keys used to encrypt stored
+files because of the relative ease with which an attacker can obtain copies
+of emailed ciphertext. Stored encrypted files in contrast are protected by
+all the physical security systems the company is relying on to protect it's
+paper files, plaintext data stored on disks, and backup tapes.
+
+For this reason the CDR approach treats communications keys as more
+sensitive than keys used to encrypt locally stored information.
+
+Separate Signature and Encryption Keys added in pgp5.0
+
+This section describes a feature added to PGP with the pgp5.0 release:
+separate signature and encryption keys. Readers familiar with pgp5.0
+functionality may like to skip this section.
+
+pgp2.x RSA keys
+
+pgp2.x (and pgp1.x) only had direct support for one type of public key: the
+RSA public key. RSA public keys were used both as signature keys, and as
+encryption keys to transfer session keys. The ability to generate RSA keys,
+and to interoperate with pgp2.x is retained in pgp5.x.
+
+pgp5.x El Gamal (DH) encryption and DSA signature keys
+
+One reason for the introduction of separate key functionalities is the
+addition, starting with pgp5.0, of the DSA digital signature algorithm which
+can only function as a signature system. In addition the El Gamal (EG)
+public key system which was also added with pgp5.0 is used only as a public
+key encryption system. (There are some El Gamal variants which can be used
+to produce digital signatures, but these are not used in pgp5.0). (El Gamal
+is a Diffie-Hellman (DH) variant which is sometimes also referred to
+confusingly as DH.) The DSA is itself a DH signature variant.
+
+Patent issues
+
+Another significant reason for the adoption of EG and DSA in particular is
+the freedom from patent encumbrances these algorithms now enjoy. RSA by
+contrast is patented, and unpatented algorithms are generally preferred for
+internet standards.
+
+Key expiry feature added in pgp5.0
+
+One general security principle is that keys used to protect communications
+should be replaced periodically to reduce the value to an attacker of an
+individual key.
+
+Migration path
+
+The pgp5.0 standard provides support for this functionality in terms of the
+ability to attach expiry dates to signature and encryption keys. (In the
+pgp5.0 and pgp5.5 clients the signature and encryption keys are treated as a
+pair, and are given the same expiry information, but both the pgp5.0 and
+pgp5.5 clients can already cope with signature-only keys and encryption-only
+keys with different expiry information.)
+
+Web of Trust
+
+In pgp5.0 with the EG public keys, the Web of Trust (WoT) is based on the
+signature keys only. The users signature key is authenticated in the web of
+trust. The user signs his own encryption key thereby transferring trust to
+it. This ensures that encryption keys can be expired and replaced without
+affecting the web of trust.
+
+Limited Perfect Forward Secrecy
+
+Perfect Forward Secrecy (PFS) refers the technique of destroying old
+communications keys to ensure that past traffic can not be compromised after
+the point of re-keying. One way to use the pgp5.0 key expiry facilities is
+to have signature and encryption keys with very different expiry periods.
+For example a signature key could be given no expiry period (the pgp5.0
+standard supports expiry periods of `forever'), and encryption keys could be
+given an expiry period of 6 months.
+
+To obtain PFS, a more secure way of dealing with expired encryption keys is
+to actually irretrievably delete them. This then simulates PFS: an attacker
+is unable to decrypt traffic encrypted with old communications keys even if
+he is able to coerce co-operation from the recipient. No one can be coerced
+because the key has been deleted.
+
+It seems reasonable that some users may want to use key expiry for this
+purpose, and this does not require any modifications to the existing pgp5.0
+standard.
+
+Key expiry problems for stored encrypted data
+
+One problem introduced by key expiry is that any stored data encrypted to
+the expired key becomes less available. For security reasons the expired key
+should ideally be deleted, and in this case access to the data is lost.
+Alternatives are to attempt to store the old keys more securely, this then
+presents the problem that some stored data is harder to access than other
+data, and presents additional key management problems for old keys which
+will be confusing for users.
+
+Re-encrypting after key expiry
+
+One method to solve this problem is to re-encrypt all of the encrypted files
+at the point of re-keying. However this method has disadvantages in that not
+all of the encrypted data may be easily available. Some of the encrypted
+data may be on backup tapes, on floppy disks, or stored inside `zip' or
+`tar' archives on the disk and hence may be missed.
+
+Separate storage keys
+
+The simplest solution to this problem seems to be to encrypt to a separate
+storage key. Within the pgp5.0 standard this storage key would be a separate
+El Gamal key with a long expiry date. With this system we then have three
+types of keys: signature-only keys, communications-only keys and
+storage-only keys. This could require minimal or even no modifications to
+the pgp5.0 standard, storage and encryption keys could be differentiated
+between by:
+
+   * location storage-only key is stored in (for example a separate keyring)
+   * application being configured to use a chosen encryption key as the
+     storage-only key by giving a keyID
+   * convention on expiry dates (expiry date `forever' could be storage key,
+     other values could be communications keys)
+   * extra flag to indicate a storage-only key
+
+Once the separation of key types is made, the security benefits of re-keying
+can be more fully obtained.
+
+Sent and recieved email folders
+
+To maintain availability after re-keying of encrypted sent and received
+emails archived in mail folders, the email plaintext would be encrypted with
+the storage-only key. This then means that data availability for encrypted
+files on disk, floppy disk, and backup tape is maintained; and that
+availability for archived sent and received emails is maintained.
+
+Storage Recovery
+
+If the system is being used in a commercial setting, disaster recovery can
+be provided by storing recovery information to allow recovery of the
+storage-only key. There is still some additional danger over the case where
+there is no recovery procedure: the risk that an attacker may be able to
+compromise the recovery information. However because the encrypted data is
+all protected by the companies existing physical security mechanisms the
+security risk is minimised.
+
+Another form of storage recovery would be to include recovery information
+with each file, and this would be a valid combination achieved by placing
+CMR-style requests for additional crypto-recipients on the CDR storage-only
+key. However this practice makes recovery from forgotten passphrase more
+problematic: to restore user access to the data after forgotten passphrase,
+the recovery agent would have to decrypt all stored files (be they on hard
+disk, backup tape, floppy disk, or stored inside `zip' or other archives),
+then the user would have to generate a new storage-only key, and re-encrypt
+all of the files. Given the frequency with which users are prone to
+forgetting passphrases implementors may decide to avoid this option for
+ergonomics reasons.
+
+CDR vs CMR
+
+PGP Inc has an alternative data recovery proposal called Commercial Message
+Recovery (CMR). The CMR proposal involves sending recovery information with
+the message in the form of a second crypto recipient. In addition mechanisms
+are provided in the form of a proposed CMR public key extension to the IETF
+OpenPGP standard which indicates a request to the sender to include this
+recovery information. In addition facilities are provided in the form of PGP
+Inc's SMTP policy enforcer to partially enforce the inclusion of this
+recovery information by bouncing mail which does not include it.
+
+Security comparison
+
+PGP Inc's CMR proposal makes re-keying problematic because data is archived
+in email folders still encrypted to the encryption key. This tends to
+encourage the practice of having very long term communication encryption
+keys. Indeed the beta pgp5.0 implementation the author tried makes the
+recommendation that most users would give keys an expiry period of
+`forever'.
+
+In addition a security risk with the CMR proposal is that an attacker is
+able to obtain via coercion, bribery or burglary the CMR key used to encrypt
+the traffic for this key. With a purloined CMR recovery key, and given the
+long life time encouraged for such keys the previously passive attacker may
+be able to recover years worth of old traffic.
+
+Another risk is that companies may for simplicity have only one CMR key,
+thereby putting at risk the entire companies secured communications over
+periods of years. This is naturally a bad practice, and one which is
+discouraged by PGP Inc also, but the author remains cynically confident that
+some corporate users will ignore such advice.
+
+Privacy Comparison
+
+PGP Inc proposese the CMR communications recovery mechanism as a privacy
+respecting method of achieving data recovery. The privacy features of the
+CMR proposal are that there are proposed flags which are attached to a
+public key to indicate statement of intent about plaintext handling to the
+sender who is about to use the public key.
+
+Three statements of intent are possible with the current CMR proposal:
+
+   * personal key (no flags set)
+   * company use key, company may read message, please encrypt to listed
+     company CMR recovery key(s) (recovery flag set)
+   * company may read message, encrypt to listed CMR recovery key(s) or the
+     message will be bounced (strict recovery flag set)
+
+PGP Inc's statement of intent in plaintext handling is a useful concept, in
+that it explains explicitly to the sender who will be able to read the
+message, and how the plaintext will be handled. Statement of intents are
+always advisory, in that they are impossible to enforce; however they are
+useful in encouraging ethical behaviour in this regard.
+
+Statement of intent messages are independent of recovery mechanism, and
+apply equally to the CDR mechanism described in this document. In fact the
+author would like to encourage a fuller set of statement of intent flags for
+both sender and recipient, allowing keys to be marked with intents:
+
+   * personal key, messages not archived
+   * personal key, messages archived
+   * key used for company business, messages not archived
+   * key used for company business, messages archived
+   * key used for company business, messages archived and recoverable
+
+And, in addition a similar privacy argument could be made to allow the
+sender to express his preferences with regard to plaintext handling on a per
+message basis. This could generalise the -m function of pgp2.x which
+instructs the recipient not to save to a file. (The -m flag is the sort of
+electronic version of `please burn this document after reading', this flag
+is mildly enforced by the pgp2.x command line application). These set of
+flags would allow a sender to send a `normal communication message', or a
+`official statement, please archive with recovery if available', or
+`sensitive do not archive' and so on. A privacy respecting implementation
+could provide support for these functionalities. Whilst obviously easy to
+over-ride, this is felt to be a useful exercise in encouraging respect for
+privacy.
+
+In addition the recipient should have ability where company policy allows to
+choose which messages to archive, and which to archive with company recovery
+information.
+
+&gt;From a privacy perspective the CDR and CMR proposals are approximately
+equivalent; the statement of intent flags, and the social value of
+encouraging companies to respect privacy are useful in both.
+
+Government access to communication key politics
+
+Another aspect of the whole data recovery area is that the US government,
+French government, and UK government (as well as other governments) have
+expressed an unhealthy interest in obtaining private individuals, and
+companies communications keys. Many privacy advocates view this development
+with fear, as it seems to many a particularly Orwellian development. Usually
+the Government Access to Communication Key (GACK) attempts try to deflect
+criticism by focussing on unrelated issues as a vehicle to introducing GACK:
+
+   * Terrorist attacks and requirement for emergency government access to
+     communications traffic
+   * Government assistance for companies to recover stored plaintext via key
+     escrow infrastructure.
+   * Assisting electronic commerce by helping put in place Certification
+     Authorities and digital signature laws
+
+However readers who have followed GACK politics will recognise the above for
+what they are: attempts to put in place GACK via indirect routes
+(respectively: the four horsemen of the infocalypse argument (the fallacy
+that terrorists will obey laws and use encryption systems which have
+government backdoors), the Clipper I, II and III attemps (various attempts
+by the US government to bribe and bully companies into building a GACK
+architecture), and the UK TTP (Trusted Third Party) proposal where `TTPs'
+are a euphamism for a Certification Authority (CA) which has been coerced by
+law to keep individuals private keys).
+
+Scenarios governments might shortly try this to request master keys for
+communications might be France, where the government is changing from a
+position of no encryption software without license, to a position of
+unlicensed encryption software being allowed provided that the governments
+has a back door into the communications. Other examples being perhaps the UK
+(with it's highly controversial TTP licensing proposals), or the US with the
+administration and law enforcement community pushing hard for access to
+communications keys. It is likely, particularly in the UK, and US in the
+authors opinion, that government backdoors would be demanded in carefully
+orchestrated stages, designed to minimise public opposition. There might be
+trials where the traditionally more regulated financial organisations were
+required to comply, next perhaps government funded research labs, and
+business organisations accustomed to large amounts of government regulation
+Only towards the end would people using government funded networks
+(academics), Internet services providers (ISPs) and individuals be
+regulated. The final phases may use a terrorist activity, or national
+emergency, or other scandal as justification for increasing the
+requirements. It is likely also that the justification will be in terms of
+wholesome sounding public safety safeguards.
+
+Political Comparison
+
+PGP Inc's CMR proposal loses heavily in the political argument in the
+author's opinion because the protocol design supports the practice of
+allowing third and fourth party access to communications traffic.
+Particularly with the multiple CMR key requests per key which are rumored to
+be coming in the next version of PGP, it will be easy technically for a
+government to request that one of the recovery keys belong to the
+government. Governments already have the political will to have access to
+communications; the barriers are technical, and individual's resistance to
+the notion. The danger with the CMR proposal is that it could become the
+enabling technology for push button suveillance, the enabling technology for
+wide scale secret service signals intelligence keyword scanning. This
+probably not what it's proposers intend, however the danger is there in
+building the technology.
+
+The CDR proposal on the other hand focusses on recovery information of
+stored information only, and as a design principle avoids sending recovery
+information over open networks. Whislt governments may be interested to
+obtain storage keys, they have much less value, because the ciphertext is
+much harder to obtain. Also non-compliance is much harder to detect: a
+government law enforcement agency would not know if an individual was
+actually using storage software with government backdoor key access without
+physically obtaining the storage media. For most individuals the point at
+which governments executes a dawn raid is a point at which the individual is
+already in trouble. The CDR proposal is much closer to the status quo in
+political terms.
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00001.html">GAK "service" charges (Re: EC refutes GAK)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00001.html">GAK "service" charges (Re: EC refutes GAK)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00002"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00002"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

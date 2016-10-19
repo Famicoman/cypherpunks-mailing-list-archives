@@ -1,0 +1,169 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Entropy, WNSTORM and steganography -->
+<!--X-From-R13: evfunoNqkz.rearg.va -->
+<!--X-Date: Sat, 23 Apr 94 05:12:06 PDT -->
+<!--X-Message-Id: gate.Xs38kc1w165w@dxm.ernet.in -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Entropy, WNSTORM and steganography</TITLE>
+<LINK REV="made" HREF="mailto:rishab@dxm.ernet.in">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01188.html">Date Prev</A>][<A HREF="msg01187.html">Date Next</A>][<A HREF="msg01213.html">Thread Prev</A>][<A HREF="msg01230.html">Thread Next</A>][<A HREF="index.html#01184">Date Index</A>][<A HREF="threads.html#01184">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Entropy, WNSTORM and steganography</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:rarachel@prism.poly.edu">rarachel@prism.poly.edu</A></LI>
+<LI><em>Subject</em>: Entropy, WNSTORM and steganography</LI>
+<LI><em>From</em>: <A HREF="mailto:rishab@dxm.ernet.in">rishab@dxm.ernet.in</A></LI>
+<LI><em>Date</em>: Sat, 23 Apr 94 01:34:56 IST</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+rarachel@prism.poly.edu (Arsen Ray Arachelian):
+
+&gt; In a previous post you mentioned that PGP does high entropy...  Do you have
+&gt; any C source code that finds the entropy of a chunk of data?  (I've written a
+&gt; cypher program that hides the cyphertext in a stream of random numbers.)
+
+Entropy is:
+ sigma(- q_i * log q_i), 
+
+for all i where q_i is the frequency of token i occurring in the data stream. 
+I don't know where I've put my old entropy program, but I cooked one up now, 
+attached to the end of the mail.
+
+&gt; Anyway, I'd like to put in an entropy checker into the program.  You may have
+&gt; seen me post a notice for it. It's called WNSTORM.  I sent it to soda, I don't
+
+I don't get it. OK, maybe if you see "Entropy 1.0" you may feel more secure 
+that the white noise is white noise, but I'm sure you're using some decent 
+generator anyway. As far as using entropy to attempt to make the input (noise)
+and output (with embedded data) statistically similar goes, it's hardly enough. 
+Entropy measure is not the most sophisticated of analysis techniques!
+
+If the real use of WNSTORM is to modify it for stego, to put things into the
+low bits, then entropy is *definitely* not a great method of ensuring that 
+your stegoed image will be statistically similar to the original. There have
+been earlier discussions on methods of ensuring that the percentage of 0s and
+1s remains similar before and after stegging (I just love that verb; I steg,
+you steg, he stegs, thou steggeth ;-)
+
+I personally believe, based on my not inconsiderable experience working with
+images both from the image-processing-programming and the digital-effect-touchup
+points of view, that very minor changes in images tend to be noticable to the
+human eye, after the right preprocessing. 'Ultimate' steganography may have to 
+bother about very sophisticated statistical modelling, or neural networks (I 
+know that many number theorists, and Bruce Schneier, intensely dislike the 
+latter. They are quite useful, however, in building complex models on data with
+which one may have no idea what to do).
+
+I'm waiting for a large collection of 'before and after' stego images, to play
+with them and see what I find. (I once worked on a model to recognize faces, 
+fast, by generating a pixel-density graph of monochrome edge-outlined images.
+Though the project died before the computer properly recognized a face, I could
+identify faces from their 'densitographs'.)
+
+-----
+
+&gt; know if it's up there yet.  I haven't checked in a while.  Anyhow unfortunatly
+&gt; since you're in India I can't send you a copy.  I wish I could, but I don't
+&gt; want the damned ITAR cops on my ass.  (Now if you were to obtain an account
+&gt; in the USA, or one that looks like a USA address, you could get it yourself
+&gt; without my intervention or knowledge... for all I know you probably have it
+&gt; already :-)
+
+Probably... ;-)
+
+-----------------------------------
+// this ought to work ;-)
+
+double entropy(FILE *fp) {
+double count[256];	// frequency of chars
+int c, i;
+double entr= 0;
+
+   for (i=256; i--; count[i]=0);
+
+   while((c=fgetc(fp)) != -1) { // for every char, 
+      count[c]++;   // inc its count
+      length++;     // and the length
+   }
+   
+   for (i=256; i--; count[i]/= length);  // convert counts to frequencies 0..1
+   
+   // sigma(0..255, -q_i * log_2(q_i)), -q_i bcoz log of fraction will be 
+   // negative, we'd like our entropy between 0..1, not 0..-1
+
+   for (i=256; i--; entropy+= -count[i] * log_base_2(count[i]));
+  
+   return entr; // bits_of_info per BYTE, as we counted 256 values.
+}
+
+-------------------------------------------   
+-------------------------------------------------------------------------------
+Rishab Aiyer Ghosh                            "What is civilisation
+rishab@dxm.ernet.in                             but a ribonucleic
+Voicemail +91 11 3760335; Vox/Fax/Data 6853410      hangover?"
+H-34C Saket New Delhi 110017 INDIA
+-------------------------------------------------------------------------------
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01230" HREF="msg01230.html">Re: Entropy, WNSTORM and steganography</A></STRONG>
+<UL><LI><EM>From:</EM> rarachel@prism.poly.edu (Arsen Ray Arachelian)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01188.html">Cypherpunk Criminal</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01187.html">Re: Spotlight</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01213.html">Re: T-Shirts, Neil Young, Asilomar, and Smalltalk</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01230.html">Re: Entropy, WNSTORM and steganography</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01184"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01184"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

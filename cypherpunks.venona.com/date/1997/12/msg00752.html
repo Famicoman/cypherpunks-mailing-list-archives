@@ -1,0 +1,175 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: hashcash spam prevention &#38; firewalls -->
+<!--X-From-R13: Oaql Rhfgzna <naqlNarcghar.purz.htn.rqh> -->
+<!--X-Date: Wed, 17 Dec 1997 01:49:16 +0800 -->
+<!--X-Message-Id: Pine.LNX.3.94.971216121132.6085v&#45;100000@neptune.chem.uga.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199712130059.AAA06343@server.eternity.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: hashcash spam prevention &amp; firewalls</TITLE>
+<LINK REV="made" HREF="mailto:andy@neptune.chem.uga.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00764.html">Date Prev</A>][<A HREF="msg00756.html">Date Next</A>][<A HREF="msg00715.html">Thread Prev</A>][<A HREF="msg00627.html">Thread Next</A>][<A HREF="index.html#00752">Date Index</A>][<A HREF="threads.html#00752">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: hashcash spam prevention &amp; firewalls</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Subject</em>: Re: hashcash spam prevention &amp; firewalls</LI>
+<LI><em>From</em>: Andy Dustman &lt;<A HREF="mailto:andy@neptune.chem.uga.edu">andy@neptune.chem.uga.edu</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 16 Dec 1997 12:46:54 -0500 (EST)</LI>
+<LI><em>cc</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00609.html">199712130059.AAA06343@server.eternity.org</A>&gt;</LI>
+<LI><em>Reply-To</em>: Andy Dustman &lt;<A HREF="mailto:andy@neptune.chem.uga.edu">andy@neptune.chem.uga.edu</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+CC: me as I'm not presently reading cypherpunks (this was bcc:ed to
+coderpunks).
+
+On Sat, 13 Dec 1997, Adam Back wrote:
+
+&gt; The required filter functionality is something like this in order of
+&gt; desirability:
+&gt; 
+&gt; Accept the SMTP session.  Use an EHLO extension HASHCASH to say that
+&gt; this server expects hashcash.  (Extended HELO is a method of
+&gt; specifying SMTP extensions (I think)).  Accept the headers, and if a
+&gt; valid hashcash postage is not included, hand off to the real
+&gt; mailserver a site configurable bounce message.
+
+I'm not sure this is doable. From what I've seen of the sendmail anti-spam
+stuff and the SMTP protocol, you can't just accept the headers and then
+decide whether not not to accept the rest; you either have to be able to
+(at present) a) reject the message before you receive it based on the FROM
+data (known spammers, bogus hostnames, etc); b) reject the messages before
+you receive it based on the RCPT data (anti-relaying: is the recipient at
+our site?); c) reject the message after you receive it. Obviously with
+spam, you'd like to be able to reject it before it takes up bandwidth. So,
+an extended protocol could require a CASH command from the client before
+DATA will be accepted. The client could generate the cash on the fly, or
+it could be grepped out of the headers. 
+
+If you don't want to dink around with patching sendmail or whatever for an
+extended protocol, then simply use a system-wide procmailrc to enforce
+hashcash; procmail can generate bounces very easily (or rather, trick the
+MTA into generating the bounce for it). Or, make requiring hashcash a
+user-selectable option by having a publicly-available script which a user
+can have included into his .procmailrc by setting some variable.
+
+&gt; This still leaves open the question of the user generating their own
+&gt; hashcash postage.  Again this could be problematic for neophytes.  One
+&gt; solution is to include a URL for a web page including a javascript
+&gt; hashcash generator -- this means that no new software must be
+&gt; installed, the user cut and pastes the generated hashcash into their
+&gt; message.
+
+Two potentially simpler solutions: a) the client MTA could generate
+hashcash on the fly as needed (like it generates Message-IDs); b) a filter
+could be installed in place of the user's normal MTA which generates
+hashcash. The latter is probably better (easier to implement). For
+example, if the normal MTA is sendmail, then a fake sendmail could be
+installed which is just a nasty little script which parses out the
+recipients, generates a suitable hashcash token for each one, and inserts
+the appropriate headers, and then passes the message off to the real
+sendmail.
+
+My preferred means of spam-blocking right now is a barrage of tests for
+typical spams using procmail, combined with a reverse spam block. An
+ordinary spam block is an address munge where something is added to the
+address to make it undeliverable, so ordinary users have to unmunge your
+address before they can mail you, i.e. andy@neptune.chem.uga.nospam.edu. A 
+reverse spam block lets you use your real address for posts but requires
+users to add something to your address to guarantee delivery. As my sig
+indicates, if you add +spamsucks to my username, various spam filtering
+features are deactivated. If I wanted to, I could bounce anything which
+didn't have the +spamsucks in it. The recipe I use also uses lists of
+"trusted" users (ones I don't do any spam testing on, so they don't need
+the password) and "spammers" (we don't spam test these either, we just
+make them bounce). Also will reject messages where I am bcc:ed (unless
+from someone trusted or the password was used) or on a huge visible list
+(again as before).
+
+It works pretty darn good. I hardly get any spam. Most of what I get
+bounces back to the sender with "User unknown". If the sender has a forged
+From, then this at least bounces there, or to the site's postmaster, who
+will likely take some action (but not complain to me because I don't
+exist). If the From was completely bogus, then I get the bounce, but that
+doesn't happen too often. I use this same system for the return address of
+the cracker remailer (anon@anon.efga.org) and it works pretty well, though
+as of late I am munging the return address for all USENET posts a la
+mail2news_nospam@anon.lcs.mit.edu (which has been hugely effective); 
+you're not supposed to reply anyway...
+
+I would like to modify the nymserver so that users can set a reverse spam
+blocking password, but just haven't gotten around to it. I'm pretty sure
+it can be done, though.
+
+Andy Dustman / Computational Center for Molecular Structure and Design
+For a great anti-spam procmail recipe, send me mail with subject "spam".
+Append "+spamsucks" to my username to ensure delivery.  KeyID=0xC72F3F1D
+Encryption is too important to leave to the government. -- Bruce Schneier
+<A  HREF="http://www.athens.net/~dustman">http://www.athens.net/~dustman</A> <A  HREF="mailto:andy@neptune.chem.uga.edu">mailto:andy@neptune.chem.uga.edu</A>   &lt;}+++&lt;
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00609" HREF="msg00609.html">hashcash spam prevention &amp; firewalls</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Back &lt;aba@dcs.ex.ac.uk&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00764.html">Re: UCENET II and Peter duh Silva</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00756.html">Clinton announces NEW GVT PROGRAMS to develop technology</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00715.html">Re: hashcash spam prevention &amp; firewalls</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00627.html">Re: hashcash spam prevention &amp; firewalls</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00752"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00752"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,354 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: A brief comparison of email encryption protocols -->
+<!--X-From-R13: Dncu Zrivra <encuNp2.bet> -->
+<!--X-Date: Thu, 15 Feb 1996 16:45:58 +0800 -->
+<!--X-Message-Id: 199602142049.MAA20108@infinity.c2.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>A brief comparison of email encryption protocols</TITLE>
+<LINK REV="made" HREF="mailto:raph@c2.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01205.html">Date Prev</A>][<A HREF="msg01283.html">Date Next</A>][<A HREF="msg01396.html">Thread Prev</A>][<A HREF="msg01392.html">Thread Next</A>][<A HREF="index.html#01197">Date Index</A>][<A HREF="threads.html#01197">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>A brief comparison of email encryption protocols</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A>, <A HREF="mailto:resolving%2Dsecurity@imc.org">resolving-security@imc.org</A>,       <A HREF="mailto:pgp%2Dmime@purpletape.cs.uchicago.edu">pgp-mime@purpletape.cs.uchicago.edu</A>, <A HREF="mailto:pem%2Ddev@neptune.tis.com">pem-dev@neptune.tis.com</A></LI>
+<LI><em>Subject</em>: A brief comparison of email encryption protocols</LI>
+<LI><em>From</em>: Raph Levien &lt;<A HREF="mailto:raph@c2.org">raph@c2.org</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 14 Feb 1996 12:49:44 -0800 (PST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+   This message briefly reviews and compares the four major email
+encryption protocols under discussion: MOSS, PGP, PGP/MIME, and
+S/MIME. Each is capable of adequate security, but also suffers from
+the lack of good implementation, in the context of transparent email
+encryption.
+
+   I will try to address issues of underlying cryptographic soundness,
+ease of integration with email, implementation issues, support for
+multimedia and Web datatypes, and backwards compatibility.
+
+   An additional grave concern is key management. Contrary to some
+beliefs, key management is not a solved problem. All of the proposals
+contain some mechanism for key management, but none of them have been
+demonstrated to be scalable to an Internet-wide email system. My
+belief is that the problems with key management do not stem from the
+classic Web of trust/certification hierarchy split, but the
+nonexistence of a distributed database (with nice interfaces) for
+holding keys. The encryption protocols also stand in the way of such a
+database, with key formats that are either overly complex, inadequate,
+or both.
+
+   In case it is not clear by now, this review will be quite
+subjective, in many cases representing my own beliefs rather than
+objective fact. I'll try to point that out where I can. Also, I do not
+claim to have a thorough understanding of PEM and PKCS. Much of my
+knowledge comes from implementing premail, a tool that acts as "glue"
+between mailers and encryption packages. It supports PGP, MOSS (using
+the TIS/MOSS 7.1 implementation), and a draft of PGP/MIME, in addition
+to a wide range of anonymous remailer services. While usable, premail
+has many limitations, and certainly does not represent the "holy
+grail" of transparent email/crypto integration. Thus, my participation
+in the Internet Mail Consortium Secuirty Workshop
+(<A  HREF="http://www.imc.org/security-workshop.html">http://www.imc.org/security-workshop.html</A>).
+
+   I apologize for the wide distribution, and ask that followups be
+trimmed.
+
+
+PGP
+---
+
+   PGP (Pretty Good Privacy) is, of course, the de facto standard for
+email encryption on the Internet.
+   PGP's underlying cryptography is quite sound - RSA (up to 2048 bits
+with the most recent implementation), IDEA with a 128 bit key, and
+MD5. PGP is entirely in accordance with the recent recommendations on
+minimum keylength (<A  HREF="http://www.bsa.org/bsa/cryptologists.html">http://www.bsa.org/bsa/cryptologists.html</A>), and in
+fact does not include a mode of operation in violation of those
+recommendations. This makes PGP (and, by extension, PGP/MIME) unique
+among the encryption protocols.
+   PGP is packaged in a single application (i.e. a single binary)
+which performs encryption, decryption, signing, verification, and key
+management. It does not depend on the existence of great deal of
+infrastructure. These factors have, in my opinion, been decisive in
+PGP's popularity.
+
+   However, PGP is still not suitable for fully transparent email
+encryption. The reasons are complex, and I will only touch on them
+here.
+
+   The main missing feature is the lack of MIME integration. Thus, PGP
+is not suitable for multimedia types other than US-ASCII text. PGP
+does contain some support for 8-bit charsets, but at cross-purposes
+with MIME. Signature checking of non-US-ASCII data is simply not
+reliable. To give an idea of this problem, the most recent
+international version (2.6.3i) tries several different character set
+conversions when verifying signatures, to see if any of them will
+work.
+   However, since a large fraction of email _is_ US-ASCII text, this
+feature alone probably does not explain the lack of deployment. PGP
+contains a number of implementation flaws (including silly things like
+not locking files, so that concurrent invocations fail). In addition,
+key management has some problems. Mostly, key management is hard to
+learn, time consuming, and requires a great deal of manual
+intervention. The "Web of trust" is supposed to fix this, by providing
+transitive trust of key authenticity. However, in practice the Web of
+trust has not delivered. In my experience (with many dozen
+correspondents), I have only had one or two keys transitively trusted.
+
+   A standard PGP-signed message consists of a "-----BEGIN PGP SIGNED
+MESSAGE-----" line, the signed text (subject to some canonicalization
+rules), a "----BEGIN PGP SIGNATURE-----" line, a version line, the PGP
+signature itself, and an "-----END PGP SIGNATURE-----" line. All this
+is in the message body. The headers indicate that the message is a
+standard 7-bit, us-ascii, text/plain message. Thus, mailers have to
+parse the message contents to identify the message as PGP signed, or
+to extract the signed parts. This is at cross-purposes with MIME.
+Mailer implementors are reluctant to include such ad-hoc extensions.
+Existing extensibility mechanisms, based on MIME, cannot be used.
+   PGP encrypted messages are similar - the identification as an
+encrypted message can only be made by parsing the message body.
+
+   One technical problem with PGP is its inability to support
+single-pass processing, because the data format includes a size
+field.
+
+
+PGP/MIME
+--------
+
+   PGP/MIME is an effort to integrate MIME and PGP. There is a
+workable draft based on the MIME security multiparts, but the PGP/MIME
+mailing list is divided. Some particpants are happy with the existing
+draft, while others feel that other points in the design space
+(for the most part, labelling existing PGP message formats with
+appropriate MIME types) would be better.
+   The design space is large and complex, with many constraints on
+efficiency, simplicity, backwards compatibility, and functionality. It
+is not clear that a consensus will develop at all.
+   There are two implementations of the PGP/MIME draft: premail, and
+the PGPMIME reference implementation by Michael Elkins.
+   For more information about the PGP/MIME draft, see
+<A  HREF="http://www.c2.org/~raph/pgpmime.html">http://www.c2.org/~raph/pgpmime.html</A> .
+
+
+PGP 3.0
+-------
+
+   Many people are hoping that PGP 3.0 will somehow come along and
+solve all their problems. PGP 3.0 is only an evolutionary improvement
+over the existing implementations (MIT PGP 2.6.2 and PGP 2.6.3i). For
+the most part, it will support only the existing message formats.
+There may be support for decoding draft PGP/MIME signed messages, but
+this is still being negotiated.
+   The main advance in PGP 3.0 is a cleaned up implemenation. The PGP
+2.6.2 code is disgusting, and should not be integrated directly into
+any mailer application. The 3.0 code will be modular and based on
+published interfaces. Furthermore, the 3.0 development team plans to
+release the code as both a stand-alone application and as a library.
+   It is difficult to predict when the public release will happen.
+Based on what I've seen, fall of 1996 seems the most likely.
+
+
+MOSS
+----
+
+   MOSS (MIME Object Security Services) is an attempt at an email
+encryption protocol in accordance with MIME. It is currently an
+Internet RFC. There is a reference implementation (TIS/MOSS 7.1).
+   MOSS is mostly cryptographically sound. However, the choice of
+symmetric encryption algorithm (and key size) is left unspecified.
+Thus, it cannot be said that MOSS is in accordance with the
+recommendations for minimum keysize. In fact, the only public
+implementation, TIS/MOSS 7.1, uses 56-bit DES, which is in direct
+violation of these standards.
+   The TIS/MOSS implementation has a number of other problems. It is
+big and complex, probably due to its TIS/PEM ancestry. For more
+information about TIS/MOSS, see
+<A  HREF="http://www.tis.com/docs/Products/tismoss.html">http://www.tis.com/docs/Products/tismoss.html</A> .
+
+   MOSS supports two modes of key management: X.509, and completely
+manual key management. In this way, it is a dramatic advance over PEM,
+which only supported X.509, but life for implementors remains hard.
+One feature which I believe is sorely lacking is a cryptographic hash
+of the public key as the basic unit of manual key management. Thus,
+people either have to trust the mechanism by which the key was
+delivered, or examine the base-64 representation of the entire key. I
+consider this to be a serious usability problem.
+   For an example of how hashes of keys have been done right, see
+Netscape 2.0's handling of untrusted certificates.
+
+
+S/MIME
+------
+
+   S/MIME is an attempt to graft MIME support onto underlying PEM
+standards. See <A  HREF="http://www.rsa.com/rsa/S-MIME/">http://www.rsa.com/rsa/S-MIME/</A> for more info.
+
+   I feel compelled to deal harshly with RSA's S/MIME FAQ
+(<A  HREF="http://www.rsa.com/rsa/S-MIME/smimeqa.htm">http://www.rsa.com/rsa/S-MIME/smimeqa.htm</A>). It suggests that MOSS has
+interoperability problems because of multiple implementations, while
+S/MIME presumably doesn't. I take strong exception to this statement.
+There is no technical basis for it. I consider the possibility of
+admitting multiple implementations as a _requirement_ for an Internet
+email standard. However, because S/MIME is documented, it hopefully
+will be possible to create independent implementations, in spite of
+what RSA says.
+
+   The only symmetric encryption algorithm mandated by S/MIME is
+40-bit RC2. Thus, S/MIME is in violation of the key size
+recommendations. Further, RC2 has not been confirmed to be publicly
+known. If RC2 is not known, then an independent implementation of
+S/MIME is impossible. Fortunately, source code for an alleged
+implementation of RC2 has recently been posted to the Internet,
+resolving this problem, if it is authentic. If not, then my
+reservations remain.
+
+   S/MIME also recommends 56-bit DES CBC and (either 112 or 168 bit)
+DES EDE3-CBC. This is good; any S/MIME implementation in accordance
+with the recommendations will conform to the keysize recommendations
+as well.
+
+   S/MIME remains firmly grounded in the X.509 certification
+hierarchy, although the FAQ claims that the guidelines for hierarchies
+are "more flexible" than in PEM.
+
+   One cryptographic weakness of S/MIME is that eavesdroppers can
+distinguish between encrypted and signed-and-encrypted messages. This
+violates the principle of disclosing a minimum amount of information.
+PGP, PGP/MIME, and MOSS do not have this problem.
+
+   Probably the most controversial aspect of S/MIME is its signature
+format. An S/MIME signed message is a MIME multipart in which the
+first part is the data to be signed, and the second part is a complete
+PKCS #7 (section 10) signed message. This protects quite well against
+munging by mail transport, but has two problems. First, the size of
+the message is doubled. Second, the fact that the two singed messages
+are identical is not enforced (if it were, mailer munging would cause
+too many signatures to fail). Thus, Eve can send Alice and Bob a
+message (M1, (M2, Signature(M2))). Alice, not having an S/MIME
+implementation, would see only M1. Bob, having an S/MIME
+implementation, would see only M2, for which the signature would
+check. Alice, being suspicious, might call Bob up on the telephone and
+ask whether the signature was really valid. Bob would of course say
+yes. Unless they compared notes on the contents, they would not notice
+the discrepancy. To my mind, this counts as protocol failure, and thus
+it is not possible to claim that S/MIME conforms to best cryptographic
+practice.
+   I would expect that doubling the message body will create
+performance problems in a Web environment. For example, if the first
+message is used for display, then it becomes necessary to compare the
+two messages. If, instead, the second message is used, then the first
+message will be responsible for significant added latency.
+
+
+Integration with mailers
+------------------------
+
+   Integration with mailers is quite difficult. In general, the mailer
+implementor will need to add specific features to support
+cryptography. Because of the restrictiveness of ITAR regulations, such
+an approach may not be practical for US developers, at least while
+supporting strong cryptography.
+   Perhaps the biggest feature required in the mailer is integration
+of key management and the "address book". If this feature is not
+implemented in the mailer, then two address books are required - one
+to select email addresses, and another to map email addresses to keys.
+This approach is used by premail, and is the source of many usability
+problems. It would be nice if a database existed which could map email
+addresses to public keys without manual intervention, but none of the
+proposals on the table are capable of it. Such a database would
+certainly improve usability, as well as making it considerably easier
+to 
+
+   Another feature that is required for fully transparent integration
+is caching of decrypted session keys. If not implemented, then the
+user interface delays in navigating a mail folder become unacceptable.
+To my knowledge, no implementation supports this feature.
+   One dimension in the design space is whether the cryptographic
+engine is tightly integrated with the mailer (i.e. shares an address
+space), or is a separate process that communicates with the mailer.
+Both approaches have been implemented. Both approaches are subject to
+numerous pitfalls, which have unfortunately not been entirely avoided.
+   These issues have more to do with implementation than with the
+encryption protocol, but I thought I'd mention them here, so that they
+are not actively thwarted.
+
+
+Conclusion
+----------
+
+   All of the proposals described here can be used for secure email.
+None of them will be widely deployed in this capacity unless they are
+implemented well. I have concerns that both MOSS and S/MIME are
+susceptible to political pressure which will restrict key sizes
+insecurely in practice. I would like to see consensus develop around
+one of the proposals, so that energies used for implementation can be
+more focussed and effective. It is my hope that this conference will
+move in that direction.
+
+Raph Levien
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01392" HREF="msg01392.html">Re: A brief comparison of email encryption protocols</A></STRONG>
+<UL><LI><EM>From:</EM> Laurence Lundblade &lt;lgl@qualcomm.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01205.html">Re: Fair Credit Reporting Act and Privacy Act</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01283.html">A good cryptanalysis text?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01396.html">Re: anonymous age credentials, sharing of</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01392.html">Re: A brief comparison of email encryption protocols</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01197"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01197"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

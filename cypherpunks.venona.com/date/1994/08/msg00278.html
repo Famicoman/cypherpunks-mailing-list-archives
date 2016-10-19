@@ -1,0 +1,136 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: fast 386 DES code figures -->
+<!--X-From-R13: Buvy Ynea <xneaNhavk.xn9d.nzce.bet> -->
+<!--X-Date: Sat, 6 Aug 94 10:00:19 PDT -->
+<!--X-Message-Id: 199408061700.KAA00742@unix.ka9q.ampr.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199408061608.JAA27681@netcom12.netcom.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: fast 386 DES code figures</TITLE>
+<LINK REV="made" HREF="mailto:karn@unix.ka9q.ampr.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00277.html">Date Prev</A>][<A HREF="msg00290.html">Date Next</A>][<A HREF="msg00276.html">Thread Prev</A>][<A HREF="msg00277.html">Thread Next</A>][<A HREF="index.html#00278">Date Index</A>][<A HREF="threads.html#00278">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: fast 386 DES code figures</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:mpd@netcom.com">mpd@netcom.com</A></LI>
+<LI><em>Subject</em>: Re: fast 386 DES code figures</LI>
+<LI><em>From</em>: Phil Karn &lt;<A HREF="mailto:karn@unix.ka9q.ampr.org">karn@unix.ka9q.ampr.org</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 6 Aug 1994 10:00:00 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:karn@unix.ka9q.ampr.org">karn@unix.ka9q.ampr.org</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00276.html">199408061608.JAA27681@netcom12.netcom.com</A>&gt; (mpd@netcom.com)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;Since 2k is exactly what is needed for a precomputed table which
+&gt;combines the S-boxes and the wirecrossing, I will assume this is
+&gt;the approach you used.
+
+Yup, it is. I could look up more than 6 bits (i.e., more than 1 S-box)
+at a time, but this really starts to eat RAM.
+
+&gt;The important trick is to reorder the S-boxes so that you do
+&gt;lookups on the odd numbered ones and the even numbered ones
+&gt;separately.  (1,3,5,7,2,4,6,8) works nicely.  This permits the
+
+This is another trick from Outerbridge's code that I picked up. As you
+say, it does make a difference. It's especially nice in 386 assembler
+since I can do the key XOR E(R) AND mask in 32-bit operations, then
+pick off the 4 resulting bytes individually to do the SP box
+indexing. This trick took me from about 1.85 megabits/sec to the 2.45
+megabit/sec figure I gave earlier.
+
+&gt;If you store the upper two bits of lookup table addressing in the
+&gt;precomputed key schedule and shift both it and the right hand
+&gt;block left two bits, all explicit table indexing vanishes and you
+&gt;can accumulate the result of a lookup with a single indexed OR
+&gt;instruction.
+
+I'm doing this too, if I understand you correctly.  By left-adjusting
+each subkey in the key schedule (i.e., shifting the 6 bits left 2
+bits), I can pre-adjust for the x4 offset I need to index the SP
+table, which has 4-byte elements. This saves two 32-bit shifts per
+round.
+
+BTW, some of the code (including Outerbridge's in Schneier)
+accumulates the 8 intermediate SP results by ORing into a temporary,
+then XORs the temporary into the output data block. This is
+unnecessary; each table lookup can be XORed directly into the output
+block. Since XOR and OR take the same time, this avoids a temporary
+and an extra operation.
+
+At the moment I'm really down in the noise. I've discovered that
+286/386/486 specific instructions like ROR EAX,31 execute slightly
+faster (2 clock cycles) on the 486 than the equivalent 8086
+instruction ROL EAX,1 (3 clock cycles), even though the faster
+instruction is more bytes.  Unexpected timings occur for several other
+486 instruction sequences as well, such as LODS[BW] (5 clocks), which
+is much slower than writing out the equivalent MOV/INC (or ADD)
+sequence longhand (1 clock each).  I guess code size is unimportant as
+long as everything lands in the cache.
+
+
+Phil
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00276" HREF="msg00276.html">Re: fast 386 DES code figures</A></STRONG>
+<UL><LI><EM>From:</EM> mpd@netcom.com (Mike Duvos)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00277.html">fast 386 DES code figures</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00290.html">Re:  RemailerNet</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00276.html">Re: fast 386 DES code figures</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00277.html">fast 386 DES code figures</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00278"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00278"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

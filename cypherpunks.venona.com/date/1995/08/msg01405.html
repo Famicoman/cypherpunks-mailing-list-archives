@@ -1,0 +1,139 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: SSL trouble -->
+<!--X-From-R13: "Xbfu [. Afobear" <fgevcrfNin.choavk.pbz> -->
+<!--X-Date: Mon, 28 Aug 95 14:07:52 PDT -->
+<!--X-Message-Id: RAA13233.199508282105@garotte.va.pubnix.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: "swan.cl.cam.:216660:950828181616"@cl.cam.ac.uk -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: SSL trouble</TITLE>
+<LINK REV="made" HREF="mailto:stripes@va.pubnix.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01421.html">Date Prev</A>][<A HREF="msg01406.html">Date Next</A>][<A HREF="msg01416.html">Thread Prev</A>][<A HREF="msg01406.html">Thread Next</A>][<A HREF="index.html#01405">Date Index</A>][<A HREF="threads.html#01405">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: SSL trouble</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Piete Brooks &lt;<A HREF="mailto:Piete.Brooks@cl.cam.ac.uk">Piete.Brooks@cl.cam.ac.uk</A>&gt;</LI>
+<LI><em>Subject</em>: Re: SSL trouble </LI>
+<LI><em>From</em>: "Josh M. Osborne" &lt;<A HREF="mailto:stripes@va.pubnix.com">stripes@va.pubnix.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 28 Aug 1995 17:05:00 -0400</LI>
+<LI><em>Cc</em>: <A HREF="mailto:patrick@Verity.COM">patrick@Verity.COM</A> (Patrick Horgan), <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:hallam@w3.org">hallam@w3.org</A></LI>
+<LI><em>In-Reply-To</em>: Your message of "Mon, 28 Aug 1995 19:16:09 BST."            &lt;"swan.cl.cam.:216660:950828181616"@cl.cam.ac.uk&gt; </LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+In message &lt;"swan.cl.cam.:216660:950828181616"@cl.cam.ac.uk&gt;, Piete Brooks writ
+[...]
+&gt;PS1: PERL gurus: Anyone know how to test whether there is input waiting on a
+&gt;     file handle ? I know about seeing if there is data waiting for the next
+&gt;     sysread type read, but not on the next &lt;SERVE&gt; type read. Ideas ?
+
+I don't think there is one.  I would just use select() on FD, and then
+a subrutine much like this:
+
+sub syswrite {
+    local($FH, $buf) = @_;
+
+    local($len, $offset, $wlen) = (length($buf), 0, 0);
+
+    while($len) {
+        $wlen = syswrite($FH, $buf, $len, $offset);
+        die "Bad write $FH: $!" if (!defined($FH));
+
+        $offset += $len;
+        $len -= $wlen;
+    }
+}
+
+
+Actually if you can use perl5 for the server (I assume this is the
+server code you are worrying about) I have code that deals with
+I/O from multiple sockets at once and drives an independant state
+machine for each socket.
+
+&gt;PS2: PERL gurus: I fixed the SGI Challenge problem by HACKing it -- as I
+&gt;     thought it was a probleb with stdio in and out on the same socket.
+&gt;     The perl mand page warns:
+&gt;	If  your  stdio  requires an seek or eof between reads and
+&gt;	writes on  a  particular  stream,  so  does  perl.   (This
+&gt;	doesn't apply to sysread() and syswrite().)
+&gt;     so I change the one "print SERVE" line to a "syswrite(SERVE" and that
+&gt;     fixed it. However, does anyone know the "correct" way to use stdio for I/
+&gt;O?
+
+For bi-directional pipes I tend to use sysread/syswrite anyway, but
+you could just sprinkle "seek(SERVE, 0, 1)" liberally through the
+code.
+
+&gt;PS3: I'd like to get the raw date in brloop (a sh script). In perl I'd just
+&gt;     use "time", and I can't see a way to get "date +" to yield the raw time.
+&gt;     I could use "date=`perl -e 'print time'`" but that seems OTT, and perl
+&gt;     may not be on teh users PATH. Any suggestions ?
+
+"date '+%s'" does it under BSDI, but I'm not sure how portable it is.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01406" HREF="msg01406.html">Re: SSL trouble</A></STRONG>
+<UL><LI><EM>From:</EM> "Josh M. Osborne" &lt;stripes@va.pubnix.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01416" HREF="msg01416.html">Re: SSL trouble</A></STRONG>
+<UL><LI><EM>From:</EM> Piete Brooks &lt;Piete.Brooks@cl.cam.ac.uk&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01421.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01406.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01416.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01406.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01405"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01405"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

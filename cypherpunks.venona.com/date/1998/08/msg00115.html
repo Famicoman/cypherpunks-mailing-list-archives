@@ -1,0 +1,147 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: text analysis -->
+<!--X-From-R13: Pvyy Egrjneg <ovyy.fgrjnegNcbobk.pbz> -->
+<!--X-Date: Thu, 6 Aug 1998 23:12:56 &#45;0700 (PDT) -->
+<!--X-Message-Id: 3.0.5.32.19980806202007.0090e140@popd.ix.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.LNX.3.96.980806105040.20223u&#45;100000@freenet.bishkek.su -->
+<!--X-Reference: 35C99712.A1572FA0@stud.uni&#45;muenchen.de -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: text analysis</TITLE>
+<LINK REV="made" HREF="mailto:bill.stewart@pobox.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00120.html">Date Prev</A>][<A HREF="msg00116.html">Date Next</A>][<A HREF="msg00107.html">Thread Prev</A>][<A HREF="msg00153.html">Thread Next</A>][<A HREF="index.html#00115">Date Index</A>][<A HREF="threads.html#00115">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: text analysis</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Mok-Kong Shen &lt;<A HREF="mailto:mok%2Dkong.shen@stud.uni%2Dmuenchen.de">mok-kong.shen@stud.uni-muenchen.de</A>&gt;, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>,       CyberPsychotic &lt;<A HREF="mailto:fygrave@freenet.bishkek.su">fygrave@freenet.bishkek.su</A>&gt;</LI>
+<LI><em>Subject</em>: Re: text analysis</LI>
+<LI><em>From</em>: Bill Stewart &lt;<A HREF="mailto:bill.stewart@pobox.com">bill.stewart@pobox.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 06 Aug 1998 20:20:07 -0700</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00107.html">35C99712.A1572FA0@stud.uni-muenchen.de</A>&gt;</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00103.html">Pine.LNX.3.96.980806105040.20223u-100000@freenet.bishkek.su</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+At 01:44 PM 8/6/98 +0100, Mok-Kong Shen wrote:
+&gt;CyberPsychotic wrote:
+&gt;&gt; text). Anyways, when things come to 2 characters set, i have to get 1024
+&gt;&gt; character set, and so on, which looks quite unreasonable to me to allocate
+&gt;&gt; memory for elements, which probably will be never found in text... I was
+&gt;&gt; thinking of other solution and came to two way connected lists (correct
+&gt;&gt; term?)  things, i.e. : i have some structure like:
+&gt;&gt; 
+&gt;&gt; struct element {
+&gt;&gt; char value[ELEMENT_LENGTH];
+&gt;&gt; unsigned int frequency;
+&gt;&gt; struct element *previous;
+&gt;&gt; struct element *next;
+&gt;&gt; }
+&gt;&gt;  and could dinamically allocate memory for each new found element, but
+&gt;&gt; this would slow down whole code by the time list of new elements grow up.
+&gt;
+&gt;I think currently memory is cheap enough so that you could do
+&gt;frequency counts of at least trigrams with one dimensional array.
+
+RAM is cheap - any 486 computer and most 386 computers has at least 4MB.
+In the US, most new PCs have 16MB or more, and many have 64MB.
+But learning how to program efficiently is still important :-)
+And some computers have operating systems that make it hard
+to use all of the RAM.
+Disk is cheaper - almost all new computers have 1GB or more,
+and most older desktops have at least 200MB.
+You probably should use 32-bit integers to store your counters,
+but you need to make sure your program does the right thing
+if you exceed counts of 2**31.
+
+Are you counting all kinds of text, or only words made of alphabetic
+characters and spaces and punctuation, or only ASCII 127-bit?
+Your 1024 number is 32*32, which sounds like only alphabetic and spaces;
+if that's good enough, you could do 32*32*32*32 with 4-byte counts
+and still fit in 4MB.
+If you want all 256 possible 8-bit characters, two characters 
+requires 64K counters (256KB).   Trigrams require 16 million counters
+if you allocate space for them all, which is 64MB, and may be expensive.
+But you could store 256*256 pointers in 256KB, and allocate memory
+for 256-counter arrays only for the digrams that appear,
+and probably save lots of memory.  You could also store the counts on disk, 
+and keep only the more frequently used arrays of counts in RAM.
+This was how we did things in the old days, when almost everything
+was too big for RAM, and it really is much slower if you're not careful :-)
+If you have a machine with a real operating system, you can 
+pretend keep your counters in RAM and let the operating system
+decide what to page out to disk.  Think about this carefully,
+because it can be very fast or very slow depending on how
+well you write your programs.
+				Thanks! 
+					Bill
+Bill Stewart, bill.stewart@pobox.com
+PGP Fingerprint D454 E202 CBC8 40BF  3C85 B884 0ABE 4639
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00153" HREF="msg00153.html">Re: text analysis</A></STRONG>
+<UL><LI><EM>From:</EM> CyberPsychotic &lt;fygrave@freenet.bishkek.su&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00103" HREF="msg00103.html">text analysis</A></STRONG>
+<UL><LI><EM>From:</EM> CyberPsychotic &lt;fygrave@freenet.bishkek.su&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00107" HREF="msg00107.html">Re: text analysis</A></STRONG>
+<UL><LI><EM>From:</EM> Mok-Kong Shen &lt;mok-kong.shen@stud.uni-muenchen.de&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00120.html">Re: Is there a freeware knockoff of SSH for win95</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00116.html">Re: SecDrv and Win95</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00107.html">Re: text analysis</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00153.html">Re: text analysis</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00115"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00115"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

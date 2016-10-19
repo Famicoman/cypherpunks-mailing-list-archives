@@ -1,0 +1,219 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: D&#45;H Forward Secrecy for E&#45;Mail? -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Mon, 13 Oct 1997 09:27:17 +0800 -->
+<!--X-Message-Id: 199710130116.CAA01032@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: v03102801b066b3b308e0@[207.167.93.63] -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: D-H Forward Secrecy for E-Mail?</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00669.html">Date Prev</A>][<A HREF="msg00676.html">Date Next</A>][<A HREF="msg00654.html">Thread Prev</A>][<A HREF="msg00670.html">Thread Next</A>][<A HREF="index.html#00682">Date Index</A>][<A HREF="threads.html#00682">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: D-H Forward Secrecy for E-Mail?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:tcmay@got.net">tcmay@got.net</A></LI>
+<LI><em>Subject</em>: Re: D-H Forward Secrecy for E-Mail?</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 13 Oct 1997 02:16:34 +0100</LI>
+<LI><em>CC</em>: <A HREF="mailto:cypherpunks@Algebra.COM">cypherpunks@Algebra.COM</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg00654.html">v03102801b066b3b308e0@[207.167.93.63]</A>&gt; (message from Tim May onSun, 12 Oct 1997 10:16:27 -0700)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+Tim May &lt;tcmay@got.net&gt; writes:
+&gt; At 2:48 AM -0700 10/12/97, Adam Back wrote:
+&gt; 
+&gt; &gt;Once you acknowledge that it is more secure to have short lived
+&gt; &gt;communication keys (which in my view it very clearly is), it should be
+&gt; ...
+&gt;
+&gt; Just what are some of the issues with us getting D-H-type perfect forward
+&gt; secrecy with something like e-mail? I assume this must be possible, of
+&gt; course, as D-H is used in just these ways. (The Comsec 3DES phone I have
+&gt; does this, of course.) (To repeat what has already been said, forward
+&gt; secrecy means some of the important keys are not kept or stored, and so a
+&gt; subpoena at some future time to produce the keys used in a communication is
+&gt; pointless. Cf. Schneier for more.)
+&gt; 
+&gt; First and foremost as a requirement would be the need for a back-and-forth
+&gt; communication, in a real-time or nearly real-time mode. This rules out
+&gt; conventional e-mail with its long a variable latencies for delivery. (Not
+&gt; to mention diverse clients and their inability to respond automatically!)
+
+It is difficult to have true interactive PFS for the reasons you
+describe.
+
+I did spend some time trying to work out a DH variant which could do
+forward secrecy entirely non-interactively, but I couldn't find
+functions with the desired properties.  If anyone is interested I can
+repost the discussions of this, and my current note pad style
+scribblings attempting to find said functions.  I am not convinced it
+is impossible; perhaps some one will figure it out at some stage.  (I
+have been having an intermittent on going discussion with Hal Finney
+on this topic on and off list for the last year or so).
+
+In the mean time what is entirely reasonable to do with email, with
+pgp5.5 is to use short lived communications keys.  That is
+communications keys which are planned to live for 1 week, say.
+
+This would not result in immediate PFS as with interactive DH, but it
+will be PFS at the end of the week.
+
+You could do it more frequently if you wished.
+
+As pgp 5.0 uses key servers directly from the mail client (and some
+other clients do also), this all works out because you just publish
+your new weekly communications key on the keyserver, and this
+eliminates the need for interactive communications with your recipient
+which true DH PFS requires.  In fact I think you could do this right
+now, if you made it clear to others that your key has short expiry in
+your .signature or whatever.  As I mentioned in another post David
+Wagner currently does just this.
+
+
+In my last post in the thread with subject:
+
+	Subject: Re: negative security aspects of GAK compliance 
+
+I think I have proved that you can't sensibly use pgp 5.5 with short
+lived communications keys without also adding storage keys.  People
+are acknowledging the logic that:
+
+1. short term communications keys are more secure
+2. it is a security mismatch to use long term CAK keys with short term
+   communications keys
+3. if you use short term CAK keys, you can't recover stored email for long
+4. if you use short term communications keys the recipient you can't
+   even read old email folders
+5. therefore you need storage keys also
+6. as a side effect PGP Inc's GAK compliant implementation of
+   corporate access to stored email is fundamentally flawed, and has to
+   be replaced with a different non GAK compliant method.
+
+(I'm working on that last point, it does follow, and I think the logic
+is sound).
+
+&gt; Forward secrecy might be arrangable even with long-latency links...it seems
+&gt; to me. (Through a series of links, compute and store the D-H parameters,
+&gt; then use them with conventional e-mail for the "payload" message?)
+
+That is another way to do DH, and also is entirely reasonable.  You
+could have this automatically for example if you were using one of the
+IPSEC proposals which has forward secrecy at the IP transport layer.
+If the systems which your mail went through to be delivered all used
+IP level forward secrecy, the SMTP traffic would all be forward
+secret.
+
+However this form of forward secrecy has a different security focus;
+keys are owned by machines rather than people, which means that it is
+probably less secure.  For example you are relying on the security of
+the recipients SMTP server.  
+
+Also the last hop of the link, between the recipients POP3 mailbox,
+and the users dial up machine is unsecured typically at the moment.
+Some IPSEC security on this link (or SSH tunneling) also would be
+possible then allowing that last hop to be secured.  However it is a
+bit like GSM mobile phone encryption, the links are secured, but the
+traffic goes in the clear through the base station.  The traffic ends
+up in clear in the recipients ISPs POP3 mailbox.
+
+Of course, you would actually encrypt the payload email also; the
+setup is more secure than no forward secrecy, because with out
+tampering with machines.
+
+IPSEC with forward secrecy is a _really_ big win for our side, because
+it automatically defeats government GAK plans; what use is GAK for
+fishing expeditions if you can't get the ciphertext because all the
+links are protected with forward secrecy.  It preempts GAKkers in an
+area where they have little control: IETF standardisation processes.
+The standards process I think refused to accept "for export" key
+sizes, on the grounds that the standards should not be weakened by
+political considerations.  With an internationally agreed, widely
+deployed IPSEC standard with forward secrecy, the GAKkers will be
+screwed because to change it will eventually mean cutting yourself off
+from the internet, and there will be much software to unpublish, and
+much inertia to overcome.
+
+I presume it is for these types of reasons that John Gilmore and
+others are enthused with the tracking the IPSEC standardisation
+process, and in John's case in organsing his free S/WAN project to
+produce a free linux IPSEC implementation.
+
+Adam
+-- 
+Now officially an EAR violation...
+Have *you* exported RSA today? --&gt; <A  HREF="http://www.dcs.ex.ac.uk/~aba/rsa/">http://www.dcs.ex.ac.uk/~aba/rsa/</A>
+
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00670" HREF="msg00670.html">Re: D-H Forward Secrecy for E-Mail?</A></STRONG>
+<UL><LI><EM>From:</EM> "William H. Geiger III" &lt;whgiii@invweb.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00654" HREF="msg00654.html">D-H Forward Secrecy for E-Mail?</A></STRONG>
+<UL><LI><EM>From:</EM> Tim May &lt;tcmay@got.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00669.html">Re: Stronghold</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00676.html">Re: PGP CAKware &amp; IETF controlled Open-PGP standard</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00654.html">D-H Forward Secrecy for E-Mail?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00670.html">Re: D-H Forward Secrecy for E-Mail?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00682"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00682"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

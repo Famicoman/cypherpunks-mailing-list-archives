@@ -1,0 +1,167 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Status of GUCAPI -->
+<!--X-From-R13: Wafbzavn Unyyhzovgf <pnpghfNuxf.arg> -->
+<!--X-Date: Thu, 19 Jan 95 15:01:58 PST -->
+<!--X-Message-Id: 199501192306.SAA16798@bb.hks.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Status of GUCAPI</TITLE>
+<LINK REV="made" HREF="mailto:cactus@hks.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00963.html">Date Prev</A>][<A HREF="msg00965.html">Date Next</A>][<A HREF="msg01000.html">Thread Prev</A>][<A HREF="msg00970.html">Thread Next</A>][<A HREF="index.html#00964">Date Index</A>][<A HREF="threads.html#00964">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Status of GUCAPI</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Status of GUCAPI</LI>
+<LI><em>From</em>: Insomnia Gallumbits &lt;<A HREF="mailto:cactus@hks.net">cactus@hks.net</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 19 Jan 1995 18:06:57 -0500</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+
+I'm just about done with the first part of my crypto library, the
+internal generalized I/O, and largely done with the framework for the
+encoding rules.  Since I haven't fully outlined what I'm doing here,
+I thought I'd mention the outline in the hopes of getting some real
+feedback and perhaps some random snipets of code.
+
+In essence, what I'm building is a crypto library that takes a very general
+approach with a few parameters controlling its behavior.  The idea is
+to have something that anybody can drop into their mail agent and have
+an easy way of using crypto and interface with existing systems such as
+PGP.  A major design goal is to be backwards compatable with PGP, but
+paramount is having a plug-and-play library that will be flexible enough
+to meet future crypto needs.
+
+One of the biggest problems today is that crypto libraries are chiselled out
+to deal with very specific cases -- the most general I know of if is RSAREF,
+which AFAIK only supports BER/DER for encoding and RSA and DES/CBC for 
+encryption.  I'll grow more clueful on that, and other crypto and key
+management issues, as I get to actually working on them.
+
+The things that I've parametrized in the design are:
+
+	- Type of I/O.  Right now, files (and fds) and a couple of memory
+	 configurations	are supported.  I've made it trivial to add new
+	 types of I/O as well, and there are flags to support to
+	 immediate zeroing of data once it is read into the internal
+	 structures.
+
+	- Encoding of data.  There are multiple ways to encode a bytestream
+	 and these methods can be nested.  For example, PGP, MIME, and
+	 uuencode use their own formats.  In this library, you can specify
+	 the type.  I also want to eventually put logic in (where possible)
+	 to determine the type and will also use this to support various
+	 compression schemes.
+
+	- Ciphers (this is the big one).  Right now, as I've mentioned,
+	 things are very haphazard.  What I want is a way to change one
+	 parameter from, for example, CRTYPE_IDEA to CRTYPE_DES and
+	 thus change the encryption scheme.
+
+	- Key management.  I know of two major ways of doing things
+	 right now, X.509/PEM certificates as pushed by RSADSI, and
+	 PGP web-of-trust.  As far as I can tell, PEM-style certificates
+	 are just a degenerate case of PGP web-of-trust.
+
+	- Random sources.  People should be offered a pretty good source
+	 of random numbers, but should also be allowed to drop in their
+	 own sources.  This is going to be relatively tough on platforms
+	 I don't know much about, IE Mac and PC, but I'm hoping for some
+	 help on this.  I can also salvage some code from RIPEM for those.
+
+	- Autoconfiguration to incoming messages.  People should be
+	 able to open a file and have it work, even with schema added
+	 to the library after the original adaption to GUCAPI.
+
+There's some other stuff that I'm probably forgetting here, but that's
+the gist of it.  The cipher code is going to be pretty simple: I'm
+getting a lot of code from various places on the net;  the code exists,
+it just isn't put into a form that is easy to use.  The most difficult is
+going to be a generalized scheme for key management: first off, I'm probably
+going to simply use PGP's web-of-trust as my model, assuming the X.509/PEM
+style certificates can be treated as degenerate cases of web of trust.
+
+I also intend to offer a GSSAPI interface to all of this, as seems
+appropriate when I get to it.
+
+This is so far all in C: I'm not a C++ convert yet and C is still the
+most portable of the languages about.  Later, perhaps class libraries
+can be designed around the same code.
+
+Thoughts?  Am I wasting my time, or is this a worthwhile pursuit?
+And should I find a better name than GUCAPI?
+
+	-- Todd
+- ---
+[This message has been signed by an auto-signing service.  A valid signature
+means only that it has been received at the address corresponding to the
+signature and forwarded.]
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+Comment: Gratis auto-signing service
+
+iQBFAwUBLx7wfCoZzwIn1bdtAQGIWAF9GgY29Qop9p1TEryO3oe/cFUyyBAJQtp7
+yPGjEDyCvk/vtLHTAxhQoMTE98MMkPP1
+=EoBl
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00963.html">Re: The Remailer Crisis</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00965.html">Re: Electronic cash illegal?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01000.html">Re: AT&amp;T IVES chip</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00970.html">Which remailer does Julf operate?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00964"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00964"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

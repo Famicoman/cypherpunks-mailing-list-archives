@@ -1,0 +1,299 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: (fwd) Random Numbers &#45; CORELA.FOR -->
+<!--X-From-R13: Xvz pubngr <enintrNotn.pbz> -->
+<!--X-Date: Thu, 7 Jul 94 13:11:05 PDT -->
+<!--X-Message-Id: 199407072010.PAA29176@ivy.bga.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>(fwd) Random Numbers - CORELA.FOR</TITLE>
+<LINK REV="made" HREF="mailto:ravage@bga.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00379.html">Date Prev</A>][<A HREF="msg00381.html">Date Next</A>][<A HREF="msg00394.html">Thread Prev</A>][<A HREF="msg00381.html">Thread Next</A>][<A HREF="index.html#00380">Date Index</A>][<A HREF="threads.html#00380">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>(fwd) Random Numbers - CORELA.FOR</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: (fwd) Random Numbers - CORELA.FOR</LI>
+<LI><em>From</em>: Jim choate &lt;<A HREF="mailto:ravage@bga.com">ravage@bga.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 7 Jul 1994 15:10:47 -0500</LI>
+<LI><em>Newsgroups</em>: sci.stat.math,sci.math,sci.math.num-analysis</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Newsgroups: sci.stat.math,sci.math,sci.math.num-analysis
+Path: bga.com!news.sprintlink.net!news.onramp.net!convex!cs.utexas.edu!swrinde!ihnp4.ucsd.edu!agate!library.ucla.edu!csulb.edu!csus.edu!netcom.com!deleyd
+From: deleyd@netcom.com
+Subject: Random Numbers - CORELA.FOR
+Message-ID: &lt;deleydCsIBCu.KzB@netcom.com&gt;
+Organization: NETCOM On-line Communication Services (408 261-4700 guest)
+Date: Wed, 6 Jul 1994 06:58:06 GMT
+Lines: 211
+Xref: bga.com sci.stat.math:1317 sci.math:15355 sci.math.num-analysis:3356
+
+{Approx. 200 lines}
+
+	PROGRAM CORELA
+C  Perform a KS test comparing the first 100 elements of a random
+C  number generator, starting with SEED values of 1..10
+C
+C This is not polished code you put on a shelf and admire, this is code
+C you dig your hands into and work with to make it do what you want it to.
+C
+C     Place your random number generator to be tested where it
+C     bluntly says "PLACE YOUR RANDOM NUMBER GENERATOR HERE".
+C     The output is a floating point between 0 (inclusive) and 1 (exclusive).
+C
+C    Currently the program is set up to use subroutine RAN1, a portable
+C    random number generator from the book "NUMERICAL RECIPES: The Art
+C    of Scientific Computing".  I've had trouble on our UNIX system
+C    not making array R(97) static even though the code says to.
+C    Compiling with the -static qualifier works.
+C
+	IMPLICIT NONE
+	INTEGER SINC,I,J
+	REAL SEQ(100,10)
+	REAL AR(10)
+	REAL D,PROB
+	INTEGER MRANDO, SEEDINIT, IRANDOM
+	INTEGER*4 SEED(2)		!Only SEED(1) result is ever used.
+	INTEGER*2 W(4)			!Seeds for RANDU
+	EQUIVALENCE(SEED,W)		!for RANDU
+	COMMON / SEEDSTORE / SEED
+
+	REAL*4 FRANDOM
+	REAL FOR$IRAN			!The RANDU random number generator
+	REAL RAN1			!test generator supplied
+	INTEGER JISHFT,IRANDOM2,COUNT
+	REAL*4 FNBINSPD			!float(NBINSPD)
+	REAL*4 TWO31F
+	REAL*4 TWO16F
+	REAL*4 TWO15F
+	TWO31F = 2.0**31.0
+	TWO16F = 2.0**16.0
+	TWO15F = 2.0**15.0
+
+102	FORMAT(' Choose random number generator to test'/,
+	1	'     /*(1)*/ MTH$RANDOM,'/
+	2	'     /*(2)*/ RANDU,'/
+	3	'     /*(3)*/ ANSI C,'/
+	4	'     /*(4)*/ Microsoft C'/
+	5	'     /*(5)*/ Turbo Pascal'/
+	8	'  (9) another random number generator (choose this one)'/
+	6	'   : ',$)
+107	FORMAT(' Input starting SEED value: ',$)
+108	FORMAT(' Input increment between SEED values: ',$)
+200	FORMAT(BN,I)
+
+10	CONTINUE
+	WRITE(6,102)			!Choose random number generator to test
+	READ(5,200) MRANDO
+	WRITE(6,107)			!Starting SEED value
+	READ(5,200) SEED(1)
+	SEEDINIT = SEED(1)
+	SEED(2) = 1
+	WRITE(6,108)			!INCREMENT VALUE
+	READ(5,200) SINC
+
+C Main Loop
+	  DO J=1,10		!10 sequences
+	    DO I=1,100		!sequence length of first 100 numbers
+
+C             ***PLACE YOUR RANDOM NUMBER GENERATOR HERE***
+C             Set FRANDOM using whatever random number generator you choose
+C	      to a floating point value in the range [0,1)
+
+	      FRANDOM = RAN1(SEED(1))
+
+C	      IF (MRANDO .EQ. 1) THEN
+C	        FRANDOM = RAN(SEED(1))		!mth$random
+C	      ELSEIF (MRANDO .EQ. 2) THEN
+C	        FRANDOM = FOR$IRAN(W(2),W(1))	!randu
+C	      ELSEIF (MRANDO .EQ. 3) THEN
+C	        CALL LIB$EMUL(1103515245,SEED,12345,SEED)	!VAX C
+C	        IRANDOM = SEED(1) .AND. '7FFFFFFF'X
+C	        FRANDOM = FLOAT(IRANDOM)/(TWO31F)
+C	      ELSEIF (MRANDO .EQ. 4) THEN
+C	        CALL LIB$EMUL(214013,SEED,2531011,SEED)	!Microsoft C 4.0
+C	        IRANDOM = W(2) .AND. '7FFF'X
+C	        FRANDOM = FLOAT(IRANDOM)/(TWO15F)
+C	      ELSEIF (MRANDO .EQ. 5) THEN
+C	        CALL LIB$EMUL(134775813,SEED,1,SEED)	!Turbo Pascal 6.0
+C	        IRANDOM = SEED(1) .AND. 'FFFF0000'X
+C	        IRANDOM = JISHFT(IRANDOM,-16)
+C	        FRANDOM = FLOAT(IRANDOM)/(TWO16F)
+C	      ENDIF
+
+	      SEQ(I,J) = FRANDOM
+	    ENDDO
+            SEEDINIT = SEEDINIT + SINC	!calculate new initial seed
+            SEED(1) = SEEDINIT          !set new initial seed
+	  ENDDO
+		  
+C Do a KS test on each edlement comparing the 10 sequences
+   	DO I=1,100
+	  DO J=1,10
+            AR(J) = SEQ(I,J)	!Transfer to short array
+          ENDDO
+	  CALL KSONE(AR,10,D,PROB)
+	  WRITE(6,2) I,PROB
+2	  FORMAT(1X,'I=',I4,' KS PROB=',F)
+        ENDDO
+	END
+
+C============================================================================
+C  From book NUMERICAL RECIPES: The Art of Scientific Computing
+C  Here for demonstration purposes
+C  Replace this with whatever random number generator you want to test
+C  Initialize with negative number
+      FUNCTION RAN1(IDUM)
+      DIMENSION R(97)
+      SAVE R	!(Some UNIX F77 compilers require -save option on compile)
+      PARAMETER (M1=259200,IA1=7141,IC1=54773,RM1=3.8580247E-6)
+      PARAMETER (M2=134456,IA2=8121,IC2=28411,RM2=7.4373773E-6)
+      PARAMETER (M3=243000,IA3=4561,IC3=51349)
+      DATA IFF /0/
+      IF (IDUM.LT.0.OR.IFF.EQ.0) THEN
+        IFF=1
+        IX1=MOD(IC1-IDUM,M1)
+        IX1=MOD(IA1*IX1+IC1,M1)
+        IX2=MOD(IX1,M2)
+        IX1=MOD(IA1*IX1+IC1,M1)
+        IX3=MOD(IX1,M3)
+        DO 11 J=1,97
+          IX1=MOD(IA1*IX1+IC1,M1)
+          IX2=MOD(IA2*IX2+IC2,M2)
+          R(J)=(FLOAT(IX1)+FLOAT(IX2)*RM2)*RM1
+11      CONTINUE
+        IDUM=1
+      ENDIF
+      IX1=MOD(IA1*IX1+IC1,M1)
+      IX2=MOD(IA2*IX2+IC2,M2)
+      IX3=MOD(IA3*IX3+IC3,M3)
+      J=1+(97*IX3)/M3
+      IF(J.GT.97.OR.J.LT.1)PAUSE
+      RAN1=R(J)
+      R(J)=(FLOAT(IX1)+FLOAT(IX2)*RM2)*RM1
+      RETURN
+      END
+
+C==============================================================================
+
+C  THE FOLLOWING SUBROUTINES CALCULATE THE KOLMOGOROV-SMIRNOV PROBABILITY
+
+      SUBROUTINE KSONE(DATA,N,D,PROB)
+C  Adapted from book NUMERICAL RECIPES: The Art of Scientific Computing
+C  DF - degrees of freedom.  Passsed to FUNC
+      INTEGER N
+      REAL DATA(N)
+      REAL D,PROB
+      CALL PIKSRT(N,DATA)
+      EN=N
+      D=0.
+      FO=0.
+      DO 11 J=1,N
+        FN=J/EN
+        FF=DATA(J)
+        DT=AMAX1(ABS(FO-FF),ABS(FN-FF))
+        IF(DT.GT.D)D=DT
+        FO=FN
+11    CONTINUE
+      PROB=PROBKS(SQRT(EN)*D)
+      RETURN
+      END
+C------------------------------------------------------------------------------
+      FUNCTION PROBKS(ALAM)
+C  Adapted from book NUMERICAL RECIPES: The Art of Scientific Computing
+C  Note the routine in the Numerical Recipes book erronously returns
+C  1 instead of 0 for large values of ALAM.
+      PARAMETER (EPS1=0.001, EPS2=1.E-8)
+      A2=-2.*ALAM**2
+      FAC=2.
+      PROBKS=0.
+      TERMBF=0.
+      DO 11 J=1,100
+        TERM=FAC*EXP(A2*J**2)
+        PROBKS=PROBKS+TERM
+C       Error in Numerical Recipes book.  Terminate if TERM underflows.
+C**     IF(ABS(TERM).LT.EPS1*TERMBF.OR.ABS(TERM).LT.EPS2*PROBKS)RETURN
+        IF(ABS(TERM).LE.EPS1*TERMBF.OR.ABS(TERM).LE.EPS2*PROBKS)RETURN
+        FAC=-FAC
+        TERMBF=ABS(TERM)
+11    CONTINUE
+      PROBKS=1.0
+      RETURN
+      END
+C------------------------------------------------------------------------------
+      SUBROUTINE PIKSRT(N,ARR)
+C  Adapted from book NUMERICAL RECIPES: The Art of Scientific Computing
+C  See book for details.
+      INTEGER N
+      REAL ARR(N)
+      DO 12 J=2,N
+        A=ARR(J)
+        DO 11 I=J-1,1,-1
+          IF(ARR(I).LE.A)GO TO 10
+          ARR(I+1)=ARR(I)
+11      CONTINUE
+        I=0
+10      ARR(I+1)=A
+12    CONTINUE
+      RETURN
+      END
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00379.html">(fwd) Random Numbers - CHIKSN.FOR</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00381.html">(fwd) Random Numbers - SPECTRAL.FOR</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00394.html">Re: (fwd) Junk</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00381.html">(fwd) Random Numbers - SPECTRAL.FOR</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00380"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00380"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

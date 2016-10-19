@@ -1,0 +1,185 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: DSA for encryption -->
+<!--X-From-R13: Oabalzbhf <abobqlNercynl.pbz> -->
+<!--X-Date: Tue, 8 Dec 1998 13:44:28 +0800 -->
+<!--X-Message-Id: 199812080525.GAA32479@replay.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: DSA for encryption</TITLE>
+<LINK REV="made" HREF="mailto:nobody@replay.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01025.html">Date Prev</A>][<A HREF="msg00279.html">Date Next</A>][<A HREF="msg00238.html">Thread Prev</A>][<A HREF="msg00279.html">Thread Next</A>][<A HREF="index.html#00290">Date Index</A>][<A HREF="threads.html#00290">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: DSA for encryption</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A>, <A HREF="mailto:bennett@peacefire.org">bennett@peacefire.org</A></LI>
+<LI><em>Subject</em>: Re: DSA for encryption</LI>
+<LI><em>From</em>: Anonymous &lt;<A HREF="mailto:nobody@replay.com">nobody@replay.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 8 Dec 1998 06:25:31 +0100</LI>
+<LI><em>Comments</em>: This message did not originate from the Sender address above.It was remailed automatically by anonymizing remailer software.Please report problems or inappropriate use to theremailer administrator at &lt;abuse@replay.com&gt;.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+On Sun, 06 Dec 1998 22:25:57 -0600, Bennett Haselton &lt;bennett@peacefire.org&gt;
+wrote:
+
+&gt;I'm working on an enhancement to a Web-based program that allows you to
+&gt;circumvent proxy server censorship by sending a request for a Web page to a
+&gt;computer in the outside world that is not blocked by the proxy, and having
+&gt;that computer re-send a copy of the banned page back to you.
+
+Good idea!
+
+&gt;Of course, any manufacturer of Internet censorship proxy server software
+&gt;could easily add ians.ml.org to their list of blocked sites (as they have
+&gt;all already done with Anonymizer), so the idea would be for people to get
+&gt;their friends to set up port-forwarding programs on computers that were not
+&gt;blocked by the censoring proxy, and those could be set up to relay requests
+&gt;between the IANS server and the computer behind the proxy server.
+
+It may not be so easy to get people to set up port-forwarding programs.
+These could be a target for hackers seeking to cover their tracks as they
+try break-ins.  Also, how many people in this day of commercial ISPs are
+able to set up port-forwarding programs?
+
+It would seem more promising to make your web page script be simple
+and portable enough that even users of AOL and free webpage hosts like
+GeoCities would be able to install it.
+
+&gt;I am working on a JavaScript form that could be used on the client side to
+&gt;solve this problem.  We would like to use DSA to encrypt the requests sent
+&gt;using IANS, since I've heard DSA can be used for encryption without
+&gt;royalties, unlike, for example, RSA.
+
+DSA per se is probably not your best choice - unless you already have a
+DSA implementation which you want to try to use.  DSA is a signature
+algorithm, and while it is sometimes possible to use a DSA implementation
+to do encryption, it is not particularly convenient.
+
+What you want to do is to use the mathematical principle behind DSA, which
+is the difficulty of solving the discrete log problem, and use an encryption
+algorithm which relies on that same math problem, namely Diffie-Hellman or
+ElGamal encryption.
+
+If you need to use DSA, Bruce Schneier describes in his book Applied
+Cryptography how to get the effect of ElGamal encryption.  Here is what
+he writes, on page 490:
+
+: ElGamal Encryption with DSA
+: 
+: There have been allegations that the government likes the DSA because it is
+: only a digital signature algorithm and can't be used for encryption.  It is,
+: however, possible to use the DSA function call to do ElGamal encryption.
+: 
+: Assume that the DSA algorithm is implemented with a single function call:
+: 
+:     DSAsign (p, q, g, k, x, h, r, s)
+: 
+: You supply the numbers p, q, g, k, x, and h, and the function returns the
+: signature parameters: r and s.
+: 
+: To do ElGamal encryption of message m with public key y, choose a random
+: number k, and call
+: 
+:     DSAsign (p, p, g, k, 0, 0, r, s)
+: 
+: The value of r returned is a in the ElGamal scheme.  Throw s away.  Then,
+: call
+: 
+:     DSAsign (p, p, y, k, 0, 0, r, s)
+: 
+: Rename the value of r to be u; throw s away.  Call
+: 
+:     DSAsign (p, p, m, 1, u, 0, r, s)
+: 
+: Throw r away.  The value of s returned is b in the ElGamal scheme.  You now
+: have the ciphertext, a and b.
+: 
+: Decryption is just as easy.  Using secret key x, and ciphertext messages
+: a and b, call
+: 
+:     DSAsign (p, p, a, x, 0, 0, r, s)
+: 
+: The value r is a^x mod p.  Call that e.  Then call
+: 
+:     DSAsign (p, p, 1, e, b, 0, r, s)
+: 
+: The value s is the plaintext message, m.
+: 
+: This method will not work with all implementations of DSA.  Some may fix
+: the value sof p and q, or the lengths of some of the other parameters.
+: Still, if the implementation is general enough, this is a way to encrypt
+: using nothing more than digital signature function.
+
+If you need more information about what the various values mean, or how
+to create a DSA and/or ElGamal key, just ask.
+
+Really, ElGamal is simple enough that if you have access to a large-number
+math package, writing your own is probably easier than trying to get DSA
+to do it.  It is unlikely that you will find a DSA implementation which
+allows you to specify all the needed parameters above, particularly h
+and k.  Usually h is forgotten after key generation and not used during
+signature, and implementions will probably want to choose k themselves
+since it is a very sensitive parameter.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00279" HREF="msg00279.html">Re: DSA for encryption</A></STRONG>
+<UL><LI><EM>From:</EM> Bennett Haselton &lt;bennett@peacefire.org&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01025.html">Alpha Options Newsletter</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00279.html">Re: DSA for encryption</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00238.html">DSA for encryption</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00279.html">Re: DSA for encryption</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00290"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00290"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

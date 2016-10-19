@@ -1,0 +1,242 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Questions/Comments on ecash protocol -->
+<!--X-From-R13: Wna Ubyqoret <vnatNpbel.SSQE.Prexryrl.SRG> -->
+<!--X-Date: Sun, 3 Dec 1995 09:44:42 +0800 -->
+<!--X-Message-Id: 199512030127.RAA03496@cory.EECS.Berkeley.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199512012222.OAA18230@netcom14.netcom.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Questions/Comments on ecash protocol</TITLE>
+<LINK REV="made" HREF="mailto:iang@cory.EECS.Berkeley.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00126.html">Date Prev</A>][<A HREF="msg00192.html">Date Next</A>][<A HREF="msg00073.html">Thread Prev</A>][<A HREF="msg00176.html">Thread Next</A>][<A HREF="index.html#00159">Date Index</A>][<A HREF="threads.html#00159">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Questions/Comments on ecash protocol</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Questions/Comments on ecash protocol</LI>
+<LI><em>From</em>: Ian Goldberg &lt;<A HREF="mailto:iang@cory.EECS.Berkeley.EDU">iang@cory.EECS.Berkeley.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 2 Dec 1995 17:27:32 -0800 (PST)</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00073.html">199512012222.OAA18230@netcom14.netcom.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Lucky Green &lt;mtwain@netcom.com&gt; wrote, to our great pleasure:
+&gt; By popular request, DigiCash is releasing the protocol specs.
+&gt; 
+&gt; The specs are available at 
+&gt; <A  HREF="http://www.digicash.com/ecash/protocol.html">http://www.digicash.com/ecash/protocol.html</A>
+&gt; 
+&gt; Please be aware that the doccument is work in progess. More 
+&gt; specifications, including byte level descriptions of the message 
+&gt; format will be added throughout the weekend.
+
+I read these specs for a little while last night.  Here are some of my
+questions/comments.  To prevent this message from becoming huge, I won't
+quote much from the protocol document itself; the URL is above if you want it.
+I'll ignore the spelling/grammar; they can be fixed later.
+
+Also: would people prefer if this discussion were moved to the ecash
+mailing list (ecash@digicash.com)?  I _would_ prefer that this was discussed
+in public, though, and not just with DigiCash.
+
+First:  Could you put some kind of protocol version number (so we know when
+the protocol changes) and document version number (so we know when the
+document changes, and can reference a particular version) somewhere near
+the top of the document?
+
+I realize that the document is incomplete.  For example, it is missing
+a description of the SETUP_REQ message and response.  From what I can gather
+from other wording in the document, this message is used to get the bank's
+public key.  I would hope this key is certified in some way.  Alternatively,
+I notice that the ecash client, in the routine ec_cash_setup, passes a value
+called hard_n (a 768-bit composite) to check_sig.  Does this mean that
+the bank's public key (or at least the public key used to sign the message
+containing that bank's real public key) is fixed, and hardcoded into the
+client?
+
+What is the function f, used in the payment_hdr to hash the payer_code
+and desc fields, as well as in WITHDRAW3 to calculate N = f(n) * r**h?
+There is reason to believe it is SHA, but I thought I saw some stuff in the
+client that indicated that the output of f is 132 _bytes_ long (but I'm
+not exceptionally sure of this, not having source and all).
+
+What are the flags used in the Withdraw Request and the payment_hdr?
+
+Please clarify what parts of the payment_hdr are shipped around.  The document
+says that the shop checks if the descr_hash matches the description.
+Since the description is in the second part of the payment_hdr, does that
+mean that both parts are sent to the shop?  Noticing that the payer_code
+(which the payer is supposed to keep secret) is in the second part, this
+doesn't seem to be right.  Also, the document states that the payment hash
+is not sent from the payer to the shop or from the shop to the mint.  However,
+the payment hash is just the SHA of the first part of the payment_hdr,
+which _is_ sent around, so although the payment hash isn't transmitted
+per se, it can certainly be calculated.
+
+What is the expries field in the payment_hdr?  Note that it's an int rather
+than a time.
+
+A (very slight) privacy concern: the payer's bank is sent in the clear,
+which gives a very small amount of information about the identity of the
+payer.  More on who knows what later.
+
+Is it in fact the case that all coins on one payment use the same payment hash
+when encrypting their signatures (the field sig in onl_coin)?
+
+If (M,e) is the mint's public modulus/exponent, and (N,h) is public mod/exp
+for a particular coin denomination, are the following statements true:
+
+o If n is the coin number (in onl_coin, assumedly the same n as used in the
+  withdraw request), and hdr is the first part of the payment header,
+  then sig (in onl_coin) equals
+
+     ([ SHA(hdr) XOR ((f(n)^(1/h)) mod N) ] ^ e) mod M
+
+o A deposit (which contains a userID in the userhdr, a payment_hdr in
+  the dep record, and a pair (n,sig) for each coin) is accepted by the bank iff
+
+     ([ SHA(payment_hdr) XOR ((sig^(1/e)) mod M) ] ^ h) mod N = f(n)
+
+  _and_ either payment_hdr.shop_accID corresponds to userID,
+	  or   a payer_code is supplied such that
+		 payment_hdr.payer_hash = f(payer_code).
+
+Since the payer_code is not supposed to be sent around, how is it sent to
+the bank in order to cancel a payment?  The document says "This allows him
+to cancel the payment (deposit in his account)...", which seems to indicate
+that a cancellation is just a deposit (made out to someone else), accompanied
+by an appropriate payer_code.  It is important that an eavesdropper not
+be able to ever see the payer_code that corresponds to a payment, or
+else she could present both to the bank and say "cancel this payment",
+and get the money "back".
+
+Where is the facility for tracing double spenders?  Perhaps it's just
+part of the "incomplete" part of the document, but I can't even see
+where it would fit in to what we've got; neither the withdrawal nor the
+payment messages seem to encode _any_ information about the payer in
+the coins, and the bank cannot seem to know who withdrew the coin that
+ended up being spent twice (due to the blinding).
+
+Is there a way to change the public key associated with an account?
+Is it just a meeter of sending another OPENACC1 message?
+
+Exactly what kind of anonymity/privacy/security does ecash offer?
+Let's examine who knows what.
+
+Our cast of characters:
+
+Charlie, the customer
+Sam, the shopkeeper
+the Bank (for simplicity, both Charlie and Sam use the same Bank for now)
+Eve, a passive eavesdropper
+Mitch, an active Man-In-The-CHannel
+the Government (which may try to force others to reveal information)
+
+Depending on which channels Eve and Mitch have access to, and whether or
+not they can tell, by examining the channel, or by selection, the
+identities of one or more of the communicating parties, they can get
+varying amounts of information.  I'll assume they have access to
+all communications for now.
+
+Not knowing the SETUP_REQ protocol is problematic.  As mentioned above,
+steps need to be taken to prevent Mitch from getting Charlie's password
+and using it to usurp his account.  We will assume that it turns out OK,
+and that Charlie can successfully open an account with a private key known
+only to him, and that he correctly knows the bank's public key.
+
+[ As this is getting long, I've snipped a bit from here.  I'll put it
+  back, with more detail, when the protocol document is more complete,
+  and my questions above have been answered. ]
+
+In short, a couple of things:
+
+Eve and Mitch know how much was paid to whom, and for what.  If they
+can tell (say, by TCP header) who was sending the payment or receiving
+the payment request, they know who paid as well.
+
+If Eve or Mitch can determine either r (the blinding factor) used in
+the withdrawal, or the payer_code, used in the payment, they can steal the
+money.  This has ramifications to Doug's "agnostic" banks; more security
+has to be added to the present ecash system if unblinded withdrawals are
+allowed.  This also brings up the "Netscape" question: how are these numbers
+generated?  Does it have to do with that 25 character string you enter
+at the beginning?  I've noticed a bit in the program that seeds a RNG with
+(time(0) ^ ((getpid()&lt;&lt;16)|getuid())).  I think publication of _at least_
+the code pertaining to blinding factor and payer_code generation is
+_absolutely vital_.
+
+I think I'll stop here; comments from anyone, and especially answers to my
+questions from DigiCash people, are welcome.  I'm sorry if it's not as
+complete as you (or I) would like; I'm quite tired, as my building had
+two fire alarms in a row at 3am this morning...
+
+   - Ian "Well, it's a start..."
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00176" HREF="msg00176.html">Re: Questions/Comments on ecash protocol</A></STRONG>
+<UL><LI><EM>From:</EM> Michael Froomkin &lt;froomkin@law.miami.edu&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="01235" HREF="msg01235.html">How to steal ecash (was: Questions/Comments on ecash protocol)</A></STRONG>
+<UL><LI><EM>From:</EM> iagoldbe@csclub.uwaterloo.ca (Ian Goldberg)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00073" HREF="msg00073.html">DigiCash releases protocol specs!</A></STRONG>
+<UL><LI><EM>From:</EM> "Mark Twain Ecash Support" &lt;mtwain@netcom.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00126.html">Re: Talking to Jim</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00192.html">Fight.comp.crime.like.a.paranoid.FBI.psycho</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00073.html">DigiCash releases protocol specs!</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00176.html">Re: Questions/Comments on ecash protocol</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00159"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00159"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,176 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: PGP 2.6.2 signator replacement bug fix -->
+<!--X-From-R13: Xvz Qnfgyroreel <wpnfgyrNva&#45;flfgrz.pbz> -->
+<!--X-Date: Wed, 1 Nov 1995 03:37:13 +0800 -->
+<!--X-Message-Id: 9510311803.AA11158@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>PGP 2.6.2 signator replacement bug fix</TITLE>
+<LINK REV="made" HREF="mailto:jcastle@in-system.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00225.html">Date Prev</A>][<A HREF="msg00235.html">Date Next</A>][<A HREF="msg00273.html">Thread Prev</A>][<A HREF="msg00245.html">Thread Next</A>][<A HREF="index.html#00226">Date Index</A>][<A HREF="threads.html#00226">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>PGP 2.6.2 signator replacement bug fix</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: PGP 2.6.2 signator replacement bug fix</LI>
+<LI><em>From</em>: Jim Castleberry &lt;<A HREF="mailto:jcastle@in%2Dsystem.com">jcastle@in-system.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 31 Oct 95 11:03:20 MST</LI>
+<LI><em>Mailer</em>: Elm [revision: 70.85]</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+
+Here's a fix for a minor bug in PGP 2.6.2.  I reported it to pgp-bugs last
+February and they responded promptly, but it hasn't been propagated to the
+release - I suppose 2.6.2 is "in the freezer".
+
+Anyway, the bug can cause a crash and other folks might like to put in the
+fix, so here it is.  Anyone have any others?
+
+Jim Castleberry
+jcastle@in-system.com
+
+Original bug report starts here:
+- -------------------------------------------------------------------------
+
+I believe I've identified a bug in PGP 2.6.2.  The bug occurs on my system:
+	HP 9000/735, running HPUX 9.03
+	MIT PGP 2.6.2
+	Compiled with either the native cc or gcc 2.6.3
+	Optimization level doesn't change the behavior (from -O0 to +O3).
+	pubring.pgp contains all the keys on the servers, plus a few
+	   unpublished keys and some additional signatures.
+
+When an existing signature is replaced by a newer one by the same signator,
+memory gets corrupted.  On my system, this results in a program abort.
+
+The problem is in file keyadd.c, function mergesigs().  When a signature is
+(possibly) going to be replaced, user_from_keyID() is called to get a pointer
+to the signator's user ID (as a C string in the in-memory user hash table.
+Then that pointer is passed to check_key_sig(), which passes it to
+getpublickey(), which passes it to readpublickey(), which reads successive
+user ID strings into it while it searches for the desired keyID.  But the hash
+table contains dynamically allocated strings that are only as long as the
+string they hold.  So when a longer user ID is read into it, memory past the
+end of the C string is corrupted.  That trashes a hash table entry ("struct
+hashent"), destroying pointers and resulting in an illegal memory access later
+in the program.
+
+The offending code in mergesigs() only gets executed when a signature is being
+replaced with a more recent one by the same signator.  It only showed up
+because I updated my pubring with all new keys on the servers for the last 31
+days, and one key has an updated sig on it:
+   pub  1024/AB1F4831 1993/05/10 Robert Walking-Owl &lt;rrothenb@ic.sunysb.edu&gt;
+			         Robert Walking-Owl &lt;robert.rothenburg@asb.com&gt;
+
+Here's a context diff for the fix.  The signator userid isn't needed by
+check_key_sig() or the functions it calls since the signator's keyID is given,
+and if the userid is NULL then readkeypacket() ignores it, so just pass NULL to
+check_key_sig() and use the signator C string in mergesigs() as-is.
+
+Jim Castleberry
+
+- - cut here -------------------------------------------------------------------
+
+*** old/keyadd.c	Wed Oct  5 20:48:11 1994
+- --- keyadd.c	Wed Feb 15 22:37:53 1995
+***************
+*** 196,206 ****
+  			    status = check_key_sig(fring,
+  						   KeyIDpos, KeyIDlen,
+  						   userid, fkey, keypos,
+! 						   ringfile, signator,
+  						   (byte *) &amp; xstamp,
+  						   &amp;sigClass);
+  			PascalToC(userid);
+- - 			PascalToC(signator);
+  			if (!status) {
+  			    fprintf(pgpout,
+  				    LANG("Replacing signature from %s\n"),
+- --- 196,205 ----
+  			    status = check_key_sig(fring,
+  						   KeyIDpos, KeyIDlen,
+  						   userid, fkey, keypos,
+! 						   ringfile, NULL,
+  						   (byte *) &amp; xstamp,
+  						   &amp;sigClass);
+  			PascalToC(userid);
+  			if (!status) {
+  			    fprintf(pgpout,
+  				    LANG("Replacing signature from %s\n"),
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQEVAwUBMJZkDJYkAuN55UFhAQG8aQf/bsx7xlS9P9SBE8ysMEbjMkKwdf6yZSCt
+fd0xBsUbTIsIS2Gzlx0ux7N3HWqJm/og2EBqebhfEzQk9IUBK8sp8Kbv8GtbUWrj
+ai2b6/hxu2yXbtQEAmTDJLO3fQCZ6yjkydFYaz2n+HuRxN4h6TlWwIHzQWOBCxuK
+qzPENr+c4YgMCHMVLGnAHDgPA8G9J/xX3UIPKQJQnrpAJwlGf+LTOkWeA+/kMLiw
+aos108n6698mcsIxXzHltCVlCaYYY6meFMHzD4rGjXOCURTtKTSRx1dJ7WNSn+1N
+JNwJSnFXrsvJRodko0fjpYnCUDNEbmEQgDsJX80wTdDfI+JH2LM/+g==
+=jh+s
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00245" HREF="msg00245.html">Re: PGP 2.6.2 signator replacement bug fix</A></STRONG>
+<UL><LI><EM>From:</EM> Derek Atkins &lt;warlord@MIT.EDU&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00225.html">RE: This PROMISes to be odius</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00235.html">Re: Keyed-MD5, ITAR, and HTTP-NG</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00273.html">Re: ecash remailer</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00245.html">Re: PGP 2.6.2 signator replacement bug fix</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00226"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00226"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

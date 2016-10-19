@@ -1,0 +1,239 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Any cypherpunk solutions to this problem? -->
+<!--X-From-R13: "S. OZZS@ E[WFV" <SOZZS@E[WFVNbprybg.Dhgtref.SRG> -->
+<!--X-Date: Tue, 3 Sep 1996 12:31:14 +0800 -->
+<!--X-Message-Id: 01I90CQSB7289JDDSI@mbcl.rutgers.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Any cypherpunk solutions to this problem?</TITLE>
+<LINK REV="made" HREF="mailto:EALLENSMITH@ocelot.Rutgers.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00196.html">Date Prev</A>][<A HREF="msg00205.html">Date Next</A>][<A HREF="msg00675.html">Thread Prev</A>][<A HREF="msg00205.html">Thread Next</A>][<A HREF="index.html#00163">Date Index</A>][<A HREF="threads.html#00163">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Any cypherpunk solutions to this problem?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Any cypherpunk solutions to this problem?</LI>
+<LI><em>From</em>: "E. ALLEN SMITH" &lt;<A HREF="mailto:EALLENSMITH@ocelot.Rutgers.EDU">EALLENSMITH@ocelot.Rutgers.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 2 Sep 1996 16:19 EDT</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+	To the degree that he's correct, how can such problems be solved
+while increasing privacy, security, etcetera? What sort of decentralized
+replacements for the current DNS system can be used, preferably with prevention
+of removal of DN for political reasons?
+	-Allen
+
+From:	IN%"rre@weber.ucsd.edu" 27-AUG-1996 06:03:35.07
+
+[Maybe the next Internet myth to bust up is this stuff about the Internet
+being decentralized.  "Designed to survive a nuclear attack", etc etc.
+I'm afraid it doesn't work like that.  The net has little redundancy, the
+backbones are in the hands of a small number of large companies, and all
+of the detailed mechanics of getting your packets to their destination are
+fragile and prone to propagating errors.  The high levels of service to
+which we've grown accustomed are due to the hard work of specific people,
+not to the intrinsic properties of the machinery.  The net works because
+those people are able to do the right thing.  The conditions that *let*
+them do the right thing may disappear next month, or the month after that.
+So let's forget the technological determinism and lose our complacency
+about the future, and instead have a little gratitude to the hackers who
+make it work and a little political concern for the architectural choices
+that are coming right up on the horizon.]
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+This message was forwarded through the Red Rock Eater News Service (RRE).
+Send any replies to the original author, listed in the From: field below.
+You are welcome to send the message along to others but please do not use
+the "redirect" command.  For information on RRE, including instructions
+for (un)subscribing, send an empty message to  rre-help@weber.ucsd.edu
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+Date: Mon, 26 Aug 1996 14:15:06 -0700 (PDT)
+From: risks@csl.sri.com
+
+RISKS-LIST: Risks-Forum Digest  Monday 26 August 1996  Volume 18 : Issue 38
+
+----------------------------------------------------------------------
+
+Date: Sat, 24 Aug 1996 08:53:31 -0700
+From: stevenw@best.com (Steven Weller)
+Subject: DNS failure [from Matthew Dillon]
+
+The following describes DNS meltdown at my ISP the other day: all DNS
+services were unavailable, despite multiple servers being online. Lack of
+DNS assured that other working services were unavailable to everyone who
+didn't have IP addresses written down.
+
+    Here is a technical explanation of the DNS failure, for those of you
+    interested.
+
+    First, a synopsis of how DNS works... every site on the net serves their
+    own DNS records.  Some sites serve other people's DNS records.  For
+    example, BEST serves the DNS records for best.com, best.net, and most
+    of our customer's custom domains.  No site serves more then a small
+    fraction of the DNS records on the internet from their own database.
+
+    The way DNS works is that when a domain name needs to be resolved, our
+    DNS server (anyone's DNS server) first goes to the NIC to ask where to
+    go to resolve the domain name.  The NIC itself cannot resolve domains,
+    it can only tell our DNS server where to go to resolve a domain.
+
+    Our DNS server then goes to the specified remote site to resolve the
+    domain name belonging to that site. The remote site replies with the 
+    answer which our DNS server (a) caches for future reference, and 
+    (b) returns to the original requester.
+
+    The caching is important, because otherwise a DNS server would have to
+    re-query the remote DNS server every time someone wanted to resolve a 
+    domain.  DNS records propagate through caches.  It is simply not possible
+    to run a DNS system with caching turned off, it would create an impossible
+    load on the internet.
+
+    Around 4:00 a.m. yesterday, some unknown site's cache got corrupted.
+    The corruption propagated to many (hundreds) of other sites on the internet
+    and eventually propagated to us.  This corruption hit a bug in the DNS
+    server program that wound up corrupting the program, causing DNS to
+    loose major records.
+    
+    Restarting the server in this case does not solve the problem because, 
+    due to the caching on remote sites, the corrupted record repropagates 
+    almost instantly.  BEST was hit by this problem very hard due to the
+    large number of custom domains we serve... so many DNS requests come into
+    BEST and are made by BEST that our servers would hit the corruption out
+    on the internet within 10 seconds of starting up.
+
+    Worse, this particular corruption tended to destroy the root records
+    (stored in memory), called SOA records, for the domains served locally. 
+    This destroyed the mail system causing mail messages to bounce rather then
+    to simply be delayed, because the DNS server was saying 'site X does
+    not exist' rather then timing out.  It's worst possible corruption that 
+    can occur in a DNS system.
+
+    --
+
+    It turns out that the last two BIND releases contain a bug that,
+    when a corrupted record of the type that started propagating at 4:00 a.m.
+    is received, results in the destruction of other **unassociated** 
+    records stored in memory.
+
+    The particular release of BIND that we were using had been running
+    perfectly for several *months* before this incident.  It was not something
+    recently installed.
+
+    There are two fixes to the problem:  (1) One can lock out those sites
+    where the corrupted records come from, and (2) One can revert to an older
+    release.  (1) is not a good solution because, due to the nature of DNS,
+    corruption can propagate to many sites and it would be impossible to keep
+    up to date and lock all of them out.  We wound up taking action #(2)
+    and reverting to an older release of bind which, fortunately, did not
+    have the bug that caused the problem.  We had to revert to BIND 4.9.3.
+    Unfortunately, we did not think to do this for many hours because we were
+    all convinced that the problem was external in nature and just didn't 
+    think to try a reversion.  In hind sight, that is the first thing we
+    should have tried since we had the friggin binary for the older version
+    sitting in our source tree.
+
+    As far as DNS goes... the DNS we run is not 'bsd' or 'sgi' .. it's the
+    *official* world-wide BIND distribution run by Paul Vixie.  It is really
+    not appropriate to run the older versions shipped with most operating 
+    systems due to massive, massive security holes.  The corruption problem
+    was unavoidable.  What *was* avoidable was the long period of time that
+    elapsed before the problem got fixed, which I take full responsibility for.
+    We spent most of that time trying to track down where the corruption was
+    coming from... a near impossible task.  Around 6:00 p.m. scuttlebutt
+    started propagating regarding a possible bug in the last two BIND releases 
+    at which point we instantly reverted to an earlier version, which fixed 
+    the problem, then started banging our heads against the wall for not trying
+    it earlier.
+
+    Matthew Dillon   Engineering, BEST Internet Communications, Inc.
+                     &lt;dillon@best.net&gt;
+
+------------------------------
+
+Date: 15 Aug 1996 (LAST-MODIFIED)
+From: RISKS-request@csl.sri.com
+Subject: Abridged info on RISKS (comp.risks)
+
+ The RISKS Forum is a MODERATED digest.  Its Usenet equivalent is comp.risks.
+=&gt; SUBSCRIPTIONS: PLEASE read RISKS as a newsgroup (comp.risks or equivalent) 
+ if possible and convenient for you.  Or use Bitnet LISTSERV.  Alternatively,
+ (via majordomo) DIRECT REQUESTS to &lt;risks-request@csl.sri.com&gt; with one-line, 
+   SUBSCRIBE (or UNSUBSCRIBE) [with net address if different from FROM:] or
+   INFO     [for unabridged version of RISKS information]
+=&gt; The INFO file (submissions, default disclaimers, archive sites, .mil/.uk
+ subscribers, copyright policy, PRIVACY digests, etc.) is also obtainable from
+ <A  HREF="http://www.CSL.sri.com/risksinfo.html">http://www.CSL.sri.com/risksinfo.html</A>  <A  HREF="ftp://www.CSL.sri.com/pub/risks.info">ftp://www.CSL.sri.com/pub/risks.info</A>
+ The full info file will appear now and then in future issues.  *** All 
+ contributors are assumed to have read the full info file for guidelines. ***
+=&gt; SUBMISSIONS: to risks@CSL.sri.com with meaningful SUBJECT: line.
+=&gt; ARCHIVES are available: <A  HREF="ftp://ftp.sri.com/risks">ftp://ftp.sri.com/risks</A> or
+ ftp ftp.sri.com&lt;CR&gt;login anonymous&lt;CR&gt;[YourNetAddress]&lt;CR&gt;cd risks
+ or <A  HREF="http://catless.ncl.ac.uk/Risks/VL.IS.html">http://catless.ncl.ac.uk/Risks/VL.IS.html</A>      [i.e., VoLume, ISsue].
+ The ftp.sri.com site risks directory also contains the most recent 
+ PostScript copy of PGN's comprehensive historical summary of one liners:
+   get illustrative.PS
+
+------------------------------
+
+End of RISKS-FORUM Digest 18.38 
+************************
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00196.html">The Esther Dyson Flap</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00205.html">Re: mailing lists</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00675.html">Re: The Esther Dyson Flap</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00205.html">Re: mailing lists</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00163"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00163"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

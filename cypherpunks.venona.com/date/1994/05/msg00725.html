@@ -1,0 +1,277 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Estimating Population Summary -->
+<!--X-From-R13: evggreNvb.pbz (Freel Dvggre) -->
+<!--X-Date: Wed, 11 May 94 14:22:04 PDT -->
+<!--X-Message-Id: 199405112119.QAA10207@indial1.io.com -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Estimating Population Summary</TITLE>
+<LINK REV="made" HREF="mailto:ritter@io.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00709.html">Date Prev</A>][<A HREF="msg00712.html">Date Next</A>][<A HREF="msg00736.html">Thread Prev</A>][<A HREF="msg00732.html">Thread Next</A>][<A HREF="index.html#00725">Date Index</A>][<A HREF="threads.html#00725">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Estimating Population Summary</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Estimating Population Summary</LI>
+<LI><em>From</em>: <A HREF="mailto:ritter@io.com">ritter@io.com</A> (Terry Ritter)</LI>
+<LI><em>Date</em>: Wed, 11 May 1994 16:19:37 -0500 (CDT)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+ Summary of:  Estimating Population from Repetitions in
+              Accumulated Random Samples
+
+
+ In the latest (April 1994) issue of Cryptologia, I describe the
+ development of a new technique for the statistical estimation of
+ population.  An example of such a problem would be estimating the
+ number of different values or codes produced by a physically-
+ random number generator.
+
+
+ Background
+
+ This work is an outgrowth of a sci.crypt discussion in early 1992
+ in which Nico de Vries promoted as "physically-random" a computer
+ program which made use of variations between software and "IBM PC"
+ hardware timing.  It was difficult to know how one could determine
+ the amount of "state" (and, thus, the limit of "randomness") in
+ such a mechanism.  Ross Anderson suggested measurement using the
+ "birthday paradox."
+
+
+ The Experimental Procedure
+
+ The experimenter will obtain a value from the RNG and save it,
+ repeating this for some fixed number of random samples, a "trial."
+ Each new sample must be compared to all previous samples to see if
+ there is a match or "exact double."  (The birthday paradox does not
+ apply to those statistical RNG's which are designed to produce a
+ sequence without value repetition.)  A trial contains enough samples
+ if, on average, it produces a few doubles.  About 2.5 or 3 Sqrt(N)
+ samples will be needed, given population N, but N is the value we
+ wish to measure.  Producing and saving N samples may not be trivial.
+
+
+ Exact Repetitions
+
+ In a single trial, if we find two occurrences of some value, we
+ have a single level-two "repetition"; this is an "exact" repetition
+ count.  But if we then find another occurrence of the same value,
+ we have a level-three repetition and no level-two repetitions.
+ Note how increased information (another occurrence) results in
+ reduced effectiveness in the level-two measurement statistic.
+
+
+ Expectations
+
+ Classical binomial equations can predict the number of expected
+ exact repetitions for a given population and number of samples.
+ But these equations are extremely difficult to reverse for use in
+ predicting population.  Trying to use these equations with numerical
+ root-finding techniques produces ambiguous results, as there are
+ generally multiple roots.  Equations which _estimate_ the probability
+ of repetitions are well known, but it was not previously clear how
+ accurate these would be, how they could be used effectively, what
+ they would mean in random sampling distribution, or how they could
+ be generalized to higher repetition levels.
+
+
+ Augmented Repetitions
+
+ I have found a new, simple, exact, and easily-reversed combinatoric
+ relationship between population and a value which I call "augmented
+ repetitions."  An "augmented double" consists of the number of
+ exact doubles (exactly two samples which have the same value),
+ _plus_ contributions from exact triples, exact quads, etc.
+
+ An exact triple may be seen as three doubles:  There are three ways
+ in which an exact triple may produce exact doubles.  Therefore, for
+ augmentation purposes, a triple should count as three augmented
+ doubles.  Similarly, a quad or exact 4-rep may be
+           4
+ seen as (   )  or 6 doubles, the number of combinations of four
+           2
+ things taken two at a time.  When we do this, we find that simple
+ equations predict the result _exactly_.
+
+ Thus, the number of augmented repetitions at the kth level (k = 2
+ means doubles), given r  exact repetitions at level i is:
+                        i
+
+              n    i
+      ar  =  SUM (   ) r  .
+        k    i=1   k    i
+
+ (This is equation 2.3 which very unfortunately was printed
+ incorrectly in the article.)
+
+ That is, we multiply the number of exact matches at each level by
+ the effective number of matches each could produce at the lower
+ level, and accumulate an overall sum.
+
+
+
+ Augmented Doubles and Population
+
+ Given population N, the expected number of augmented doubles Ead
+ found in s samples is _exactly_:
+
+                 s (s - 1)
+      Ead(N,s) = --------- .
+                    2 N
+
+ Given population N = 10,000 (so Sqrt(N) = 100), we can show
+ the expected number of augmented doubles for various numbers
+ of samples:
+
+       s     Ead
+      -----------
+      100   0.495
+      150   1.118
+      200   1.990
+      250   3.113
+      300   4.485
+      400   7.980
+
+ The formula implies, of course, that the population N is
+ related to augmented doubles ad and samples s as:
+
+                  s (s - 1)
+      Nad(s,ad) = ---------
+                     2 ad
+
+ which is the desired simple form for estimating population.
+
+
+ Distribution
+
+ A major issue in population measurement is the fact that the
+ number of augmented doubles varies greatly over similar trials
+ on the exact same population.  Thus, a single trial is essentially
+ meaningless for estimating population.
+
+ Experiments indicate that various numbers of augmented doubles
+ occur in Poisson distribution over different trials, a result
+ which also has theoretical support.  Therefore, we should develop
+ an arithmetic mean or expected value which is the Poisson parameter.
+
+ The Poisson distribution is asymmetric, and changes radically for
+ different expected values.  In general it will be necessary to
+ perform tens or hundreds of separate trials to develop an accurate
+ mean for population estimation.  It is worthwhile to accumulate the
+ entire distribution (rather than just a simple mean), and compare
+ that shape with the ideal shape of the Poisson distribution for
+ the given mean.
+
+ The Poisson distribution also gives us a way to talk about the
+ probability of finding augmented doubles Ead:
+
+                      -Ead
+      Pd(N,s) = 1 - e      .
+
+ So, for population N = 10,000:
+
+       s     Ead     Pd
+      ------------------
+      100   0.495   0.39
+      150   1.118   0.67
+      200   1.990   0.86
+      250   3.113   0.96
+      300   4.485   0.99
+      400   7.980   0.9997
+
+ It is often stated that the birthday paradox predicts a match
+ with the sample size s = Sqrt(N), but this value is actually a
+ little small; the expected number of augmented doubles for
+ s = Sqrt(N) is 0.5 (and there are at least as many augmented
+ doubles as exact doubles).  Thus, if we want one augmented double
+ on average, we need something like s = 1.5 Sqrt(N) samples.  But it
+ is beneficial to move the Poisson distribution toward a symmetric
+ Normal curve, so 2.5 Sqrt(N) or 3 Sqrt(N) are reasonable
+ experimental minimums.
+
+
+ The Advance
+
+ A new statistically-exact combinatoric relationship has been found
+ between population and value repetition in random trials.  Since
+ previous well-known estimates could be used for rough estimates,
+ it is not clear that this is a breakthrough in practice.
+
+ However, the identification of an applicable _exact_ relationship,
+ and its expected distribution in random trials, is important in
+ that it clarifies what we can expect to see in actual use.
+
+ The paper starts with simple probability, limits itself to algebra
+ and statistics, discusses the existing techniques for exact and
+ other repetitions, and develops general expressions for augmented
+ repetitions.  It also has tables of all possible trials for some
+ tiny populations, whose resulting repetition values correspond to
+ predictions exactly.  The paper also has some nice graphs of
+ experimental results on larger populations, which show a real
+ Poisson distribution in action, and tables show the effect of
+ estimating population from the experimental results.
+
+ ---
+ Terry Ritter   ritter@io.com
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00709.html">No Subject</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00712.html">Re: State Dept Response to my second CJ request</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00736.html">So what do you think...</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00732.html">Enhanced One-time pad</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00725"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00725"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

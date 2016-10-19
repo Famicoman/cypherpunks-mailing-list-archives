@@ -1,0 +1,169 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: RC2&#45;&#45;Some very preliminary analysis -->
+<!--X-From-R13: qnjNqnja7.QE.Prexryrl.SRG (Rnivq O Intare) -->
+<!--X-Date: Wed, 7 Feb 1996 06:05:09 +0800 -->
+<!--X-Message-Id: 199602060250.VAA11055@bb.hks.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: RC2--Some very preliminary analysis</TITLE>
+<LINK REV="made" HREF="mailto:daw@dawn7.CS.Berkeley.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00490.html">Date Prev</A>][<A HREF="msg00436.html">Date Next</A>][<A HREF="msg00259.html">Thread Prev</A>][<A HREF="msg00249.html">Thread Next</A>][<A HREF="index.html#00434">Date Index</A>][<A HREF="threads.html#00434">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: RC2--Some very preliminary analysis</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: RC2--Some very preliminary analysis</LI>
+<LI><em>From</em>: <A HREF="mailto:daw@dawn7.CS.Berkeley.EDU">daw@dawn7.CS.Berkeley.EDU</A> (David A Wagner)</LI>
+<LI><em>Date</em>: Mon, 5 Feb 1996 21:50:37 -0500</LI>
+<LI><em>References</em>: <A HREF="msg00259.html">01I0SDBW5VYY984JFR@delphi.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+In article &lt;<A HREF="msg00259.html">01I0SDBW5VYY984JFR@delphi.com</A>&gt;,  &lt;JMKELSEY@delphi.com&gt; wrote:
+[ ... 1/4 of a cycle of RC2: ... ]
+&gt; A = rotl(A + f(B,C,D) + sk[i], 1);
+     [...]
+&gt; Has anyone looked at this cipher with regard to linear attacks?
+
+A little bit.
+
+&gt;           However, it's not clear to me how to build linear
+&gt; characteristics that will make it through more than a few rounds of
+&gt; alleged-RC2.  Linear characteristics that are spread across many
+&gt; subblocks (i.e., partly in A and partly in B) seem to get messed up
+&gt; quickly by the rotations.
+
+Hrmm, I'm not convinced that it's so hard to build a linear characteristic;
+there are plenty of 1/4-cycle characteristics that don't spread out very
+much.  The problem is that I can't find any approximations with high enough
+bias to be useful.
+
+So here's some information on the (useless) linear characteristics I've been
+thinking about; maybe this will prompt some clever improvement from someone
+else.  They're all based on two observations: first, the addition operation
+	Y = A + X
+has linear characteristics of the form
+	Y[i] = A[i] + X[i,i-1]		bias 1/2
+	Y[i] = A[i,i-1] + X[i]		bias 1/2
+and second, the bit-multiplexing function
+	X = f(B,C,D)
+has linear characteristics of the form
+	X[i] = B[i]			bias 1/2
+	X[i] = C[i]			bias 1/2
+	X[i] = B[i] + D[i]		bias 1/2
+	X[i] = C[i] + D[i] + 1		bias 1/2
+	etc.
+(A note on notation: X[i] denotes the i-th bit of X, and
+X[i,j,k] = X[i] + X[j] + X[k].  If an approximation holds with probability
+p, then I say it has bias b = 2 |p - 1/2|; note that adding two approximations
+multiplies their biases, and that one needs about 1/b^2 known plaintexts
+to take advantage of a linear characteristic for the whole cipher.  Next,
+let K denote the 1/4-cycle subkey, and let A' denote the new value of A
+after the 1/4-cycle is applied to it.  Also, + denotes xor in approximations.
+By 1/4-cycle, I mean something of the form A = rotl(A + f(B,C,D) + K, 1);
+so RC2 has 16 full cycles, and each full cycle has 4 1/4-cycles.)
+
+Now given those building blocks for linear characteristics, you can combine
+them to get various linear characteristics for 1/4 of a cycle, like this:
+	A'[i+1] = A[i,i-1] + B[i] + K[i,i-1]	bias 1/8
+	A'[i+1] = A[i] + B[i,i-1] + K[i,i-1]	bias 1/8
+	A'[i+1,i] = A[i,i-2] + B[i,i-1] + K[i,i-2]	bias 1/64
+	A'[i+1,i] = A[i,i-1] + B[i,i-2] + K[i,i-2]	bias 1/64
+	A'[i+1] = A[i,i-1] + C[i] + K[i,i-1]	bias 1/8
+	A'[i+1] = A[i] + C[i,i-1] + K[i,i-1]	bias 1/8
+	etc.
+These don't spread out too well; I haven't completely worked out how to
+do many-cycle linear approximations, but I think they shouldn't be too hard
+to find.  (For instance, keep only A and C active, or somesuch.)
+
+The real stumbling block is the lack of high-bias linear approximations for
+a 1/4-cycle, not the difficulty of combining them, IMHO.  For instance, if
+you supposed that there was just one 1/8-bias linear approximation active
+in each full cycle, we get a total bias over 16 cycles of 2^{-48}, which
+would imply something like 2^{96} known plaintexts for a linear attack.
+This is an overly optimistic estimate, since any full 16-cycle linear
+characteristic which I can imagine will probably require more than one
+linear approximation per cycle.  (It also ignores the non-iterative rounds;
+but I think they'll be easy to deal with if you can handle everything else.)
+
+What makes the 1/4-cycle linear approximations have such a low bias is RC2's
+extensive use of addition mod 2^32 instead of bitwise xor.
+
+So anyhow, the final word is that I don't see how to do linear cryptanalysis
+of RC2, but maybe someone else will have some insights.
+
+P.S. There is an analogue of differential cryptanalysis where we consider the
+difference measure as addition mod 2^32 instead of bitwise xor.  Is there
+a similar generalization of linear cryptanalysis?  I don't know any, offhand.
+- ---
+[This message has been signed by an auto-signing service.  A valid signature
+means only that it has been received at the address corresponding to the
+signature and forwarded.]
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+Comment: Gratis auto-signing service
+
+iQBFAwUBMRbB/CoZzwIn1bdtAQEKEAGAujcKp6aM4OV9AoveQaFQdEpQi/hQTSK/
+YoMEkSKYtt+aq0Usv5nMHB7ikEflmGak
+=TYbl
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00490.html">Re: Why am I wrong?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00436.html">Why am I wrong?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00259.html">RC2--Some very preliminary analysis</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00249.html">Zundelsite webcom.com &lt;--&gt; Germany routing difficulties resolved</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00434"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00434"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

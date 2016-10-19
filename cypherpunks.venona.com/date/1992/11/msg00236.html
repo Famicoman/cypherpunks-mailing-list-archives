@@ -1,0 +1,192 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Electronic Banking -->
+<!--X-From-R13: tufink!unyNhharg.GG.@SF (Vny Tvaarl) -->
+<!--X-Date: Wed, 25 Nov 92 13:04:57 PST -->
+<!--X-Message-Id: 9211251953.AA01487@nano.noname -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Electronic Banking</TITLE>
+<LINK REV="made" HREF="mailto:ghsvax!hal@uunet.UU.NET">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00244.html">Date Prev</A>][<A HREF="msg00239.html">Date Next</A>][<A HREF="msg00241.html">Thread Prev</A>][<A HREF="msg00242.html">Thread Next</A>][<A HREF="index.html#00236">Date Index</A>][<A HREF="threads.html#00236">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Electronic Banking</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Electronic Banking</LI>
+<LI><em>From</em>: <A HREF="mailto:ghsvax%21hal@uunet.UU.NET">ghsvax!hal@uunet.UU.NET</A> (Hal Finney)</LI>
+<LI><em>Date</em>: Wed, 25 Nov 92 11:53:27 PST</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Some time back Tim May suggested that we should do some experiments
+with electronic cash.  He offered to do some Xeroxing if people would
+"pay" him.
+
+There are lots of proposals for electronic cash in the literature,
+mostly very complex.  I think one of Chaum's simpler proposals would be
+adequate for email "banking".  This proposal, from the beginning of
+his paper "Untraceable Electronic Cash" in Crypto 88(?), goes like
+this:
+
+1. Alice chooses a random x and r, and supplies the bank with
+B=r^3*f(x) mod n, where f is a one-way function (like MD5), and n is
+the modulus for the bank's public key.
+
+2. The bank takes the third root of B (e.g. via an RSA decryption) and
+sends it back to Alice: D = r * f(x)^(1/3), and withdraws one dollar from
+her account.
+
+3. Alice extracts C = f(x)^(1/3) by dividing D by r.  (Note that
+division can be done mod n without knowing the factors of n, but it's
+rather complicated.)
+
+4. To pay Bob one dollar, Alice gives him (x, C).
+
+5. Bob can verify that C = f(x)^(1/3), but he still has to send (x, C)
+to the bank in order to make sure that x hasn't been used before.
+Otherwise Alice could spend (x, C) twice.  The bank increases Bob's
+account by one dollar.
+
+This scheme is pretty simple and provides untraceability - the bank
+saw B and D but not C, so although it can verify that (x, C) is legit,
+it can't correlate that with Alice's withdrawal.
+
+The main disadvantage of this approach is that Bob has to send (x, C)
+to the bank right away (or at least before sending Alice anything in
+return for her cash) to verify that the cash hasn't been used before.
+But in email, where turnarounds of a day or more aren't unusual, this
+should be tolerable.
+
+Alice and Bob could be pseudonyms, using anonymous addresses to
+communicate with each other and with the bank.
+
+Different denominations of cash could correspond to different
+exponents than "3" in the example above.  (That is, $1 would use
+C=f(x)^(1/3), $2 would use C=f(x)^(1/5), $4 would use C=f(x)^(1/7),
+and so on.)
+
+Technically, this would be quite easy to implement, using the code in
+PGP for the arithmetic, and MD5 for the one-way function.  We'd need
+to define a few message formats.  The RFC1113 ascii encoding from PGP
+could be used as well.
+
+The "social" problems are more challenging, it seems to me.  What is
+the backing for this electronic money?  Why do people care what their
+bank balances are?  Is this stuff really worth anything?
+
+One possibility is to base digital cash on real money.  People would
+open a pseudonymous account via email, then postal-mail dollars to the
+bank, enclosing their account number so the bank would know whom to
+credit with the deposit.  Later, if someone wanted to withdraw "real
+money" from their account they would have to give a real postal
+address where it could be mailed.  Now the electronic money is worth
+real dollars.  Even if people didn't deposit or withdraw very often,
+it still has value because of the backing.
+
+Unfortunately, this approach would currently be illegal (at least,
+unless you actually were a real bank!).  If there were some way the
+bank itself could be anonymous, it might survive, but I don't see how
+to mail it money while keeping the anonymity.  Still, we could
+consider experimenting with this on a small scale with accounts of no
+more than a few dollars.  As long as it was clearly an experiment I
+doubt that any prosecutions would result even if it attracted
+government attention, because the expense involved in court costs
+would be so disproportionate to the few dollars involved in this
+technically illegal act.
+
+Another approach would be not to try backing the digital cash at all,
+or rather backing it implicitly by the determination of various people
+to accept it and perform services or supply goods in return for it.
+Tim's offer to Xerox papers in return for digital cash would be one
+example.  Perhaps others could provide some other services.  It would
+be great if some shareware author would accept digital cash as a
+symbol of support for crypto anonymity.
+
+One problem that I see with this approach is how you determine the
+size of the money supply.  Or, in other words, how does new digital
+cash get started circulating?  How do people get new accounts, and how
+much money is in them?
+
+If these problems can be solved, a big advantage of this approach is
+that the banker can be anonymous.  He would be known only by his
+anonymous address and his public key(s).  This would provide some
+safety in the event that even a small-scale experiment like this
+was targetted for a crackdown.
+
+Another issue is the prospect of multiple "banks", each issuing their
+own (incompatible) cash.  How would they compete?  Perhaps in terms of
+rapid turnaround?  Some might choose to be anonymous, others would go
+public.  The latter would have the advantage that people might trust
+them more, but OTOH there is more chance of your bank account
+disappearing after a crackdown for a public bank than an anonymous
+one.
+
+Lots to think about here!
+
+Hal
+74076.1041@compuserve.com
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00242" HREF="msg00242.html">Re: Electronic Banking</A></STRONG>
+<UL><LI><EM>From:</EM> tcmay@netcom.com (Timothy C. May)</LI></UL></LI>
+<LI><STRONG><A NAME="00375" HREF="msg00375.html">Electronic Banking</A></STRONG>
+<UL><LI><EM>From:</EM> Eric Hughes &lt;hughes@soda.berkeley.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00244.html">Re: An easy-to-reply anonymous mail scheme</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00239.html">Re: SF Bay Area Parties</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00241.html">Re: anonymous reply</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00242.html">Re: Electronic Banking</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00236"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00236"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

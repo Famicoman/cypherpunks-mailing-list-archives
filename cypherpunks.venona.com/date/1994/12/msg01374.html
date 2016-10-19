@@ -1,0 +1,169 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Are 2048&#45;bit pgp keys really secure ? -->
+<!--X-From-R13: qnavfpuNven.hxn.qr (Vnqzhg Rnavfpu) -->
+<!--X-Date: Tue, 27 Dec 94 11:41:22 PST -->
+<!--X-Message-Id: 9412271941.AA19596@elysion.iaks.ira.uka.de -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Are 2048-bit pgp keys really secure ?</TITLE>
+<LINK REV="made" HREF="mailto:danisch@ira.uka.de">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01355.html">Date Prev</A>][<A HREF="msg01358.html">Date Next</A>][<A HREF="msg01359.html">Thread Prev</A>][<A HREF="msg01358.html">Thread Next</A>][<A HREF="index.html#01374">Date Index</A>][<A HREF="threads.html#01374">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Are 2048-bit pgp keys really secure ?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Are 2048-bit pgp keys really secure ?</LI>
+<LI><em>From</em>: <A HREF="mailto:danisch@ira.uka.de">danisch@ira.uka.de</A> (Hadmut Danisch)</LI>
+<LI><em>Date</em>: Tue, 27 Dec 1994 20:41:06 --100</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+A 2048-bit pgp key ( n=p*q somewhere around 2^2048,
+p and q somewhere around 2^1024) is only as secure as it looks
+like, if both p and q are prime numbers. 
+
+In fact p and q are only pseudo prime numbers, they are not proven to
+be prime numbers. It is known only that they have a high probability
+to be prime numbers. 
+
+Usually a candidate number is send through a probabilistic prime test
+which says either "No, not a prime" or "a prime with a probability of
+at least 50% ". Usually this test is repeated 10 or 20 times, so after
+passing this iteration the probability of having a prime number is at
+least 1:2^10 or 1:2^20 . 
+
+Would such a test be sufficient for generating 1024-bit prime numbers?
+Does it make sense to use pseudo-prime-numbers with a low probability of
+1:2^10 only to generate a rsa key with a 2048 bit n ?
+
+Now have a look at pgp2.6.2:
+
+In genprime.c the prime numbers are generated. After testing the
+candidates with a table of small primes, they are passed to
+slowtest(). [Read slowtest and its comment...]
+
+slowtest() does not do one of the usual primality tests. It just passes
+the candidate through a Fermat test. Only four (4!) passes are done.
+
+The comment of slowtest() gives a probability of 10^-44 to fail for a 
+number of about 512 bit. If this is true ( 10^-44  ~  2^-146 ), about
+one of 10^44 keys is weak. This shouldn't be a problem, 10^44 is quite
+big.
+
+But at the moment I can't follow the arguments, why 4 Fermat tests
+should be enough to find good (pseudo-)primes. I can't see a reason
+why the iteration should already be stopped after the 4th
+loop. Generating a key should be worth to wait some minutes longer,
+especially when this doesn't need interactive work. I am also not
+convinced yet of the Fermat test. Why not use a Rabin-Miller-Test ?
+
+I have read only a very small piece of the pgp code yet, but if I
+understand the code of slowtest well (correct me if not...) the
+command mp_init(x, primetable[i]) for i=0,1,2,3 sets mpi x to
+the values 2,3,5,7 . If I understood this well, the slowtest() is
+nothing more than testing for a given p whether 
+
+ 2^(p-1)  = 1  mod p
+ 3^(p-1)  = 1  mod p
+ 5^(p-1)  = 1  mod p
+ 7^(p-1)  = 1  mod p
+
+
+Any comments?
+
+
+BTW: The comment of slowtest() references "Finding Four Million Large
+Random Primes", by Ronald Rivest, in Advancess in Cryptology:
+Proceedings of Crypto '91.
+
+I have the "Advances in Cryptology - Crypto '91, Proceedings", Lecture
+Notes in Computer Science, 576, Springer, here. Call me blind or
+stupid, but I can't find the referenced Article. Neither the Title in
+the contents, nor R. Rivest in the Author Index. Can anybody tell me
+where to find the referenced Article ?
+
+
+Hadmut Danisch
+
+
+BTW 2: pgp2.6.2 doesn't work well if a key identified by its keyid is
+keychecked ( pgp -kc 0x... ). It stops after the first signature
+with a signators key shorter than the signed/checked key, because the
+global precision is changed and not changed back for testing the
+signature. 
+
+
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBLwBtzGc1jG5vDiNxAQHi6wP/WS3afYhQ0ijJZfWbByjtvPrCZtCfDs1M
+1p8Paqx0ZIIgCE2G6tY8JTlZ6tn5nEY4/qGHS3Q3TrO77HVheKq2bHMajGzSA3At
+CoX65ycg2Pn30q7PeLY89vtNosW568CqnmpPAmusD+o9CFO6RpFFZxIb5pgY5brF
+8ll/F1ztdmM=
+=JZS6
+-----END PGP SIGNATURE-----
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01358" HREF="msg01358.html">Re: Are 2048-bit pgp keys really secure ?</A></STRONG>
+<UL><LI><EM>From:</EM> eric@remailer.net (Eric Hughes)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01355.html">RE: EXPORT CONTROLS ON RC</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01358.html">Re: Are 2048-bit pgp keys really secure ?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01359.html">credit card charges</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01358.html">Re: Are 2048-bit pgp keys really secure ?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01374"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01374"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

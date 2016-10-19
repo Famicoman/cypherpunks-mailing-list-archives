@@ -1,0 +1,1240 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: How to do encrypted telnet without being root (tutorial, includes src) -->
+<!--X-From-R13: tgbnyNna&#45;grnyynpu.pbz (Uenunz Fbny) -->
+<!--X-Date: Fri, 4 Mar 94 03:33:29 PST -->
+<!--X-Message-Id: 199403041131.LAA06991@an&#45;teallach.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>How to do encrypted telnet without being root (tutorial, includes src)</TITLE>
+<LINK REV="made" HREF="mailto:gtoal@an-teallach.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00227.html">Date Prev</A>][<A HREF="msg00232.html">Date Next</A>][<A HREF="msg00260.html">Thread Prev</A>][<A HREF="msg00233.html">Thread Next</A>][<A HREF="index.html#00246">Date Index</A>][<A HREF="threads.html#00246">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>How to do encrypted telnet without being root (tutorial, includes src)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:alt%2Dsecurity%2Dpgp@demon.co.uk">alt-security-pgp@demon.co.uk</A>, <A HREF="mailto:alt%2Dsources@demon.co.uk">alt-sources@demon.co.uk</A>,       <A HREF="mailto:comp%2Dsecurity%2Dunix@demon.co.uk">comp-security-unix@demon.co.uk</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: How to do encrypted telnet without being root (tutorial, includes src)</LI>
+<LI><em>From</em>: <A HREF="mailto:gtoal@an%2Dteallach.com">gtoal@an-teallach.com</A> (Graham Toal)</LI>
+<LI><em>Date</em>: Fri, 4 Mar 1994 11:31:41 GMT</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+People have been talking about encrypted telnets for ages, but I still
+haven't seen one I can easily use.  And most suggestions would actually
+require a sysadmin to install a special telnet daemon.  Here's a suggestion
+for how to do encrypted telnet sessions *without* any system code.
+
+It's quite simple - there's a process called 'remote' which sits between
+your keyboard/screen and the actual machine you're using.  Very much like
+the way the 'script' program works, or perhaps 'screen' (though the latter
+is much much more complex than script).  'remote' encrypts all screen
+output.
+
+Next, there's a program called 'local'; you run local on your directly-
+connected local host.  Normally local is transparent, and works again
+pretty much like 'script' (except of course there's no logging :-) );
+however when local sees a certain magic string has been printed, it
+then assumes the data following will be encrypted, and it decrypts
+everything that's sent to your screen. (This 'in band' data is a little
+unclean, but it's what makes the whole scheme possible in user-level code)
+
+Actually it's *slightly* more complicated than this; when local sees
+the magic string, it starts up a conversation with whatever it's running
+on top of, and does some sort of key exchange to use with the encryption.
+(This conversation works by looking at the data that would otherwise be
+sent to the screen, and replying by simulating data as if it had been
+typed)
+
+I took two hours last night to actually hack up a version of these programs
+- the hack uses rot13 as its encryption method, and the key exchange is
+completely bogus.  But it does show the method in action, and it wouldn't
+take much to adapt this to use a real encryption function.  Left as the
+proverbial exercise for the reader.
+
+
+So, in summary...
+
+% local
+% telnet remotehost  # (one that lets you log in with a 1-time password?)
+% remote
+
+Here's an actual log of such a session.  I run the remote program first just
+to show you that the encryption does something - the process is so
+transparent that you might not follow it otherwise :-)
+
+Anyway, the point of this mechanism is that - like pgp - it is *user*
+code that you can take with you anywhere; you don't need the co-operation
+of the sys admins at each pair of sites you use.
+
+If anyone wants to take this ball and run with it to produce something
+that's a little more secure than rot13, be my guest.  The only copyright
+here is the Berkeley one attached to the original 'script' source.  Once
+you've got the idea, you might consider rewriting that bit from scratch too.
+
+G
+
+Script started on Fri Mar  4 10:44:32 1994
+suilven% cd src/utel
+suilven% ./remote                                    | Start encrypted session
+REMOTE: Asking local to start an encrypted session   |
+[%MAGIC-PGP-START-SESSION%]                          | Expects a typed
+actually this stuff doesnt matter                    | key-exchange
+[%I-REPLY%]                                          |
+wibble-wobble/actually this stuff doesnt matter      | - this is clearly
+[%WHAT-DO-YOU-SAY?%]                                 |   a dummy exchange
+nothing really                                       |
+[%FAIR-ENOUGH-ANYTHING-ELSE?%]                       |
+this is a dummy key exchange                         |
+[%THANK-YOU%]                                        |
+fhvyira% cjq                                         | % pwd
+/hfe/ubzr/tgbny/fep/hgry                             |
+fhvyira%                                             | ^D
+[%ZNTVP-CTC-RAQ-FRFFVBA%]                            | 'end of session' message
+suilven% 
+suilven% ./local
+LOCAL: I'll switch to encrypted mode when someone talks to me!
+suilven% telnet localhost
+Trying 127.0.0.1...
+Connected to localhost.an-teallach.com.
+Escape character is '^]'.
+
+
+BSDI BSD/386 1.0 (suilven.an-teallach.com) (ttyp8)   | We're now running
+                                                     | over a telnet link
+login: gtoal
+Password:
+BSDI BSD/386 1.0 Kernel #6: Wed Oct  6 11:42:35 GMT 1993
+
+
+pgp password: 
+suilven% cd src/utel
+suilven% ./remote                                   | start encryptor, do
+REMOTE: Asking local to start an encrypted session  | key exchange (hidden)
+[%MAGIC-PGP-START-SESSION%]                         | local notices this rune
+suilven% echo Not obvious, but this is an encrypted telnet...
+Not obvious, but this is an encrypted telnet...
+suilven%                                            | ^D, end encryption
+[%MAGIC-PGP-END-SESSION%]                           | local spots this magic
+suilven% logout                                     | string and stops decrypt
+Connection closed by foreign host.                  | now a ^D to end local
+suilven% LOCAL: Done.  (I won't be looking for encrypted output any more...)
+suilven% 
+Script done on Fri Mar  4 10:46:24 1994
+
+And for your edification, here's the code. (bsd systems only - tested
+on BSDI and 386BSD)
+
+*BIG NOTE*... there are (ahem) one or two rather hacky bits in here.
+As I said, it was a two-hour hack just to prove the point that code
+like this can be written easily and it doesn't take a systems manager
+to install it.  (Also, being code you compile yourself, you might
+trust it a little more).  Noticably the rot13 encryption neatly
+allows me to avoid problems sending binary data.  Doing this for
+real, your output to screen/read from output stream code should
+encode each encrypted byte as two hexascii bytes for portability;
+also a few newlines here and there to keep the buffers flushed
+wouldn't hurt.  And there's a *filthy* piece of code to do keyboard
+stuffing in here.  This is *not* how you'd do it in a production
+program.  A security hole a mile wide.  I couldn't be bothered
+learning how to do internal pipes for this quick proof-of-concept
+hack, so I used a file in /tmp to communicate through...
+
+*BIG NOTE #2* This only does screen output; keyboard input is also
+left as a trivial exercise to the reader...
+
+# This is a shell archive.  Save it in a file, remove anything before
+# this line, and then unpack it by entering "sh file".  Note, it may
+# create directories; files and directories will be owned by you and
+# have default permissions.
+#
+# This archive contains:
+#
+#	Makefile
+#	local.c
+#	remote.c
+#
+echo x - Makefile
+sed 's/^X//' &gt;Makefile &lt;&lt; 'END-of-Makefile'
+Xall: remote local
+X	echo All up to date
+X
+Xremote: remote.c
+X	cc -o remote remote.c
+X
+Xlocal: local.c
+X	cc -o local local.c
+END-of-Makefile
+echo x - local.c
+sed 's/^X//' &gt;local.c &lt;&lt; 'END-of-local.c'
+X/*
+X     This is a trivial (2 hour) hack to the 'script' command
+X    to show the general principle involved in hacking up a user-level
+X    encrypted telnet equivalent.  This particular hack uses 'rot13'
+X    as its 'encryption'; feel free to make it (ahem) more robust.
+X */
+X
+X/*
+X
+X
+X             +---------+      +----------+      +-------------------+
+Xkeyboard----&gt;|         |-----&gt;|          |-----&gt;|-\                 |
+X             |  local  |      |  remote  |      |  | remote process |
+X     vdu&lt;----|         |&lt;-----|          |&lt;-----|-/                 |
+X             +---------+  ^   +----------+      +-------------------+
+X                          |
+X                          |
+X                          This line may include a telnet session...
+X
+X*/
+X
+X/*
+X * Copyright (c) 1980 Regents of the University of California.
+X * All rights reserved.
+X *
+X * Redistribution and use in source and binary forms, with or without
+X * modification, are permitted provided that the following conditions
+X * are met:
+X * 1. Redistributions of source code must retain the above copyright
+X *    notice, this list of conditions and the following disclaimer.
+X * 2. Redistributions in binary form must reproduce the above copyright
+X *    notice, this list of conditions and the following disclaimer in the
+X *    documentation and/or other materials provided with the distribution.
+X * 3. All advertising materials mentioning features or use of this software
+X *    must display the following acknowledgement:
+X *	This product includes software developed by the University of
+X *	California, Berkeley and its contributors.
+X * 4. Neither the name of the University nor the names of its contributors
+X *    may be used to endorse or promote products derived from this software
+X *    without specific prior written permission.
+X *
+X * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+X * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+X * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+X * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+X * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+X * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+X * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+X * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+X * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+X * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+X * SUCH DAMAGE.
+X */
+X
+X#ifndef lint
+Xchar copyright[] =
+X"@(#) Copyright (c) 1980 Regents of the University of California.\n\
+X All rights reserved.\n";
+X#endif /* not lint */
+X
+X#ifndef lint
+Xstatic char sccsid[] = "@(#)script.c	5.13 (Berkeley) 3/5/91";
+X#endif /* not lint */
+X
+X/*
+X * script
+X */
+X#include &lt;unistd.h&gt;
+X#include &lt;sys/types.h&gt;
+X#include &lt;sys/stat.h&gt;
+X#include &lt;termios.h&gt;
+X#include &lt;sys/ioctl.h&gt;
+X#include &lt;sys/time.h&gt;
+X#include &lt;sys/file.h&gt;
+X#include &lt;sys/signal.h&gt;
+X#include &lt;stdlib.h&gt;
+X#include &lt;stdio.h&gt;
+X#include &lt;string.h&gt;
+X#include &lt;errno.h&gt;
+X#include &lt;stdarg.h&gt;
+X#include &lt;paths.h&gt;
+X
+Xchar	*shell;
+Xint	master;
+Xint	slave;
+Xint	child;
+Xint	subchild;
+Xchar	*fname;
+X
+Xstruct	termios tt;
+Xstruct	winsize win;
+Xint	lb;
+Xint	l;
+Xchar	line[] = "/dev/ptyXX";
+Xint	aflg;
+X
+X
+Xstatic int debug = 0;
+X
+X#define NULLFILE "/dev/null"
+X#define LOGFILE "utel.log"
+X
+Xstatic int suppress_debug = (0!=0);
+X
+Xstatic void debugf(char *s, ...) {
+Xstatic int checked = 0;
+Xint string_length;
+XFILE *nullfile;
+XFILE *errfile;
+Xstatic char buff[256];
+Xva_list ap;          
+X  if (checked == 0) { checked = 1;
+X    /* Only want to log if logfile exists already... */
+X    errfile = fopen(LOGFILE, "r");
+X    suppress_debug = (errfile == NULL);
+X    if (errfile != NULL) fclose(errfile);
+X  }
+X
+X  nullfile = fopen(NULLFILE, "w");
+X  if (nullfile == NULL) {
+X    errfile = fopen(LOGFILE, "a");
+X    if (errfile != NULL) {
+X      fprintf(errfile, "Major error - cannot open %s\n", NULLFILE);
+X      fflush(errfile);
+X      fclose(errfile);
+X    }
+X    exit(1);
+X  }
+X
+X  va_start(ap, s);
+X  string_length = vfprintf(nullfile, s, ap);
+X  if (string_length &lt; 126) {
+X    vsprintf(buff, s, ap);
+X  } else {
+X    sprintf(buff, "[%d char debugf string excised]\n", string_length);
+X  }
+X  va_end(ap);
+X
+X  fclose(nullfile);
+X
+X  if (suppress_debug) return;
+X  errfile = fopen(LOGFILE, "a");
+X  if (errfile != NULL) {
+X    fprintf(errfile, "%s", buff);
+X    fflush(errfile);
+X    fclose(errfile);
+X  }
+X}
+X
+X
+X
+Xint session_started = (0!=0);
+X
+X#define STATE_SIZE 128
+Xtypedef struct cypherstate {
+X  char whatever[STATE_SIZE];
+X  long int byteno;
+X  /* Add useful stuff here as need be... */
+X} CYPHER_STATE;
+X
+Xvoid new_cypher(CYPHER_STATE *s)
+X{
+X  int i;
+X  /* Random mockup code as a placeholder... */
+X  for (i = 0; i &lt; STATE_SIZE; i++) {
+X    s-&gt;whatever[i] = 0;
+X  }
+X  s-&gt;byteno = 0L;
+X}
+X
+X#define MAX_KEYLINELEN 4096
+X/* Need to hack this to allow for errors... */
+X
+Xstatic void getline(int masterfd, char *answer)
+X{
+Xchar *s;
+Xint i;
+Xint rc;
+Xchar c;  
+X  i = 0;
+X  s = answer;
+X  for (;;) {
+X    rc = read(masterfd, &amp;c, 1);
+X    if (rc != 1) continue;
+X    if (c == '\r') continue;
+X    if (c == '\n') break;
+X    i += 1;
+X    if (i == MAX_KEYLINELEN) {
+X      fprintf(stderr, "Protocol failure - line too long\n");
+X      break;
+X    }
+X    *s++ = c;
+X  }
+X  *s = '\0';
+X}
+X
+Xvoid expect(int masterfd, char *line)
+X{
+Xstatic char answer[MAX_KEYLINELEN];
+X  answer[0] = '\0';
+X  getline(masterfd, answer);
+X  debugf("Expect: Want '%s', Got '%s'\n", line, answer);
+X  if (strcmp(line, answer) != 0) {
+X    /*fprintf(stderr, "\r\nProtocol failure - wanted '%s' - got '%s'\r\n",
+X      line, answer);
+X    fflush(stderr);*/
+X    return;
+X  }
+X  /*fflush(stderr);*/
+X}
+X
+Xvoid faketype(char *s)
+X{
+X  /* Ask out other half to send this text as if it had been typed. */
+X  FILE *hack;
+X  debugf("faketype: sending '%s'\n", s);
+X  hack = fopen("/tmp/typeme", "r");
+X  if (hack != NULL) {
+X    char *ptr;
+X    char tmp[128];
+X    fgets(tmp, 127, hack);
+X    ptr = strchr(tmp, '\n');
+X    if (ptr != NULL) *ptr = '\n';
+X    fprintf(stderr, "Oops - last line (%s) not sent yet!\n", tmp);
+X    fclose(hack);
+X    return;
+X  }
+X  hack = fopen("/tmp/typeme.tmp", "w");
+X  if (hack == NULL) {
+X    fprintf(stderr, "Can't faketype to /tmp/typeme\n");
+X    return;
+X  }
+X  fprintf(hack, "%s\n", s);
+X  fclose(hack);
+X  rename("/tmp/typeme.tmp", "/tmp/typeme");
+X}
+X
+X/* This procedure is invoked at a random time in the middle
+X   of a session of 'local' when the MAGIC-PGP-START-SESSION
+X   string is recognised as just having been printed... */
+Xvoid NEGOTIATE_SESSION_KEYS(
+X  int masterfd, FILE *out,
+X  CYPHER_STATE *outkey, CYPHER_STATE *inkey)
+X{
+Xstatic char keyline[MAX_KEYLINELEN];
+Xchar *ptr;
+X
+X  new_cypher(outkey);
+X  new_cypher(inkey);
+X  /* Engage in a conversation with the program at the other
+X     side to negotiate a session key.  How you do this is
+X     up to you. */
+X  faketype("Hello big boy!"); expect(masterfd, "Hello big boy!");
+X  /* At this point, the other half *must* poll the file and
+X     send the data or we're in trouble */
+X  expect(masterfd, "[%I-REPLY%]");
+X  getline(masterfd, keyline);
+X  expect(masterfd, "[%WHAT-DO-YOU-SAY?%]");
+X  faketype("Nice weather..."); expect(masterfd, "Nice weather...");
+X  expect(masterfd, "[%FAIR-ENOUGH-ANYTHING-ELSE?%]");
+X  faketype("Thank you for calling &lt;beep&gt;");
+X  expect(masterfd, "Thank you for calling &lt;beep&gt;");
+X  expect(masterfd, "[%THANK-YOU%]");
+X  session_started = (0==0);
+X}
+X
+XCYPHER_STATE outstate, instate;
+X
+Xchar rot13(char c)
+X{
+Xreturn(isalpha(c) ? ((c &gt; (islower(c) ? 'z' : 'Z')-13) ? c - 13 : c + 13) : c);
+X}
+X
+Xchar decrypt_stream_cypher(CYPHER_STATE *s, char byte)
+X{
+X  return(rot13(byte)); /* bwahahahaha! */
+X}
+X
+Xvoid ENCRYPT_KEYBOARD_INPUT(char *buff, int count)
+X{
+X  /* First iteration - keyboard input in clear,
+X     only screen output to be encrypted */
+X}
+X
+Xvoid DECRYPT_SCREEN_OUTPUT(char *buff, int count)
+X{
+X  int i;
+X  if (session_started) {
+X    for (i = 0; i &lt; count; i++) {
+X      buff[i] = decrypt_stream_cypher(&amp;outstate, buff[i]);
+X    }
+X  }
+X}
+X
+Xint scanfor_start(int masterfd, char c)
+X{
+X#define MAGIC "[%MAGIC-PGP-START-SESSION%]"
+X#define MAGICLEN strlen(MAGIC)
+Xstatic char *buffer = NULL;
+Xstatic int nextfree = 0;
+X  c &amp;= 127;
+X  if (c == 13) return(0!=0);
+X  /* An expensive hack, but who cares... */
+X  if (buffer == NULL) {
+X    buffer = malloc(MAGICLEN+1);
+X    memset(buffer, ' ', MAGICLEN-1);
+X    buffer[MAGICLEN] = '\0';
+X  }
+X  if (c == '\n') {
+X    if (memcmp(buffer, MAGIC, MAGICLEN) == 0) {
+X      NEGOTIATE_SESSION_KEYS(masterfd, stdout, &amp;outstate, &amp;instate);
+X      /*printf("LOCAL: starting session\r\n");*/
+X      return(0==0);
+X   }
+X  }
+X  memmove(buffer, buffer+1, MAGICLEN-1);
+X  buffer[MAGICLEN-1] = c;
+X#undef MAGIC
+X#undef MAGICLEN
+X  return(0!=0);
+X}
+X
+Xvoid scanfor_end(int masterfd, char c)
+X{
+X#define MAGIC "[%MAGIC-PGP-END-SESSION%]"
+X#define MAGICLEN strlen(MAGIC)
+Xstatic char *buffer = NULL;
+Xstatic int nextfree = 0;
+X  c &amp;= 127;
+X  if (c == 13) return;
+X  /* An expensive hack, but who cares... */
+X  if (buffer == NULL) {
+X    buffer = malloc(MAGICLEN+1);
+X    memset(buffer, ' ', MAGICLEN-1);
+X    buffer[MAGICLEN] = '\0';
+X  }
+X  if (c == '\n') {
+X    if (memcmp(buffer, MAGIC, MAGICLEN) == 0) {
+X      /*printf("LOCAL: starting session\r\n");*/
+X      session_started = (0!=0);
+X      /* Go quiescent again.  Maybe it would be better
+X         to exit the local program entirely??? */
+X    }
+X  }
+X  memmove(buffer, buffer+1, MAGICLEN-1);
+X  buffer[MAGICLEN-1] = c;
+X#undef MAGICLEN
+X#undef MAGIC
+X}
+X
+Xint filter_incoming_text(int masterfd, char *s, int len)
+X{
+Xint i;
+Xint rc;
+X  /* Watch the incoming stream for the magic string that
+X     denotes the start of a key exchange; when it's detected,
+X     do a key exchange, and enable decryption of the session */
+X  rc = (0!=0);
+X  for (i = 0; i &lt; len; i++) {
+X    if (scanfor_start(masterfd, s[i])) {
+X      rc = (0==0);
+X    }
+X  }
+X  return(rc);
+X}
+Xvoid filter_outgoing_text(int masterfd, char *s, int len)
+X{
+Xint i;
+X  /* Watch the incoming stream for the magic string that
+X     denotes the start of a key exchange; when it's detected,
+X     do a key exchange, and enable decryption of the session */
+X  for (i = 0; i &lt; len; i++) {
+X    scanfor_end(masterfd, s[i]);
+X  }
+X}
+X
+X
+X
+Xmain(argc, argv)
+X	int argc;
+X	char *argv[];
+X{
+X	extern char *optarg;
+X	extern int optind;
+X	int ch;
+X	void finish();
+X	char *getenv();
+X
+X	while ((ch = getopt(argc, argv, "a")) != EOF)
+X		switch((char)ch) {
+X		case 'a':
+X			aflg++;
+X			break;
+X		case '?':
+X		default:
+X			fprintf(stderr, "usage: script [-a] [file]\n");
+X			exit(1);
+X		}
+X	argc -= optind;
+X	argv += optind;
+X
+X	shell = getenv("SHELL");
+X	if (shell == NULL)
+X		shell = _PATH_BSHELL;
+X
+X	getmaster();
+X	printf("LOCAL: I'll switch to encrypted mode when someone talks to me!\n");
+X
+X	fixtty();
+X
+X	(void) signal(SIGCHLD, finish);
+X	child = fork();
+X	if (child &lt; 0) {
+X		perror("fork");
+X		fail();
+X	}
+X	if (child == 0) {
+X		subchild = child = fork();
+X		if (child &lt; 0) {
+X			perror("fork");
+X			fail();
+X		}
+X		if (child)
+X			dooutput();
+X		else
+X			doshell();
+X	}
+X	doinput();
+X}
+X
+Xdoinput()
+X{
+X	register int cc;
+X	char ibuf[BUFSIZ];
+X
+X	char fakeline[MAX_KEYLINELEN];
+X	FILE *hack;
+X	char *ptr;
+X
+X        fd_set fds;
+X	struct timeval t;
+X
+X	for (;;) {
+X		timerclear(&amp;t);
+X		t.tv_sec = 1; /* No more than 1 sec without polling faketype */
+X		FD_ZERO(&amp;fds);
+X		FD_SET(0, &amp;fds);
+X
+X		cc = select(1, &amp;fds, NULL, NULL, &amp;t);
+X		if (cc == -1) {
+X			/* select error */
+X		}
+X		if (cc == 0) {
+X			/* timeout */
+X		}
+X		if (cc &gt; 0) {
+X			cc = read(0, ibuf, BUFSIZ);
+X			/* cc should be &gt; 0 */
+X			if (cc &gt; 0) {
+X				ENCRYPT_KEYBOARD_INPUT(ibuf, cc);
+X				(void) write(master, ibuf, cc);
+X			}
+X		}
+X		hack = fopen("/tmp/typeme", "r");
+X		if (hack != NULL) {
+X			ptr = fgets(fakeline, MAX_KEYLINELEN, hack);
+X			(void)write(master, fakeline, strlen(fakeline));
+X			fclose(hack);
+X			remove("/tmp/typeme");
+X		}
+X	}
+X	done();
+X}
+X
+X#include &lt;sys/wait.h&gt;
+X
+Xvoid
+Xfinish()
+X{
+X	union wait status;
+X	register int pid;
+X	register int die = 0;
+X
+X	while ((pid = wait3((int *)&amp;status, WNOHANG, 0)) &gt; 0)
+X		if (pid == child)
+X			die = 1;
+X
+X	if (die)
+X		done();
+X}
+X
+Xdooutput()
+X{
+X	time_t tvec, time();
+X	char obuf[BUFSIZ], *ctime();
+X	int cc;
+X	int rc;
+X
+X	(void) close(0);
+X	tvec = time((time_t *)NULL);
+X
+X	for (;;) {
+X		cc = read(master, obuf, sizeof (obuf));
+X		if (cc &lt;= 0) break;
+X		rc = filter_incoming_text(master, obuf, cc);
+X		if (!rc) DECRYPT_SCREEN_OUTPUT(obuf, cc);
+X		(void) write(1, obuf, cc);
+X		filter_outgoing_text(master, obuf, cc);
+X	}
+X	done();
+X}
+X
+Xdoshell()
+X{
+X	int t;
+X
+X	/***
+X	t = open(_PATH_TTY, O_RDWR);
+X	if (t &gt;= 0) {
+X		(void) ioctl(t, TIOCNOTTY, (char *)0);
+X		(void) close(t);
+X	}
+X	***/
+X	getslave();
+X	(void) close(master);
+X	(void) dup2(slave, 0);
+X	(void) dup2(slave, 1);
+X	(void) dup2(slave, 2);
+X	(void) close(slave);
+X	execl(shell, "sh", "-i", 0);
+X	perror(shell);
+X	fail();
+X}
+X
+Xfixtty()
+X{
+X	struct termios rtt;
+X
+X	rtt = tt;
+X	cfmakeraw(&amp;rtt);
+X	rtt.c_lflag &amp;= ~ECHO;
+X	(void) tcsetattr(0, TCSAFLUSH, &amp;rtt);
+X}
+X
+Xfail()
+X{
+X
+X	(void) kill(0, SIGTERM);
+X	done();
+X}
+X
+Xdone()
+X{
+X	time_t tvec, time();
+X	char *ctime();
+X
+X	if (subchild) {
+X		tvec = time((time_t *)NULL);
+X		(void) close(master);
+X	} else {
+X		(void) tcsetattr(0, TCSAFLUSH, &amp;tt);
+X		printf("LOCAL: Done.  (I won't be looking for encrypted output any more...)\n");
+X	}
+X	exit(0);
+X}
+X
+Xgetmaster()
+X{
+X	char *pty, *bank, *cp;
+X	struct stat stb;
+X
+X	pty = &amp;line[strlen("/dev/ptyp")];
+X	for (bank = "pqrs"; *bank; bank++) {
+X		line[strlen("/dev/pty")] = *bank;
+X		*pty = '0';
+X		if (stat(line, &amp;stb) &lt; 0)
+X			break;
+X		for (cp = "0123456789abcdef"; *cp; cp++) {
+X			*pty = *cp;
+X			master = open(line, O_RDWR);
+X			if (master &gt;= 0) {
+X				char *tp = &amp;line[strlen("/dev/")];
+X				int ok;
+X
+X				/* verify slave side is usable */
+X				*tp = 't';
+X				ok = access(line, R_OK|W_OK) == 0;
+X				*tp = 'p';
+X				if (ok) {
+X					(void) tcgetattr(0, &amp;tt);
+X				    	(void) ioctl(0, TIOCGWINSZ, 
+X						(char *)&amp;win);
+X					return;
+X				}
+X				(void) close(master);
+X			}
+X		}
+X	}
+X	fprintf(stderr, "Out of pty's\n");
+X	fail();
+X}
+X
+Xgetslave()
+X{
+X
+X	line[strlen("/dev/")] = 't';
+X	slave = open(line, O_RDWR);
+X	if (slave &lt; 0) {
+X		perror(line);
+X		fail();
+X	}
+X	(void) tcsetattr(slave, TCSAFLUSH, &amp;tt);
+X	(void) ioctl(slave, TIOCSWINSZ, (char *)&amp;win);
+X	(void) setsid();
+X	(void) ioctl(slave, TIOCSCTTY, 0);
+X}
+END-of-local.c
+echo x - remote.c
+sed 's/^X//' &gt;remote.c &lt;&lt; 'END-of-remote.c'
+X/*
+X     This is a trivial (2 hour) hack to the 'script' command
+X    to show the general principle involved in hacking up a user-level
+X    encrypted telnet equivalent.  This particular hack uses 'rot13'
+X    as its 'encryption'; feel free to make it (ahem) more robust.
+X */
+X
+X/*
+X * Copyright (c) 1980 Regents of the University of California.
+X * All rights reserved.
+X *
+X * Redistribution and use in source and binary forms, with or without
+X * modification, are permitted provided that the following conditions
+X * are met:
+X * 1. Redistributions of source code must retain the above copyright
+X *    notice, this list of conditions and the following disclaimer.
+X * 2. Redistributions in binary form must reproduce the above copyright
+X *    notice, this list of conditions and the following disclaimer in the
+X *    documentation and/or other materials provided with the distribution.
+X * 3. All advertising materials mentioning features or use of this software
+X *    must display the following acknowledgement:
+X *	This product includes software developed by the University of
+X *	California, Berkeley and its contributors.
+X * 4. Neither the name of the University nor the names of its contributors
+X *    may be used to endorse or promote products derived from this software
+X *    without specific prior written permission.
+X *
+X * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+X * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+X * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+X * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+X * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+X * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+X * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+X * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+X * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+X * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+X * SUCH DAMAGE.
+X */
+X
+X#ifndef lint
+Xchar copyright[] =
+X"@(#) Copyright (c) 1980 Regents of the University of California.\n\
+X All rights reserved.\n";
+X#endif /* not lint */
+X
+X#ifndef lint
+Xstatic char sccsid[] = "@(#)script.c	5.13 (Berkeley) 3/5/91";
+X#endif /* not lint */
+X
+X/*
+X * script
+X */
+X#include &lt;unistd.h&gt;
+X#include &lt;sys/types.h&gt;
+X#include &lt;sys/stat.h&gt;
+X#include &lt;termios.h&gt;
+X#include &lt;sys/ioctl.h&gt;
+X#include &lt;sys/time.h&gt;
+X#include &lt;sys/file.h&gt;
+X#include &lt;sys/signal.h&gt;
+X#include &lt;stdio.h&gt;
+X#include &lt;string.h&gt;
+X#include &lt;paths.h&gt;
+X
+X#define MAX_KEYLINELEN 4096
+X
+Xchar	*shell;
+Xint	master;
+Xint	slave;
+Xint	child;
+Xint	subchild;
+Xchar	*fname;
+X
+Xstruct	termios tt;
+Xstruct	winsize win;
+Xint	lb;
+Xint	l;
+Xchar	line[] = "/dev/ptyXX";
+Xint	aflg;
+X
+X
+X#define STATE_SIZE 128
+Xtypedef struct cypherstate {
+X  char whatever[STATE_SIZE];
+X  long int byteno;
+X  /* Add useful stuff here as need be... */
+X} CYPHER_STATE;
+X
+Xvoid new_cypher(CYPHER_STATE *s)
+X{
+X  int i;
+X  /* Random mockup code as a placeholder... */
+X  for (i = 0; i &lt; STATE_SIZE; i++) {
+X    s-&gt;whatever[i] = 0;
+X  }
+X  s-&gt;byteno = 0L;
+X}
+X
+Xstatic void getline(FILE *in, char *answer)
+X{
+Xchar *s;
+Xint i;
+Xint rc;
+Xchar c;  
+X  i = 0;
+X  s = answer;
+X  for (;;) {
+X    c = fgetc(in);
+X    if (c == '\r') continue;
+X    if (c == '\n') break;
+X    i += 1;
+X    if (i == MAX_KEYLINELEN) {
+X      fprintf(stderr, "Protocol failure - line too long\n");
+X      break;
+X    }
+X    *s++ = c;
+X  }
+X  *s = '\0';
+X}
+X
+X
+Xvoid NEGOTIATE_SESSION_KEYS(
+X  FILE *in, FILE *out,
+X  CYPHER_STATE *outkey, CYPHER_STATE *inkey)
+X{
+Xstatic char keyline[MAX_KEYLINELEN];
+Xchar *ptr;
+X
+X  new_cypher(outkey);
+X  new_cypher(inkey);
+X  /* Engage in a conversation with the program at the other
+X     side to negotiate a session key.  How you do this is
+X     up to you. */
+X  fprintf(out, "REMOTE: Asking local to start an encrypted session\n");
+X  fprintf(out, "[%%MAGIC-PGP-START-SESSION%%]\n"); /* Detected by finite-state mc */
+X    /* (what I don't understand is why the line above comes out on
+X       the user's display, encrypted) */
+X  /* The fgets below comes from data that 'local' fakes as if it had
+X     been typed at the keyboard. */
+X  strcpy(keyline, "AAA");
+X  getline(in, keyline);
+X  ptr = strchr(keyline, '\n'); if (ptr != NULL) *ptr = '\0';
+X  fprintf(out, "[%%I-REPLY%%]\n");
+X  fprintf(out, "wibble-wobble/%s\n", keyline);
+X  fprintf(out, "[%%WHAT-DO-YOU-SAY?%%]\n");
+X  strcpy(keyline, "BBB");
+X  getline(in, keyline);
+X  fprintf(out, "[%%FAIR-ENOUGH-ANYTHING-ELSE?%%]\n");
+X  strcpy(keyline, "CCC");
+X  getline(in, keyline);
+X  fprintf(out, "[%%THANK-YOU%%]\n");
+X}
+X
+XCYPHER_STATE outstate, instate;
+X
+Xchar rot13(char c)
+X{
+Xreturn(isalpha(c) ? ((c &gt; (islower(c) ? 'z' : 'Z')-13) ? c - 13 : c + 13) : c);
+X}
+X
+Xchar stream_cypher(CYPHER_STATE *s, char byte)
+X{
+X  return(rot13(byte)); /* bwahahahaha! */
+X}
+X
+Xvoid DECRYPT_KEYBOARD_INPUT(char *buff, int count)
+X{
+X  /* First iteration - keyboard input in clear,
+X     only screen output to be encrypted */
+X}
+X
+Xvoid ENCRYPT_SCREEN_OUTPUT(char *buff, int count)
+X{
+X  int i;
+X  for (i = 0; i &lt; count; i++) {
+X    buff[i] = stream_cypher(&amp;outstate, buff[i]);
+X  }
+X}
+X
+Xmain(argc, argv)
+X	int argc;
+X	char *argv[];
+X{
+X	extern char *optarg;
+X	extern int optind;
+X	int ch;
+X	void finish();
+X	char *getenv();
+X
+X	while ((ch = getopt(argc, argv, "a")) != EOF)
+X		switch((char)ch) {
+X		case 'a':
+X			aflg++;
+X			break;
+X		case '?':
+X		default:
+X			fprintf(stderr, "usage: script [-a] [file]\n");
+X			exit(1);
+X		}
+X	argc -= optind;
+X	argv += optind;
+X
+X	shell = getenv("SHELL");
+X	if (shell == NULL)
+X		shell = _PATH_BSHELL;
+X
+X	getmaster();
+X        /* This session is negotiated before we do the complicated
+X           stuff with the two processes... Anything we send to the
+X           screen can be trapped by 'local', and local's replies
+X           will appear to be typed at the keyboard... */
+X        NEGOTIATE_SESSION_KEYS(stdin, stdout, &amp;outstate, &amp;instate);
+X	fixtty();
+X
+X	(void) signal(SIGCHLD, finish);
+X	child = fork();
+X	if (child &lt; 0) {
+X		perror("fork");
+X		fail();
+X	}
+X	if (child == 0) {
+X		subchild = child = fork();
+X		if (child &lt; 0) {
+X			perror("fork");
+X			fail();
+X		}
+X		if (child)
+X			dooutput();
+X		else
+X			doshell();
+X	}
+X	doinput();
+X}
+X
+Xdoinput()
+X{
+X	register int cc;
+X	char ibuf[BUFSIZ];
+X
+X	while ((cc = read(0, ibuf, BUFSIZ)) &gt; 0) {
+X		DECRYPT_KEYBOARD_INPUT(ibuf, cc);
+X		(void) write(master, ibuf, cc);
+X	}
+X	done();
+X}
+X
+X#include &lt;sys/wait.h&gt;
+X
+Xvoid
+Xfinish()
+X{
+X	union wait status;
+X	register int pid;
+X	register int die = 0;
+X
+X	while ((pid = wait3((int *)&amp;status, WNOHANG, 0)) &gt; 0)
+X		if (pid == child)
+X			die = 1;
+X
+X	if (die)
+X		done();
+X}
+X
+Xdooutput()
+X{
+X	register int cc;
+X	time_t tvec, time();
+X	char obuf[BUFSIZ], *ctime();
+X
+X	(void) close(0);
+X	tvec = time((time_t *)NULL);
+X
+X	for (;;) {
+X		cc = read(master, obuf, sizeof (obuf));
+X		if (cc &lt;= 0)
+X			break;
+X		ENCRYPT_SCREEN_OUTPUT(obuf, cc);
+X		(void) write(1, obuf, cc);
+X	}
+X	done();
+X}
+X
+Xdoshell()
+X{
+X	int t;
+X
+X	/***
+X	t = open(_PATH_TTY, O_RDWR);
+X	if (t &gt;= 0) {
+X		(void) ioctl(t, TIOCNOTTY, (char *)0);
+X		(void) close(t);
+X	}
+X	***/
+X	getslave();
+X	(void) close(master);
+X	(void) dup2(slave, 0);
+X	(void) dup2(slave, 1);
+X	(void) dup2(slave, 2);
+X	(void) close(slave);
+X	execl(shell, "sh", "-i", 0);
+X	perror(shell);
+X	fail();
+X}
+X
+Xfixtty()
+X{
+X	struct termios rtt;
+X
+X	rtt = tt;
+X	cfmakeraw(&amp;rtt);
+X	rtt.c_lflag &amp;= ~ECHO;
+X	(void) tcsetattr(0, TCSAFLUSH, &amp;rtt);
+X}
+X
+Xfail()
+X{
+X
+X	(void) kill(0, SIGTERM);
+X	done();
+X}
+X
+Xdone()
+X{
+X	time_t tvec, time();
+X	char *ctime();
+X
+X	if (subchild) {
+X		tvec = time((time_t *)NULL);
+X		(void) close(master);
+X	} else {
+X		char tmp[128];
+X		(void) tcsetattr(0, TCSAFLUSH, &amp;tt);
+X		/* This too has to be hacked when we do a real encryptor */
+X                /* This text should be sent and checked encrypted */
+X		strcpy(tmp, "\n[%MAGIC-PGP-END-SESSION%]\n");
+X		ENCRYPT_SCREEN_OUTPUT(tmp, strlen(tmp));
+X		printf("%s", tmp); fflush(stdout);
+X		/* Need a 'sleep' here to flush that damn buffer properly */
+X		sleep(2);
+X	}
+X	exit(0);
+X}
+X
+Xgetmaster()
+X{
+X	char *pty, *bank, *cp;
+X	struct stat stb;
+X
+X	pty = &amp;line[strlen("/dev/ptyp")];
+X	for (bank = "pqrs"; *bank; bank++) {
+X		line[strlen("/dev/pty")] = *bank;
+X		*pty = '0';
+X		if (stat(line, &amp;stb) &lt; 0)
+X			break;
+X		for (cp = "0123456789abcdef"; *cp; cp++) {
+X			*pty = *cp;
+X			master = open(line, O_RDWR);
+X			if (master &gt;= 0) {
+X				char *tp = &amp;line[strlen("/dev/")];
+X				int ok;
+X
+X				/* verify slave side is usable */
+X				*tp = 't';
+X				ok = access(line, R_OK|W_OK) == 0;
+X				*tp = 'p';
+X				if (ok) {
+X					(void) tcgetattr(0, &amp;tt);
+X				    	(void) ioctl(0, TIOCGWINSZ, 
+X						(char *)&amp;win);
+X					return;
+X				}
+X				(void) close(master);
+X			}
+X		}
+X	}
+X	fprintf(stderr, "Out of pty's\n");
+X	fail();
+X}
+X
+Xgetslave()
+X{
+X
+X	line[strlen("/dev/")] = 't';
+X	slave = open(line, O_RDWR);
+X	if (slave &lt; 0) {
+X		perror(line);
+X		fail();
+X	}
+X	(void) tcsetattr(slave, TCSAFLUSH, &amp;tt);
+X	(void) ioctl(slave, TIOCSWINSZ, (char *)&amp;win);
+X	(void) setsid();
+X	(void) ioctl(slave, TIOCSCTTY, 0);
+X}
+END-of-remote.c
+exit
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00227.html">reply-to feeds an anon pool, jpp=pr0duct=cypher</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00232.html">Anonymous Encrypted Remailer Interface for Emacs</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00260.html">Re:  reply-to feeds an anon pool, jpp=pr0duct=cypher</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00233.html">Re: How to do encrypted telnet without being root (tutorial, includes src)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00246"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00246"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

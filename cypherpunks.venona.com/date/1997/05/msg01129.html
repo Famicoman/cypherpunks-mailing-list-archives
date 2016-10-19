@@ -1,0 +1,505 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Ecash API -->
+<!--X-From-R13: abobqlNuhtr.pnwbarf.pbz (Vhtr Qnwbarf Drznvyre) -->
+<!--X-Date: Thu, 22 May 1997 05:35:35 +0800 -->
+<!--X-Message-Id: 199705212108.OAA13411@fat.doobie.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Ecash API</TITLE>
+<LINK REV="made" HREF="mailto:nobody@huge.cajones.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01128.html">Date Prev</A>][<A HREF="msg01132.html">Date Next</A>][<A HREF="msg01128.html">Thread Prev</A>][<A HREF="msg01131.html">Thread Next</A>][<A HREF="index.html#01129">Date Index</A>][<A HREF="threads.html#01129">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Ecash API</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Ecash API</LI>
+<LI><em>From</em>: <A HREF="mailto:nobody@huge.cajones.com">nobody@huge.cajones.com</A> (Huge Cajones Remailer)</LI>
+<LI><em>Date</em>: Wed, 21 May 1997 14:08:47 -0700</LI>
+<LI><em>Comments</em>: Please report misuse of this automated remailing service to &lt;remailer-admin@cajones.com&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@algebra.com">owner-cypherpunks@algebra.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+X-Authentication-Warning: blacklodge.c2.net: majordom set sender to
+owner-dev-lucre@c2.org using -f
+X-Sender: jeremey@descartes.bluemoney.com
+Date: Wed, 21 May 1997 12:32:09 -0700
+To: ecash-dev@digicash.com, dev-lucre@c2.net
+From: Jeremey Barrett &lt;jeremey@bluemoney.com&gt;
+Subject: Ecash API
+Mime-Version: 1.0
+Sender: owner-dev-lucre@c2.net
+Precedence: bulk
+
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Given the absence of an API from Digicash, we need a high level API so
+make the task of integrating ecash into products really easy. So here's
+my stab. This is the current header from my ecash library, which is a wrapper
+for -lucre. -lucre is great, but it's pretty low-level, hence the wrapper.
+
+The documentation in here is pretty incomplete, with just basic descriptions
+of what functions do what. At some point it will be improved. I welcome
+comments, suggestions, questions, and feature requests.
+
+Currently, this lib handles socket transactions only, but ascii-armor
+support will be added. This library will be available in some form or another
+in the future, at the moment I'm just looking for feedback.
+
+Regards,
+Jeremey.
+
+
+/*   Copyright (c) 1995, 1996, 1997
+ *      The VeriWeb Internet Corporation.  All Rights Reserved.
+ *
+ *   Please view the full copyright at the bottom of this file.
+ *
+ *    ecash.h $Revision: 1.2 $ (VeriWeb) $Date: 1997/05/21 01:48:50 $
+ */
+
+/*==========================================================================*
+ *
+ * ecash.h
+ *
+ * Written by: Jeremey Barrett
+ *
+ * $Revision: 1.2 $
+ */
+
+#ifndef _ECASH_H_
+#define _ECASH_H_
+
+
+#include &lt;Vlib.h&gt;                           /* utility header */
+#include &lt;lucre.h&gt;                          /* -lucre header */
+
+
+/*-------------------------------------------------------------------- 
+ * Types
+ */
+
+typedef struct _ECSocket ECSocket;
+typedef struct _ECPayment ECPayment;
+typedef struct _ECPocket ECPocket;
+typedef struct _ECConfig ECConfig;
+typedef struct _ECError ECError;
+
+
+
+/*-------------------------------------------------------------------- 
+ * Errors
+ */
+
+#define ECError_NONE                   0
+#define ECError_INVALID                -1
+#define ECError_ECSYS                  -2
+#define ECError_SYS                    -3
+#define ECError_TCP                    -4
+#define ECError_READ                   -5
+#define ECError_WRITE                  -6
+#define ECError_BIGNUM                 -7
+#define ECError_MSGNEW                 -8
+#define ECError_WALLETCREATE           -9
+#define ECError_NOMEM                  -10
+#define ECError_POCKETOPEN             -11
+#define ECError_POCKETPASSWD           -12
+#define ECError_NOBANKACCOUNT          -13
+#define ECError_WITHDRAWAMOUNTLOW      -14
+#define ECError_DEPOSITPAYMENT         -15
+#define ECError_DEPOSITALLPAYMENTS     -16
+#define ECError_DEPOSITRECDB           -17
+#define ECError_DEPOSITREJECTED        -18
+#define ECError_WALLETSTATUS           -19
+#define ECError_DEPOSIT                -20
+#define ECError_WITHDRAW               -21
+#define ECError_NOPOCKETPASSWD         -22
+#define ECError_ECMSGINVALID           -23
+#define ECError_SENDMSGCALLBACK        -24
+#define ECError_MAGIC                  -25
+#define ECError_APPENDMSG              -26
+#define ECError_PAYMENTACCEPT          -27
+#define ECError_PAYMENTACCEPTBADAMOUNT -28
+#define ECError_PAYMENTREJECTED        -29
+#define ECError_PAYMENTMAKE            -30
+#define ECError_PAYREQRECEIVE          -31
+#define ECError_PAYREQCURRENCYUNKNOWN  -32
+#define ECError_PAYMENTREQUEST         -33
+#define ECError_PAYMENTACK             -34
+#define ECError_PAYDB                  -35
+#define ECError_NOPAYMENTS             -36
+#define ECError_WALLETCOINS            -37
+#define ECError_EXCHANGECOINS          -38
+#define ECError_EXCHANGEREJECTED       -39
+#define ECError_NOTENOUGHCASH          -40
+
+#define ECNoError ((ECError *)NULL)
+
+
+
+
+/*-------------------------------------------------------------------- 
+ * ECPocket APIs
+ *
+ * Very preliminary documentation (will get enhanced later, I'm just
+ * documenting the less obvious here.
+ *
+ * EC_Pocket_open() - Open an existing pocket, with location and
+ *                    passphrase set in the ECConfig *.
+ *
+ * EC_Pocket_openAccount() - Create a new pocket with the attributes
+ *                           in the ECConfig *. This does _not_ open
+ *                           the pocket. This is for pockets which
+ *                           have mint accounts only.
+ *
+ * EC_Pocket_openNoAccount() - Create a new pocket with the attributes
+ *                             in the ECConfig *. This does _not_ open
+ *                             the pocket. This creates an accountless
+ *                             pocket, so the mintAddr and mintPort of
+ *                             the ECConfig * should point to the
+ *                             moneychanger. Note that mintID is still
+ *                             required. This will open a connection
+ *                             to the moneychanger and retrieve currency
+ *                             keys for the mint.
+ *
+ * EC_Pocket_withdraw() - Withdraw from a mint account.
+ *
+ * EC_Pocket_withdrawProtoCoins() - Complete and withdraw the coins in
+ *                                  the EC_M_Withdraw3 (a -lucre struct).
+ *                                  amt is the value of the coins being
+ *                                  withdrawn.
+ *
+ * EC_Pocket_deposit() - Deposit amount into mint account
+ *
+ * EC_Pocket_depositWithdraw() - Deposit coins and immediately withdraw
+ *                               the same amount. This allows for exchanges
+ *                               of coins and altering the stored 
+ *                               denominations. Call this when you don't have
+ *                               the right coins on hand for a payment.
+ *
+ * EC_Pocket_exchangeCoins() - Exchange coins (via moneychanger), same as
+ *                             above but w/o mint.
+ *
+ * EC_Pocket_getCoinInfo() - Returns information about the denominations
+ *                           available for a given amount. max_avail is the
+ *                           largest amount the pocket can make less than the
+ *                           amount specified. min_dep is the smallest amount 
+ *                           to exchange which will guarantee the ability to 
+ *                           make amount, provided min_dep is withdrawn in 
+ *                           base units (i.e. 1 cent).
+ *
+ */
+ECPocket *EC_Pocket_create( void );
+ECPocket *EC_Pocket_copy( ECPocket *this );
+ECError *EC_Pocket_destroy( ECPocket *this );
+ECError *EC_Pocket_open( ECPocket *this, 
+          ECConfig *conf );
+ECError *EC_Pocket_openAccount( ECConfig *conf );
+ECError *EC_Pocket_openNoAccount( ECConfig *conf );
+ECError *EC_Pocket_withdraw( ECPocket *this, 
+              Int32 amount, 
+              Int32 minPayments );
+ECError *EC_Pocket_withdrawProtoCoins( ECPocket *this, 
+                   ECSocket *sock, 
+                   EC_M_Withdraw3 wd3, 
+                   Int32 amt );
+ECError *EC_Pocket_deposit( ECPocket *this, 
+             Int32 amount );
+ECError *EC_Pocket_depositWithdraw( ECPocket *this, 
+                Int32 amount, 
+                Int32 payments );
+ECError *EC_Pocket_exchangeCoins( ECPocket *this, 
+              Int32 amount, 
+              Int32 payments,
+              char *host, 
+              char *port );
+ECError *EC_Pocket_getMintID( ECPocket *this, 
+               UInt32 *id );
+ECError *EC_Pocket_getCurrency( ECPocket *this, 
+            UInt32 *cur );
+ECError *EC_Pocket_getAccountName( ECPocket *this, 
+               char **name );
+ECError *EC_Pocket_getCash( ECPocket *this, 
+             UInt32 *cash );
+ECError *EC_Pocket_getBalance( ECPocket *this, 
+                UInt32 *bal );
+ECError *EC_Pocket_getCashStr( ECPocket *this, 
+                char **cash_str );
+ECError *EC_Pocket_getBalanceStr( ECPocket *this, 
+              char **bal_str );
+ECError *EC_Pocket_getCoinInfo( ECPocket *this, 
+            UInt32 amount, 
+            UInt32 *max_avail,
+            UInt32 *min_dep );
+Int32 EC_Pocket_isAccountless( ECPocket *this );
+
+
+
+/*-------------------------------------------------------------------- 
+ * ECSocket APIs
+ *
+ *
+ * Simple set of socket APIs. These functions manage the ecash TCP
+ * protocol for you. Documentation later.
+ *
+ * EC_Socket_setCallbacks() - Sets send and receive callbacks for
+ *                            sending ecash messages. These will be
+ *                            called _after_ the message is encoded 
+ *                            with the ecash TCP header.
+ */
+ECSocket *EC_Socket_create( UInt32 type );
+ECError *EC_Socket_setCallbacks( ECSocket *this,  
+             UInt32 (*sendcallback)( void *cbInfo,
+                      UChar *msg, 
+                      UInt32 len ),
+             UInt32 (*recvCallback)( void *cbInfo,
+                      UChar **msg,
+                      UInt32 *len),
+             void *cbInfo );
+ECSocket *EC_Socket_createFromFd( char *haddr, char *hport, Int32 fd );
+ECError *EC_Socket_open( ECSocket *this, char *haddr, char *hport );
+ECError *EC_Socket_accept( ECSocket *this, ECSocket *new );
+ECError *EC_Socket_listen( ECSocket *this, char *hport );
+ECError *EC_Socket_sendMsg( ECSocket *this, EC_M_Msg msg );
+ECError *EC_Socket_recvMsg( ECSocket *this, EC_M_Msg msg );
+TCPSocket *EC_Socket_getTCPSocket( ECSocket *this );
+
+
+
+/*-------------------------------------------------------------------- 
+ * ECConfig APIs
+ */
+ECConfig *EC_Config_create( void );
+ECConfig *EC_Config_copy( ECConfig *this );
+ECError *EC_Config_destroy( ECConfig *this );
+ECError *EC_Config_setAccountName( ECConfig *this, char *name );
+ECError *EC_Config_setAccountPassword( ECConfig *this, char *passwd );
+ECError *EC_Config_setPocketPassword( ECConfig *this, char *passwd );
+ECError *EC_Config_setPocketDir( ECConfig *this, char *path );
+ECError *EC_Config_setMintID( ECConfig *this, UInt32 mintID );
+ECError *EC_Config_setMintAddr( ECConfig *this, char *host );
+ECError *EC_Config_setMintPort( ECConfig *this, char *port );
+
+
+
+
+/*-------------------------------------------------------------------- 
+ * ECPayment APIs
+ *
+ * The important functions here are accept(), make(), request(), and
+ * variants. Note that this is all socket based, there will be ascii
+ * armor variants soon, but not now.
+ *
+ * EC_Payment_accept() - accept an online payment. The this pointer
+ *                       points to an ECPayment with the expected
+ *                       amount set. This amount is checked and an
+ *                       error will be returned if the incoming payment
+ *                       does not agree. The ECSocket * is an already
+ *                       open socket to the payer. This function will
+ *                       automatically handle accountless pockets, so
+ *                       explicitly calling the NoAccount variant is
+ *                       not necessary.
+ *
+ * EC_Payment_accept1() - same as above, but the payment is _not_ acked
+ *                        to the payer.
+ *
+ * EC_Payment_acceptNoAccount() - same as accept() but for accountless
+ *                                pockets. Gets called by accept() if
+ *                                the pocket is accountless.
+ *
+ * EC_Payment_acceptNoAccount1() - same as above, but the payment is _not_
+ *                                 acked to the payer.
+ *
+ * EC_Payment_handle() - Unconditionally accept a -lucre EC_M_Payment. This
+ *                       will _not_ check amounts. It will handle NoAccount
+ *                       automatically.
+ *
+ * EC_Payment_handleNoAccount() - same as above except for accountless 
+ *                                pockets. Called by handle() if the pocket 
+ *                                is accountless.
+ *
+ * EC_Payment_make() - make a payment over the ECSocket passed. This
+ *                     function _expects_ a payment ack. Use make1() if
+ *                     none will arrive.
+ *
+ * EC_Payment_make1() - same as above, but does not wait for an ack.
+ *
+ * EC_Payment_receiveRequest() - Receive a payment request on the ECSocket
+ *                               passed. Returns the information in the
+ *                               this pointer.
+ *
+ * EC_Payment_request() - Send a payment request over the ECSocket passed.
+ */
+ECPayment *EC_Payment_create( ECPocket *pocket );
+ECError *EC_Payment_setAmount( ECPayment *this, Int32 amt );
+ECError *EC_Payment_setTimestamp( ECPayment *this, UInt32 timestamp );
+ECError *EC_Payment_setSeqNo( ECPayment *this, UInt32 timestamp );
+ECError *EC_Payment_setDescription( ECPayment *this, char *desc );
+ECError *EC_Payment_setRecipientName( ECPayment *this, char *name );
+ECError *EC_Payment_setRecipientMint( ECPayment *this, UInt32 id );
+ECError *EC_Payment_getAmount( ECPayment *this, UInt32 *amt );
+ECError *EC_Payment_getSeqNo( ECPayment *this, UInt32 *seqno );
+ECError *EC_Payment_getTimestamp( ECPayment *this, UInt32 *timestamp );
+ECError *EC_Payment_getDescription( ECPayment *this, char **desc );
+ECError *EC_Payment_getRecipientName( ECPayment *this, char **name );
+ECError *EC_Payment_getRecipientMint( ECPayment *this, UInt32 *id );
+ECError *EC_Payment_accept( ECPayment *this, ECPocket *pocket,
+             ECSocket *sock );
+ECError *EC_Payment_accept1( ECPayment *this, ECPocket *pocket,
+              ECSocket *sock );
+ECError *EC_Payment_acceptNoAccount( ECPayment *this, ECPocket *pocket,
+                 ECSocket *sock );
+ECError *EC_Payment_acceptNoAccount1( ECPayment *this, ECPocket *pocket,
+                  ECSocket *sock );
+ECError *EC_Payment_handle( ECPayment *this, ECPocket *pocket, 
+             EC_M_Payment payment );
+ECError *EC_Payment_handleNoAccount( ECPayment *this, ECPocket *pocket, 
+                 EC_M_Payment payment );
+ECError *EC_Payment_make( ECPayment *this, ECPocket *pocket, ECSocket *sock );
+ECError *EC_Payment_make1( ECPayment *this, ECPocket *pocket, ECSocket *sock 
+);
+ECError *EC_Payment_receiveRequest( ECPayment *this, ECPocket *pocket, 
+                ECSocket *sock );
+ECError *EC_Payment_request( ECPayment *this, ECPocket *pocket, ECSocket
+*sock 
+);
+
+
+
+/*-------------------------------------------------------------------- 
+ * ECError APIs
+ */
+ECError *EC_Error_create( void );
+ECError *EC_Error_returnValue( Int32 errno );
+ECError *EC_Error_returnTCPError( TCPError *err );
+ECError *EC_Error_returnLibError( Int32 errno, Int32 libErrno );
+
+
+
+
+
+
+#endif /* _ECASH_H_*/
+
+/* &lt;COPYRIGHT_PUB&gt;
+ *
+ *   Copyright (c) 1995, 1996, 1997
+ *      The VeriWeb Internet Corporation.  All Rights Reserved.
+ *
+ *   This is a published work of the VeriWeb Internet Corporation
+ *   ("VeriWeb").  Permission to use and/or redistribute may be 
+ *   obtained upon prior written permission by VeriWeb, and 
+ *   provided that the following conditions are also met:
+ *
+ *      1. Redistributions of source code, including binary forms, 
+ *         must retain the above copyright notice, this list of 
+ *         conditions, and the following disclaimer.
+ *
+ *      2. Documentation and/or other materials provided with any
+ *         redistribution must contain the above copyright notice, 
+ *         this list of conditions, and the following disclaimer.
+ *
+ *      3. All advertising materials mentioning features or use of 
+ *         this software must display the following acknowledgement:
+ *              
+ *              This product includes software developed by
+ *              the VeriWeb Internet Corporation and its contributors.
+ *
+ *      4. Neither the name of the VeriWeb nor the names of its 
+ *         contributors may be used to endorse or promote products 
+ *         derived from this software without specific prior written 
+ *         permission.
+ *
+ *   THIS SOFTWARE IS PROVIDED BY VERIWEB AND CONTRIBUTORS ``AS IS''.  
+ *   THEREFORE, ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+ *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+ *   FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL VERIWEB 
+ *   OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+ *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+ *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED, AND ON 
+ *   ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+ *   OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
+ *   OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY 
+ *   OF SUCH DAMAGE.
+ *
+ * &lt;/COPYRIGHT_PUB&gt;
+ *
+ *    ecash.h $Revision: 1.2 $ (VeriWeb) $Date: 1997/05/21 01:48:50 $
+ */
+
+/*eof*/
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 5.0 beta
+Charset: noconv
+
+iQCVAwUBM4NNuS/fy+vkqMxNAQEzngP7BmDg16Cmnb9uqS30xlhBvA7FaZb4YPRA
+tulRHA+7FhRZttfBm/jL8gaOEzjdtPR4f7p3gGjB4YC2KvSAI1iTrpR9EYxdzHB7
+0qMAjPAZbI0A08ZOPLkGDoOi9Qqs3jCgdimANjdVeTheYNNpcR1Ti4ez1CtdwmUo
+he0phYP1FBg=
+=qizj
+-----END PGP SIGNATURE-----
+
+--
+Jeremey Barrett                                  VeriWeb Internet Corp.
+Crypto, Ecash, Commerce Systems                 <A  HREF="http://www.veriweb.com/">http://www.veriweb.com/</A>
+PGP key fingerprint =  3B 42 1E D4 4B 17 0D 80  DC 59 6F 59 04 C3 83 64
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01128.html">Press Release -- NetFortress Added to GSA Schedule (fwd)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01132.html">Re: The USA is the world's biggest terrorist state</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01128.html">Press Release -- NetFortress Added to GSA Schedule (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01131.html">Re: attila the hun (was Re: Wine Politics Again!)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01129"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01129"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

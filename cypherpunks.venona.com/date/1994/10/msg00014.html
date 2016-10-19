@@ -1,0 +1,198 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: FWD: Safe&#45;Tcl meets PGP!!!! -->
+<!--X-From-R13: abobqlNfuryy.cbegny.pbz -->
+<!--X-Date: Sat, 1 Oct 94 15:15:20 PDT -->
+<!--X-Message-Id: 199410012214.PAA14345@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>FWD: Safe-Tcl meets PGP!!!!</TITLE>
+<LINK REV="made" HREF="mailto:nobody@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00006.html">Date Prev</A>][<A HREF="msg00019.html">Date Next</A>][<A HREF="msg00041.html">Thread Prev</A>][<A HREF="msg00019.html">Thread Next</A>][<A HREF="index.html#00014">Date Index</A>][<A HREF="threads.html#00014">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>FWD: Safe-Tcl meets PGP!!!!</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: FWD: Safe-Tcl meets PGP!!!!</LI>
+<LI><em>From</em>: <A HREF="mailto:nobody@shell.portal.com">nobody@shell.portal.com</A></LI>
+<LI><em>Date</em>: Sat, 1 Oct 1994 15:14:44 -0700</LI>
+<LI><em>Comments</em>: This message is NOT from the person listed in the Fromline.  It is from an automated software remailing service operating atthat address.  Please report problem mail to &lt;hfinney@shell.portal.com&gt;.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+This is from the Safe-Tcl list, which discusses a variant on tcl which
+provides a "safe" subset of capabilities appropriate for letting incoming
+mail bring in programs which can run autonomously on your computer.  I
+mentioned this a few weeks ago and I've been on the list, although I haven't
+looked at it in much detail.   Nathaniel Borenstein is very active in
+the email community so this may turn out to be an influential technology.
+He is using PGP to authenticate incoming messages and grant them more
+privileges as appropriate:
+
+&gt; From hfinney@shell.portal.com Sat Oct  1 13:30:26 1994
+&gt; Date: Sat,  1 Oct 1994 15:44:46 -0400 (EDT)
+&gt; From: Nathaniel Borenstein &lt;nsb@nsb.fv.com&gt;
+&gt; Subject: Safe-Tcl meets PGP!!!!
+&gt; Cc: Marshall Rose &lt;mrose@dbc.mtview.ca.us&gt;,
+&gt;         John Ousterhout &lt;John.Ousterhout@eng.sun.com&gt;,
+&gt;         Philip Zimmermann &lt;prz@acm.org&gt;,
+&gt;         Trent Jaeger &lt;jaegert@engin.umich.edu&gt;
+&gt; 
+&gt; For over a year now, people have been asking me about extending safe-tcl
+&gt; to make use of digital signatures so that it can grant more powerful
+&gt; capabilities to programs from trusted senders.  My position all along
+&gt; has been "the hooks are there, but nobody has put all the pieces
+&gt; together." 
+&gt; 
+&gt; Today, after a message from Trent Jaeger that got me to thinking about
+&gt; this again, I took a new look at the situation, the first time I'd done
+&gt; so since becoming a regular PGP user.  It turns out -- amazingly enough
+&gt; -- that integrating these technologies was almost trivial!  I am happy
+&gt; to report that I now have integrated safe-tcl, pgp, the Internet Draft
+&gt; on MIME/PGP, and metamail, to do "the right thing".  Best of all -- you
+&gt; don't need to compile anything, the "hooks" all work. 
+&gt; 
+&gt; With this hack -- which works for all metamail-based mail readers, and
+&gt; which I expect will be easy to replicate for mhn and others -- I believe
+&gt; that Safe-Tcl now has the last bit of functionality where Telescript was
+&gt; previously superior.  We now have a completely open platform for sending
+&gt; around programs with differential capabilities dependent on the level of
+&gt; trust that the receiver has in the sender. 
+&gt; 
+&gt; Getting this working is trivial.  The assumption here is that you have a
+&gt; message with a content-type of "application/pgp; format=mime" which,
+&gt; when after its signature is checked (and after it is decrypted if
+&gt; necessary) contains a MIME entity with a content-type of either
+&gt; "application/safe-tcl" or "multipart/enabled-mail" (or some other
+&gt; multipart, with one of these two types nested inside it somewhere).  The
+&gt; basic scheme is to make the PGP-smart process put signature information
+&gt; into an environment variable, PGP_SIGNATURE, which is then checked by
+&gt; the safe-tcl interpreter.  Obviously, if you implement this, you want to
+&gt; make sure that you don't usually have PGP_SIGNATURE set in the process
+&gt; you use to read your mail! 
+&gt; 
+&gt; Anyway, to make this work there are two steps: 
+&gt; 
+&gt; 1.  In your .safetclrc file, add the following: 
+&gt; 
+&gt; catch { 
+&gt;     global SafeTcl_Services 
+&gt;     set SafeTcl_Services(authentication) $env(PGP_SIGNATURE) 
+&gt; } 
+&gt; 
+&gt; This will ensure that SafeTcl_Services is set properly if the
+&gt; PGP_SIGNATURE variable is set. 
+&gt; 
+&gt; 2.  Configure your mail reading tool so that it understands
+&gt; application/pgp and text/pgp, and sets the PGP_SIGNATURE variable.  For
+&gt; metamail-based systems, this consists of adding the following mailcap
+&gt; lines: 
+&gt; 
+&gt; text/pgp; decode-pgp %s ; needsterminal 
+&gt; application/pgp; decode-pgp %s  mime; needsterminal; \ 
+&gt;     test=test %{format}  = mime 
+&gt; application/pgp; decode-pgp %s ; needsterminal 
+&gt; 
+&gt; and then installing the "decode-pgp" script on your search path.  That
+&gt; script is a twelve-line shell script: 
+&gt; 
+&gt; #!/bin/csh -f 
+&gt; set viewprog=cat 
+&gt; if ($#argv &gt; 1) then 
+&gt;     set viewprog=metamail 
+&gt; endif 
+&gt; set prog="pgp" 
+&gt; set infile=$1 
+&gt; pgp $1 -o /tmp/outputfile.$$ |&amp; tee /tmp/shotputfile.$$ 
+&gt; set PS=`grep "Good signature" /tmp/shotputfile.$$ | sed -e "s/Good
+&gt; signature from user//"` 
+&gt; setenv PGP_SIGNATURE "$PS" 
+&gt; $viewprog /tmp/outputfile.$$ 
+&gt; rm /tmp/*putfile.$$ 
+&gt; 
+&gt; I think that's all you need to do!  If I'd known it was going to be this
+&gt; simple I would have done it months ago!  
+&gt; 
+&gt; As an example of how to USE this facility, you can put the following
+&gt; code in your .safetclrc: 
+&gt; 
+&gt; proc readsharedfile {nm} { 
+&gt;     set fd [open $nm r] 
+&gt;     set result [read $fd] 
+&gt;     close $fd 
+&gt;     return $result 
+&gt; } 
+&gt; catch { 
+&gt;   if {[regexp "nsb@nsb.fv.com" $SafeTcl_Services(authentication)]} { 
+&gt;       declareharmless readsharedfile 
+&gt;   } 
+&gt; } 
+&gt; 
+&gt; In this case, if you get a safe-tcl program that is signed (and,
+&gt; optionally, encrypted) by ME, and I'm on your keyring, it will be able
+&gt; to read any file YOU can read.  Otherwise, the readsahredfile procedure
+&gt; will be undefined in the restricted interpreter. 
+&gt; 
+&gt; Pretty cool, eh?  I encourage folks to try it out.  -- Nathaniel 
+&gt; 
+&gt; PS -- Assuming no problems turn up, I will probably put "decode-pgp" and
+&gt; the relevant mailcap entries in the next metamail release, and will
+&gt; build the few lines that set SafeTcl_Services based on PGP_SIGNATURE
+&gt; into the stuff done automatically in the next safe-tcl release.  --
+&gt; Nathaniel 
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00006.html">PGP 2.6.2??</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00019.html">Feds &amp; Ecash!  Yikes!</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00041.html">Re: PGP 2.6.2??</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00019.html">Feds &amp; Ecash!  Yikes!</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00014"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00014"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

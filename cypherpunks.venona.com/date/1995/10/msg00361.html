@@ -1,0 +1,179 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: X.509, S/MIME, and evolution of PGP -->
+<!--X-From-R13: Qney Syyvfba <pzrNFWE.QA[> -->
+<!--X-Date: Mon, 2 Oct 95 08:15:50 PDT -->
+<!--X-Message-Id: 9510021511.AA10057@tis.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199509292140.OAA27151@comsec.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: X.509, S/MIME, and evolution of PGP</TITLE>
+<LINK REV="made" HREF="mailto:cme@TIS.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00359.html">Date Prev</A>][<A HREF="msg00377.html">Date Next</A>][<A HREF="msg00505.html">Thread Prev</A>][<A HREF="msg00381.html">Thread Next</A>][<A HREF="index.html#00361">Date Index</A>][<A HREF="threads.html#00361">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: X.509, S/MIME, and evolution of PGP</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A></LI>
+<LI><em>Subject</em>: Re: X.509, S/MIME, and evolution of PGP</LI>
+<LI><em>From</em>: Carl Ellison &lt;<A HREF="mailto:cme@TIS.COM">cme@TIS.COM</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 2 Oct 95 11:11:08 EDT</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Cc</em>: <A HREF="mailto:cme@TIS.COM">cme@TIS.COM</A></LI>
+<LI><em>In-Reply-To</em>: Bill Stewart's message of Wed, 27 Sep 1995 15:22:08 -0700 &lt;199509292140.OAA27151@comsec.com&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;Date: Wed, 27 Sep 1995 15:22:08 -0700
+&gt;From: Bill Stewart &lt;stewarts@ix.netcom.com&gt;
+
+Bill,
+
+&gt;I'd always heard X.509 public key certificates were a hierarchical, evil,
+&gt;anti-WebOfTrust ISOism.  But Netscape is now doing them, and talking S/MIME,
+&gt;so I sat down to read the specs, and they're really not all that bad.  
+
+I was all set to scream, when I read this first sentence.  Then I read on.
+
+&gt;(Technically, I've only read PKCS#6 and RFC 1422, and not the real ISOisms...)
+&gt;Yeah, they've got lots of clunky ASN.1 Ambiguous Encoding Rules and X.500 
+&gt;Silly Name Format, but those can be lived with, and the X.500 may be possible
+&gt;to simply ignore in most cases.
+
+At this point, I realized that we agree in evaluation but not in weighting.
+
+Twice now, I have had to deal with X.509 certificates in real code and it
+is excruciatingly painful -- especially for someone, like me, with some
+background in performance engineering and much background in software
+engineering.
+
+ASN.1 is not merely ambiguous, it is actively wrong as part of a design
+methodology.  It encourages people to define structures in the BNF style --
+and they do (witness X.509).  When you translate this into C or PASCAL
+structures by an automatic translator, you end up with structures whose
+definitions are nested so deeply that even with short field names you would
+have variable names which occupy a substantial part of a line of text.
+However, ASN.1's BNF-ness encourages people to use
+longNamesWithEmbeddedCapitals -- so you end up with variable names which
+turn routine C function calls into multi-line, unreadable blocks.
+
+You also end up with too much code.  I recently had to deal with X.509
+certs for an authentication application (a firewall proxy).  The proxy was
+about 30KB of code prior to the ASN.1.  The ASN.1 code, just to do packing
+and parsing, was over 100KB (.o file sizes, in both cases).
+
+You also end up with too many bytes being transferred.  I worked out an
+example of ASN.1 abuse -- defining a triple-DES key structure for
+encrypting and transmittal -- as a raw C structure (following long
+established practice and performance engineering (an array of unsigned
+char, with offsets for each key and the IV)) and as ASN.1 (following modern
+ASN.1 practice).  The raw C structure was 32 bytes long.  The ASN.1
+structure was 86 bytes.  Worse was the code dedicated to structure
+definition and packing/unpacking.  In the raw C case, it took 48 ASCII
+characters to define the structure and its offsets (including comments) and
+nothing to pack/unpack.  With ASN.1, it took 55085 characters of
+definition, pack and unpack code.  This is a factor of 1148 in source code
+expansion.
+
+		--------------------------------
+
+I could go on at length, and have in other fora.  Not only is ASN.1 clearly
+the work of Satan, the Distinguished Name definition is more than a victim
+of ASN.1 generality, it is a clear reason for the unpopularity of systems
+which use it.  Do you remember when X.400 names started showing up in
+e-mail (e.g., with Lotus Notes).  How many of those names do you see now?
+It didn't work.  The concept is flawed -- but it lives on in X.509.  [It
+reminds me of a flaky grad student's idea of a way to do things -- elevated
+to standard before people had the chance to try it and discover how
+completely bogus it was.]
+
+
+It is possible to implement something which reads and writes ASN.1 -- but
+it is ugly, it inflates your code and it hurts your runtime.  I would like
+to see as many hold-outs against ASN.1 and Distinguished Names as possible.
+
+PGP is one such.  TIS/MOSS has learned its lesson (from PEM days) and is
+making all of the ASN.1 and DN stuff (X.509) optional.  With luck, the
+X.509 parts will die away (although MOSS was retarded so strongly in the
+PEM days that it may never recover -- may never acquire the market share to
+make it a force).  I would strongly encourage others to join the battle.
+
+This might not be easy.  It is clear that there is an ASN.1 juggernaut.  It
+is taking over all sorts of standards.  I believe I know why.  It makes the
+job of the standards writer easier.  However, I also believe it needs to be
+fought...not merely to save future S/W development efforts from the waste
+and abuse which ASN.1 creates, but also to take a stand against the process
+by which non-implementors get together on standards committees and come out
+with standards which preclude good software architectures -- and who, in a
+kind of old-boy-network, endorse other standards (e.g., the ISO set) as
+part of their own.  Such a design process is destructive.
+
+ - Carl
+
++--------------------------------------------------------------------------+
+|Carl M. Ellison      cme@tis.com    <A  HREF="http://www.clark.net/pub/cme">http://www.clark.net/pub/cme</A>	   |
+|Trusted Information Systems, Inc.   <A  HREF="http://www.tis.com/">http://www.tis.com/</A>                   |
+|3060 Washington Road          PGP 2.6.2:  61E2DE7FCB9D7984E9C8048BA63221A2|
+|Glenwood MD  21738         Tel:(301)854-6889      FAX:(301)854-5363       |
++--------------------------------------------------------------------------+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00381" HREF="msg00381.html">De Re ASN.1 and encoding rules ( was Re: X.509,...)</A></STRONG>
+<UL><LI><EM>From:</EM> Simon Spero &lt;ses@tipper.oit.unc.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00359.html">`Hack Microsoft' challenge is NYT Computer News Daily's top story</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00377.html">One-Time-Pad generation from audio device</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00505.html">Re: `Hack Microsoft' challenge is NYT Computer News Daily's top story</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00381.html">De Re ASN.1 and encoding rules ( was Re: X.509,...)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00361"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00361"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

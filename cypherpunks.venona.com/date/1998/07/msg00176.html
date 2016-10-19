@@ -1,0 +1,456 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Mixmaster protocol -->
+<!--X-From-R13: hysNDSBZOK.QA[ -->
+<!--X-Date: Fri, 10 Jul 1998 13:26:22 &#45;0700 (PDT) -->
+<!--X-Message-Id: 199807102025.WAA06967@basement.replay.com -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Mixmaster protocol</TITLE>
+<LINK REV="made" HREF="mailto:ulf@REPLAY.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00172.html">Date Prev</A>][<A HREF="msg00171.html">Date Next</A>][<A HREF="msg00172.html">Thread Prev</A>][<A HREF="msg00171.html">Thread Next</A>][<A HREF="index.html#00176">Date Index</A>][<A HREF="threads.html#00176">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Mixmaster protocol</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:mix%2Dl@jpunix.com">mix-l@jpunix.com</A></LI>
+<LI><em>Subject</em>: Mixmaster protocol</LI>
+<LI><em>From</em>: <A HREF="mailto:ulf@REPLAY.COM">ulf@REPLAY.COM</A></LI>
+<LI><em>Date</em>: Fri, 10 Jul 1998 22:25:45 +0200 (CEST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:remailer%2Doperators@anon.lcs.mit.edu">remailer-operators@anon.lcs.mit.edu</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I'd like to get feedback on the clarity of this draft describing the
+Mixmaster protocol.
+
+I'll post the proposed extensions for version 3 later.
+
+
+
+Mixmaster Protocol
+==================
+
+Abstract
+
+Most e-mail security protocols only protect the message body, leaving
+useful information such as the the identities of the conversing
+parties, sizes of messages and frequency of message exchange open to
+adversaries. This document describes Mixmaster, a mail transfer
+protocol designed to protect electronic mail against traffic analysis.
+
+
+Table of Contents
+
+1. Introduction
+2. The Mix-Net Protocol
+   2.1 Message Creation
+   2.2 Remailing
+3. Message Format
+   3.1 Cryptographic Algorithms
+   3.2 Packet Format
+   3.2.1 Header Chart Format
+   3.2.2 Body Format
+   3.3 Mail Transfer Encoding
+   3.5 Transfer through Socket Connections
+4. Key Format
+5. References
+
+
+1. Introduction
+
+This document describes a mail transfer protocol designed to protect
+electronic mail against traffic analysis. Most e-mail security
+protocols only protect the message body, leaving useful information
+such as the the identities of the conversing parties, sizes of
+messages and frequency of message exchange open to adversaries.
+
+Message transmission can be protected against traffic analysis by the
+mix-net protocol. A mix (remailer) is a service that forwards
+messages, using public key cryptography to hide the correlation
+between its inputs and outputs. If a message is sent through a
+sequence of mixes, one trusted mix is sufficient to provide anonymity
+and unobserveability of communications against a powerful
+adversary. Mixmaster is a mix-net implementation for electronic mail.
+
+This document describes version 2 of the Mixmaster message format.
+
+
+2. The Mix-Net Protocol
+
+The mix-net protocol [Chaum] allows to send messages while hiding the
+relation of sender and recipient from observers (unobserveability). It
+also provides the sender of a message with the ability to remain
+anonymous to the recipient (sender anonymity). If anonymity is not
+desired, authenticity and unobserveability can be achieved in the same
+time by transmitting digitally signed messages.
+
+This section gives an overview over the protocol used in
+Mixmaster. The message format is specified in section 3.
+
+
+2.1 Message Creation
+
+To send a message, the user agent splits into parts of fixed size,
+which form the bodies of Mixmaster packets. If sender anonymity is
+desired, care should be taken not to include identifying information
+in the message. The message may be compressed.
+
+The sender choses a sequence of up to 20 remailers for each
+packet. The final remailer must be identical for all parts of the
+message.
+
+The packet header consists of 20 charts. For a sequence of n
+remailers, header charts n+1, ... , 20 are filled with random
+data. For all charts i := n down to 1, the sender generates a
+symmetric encryption key, which is used to encrypt the body and all
+following header charts. This key, together with other control
+information for the remailer, is included in the i-th header chart,
+which is then encrypted with the remailer's public key.
+
+The message is sent to the first remailer in an appropriate transport
+encoding.
+
+To increase reliability, multiple copies of message may be sent
+through different paths. The final remailer must be identical for all
+paths, so that duplicates can be detected and the message is delivered
+only once.
+
+
+2.2 Remailing
+
+When a remailer receives a message, it decrypts the first header chart
+with its private key. By keeping track of a packet ID, the remailer
+verifies that the packet has not been processed before. The integrity
+of the message is verified by checking the packet length and verifying
+message digests included in the packet. Then the first header chart is
+removed, the others are shifted up by one, and the last chart is
+filled with random padding. All header charts and the message body are
+decrypted with the symmetric key found in the header. This reveals a
+public key-encrypted header chart for the next remailer at the top,
+and obscures the old top header chart. Transfer encoding is applied to
+the resulting message.
+
+The remailer collects several encrypted messages before sending the
+resulting messages in random order. Thus the relation between the
+incoming and outgoing messages is obscured to outside adversaries even
+if the adversary can observe all messages sent. The message is
+effectively anonymized by sending it through a chain of independently
+operated remailers.
+
+
+2.3 Message Reassembly
+
+When a packet is sent to the final remailer, it contains a flag
+indicating that the chain ends at that remailer, and whether the
+packet contains a complete message or part of a multi-part message. If
+the packet contains the entire message, the body is decrypted and
+after reordering messages the plain text is delivered to the
+recipient. For partial messages, a packet ID is used to identify the
+other parts as they arrive. When all parts have arrived, the message
+is reassembled and delivered. If the parts do not arrive within a time
+limit, the message is discarded.
+
+Only the last remailer in the chain can determine whether packets are
+part of a certain message. To all the others, they are completely
+independent.
+
+If necessary, the reassembled message is decompressed before sending
+it to the recipient.
+
+When anonymous messages are forwarded to third parties, the final
+remailer should ensure that the sender cannot supply header lines that
+indicate a false identity or send Usenet control messages that may
+have security implications. Appropriate information about the origin
+of the message should be inserted in the Comments: header line of the
+message.
+
+If the recipient does not wish to receive anonymous messages, the
+remailer can ensure authenticity be verifying that the message is
+cryptographically signed [RFC 1991, RFC 2311] by a known sender.
+
+
+3. Message Format
+
+3.1 Cryptographic Algorithms
+
+The asymmetric encryption operation in Mixmaster version 2 uses RSA
+with 1024 bit RSA keys and PKCS #1 padding [RFC 2313]. The symmetric
+encryption uses EDE 3DES with cipher block chaining (24 byte key, 8
+byte initialization vector) [Schneier]. MD5 [RFC 1321] is used as the
+message digest algorithm.
+
+
+3.2 Packet Format
+
+A Mixmaster packet consists of a header containing information for the
+remailers, and a body containing the payload. To ensure that packets
+are undistinguishable, the size of these encrypted data fields is
+fixed.
+
+The packet header consists of 20 header charts (specified in section
+A.2) of 512 bytes each, resulting in a total size of 10240 bytes. The
+header charts and the body are encrypted with symmetric session keys
+specified in the first header chart.
+
+
+3.2.1 Header Chart Format
+
+     Public key ID                [  16 bytes]
+     Encrypted session key length [   1 byte ]
+     RSA-encrypted session key    [ 128 bytes]
+     Initialization vector        [   8 bytes]
+     Encrypted header section     [ 328 bytes]
+     Padding                      [  31 bytes]
+
+Total size:
+  512 bytes
+
+A random 24 bit Triple-DES key is encrypted with RSA, resulting
+in 1024 bit of encrypted data.
+
+The header section encrypted with this session key is:
+
+     Packet ID                     [ 16 bytes]
+     Triple-DES key                [ 24 bytes]
+     Packet type identifier        [  1 byte ]
+     Packet type 0:
+        19 Initialization vectors  [152 bytes]
+        Remailer address           [ 80 bytes]
+     Packet type 1:
+        Message ID                 [ 16 bytes]
+        Initialization vector      [  8 bytes]
+     Packet type 2:
+        Packet number              [  1 byte ]
+        Number of packets          [  1 byte ]
+        Message ID                 [ 16 bytes]
+        Initialization vector      [  8 bytes]
+     Timestamp                     [  7 bytes] (optional)
+     Message digest                [ 16 bytes]
+
+Total size:
+  Type 0: 297 bytes (+ 7 if timestamp is used)
+  Type 1:  81 bytes (+ 7 if timestamp is used)
+  Type 2:  83 bytes (+ 7 if timestamp is used)
+
+This data structure is padded to 328 bytes.
+
+Packet ID: randomly generated packet identifier.
+
+Key: symmetric key used to encrypt the following header charts and the
+body.
+
+Packet type identifier:
+
+Intermediate hop           0
+Final hop                  1
+Final hop, partial message 2
+
+Initialization vectors: For packet type 1 and 2, the IV is used to
+symmetrically encrypt the body. For packet type 0, there is one IV for
+each of the 19 following header charts. The IV for 19th header chart
+is also used for the body.
+
+Remailer address: address of next hop.
+
+Message ID: randomly generated identifier unique to (all packets of)
+this message.
+
+Packet number: Sequence number used in multi-packet messages.
+
+Number of packets: Total number of packets.
+
+Timestamp: A timestamp is introduced with the byte sequence (48, 48,
+48, 48, 0). The following two bytes specify the number of days since
+Jan 1, 1970, given in little-endian byte order. A random number of up
+to 3 may be substracted from the number of days in order to obscure
+the origin of the message.
+
+Digest: MD5 digest computed over the preceding elements of the
+encrypted header section.
+
+Header charts 2 .. 20 and the body each are decrypted separately using
+the respective initialization vectors.
+
+
+3.2.2 Body Format
+
+     Number of destinations     [        1 byte]
+     Destination addresses      [ 80 bytes each]
+     Number of header lines     [        1 byte]
+     Header lines               [ 80 bytes each]
+     Payload                    [      any size]
+
+Destination addresses are Internet mail addresses. Additionally,
+the following special destinations are defined:
+
+null:             Dummy message, will be discarded by the final mix.
+post: newsgroup   Message will be posted to Usenet.
+
+The payload may be compressed using GZIP [RFC 1952] if the
+capabilities attribute of the final remailer contains the flag
+"C". When compressing the message, the operating system field must be
+set to Unix, and file names must not be given. The remailer treats
+messages beginning with the GZIP identification header (31, 139) as
+compressed.
+
+The resulting message is split into chunks of 10236 bytes. To each chunk,
+its length is prepended as a 4 byte little-endian number to form the body
+of a Mixmaster packet.
+
+
+3.3 Mail Transfer Encoding
+
+Mixmaster packets are sent as text messages [RFC 822]. The body has
+the following format:
+
+  ::
+  Remailer-Type: Mixmaster [version number]
+  
+  -----BEGIN REMAILER MESSAGE-----
+  [message length]
+  [message digest]
+  [encoded message]
+  -----END REMAILER MESSAGE-----
+
+The length field always contains the decimal number "20480", since the
+size of Mixmaster messages is constant. The MD5 message digest [RFC
+1321] of the message is encoded as a hexadecimal string.
+
+The message itself is encoded in base 64 encoding [RFC 1421] and
+broken into lines of 40 characters.
+
+
+4. Key Format
+
+Remailer public key files consist of a list of attributes and a
+public RSA key:
+
+  [attributes list]
+  
+  -----Begin Mix Key-----
+  [key ID]
+  [length]
+  [encoded key]
+  -----End Mix Key-----
+
+The attributes are listed in one line separated by spaces:
+
+identifier:   a human readable alphabetical string identifiying the remailer
+address:      the remailer's Internet mail address
+key ID:       public key ID
+version:      the Mixmaster version number
+capabilities: flags indicating additional capabilites of the remailers
+
+The identifier consists of alphanumeric characters, begining with an
+alphabetic character. It must not contain whitespace.
+
+The encoded key packet consists of two bytes specfying the key length
+(1024 bits) in little-endian byte order, and of the RSA modulus and
+the public exponent in big-endian form using 128 bytes each, with
+preceding null bytes where necessary. The packet is encoded in base
+64, and broken into lines of 40 characters each. Its length (258
+bytes) is given as a decimal number.
+
+The key ID is the MD5 message digest of the reprentation of the RSA
+public key (not including the length bytes). It is encoded as a
+hexadecimal string.
+
+The capabilities field is optional. Clients should ignore unknown flags.
+The following flags are used in version 2.0.4:
+
+C     accepts compressed messages.
+M     will forward messages to another mix, when used as the final hop.
+Nm    supports posting to Usenet throught a mail-to-news gateway.
+Np    supports direct posting to Usenet.
+
+Digital signatures [RFC 1991] should be used to ensure the
+authenticity of the key files.
+
+
+5. References
+
+[Chaum] Chaum, D., "Untraceable Electronic Mail, Return Addresses, and
+Digital Pseudonyms", Communications of the ACM 24 (1981) 2.
+
+[RFC 822] Crocker, D., "Standard for the Format of ARPA Internet Text
+Messages", STD 11, RFC 822, August 1982.
+
+[RFC 1321] Rivest, R., "The MD5 Message-Digest Algorithm", RFC 1321,
+April 1992.
+
+[RFC 1421] Linn, J., "Privacy Enhancement for Internet Electronic
+Mail: Part I -- Message Encryption and Authentication Procedures", RFC
+1421, February 1993.
+
+[RFC 1952] Deutsch, P., "GZIP file format specification version 4.3",
+RFC 1951, May 1996.
+
+[RFC 1991] Atkins, D., Stallings, W. and Zimmermann, P., "PGP Message
+Exchange Formats", RFC 1991, August 1996.
+
+[RFC 2311] Dusse, S., Hoffman, P, Ramsdell, B, Lundblade, L. and
+Repka, L., "S/MIME Version 2 Message Specification", RFC 2311, March
+1998.
+
+[RFC 2313] Kaliski, B., "PKCS #1: RSA Encryption, Version 1.5", RFC
+2313, March 1998.
+
+[Schneier] Schneier, B., "Applied Cryptography", 2nd Edition, Wiley,
+1996.
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00172.html">Re: FC: Possessing fake IDs soon to be a federal crime (&amp; Y2K)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00171.html">Tit 'n' Run/Man sues self/World's worst liar</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00172.html">Re: FC: Possessing fake IDs soon to be a federal crime (&amp; Y2K)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00171.html">Tit 'n' Run/Man sues self/World's worst liar</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00176"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00176"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

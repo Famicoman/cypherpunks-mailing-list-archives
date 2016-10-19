@@ -1,0 +1,154 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Exchange random numbers (was: Re: netscape's response) -->
+<!--X-From-R13: Rnivq_O Intare <qnjNQE.Prexryrl.SRG> -->
+<!--X-Date: Wed, 27 Sep 95 10:48:23 PDT -->
+<!--X-Message-Id: 199509271747.KAA01043@lagos.CS.Berkeley.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199509270913.KAA17943@piraya.electrum.kth.se -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Exchange random numbers (was: Re: netscape's response)</TITLE>
+<LINK REV="made" HREF="mailto:daw@CS.Berkeley.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02040.html">Date Prev</A>][<A HREF="msg02059.html">Date Next</A>][<A HREF="msg02037.html">Thread Prev</A>][<A HREF="msg01672.html">Thread Next</A>][<A HREF="index.html#02041">Date Index</A>][<A HREF="threads.html#02041">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Exchange random numbers (was: Re: netscape's response)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cwe@it.kth.se">cwe@it.kth.se</A> (Christian Wettergren)</LI>
+<LI><em>Subject</em>: Re: Exchange random numbers (was: Re: netscape's response)</LI>
+<LI><em>From</em>: David_A Wagner &lt;<A HREF="mailto:daw@CS.Berkeley.EDU">daw@CS.Berkeley.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 27 Sep 1995 10:47:50 -0700 (PDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg02037.html">199509270913.KAA17943@piraya.electrum.kth.se</A>&gt; from "Christian Wettergren" at Sep 27, 95 10:14:45 am</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; | &gt; Giving out contribution: 
+&gt; | &gt;      MD5(select_bits(my_seed, start_bit, stop_bit)) -&gt; remote
+&gt; | &gt; Taking in contribution : 
+&gt; | &gt;      my_seed = my_seed XOR 
+&gt; | &gt;      ((select_low_bits(remote_contrib, contrib_width) &lt;&lt; contrib_area)
+
+So here's another attack on this scheme which I noticed today.
+I'll assume you're using the Netscape/RSAREF PRNG:
+
+	prng() {
+		increment(my_seed);
+		return(MD5(my_seed));
+	}
+
+Then an attacker can send you ``1'' as contribution.  This will
+xor ``1 &lt;&lt; contrib_area'' into your seed.  With probability 1/2,
+this will be the same as subtracting ``1 &lt;&lt; contrib_area'' from
+your seed -- and in this case, your PRNG will repeat after
+``1 &lt;&lt; contrib_area'' more outputs.  This is much worse than the
+expected 1 &lt;&lt; 128 cycle length.
+
+
+So this is an example of why it's dangerous to xor in values
+*chosen by your adversary* to your seed.
+
+
+&gt; Could you quantify how powerful a related-key attack is, compared to
+&gt; some other kind of attack? I don't know anything about this kind of 
+&gt; attack, do you have any references?
+
+I don't know about any work on related-key attacks on stream ciphers.
+For block ciphers, related-key attacks are much stronger than other
+attacks. (e.g. DES can be broken with ~ 2^28 related key queries and
+about ~ 2^28 off-line computation steps)
+
+
+Here's some references on related key attacks on block ciphers.  If
+anyone can find any other work in this area, let me know!
+
+
+@inproceedings{subkeys-important,
+        author = {Edna K. Grossman and Bryant Tuckerman},
+        title = {Analysis of a Weakened {Feistel}-like Cipher},
+        booktitle = {1978 International Conference on Communications},
+        pages = {46.3.1--46.3.5},
+        publisher = {Alger Press Limited},
+        year = {1978},
+        annote = {Feistel ciphers with identical subkeys in each round
+                        are very weak}
+}
+
+@article{related-keys-1,
+        author = {Robert Winternitz and Martin Hellman},
+        title = {Chosen-key Attacks on a Block Cipher},
+        journal = {Cryptologia},
+        year = {1987},
+        volume = {{XI}},
+        number = {1},
+        month = {January},
+        pages = {16--20}
+}
+
+@inproceedings{related-keys-2,
+        author = {Eli Biham},
+        title = {New Types of Cryptanalytic Attacks Using Related Keys},
+        booktitle = {Advances in Cryptology: {EUROCRYPT} '93},
+        pages = {398--409},
+        publisher = {Springer-Verlag},
+        year = {1994}
+}
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="02037" HREF="msg02037.html">Re: Exchange random numbers (was: Re: netscape's response)</A></STRONG>
+<UL><LI><EM>From:</EM> Christian Wettergren &lt;cwe@it.kth.se&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02040.html">Re: Timothy C. May: Mini-mailbombs and Warning Letters</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02059.html">Re: Timothy C. May: Mini-mailbombs and Warning Letters</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02037.html">Re: Exchange random numbers (was: Re: netscape's response)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01672.html">Munition (RSA/Perl) T-shirts Now Shipping From Stock!</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02041"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02041"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

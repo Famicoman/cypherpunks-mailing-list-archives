@@ -1,0 +1,199 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: RC2's key schedule and passphrase hashing -->
+<!--X-From-R13: X[YSZESKNqrycuv.pbz -->
+<!--X-Date: Sat, 10 Feb 1996 06:16:37 +0800 -->
+<!--X-Message-Id: 01I0ZVV5YJBC985HB3@delphi.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>RC2's key schedule and passphrase hashing</TITLE>
+<LINK REV="made" HREF="mailto:JMKELSEY@delphi.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00732.html">Date Prev</A>][<A HREF="msg00797.html">Date Next</A>][<A HREF="msg00807.html">Thread Prev</A>][<A HREF="msg00797.html">Thread Next</A>][<A HREF="index.html#00733">Date Index</A>][<A HREF="threads.html#00733">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>RC2's key schedule and passphrase hashing</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: RC2's key schedule and passphrase hashing</LI>
+<LI><em>From</em>: <A HREF="mailto:JMKELSEY@delphi.com">JMKELSEY@delphi.com</A></LI>
+<LI><em>Date</em>: Fri, 09 Feb 1996 04:28:57 -0500 (EST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+[ To: Cypherpunks, sci.crypt ## Date: 02/09/96 01:44 am ##
+  Subject:  RC2's key schedule and passphrase hashing ]
+
+Summary:  Don't use RC2's key schedule to hash passphrases, with or
+          without the export hack.  Instead, hash the passphrase
+          first, and then pass the result into RC2 to get expanded.
+          (This is a good rule to follow with any cipher whose
+          designers didn't specifically intend for it to be used to
+          hash passphrases.)  Don't use phase two at all--if you
+          need exportable 40 bit security, generate a 128-bit random
+          value, and leak 88 bits as salt.  Hash the value, and use
+          the result as the RC2 key.
+
+&gt;Date: Fri, 02 Feb 1996 10:02:37 -0800 (PST)
+&gt;From: baldwin &lt;baldwin@RSA.COM&gt; (Robert W. Baldwin)
+&gt;Subject: RC2 technical questions
+
+&gt;- How does the length of the key influence the mixing
+&gt;  of bits during each pass of the expansion algorithm?
+
+&gt;- If the first pass of expansion is viewed as a hash
+&gt;  function that produces 40 or 128 bits out, what are
+&gt;  its properties?
+
+These are good questions, and they turn out to be pretty
+educational.  I no longer can see any good reason for the
+effective-bits hack.  Let me explain why, briefly:
+
+Suppose I'm hashing a 64-character passphrase, where each character
+has about three bits of actual entropy, for use in an export-
+controlled application.  Clearly, this gives us plenty of entropy
+(192 bits) in the whole user key.  How much entropy can make it to
+the last five bytes of expanded key?  These last five bytes are a
+function of the last five bytes of user passphrase (total entropy of
+about 15 bits), and the previous byte of expanded key (which can't
+have more than eight bits of entropy). Those are the only inputs
+that aren't known to all attackers.  This means that in this (very
+degenerate) case, we'd have 23 bits of entropy in our last 40 bits.
+If we then did phase two of the key expansion based on those 40
+bits, we'd wind up with a total expanded key entropy of 23 bits. In
+short:  Guess an 8 bit random number and the last five bytes of the
+user key, and you've got the entire expanded key.  (Of course, if
+the application always padded the user passphrase with blanks or
+something to make it 64 bytes long, and then scheduled the key with
+the export control hack, we'd have *eight* bits of entropy in our
+expanded key, which probably qualifies for some kind of special
+thank-you note from Fort Meade or something.)
+
+Suppose I'm hashing a 32 character user passphrase.  The same
+analysis applies to the bytes 60..63 of expanded key.  Those bytes
+can have no more than 23 bits of entropy, if each character of the
+passphrase carries three bits of entropy. This means that bytes
+92..95 carry at most 31 bits of entropy, and thus that bytes
+124..127 carry at most 39 bits of entropy.  If we pad the passphrase
+out on the right to 32 bytes before sending it into the RC2 key
+schedule, then we wind up with about 24 bits of entropy in the whole
+expanded key after phase two.
+
+Our assumptions about entropy in user passphrases can make this
+better or worse.  For example, we may assume that it costs us 16
+bits to guess the first three characters of any passphrase
+substring, and one bit per character after that.  In that case,
+processing a 64-character passphrase into 40 effective key bits gives
+us 26 bits of entropy.  If we assume that each additional character
+after the first three guessed costs us two bits, then processing a
+64-character passphrase down to 40 bits gives us 28 bits of entropy,
+and processing it down to 56 bits gives us 32 bits.
+
+Without phase two, long user passphrases simply leave most of the
+expanded key fairly predictable, especially in the high couple of
+bits of each byte.  I haven't tried to analyze yet what this does to
+RC2's security, but it's almost never a good idea to have
+highly-predictable bits anywhere in a cipher's expanded key.
+
+The moral of the story seems to be this:  Don't use key schedules as
+passphrase hashing functions, unless they're specifically designed
+as such.  In particular, don't use RC2's key schedule to hash your
+passphrase.  Pass your passphrase (and salt) through a good one-way
+hash function like SHA1, and feed the result into your key schedule.
+
+Can anyone guess what the effective-bits parameter is used for?  It
+doesn't seem to be secure for hashing passphrases, making some
+reasonable-sounding assumptions about actual entropy per character
+in user passphrases.  I can't see an intelligent use for it.
+
+Note that setting effective bits to 40, we have only a 40-bit
+key--no salt.  This means that using alleged-RC2 with phase two of
+the key schedule and effective bits set to 64 or less, we're
+potentially vulnerable to a precomputation attack.  This is a real
+problem if we're doing something like encrypting a constant block at
+the beginning of the encryption, to verify that we have the right
+decryption key.  (It's enough of a potential problem to be
+worrysome, anyway--note that almost all of my notes to John Smith
+start out with the same eight characters:  "[ To: Jo".
+Precomputation attacks based on this are quite feasible.)  I am very
+curious about how this is dealt with in practical implementations.
+The obvious way to do this would be to leave effective-bits = 1024,
+and just hash an 88-bit salt with a 40-bit session key to get the
+128-bit key actually passed into RC2.  But that begs the question:
+What's the use of having the effective-bits parameter? I certainly
+hope nobody is using RC2 with effective-bits set to 40 in any
+important, real-world applications.
+
+&gt;--Bob
+
+Note:  Please respond via e-mail as well as or instead of posting,
+as I get CP-LITE instead of the whole list.
+
+   --John Kelsey, jmkelsey@delphi.com / kelsey@counterpane.com
+ PGP 2.6 fingerprint = 4FE2 F421 100F BB0A 03D1 FE06 A435 7E36
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBMRsR1kHx57Ag8goBAQFzOAQAnjL06eTNMkqgT9OatMa2FRm2dFU7yffU
+lH3blWxV2Wv8XrMGTB3WTES6ME1D84qJMk641MNxAtH1PAigFzEFDeBHxDr83fR4
+tJFECzQ0KWGUu3Pn9/sHJFhjOWUbg6AAtNQ94XN4kBx+NSb3rF/AtoEMyJr6azug
+FA5T+AQq+Jo=
+=Y7P+
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00732.html">Re: Money &amp; CreditCard URLs</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00797.html">The Resistor</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00807.html">Re: V-Chip Settings Escrow</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00797.html">The Resistor</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00733"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00733"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

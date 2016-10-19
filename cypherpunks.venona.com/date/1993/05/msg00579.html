@@ -1,0 +1,238 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Clipperpunks Write Code? -->
+<!--X-From-R13: crgre ubarlzna <ubarlNpvgv.hzvpu.rqh> -->
+<!--X-Date: Mon, 31 May 93 20:10:26 PDT -->
+<!--X-Message-Id: 9306010310.AA14901@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9305312100.AA22836@netcom3.netcom.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Clipperpunks Write Code?</TITLE>
+<LINK REV="made" HREF="mailto:honey@citi.umich.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00578.html">Date Prev</A>][<A HREF="msg00576.html">Date Next</A>][<A HREF="msg00571.html">Thread Prev</A>][<A HREF="msg00573.html">Thread Next</A>][<A HREF="index.html#00579">Date Index</A>][<A HREF="threads.html#00579">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Clipperpunks Write Code?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:tcmay@netcom.com">tcmay@netcom.com</A> (Timothy C. May)</LI>
+<LI><em>Subject</em>: Re: Clipperpunks Write Code? </LI>
+<LI><em>From</em>: peter honeyman &lt;<A HREF="mailto:honey@citi.umich.edu">honey@citi.umich.edu</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 31 May 1993 23:47:38 -0400</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: Your message of Mon, 31 May 1993 14:00:24 -0700.            &lt;<A HREF="msg00571.html">9305312100.AA22836@netcom3.netcom.com</A>&gt; </LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;                 If "Cypherpunks write code", how much code has been written
+&gt; lately?
+
+this is not a major hack, but a fun one.  i've never been big on the details
+of pgp's trust model, with "trusted", "sort of trusted", etc.  the keys
+i trust most are those i have signed.  by extension, what i want to know is
+the "signature distance" of a given key.  so here's my hack, a shell script
+that uses pgp and pathalias to compute signature distance.  here's a sample:
+
+  reno:; ./pgpwho hughes@soda honey
+  peter honeyman &lt;honey@citi.umich.edu&gt;
+  Phil Karn &lt;karn@qualcomm.com&gt;
+  Tom Jennings &lt;tomj@fido.wps.com&gt;
+  Eric Hughes &lt;hughes@soda.berkeley.edu&gt;
+
+actually, it's much more verbose than that, but that will change.
+so far, i find the script useful.  here it is.
+
+	peter
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+#!/bin/sh
+# usage: pgpwho [ who [ me ] ]
+
+# @(#)pgpwho	1.1 93/05/31
+# public domain.   send comments to honey@citi.umich.edu.
+
+case $# in
+0)	argwho=
+	arglocal=;;
+1)	argwho=$1
+	arglocal=;;
+2)	arglocal=$2
+	if [ "$1" != "-" ]; then
+		argwho=$1
+	else
+		argwho=
+	fi;;
+*)	echo usage: pgpwho [ who [ me ] ]
+	exit 1;;
+esac
+
+find kvv pain reach -size 0 -exec rm -f '{}' ';' &gt;/dev/null 2&gt;&amp;1
+
+if [ ! -r kvv ]; then
+	kvv=
+else
+	kvv=`find kvv -newer $PGPPATH/pubring.pgp -print`
+fi
+
+case "$kvv" in
+kvv)	echo "kvv is up to date";;
+*)	echo "dumping keys (pgp -kvv) ..."
+	pgp -kvv &gt; kvv;;
+esac
+
+if [ ! -r pain ]; then
+	pain=
+else
+	pain=`find pain -newer kvv -print`
+fi
+
+case "$pain" in
+pain)	echo "pain is up to date";;
+*)	echo "massaging kvv into pain (pathalias input) ..."
+	cat kvv | awk '
+		$1 == "pub" {
+			num = split($2, bitskeyid, "/");
+			if (num != 2) {
+				print "???", $0
+				next;
+			}
+			nkeys++;
+			keyid = bitskeyid[2]
+			user = "";
+			for (j = 4; j &lt;= NF; j++)
+				user = user " " $j
+			userid[keyid] = user;
+			}
+
+		$1 == "sig" {
+			if ($2 != keyid)
+				print $2, keyid, "(1)"
+		}
+
+		END {
+			for (i in userid)
+				print "#", i, userid[i];
+		}
+	' &gt; pain;;
+esac
+
+while :; do
+	if [ -z "$arglocal" ]; then
+		echo -n "what is your pgp id? "
+		read arglocal
+	fi
+	grep -i "^pub.*$arglocal" kvv | tee tmp
+	case `wc -l &lt; tmp|sed 's/ //g'` in
+	0)	echo $arglocal not found, try again;;
+	1)	break;;
+	*)	echo too many matches for id $arglocal, please narrow it down;;
+	esac
+	arglocal=
+done
+local=`awk '{print $2}' tmp | sed 's/.*\///'`
+
+while :; do
+	if [ -z "$argwho" ]; then
+		echo -n "who? "
+		read argwho
+	fi
+	grep -i "^pub.*$argwho" kvv | tee tmp
+	case `wc -l &lt; tmp|sed 's/ //g'` in
+	0)	echo $argwho not found, try again;;
+	1)	break;;
+	*)	echo too many matches for $argwho, please narrow it down;;
+	esac
+	argwho=
+done
+who=`grep "^pub" tmp | awk '{print $2}' | sed 's/.*\///'`
+
+if [ ! -r reach ]; then
+	reach=
+else
+	reach=`find reach -newer pain -print`
+fi
+
+case "$reach" in
+reach)	echo "reach is up to date";;
+*)	echo "running pathalias ..."
+	pathalias -l $local -c pain 2&gt;xxx-errs | tee xxx | awk '$1 &lt; 10000 {print}' &gt; reach;;
+esac
+
+echo "searching for $who ..."
+
+grep "	$who	" reach | sed -e 's/.*	//' -e 's/%s//' -e 's/!/ /g' &gt; tmp
+case `wc -l &lt; tmp|sed 's/ //g'` in
+0)	echo no signature path to $who
+	exit 1;;
+1)	;;
+*)	echo weird error
+	exit -1;;
+esac
+
+set `cat tmp`
+
+grep "^# $local" pain | sed -e 's/..........//'
+for i in $*; do
+	grep "^# $i" pain | sed -e 's/..........//'
+done
+
+rm -f tmp
+exit
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00571" HREF="msg00571.html">Clipperpunks Write Code?</A></STRONG>
+<UL><LI><EM>From:</EM> tcmay@netcom.com (Timothy C. May)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00578.html">Re: divers</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00576.html">Re: your mail</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00571.html">Clipperpunks Write Code?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00573.html">Crypto anarchy in a VW? (not the bug)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00579"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00579"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

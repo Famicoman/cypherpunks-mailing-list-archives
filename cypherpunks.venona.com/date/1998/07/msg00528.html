@@ -1,0 +1,202 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Refining entropy -->
+<!--X-From-R13: Rnivq Vbavt <ubavtNz7.fcelarg.pbz> -->
+<!--X-Date: Fri, 31 Jul 1998 13:54:05 &#45;0700 (PDT) -->
+<!--X-Message-Id: 3.0.5.32.19980731134616.007c42d0@m7.sprynet.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199807302045.WAA19934@replay.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Refining entropy</TITLE>
+<LINK REV="made" HREF="mailto:honig@m7.sprynet.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00538.html">Date Prev</A>][<A HREF="msg00535.html">Date Next</A>][<A HREF="msg00538.html">Thread Prev</A>][<A HREF="msg00006.html">Thread Next</A>][<A HREF="index.html#00528">Date Index</A>][<A HREF="threads.html#00528">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Refining entropy</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Refining entropy</LI>
+<LI><em>From</em>: David Honig &lt;<A HREF="mailto:honig@m7.sprynet.com">honig@m7.sprynet.com</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 31 Jul 1998 13:46:16 -0700</LI>
+<LI><em>In-Reply-To</em>: &lt;199807302045.WAA19934@replay.com&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+This essay addresses the question, How can we improve the output of a bad
+true RNG?  By "true RNG" I mean a source of unpredictability, which
+necessarily derives from an analog measurement.  By "bad" RNG
+I mean that its output does not carry one bit of information per binary
+symbol.  This means that not all output symbols are equiprobable.  Methods
+to improve various properties of RNGs are called conditioning algorithms.
+
+I had begun by thinking that, since the output of a block cipher in
+feedback mode (ie, a stream cipher) is uniformly distributed ("white") that
+it would be sufficient conditioning to feed a bad RNG into a block cipher
+with feedback.  Here, the bad RNG would kick the cipher out of the fixed,
+but key-dependant, sequence it would otherwise generate.
+
+But it bothered me that I was producing more apparently-random bits than I
+actually had negentropy.
+
+On cypherpunks, Bill Stewart mentioned using hashes instead of ciphers.  A
+hash is like a cipher in that
+changing any input or key bit changes the  output unpredictably, but a hash
+is irreversible because there are fewer output bits than input bits.    The
+simplest hash is a one-bit parity; MD5
+is a more expensive keyed hashing function used for message authentication.
+
+Thinking about a hash instead of a cipher was interesting because now we
+reduce the number of output bits, which if done right, could improve the
+information carried by each binary digit.  We take the MAC of an imperfect
+random number and toss the original random, retaining the MAC as our better
+random value.
+
+Can we get an analytic handle on this?
+
+Let's take Mr. Shannon's measure of information over a discrete alphabet.
+The average amount of information per symbol is the (negation of the) sum
+of the probabilities of each symbol times the log base 2 of that probability.
+
+If we have two symbols, A and B, and each occurs half the time, we have 
+	1/2 * log (1/2) + 1/2 * log(1/2) = -1 = 1 bit, which is what we expect.
+
+If symbol A occurs, say, 3 times more often than B, we get:
+	3/4* log(3/4) + 1/4*log(1/4) = 3/4(log 3 - 2) + -2/4 = 3/4 log 3 - 6/4 -
+2/4 = 3/4 log 3 - 2 = 
+	2- 3/4*log 3 bits/symbol after handling the minus sign.  This is less than
+the optimum 1 bit/symbol, achieved when the symbols are equiprobable as above.
+
+So now we have demonstrated how to use Shannon to measure the actual
+entropy carried by each imperfectly random symbol. We now use this to
+measure the result of XORing two such imperfect values.
+
+We continue to use the imperfect RNG source where A occurs 3/4 time, B
+occurs 1/4 time.  We take 
+two of these badbits and XOR them: 
+A.A=A, 
+A.B=B, 
+B.A=B, 
+B.B=A.
+
+We now compute the liklihood of each output symbol: 
+
+A.A	3/4 * 3/4 = 9/16	(A)
+A.B	3/4 * 1/4 = 3/16	(B)
+B.A	1/4 * 3/4 = 3/16	(B)
+B.B	1/4 * 1/4 =1/16	(A)
+
+So the output has symbol A 10/16 of the time, and B 6/16 of the time.  The
+difference in frequency has decreased; the distribution becomes more
+uniform, which means that the information content of the output has
+increased.  The information content of the whole system can only decrease;
+but if you destroy the inputs
+the output carries their entropy.
+	
+The exact amount of information per symbol in the 10:6 distribution is 
+	10/16 * log(10/16) + 6/16 * log(6/16) = 10/16 * (log10 - 4) + 6/16*(log6
+-4) = 
+	10/16 log 10 - 40/16 + 6/16 log 6 - 24/16 = 
+	10/16 log 10 + 6/16 log 6 - 4 the negative of which is
+	4 - (10log 10 + 6 log 6) / 16
+	Which is less than 1 but more than the content of each of the 2 bits we
+started with.
+
+Intuitively, we have gone from this distribution:
+ 
+----
+------------
+
+crossed with itself, yields this distribution of states: 
+
+-
+---
+---
+---------
+
+which when collapsed yields this: 
+
+------
+----------
+
+
+So: we can use Shannon's analytic measure to look at entropy collection
+through
+a combination of imperfect input bits.  It shows us that we'll never get
+perfectly uniformly 
+distributed symbols by combining arbitrary quantities of nonuniformly
+distributed symbols, but we can get arbitrarily close.  All we need is more
+input.
+Quantity vs. quality.
+
+A video ADC acquires say 8 bits resolution at 4 msamples/sec.  This might
+condense down to 
+4 Mbits/sec true negentropy, which is about half the rate of regular Ethernet.
+
+
+
+honig@alum.mit.edu
+
+   "Speech is not protected simply because it is written in a language"	
+	Federal Misjudge Gwin on the Bernstein Case
+
+
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00538.html">Secret Service With A Smile - SAHMD!!! / Pwd: lco</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00535.html">Re: Comments on this Pentagon opinion...not a new debate</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00538.html">Secret Service With A Smile - SAHMD!!! / Pwd: lco</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00006.html">Re: Paul Merrill, his eyes uncovered! (or so he claims)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00528"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00528"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

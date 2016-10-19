@@ -1,0 +1,248 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Benford: Why and Why Not (non&#45;Math&#45;heads: SNOOZE ALERT) -->
+<!--X-From-R13: pbyyvafNarjgba.nccyr.pbz (Epbgg Qbyyvaf) -->
+<!--X-Date: Sun, 26 Dec 93 21:20:08 PST -->
+<!--X-Message-Id: 9312270517.AA04128@newton.apple.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Benford: Why and Why Not (non-Math-heads: SNOOZE ALERT)</TITLE>
+<LINK REV="made" HREF="mailto:collins@newton.apple.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00613.html">Date Prev</A>][<A HREF="msg00604.html">Date Next</A>][<A HREF="msg00614.html">Thread Prev</A>][<A HREF="msg00609.html">Thread Next</A>][<A HREF="index.html#00605">Date Index</A>][<A HREF="threads.html#00605">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Benford: Why and Why Not (non-Math-heads: SNOOZE ALERT)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Benford: Why and Why Not (non-Math-heads: SNOOZE ALERT)</LI>
+<LI><em>From</em>: <A HREF="mailto:collins@newton.apple.com">collins@newton.apple.com</A> (Scott Collins)</LI>
+<LI><em>Date</em>: Sun, 26 Dec 1993 21:18:28 -0800</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Howdy,
+
+Here is an explanation of why more numbers start with '1' than with '9',
+how to make a system where that isn't true, and why you don't need to.  If
+you don't like math, you've already extracted everything from this message
+that you could possibly need.
+
+-----
+
+For any integral magnitude x in the range 0..N, there are infinitely many
+polynomials of the form
+
+        c_1 b_1^e_1 + c_2 b_2^e_2 + ... + c_L b_L^e_L = x
+
+c_i, b_i, e_i integers.  This is trivially provable given the single term
+(x b_1^0), in combination with all the possible terms where c_i = 0.
+
+Let us distinguish polynomials of a form where, for terms i and j, i != j:
+
+  1. b_i = j_i
+
+  2. e_i = L-i
+
+  3. b_i^e_i &lt;= x
+
+  4. 0 &lt;= c_i &lt; b_i
+
+Condition 1 allows only polynomials where b is the same for every term. 
+Condition 2 allows only polynomials whose terms are in strictly decreasing
+order by the exponent, and contain every integral exponent from L-1 downto
+0.  Condition 3 ensures that the c_1 != 0.
+
+These four conditions, restrict the set of polynomials that can represent
+x, for any B such that b_i=B, to 1.  These conditions are, in fact, the
+'normalization' rules for representing numbers as strings of symbols, in
+any base B.  Since B can be assumed, and e_i adduced, any x can be
+represented by concatenating symbols drawn from an alphabet of size B,
+representing the magnitudes 0..B-1 according to c_i.  When B=10, and the
+alphabet is { '0'=0, '1'=1, '2'=2, ... '9'=9 }, we call this the decimal
+system.
+
+Consider the journey of x as it goes from 0 to B^(i+1)-1.  It has to
+progress from 0 to B^i-1 to 2B^i-1 to B^(i+1)-1.
+
+Graph(?) A:
+
+ B^(i-1)-1 (B^i)-1   (2B^i)-1                                  (B^(i+1))-1
+  |..........|..........|........................................|
+  R    r     S     s    T                     t                  R'
+
+Distance r = s = B^i.  Distance t = (B-2)B^i.  These three 'legs' of x's
+journey represent, starting with s, a contiguous range of representations
+beginning with '1', t, a contiguous range of representations _not_ starting
+with '1', and r, a range 1/B the size we are disecting, which is itself
+divided in the same proportions.  Thus, from S to T, the fraction of
+strings beginning with '1' increases to (about) 1/2, and from T to R' it
+decreases to 1/B.  And since r is a minor copy of rst, at R and S, the
+fraction must be 1/B.  So, for any period, the fraction rises to 1/2 in
+time s, and falls to 1/B in time (B-2)s.
+
+Consider the normalized decimal representations of integers drawn from the
+range [0,N].  When N=1, the set in question is {'0', '1'} of which 1/2
+begin with '1'.  As N goes to 9, eight strings are added to the set, none
+of which begin with '1', thus, at N=9, only 1/10 of the sets elements begin
+with '1'.  As N goes to 19, the fraction swings quickly back up to 1/2.  As
+N goes to 99, the fraction drops, again, more slowly (8 times more slowly),
+to 1/10.  On a log graph, this behavior is a saw-tooth pattern:
+
+Graph B:
+        .         .         .
+        .         .         .
+0.5 ....*.........*.........*..........
+        . *       . *       . *
+    p   .   *    *.   *    *.   *
+        .     *   .     *   .     *  
+0.1 ............*.........*.........*..
+      * .         .         .
+        .         .    N    .
+      0 1        19        199      1999
+
+
+Note that this graph describes properties of a representation for numbers. 
+That is, this is the graph of a distribution of strings, not of integers. 
+A different representation would yield a different behavior.
+
+Consider the graph of log_B(N).  Here the x-axis is N, the y-axis log_B(N),
+and it is graphed on log_B, paper as '*'s:
+
+Graph C:
+
+3 -                     +---------*
+                        |    *
+2 -           +---------*
+              |    *
+1 - +---------*
+    |    *
+0 - *
+
+    |         |         |         |
+   B^0       B^1       B^2       B^3
+
+Ceiling(log_B(N)), shown in the graph with lines, is the length of the base
+B representation of N.  This shows that even if the 'unfair first digit'
+problem were avoided by a different representation, any log based
+distribution would still exhibit a similar problem in string _lengths_. 
+i.e., only 1/B of all strings from 0..N are shorter than log_b(N): an
+'unfair distribution of lengths'.
+
+For a flat distribution of strings, you require a representation scheme
+where, for any N, 1/B strings begin with a_i (a symbol from B's alphabet),
+and for range of allowable lengths of strings in the scheme (1..L), for any
+l, the number of strings for numbers in N is the same.
+
+Here are two such schemes.
+
+'Base-1' representation: the alphabet has one symbol, any magnitude x is
+represented by x concatenated instances of the symbol.  The first property
+is satisfied because the alphabet has 1 symbol, and 1/1 of the strings from
+1..N begin with that symbol.  The second property is satisfied because the
+allowable lengths vary from 1..N, and for each length, only one string
+exists of that length, thus every possible length has the name number of
+strings.
+
+Fixed length representation:  All numbers from 0..N, N = B^L, are
+represented by strings of length L comprising symbols from B's alphabet,
+constructed according to the normalization rules but replacint condition 3
+with the rule e_i=L-(i+1) (forcing all strings to be the same length).  The
+second property is satisfied because there is only one allowable length. 
+The first property is satisfied, because, since N=B^L, every distinct
+string of length L of symbols from B's alphabet is a valid number in this
+representation, and of those strings, for any position p in the string,
+including p=0 (the first symbol), 1/B of the strings will symbol a_i in
+that position.  An example of this scheme is a byte of computer memory used
+to hold magnitudes from 0..255.
+
+But, since the 'Base-1' scheme doesn't exhibit the predictability problem
+of our normalized decimal system, and is a dramatically 'real'
+representation of numbers (although inconvenient) one might guess that even
+if one can predict features of representations, it does not necessarily
+follow that such a prediction can be exploited into guessing the number
+itself.  Something near half of all decimal representations begin with a
+symbol from { '1', '2', '3' }, but that doesn't actually help me guess the
+next number, just make some predictions about its representation.
+
+This is, in fact the case.  Our normalized log-based representation schemes
+are 'unfair' in the distribution of strings, essentially using all the
+'good' ones first (for oft' used small numbers).  The further out we go,
+the longer strings we need, and the log distrubition problem surfaces.  But
+for any range, the actual (formless) magnitudes themselves are evenly
+distributed, in spite of what you might guess from our biased strings. 
+Thus, Benford distribution is the kernel of a great bar bet, but an
+unlikely alley in predicting the underlying magnitudes.
+
+-----
+
+Fractals?  Well, r is a 'little copy' of rst.  Chaos theory?  No.  How
+about just some good basic algebra (OK, a little calculus if you want to
+calculate the area under under the curve in Graph B, and from that, the
+amount to bet at the bar).
+
+Hope you enjoyed this,
+
+
+Scott Collins         | "Few people realize what tremendous power there
+                      |  is in one of these things."     -- Willy Wonka
+......................|................................................
+BUSINESS.   voice:408.862.0540  fax:974.6094   collins@newton.apple.com
+Apple Computer, Inc.   5 Infinite Loop, MS 305-2B   Cupertino, CA 95014
+.......................................................................
+PERSONAL.   voice/fax:408.257.1746    1024:669687   catalyst@netcom.com
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00613.html">Another groups handling of disruptive people</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00604.html">Re: Another groups handling of disruptive people</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00614.html">Re: Another groups handling of disruptive people</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00609.html">IRC and the Feeling of Power</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00605"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00605"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

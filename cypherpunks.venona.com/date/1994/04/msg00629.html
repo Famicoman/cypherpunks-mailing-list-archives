@@ -1,0 +1,356 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: [hughes@hughes.network.com: Encrypting tunnel negotiation protocol] -->
+<!--X-From-R13: Sevp Pybffbz <roNfe.uc.pbz> -->
+<!--X-Date: Thu, 14 Apr 94 16:10:09 PDT -->
+<!--X-Message-Id: 9404142315.AA06442@srlr14.sr.hp.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>[hughes@hughes.network.com: Encrypting tunnel negotiation protocol]</TITLE>
+<LINK REV="made" HREF="mailto:eb@sr.hp.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00628.html">Date Prev</A>][<A HREF="msg00630.html">Date Next</A>][<A HREF="msg00626.html">Thread Prev</A>][<A HREF="msg00630.html">Thread Next</A>][<A HREF="index.html#00629">Date Index</A>][<A HREF="threads.html#00629">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>[hughes@hughes.network.com: Encrypting tunnel negotiation protocol]</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: [hughes@hughes.network.com: Encrypting tunnel negotiation protocol]</LI>
+<LI><em>From</em>: Eric Blossom &lt;<A HREF="mailto:eb@sr.hp.com">eb@sr.hp.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 14 Apr 1994 16:15:39 -0700</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:eb@well.sf.ca.us">eb@well.sf.ca.us</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+This came across the ipsec list.
+Apologies to those who have already seen it.
+
+Eric Blossom
+
+----------------------------------------------------------------
+
+Return-Path: &lt;ipsec-request@ans.net&gt;
+From: hughes@hughes.network.com (James P. Hughes)
+Date: Thu, 14 Apr 1994 12:51:56 -0500
+X-Mailer: Z-Mail (3.1.0 22feb94 MediaMail)
+To: ipsec@ans.net
+Subject: Encrypting tunnel negotiation protocol
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0
+
+This is a discussion that I promised to start at the last IETF.
+
+This is a long email, so I will ask for any comments here at the start.
+
+Thanks
+
+jim
+ 
+-------------------
+
+Introduction.
+
+This note is to start a discussion regarding key negotiation for encrypting 
+tunnels. There are several specific attacks and authentication capabilities 
+that will be addressed.
+
+The tunnel establishment protocol must negotiate several parameters and well 
+as reliably negotiate a session key. 
+
+A 2 message authentication/session key negotiation was chosen because of the 
+complexities of multiple messages.
+
+Authentication will be accomplished with RSA. Getting certified public keys 
+will be beyond this document. It is expected that they will be distributed via 
+"secure sneaker-net", via secure DNS or X.509 certification services. An 
+example of a secure sneaker-net is where the public keys are gathered together 
+on a disk and then distributed to potential partners. During this phase the 
+disk mst be guarded to ensure that "Mallet" can get at the disk and replace 
+the keys. After the keys are loaded into the partners, they must be protected 
+form unauthorized external writes and/or erasures.
+
+Attacks addressed will be "denial of service because of message playback", 
+"man in the middle", and "rubber hose" attacks.
+
+Denial of service
+
+It is expected that processing tunnel establishment messages will be an 
+processor expensive task, and this protocol is intended to minimize the 
+processing required to determine if a tunnel establishment packet is not an 
+old packet or a malicious packet created to "clog up" the tunnel establishment 
+task. 
+
+If the tunnel is established, a tunnel request will be ignored unless the 
+request has the proper identifier. If there is an active tunnel, then there 
+will be an active tunnel negotiation request identifier. A malicious user can 
+not interrupt an exiting tunnel without this "once". Once a request is 
+received, that request identifier is (probably) not used again.
+
+When a tunnel is not established, there is not an existing tunnel negotiation 
+request identifier, and a malicious user can create a packet that passes the 
+initial checks. All a malicious user can cause is a one block of RSA 
+decryption, one block of RSA encryption and a MD5 calculation. This 
+vulnerability can be limited by queueing only the oldest packet per requestor 
+IP address if the tunnel renegotiation task is busy.
+
+If the malicious user sends in old packets, the increasing time of day check 
+will be enough to catch them. if the user modifies the time of day, then the 
+RSA and MD5 checks will catch that.
+
+In either case, the malicious user can not interrupt existing tunnels and if 
+the tunnel request processing is a background, low priority task, throughput 
+will not be adversely effected.
+
+Other attacks.
+
+Man in the middle is addressed with (unspecified) trusted public key 
+distribution mechanism.
+
+Rubber hose attack is where the private key is extracted through (possible 
+painful means) and all previous messages passed can then be decrypted. The 
+more common method of using this would be to "steal" the host or router and 
+then use in circuit emulators or the like to extract the public key. After an 
+attack like this the key would be compromised and never used again. What this 
+is trying to protect is all previous messages passed before the rubber hose is 
+applied even if the private key is compromised.
+
+The key establishment protocol
+
+The protocol is comprised of two messages.
+
+        Requestor                                     Responder
+
+        Tunnel Request -----------------------------&gt;
+
+                  &lt;---------------------------------- Tunnel Reply
+
+If there is not a reply from the first packet, the source will resend the 
+packet with a new time of day (and recomputed MD5).
+
+Sending traffic on the new tunnel or sending a Tunnel alive message will 
+complete the negotiating.
+
+Tunnel keep alive messages are sent and acknowledged at a predetermined 
+regular basis. Both sides send the requests and both sides send the Ackd. 
+These messages are passed within the tunnel and are encrypted by that process. 
+The format of the tunnel alive messages are in the tunnel document.
+
+The contents of the tunnel request is:
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   +
+   |                   Requestor IP address                        |   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   |
+   |                   Responder IP address                        |   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   |
+   |                   Request Identifier                          |   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   |
+   |                   Time of Day         (2 words)               |   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   |
+   |                   Diffie-Hellman modulus Length               |   | 
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   | 
+   |                   g                  (16 through 64 words)    |   | 
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+  MD5  
+   |                   Modulus            (16 through 64 words)    |   | 
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   | 
+   |           Diffie-Hellman (X=g^x mod n) (16 through 64 words)  |   | 
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   |   +
+   |                   Reply identifier                            |   |   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   |   |
+   |              Tunnel request and parameters (TBD)  (? words)   |   |   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   |   |
+   |                   Tunnel Lifetime                             |   |   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   +  RSA
+   |                   MD5 residue             (2 words)           |       |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+       |
+   |                   Padding (Random data) (? words)             |       |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+       +
+
+    
+"Request Identifier" is the value from the last tunnel negotiation that 
+identifies this packet as the correct tunnel renegotiation packet. If there is 
+not a current tunnel in effect then this is 0.
+
+"Time of day" is the unix format time of day, that is, the high word contains 
+the number of seconds since January 1, 1970 GMT, and the second word contains 
+the number of microseconds elapsed during the current second. The clock needs 
+to be monotonically increasing, but does not need to be synchronized. The 
+microseconds can be an increment.
+
+"Tunnel request parameter" contains information which is used in the 
+negotiation of the tunnel. This includes tunnel ID (SAID), encryption type(s), 
+compression type(s). Details TBD.
+
+"Reply identifier" is the value expected in the reply. This is a random number.
+
+"Tunnel Lifetime" is the expected time for the tunnel to live. This value, 
+added to the local time of day creates both the expected time of day to be 
+used in the next request as well as allowing the Responder to calculate the 
+time after which it is to expect that negotiation to occur. Tunnel 
+renegotiation can occur sooner if the tunnel keep alive messages show that the 
+tunnel has collapsed.
+
+"Random Padding" is used to pad out the block to the RSA modulus.
+
+RSA is used to double encrypt this with the requestors private key and the 
+responders public key. The double protection will obscure from any potential 
+eavesdroppers the exact encryption methods, compression options as well as 
+renegotiation times and reply identifier.
+
+The Diffie Hellman modulus length (in bytes) is then followed by the 3 values, 
+g, n, and (g^x)mod n. (x is the secret value to be used to calculate the key 
+later.) The length can be from 512 to 2k bits.
+
+When the packet is received the following steps are performed. 
+
+1. The IP address, request ID are validated to ensure that the packet is from 
+the correct requestor. If the requestor id is 0, and the tunnel is still 
+operational (as of last tunnel alive request), then toss the packet. (The 
+requestor id should be 0 only if the tunnel is not operational.) If the 
+request is 0 and the tunnel is not operational, the time of day is checked to 
+ensure it is increasing.
+
+3. The RSA protected data is decrypted by the responders private key and then 
+encrypted by the requesters public key. 
+
+2. MD5 hash of the entire packet is calculated and determined to be correct. 
+The originator and this packet has been authenticated.
+
+5. The time of day is saved as being correct.
+
+7. Create the random number y and calculate the value X^y mod n. A number of 
+these bits are used as the session key.
+
+The responder then creates a reply packet.
+
+Once the packet is sent, the responder should be ready to accept packets using 
+the new SAID. (Packets using the existing SAID can continue to be sent.)
+
+The reply should be resent after time-out until a packet is received on the 
+tunnel.
+
+The responder can not use the SAID until a packet is received on the tunnel. 
+
+ The contents of the tunnel reply is:
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   +
+   |                   Requestor IP address                        |   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   |
+   |                   Responder IP address                        |   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   |
+   |                   Reply identifier                            |   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   |
+   |                   Time if Day             (2 words)           |   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   |
+   |                   Diffie-Hellman modulus Length               |   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+  MD5
+   |           Diffie-Hellman (Y=g^y mod n) (16 through 64 words)  |   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   |   +
+   |                   Next Request identifier                     |   |   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   |   |
+   |              Tunnel request and parameters (TBD)  (? words)   |   |   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   |  RSA
+   |                   Tunnel Lifetime                             |   |   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   +   |
+   |                   MD5 residue             (2 words)           |       |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+       |
+   |                   Padding (Random data) (? words)             |       |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+       +
+
+Where "Time of day" is the time received in the request. (Actually, this is 
+not used, but it is easier to leave the space there.)
+
+"Tunnel request parameter" contains results of the negotiation. This includes 
+tunnel ID, encryption type(s), compression type(s). Details TBD. 
+
+"Fixed Pattern" A value to ensure that the RSA decryption was successful. 
+
+"Tunnel Lifetime" is the value received in the request or smaller.
+
+"Random Padding" is used to pad out the block to the RSA modulus.
+
+RSA is used to double encrypt this with the responders private key and the 
+requestors public key. 
+
+The Diffie Hellman modulus length (in bytes) is then followed by the (g^y)mod 
+n. (y is the secret value.)
+
+When the packet is received the following steps are performed. 
+
+1. The source, destination and time are validated to be correct. 
+
+2. MD5 is calculated over the packet.
+
+3. The RSA protected data is decrypted by the requestors private key and then 
+encrypted by the responders private key.
+
+4. The fixed pattern is checked. The packet has now been validated.
+
+5. Verify MD5(2) is correct.
+
+5. Calculate the value Y^x mod n. A number of these bits are used as the 
+session key.
+
+The new SAID can now be used. 
+
+-- 
+
+jim
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00628.html">Speech compression and encryption (Secure Phone)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00630.html">Little known facts about the infohigh....</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00626.html">1st case of email libel won (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00630.html">Little known facts about the infohigh....</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00629"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00629"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

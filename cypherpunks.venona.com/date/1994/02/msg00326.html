@@ -1,0 +1,153 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Some stuff about Diffie&#45;Hellman (and more :&#45;) -->
+<!--X-From-R13: fzoNerfrnepu.ngg.pbz -->
+<!--X-Date: Sat, 5 Feb 94 14:35:45 PST -->
+<!--X-Message-Id: 9402052233.AA04867@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Some stuff about Diffie-Hellman (and more :-)</TITLE>
+<LINK REV="made" HREF="mailto:smb@research.att.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00319.html">Date Prev</A>][<A HREF="msg00322.html">Date Next</A>][<A HREF="msg00479.html">Thread Prev</A>][<A HREF="msg00364.html">Thread Next</A>][<A HREF="index.html#00326">Date Index</A>][<A HREF="threads.html#00326">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Some stuff about Diffie-Hellman (and more :-)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:rcain@netcom.com">rcain@netcom.com</A> (Robert Cain)</LI>
+<LI><em>Subject</em>: Re: Some stuff about Diffie-Hellman (and more :-) </LI>
+<LI><em>From</em>: <A HREF="mailto:smb@research.att.com">smb@research.att.com</A></LI>
+<LI><em>Date</em>: Sat, 05 Feb 94 17:32:13 EST</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A> (cypherpunks)</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+	 
+	 In the Diffie-Hellman exchange there is a well-known-prime, w, and a
+	 well-knwon-modulus, m.  For those interested that don't know I think
+	 it then proceeds as follows (don't have notes in front of me so please
+	 someone correct me if I'm misremembering it) where ** is the power or
+	 exponentiation operator and % is the modulus operator:
+
+	 	1) Bob generates a one time random prime, b, then computes
+	 		B = (w ** b) % m
+	 	   and sends B to Carol.
+
+	 	2) Carol generates a one time random prime, c, then computes
+	 		C = (w ** c) % m
+	 	   and sends C to Bob.
+
+	 	3) Bob generates a session key:
+	 		K = (B ** c) % m
+
+	 	4) Carol generates a session key:
+	 		K = (C ** b) % m
+
+	 Carol and Bob have the same K because:
+	 	K == (C ** b) % m == (B ** c) % m == (w ** (b * c)) % m
+
+	 &gt;From just the knowledge of B and C a snoop cannot determine
+	 b from B, within computational reason (the root modulus being as
+	 difficult as factoring), nor c from C, and because K cannot be 
+	 determined from B and C without knowing b or c, she is screwed.
+
+Close, but not quite.  The modulus m should be primed for best results.
+Some folks have used a power of 2 for m, since that makes the modulus
+operation easier, but it also makes cracking it easier, for comparable
+sizes.  Next, the base w should be a primitive root of the group GF(m).
+
+More seriously, your equations are subtly wrong -- Bob and Carol can't
+do the calculations you've given.  Bob should calculate (C**b)%m -- he
+knows b and C, but doesn't know c.  Similarly, Carol calculates (B**c)%m.
+
+	 Now, the tutorial over :-), the question is; is there a "standard"
+	 well-known-prime, w, and a "standard" well-known-modulus, m, and if
+	 not, let's define one.  I suppose that PGP uses a well known pair but
+	 they are big and not easy to hand around without going through media (I
+	 think.)  When defined algorithmically they might be easier to actually
+	 incorporate in a program or a product than great big numbers.  If this
+	 has not been done, I propose a simply stated algorithm for finding a
+	 "standard" w and m that will allow interoperation among all future
+	 implementations of D-H as follows:
+
+(deleted)
+
+Two problems...  First, many attacks on the discrete log problem are
+based on massive precomputation for a known modulus.  That probably
+isn't an issue when you get to ~1K bits (*not* digits!).  Second, you
+need to specify things far more concretely, and in particular define
+the random number generation process.  You can't pick w till you know m.
+
+	 I've found a solution to this that is more than sufficiently secure in
+	 practice and even theoretically secure in most practical situations.
+
+Well, I'd certainly be interested in hearing about it...  There have
+been a number of mechanisms for preventing eavesdropping with DH;
+a lot depends on what assumptions you want to make.  My attempts --
+which involve the two parties sharing a weak (i.e., PIN- or password-grade
+secret) can be found in /dist/smb/{neke,aeke}.ps on research.att.com.
+There's also Rivest and Shamir's Interlock Protocol (April '84 CACM).
+Davies and Price suggest using it for authentication, but Mike Merritt
+and I showed that that doesn't work under certain circumstances.
+
+		--Steve Bellovin
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00364" HREF="msg00364.html">Re: Some stuff about Diffie-Hellman (and more :-)</A></STRONG>
+<UL><LI><EM>From:</EM> mgream@acacia.itd.uts.edu.au (Matthew Gream)</LI></UL></LI>
+<LI><STRONG><A NAME="00480" HREF="msg00480.html">Re: Some stuff about Diffie-Hellman (and more :-)</A></STRONG>
+<UL><LI><EM>From:</EM> rcain@netcom.com (Robert Cain)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00319.html">Re:  Some stuff about Diffie-Hellman (and more :-)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00322.html">CypherPUNKS. Not!</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00479.html">Re: Some stuff about Diffie-Hellman (and more :-)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00364.html">Re: Some stuff about Diffie-Hellman (and more :-)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00326"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00326"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

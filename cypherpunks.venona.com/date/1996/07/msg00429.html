@@ -1,0 +1,200 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Pseudo&#45;DC&#45;net Project -->
+<!--X-From-R13: wnaxrNhavkt.hop.pn -->
+<!--X-Date: Tue, 9 Jul 1996 08:44:30 +0800 -->
+<!--X-Message-Id: 199607081845.LAA00269@clouds.heaven.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Pseudo-DC-net Project</TITLE>
+<LINK REV="made" HREF="mailto:janke@unixg.ubc.ca">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00448.html">Date Prev</A>][<A HREF="msg00464.html">Date Next</A>][<A HREF="msg00448.html">Thread Prev</A>][<A HREF="msg00449.html">Thread Next</A>][<A HREF="index.html#00429">Date Index</A>][<A HREF="threads.html#00429">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Pseudo-DC-net Project</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Pseudo-DC-net Project</LI>
+<LI><em>From</em>: <A HREF="mailto:janke@unixg.ubc.ca">janke@unixg.ubc.ca</A></LI>
+<LI><em>Date</em>: Mon, 8 Jul 1996 11:45:23 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+
+I am working on a project to implement a variation of a DC-net to be run
+over the Internet. I am posting this summary to find out if it overlaps
+with projects others are working on; to see what members of the lists think
+of the general ideas for the network I have in mind; and to see if anyone
+is interested in helping me out.
+
+The variation of a DC-net I have in mind will vary in three important ways 
+from a true DC-net: 
+
+Difference (1) (Pseudo-random numbers) 
+
+It will use pseudo-random numbers in place of true random numbers. 
+
+Difference (2) (Star shaped network)
+
+The graph of the network will be star shaped instead of completely
+connected. 
+
+Difference (3) (MACs)
+
+Messages broadcast on the pseudo-DC-net will have a MAC appended in a key 
+shared by the channel participants.
+
+Difference (4) (Encryption)
+
+Messages sent to the channel will be encrypted in a key shared by the
+participants.
+
+Because of these difference from a true DC-net I will refer to the network
+I have in mind as a "pseudo-DC-net". Difference (1) is desirable since
+current techniques for generating true random numbers on PC's are slow, and
+distribution of the resulting true random numbers is enormously consumptive
+in terms of bandwidth. Difference (2) is made possible by the use of
+pseudo-random number generators, and is desirable since it reduces the
+total number of messages that need to transferred.  Difference (3) is
+desirable to identify messages broadcast by unauthorized parties to the
+network, and, as a side benefit, to help clients filter out collisions---
+when two parties try to broadcast at the same time. Difference (4) is 
+desirable so that eavesdroppers cannot determine what messages are 
+being broadcast to the network.   
+
+Difference (1) implies a downgrading of the level of anonymity from
+unconditional to cryptographic, and difference (2) opens the possibility for
+protocol attacks.  
+
+I would like to break this project up into three parts: a formal protocol
+specification, a client implementation or implementations, and a server
+implementation or implementations. I would like the formal protocol
+specification to be publicly available to allow anyone to write their own
+clients and servers, and to communicate their criticisms of the protocol.
+The protocol will not dictate what pseudo-random number generator is to be
+used, although there will be a note of a rule to ensure that pairs of users
+are using the same generator for the "coin flips" they share. Similarly,
+the protocol should be flexible enough to allow the use of any reasonable
+length MAC.  
+
+A general outline of the protocols I have in mind are as follows: 
+
+Protocol (1) (Channel registration protocol) 
+
+Channels will be registered with the server. A channel will be specified by
+a time frame in which a pseudo-DC-net is to be run; the IP address and port
+to which clients are to connect to join the channel; the length of each
+message block to be transmitted to the channel; and a channel ID. 
+
+Protocol (2) (Pseudo-DC-net real-time protocol)
+
+The protocol for running the channel will consist of a series of "rounds". 
+Each round will consist of the following steps:
+
+ Step (1) The transmission of a round synchronization number from the server
+ to the clients, along with a string of bits specifying the set of users 
+ connected. Old clients should make sure that the synchronization number 
+ is consistent with the synchronization number of the previous round. 
+
+ Step (2) Receipt by the server from each client of a block of input
+ for that round. (If the user does not wish to broadcast, this will be the 
+ XOR sum of the next blocks in the the pseudo-random number streams shared 
+ by the user with the other users (call this sum S). If the user wishes 
+ to broadcast, it will be the encryption of the following: the XOR of S 
+ with a message consisting of the concatenation of the channel id, round 
+ number, message length, message, message padding, and MAC of these five 
+ components.) 
+
+ Step (3) Transmission from the server to each client of the XOR sum of 
+ the blocks received.
+
+Protocol (3) (Optional Payment Protocol)
+
+I would like to add the option for the server to charge e-cash for the
+administration of the channel.
+
+I have also thought about an extension in which messages to the server
+would be signed so that the server could prevent an unauthorized user
+from hijacking a connection and disrupting a channel. 
+
+If you would like to help me out with this project, if it overlaps with
+something you are already doing or have done, or you just think my ideas
+are no good (or good! :) ), please let me know. I am especially interested
+in attacks in which the server lies about the round number or set of
+connected users. 
+
+If this project is works out well, I would like to later work on protocols 
+for voting using a pseudo-DC-net. 
+
+Leonard Janke
+(pgp key id 0xF4118611)
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.3ia
+Charset: noconv
+
+iQEVAwUBMeFVY0MBIFf0EYYRAQErKwf+OcQjqoODovlRJZtrXuqTGeiRHTobFDa+
+DFWEmGl+yditRBt9nAlCgXGiRkCXhqroX30M+SEVw02trc1eBMCeJUSvxB9d0pN6
+9x3vDN/XB4Kj6kAuAypulBCa0f74Uim4nJvZDw7boEW/hXY3Yuf7d3mgOsNY/LRT
+p62FL24wnz8aeBAVYnE6SJp59u9Yssrvb2lez1IuKIdN8Rqx590Fwn1VBZ2oqGk8
+6UucJkvTht7XmKPuckND+Lhq7jv1vVZKZD3NRe4Uy21JstwKwwpuVXVX98YlNc+Y
+a15wW4WstZIzsKuPrYVsLsb+wXsETp1sgp5jDkKQABfit7XS8FVC9g==
+=KZsI
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00448.html">Re: doubleclick monitoring web browsing habits</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00464.html">[Announcement] - Crypto library for Java available</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00448.html">Re: doubleclick monitoring web browsing habits</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00449.html">Re:Pseudo-DC-net Project</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00429"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00429"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

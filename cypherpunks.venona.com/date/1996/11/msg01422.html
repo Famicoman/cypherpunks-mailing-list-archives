@@ -1,0 +1,211 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: RFC: A UNIX crypt(3) replacement -->
+<!--X-From-R13: "Xbfuhn S. Vvyy" <wruvyyNj6oum.pnycbyl.rqh> -->
+<!--X-Date: Sat, 16 Nov 1996 20:57:41 &#45;0800 (PST) -->
+<!--X-Message-Id: 199611170451.UAA05059@hyperion.boxes.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>RFC: A UNIX crypt(3) replacement</TITLE>
+<LINK REV="made" HREF="mailto:jehill@w6bhz.calpoly.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01417.html">Date Prev</A>][<A HREF="msg01443.html">Date Next</A>][<A HREF="msg01439.html">Thread Prev</A>][<A HREF="msg01504.html">Thread Next</A>][<A HREF="index.html#01422">Date Index</A>][<A HREF="threads.html#01422">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>RFC: A UNIX crypt(3) replacement</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: RFC: A UNIX crypt(3) replacement</LI>
+<LI><em>From</em>: "Joshua E. Hill" &lt;<A HREF="mailto:jehill@w6bhz.calpoly.edu">jehill@w6bhz.calpoly.edu</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 16 Nov 1996 20:51:38 -0800 (PST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+	I'm trying to think of a function to replace UNIX's crypt(3).  
+My design criteria are as follows:
+
+	1) I want it to be secure.
+	2) I would like to use a cryptographic hash.
+	3) I would like to use well understood cryptographic primitives.
+	4) I would like to use a salt, and I would like the salt to be
+	considerably larger than the current salt.
+	5) I would like the process to be able to be more computationally
+	intensive than crypt(3).
+	6) The ability to use the algorithm in any setting domestic (US)
+	and abroad is a concern, but not a primary one.
+
+	#1 is important for the obvious reasons.
+	#2 is important because a one way hash allows for a secure way of
+checking the original password against the entered password.  No password
+should be able to be recovered by simply reading a file, or finding an
+internal key.
+	#3 is basicly a result of #1
+	#4 and 5 makes the password system more resistant to a dictionary-
+type attack.  Several of the more popular password guessers (ie: Crack)
+get a significant speed increase from the fact that they only have to hash 
+each of the words once per salt.  I would like it to be possible for each
+user to have an independent salt (for any reasonable system size).  I would
+also like this function to be able to be scaled to that it can be slower
+than crypt(3).  This will also hinder a dictionary attack.
+	#6 is a byproduct of silly legal concerns.
+
+The algorithm that I developed was heavily influenced by RFCs 1852 [1] 
+and 1828 [2] (IP Authentication using SHA and MD5, respectively), and 
+"Keying Hash Functions for Message Authentication" by Mihir Bellare, 
+Ran Canetti, and Hugo Krawczyk [3]
+
+This algorithm borrows several concepts from [3]:
+	The idea of the keyed hash, where the key is used as the hash's 
+	IV, or Initial Value. Its security is completely based on the
+	choice of the key, and the strength of the underlying hash
+	function.
+
+	The concept of the NMAC (Nested MAC), and security analysis
+	of it.
+
+
+The Algorithm:
+
+Given that:
+. = the concatenation operator
+P = the user pass phrase
+H(m) = the hash of the message m
+l = length of the hash returned by H(m)
+H(k,m) = the keyed hash of message m, using key k (as the IV)
+N = salt, length l = (n1 . n2) where n1 and n2 are sub-salts
+i = the iteration number
+E = a temporary value = (e1 . e2)
+K = key = (k1,k2), where k1 and k2 are the sub-keys used in the NMAC
+NMAC(k, m) = H(k1, H(k2, m))
+
+In several cases a value is said to be equal to the concatenation
+of two other values (we'll take N as an example); ie 
+N = (n1 . n2)
+This means that N is divided into two equal sized chunks, n1 and n2.
+(n1 . n2) = N
+
+initially:
+(1) E = H (P)
+(2) k1 = (e1 . n1), k2 = (e2 . n2)
+(3) T0 = NMAC(K, n)
+
+And then:
+(4) T(i) = NMAC(K, T(i-1) . n . T(i-1))
+(repeat (4) a number of times)
+
+In (1) the user pass phrase is hashed using the non keyed hash, and the 
+resulting value is kept in E. 
+
+In (2) k1 is formed by concatenating the first half of E and the
+first half of the salt.  k2 is formed by concatenating the second
+half of the key with the second half of the salt.  Now each sub-key
+is of length l.
+
+In (3) the NMAC of n is assigned to T0
+
+and then in (4) T(i) is calculated by doing the NMAC of the value
+of the previous hash concatenated with n concatenated with the value
+the previous hash.
+
+Step (4) is repeated a known number of iterations.
+
+"Keying Hash Functions..." [3] seems to imply that the security of this
+hash would be based on the length of l and the underlying hash function, H.  
+Because of the way that K is used, the security granted is a function 
+of l/2, not l.  (For further explanation see [3])
+
+I was thinking of implementing this using SHA-1.  
+This would lead to a 160 bit value for l, hence the security would be 
+based on an 80 bit key.
+
+Some modifications that I have considered, and would like feedback on
+are:
+
+I was thinking of making the keys used for the hash come from the
+previous hashes, and then hash a constant string.  ie:
+T(i) = NMAC(T(i-2) . T(i-1), P . n . P)
+instead of having a more-or-less constant key, and constantly changing
+what is being hashed.
+
+I also am not sure that the string that I'm hashing is ideal.  
+Would (n . P . n ) be better?
+
+- -------------------------------------------------------------------------
+[1] Metzger, P. and Simpson, W. "Request for Comments: 1852, 
+	IP Authentication using Keyed SHA"
+
+[2] Metzger, P. and Simpson, W. "Request for Comments: 1828,
+	IP Authentication using Keyed MD5"
+
+[3] Bellare, Mihir and Canetti, Ran and Krawczyk, Hugo. "Keying
+	Hash Functions for Message Authentication"
+
+I very much appreciate comments on any portion of this, or on my general
+approach.
+			Thanks,
+			Joshua
+
+
+-----------------------------Joshua E. Hill-----------------------------
+|   If you not part of the solution, you're part of the precipitate    |
+-------jehill@&lt;gauss.elee|galaxy.csc|w6bhz|tuba.aix&gt;.calpoly.edu--------
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01504" HREF="msg01504.html">Re: RFC: A UNIX crypt(3) replacement</A></STRONG>
+<UL><LI><EM>From:</EM> The Deviant &lt;deviant@pooh-corner.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01417.html">Re: The persistance of reputation</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01443.html">Re: NT insecurity</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01439.html">opinions on www.accutrade.com security?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01504.html">Re: RFC: A UNIX crypt(3) replacement</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01422"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01422"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

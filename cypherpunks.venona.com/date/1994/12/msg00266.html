@@ -1,0 +1,304 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Remailers, RSAREF for PERL -->
+<!--X-From-R13: [vxr Watyr <[WYSW@UZSNqrycuv.pbz> -->
+<!--X-Date: Sun, 4 Dec 94 15:54:26 PST -->
+<!--X-Message-Id: 01HK987PYP1U90PJ4I@delphi.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Remailers, RSAREF for PERL</TITLE>
+<LINK REV="made" HREF="mailto:MIKEINGLE@delphi.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00255.html">Date Prev</A>][<A HREF="msg00256.html">Date Next</A>][<A HREF="msg00285.html">Thread Prev</A>][<A HREF="msg00327.html">Thread Next</A>][<A HREF="index.html#00266">Date Index</A>][<A HREF="threads.html#00266">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Remailers, RSAREF for PERL</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Remailers, RSAREF for PERL</LI>
+<LI><em>From</em>: Mike Ingle &lt;<A HREF="mailto:MIKEINGLE@delphi.com">MIKEINGLE@delphi.com</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 04 Dec 1994 18:54:14 -0500 (EST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I've received a couple of requests for information about the RSAREF-Perl
+interface. Yes, I do intend to release it, and it follows the RSAREF
+interface so there is no patent problem involved. It calls the DES library
+directly, but RSA says they have no problem with that. I'm currently waiting
+to hear if it is okay to call the random-number generator, so I can provide
+a "get random bytes" function. When I find this out, and integrate the
+"shade" program mentioned below, I will release it officially. I can send
+out Beta versions now to people who really want to test it, and will give me
+feedback on how it works. You need a Unix machine (no root required), a copy
+of RSAREF 2.0, a copy of Perl 4, and a classic or gcc compiler.
+
+Hal Finney writes:
+
+&gt;[Part about remailers deleted]
+
+Deleted? That was my main point! What do you think of this remailer design?
+
+&gt;&gt;For something complex like this, we need a language with a little more
+&gt;&gt;leverage than C provides. For this and other complex protocols, I've ported
+&gt;&gt;RSAREF 2.0 to Perl. The interface does not require you to recompile Perl.
+&gt;&gt;It uses a C daemon and pipes. It provides symmetric encryption, public-key
+&gt;&gt;encryption, digital signatures, hashing, DH exchange, and ASCII armor.
+&gt;&gt;The algorithms used are MD5, MD2, DES, DESX, triple-DES, RSA, and DH.
+&gt;&gt;It has a good (eval/die) exception handling mechanism, and a very thorough
+&gt;&gt;regression testing script.
+&gt;&gt;[...]
+&gt;&gt;I want to add other algorithms to the Perl encryption package. The secret
+&gt;&gt;sharing, for one. A one-function call to gzip for compression. A blind
+&gt;&gt;signature if I could get patent permission (not from Chaum; how's Brands?)
+&gt;&gt;or perhaps just do it with a "research purposes only" disclaimer. Someone
+&gt;&gt;with Visual Basic experience could do a DOS/Windows VBX module to enable
+&gt;&gt;easy writing of PC clients for neat net-based servers written with the Perl
+&gt;&gt;encryption package.
+
+&gt;This is very exciting!  Could you show some examples of how your code
+&gt;would be used with Perl?  Some kind of script that could work with MP
+&gt;numbers or RSA decrypt a file?  It would be very good to have a
+&gt;prototyping language like Perl with crypto addons.
+
+I put some examples from the manual at the end of this message, as they are
+fairly long compared to the rest of the message. Essentially it does
+everything documented in "rsaref.txt".
+
+&gt;&gt;Code for secret sharing is available, but most secret-sharing algorithms
+&gt;&gt;create shadows each the size of the message. This can be avoided: use an
+&gt;&gt;error correcting code to add enough information to the original so the
+&gt;&gt;message can be recreated with any m of n pieces. Break into pieces, encrypt
+&gt;&gt;each piece, and secret-share the key. Where can I get an error correction
+&gt;&gt;algorithm that can do this? You should be able to increase a file's size by
+&gt;&gt;50% and then have any two of three pieces recreate it, for example.
+
+&gt;Try looking for a package called Shade using Archie.  Here is an excerpt
+&gt;from the doc file:
+
+&gt;&gt;`shade' is a file splitting and merging utility.  It takes a large
+&gt;&gt;file and splits it into uniformly sized blocks.  It can also output
+&gt;&gt;extra blocks (called shadows).  These shadows can be used to recover
+&gt;&gt;missing sections if they get corrupted or it they are lost.  With a
+&gt;&gt;single shadow, `shade' can recover ANY single missing block.  As many
+&gt;&gt;shadows are needed as there are blocks missing.  If too few blocks
+&gt;&gt;and shadows are available, nothing can be recovered.
+&gt;&gt;
+&gt;&gt;For example, foo.bar (259042 bytes) is split into 5 sections
+&gt;&gt;of 45000 bytes, 1 section of 34042 bytes and 2 shadows of
+&gt;&gt;45000 bytes.  Each of these 8 parts is sent through email.
+&gt;&gt;Even if any two of these eight parts gets lost, the original
+&gt;&gt;foo.bar can be reconstructed.
+&gt;&gt;
+&gt;&gt;`shade' is a simple application of the chinese remainder theorem
+&gt;&gt;for polynomials with coeficients modulo two.  For more information
+&gt;&gt;see the comments at the beginning of project.c.
+
+Ok, I will get this file. Looks like what I wanted.
+
+&gt;As for the remailer return address idea, I would suggest looking at
+&gt;Chaum's 1981 paper from CACM which has a similar concept.  I believe it
+&gt;was posted here recently.  Instead of using shared secrets he had the
+&gt;secret key at each hop get embedded in the return address itself.
+
+My database system (grep) picked up the article, posted Oct 14 anonymously.
+Looks like Chaum just has the remailer keep track of sent messages and
+refuse to process them again. This does not protect you if the remailer is
+coerced or hacked. There is still enough persistent information available to
+catch you. Is there a good way to establish a shared secret untraceably?
+
+----
+
+Applying a chainsaw to the RSAREF for Perl user manual:
+
+You have two files: rsaref.pl and rsarefd. Rsarefd is a C program, and
+rsaref.pl is a perl package you "require" to use it.
+...
+The functions available are:
+
+Message digest (secure hashing) algorithms MD5 and MD2
+Symmetric encryption algorithms DES, DESX, and Triple-DES in CBC mode
+ASCII encoding and decoding of binary strings according to RFC 1421
+Public-key encryption with RSA and DES, DESX, or Triple-DES in CBC mode
+Digital signatures with RSA and MD5 or MD2
+Generation of RSA keys (up to 1024 bits) for the above
+Diffie-Hellman key agreement (up to 1024 bits)
+Generation of Diffie-Hellman parameters for the above
+...
+The included Perl script "rsaref_test" will test all of the interface
+functions, and generate all of the exceptions to make sure they are handled
+correctly. It also checks the daemon for memory leaks. If rsarefd has been
+compiled in the current directory and rsaref.pl is available, running
+"rsaref_test" should run it.
+...
+Exception handling is done with the Perl eval/die mechanism. The individual
+error codes are listed along with the function descriptions. The error code
+will be returned in $@ as an ASCII string if the eval fails.
+...
+require 'rsaref.pl';
+&amp;rsaref'start_daemon($daemon_location); # starts rsarefd
+&amp;rsaref'end_daemon; # ends rsarefd
+
+$digest=&amp;rsaref'digest($data,$digestAlgorithm); # take a message digest
+  $digestAlgorithm is one of the defined constants
+  "$rsaref'DA_MD2" or "$rsaref'DA_MD5".
+An "RE_DIGEST_ALGORITHM" will be raised if $digestAlgorithm is invalid.
+
+$output=&amp;rsaref'cipher($input,$key,$iv,$function,$algorithm);
+Encrypts or decrypts a string using a symmetric encryption algorithm.
+$function is one of "$rsaref'CM_ENCRYPT" or "$rsaref'CM_DECRYPT".
+
+$algorithm is one of $rsaref'EA_DES_CBC, $rsaref'EA_DESX_CBC,
+$rsaref'EA_DES_EDE3_CBC or $rsaref'EA_DES_EDE2_CBC.
+
+If $algorithm or $function is invalid, the function raises an
+"RE_ENCRYPTION_ALGORITHM" exception. If $key is larger than 24 bytes or $iv
+is not 8 bytes long, the function raises a "RE_KEY" exception.
+
+$asciiText=&amp;rsaref'encodePEMblock($binaryData);
+$binaryData=&amp;rsaref'decodePEMblock($asciiText);
+
+These two functions are used to move binary data, such as ciphertext and
+keys, via Email and other non-eight-bit-clean channels. They are similar to
+(but not compatible with) uuencode. The method is detailed in RFC 1421.
+encodePEMblock does not raise any exceptions. decodePEMblock will raise an
+"RE_ENCODING" if the input is invalid.
+
+$bytes=&amp;rsaref'getRandomBytesNeeded;
+&amp;rsaref'randomUpdate($randomBytes); # setup random numbers
+
+@private_key=&amp;rsaref'generatePEMkeys($bits,$useFermat4);
+@public_key=@private_key[0..2];
+
+This function is used to generate RSA public and private keys for digital
+signatures and public-key encryption ("envelopes" or "sealing".)
+
+$bits specifies the key length from 508 to 1024 bits.
+$useFermat4 chooses the public exponent; if it is 0, the exponent is 3; if
+it is 1, the exponent is 65537.
+The returned @private_key is actually:
+ ($bits,$modulus,$publicExponent,$privateExponent,$prime1,$prime2,
+  $primeExponent1,$primeExponent2,$coefficient)
+By taking only the first three, you get a public key:
+ ($bits,$modulus,$publicExponent)
+
+This function raises an "RE_NEED_RANDOM" if you did not initialize the
+random-number generator. If your key length is out of range, it raises
+an "RE_MODULUS_LEN" exception.
+
+$signature=&amp;rsaref'sign($data,$digestAlgorithm,@privateKey);
+This function raises an "RE_DIGEST_ALGORITHM" exception if $digestAlgorithm
+is invalid, or an "RE_PRIVATE_KEY" if @private_key is invalid.
+
+&amp;rsaref'verify($data,$digestAlgorithm,$signature,@publicKey); Verify returns
+no value. If it completes successfully, the signature is valid. If the
+signature is invalid, Verify raises an "RE_SIGNATURE" exception.
+Verify returns an "RE_LEN" if the signature is the wrong length, and an
+"RE_PUBLIC_KEY" if the public key cannot decrypt the signature. This means
+the public key or the signature is corrupted.
+
+($encryptedMessage,$iv,@encryptedKeys)=
+    &amp;rsaref'seal($message,$encryptionAlgorithm,@publicKeys);
+
+This function seals (public-key encrypts) a message. The same message can be
+encrypted for multiple recipients. The message is only encrypted once; then
+the session key is encrypted with each recipient's public key.
+
+@publicKeys are one or more public keys. For each public key you provide,
+you will get back one encryptedKey. Each encryptedKey can decrypt the
+message using the private key corresponding to the public key used to
+encrypt it.
+
+Seal raises an "RE_ENCRYPTION_ALGORITHM" exception if $encryptionAlgorithm
+is invalid, an "RE_PUBLIC_KEY" if the public key is invalid, and an
+"RE_NEED_RANDOM" if the random-number generator is not initialized.
+
+$message=&amp;rsaref'open($encryptedMessage,$iv,$encryptionAlgorithm,
+                      $encryptedKey,@privateKey);
+
+This function opens (decrypts) a sealed message using a private key.
+$encryptedMessage is the output from the seal operation.
+
+Open raises an RE_LEN exception if the encryptedKey size is out of range,
+RE_ENCRYPTION_ALGORITHM if the encryptionAlgorithm is invalid,
+RE_PRIVATE_KEY if the private key cannot decrypt the encryptedKey, and
+RE_KEY if the symmetric key cannot decrypt the message.
+
+($prime,$generator)=
+   &amp;rsaref'generateDHparams($primeBits,$subPrimeBits);
+
+This function generates a new prime and generator for Diffie-Hellman
+exchange. $primeBits is the length of the DH modulus (prime), and
+$subPrimeBits is the order of the generator. $subPrimeBits can be somewhat
+smaller than $primeBits without compromising security, and this makes the
+exchange go faster. The dhdemo included with RSAREF uses a 512-bit prime and
+160-bit subprime, for example.
+
+The function returns RE_MODULUS_LEN if the prime length is invalid, and
+RE_NEED_RANDOM if the random generator is not initialized.
+
+($publicValue,$privateValue)=
+  &amp;rsaref'setupDHagreement($prime,$generator,$privateValueLen);
+
+This function raises an RE_NEED_RANDOM exception if the random number
+generator is not initialized.
+
+$agreedKey=&amp;rsaref'computeDHagreedKey($prime,$generator,
+                   $privateValue,$otherPublicValue);
+
+This function raises an RE_DATA exception if the otherPublicValue is longer
+than the prime.
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00255.html">future entrapment</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00256.html">Re: Brands excluded from digicash beta</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00285.html">Re: future entrapment</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00327.html">Re: Remailers, RSAREF for PERL</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00266"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00266"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

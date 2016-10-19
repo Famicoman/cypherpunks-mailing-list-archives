@@ -1,0 +1,248 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: RC2&#45;&#45;Some very preliminary analysis -->
+<!--X-From-R13: X[YSZESKNqrycuv.pbz -->
+<!--X-Date: Sun, 4 Feb 1996 08:39:58 +0800 -->
+<!--X-Message-Id: 01I0SDBW5VYY984JFR@delphi.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>RC2--Some very preliminary analysis</TITLE>
+<LINK REV="made" HREF="mailto:JMKELSEY@delphi.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00282.html">Date Prev</A>][<A HREF="msg00137.html">Date Next</A>][<A HREF="msg00282.html">Thread Prev</A>][<A HREF="msg00434.html">Thread Next</A>][<A HREF="index.html#00259">Date Index</A>][<A HREF="threads.html#00259">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>RC2--Some very preliminary analysis</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: RC2--Some very preliminary analysis</LI>
+<LI><em>From</em>: <A HREF="mailto:JMKELSEY@delphi.com">JMKELSEY@delphi.com</A></LI>
+<LI><em>Date</em>: Sat, 03 Feb 1996 19:22:33 -0500 (EST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+[ To: sci.crypt, cypherpunks ## Date: 02/02/96 06:21 pm ##
+  Subject:  Alleged RC2--some very preliminary analysis ]
+
+I just wanted to post some corrected comments here, regarding
+alleged-RC2.
+
+1.   The best differential characteristic I can think of looks like
+it will have a probability of 2^{-4} per round.  It's a one-round
+iterative characteristic.  In my earlier post, I miscalculated this
+to be 2^{-8} per round.  Sorry.
+
+2.   Each round of RC2 represents four "steps."  This means that RC2
+has 64 "steps," the same number as MD5.  (I find this interesting,
+since MD5 has twice as many bits to diffuse through, and the
+attacker can choose its key, but not its input block.)
+
+3.   I don't see how to build useful linear characteristics.  Our
+S-box is one bit wide.  There may be some very low-round confusion
+failures, but they don't seem particularly useful here.  I'd like to
+hear from anyone who can see a way to do a linear attack here.
+
+It looks to me (though I haven't spent enough time to be certain)
+that the best differential characteristics to push through the block
+are going to be one-bit characteristics.  (These are certainly easy
+to analyze.)
+
+Let's throw some terminology in here:
+
+This is one step:
+
+A = rotl(A + f(B,C,D) + sk[i], 1);
+
+A round is all four of these steps.  In the step above, A is the
+target block (it's the one that's getting stomped by the other
+values) and B, C, and D are the source block.  f(B,C,D) is the
+bitwise-select function.  For each bit position i, if B_i is a one,
+then f_i = C_i, otherwise f_i = D_i.
+
+Now, when a one-bit difference is anywhere in the target block (the
+block getting all the stuff added into it) except for the high bit,
+its probability of not propogating to other bits in that block seems
+to be about 0.5.  (This is just based on its chances of affecting
+the carry into the next bit position.)  When the flipped bit is the
+high-order bit of the target block, it has no chance of propogating.
+When a one-bit difference is in the source block, if the rest of the
+bits are approximately random, then it has a 0.5 probability of not
+affecting the target block at all.  If it does affect the target
+block, it has a 0.5 probability of only affecting one bit in that
+block.
+
+Note that I messed up the calculations in my earlier post on RC2 by
+combining these three events in each round.  Let me try to fix that:
+
+We flip some bit, t, making certain that if this bit doesn't
+cause other bits to change, it won't ever affect the low six bits of
+any block during rounds 4 and 11, when it would have a radical
+effect on the encryption process.  (In other words, we choose an
+input XOR delta with only bit t on.)  This bit then has the
+following effect:
+
+a.   Whenever it's in the target block, it passes through the
+encryption step with probability 0.5.  (This means that changing
+this bit doesn't change the carry into the next higher bit.) This
+happens once per round.
+
+b.   Whenever it's in the source block, it fails to affect the
+target block with probability 0.5.  This happens three times per
+round.
+
+Note the reasons for this.  The source block affects the target
+block only through this function:  ((A&amp;B)|((~A)&amp;C)).  This function
+looks somewhat complicated, but it's really just a bitwise IF-THEN
+statement:  If bit A is on, then choose bit B, otherwise choose bit
+C.  Assume that A, B, and C are random.  Now, imagine flipping A.
+If you were choosing bit B before, now you're choosing bit C.  Since
+they're both random, half the time, B=C, so there's no change.  On
+the other hand, imagine flipping bit C.  About half the time, bit A
+is a one, and so C has no effect on the output.
+
+All of this gives us a total per-round probability of 2^{-4} (NOT
+2^{-8}). Getting through 14 rounds with this characteristic thus
+happens with probability 2^{-56}.  *IF* single-bit characteristics
+are the best ones to use, I'm doing the calculations right, and
+there aren't some improvements in splitting out and dealing with
+several possible characteristics in the later rounds, then it looks
+to me like straight differential attacks aren't going to be too
+practical against alleged RC2, though they will be possible. The
+trick is going to be detecting the right pairs reliably. (This
+analysis is guaranteed to be worth at least what you paid me for it.
+:-) )
+
+If this really is RC2, I suspect the number of rounds needed was
+determined by imagining flipping a bit, and then seeing what the
+odds were that it wouldn't flip any other bits all the way through.
+My guess is that a probability of 2^{-64} of this happening was
+deemed acceptably low.
+
+That takes care of diffusion--now how about confusion?  Has anyone
+looked at this cipher with regard to linear attacks?  In general, it
+seems like source-heavy UFNs can often be attacked by linear
+attacks.  However, it's not clear to me how to build linear
+characteristics that will make it through more than a few rounds of
+alleged-RC2.  Linear characteristics that are spread across many
+subblocks (i.e., partly in A and partly in B) seem to get messed up
+quickly by the rotations.  However, just keeping a linear
+characteristic in A doesn't seem to work too well, either--if the
+bits in the other blocks are random, then the bits in our
+characteristic will quickly become random, as well, because the
+bit-selection function has balanced outputs.  Intuitively, I think
+the problem here is that we're applying a three-bit to one-bit
+balanced S-box here, and each output from this S-box has at least
+one different input bit.  This seems to make it really hard to find
+correlations between multiple S-box output bits and their
+corresponding input bits that span more than one or two rounds.
+Also, we have to deal with the carry-bits from addition, which make
+things significantly harder.  Am I missing something?
+
+There are some other plaintext patterns that will make it through a
+single round, but I can't see any way to exploit them for more
+rounds.  Anyone want to point something out to me?
+
+The other interesting area is the key schedule.  Recall that phase
+one of the key schedule in alleged-RC2 works by filling the leftmost
+k bytes with the k bytes of key, and then using a byte-wide S-box to
+expand this out to 128 bytes.  Phase two then works from the
+opposite direction, taking the last t bits of the expanded key
+buffer, and making the entire expanded key dependent only upon those
+bytes.  As someone on cypherpunks pointed out, this seems to be
+meant to make it possible to use the key schedule directly on user
+passphrases, and then reduce the effective key length to t bits to
+meet export control requirements.
+
+In general, I don't think it's a good idea to use that key schedule
+to hash long user passphrases, because the first few subkeys wind up
+with some badly skewed bits. (This may or may not translate into an
+attack, but there isn't any good reason for allowing it.)  If you
+had (say) a 64-byte user passphrase, this would mean that the first
+four rounds' subkeys were badly skewed in this way, and the next
+four rounds' subkeys were probably not all that well-mixed.  As I
+said, I don't see a specific attack based on this, but it seems like
+a bad idea, since I might be able to plan out (for example)
+differential characteristics that took advantage of the skewed
+subkey bits.
+
+If you're using the key schedule to hash passphrases, then it's
+probably better that you use phase two as well, perhaps with bits =
+256 or something similar.  If you limit user passphrases to
+something reasonable, such as 64 characters, then this is probably
+okay.  Has anyone else looked at this?  (Naturally, it would make
+more sense to just hash the passphrase intelligently, and then use
+the export control hack if you had to.)
+
+Comments?
+
+Note:  Please respond via e-mail as well as or instead of posting,
+as I get CP-LITE instead of the whole list.
+
+   --John Kelsey, jmkelsey@delphi.com / kelsey@counterpane.com
+ PGP 2.6 fingerprint = 4FE2 F421 100F BB0A 03D1 FE06 A435 7E36
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBMRP5P0Hx57Ag8goBAQF2FQP8DCxUvPqNly99t/KyRogWKkM5X0iZWHhq
+MdQ5XEFWdyg26KMpwmPmFeNcgj3rpQiValSGGM3cTzAd2v35GQrKwPdRU/nmQW7B
+hojJrYA1D0IuMxE7c0+tyqdjw6oFXrqiWYH816NKKlTSvAUzgst8hCyoVgpbNwkm
+tbjAD93wsTk=
+=uaz+
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00282.html">Ok Fake E.E.rnst!</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00137.html">Re: Futplex makes the news!</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00282.html">Ok Fake E.E.rnst!</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00434.html">Re: RC2--Some very preliminary analysis</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00259"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00259"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

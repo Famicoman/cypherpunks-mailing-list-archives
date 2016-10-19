@@ -1,0 +1,411 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: The SKRONK protocols (version 0.6) -->
+<!--X-From-R13: fgevpx ng Fur Knx <fgevpxNlnx.arg> -->
+<!--X-Date: Sun, 5 Feb 95 02:03:31 PST -->
+<!--X-Message-Id: 199502051002.CAA01090@nando.yak.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>The SKRONK protocols (version 0.6)</TITLE>
+<LINK REV="made" HREF="mailto:strick@yak.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00151.html">Date Prev</A>][<A HREF="msg00155.html">Date Next</A>][<A HREF="msg00151.html">Thread Prev</A>][<A HREF="msg00159.html">Thread Next</A>][<A HREF="index.html#00152">Date Index</A>][<A HREF="threads.html#00152">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>The SKRONK protocols (version 0.6)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: The SKRONK protocols (version 0.6)</LI>
+<LI><em>From</em>: strick at The Yak &lt;<A HREF="mailto:strick@yak.net">strick@yak.net</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 05 Feb 1995 02:02:39 -0800</LI>
+<LI><em>Cc</em>: <A HREF="mailto:strick@yak.net">strick@yak.net</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+========================================================================
+The SKRONK protocols                                         version 0.6
+========================================================================
+                                                        Henry Strickland 
+                                                        &lt;strick@yak.net&gt;
+                                                        Sun Feb  5  1995
+
+
+                          This is a working document, subject to change. 
+                                                   Please comment on it!
+
+
+Skronk is a user-level C library that re-implements the usual "posix
+i/o" (unix man 2) functions and "berkeley socket" functions with a set
+of functions that can use enhanced or alternate ("skronked") protocols
+for TCP connections.  (Typical enhancements could be authentication
+and/or encryption of the connection.)  A simple negotiation protocol
+allows the clients and servers to agree on what enhancements are
+desired or required.
+
+Skronk is designed so that your common unix network clients and servers
+(telnet, sendmail, ftp, nntp, X11, etc.) can be merely relinked with the
+skronk library (libskronk.a) without changing the source code for the
+programs.
+
+As a matter of configuration and policy, skronked clients and servers
+may choose either to interoperate with normal (non-skronked) client and
+servers or to forbid normal connections.  In order to not interfere
+with non-skronked programs, skronked connections take place an
+alternate TCP server port numbers.
+
+/* "Skronk" is a musical term, for a new-york-ish free-jazz 
+ *   massively saxaphonish kind of music, e.g. John Zorn  
+ */
+
+
+---- THE UDP PROTOCOL BEGINS HERE ----
+
+THE SKRONK MAP DAEMON
+
+A skronk map daemon is a UDP service that tells what skronked services are
+available from a site, and what alternate TCP server port numbers they
+use.
+
+The skronk map daemon receives "skronk map request" packets and returns
+"skronk map reply" packets that list pairs of port numbers, mapping
+normal server port numbers to corresponding skronked port numbers.  The
+skronk map reply packet is sent to the same IP address and host port
+that the request was received from.
+
+If there is no map reply in a certain time, after a couple of 
+map request resends, the skronk map client should assume that 
+skronked services are not currently available on that host.
+
+SKRONK MAP REQUEST PACKET
+
+See "struct skronk_map_request" below.  The comment will say
+something like "finger skronk@yak.net for info", to explain what
+is going on to network administrators who see these packets for
+the first time probing their hosts.
+
+SKRONK MAP REPLY PACKET
+
+See "struct skronk_map_reply" below.  The "serial" field should
+match the serial field of the map request packet.  Replies be cached,
+using the "ttl" time-to-live field for a timeout.
+
+If the request packet cannot be replied to (perhaps because the action
+was not understood, or the version was wrong), a reply with action
+SKRONK_MAP_NACK should be returned.  If the magic field of the request
+is wrong, do not reply.  (The magic number should be changed if the
+first five fields are changed; otherwise, version and opcode may be
+changed to implement new protocols.)
+
+Skronk map clients should also recognize as a reply the 
+relevant ICMP packets indicating that there is no skronk map daemon.
+
+Version numbers 128 through 255 will not be assigned and are
+available for experimentation.  Action codes 128 through 255 will
+not be assigned and are available for experimentation.
+
+Initial prototypes use UDP port 333 for the skronk map service,
+until a number is officially allocated.
+
+--------------------------------
+
+        /* unsigned long = 4 octets, "network" order */
+        /* unsigned short = 2 octets, "network" order */
+        /* char = 1 octet, ASCII encoding, NUL terminated */
+
+        struct skronk_map_request {
+                unsigned long   magic;          /* SKRONK_MAGIC */
+                unsigned long   serial;
+                unsigned short  version;        /* SKRONK_VERSION */
+                unsigned short  action;         /* SKRONK_MAP_REQUEST */
+                unsigned long   reserved;       /* (corresponds to ttl) */
+                char            comment[1];  /* variable length, NTBS */
+                /* after NUL, remained of packet ignored */
+        };
+
+        #define SKRONK_MAGIC    0x1F1206FB  /* tail(md5("SKRONK_MAGIC\n")) */
+        #define SKRONK_VERSION  0x0101		/* major 1 minor 1 */
+
+	#define SKRONK_MAP_REQUEST      63      /* '?' */
+	#define SKRONK_MAP_RESPONSE     46      /* '.' */
+	#define SKRONK_MAP_NACK         33      /* '!' */
+
+        #define SKRONK_DEFAULT_TTL      3600    /* one hour */
+
+        #define SKRONK_NUM_TRIES        3       /* try three packets */
+        #define SKRONK_WAIT_TIME        3       /* wait three seconds */
+
+        struct skronk_map_reply {
+                unsigned long   magic;          /* SKRONK_MAGIC */
+                unsigned long   serial;         /* matches map request serial */
+                unsigned short  version;        /* SKRONK_VERSION */
+                unsigned short  action;         /* SKRONK_MAP_REPLY or _NACK */
+                unsigned long   ttl;            /* cache time to live, in seconds */
+                unsigned short  map[1];         /* variable length, 0 terminate */
+                /* after 0, remainder of packet ignored */
+        };
+
+--------------------------------
+
+
+EXAMPLE SKRONK MAP REQUEST AND REPLY
+
+Map Request Packet:
+
+   ip header:
+        UDP             protocol
+        128.32.43.52    source_ip_address
+        199.170.88.5    destination_ip_address
+   udp header:
+        1066            source_port
+        skronk          destination_port (number not assigned yet)
+   body:
+        0x1F1206FB      skronk_magic
+        2001            skronk_serial
+        1               version
+        '?'             action (SKRONK_MAP_REQUEST)
+        "finger         comment (for paranoid net admins)
+         skronk@yak.net
+         for info"
+
+Map Request Reply:
+
+   ip header:
+        UDP             protocol
+        199.170.88.5    source_ip_address
+        128.32.43.52    destination_ip_address
+   udp header:
+        skronk          source_port (number not assigned yet)
+        1066            destination_port
+   body:
+        0x1F1206FB      skronk_magic
+        2001            skronk_serial (copied from request)
+        1               version
+        '.'             action (SKRONK_MAP_REPLY)
+        3600            ttl (one hour)
+   map list:
+        23, 423,        /* skronked TELNET on port 423 */
+        25, 425,        /* skronked SMTP on port 425 */
+        70, 470,        /* skronked GOPHER on port 470 */
+        80, 480,        /* skronked HTTP on port 480 */
+        514, 914,       /* skronked shell on port 914 */
+        750, 350,       /* skronked shell on port 350 */
+        6000, 6400,     /* skronked X11 on port 6400 */
+        0               /* zero marks end of list */
+                        /* ... assume other services 
+                                cannot be skronked */
+
+/* 
+ * Notice the skronked ports on this host (199.170.88.5)
+ * have been allocated by the system administrator
+ * using a simple (but arbitrary) rule: 
+ *
+ *     add 400 to the normal number, unless this has
+ *     problems (like it would bring a less-than-1024
+ *     port number to be greater-than-1024), in which
+ *     case subtract 400.
+ *
+ * I propose this rule as a default, since it does not seem
+ * to collide with common port numbers, but because we 
+ * have and always use the skronk map daemon, each site
+ * could pick different numbers.
+ */
+
+
+---- THE UDP PROTOCOL ENDS HERE ----
+
+
+SKRONK PER-CONNECTION NEGOTIATION
+
+/* 
+ * The current skronk prototype temporarily works on 
+ * a simpler negotiation scheme, but below is the
+ * intended scheme.
+ */
+
+/*
+ * Good questions:  
+ * 1.  Would telnet-style negotiations be better?
+ *
+ *      I conclude not:
+ *      -- this offers options to be combined at once
+ *      -- this does fewer passes from server to client
+ *      -- this uses ASCII names rather than numbers
+ *              for options, which allows liberal 
+ *              experimentation with "x-" names.
+ *
+ * 2. Do we need some escape-character &amp; character-stuffing 
+ *    to re-open negotiations?
+ *
+ *      Maybe... but flow of control probably never returns 
+ *      to the skronk layers with any such requests, so let's
+ *      let some escape-octet (with escape-octet-stuffing) 
+ *      option for return-to-negotiation be a negotiated
+ *      option that can be added later.
+ */
+
+The skronk library does a negotiation at the beginning of each TCP
+connection, after "connect()" and "accept()" rendezvous, before
+returning flow of control to the application.  This negotiation is
+transparent to the application, but may be configured with skronk
+configuration files or environment variables.
+
+These negotiations should not be confused with other negotiations
+specific to the program, such as TELNET negotiations, which would occur
+later, once control is returned to the application.
+
+
+/*
+ *  I should first define 'negotiation line', 'acceptance line', 
+ *    and 'disconnect' to describe the following...
+ */
+
+
+When the connection is made, the server writes a line of 10 to 999
+octets, composed of ASCII characters, terminating with CRLF, to the
+client.  This line must begin with the eight characters
+
+        'S'  'K'  'R'  SPACE  h  t  o  SPACE
+
+where h, t, and o are three decimal digits '0'-'9' (hundreds, tens, and
+ones places), with leading a zero in the hundreds place if required,
+specifying the length of this line, counting the CRLF at the end.  Thus
+the minimum length of the line is 10.  The reason for putting the
+length of the line in the front is so that the client can first read 8
+characters, and then read the rest of the line, but not try to read any
+characters beyond that size.
+
+After the "SKR hto " follow zero or more words of the regexp form
+
+        [A-Za-z0-9+][A-Za-z0-9/.+-]*
+
+separated by one or more SPACE characters.  Case matters.  These words
+specify protocols, and should registered with strick@yak.net, or begin
+with "x-" for experimental protocols.
+
+By sending this line, the server volunteers to server this protocol
+skronked with any of the listed protocols.  The server should list the
+protocols in order of preference, its favored protocols first.
+
+The client reads this line, chooses one (or more) protocols, and
+responds with a similar line, listing only the protocol(s) that it
+chooses to use, in a specific "stacking" order, from the first protocol
+applied to the last.  For instance, if it chooses "gzip" compression
+followed by "des" encryption, it should list them in the order "gzip
+des".  Some protocols choices may not be compatible, and some protocol
+choices may not have stacking order; this will have to be described
+when the protocols are defined.
+
+If the client does not like any of the choices offered, it may hang up
+the connection, instead of replying with a line.
+
+If the server accepts the protocol the client chose, it responds with 8
+characters
+
+        'S'  'K'  'R'  SPACE  'O'  'K'  CR  LF
+
+If not, it may either disconnect the connection, or it may send another
+initial negotiation line, which should be different from the initial
+line offered (probably with fewer options for the client to choose).
+
+
+If the negotiation is accepted, what happens next depends on the
+accepted protocols, and on the actions of the rest of the program.
+Typically a selected protocol may have to do some more negotiation or
+trading of data before control is returned to the application.  And
+later reads and writes from the application to the skronked socket may
+be intercepted and frobbed.
+
+
+PRIMORDIAL PROTOCOLS
+
+For stream encryption:
+
+	/* needs work */
+
+	A simple initial protocol named "dh/idea.1".
+
+	Use Diffee-Hellman key exchange from RSAREF 2.0.
+	Let the server declare the R_DH_PARAMS, and the size of things.
+	Use IDEA encryption in CFB mode from PGP 2.6.
+	No authentication -- susceptible to man-in-the-middle 
+	attacks at connection time.
+
+
+For authentication:
+
+	/* needs lots of work */
+
+	A simple initial protocol named "auth-pgp.1"
+
+	Use PGP public keys and certificates to create
+	a web of trust and thereby authenticate hosts.
+
+	Can be combined with "dh/idea.1" or used separately. 
+
+	(This probably requires having secret key pass phrases
+	on multiuser machines, so it's one small step forward.)
+
+
+
+--------------------------------
+
+END $Header: /x/nepal/x/yak/strick/work/skronk-write/RCS/skronk.proto,v 1.3 95/02/05 01:18:49 strick Exp Locker: strick $
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00159" HREF="msg00159.html">Re: The SKRONK protocols (version 0.6)</A></STRONG>
+<UL><LI><EM>From:</EM> sdw@lig.net (Stephen D. Williams)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00151.html">Mixmaster client release</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00155.html">NYT on Tera and UUNet</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00151.html">Mixmaster client release</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00159.html">Re: The SKRONK protocols (version 0.6)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00152"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00152"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

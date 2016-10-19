@@ -1,0 +1,158 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Dr. Dobbs Dev. Update 1/5 July 94 &#38; Schneier -->
+<!--X-From-R13: Oyna Pneergg <oneerggNqnvfl.rr.haq.np.mn> -->
+<!--X-Date: Sun, 3 Jul 94 02:53:06 PDT -->
+<!--X-Message-Id: Pine.3.89.9407031141.B196&#45;0100000@newdaisy.ee.und.ac.za -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9407030815.AA20743@toad.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Dr. Dobbs Dev. Update 1/5 July 94 &amp; Schneier</TITLE>
+<LINK REV="made" HREF="mailto:barrett@daisy.ee.und.ac.za">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00156.html">Date Prev</A>][<A HREF="msg00157.html">Date Next</A>][<A HREF="msg00166.html">Thread Prev</A>][<A HREF="msg00151.html">Thread Next</A>][<A HREF="index.html#00169">Date Index</A>][<A HREF="threads.html#00169">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Dr. Dobbs Dev. Update 1/5 July 94 &amp; Schneier</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Eli Brandt &lt;<A HREF="mailto:ebrandt@jarthur.cs.hmc.edu">ebrandt@jarthur.cs.hmc.edu</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Dr. Dobbs Dev. Update 1/5 July 94 &amp; Schneier</LI>
+<LI><em>From</em>: Alan Barrett &lt;<A HREF="mailto:barrett@daisy.ee.und.ac.za">barrett@daisy.ee.und.ac.za</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 3 Jul 1994 11:52:39 +0200 (GMT+0200)</LI>
+<LI><em>Cc</em>: cypherpunks list &lt;<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>&gt;</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00150.html">9407030815.AA20743@toad.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; You can do better than a bit-serial loop -- though not down to
+&gt; one instruction!  There are a lot of very cool approaches, only
+&gt; one of which I remember.
+
+Bit counting was discussed in great detail in comp.lang.c in October
+1990.  I saved an excellent summary by Chris Torek, which I can post if
+there is interest.  It includes a program to test 17 different methods
+of bit counting, and a table of results from six machine/compiler
+combinations.
+
+In 5 of the 6 tested environments, the fastest method for counting the
+1's in a 32-bit word turned out to be some variant of a table lookup
+(but not always the same variant).  In 1 of the 6 tested environments,
+the fastest code was the following, which is similar to that posted here
+by Eli Brandt:
+
+/*
+ * Explanation:
+ * First we add 32 1-bit fields to get 16 2-bit fields.
+ * Each 2-bit field is one of 00, 01, or 10 (binary).
+ * We then add all the two-bit fields to get 8 4-bit fields.
+ * These are all one of 0000, 0001, 0010, 0011, or 0100.
+ *
+ * Now we can do something different, becuase for the first
+ * time the value in each k-bit field (k now being 4) is small
+ * enough that adding two k-bit fields results in a value that
+ * still fits in the k-bit field.  The result is four 4-bit
+ * fields containing one of {0000,0001,...,0111,1000} and four
+ * more 4-bit fields containing junk (sums that are uninteresting).
+ * Pictorially:
+ *	    n = 0aaa0bbb0ccc0ddd0eee0fff0ggg0hhh
+ *	 n&gt;&gt;4 = 00000aaa0bbb0ccc0ddd0eee0fff0ggg
+ *	  sum = 0aaaWWWWiiiiXXXXjjjjYYYYkkkkZZZZ
+ * where W, X, Y, and Z are the interesting sums (each at most 1000,
+ * or 8 decimal).  Masking with 0x0f0f0f0f extracts these.
+ *
+ * Now we can change tactics yet again, because now we have:
+ *	    n = 0000WWWW0000XXXX0000YYYY0000ZZZZ
+ *	 n&gt;&gt;8 = 000000000000WWWW0000XXXX0000YYYY
+ * so	  sum = 0000WWWW000ppppp000qqqqq000rrrrr
+ * where p and r are the interesting sums (and each is at most
+ * 10000, or 16 decimal).  The sum `q' is junk, like i, j, and
+ * k above; but it is not necessarry to discard it this time.
+ * One more fold, this time by sixteen bits, gives
+ *	    n = 0000WWWW000ppppp000qqqqq000rrrrr
+ *	n&gt;&gt;16 = 00000000000000000000WWWW000ppppp
+ * so	  sum = 0000WWWW000ppppp000sssss00tttttt
+ * where s is at most 11000 and t is it most 100000 (32 decimal).
+ *
+ * Now we have t = r+p = (Z+Y)+(X+W) = ((h+g)+(f+e))+((d+c)+(b+a)),
+ * or in other words, t is the number of bits set in the original
+ * 32-bit longword.  So all we have to do is return the low byte
+ * (or low 6 bits, but `low byte' is typically just as easy if not
+ * easier).
+ *
+ * This technique is also applicable to 64 and 128 bit words, but
+ * 256 bit or larger word sizes require at least one more masking
+ * step.
+ */
+int
+tG_sumbits(n)
+	register unsigned long n;
+{
+
+	n = (n &amp; 0x55555555) + ((n &gt;&gt; 1) &amp; 0x55555555);
+	n = (n &amp; 0x33333333) + ((n &gt;&gt; 2) &amp; 0x33333333);
+	n = (n + (n &gt;&gt; 4)) &amp; 0x0f0f0f0f;
+	n += n &gt;&gt; 8;
+	n += n &gt;&gt; 16;
+	return (n &amp; 0xff);
+}
+
+--apb (Alan Barrett)
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00150" HREF="msg00150.html">Re: Dr. Dobbs Dev. Update 1/5 July 94 &amp; Schneier</A></STRONG>
+<UL><LI><EM>From:</EM> Eli Brandt &lt;ebrandt@jarthur.cs.hmc.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00156.html">Re: Dr. Dobbs Dev. Update 1/5 July 94 &amp; Schneier</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00157.html">Re: ANI numbers</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00166.html">Re: Dr. Dobbs Dev. Update 1/5 July 94 &amp; Schneier</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00151.html">Re: Dr. Dobbs Dev. Update 1/5 July 94 &amp; Schneier</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00169"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00169"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

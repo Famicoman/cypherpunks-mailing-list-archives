@@ -1,0 +1,207 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: bank protocol run through -->
+<!--X-From-R13: Yney Z. Pneehf <oneehfNgerr.rte.hu.rqh> -->
+<!--X-Date: Wed, 2 Dec 92 19:49:53 PST -->
+<!--X-Message-Id: 9212030349.AA07296@tree.egr.uh.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>bank protocol run through</TITLE>
+<LINK REV="made" HREF="mailto:barrus@tree.egr.uh.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00032.html">Date Prev</A>][<A HREF="msg00026.html">Date Next</A>][<A HREF="msg00032.html">Thread Prev</A>][<A HREF="msg00034.html">Thread Next</A>][<A HREF="index.html#00030">Date Index</A>][<A HREF="threads.html#00030">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>bank protocol run through</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: bank protocol run through</LI>
+<LI><em>From</em>: Karl L. Barrus &lt;<A HREF="mailto:barrus@tree.egr.uh.edu">barrus@tree.egr.uh.edu</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 2 Dec 92 21:49:20 -0600</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+I find it useful to work through a protocol by hand a few times to  
+really see what's going on.  Here is an example of the digital bank  
+protocol.  It is meant for people who are curious to see if it works,  
+as educational material for new subscribers, or general interest.
+
+I'm choosing relatively small numbers to use: in a real  
+implementation, they would be much much larger.
+
+OK, let's start!
+
+----------------------------------------
+On the bank's side, it chooses the primes
+p = 2038074743 and
+q = 2038074947
+and so the public key n = pq = 4153749073821763621
+also phin = Euler totient function of n 
+
+          = (p-1)(q-1) = 4153749069745613932
+The bank decides to make people use the exponent 5 (it's just easier  
+to tell if GCD[5, phin] is 1)
+
+1) Alice chooses a random x, r.  She hashes x to yield fx
+x = 3141526535
+r = 5772156649
+fx = 2718281828
+
+Here, I just picked the value of the hash function from the  
+mathematical air, so to speak.
+
+Alice computes B = r^5 fx mod n
+ = (5772156649^5 2718281828) mod 4153749073821763621
+ = 592088213321408342 
+
+
+-&gt; B = PowerMod[r^5 fx, 1, n] in Mathematica
+
+Alice sends B to the bank.
+
+2) The bank takes fifth root of B.  Or, it raises B to the power that  
+is the inverse of 5 mod n.
+To find the inverse of 5 mod n, compute
+inv1 = 5^(-1) mod phin = 5^(-1) mod 4153749069745613932
+ = 1661499627898245573
+
+The bank can do this since it knows the factorization of n.
+
+-&gt; inv1 = PowerMod[5, -1, phin] in Mathematica
+
+So, to take the fifth root:
+D = B^inv1 mod n 
+
+ = (592088213321408342 ^ 1661499627898245573) mod 4153749073821763621
+ = 1189395596986402260
+
+-&gt; D = PowerMod[B, inv, n] in Mathematica
+
+Just as a check: D^5 mod n = 
+
+ = (1189395596986402260 ^ 5) mod 4153749073821763621
+= 592088213321408342 = B     So we're OK.
+-&gt; Mod[D^5, n] in Mathematica
+
+Bank sends Alice D.
+
+3) Alice extracts C by dividing D by r.  Or, she solves the following  
+equation for C:
+D = C r mod n, or
+1189395596986402260 = C 5772156649 mod 4153749073821763621
+
+This can be solved by multiplying D by the inverse of r mod n, and  
+taking the result mod n.  You don't need to know the factors of n.   
+As a technical note, there will be only one solution since GCD[D,n] =  
+1, which is usually true since n only has two factors p and q.  The  
+bank is in trouble if GCD[D, n] != 1 since that means n can be  
+factored by the information in D.
+
+inv2 = r^(-1) mod n
+ = 5772156649 ^ (-1) mod 4153749073821763621
+ = 3900656075651054436
+
+-&gt; inv2 = PowerMod[r, -1, n] in Mathematica
+
+So, C = (D inv2) mod n
+ = (1189395596986402260 3900656075651054436) mod 4153749073821763621
+ = 3844350519262422248
+
+-&gt; C = Mod[D inv2, n] in Mathematica
+
+Just as a check: C r mod n = 
+
+ = (3844350519262422248 5772156649) mod 4153749073821763621
+ = 1189395596986402260 = D     So we're OK.
+-&gt; Mod[C r, n] in Mathematica
+
+So now Alice has
+x = 3141526535 and
+C = 3844350519262422248
+
+4) Alice pays Bob by giving him (x, C)
+
+5) Bob verifies that C = fx ^ (1/5) mod n.  Or, he verifies that fx =  
+C^5 mod n
+C^5 mod n = 
+
+ = 3844350519262422248 ^ 5 mod 4153749073821763621
+ = 2718281828
+
+which does indeed equal f(3141526535) = 2718281828 where f is our  
+hashing function.  So Alice isn't cheating by sending a bogus (x, C)
+
+But Bob must also send (x, C) to the bank to verify Alice isn't  
+trying to spend the money more than once!
+----------------------------------------
+
+So there it is, with numbers and Mathematica statements for those who  
+have access to Mathematica.  Hopefully, the numbers are large enough  
+to convince people it didn't work out by chance.
+
+Now, the code to perform the math must be written, as well as the  
+scripts to support the bank.  Has anyone used the RSAREF routines, or  
+should we stick to what's supplied with PGP?  I haven't thought that  
+far ahead.  Like I said earlier, I'll pick up work on this in a few  
+weeks.
+
+---
+/-----------------------------------\
+| Karl L. Barrus                    |
+| barrus@tree.egr.uh.edu (NeXTMail) |
+| elee9sf@menudo.uh.edu             |
+\-----------------------------------/
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00032.html">uh oh, o-o</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00026.html">Re: Suggest splitting things up</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00032.html">uh oh, o-o</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00034.html">enjoy enjoy</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00030"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00030"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

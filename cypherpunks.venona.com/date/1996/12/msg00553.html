@@ -1,0 +1,261 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Secure Erase for PCs? -->
+<!--X-From-R13: vpuhqbiNnytroen.pbz (Wtbe Quhqbi N ubzr) -->
+<!--X-Date: Mon, 9 Dec 1996 19:29:29 &#45;0800 (PST) -->
+<!--X-Message-Id: 199612100325.VAA07661@manifold.algebra.com -->
+<!--X-Content-Type: text -->
+<!--X-Reference: 199612100131.RAA19898@netcom.netcom.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Secure Erase for PCs?</TITLE>
+<LINK REV="made" HREF="mailto:ichudov@algebra.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00546.html">Date Prev</A>][<A HREF="msg00557.html">Date Next</A>][<A HREF="msg00542.html">Thread Prev</A>][<A HREF="msg00554.html">Thread Next</A>][<A HREF="index.html#00553">Date Index</A>][<A HREF="threads.html#00553">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Secure Erase for PCs?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:foodie@netcom.com">foodie@netcom.com</A> (Bryna Bank/Jamie Lawrence)</LI>
+<LI><em>Subject</em>: Re: Secure Erase for PCs?</LI>
+<LI><em>From</em>: <A HREF="mailto:ichudov@algebra.com">ichudov@algebra.com</A> (Igor Chudov @ home)</LI>
+<LI><em>Date</em>: Mon, 9 Dec 1996 21:25:05 -0600 (CST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:foodie@netcom.com">foodie@netcom.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00542.html">199612100131.RAA19898@netcom.netcom.com</A>&gt; from "Bryna Bank/Jamie Lawrence" at Dec 9, 96 05:31:34 pm</LI>
+<LI><em>Organization</em>: Bool Sheet Software</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:ichudov@algebra.com">ichudov@algebra.com</A> (Igor Chudov)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Bryna Bank/Jamie Lawrence wrote:
+&gt; 
+&gt; &gt; 	Though, technically, no disk can be securely erased, my program, Very Good
+&gt; &gt; Privacy, can securely delete files after they have been encrypted. I don't
+&gt; &gt; know if this is what you're looking for, but if it is, check out the VGP
+&gt; &gt; home page at: <A  HREF="http://www.geocities.com/SiliconValley/Pines/2690">http://www.geocities.com/SiliconValley/Pines/2690</A>
+&gt; &gt; 
+&gt; &gt;
+&gt; Ideally, I'm looking for a free space wiper, along the lines
+&gt; of what Burn 2.4 on the Mac can do.
+&gt;  
+&gt; As in, create a file the size of available free space, and then
+&gt; write garbage repeatedly to that file.
+&gt; 
+&gt; I've found "Real Deal", a TSR that intercepts the DEL command,
+&gt; but that's a poor substitute, at least for my needs.
+
+I am attaching a program that does it for Unix.
+
+
+/******************************************************* wipedisk.c */
+/* U  N  I  X    w  i  p  e  d  i  s  k       p  r  o  g  r  a  m  .*/
+/********************************************************************/
+
+/*
+ *    Copyright(C) 1995, Igor Chudov, ichudov@algebra.com.
+ *
+ *    This program is free software; you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation; either version 2 of the License , or
+ *    (at your option) any later version.
+ *
+ *    This program is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *    You should have received a copy of the GNU General Public License
+ *    along with this program. If not, write to the Free Software
+ *    Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+/*
+ * Syntax: wipedisk /my/directory/filename
+ */
+
+/* 
+ *   This program creates a file with a specified name (which you must 
+ *   supply) and simply writes pseudo-random data into this file. It 
+ *   deletes this file after it filled the whole disk with this file.
+ *   Actually it unlinks the file _right after_ that file was created
+ *   to avoid shitting all over the place with dummy files left in case
+ *   it was killed.
+ *
+ *   Therefore, this program may be used to securely wipe (delete) all
+ *   data that does not belong to legitimate files. Pretty neat thing to
+ *   use with PGP. Note that I am not an expert in secure erasure of data:
+ *   if you use this program to delete criminal traces and FBI is going
+ *   after you, talk to an expert first :-)
+ *
+ *   It wipes disk only once; call it several times for more secure
+ *   erasure. If you run it more than six times at once, consult with your
+ *   psychiatrist.
+ *
+ *   Note that user filesystem quotas may conflict with wiping the whole
+ *   disk. Also, there may be some percentage of every filesystem (usually
+ *   5%) that can only be used by root. It is best if this program is run
+ *   by root. Note that for a short period of time this program can make
+ *   all disk space used and not available for users. Please notify your
+ *   root if you plan to run this program, because running it can create
+ *   hardships for other users of your Unix system.
+ *
+ *   It is best run from root's crontab in the middle of the night, 
+ *   when everyone should be sleeping and not hacking.
+ *
+ *   The file named in the argument 1 must NOT exist before program is
+ *   called.
+ */
+
+#include &lt;sys/types.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;unistd.h&gt;
+
+#define KILOBYTE    1024
+#define PAGE_SIZE   (1024 * KILOBYTE) 
+        /* This is a standard page size on my system. */
+        /* should be proportional to 1024             */
+#define KB_PER_PAGE (PAGE_SIZE / KILOBYTE)    
+
+/*********************************************************** randomize */
+/* fills buffer with random data                                       */
+char * randomize( buf )
+  char * buf;
+{
+  int i;
+  int * ibuf = (int *)buf; 
+  int int_PAGE_SIZE = PAGE_SIZE / sizeof( int );
+
+  for( i=0; i &lt; int_PAGE_SIZE; i++ ) 
+     ibuf[i] = rand(); /* So we set 4 bytes at a time, not 1 byte at a time */
+
+  return( buf );
+}
+
+/************************************************************** main() */
+int main( argc, argv )
+  int argc;
+  char *argv[];
+{
+  int fd, i;
+
+  char * buf;
+
+  if( argc != 2 || !strcmp( argv[1], "--help" ) )  {
+    fprintf( stderr, 
+             "usage: %s file-name-to-use-for-wiping\n"
+             "This utility fills free space on disk with random garbage.\n"
+             "There is NO WARRANTY!!! Covered by GNU Public License.\n", 
+             argv[0] );
+    exit( 1 );
+  }
+
+  fd = open( argv[1], O_WRONLY | O_CREAT | O_EXCL );
+
+  if( fd &lt; 0 ) {
+    fprintf( stderr, "Can't open file %s for EXCLUSIVE writing\n",
+             argv[1] );
+    exit( 1 );
+  }  
+
+  unlink( argv[1] ); /* let's unlink it now so that if someone kills
+                        me, the file with bullshit will be gone */
+
+  if( (buf = (char *)malloc( PAGE_SIZE )) == 0 ) {
+    fprintf( stderr, 
+             "Wow, malloc failed. Your system must be royally hosed.\n" );
+    exit( 1 );
+  }
+
+  srand( time( 0 ) );
+
+  for( i=0; write( fd, randomize( buf ), PAGE_SIZE ) == PAGE_SIZE; i++ ) {
+    /* every time we write a newly randomized buffer and stop
+     * writing when we cannot write any more 
+     */
+
+    if( (i % 1) == 0 ) {
+      /* Just to say I am not dead */
+      printf( "%d Kbytes of pseudo-random data (rand()) written\r", 
+              i * KB_PER_PAGE );
+      fflush( stdout );
+    }
+  }
+
+  printf( "\nSyncing disk (wait 30 sec)...\n" ); /* Ughh... */
+
+  sync();
+
+  sleep( 30 );
+
+  printf( "Done.\n" );
+
+  free( buf ); /* I am a good guy */
+
+  close( fd );
+}
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00554" HREF="msg00554.html">Re: Secure Erase for PCs?</A></STRONG>
+<UL><LI><EM>From:</EM> Jamie Lawrence &lt;foodie@netcom.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00542" HREF="msg00542.html">Re: Secure Erase for PCs?</A></STRONG>
+<UL><LI><EM>From:</EM> foodie@netcom.com (Bryna Bank/Jamie Lawrence)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00546.html">Re: Secure Erase for PCs?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00557.html">Re: [ANNOUNCEMENT] Secure envelopes</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00542.html">Re: Secure Erase for PCs?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00554.html">Re: Secure Erase for PCs?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00553"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00553"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

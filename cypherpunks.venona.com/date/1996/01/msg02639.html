@@ -1,0 +1,175 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Random noise from disk drives -->
+<!--X-From-R13: Dvpu Enym <efnymNbfs.bet> -->
+<!--X-Date: Mon, 22 Jan 96 20:35:21 PST -->
+<!--X-Message-Id: 9601230431.AA06742@sulphur.osf.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Random noise from disk drives</TITLE>
+<LINK REV="made" HREF="mailto:rsalz@osf.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02628.html">Date Prev</A>][<A HREF="msg02640.html">Date Next</A>][<A HREF="msg02340.html">Thread Prev</A>][<A HREF="msg02641.html">Thread Next</A>][<A HREF="index.html#02639">Date Index</A>][<A HREF="threads.html#02639">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Random noise from disk drives</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Random noise from disk drives</LI>
+<LI><em>From</em>: Rich Salz &lt;<A HREF="mailto:rsalz@osf.org">rsalz@osf.org</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 22 Jan 1996 23:31:32 -0500</LI>
+<LI><em>Cc</em>: <A HREF="mailto:dom@cam.ov.com">dom@cam.ov.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Don Davis  has done some interesting/important/widely-referenced work on
+using disk latencies as a random number source.  We were talking about
+some of his techniques, and he kindly gave me permission to forward along
+his email.  He's not on the list, so I cc'd him.
+	/r$
+
+--------------------forwarded message-----------------
+well, if you're willing to accept a temporary peak
+load on your machine, then a paging rng is easy to
+write.
+
+the basic idea that worked is:
+    * allocate a little more memory than is available in ram;
+    * walk through it in steps of a prime # near 4kb or 5kb;
+    * time each access with whatever system clock is easiest;
+    * throw away accesses that take less than 5 millisec or so;
+    * keep only the parity of each access that remains.
+
+naturally, on the first passes through the array, you'll
+get mostly fast accesses; thereafter, most accesses
+will cause page-faults. mostly a page-fault's access-time
+reflects where the page was on the disk, where the head
+and spindle were before the page-fault, etc. that's why
+you keep only the parity. however, you're not going to
+get a bit of entropy from every access, by any means.
+
+the reason for a prime-valued step is that you want to be
+sure of visiting every page, but you don't want to have
+to know the page-size. (i haven't checked this trick yet;
+i used 2kb or 4kb steps, if i remember correctly).
+
+the reason for the 5 msec cutoff is that it's rare for
+a disk access to happen so fast, and you want to screen
+out other causes of non-immediate memory accesses. you'll
+only get a real access that fast, if at the moment of the
+page-fault, the head's already in the right track, and if
+the block you want is less than a third of a rev away
+from the head.
+
+i used a byte-indexed table to get the parity quickly.
+you don't really need to bother packing the parity bits
+into bytes; store the 1's and 0's as chars into the md5
+buffer, &amp; hash it; then, put the hash itself into the
+buffer, xor more 1's &amp; 0's back in on top, rehash, etc.
+running md5 8 times as often as necessary doesn't matter.
+
+note that this algorithm should defeat caching disk
+controllers, but i haven't checked for sure. if it
+doesn't, the symptom will be long stretches of fast
+access-times.
+
+any fancy stuff you put in, like feeding noise-bits
+back into your path through the array, is a bad idea;
+first, it really only adds pseudo-randomness; second,
+it's liable to reduce the frequency of page-faults.
+though i knew it was a bad idea, i tried it anyway,
+lots of ways, and that's what i found. simple is best.
+
+really, the only complicated code should be outside
+the rng: reallocating when memory availability changes,
+minimizing the ui, stuff like that.
+
+it is worthwhile to run find, or some other filesys-
+traversing program, while you're running the paging-rng.
+the benefit is not from the changed paging-times, but
+from the extra head-motion, which perturbs the spindle
+speed.
+
+if you choose to measure the rng's quality, study the
+raw parity-bits, not the hashed output. the hashes would
+look perfectly random, even if the parity bits were periodic.
+look for periodicity (fft), long-term autocorrelation,
+and measure the entropy with an entropy estimator. don't
+bother with runs tests and the others; the hashing will
+produce nice output bits, even if the parity inputs
+are periodic or are highly correlated in the long-run.
+but if they're not periodic and uncorrelated, the
+output bits will be random, instead of pseudo-random.
+
+on the only machine i studied closely, i got 100 bits/min, 
+with a 1 khz interrupt-clock; if your interrupt schedule
+is more frequent, then you can expect proportionally more
+entropy.  remember that even for long rsa keys, you only
+need enough entropy to prevent exhaustive key-search.
+use 100 bits or so to seed the prng, then use the prng
+to generate a prime.  reseed for each prime, and as
+often as you can for symmetric session-keys. i don't
+trust pseudo-random key-generation (it's no surprise
+that i don't, i suppose).
+
+please let me know if anything comes of this, like if
+someone builds it properly before i get around to it.
+i suppose i ought to build it, test it, and write a paper
+about how much fun it was, but i have too much work, and
+too many papers to write.
+					-don davis, boston
+-----------------egassem dedrawrof--------------------
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02628.html">PZ a Nazi?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02640.html">FORSALE: HP48GX</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02340.html">Re: PZ a Nazi?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02641.html">Re:  Random noise from disk drives</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02639"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02639"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

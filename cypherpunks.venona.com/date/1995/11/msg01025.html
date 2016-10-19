@@ -1,0 +1,157 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: cryptl99.zip Free encryption library for DOS/UNIX/Windows (fwd) -->
+<!--X-From-R13: Sevp Kbhat <rnlNzvapbz.bm.nh> -->
+<!--X-Date: Tue, 21 Nov 1995 20:49:37 +0800 -->
+<!--X-Message-Id: Pine.SOL.3.91.951121220824.2627A&#45;100000@orb -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.LNX.3.91.951121193458.8471B&#45;100000@ima.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: cryptl99.zip Free encryption library for DOS/UNIX/Windows (fwd)</TITLE>
+<LINK REV="made" HREF="mailto:eay@mincom.oz.au">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01016.html">Date Prev</A>][<A HREF="msg01020.html">Date Next</A>][<A HREF="msg01024.html">Thread Prev</A>][<A HREF="msg01007.html">Thread Next</A>][<A HREF="index.html#01025">Date Index</A>][<A HREF="threads.html#01025">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: cryptl99.zip Free encryption library for DOS/UNIX/Windows (fwd)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Enzo Michelangeli &lt;<A HREF="mailto:enzo@ima.com">enzo@ima.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: cryptl99.zip Free encryption library for DOS/UNIX/Windows (fwd)</LI>
+<LI><em>From</em>: Eric Young &lt;<A HREF="mailto:eay@mincom.oz.au">eay@mincom.oz.au</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 21 Nov 1995 22:32:59 +1000 (EST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01024.html">Pine.LNX.3.91.951121193458.8471B-100000@ima.net</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+On Tue, 21 Nov 1995, Enzo Michelangeli wrote:
+&gt; This encryption library provides a universal interface to a number of 
+&gt; conventional-key encryption algorithms.  The library currently supports 
+&gt; encryption algorithms and modes of MDC/SHS CFB, DES ECB, CBC, CFB, OFB, PCBC, 
+&gt; triple DES ECB, CBC, CFB, OFB, IDEA ECB, CBC, CFB, OFB, RC4, SAFER ECB, CBC, 
+&gt; CFB, OFB, and SAFER-SK ECB, CBC, CFB, OFB.  All encryption routines are 
+
+:-) cute, the next version of SSLeay to be released will have the same 
+thing, good to see great minds think alike (or is that simple minds 
+seldom differ :-).
+
+Currently the interface I will have is
+EVP_EncryptInit(EVP_CIPHER_CTX *ctx,EVP_CIPHER *type,unsigned char *key,
+	unsigned char *iv);
+void EVP_EncryptUpdate(EVP_CIPHER_CTX *ctx,unsigned char *out,int *outl,
+	unsigned char *in,int inl);
+void EVP_EncryptFinal(EVP_CIPHER_CTX *ctx,unsigned char *out,int *outl);
+
+with a string to bytes function,
+int EVP_BytesToKey(EVP_CIPHER *type,EVP_MD *md,unsigned char *salt,
+	unsigned char *data,int datal,int count,
+	unsigned char *key,unsigned char *iv);
+
+this is upward compatable with PKCS#5 and will generate a key and iv of 
+the correct size depending on the EVP_CIPHER for a data string (the 
+lengths are encoded in the EVP_CIPHER definition).
+I also have all my Message digest routines using the same type of interface.
+
+What makes this nice is that all my digital signature routines 
+(open, seal, sign, verify etc) all take EVP_CIPHER and EVP_MD arguments 
+so any cipher can be used and any MD can be used.  The ASN1 object 
+identifiers are contained in the EVP_CIPHER/EVP_MD structures.
+
+It also make the 'demo' program that supports all the above mentioned 
+encryption modes (and also does base64 encoding/decoding) only 290 lines 
+long :-).
+
+Now, heres the rub, to use a cipher to encode in pkcs#7 (which is what
+S/MIME is using) one needs to have an object identifier (for use in the
+ASN1 encoding).  I know of very few object identifiers.
+
+type			object identifier.
+EVP_des_ecb		1 3 14 3 2 6
+EVP_des_ede
+EVP_des_ede3		1 2 840 113549 3 17 (or is this EVP_des_ede (2 keys))
+EVP_des_cfb		1 3 14 3 2 9
+EVP_des_ede_cfb
+EVP_des_ede3_cfb
+EVP_des_ofb		1 3 14 3 2 8
+EVP_des_ede_ofb
+EVP_des_ede3_ofb
+EVP_des_cbc		1 3 14 3 2 7
+EVP_des_ede_cbc
+EVP_des_ede3_cbc
+EVP_rc4			1 2 840 113549 3 4
+EVP_idea_ecb
+EVP_idea_cfb
+EVP_idea_ofb
+EVP_idea_cbc
+MD_md2			1 2 840 113549 2 2
+MD_md5			1 2 840 113549 2 5
+MD_sha			1 3 14 3 2 18
+
+Can anyone out there fill in the blanks?  I also supose the new version 
+of SHA, SHA-1 will also have a different identifier as well which I will 
+also need.
+
+In the above, I always use 'ede' to refer to encrypt-decrypt-encrypt with 
+2 keys and 'ede3' to refer to ede with three keys.
+
+eric (on a quest for object identifiers... and to finish the next version
+      of SSLeay before he goes on a long holiday...)
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01024" HREF="msg01024.html">cryptl99.zip Free encryption library for DOS/UNIX/Windows (fwd)</A></STRONG>
+<UL><LI><EM>From:</EM> Enzo Michelangeli &lt;enzo@ima.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01016.html">Re: NSA, ITAR, NCSA and plug-in hooks.</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01020.html">Re: Virus attacks on PGP</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01024.html">cryptl99.zip Free encryption library for DOS/UNIX/Windows (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01007.html">Applied Cryptography case filings on the Web</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01025"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01025"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

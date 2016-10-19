@@ -1,0 +1,192 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: textbooks -->
+<!--X-From-R13: xbbagmN[nfBne.QA[ (Rnivq U. Ybbagm) -->
+<!--X-Date: Wed, 25 Oct 95 10:44:15 PDT -->
+<!--X-Message-Id: 9510251744.AA23624@argosy.MasPar.COM -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: textbooks</TITLE>
+<LINK REV="made" HREF="mailto:koontz@MasPar.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02014.html">Date Prev</A>][<A HREF="msg02018.html">Date Next</A>][<A HREF="msg01976.html">Thread Prev</A>][<A HREF="msg01598.html">Thread Next</A>][<A HREF="index.html#02006">Date Index</A>][<A HREF="threads.html#02006">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: textbooks</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:patrick@verity.com">patrick@verity.com</A>, <A HREF="mailto:sommerfeld@orchard.medford.ma.us">sommerfeld@orchard.medford.ma.us</A></LI>
+<LI><em>Subject</em>: Re: textbooks</LI>
+<LI><em>From</em>: <A HREF="mailto:koontz@MasPar.COM">koontz@MasPar.COM</A> (David G. Koontz)</LI>
+<LI><em>Date</em>: Wed, 25 Oct 95 10:44:09 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:sandoval@cic.teleco.ulpgc.es">sandoval@cic.teleco.ulpgc.es</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+IP/FP and PC1 describe how to get from input bytes to L, R, C and D Blocks:
+
+ 
+The Initial Permutation
+ 
+The Initial Permuation (IP) is a description of how a byte wide interface is
+connected to a 64 bit block comprised of two 32 bit blocks (L and R).  Consider
+a byte wide interface with the bits numbered 1-8.  The event numbered bits
+go to the L Block and the odd numbered bits go to the R block.  Note that the
+bit order is big endian, where bit 1 is most significant and bit 8 is least
+least significant.  The input block is typically loaded as 8 successive byte 
+loads:
+ 
+Port    MSB7     Input  (LR)                     Left
+ Bit    Bit             Block (64 bits)                 Block (32 bits)
+ 
+  2------6-------58 50 42 34 26 18 10  2                 1  2  3  4  5  6  7  8
+  4------4-------60 52 44 36 28 20 12  4                 9 10 11 12 13 14 15 16
+  6------2-------62 54 46 38 30 22 14  6                17 18 19 20 21 22 23 24
+  8------0-------64 56 48 40 32 24 16  8                25 26 27 28 29 30 31 32
+ 
+                                                        Right
+                                                        Block (32 bits)
+  1------7-------57 49 41 33 25 17  9  1                 1  2  3  4  5  6  7  8
+  3------5-------59 51 43 35 27 19 11  3                 9 10 11 12 13 14 15 16
+  5------3-------61 53 45 37 29 21 13  5                17 18 19 20 21 22 23 24
+  7------1-------63 55 47 39 31 23 15  7                25 26 27 28 29 30 31 32
+ 
+Input Byte        8  7  6  5  4  3  2  1
+ 
+The Final Permutation
+ 
+The Final Permutation (IP-1) provides the inverse, it standarizes the output
+of the R16L16 output block to a byte wide interface.  The Output block is
+ordered Right then Left to allow complementary operation for subsequent
+decryption.  Were one to perform an IP followed by IP-1 without any intervening
+round iteration operations, one would end up with odd and even bits swapped:
+ 
+Right                           Output (R16L16)               Standard  Port
+Block (32 bits)                 Block   (64 bits)               Bit      Bit
+ 
+ 1  2  3  4  5  6  7  8          1  2  3  4  5  6  7  8---------6--------2
+ 9 10 11 12 13 14 15 16          9 10 11 12 13 14 15 16---------4--------4
+17 18 19 20 21 22 23 24         17 18 19 20 21 22 23 24---------2--------6
+25 26 27 28 29 30 31 32         25 26 27 28 29 30 31 32---------0--------8
+ 
+Left
+Block (32 bits)
+ 
+ 1  2  3  4  5  6  7  8         33 34 35 36 37 38 39 40---------7--------1
+ 9 10 11 12 13 14 15 16         41 42 43 44 45 46 47 48---------5--------3
+17 18 19 20 21 22 23 24         49 50 51 52 53 54 55 56---------3--------5
+25 26 27 28 29 30 31 32         57 58 59 60 61 62 63 64---------1--------7
+ 
+Output Byte                      8  7  6  5  4  3  2  1
+ 
+ 
+From FIPS Pub 46-2:
+ 
+Final Permuation IP-1:
+                                   Output Byte
+40  8 48 16 56 24 64 32                 1
+39  7 47 15 55 23 63 31                 2
+38  6 46 14 54 22 62 30                 3
+37  5 45 13 53 21 61 29                 4
+36  4 44 12 52 20 60 28                 5
+35  3 43 11 51 19 59 27                 6
+34  2 42 10 50 18 58 26                 7
+33  1 41  9 49 17 57 25                 8
+ 
+ 1  2  3  4  5  6  7  8 Port Bit
+ 7  6  5  4  3  2  1  0 MSB7 Bits
+ 
+In the simplest hardware implementation of DES, the Left and Right blocks are
+comprised in hardware of four 8 bit register each.  Each 8 bit register can be
+serially loaded (IP), serially unloaded (IP-1), or parallel output and parallel
+loaded (round interation).  DES is an encryption algorithm originally required
+to be implemented in hardware, specified in 1977 - predating 16 or 32 bit
+microprocessor peripherals.
+ 
+Permuted Choice 1
+ 
+PC1 performs a similar function loading the C and D 28 bit registers (comprised
+of three 8 bit bidirectional shift register and 1 4 bit bidirectional shift
+register, all with parallel outputs).  The C and D registers can be serially
+loaded (shifting right), or serially shifted left or right in a closed ring
+for encryption or decryption.
+ 
+Port    MSB7                                                                
+Bits     Bits                                                           
+                           
+                Input   (CD)                            C
+                        Block, 64 bits                  Block (28 bits)
+ 
+1--------7------57 49 41 33 25 17  9  1         MS       1  2  3  4  5  6  7  8
+2--------6------58 50 42 34 26 18 10  2                  9 10 11 12 13 14 15 16
+3--------5------59 51 43 35 27 19 11  3                 17 18 19 20 21 22 23 24
+4--------4------60 52 44 36 ----------- (C(28))         25 26 27 28
+ 
+                                                        D
+                                                        Block (28 bits)
+ 
+7--------1------63 55 47 39 31 23 15  7                  1  2  3  4  5  6  7  8
+6--------2------62 54 46 38 30 22 14  6                  9 10 11 12 13 14 15 16
+5--------3------61 53 45 37 29 21 33  5                 17 18 19 20 21 22 23 24
+4-------(D(25)--------------28 20 12  4                 25 26 27 28
+ 
+8--------0------64 56 48 40 32 24 16  8         LS      (parity)
+ 
+Input Byte      8  7  6  5  4  3  2   1 
+ 
+Note that bit 4 is used as input for both C and D.  This implies that C(28)
+output is used as the serial input to D(25).  The least significant bit is
+used for odd parity.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02014.html">Re: Hack DigiCash: Payee Anonymity</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02018.html">Re: Reformated: How secure....</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01976.html">RE: textbooks</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01598.html">Java power</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02006"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02006"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

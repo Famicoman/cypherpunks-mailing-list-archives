@@ -1,0 +1,216 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Magic Money coins -->
+<!--X-From-R13: uhturfNnu.pbz (Sevp Vhturf) -->
+<!--X-Date: Tue, 8 Feb 94 00:06:46 PST -->
+<!--X-Message-Id: 9402080759.AA00803@ah.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199402080633.WAA27612@jobe.shell.portal.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Magic Money coins</TITLE>
+<LINK REV="made" HREF="mailto:hughes@ah.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00457.html">Date Prev</A>][<A HREF="msg00458.html">Date Next</A>][<A HREF="msg00449.html">Thread Prev</A>][<A HREF="msg00465.html">Thread Next</A>][<A HREF="index.html#00456">Date Index</A>][<A HREF="threads.html#00456">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Magic Money coins</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Magic Money coins</LI>
+<LI><em>From</em>: <A HREF="mailto:hughes@ah.com">hughes@ah.com</A> (Eric Hughes)</LI>
+<LI><em>Date</em>: Mon, 7 Feb 94 23:59:19 -0800</LI>
+<LI><em>In-Reply-To</em>: Hal's message of Mon, 7 Feb 1994 22:33:56 -0800 &lt;<A HREF="msg00449.html">199402080633.WAA27612@jobe.shell.portal.com</A>&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;I was thinking over the attack I described on Magic Money and Chaum
+&gt;cash, and I now think it will not actually work, especially in the case
+&gt;of the Chaum cash.  
+
+Well, with Chaum's signature pairs of the form &lt;x,f(x)^(1/e)&gt;, you'd
+still have to calculate some inverse value of a one-way function.
+
+On he other hand, Hal says that his attack against MM coins doesn't
+work.  That's OK, as far as it goes.
+
+The problem is really quite general.  Given a set of signatures on the
+same modulus, how can one calculate signed values of a particular
+sort?  In the proceeding, let { &lt; a_i, a_i^(1/e) &gt; } be the set of
+signatures one has, e the public key, n = pq the modulus, S the set of
+acceptable signed elements.
+
+Note that the product of any two signatures, pairwise, yields another
+valid signature.  A signature can be multiplied by itself as well.
+These are valid as RSA signatures but possibly not as any special coin
+format.  Note that the Chaum signature pair above prevents
+multiplicative combinations entirely.
+
+The problem is then "Can we find an element of S in the multiplicative
+span of the { a_i } modulo n?"  (The multiplicative span is any
+product of the a_i, possibly taken multiple times.)
+
+Hal's attack was about the about problem, _but without the modulo n_.
+
+There's a subtlety to remember here: factoring doesn't mean anything
+in a field.  The RSA ring is almost-a-field; if you can find a
+non-invertible element, you've factored the modulus.  Factoring only
+make good sense in rings where lots of elements are _not_ invertible.
+
+So Hal's factoring attack only considered direct multiplication,
+forgetting that that modular equality was what was relevant.
+
+The upshot is this.  Let s be in S.  What we are looking for is a
+factorable (in integers) number of the form s+kn.  Now s can be any
+element in S, and k any integer.  That's a wide range to choose from.
+
+A.  First off, what is the size of the possible multiplicative span?
+The short answer is "It's likely the whole thing".
+
+Recall that in an RSA cryptofield (my term for a ring where it's
+infeasible for an outsider to find a zero-divisor) the invertible
+elements form a multiplicative group which comprise all the 'normal'
+operations in the cryptofield.  Its structure is the product of two
+groups, one of order p-1 and one of order q-1.  Now the number of
+generators of the Z_p is \phi(p-1).  (That's the Euler \phi function.)
+The average value of \phi(x) is x * (6 / \pi^2), i.e. on average 61%
+of the numbers.  [N.B. This is for random x.  p and q can be picked to
+change these values.]  
+
+Eliding the rest of the calculation, we see that with a few
+signatures, it's very likely that _every_ cryptofield number is in the
+multiplicative span.
+
+B.  The next question is "How tractable is finding particular
+combinations?"  I don't know, but I wouldn't trust on the lack of an
+efficient algorithm.
+
+Remember, we can pick and set of numbers to get signed to span with,
+any coin format to try to create [RANT: forge indicates intent] with
+that span, and we're working in a modular cryptofield.  That's lots of
+possibilities.
+
+Here is one idea for such attack.  The numbers in S all have the same
+upper bits.  Suppose one could calculate a number u which was 'close
+to' 1 in a range containing S.  To be specific, suppose that
+
+	P( | s - u*s | &lt; sqrt(s) ) &gt; .1
+
+that is, multiplication by u likely doesn't move the value around by
+more than the square root of s.  Then one can randomly pick coin
+values, multiply by u, and likely get new coin values, since all the
+upper bits are the same.
+
+Are such u rare?  Maybe not.  Consider the number 3 and values near
+n/2.  Observe that 
+
+	3 * ((n-1)/2) = ((n-1)/2) - 1 (mod n)
+	3 * ((n+1)/2) = ((n+1)/2) + 1 (mod n)
+
+So for the numbers close to half the modulus, 3 is exactly such an
+almost-identity.
+
+But can we find one for our given range?  I think so.  Here's my first
+guess at how to proceed.  And it really is a guess, even if it is
+inspired by a Gauss sum.
+
+Consider the following.  Take the range S and choose random { x_i } in
+S with, say, some truncated Gaussian distribution in order to favor
+number in the center.  Now calculate the term
+
+	1     x_1   x_3         x_(2n-1)
+	- * ( --- + --- + ... + -------- )
+	n     x_2   x_4           x_2n
+
+In other words, just calculate an average of a bunch of values that
+move one element of S to some other element of S.  Such an element
+*might* tend to preserve values of S near the center, maybe not.  It
+may be that diddling the distribution helps.  It may be that a
+different average works, say a geometric average (although taking
+roots becomes an issue).  It may be that this technique works but
+doesn't converge rapidly.  I don't know; I haven't tried it.
+
+In any case, if it does work, there are lots of candidate u's that one
+can sample.
+
+It also appears that one might be able to directly calculate some of
+these near-identities with continued fractions.
+
+C. Recommendations
+
+In any case, the issue of creating new signatures out of old is
+sufficiently unsettled in my mind that I would avoid the issue
+entirely.  
+
+1.  Don't rely only on format of the signed number for validity.
+
+2.  Do use a one-way function in the signature in order to prevent
+multiplicative attacks.
+
+3.  Use both techniques above.
+
+Therefore I recommend the Magic Money signature format be changed.
+
+Eric
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00465" HREF="msg00465.html">Magic Money coins</A></STRONG>
+<UL><LI><EM>From:</EM> hughes@ah.com (Eric Hughes)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00449" HREF="msg00449.html">WRONG:  Attack on Magic Money and Chaum cash</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00457.html">What's a "real encryptor"?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00458.html">What's a "real encryptor"?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00449.html">WRONG:  Attack on Magic Money and Chaum cash</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00465.html">Magic Money coins</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00456"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00456"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

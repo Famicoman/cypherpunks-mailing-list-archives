@@ -1,0 +1,176 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: No Subject -->
+<!--X-From-R13: bjare&#45;plcurechaxfNgbnq.pbz -->
+<!--X-Date: Wed, 21 Feb 1996 18:26:51 +0800 -->
+<!--X-Message-Id: QQadwb23961.199602211023@relay3.UU.NET -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>No Subject</TITLE>
+<LINK REV="made" HREF="mailto:owner-cypherpunks@toad.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01775.html">Date Prev</A>][<A HREF="msg01774.html">Date Next</A>][<A HREF="msg01775.html">Thread Prev</A>][<A HREF="msg01774.html">Thread Next</A>][<A HREF="index.html#01776">Date Index</A>][<A HREF="threads.html#01776">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>No Subject</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>From</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+<LI><em>Date</em>: Wed, 21 Feb 1996 05:23:26 -0500 (EST)</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I am answering the courteous inquiry from Thomas Womack about my request for 
+help with a Visual Basic-only PRNG.  The premise is that those who will not or
+can not afford hardware-based RNG's need something relatively secure in the
+face of nothing at all or at best a lesser implementation.
+ 
+I was reluctant to post code at first but rather asked for an interpretation 
+of 10 runs of 9999 characters each.  I want peer review of source code but 
+the threads in CypherPunks have been of a shall we say "low signal to noise" 
+ratio of late.  Even more so than usual.  I just didn't want to feed the 
+beast at this time.
+ 
+That said, here's the outline of what I'm doing.  A splash screen loads first
+displaying a random tip'o'the day about good key management.  I make use of 
+the getcurrenttime() Win API a lot.  Said to have 50 millicent increments.
+ 
+ 
+' Load splash screen first
+Sub Form_Load ()
+ 
+  ' first randomize using number of milliseconds since Windows was launched
+  Randomize getcurrenttime()
+ 
+  ' then rotate the tip'o'the day (30 currently, adding unknown some delay)
+  For j = 1 To Int(n * Rnd + 1)
+    Select Case j
+      Case 1
+        hint.Caption = "You passphrase is SUPPOSED to look like gibberish."
+      ...
+      Case n
+        hint.Caption = "Change your passphrases often."
+       End Select
+  Next j
+ 
+End Sub
+ 
+' user clicks an OK button and up comes 2nd screen
+Sub Form_Load ()
+ 
+ ' mix things up
+  Randomize getcurrenttime()
+  
+End Sub
+ 
+ 
+' main screen's OK button
+Sub Command1_Click ()
+  
+  Screen.MousePointer = 11
+  scramble = ""
+  keyLen = Val(keyLength.Text)
+ 
+  ' repeat for the number of characters in the desired key
+  For i = 1 To keyLen
+    ' character set is ASCII 33 to ASCII 127
+    scramble = scramble &amp; Chr$(Int(94 * Rnd + 33))
+    ' reseed
+    Randomize getcurrenttime()
+    ' now make it wobble to throw off any regularity in the loop
+    ' this loop works because as the 7 increases, so does execution time
+    For j = 1 To Int(7 * Rnd + 1)
+      'idle
+    Next j
+  Next
+  
+  Screen.MousePointer = 0
+  secondaryForm.keyLabel.Caption = scramble
+ 
+End Sub
+ 
+ 
+I'd be happy with an analysis of just how random this is.  My working 
+assumption is that over a &gt;8 character key, it beats trying to dream one 
+up in one's head.  Besides the getcurrenttime API, I don't know what else 
+to sample without an external DLL or hardware.
+ 
+I started out attempting a keyboard timing routine but had second thoughts.
+My software company has been doing bar code printing tools for years. Now 
+we're moving from simple encoding to encryption.
+ 
+After playing with RSA Secure briefly, I realized that one way to spoof a 
+request to type willy nilly to initialize anything is to use a bar code 
+scanner.  The common type is sometimes called a wedge because you plug your 
+keyboard into it, and it into the keyboard port.  It's wedged between the 
+keyboard and the CPU.
+ 
+So when asked to type (obstensibly to input randomly timed events) I scan 
+a very large block of bar coded material.  I fill the keyboard buffer at a 
+fixed rate; the throughput of my scanner and PC.  If I scan a large bar 
+code, yes, I'll fill the keyboard buffer as fast as possible.  Little 
+entropy in my eyes.
+ 
+Oh yeah, with common symbologies like Code 39 and Code 128, I can recreate 
+the whole lower ASCII 128 including tabs, LF/CR, etc.  So I can tab to 
+activate buttons in some UI scenarios. Or do macros any any combination that 
+may include control characters.
+ 
+So gang, what about bar code scanners being used to thwart random typing 
+requests??
+ 
+Jerry Whiting
+jwhiting@azalea.com 
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01775.html">No Subject</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01774.html">No Subject</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01775.html">No Subject</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01774.html">No Subject</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01776"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01776"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

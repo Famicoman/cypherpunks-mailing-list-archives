@@ -1,0 +1,183 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Transcript of Bernstein hearing is now available -->
+<!--X-From-R13: Xvz Uvyybtyl <wvzNnpz.bet> -->
+<!--X-Date: Fri, 3 Nov 1995 05:22:52 +0800 -->
+<!--X-Message-Id: 199511021951.LAA03152@mycroft.rand.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9511020308.AA25206@toad.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Transcript of Bernstein hearing is now available</TITLE>
+<LINK REV="made" HREF="mailto:jim@acm.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00056.html">Date Prev</A>][<A HREF="msg00082.html">Date Next</A>][<A HREF="msg00036.html">Thread Prev</A>][<A HREF="msg00195.html">Thread Next</A>][<A HREF="index.html#00067">Date Index</A>][<A HREF="threads.html#00067">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Transcript of Bernstein hearing is now available</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Transcript of Bernstein hearing is now available </LI>
+<LI><em>From</em>: Jim Gillogly &lt;<A HREF="mailto:jim@acm.org">jim@acm.org</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 02 Nov 95 11:51:20 PST</LI>
+<LI><em>In-Reply-To</em>: Your message of Wed, 01 Nov 95 19:08:08 -0800.            &lt;<A HREF="msg00036.html">9511020308.AA25206@toad.com</A>&gt; </LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:jim@acm.org">jim@acm.org</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+&gt; John Gilmore &lt;gnu@toad.com&gt; writes:
+&gt; We received the transcript of October 20's oral hearing from the court
+&gt; stenographer.  It's up on the EFF Web site at:
+
+&gt; <A  HREF="http://www.eff.org/pub/Legal/Cases/Bernstein_v_DoS/Legal/951020_hearing.transcript">http://www.eff.org/pub/Legal/Cases/Bernstein_v_DoS/Legal/951020_hearing.transcript</A>
+
+I find it hard to read things in all upper case.  Here's a slowish 95%
+hack to make it more legible.  I imagine there's a 5-line way to do it
+twenty times faster for 99% success, but what the heck...
+
+	Jim Gillogly
+	Highday, 12 Blotmath S.R. 1995, 19:47
+
+-----------------------------------------------------------------------
+#!/usr/bin/perl
+# delegal: quick-n-dirty case conversion for Bernstein transcript
+# 2 Nov 95, Gillogly
+
+@propers =
+( "daniel", "dan", "marilyn", "hall", "patel", "california", "bernstein",
+  "united", "department", "state", "cohn", "coppolino", "national",
+  "security", "agency", "steefel", "levitt", "weiss", "court", "i",
+  "mc", "glashan", "sarrall", "lee", "tien", "ed", "ross", "susan", "arnold",
+  "justice", "anthony", "mandel", "bazarov", "appeals", "helme", "webster",
+  "states", "dorfmont", "constitution", "constitutional", "doe", "schechter",
+  "snuffle", "june", "lowell", "cj", "edler", "olc", "mr", "ninth",
+  "circuit", "judge", "ritchie", "english", "dr", "freedman", "o", "brien",
+  "pentagon", "cubby", "compuserve", "golden", "gate", "san", "francisco",
+
+);
+
+$INDENT_UPALL = 13;     # If indented deeper than this, upcase each word
+$INDENT_UPCOLON = 6;    # If indented with a colon and these spaces, upcase
+$INDENT_PARA = 10;      # If indented this deep, upcase first word
+$INDENT_SENT = 2;       # Pick up sentence starts
+
+while ($proper = pop(@propers))
+{
+	($first, $rest) = ($proper =~ /^(.)(.*)$/);
+	$first =~ tr/a-z/A-Z/;
+	$caps{$proper} = $first . $rest;
+}
+
+
+while (&lt;&gt;)
+{
+	tr/A-Z/a-z/;            # Downcase everything
+	s/u\.s\./U.S./g;        # special case
+	s/d\.c\./D.C./g;        # special case
+	s/([^a-z])nsa([^a-z])/$1NSA$2/g;  # Another one
+	s/([^a-z])itar([^a-z])/$1ITAR$2/g;  # Another one
+
+	# Upcase known proper names
+	while (($proper, $cap) = each(%caps))
+	{
+		($first, $rest) = ($proper =~ /^(.)(.*)$/);
+		s/([^a-z])$proper([^a-z])/$1$cap$2/g;
+	}
+	# If it's indented deeply, upcase each word
+	if (/ {$INDENT_UPALL}/ || /: {$INDENT_UPCOLON}/)
+	{
+		while (($low) = /[^a-zA-Z]([a-z])/)
+		{
+			$low =~ tr/a-z/A-Z/;
+			s/([^a-zA-Z])[a-z]/$1$low/;
+		}
+	}
+	# Upcase middle initials
+	while (($init) = / ([a-z])\./)
+	{
+		$init =~ tr/a-z/A-Z/;
+		s/ [a-z]\./ $init\./;
+	}
+	# Upcase paragraphs
+	if (($init) = / {$INDENT_PARA}([a-z])/)
+	{
+		$init =~ tr/a-z/A-Z/;
+		s/( {$INDENT_PARA})[a-z]/$1$init/;
+	}
+	# Sentences
+	($num, $_) = /^([ \d]*)([^ \d].*)$/; # Simplify
+	while (($init) = /[^ ] {$INDENT_SENT}([a-z])/)
+	{
+		$init =~ tr/a-z/A-Z/;
+		s/( {$INDENT_SENT})[a-z]/$1$init/;
+	}
+	$_ = $num . $_ . "\n";
+
+
+	print $_;
+}
+-----------------------------------------------------------------------
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00195" HREF="msg00195.html">Re: Transcript of Bernstein hearing is now available</A></STRONG>
+<UL><LI><EM>From:</EM> shields@tembel.org (Michael Shields)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00036" HREF="msg00036.html">Transcript of Bernstein hearing is now available</A></STRONG>
+<UL><LI><EM>From:</EM> John Gilmore &lt;gnu@toad.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00056.html">Re: censored? corrected [Steve Pizzo cited in The Spotlight]</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00082.html">Surviving DNS disruption</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00036.html">Transcript of Bernstein hearing is now available</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00195.html">Re: Transcript of Bernstein hearing is now available</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00067"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00067"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

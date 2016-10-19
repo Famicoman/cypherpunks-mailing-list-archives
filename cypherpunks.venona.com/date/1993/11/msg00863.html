@@ -1,0 +1,143 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Does someone know about irc "/on"? -->
+<!--X-From-R13: Fvzbgul @rjfunz <arjfunzNjvyvxv.rat.unjnvv.rqh> -->
+<!--X-Date: Sun, 21 Nov 93 17:43:21 PST -->
+<!--X-Message-Id: 9311220143.AA28056@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: m0p1Mhd&#45;000J6pC@infinity.hip.berkeley.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Does someone know about irc "/on"?</TITLE>
+<LINK REV="made" HREF="mailto:newsham@wiliki.eng.hawaii.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00862.html">Date Prev</A>][<A HREF="msg00864.html">Date Next</A>][<A HREF="msg00862.html">Thread Prev</A>][<A HREF="msg00864.html">Thread Next</A>][<A HREF="index.html#00863">Date Index</A>][<A HREF="threads.html#00863">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Does someone know about irc "/on"?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:sameer@uclink.berkeley.edu">sameer@uclink.berkeley.edu</A></LI>
+<LI><em>Subject</em>: Re: Does someone know about irc "/on"?</LI>
+<LI><em>From</em>: Timothy Newsham &lt;<A HREF="mailto:newsham@wiliki.eng.hawaii.edu">newsham@wiliki.eng.hawaii.edu</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 21 Nov 1993 15:36:14 -1000 (HST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00862.html">m0p1Mhd-000J6pC@infinity.hip.berkeley.edu</A>&gt; from "Sameer" at Nov 21, 93 01:52:16 pm</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+I wrote a package for doing encryption over irc called Circ.  It was posted
+to comp.sources.misc and should be in the archives.  It is currently not
+extremely secure,  the weakest link is the random key generation which is
+seeded by the time.  This is very easy to brute force if you have any
+information on the time (even if you know the time to within a year).
+The program uses RSA to exchange secret keys and uses tripleDes to encrypt
+messages.  
+
+The program is implemented as a binary written in C and talks to ircII through
+/on's and /alias'es.  The script used by Circ is included below and may
+give you some ideas on how to interact with ircII.
+
+
+
+
+
+# this is for ircII 2.2.4
+# for some reason, /on ^public acts differently
+
+# Start up the proggie
+/^exec -name crypt exec new
+
+# automatically pick out protocol messages
+#    crypt processor gets:   !send nick!CLIPPER:...etc
+#    or   !our nick!SKPJACK:...etc 
+# under 2.2.4 public has:  nick channel message
+#   the version I use has  nick message
+#   this is the difference between the two script versions
+/on ^public "* * CLIPPER:*" /msg %crypt !$0!$2-
+/on ^public "* * SKPJACK:*" /msg %crypt OURNICK:$N;/msg %crypt !$0!$2-
+/on ^public_other "* * CLIPPER:*" /msg %crypt !$0:$1!$2-
+/on ^public_other "* * SKPJACK:*" /msg %crypt OURNICK:$N;/msg %crypt !$0:$1!$2-
+
+/on ^msg "* CLIPPER:*" /msg %crypt !*$0*!$1-
+/on ^msg "* SKPJACK:*" /msg %crypt OURNICK:$N;/msg %crypt !*$0*!$1-
+
+# messages comming back from crypt, to server or screen?
+/on ^exec "crypt TCHANNL: *" /msg $C $2-
+/on ^exec "crypt TSCREEN: *" /echo $2-
+/on ^exec "crypt TNICKNM: *" /msg $2 $3-
+
+# our irc commands:
+#    /key nick  or /key nick filename
+#    /die
+#    /e message to be encrypted
+#    /p message to be plaintext
+#    /crypt   (turn on automatic encryption)
+#    /plain   (turn off automatic encryption)
+#    /emsg nick text  send an encrypted message
+/alias key /echo K-&gt;*$0* Sending Key;/^msg %crypt SENDKEY: $0-
+/alias die /^msg %crypt QUITDIE:;/query 
+/alias e /echo E&gt; $0-;/^msg %crypt CRYPTME:$0-
+/alias p /msg $C $0-
+/alias crypt /query %crypt
+/alias plain /query
+/alias emsg /echo E-&gt;*$0* $1-;/^msg %crypt !$0!CRYPTME:$1-
+
+/echo *** Encrypted Irc Protocol loaded. 
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00862" HREF="msg00862.html">Does someone know about irc "/on"?</A></STRONG>
+<UL><LI><EM>From:</EM> Sameer &lt;sameer@uclink.berkeley.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00862.html">Does someone know about irc "/on"?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00864.html">Virtual City Network update</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00862.html">Does someone know about irc "/on"?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00864.html">Virtual City Network update</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00863"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00863"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

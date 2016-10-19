@@ -1,0 +1,268 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: anti&#45;GAK design principles: worked example #1 -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Thu, 16 Oct 1997 07:11:27 +0800 -->
+<!--X-Message-Id: 199710152245.XAA01135@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: v04001b0eb06a3d206797@[205.180.137.244] -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>anti-GAK design principles: worked example #1</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00822.html">Date Prev</A>][<A HREF="msg00808.html">Date Next</A>][<A HREF="msg00793.html">Thread Prev</A>][<A HREF="msg00808.html">Thread Next</A>][<A HREF="index.html#00829">Date Index</A>][<A HREF="threads.html#00829">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>anti-GAK design principles: worked example #1</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:wprice@pgp.com">wprice@pgp.com</A></LI>
+<LI><em>Subject</em>: anti-GAK design principles: worked example #1</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 15 Oct 1997 23:45:01 +0100</LI>
+<LI><em>CC</em>: <A HREF="mailto:ietf%2Dopen%2Dpgp@imc.org">ietf-open-pgp@imc.org</A>, <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg00767.html">v04001b0eb06a3d206797@[205.180.137.244]</A>&gt; (message from WillPrice on Wed, 15 Oct 1997 02:34:01 -0700)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+
+Part of the problem in this debate I think is that I have proposed
+many alternate designs, with varying degrees of GAK-hostility.
+
+Also I have been accused of using "lots of anti GAK rhetoric, but
+giving no proposals" by Kent.  I reject that claim.  (I did use lots
+of rhetoric, but this was to try to impress upon those arguing for CMR
+of it's dangers.  They do not seem to acknowledge them.) I'll try in
+this post to steer clear of anti-GAK rhetoric.  We'll instead take it
+as a given that pgp5.5 and pgp5.0 are GAK compliant because of CMR and
+that this is a bad thing.
+
+Will is correct on one point: at the begining I had not properly
+thought one aspect through: my earlier decrypt &amp; re-encrypt construct
+violates anti-GAK design principle 2; namely it is guilty of the same
+violation as CMR, it has an effective second crypto recipient outside
+of the senders control. I agree with Will Price's comments on the GAK
+pervertability tendencies of this construct.  I spotted the error of
+my ways since clarifying my thoughts on the subject by constructing
+the more formalised anti-GAK design principles.  Readers will see my
+codification of my recognition of the dangers of the re-encrypting
+construct in corollary 1 of the anti-GAK design principles (copy of
+principles below [1]).  The fact that I posted this corollary in
+updated copies of the design principles prior to Will's post should
+show that this claim is sincere and not an attempt at side stepping
+Will's observation: he is correct, I agree.
+
+The rest of Will's post seems to miss the point, so it seems to me
+that the best way to transfer understanding of how to use the anti-GAK
+design principles to design less GAK friendly systems is to present a
+worked example.
+
+This first simple CDR replacement for PGP's CMR method also attempts
+to keep changes necessary to implementations and packet formats to a
+minimum.  Please understand also that it violates one of the major
+design principles in order to acheive this simplicity and so that
+objections that it is not that much more valuable than CMR will be
+countered by showing you how to achieve an even more GAK-hostile
+design by removing the violation of design principle 3, albeit with
+more coding effort and design modifications on PGP's part.  Never the
+less it is already much harder to pervert for GAK than CMR.
+
+Design 1.
+
+Instructions:
+
+- scrap the CMR key extension
+
+- store a copy of the private half of the users PGP encryption key
+  encrypted to the company data recovery key on the users disk.
+
+- (optional) design the software to make it hard to copy the data
+  recovery packet from the disk, hide the data, bury it in keyrings,
+  stego encode it, whatever, use your imagination.  This is to attempt
+  to restrict the third parties ability to by pass the principle of
+  non communication of recovery information
+
+
+Recovery method:
+
+Custodian of recovery key inserts recovery floppy disk in machine,
+decrypts copy of users private key, hands control back to user to
+choose new passphrase.
+
+
+Possible objections:
+
+objection #1. what if disk burns?
+counter #1:   backup your disk
+
+objection #2: users don't back up disks
+counter #2:   that is a good way to loose data :-) if they don't have
+              the data the key protecting the data won't help them
+
+GAK-hostility rating:
+
+Harder to pervert for GAK than pgp5.5 / pgp5.0 CMR design.
+
+
+I'd be interested to see Will, or Hal, or other PGPer's criticisms of this
+simple modification, perhaps criticisms could most constructively answer:
+
+- what is stopping you implementing this
+- are there any plug ins which can't cope with this
+- are there user requirements which it can't meet
+- is there some fundamental flaw you think I have missed
+- can you see ways that this could be perverted to implement GAK
+  (yes I can too, btw, but...)
+- are those ways logisitically harder for GAKkers to acheive than for CMR
+
+Please be specific, no general waffle about understanding the
+complexities of balancing user ergonomics, user requirements etc.
+That is a no-brainer, you need to do this analysis, the cost function
+for evaluating such design issus is now expressed explicitly in design
+principle 4 rather than being assumed.  List problems and explain the
+significance of the all important deployability criteria.
+
+Cryptographic protocol designs are very flexible; most design goals can
+be met, or worked around I claim within the positive GAK-hostility
+side of the cryptographic protocol and product design solution space.
+
+Lastly, I would encourage readers to be critical of the GAK-hostile design
+principles themselves:
+
+- can you see any aspects which inaccurately reflect trade-offs
+- can you see methods to bypass inadvertently or deliberately the design 
+  that might require another corollary to correct.
+
+In anticipation of constructive criticism,
+
+Adam
+
+[1]
+==============================8&lt;==============================
+GAK-hostile design principles
+
+If we take the design goal of designing systems including
+confidentiality which are not GAK compliant, we can most succinctly
+state this design goal as the task of ensuring that:
+
+- at no point will any data transferred over communications links be
+  accessible to anyone other than the sender and recipient with out
+  also obtaining data on the recipient and/or senders disks
+
+
+We can then derive the design principles required to meet the design
+goal of a non-GAK compliant system with confidentiality services down
+to ensuring that:
+
+principle 1:
+   no keys used to secure communications in any part of the system are
+   a-priori escrowed with third parties
+
+principle 2:
+   second crypto recipients on encrypted communications are not
+   used to allow access to third parties who are not messaging
+   recipients manually selected by the sender
+
+principle 3:
+   communications should be encrypted to the minimum number of
+   recipients (typically one), and those keys should have as short a
+   life time as is practically possible
+
+principle 4:
+   deployment wins.  violating any of principles 1 to 3 whilst
+   still retaining some GAK-hostility can be justified where
+   deployment is thereby increased to the extent that the violations
+   increase the degree of GAK hostility in the target jurisdictions
+   overall
+
+Corrollary 1: Included in design principle 2) is the principle of not
+re-transmitting keys or data after decryption over communication
+channels, re-encrypted to third parties -- that is just structuring --
+and violates design principle 2.
+
+Corrollary 2: where communications are transmitted which violate
+principles 1, 2 or 3 it is in general more GAK hostile to enforce as
+far as possible that the recovery or escrow information remains in as
+close proximity to the data as possible.
+
+Corrollary 3: where communications are transmitted which violate
+principles 1, 2 or 3 it is in general more GAK hostile to make these
+communications as difficult to automate as possible.  For example no
+scripting support is given to enforce that GUI user interaction is
+required, and/or that the process is made artificially time consuming,
+and/or that the communication must not use electronic communication
+channels
+
+==============================8&lt;==============================
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00808" HREF="msg00808.html">Re: anti-GAK design principles: worked example #1</A></STRONG>
+<UL><LI><EM>From:</EM> Gene Hoffman &lt;hoffmang@pgp.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00814" HREF="msg00814.html">Re: anti-GAK design principles: worked example #1</A></STRONG>
+<UL><LI><EM>From:</EM> Jon Callas &lt;jon@pgp.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00819" HREF="msg00819.html">Re: anti-GAK design principles: worked example #1</A></STRONG>
+<UL><LI><EM>From:</EM> Kent Crispin &lt;kent@bywater.songbird.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00872" HREF="msg00872.html">Re: anti-GAK design principles: worked example #1</A></STRONG>
+<UL><LI><EM>From:</EM> Bill Stewart &lt;stewarts@ix.netcom.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00767" HREF="msg00767.html">Re: proposal: commercial data recovery</A></STRONG>
+<UL><LI><EM>From:</EM> Will Price &lt;wprice@pgp.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00822.html">Re: Equal rights for receivers</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00808.html">Re: anti-GAK design principles: worked example #1</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00793.html">Re: proposal: commercial data recovery</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00808.html">Re: anti-GAK design principles: worked example #1</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00829"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00829"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

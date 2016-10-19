@@ -1,0 +1,171 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: TEMPEST (fwd) -->
+<!--X-From-R13: Xvz Qubngr <enintrNffm.pbz> -->
+<!--X-Date: Wed, 11 Feb 1998 03:01:58 +0800 -->
+<!--X-Message-Id: 199802101901.NAA04520@einstein.ssz.com -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: TEMPEST (fwd)</TITLE>
+<LINK REV="made" HREF="mailto:ravage@ssz.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00372.html">Date Prev</A>][<A HREF="msg00377.html">Date Next</A>][<A HREF="msg00387.html">Thread Prev</A>][<A HREF="msg00335.html">Thread Next</A>][<A HREF="index.html#00369">Date Index</A>][<A HREF="threads.html#00369">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: TEMPEST (fwd)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@ssz.com">cypherpunks@ssz.com</A> (Cypherpunks Distributed Remailer)</LI>
+<LI><em>Subject</em>: Re: TEMPEST (fwd)</LI>
+<LI><em>From</em>: Jim Choate &lt;<A HREF="mailto:ravage@ssz.com">ravage@ssz.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 10 Feb 1998 13:01:05 -0600 (CST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Forwarded message:
+
+&gt; Subject: Re: TEMPEST
+&gt; Date: Tue, 10 Feb 1998 18:32:28 +0000
+&gt; From: Markus Kuhn &lt;Markus.Kuhn@cl.cam.ac.uk&gt;
+
+&gt; You might want to consider to read van Ecks paper yourself:
+&gt; 
+&gt;   Wim van Eck: Electromagnetic Radiation from Video Display Units: An
+&gt;   Eavesdropping Risk? Computers &amp; Security 4 (1985) 269--286
+&gt; 
+&gt; If you don't have C&amp;S in your library, you might also find a
+&gt; scan on &lt;<A  HREF="http://www.eskimo.com/~joelm/tempest.html">http://www.eskimo.com/~joelm/tempest.html</A>&gt;
+
+I read the paper when it came out, but that's been a while now..:)
+
+Thanks for the reference, I'll take a look at it over the next few days.
+
+&gt; &gt; As I alluded to with the comment I made about integrating the received
+&gt; &gt; signals. The easiest way to do this sort of stuff with a small budget is
+&gt; &gt; with a flying capacitor integrator.
+&gt; 
+&gt; Please explain! I was more thinking in terms of digitizing everything
+&gt; and solving large per-pixel systems of equations to separate the drifting
+&gt; images, which does not sound much like something equivalent to a
+&gt; single hardware integrator, but more like something that keeps a
+&gt; workstation very busy for a few minutes.
+
+I'll describe how it works in hardware and then how I've done it in
+software.
+
+Hardware:
+
+You have a bank of n capacitors that are hooked to a amplifier via a
+mux. You use a counter that you start with some sort of trigger that
+sequentialy connects each cap in turn to the amplifier. The charge and as
+a consequence the voltage varies depending upon whether the new voltage is
+higher or lower than the last sample. The assumption being that the signal
+itself is time invariant and that the variations in signal strength are
+noise and random in nature. After only 3-4 cycles through the cap bank you
+begin to pull a workable signal out of the noise. The nice thing is that
+this works for signals that are below the noise floor and buried in the
+grass.
+
+In a VanEck monitoring situation you'd need a bank of n capacitors where n
+is the number of horizontal pixels. You will also need to array each bank
+into a m row matrix where m is the number of scan lines. You can get around
+some of the bulk by using a gyrator circuit to synthesize the capacitor and
+some sample-and-holds to synthesize the array.
+
+The advantage here over software is that this signal can be sampled as its
+built in real-time (use instrumentation amps) unless you happen to have
+dual-port ram in your computer (I've never had access to such hardware) and
+fed to whatever equipment you want to process it.
+
+Software:
+
+You take a A/D converter and drive an array with it. You sync it the same
+sort of way as the hardware methods above. Each element in the array
+contains the current estimate for that particular sample of the total
+waveform. Each time you come back to the same array element you compare the
+last value to the new value. You take the value that is half-way between the
+two and store that as the new array value for the next cycle. In short order
+a signal comes out.
+
+Either the hardware or software method will naturaly integrate the signal
+within the sample window because of the capacitor effect. This compensates
+for clock and signal jitter quite nicely.
+
+This method will require a D/A conversion process if you want to feed it
+to any external equipment. Though it should be perfect for Van Eck
+monitoring. Simply use your video frame buffer as your sample storage array.
+
+Enjoy.
+
+
+    ____________________________________________________________________
+   |                                                                    |
+   |                   The obvious is sometimes false;                  |
+   |                   The unexpected sometimes true.                   |
+   |                                                                    |
+   |                                       Anonymous                    |
+   |                                                                    |
+   |                                                                    | 
+   |            _____                             The Armadillo Group   |
+   |         ,::////;::-.                           Austin, Tx. USA     |
+   |        /:'///// ``::&gt;/|/                     <A  HREF="http://www.ssz.com/">http://www.ssz.com/</A>   |
+   |      .',  ||||    `/( e\                                           |
+   |  -====~~mm-'`-```-mm --'-                         Jim Choate       |
+   |                                                 ravage@ssz.com     |
+   |                                                  512-451-7087      |
+   |____________________________________________________________________|
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00372.html">Re: Cyber 'Nannys"</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00377.html">Re: Cyber 'Nannys"</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00387.html">Re: TEMPEST</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00335.html">E-CDA</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00369"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00369"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

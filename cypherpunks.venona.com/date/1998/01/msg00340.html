@@ -1,0 +1,145 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Batch RSA for stego data -->
+<!--X-From-R13: Oabalzbhf <abobqlNDSBZOK.QA[> -->
+<!--X-Date: Sat, 10 Jan 1998 05:18:50 +0800 -->
+<!--X-Message-Id: 199801092105.WAA15456@basement.replay.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Batch RSA for stego data</TITLE>
+<LINK REV="made" HREF="mailto:nobody@REPLAY.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00321.html">Date Prev</A>][<A HREF="msg00317.html">Date Next</A>][<A HREF="msg00321.html">Thread Prev</A>][<A HREF="msg00317.html">Thread Next</A>][<A HREF="index.html#00340">Date Index</A>][<A HREF="threads.html#00340">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Batch RSA for stego data</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Batch RSA for stego data</LI>
+<LI><em>From</em>: Anonymous &lt;<A HREF="mailto:nobody@REPLAY.COM">nobody@REPLAY.COM</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 9 Jan 1998 22:05:10 +0100 (MET)</LI>
+<LI><em>Comments</em>: This message did not originate from the Sender address above.It was remailed automatically by anonymizing remailer software.Please report problems or inappropriate use to theremailer administrator at &lt;abuse@REPLAY.COM&gt;.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Problem: Suppose there is a source of data which looks like random noise
+but which contains embedded messages.  This may be a subliminal channel
+in a crypto protocol, steganographically embedded data, or even a simple
+message pool where you want to disguise what key each message is for.
+How do you scan and identify messages for you?
+
+Solution: Extract bits as appropraite, apply whatever selection rules
+are necessary to pull them out of the stego'd data or other source.
+Some fraction of what results is messages for you, the remainder is
+noise or messages for someone else, which will be indistinguishable.
+
+Method 1: For finding messages sent by someone you have communicated
+with previously.  Use shared secret data to flag the message.
+
+Method 1A: each time you send a message, include (in the encrypted
+portion) a 64-bit random value which will be used to flag the next
+message to them.  Prepend the encrypted message with the 64 bit random
+value from the previous message.  Each person keeps a list of the next
+random value to be expected from each communicant.  The extracted data
+can be easily scanned to see if it matches anything on the list.
+
+Method 1B: use shared secret data and a sequence number to calculate a
+hash which will be used to flag the next message sent.  This can be
+used to calculate the flag value to be expected for the next message
+from each sender, which can be compared against each potential
+message.
+
+For both methods 1A and 1B, once the message is recognized a shared
+secret key is used to decrypt the remainder of the data past the flag
+portion.  The shared secret key can be changed after each message
+using similar techniques to changing the flags.  (Safety tip: don't
+make the shared secret key the same as the flag value.)
+
+
+Method 2: For finding messages sent by someone you have never communicated
+with previously.
+
+Method 2A: Sender encrypts a low-entropy flag message with receiver's
+public key, pads it so it looks like random noise, and puts that at
+the start of each message.  Receiver decrypts the beginning of each
+message using his private key, looking to see if the results are low
+entropy.  When such a message is detected the secret key for
+decrypting the remainder of the message can be embedded in the
+low-entropy portion.
+
+Method 2B: Like 2A, but use Fiat's "Batch RSA" to decrypt multiple
+messages in one batch.  Recipient publishes his public key with
+multiple legal exponents (say, the first 16 primes).  Sender encrypts
+his low-entropy message choosing one of the encryption exponents at
+random.  He checks to see if the low bits of the encryption output
+match the index of the encryption exponent (e.g. if the 7th encryption
+exponent was chosen then the low order 4 bits should hold the value
+7).  He repeatedly encrypts with different random padding until he
+finds an encrypted form which properly encodes the exponent.  Receiver
+batches messages together such that the low order 4 bits of each
+message in the batch are different, and applies the Batch RSA
+decryption to try decrypting each message.  As before the receiver
+looks to see if the result is low entropy.
+
+For both 2A and 2B it may be possible to do the decryption using only
+one of the two RSA primes, if the encrypted data was smaller than that
+prime value.  (This idea comes from Shamir.)  Even if not, the Batch
+RSA algorithm can be applied separately for the two primes and then
+the results combined at the end for each message via the CRT, as is
+often done for RSA decryption.
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00321.html">Re: In God We Antitrust, from the Netly News (fwd)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00317.html">Germany not so worried about Gestapo wiretaps now</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00321.html">Re: In God We Antitrust, from the Netly News (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00317.html">Germany not so worried about Gestapo wiretaps now</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00340"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00340"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

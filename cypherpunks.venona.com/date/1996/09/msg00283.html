@@ -1,0 +1,207 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: SRP (from the cutting&#45;room floor) -->
+<!--X-From-R13: crgre.nyynaNnrng.pb.hx (Brgre [ Oyyna) -->
+<!--X-Date: Wed, 4 Sep 1996 05:24:01 +0800 -->
+<!--X-Message-Id: 9609031622.AA26229@clare.risley.aeat.co.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>SRP (from the cutting-room floor)</TITLE>
+<LINK REV="made" HREF="mailto:peter.allan@aeat.co.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00241.html">Date Prev</A>][<A HREF="msg00295.html">Date Next</A>][<A HREF="msg00256.html">Thread Prev</A>][<A HREF="msg00255.html">Thread Next</A>][<A HREF="index.html#00283">Date Index</A>][<A HREF="threads.html#00283">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>SRP (from the cutting-room floor)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: SRP (from the cutting-room floor)</LI>
+<LI><em>From</em>: <A HREF="mailto:peter.allan@aeat.co.uk">peter.allan@aeat.co.uk</A> (Peter M Allan)</LI>
+<LI><em>Date</em>: Tue, 3 Sep 96 17:22:22 BST</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+JAM&gt; Rather than divert messages, then, I propose that for each input
+JAM&gt; message there is a 10% chance that a piece of cover traffic is
+JAM&gt; generated.
+
+AB&gt; The way that this kind of attack is frustrated is that dummy messages
+AB&gt; are created as cover traffic by the remailer, and that at some points
+AB&gt; messages can be swallowed by a remailer as junk messages.
+
+Automatic decoy traffic was in my draft, but was not in the slimmed-down
+document I posted to CP.  This was mainly because Lance Cottrell and I
+agreed on that bit, and thought it could be passed over.  Unlike JAM,
+I was in favour of decoy traffic being _inversely_ related to genuine traffic.
+
+
+
+AB&gt; You can still do a spamming attack by recognizing the destination,
+AB&gt; rather than the message:
+
+Diversion was intended to make that harder too.  Eve's messages won't all
+go straight where she wants them.  They should turn up after some of them
+completed the diversion, but I suggested that would  sometimes be too late
+to track it further through the chain.
+
+
+As for "messages can be swallowed by a remailer as junk messages", there's a
+catch for the unwary in that.  See below.
+
+
+
+TCM&gt; Note that merely fiddling around with probabilities of transmission, such
+TCM&gt; as described above, will not be enough. This just adds a layer of noise,
+TCM&gt; which will disappear under a correlation analysis.
+
+Kelsey wrote on 28th June about correlating messages at the points of
+entry &amp; exit from the remailer network.  I don't know what an attacker
+gains by correlating _inside_ the net.
+
+
+Here are the bits I omitted before.
+
+
+
+
+
+
+DECOY MESSAGES
+
+The sending of decoy messages by users is recommended, and serves to
+hide statistical correlations between your sending a message and
+somebody receiving one.  This practice should continue.  It is also
+desirable that a remailer be able to originate decoy messages
+itself.
+
+Advantages include better traffic load following.  The remailer knows
+when traffic is light and can generate more decoys.  This could be
+important at times of low traffic such as public holidays.  It would
+be especially important during a denial-of-service attack.  When an
+attacker prevents messages from reaching the remailer (in the hope of
+isolating a small number of target messages) a locally-produced set
+of decoys, immune from the denial-of-service, could be crucial.
+
+     DESTINATION
+     
+     Addressing all automatic decoys ultimately to "nobody" would
+     ensure that they circulate in the network and then disappear.
+     Nonconservation of message number should prove annoying to an
+     eavesdropper.  (An implementation detail on this will be
+     mentioned later.)
+
+     Addressing some of them outside the network, to test newsgroups
+     for instance might also be useful - confusing an attacker
+     looking at the point of exit.
+
+     NUMBER
+
+     A possible means of matching the traffic would be to use an
+     exponential- along the lines of those in thermodynamics.
+
+               decoys = max  ( D.exp(-kT)  , E  )
+
+     The "max" operator here ensures that every time a batch of
+     messages is sent a minimum number of decoys will be included.
+     Values for the constants can doubtless be suggested by remailer
+     operators familiar with the traffic load.
+
+
+
+
+
+.....
+
+
+
+
+
+SILENT SPAMMING
+
+Re-encryption as discussed here will not do any good if
+remailers allow "silent spamming".  To exploit this feature
+the attacker addresses his messages to "nobody" (or "null"
+in Mixmaster jargon).  These mails fill the message pool,
+sweeping out all the target messages, but when they come to
+be sent they disappear.  They do not show on the net, they
+do not need to be recognised and eliminated from the
+search.  All the attacker sees leaving the spammed host is
+undiluted target mail.
+
+Obviously the remailer should detect messages of this type and
+process them without storing them in the message pool.  Any message
+that will not be delivered to a remote host comes into this
+category, including those to most local accounts.
+
+I briefly examined the source of 2.0.3
+(from <A  HREF="ftp://utopia.hacktic.nl/pub/replay/pub/remailer">ftp://utopia.hacktic.nl/pub/replay/pub/remailer</A> on 11 July 1996)
+and could not find code to deal with this attack.
+
+
+
+[Cottrell tells me this is on the to-do list.]
+
+
+
+ -- Peter Allan    peter.allan@aeat.co.uk
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00255" HREF="msg00255.html">Re: SRP (from the cutting-room floor)</A></STRONG>
+<UL><LI><EM>From:</EM> qut@netcom.com (Dave Harman OBC)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00241.html">Re: The Esther Dyson Flap</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00295.html">KILL ALL RUSSIAN IMIGRANTS</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00256.html">Flux in today's HotWired/Packet</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00255.html">Re: SRP (from the cutting-room floor)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00283"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00283"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

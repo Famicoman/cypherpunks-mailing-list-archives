@@ -1,0 +1,150 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: encrypting pppd? -->
+<!--X-From-R13: [nggurj Uuvb <tuvbNzlevnq.nyvnf.arg> -->
+<!--X-Date: Mon, 7 Oct 1996 02:14:38 +0800 -->
+<!--X-Message-Id: 199610061634.MAA28522@myriad -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199610021431.JAA02934@linkdead.paranoia.com -->
+<!--X-Reference: 961002.235706.1R8.rnr.w165w@sendai.scytale.com -->
+<!--X-Reference: 534nh8$c4p@abraham.cs.berkeley.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: encrypting pppd?</TITLE>
+<LINK REV="made" HREF="mailto:ghio@myriad.alias.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00508.html">Date Prev</A>][<A HREF="msg00509.html">Date Next</A>][<A HREF="msg00481.html">Thread Prev</A>][<A HREF="msg00505.html">Thread Next</A>][<A HREF="index.html#00518">Date Index</A>][<A HREF="threads.html#00518">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: encrypting pppd?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: encrypting pppd?</LI>
+<LI><em>From</em>: Matthew Ghio &lt;<A HREF="mailto:ghio@myriad.alias.net">ghio@myriad.alias.net</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 6 Oct 1996 12:34:10 -0400</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00129.html">199610021431.JAA02934@linkdead.paranoia.com</A>&gt; &lt;<A HREF="msg00197.html">961002.235706.1R8.rnr.w165w@sendai.scytale.com</A>&gt; &lt;<A HREF="msg00427.html">534nh8$c4p@abraham.cs.berkeley.edu</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Ian Goldberg &lt;iang@cs.berkeley.edu&gt; wrote:
+
+&gt; -----BEGIN PGP SIGNED MESSAGE-----
+&gt;
+&gt; In article &lt;<A HREF="msg00197.html">961002.235706.1R8.rnr.w165w@sendai.scytale.com</A>&gt;,
+&gt; Roy M. Silvernail &lt;roy@scytale.com&gt; wrote:
+&gt; &gt;In list.cypherpunks, vax@linkdead.paranoia.com writes:
+&gt; &gt;
+&gt; &gt;&gt; Anyone worked on, or know of a freely available, one of these beasts?
+&gt; &gt;
+&gt; &gt;What threat model does this address?  It'd be link encryption, where the
+&gt; &gt;best security is found in end-to-end encryption.
+&gt;
+&gt; pppd doesn't necessarily run over a modem; you can "tunnel" it over
+&gt; another IP connection.
+&gt;
+&gt; I have in fact done this very thing.  Use ssh to (encrypted) log in to
+&gt; the ppp server, and start pppd at each end.  It's been a while; I think
+&gt; I had to tweak something to make it work over a pty instead of a serial
+&gt; port.
+
+Here's a little script for tunnelling SLIP over a ssh session on Linux:
+
+(sleep 2;\
+ /usr/local/bin/ssh -l username -e none remotehost&lt;/dev/ttyqe&gt;&amp;/dev/ttyqe)&amp;
+(echo "port ptyqe";\
+ echo "wait ord: 15";\
+ echo "send secretpw\\n";\
+ echo "wait (shellprompt)&gt; 60";\
+ echo "send slip\\n";\
+ echo get \$rmtip 192.168.0.1;\
+ echo get \$locip 192.168.0.2;\
+ echo "mode CSLIP";sleep 15)|/sbin/dip -tv
+
+PPP is a little more complicated; I found it's easier if you put the ssh on
+the pty instead of the tty side.  You can't do this from a shell script,
+because the pty can only be opened once.  This will take care of that:
+
+main(ac,av)int ac;char **av;{
+  int fd;
+  fd=open("/dev/tty",O_RDWR);
+  ioctl(fd,TIOCNOTTY);
+  close(fd);
+  fd=open("/dev/ptyqf",O_RDWR);
+  if(fd&lt;=0) exit(1);
+  dup2(fd,0);
+  dup2(fd,1);
+  dup2(fd,2);
+  execl("/usr/local/bin/ssh","ssh","-l","username","-e","none","-c","idea",
+        "-t","remotehost","mesg n;/usr/sbin/ppp -direct mylink",(char *)0);
+  exit(1);
+}
+
+Do remember that you can't route the ip addresses that you're tunneling
+inside the tunnel!  So be sure to assign some alternate ip addresses to
+each end of the link.  192.168.x.x will work; those addresses aren't
+assigned to anyone.
+
+I used /dev/ttyqf for the tty, that is usually unused.  If you have more
+than 30 users online then you'll need to increase it.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00129" HREF="msg00129.html">encrypting pppd?</A></STRONG>
+<UL><LI><EM>From:</EM> VaX#n8 &lt;vax@linkdead.paranoia.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00197" HREF="msg00197.html">Re: encrypting pppd?</A></STRONG>
+<UL><LI><EM>From:</EM> roy@sendai.scytale.com (Roy M. Silvernail)</LI></UL></LI>
+<LI><STRONG><A NAME="00427" HREF="msg00427.html">Re: encrypting pppd?</A></STRONG>
+<UL><LI><EM>From:</EM> iang@cs.berkeley.edu (Ian Goldberg)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00508.html">Re: FUCK!!!!!!;-)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00509.html">Re: Voice Stress Analysis of Debates?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00481.html">Re: encrypting pppd?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00505.html">Re: encrypting pppd?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00518"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00518"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

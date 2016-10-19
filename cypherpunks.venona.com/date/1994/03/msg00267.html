@@ -1,0 +1,183 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: some technical steganography -->
+<!--X-From-R13: uhturfNnu.pbz (Sevp Vhturf) -->
+<!--X-Date: Sat, 5 Mar 94 00:51:54 PST -->
+<!--X-Message-Id: 9403050842.AA06538@ah.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9403042136.AA03953@bilbo.suite.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>some technical steganography</TITLE>
+<LINK REV="made" HREF="mailto:hughes@ah.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00272.html">Date Prev</A>][<A HREF="msg00268.html">Date Next</A>][<A HREF="msg00254.html">Thread Prev</A>][<A HREF="msg00255.html">Thread Next</A>][<A HREF="index.html#00267">Date Index</A>][<A HREF="threads.html#00267">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>some technical steganography</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: some technical steganography</LI>
+<LI><em>From</em>: <A HREF="mailto:hughes@ah.com">hughes@ah.com</A> (Eric Hughes)</LI>
+<LI><em>Date</em>: Sat, 5 Mar 94 00:42:47 -0800</LI>
+<LI><em>In-Reply-To</em>: Jim Miller's message of Fri, 4 Mar 94 15:36:24 -0600 &lt;<A HREF="msg00254.html">9403042136.AA03953@bilbo.suite.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;What does "appears relatively random" really mean?  How do you  
+&gt;measure the randomness of a sequence of bits?  
+
+Randomness is the wrong measure.  Suppose I take 2^10 random bits and
+prepend 16 zeros.  How random is this?  Almost as random, and this can
+be made precise.  How compressible is it?  Almost incompressible.
+Now, what about 2^20 bit?  2^30?
+
+It is not randomness but recognizability which is at issue.
+
+Then the next issue arises.
+
+&gt;If the reverse steg process makes it look like all, or even many,  
+&gt;files contain hidden messages, even when they don't, then you can  
+&gt;plausible deny knowledge of a suspicious bit pattern in any specific  
+&gt;file.
+
+The situation of one file is the wrong problem.  Suppose you have a
+collection of files.  What you want is deniability for the group of
+files as a whole.  This is much trickier, and the obvious thing
+doesn't work.
+
+Suppose the files contain some bytes of an RSA encrypted session key
+concatenated to the bytes of a file encrypted with the session key.
+This is a reasonable scheme, and is basically how a stealth-PGP might
+work.  Because the mode of representation is concatenation, the
+session key is represented as some arbitrary number X mod N, the
+public key modulus.  Recall that N is public.
+
+Now let k be the length of N in bits, rounded up to the nearest
+multiple of eight.  Since the encrypted key is represented as bytes,
+the bit length is a multiple of eight.  Now the probability that a
+random number between 0 and 2^k will be less than N is N/2^k.  Easy.
+If N is not chosen specifically with this purpose, the fraction N/2^k
+is on average about 1/4.  The important thing is not that this number
+is small but that it is less than one, say p.
+
+Now take an arbitrary string of bits and apply the (public) extraction
+technique for a given public key, and from this extract a candidate
+for the encrypted session key.  Now you can check the candidate
+against the modulus.  If the candidate is greater than the modulus,
+then you can reject that public key as being a possible recipient of
+that message.
+
+The probability that a public key rejects none of a group of files
+grows exponentially small, therefore.  Each time a file is not
+rejected as a possible message with respect to a particular recipient
+key, the probability lowers by p.
+
+You could even check all possible keys.  You may not be able to
+identify the recipient, but in aggregate the opponent will be able to
+ascertain that messages are being sent.  That is sufficient.
+Steganography not only seeks to hide individual messages, but also the
+fact that communication is taking place.
+
+There are some defenses.  One can look for public keys which give high
+N/2^k ratios.  Unfortunately, this almost assuredly makes factoring
+the modulus easier, if only by lowering the search space.
+
+One can make sure the collection of files contains some ringers, such
+that the ratio of ringers to real messages is 2^k-N:N.  This is
+certainly possible if one is simply storing files, but if the
+collection of files were intercepted in transit, the sender would have
+to make sure to send files in the correct ratio.  Yet this requires
+that the sender look out for you and your security!
+
+What is most broken here is the N/2^k ratio itself, that is, the
+artifact of the byte-oriented encoding.  In other words, a random
+modular number is not random in the byte length representation.
+
+More to the point, one can't simply lop the front off a PGP message
+and get stealth-PGP.  
+
+So one way to solve this is to introduce some indeterminism into the
+modular representation, so that the session key is evenly distributed
+in all of its relevant representations.  This would mean that every
+session on the range [0..2^k) was valid, and was taken mod N to
+decrypt a session key.  This yields non-random session keys mod N,
+which might be acceptable, since the entropy of the modular
+distribution doesn't drop all that much.  Still, this requires the
+sender's software to be secure.
+
+Another way would be to use arithmetic coding to spread out the N/2^k
+ration throughout the whole file.  For an exact solution, one would
+have to use rational cooefficients rather than 2-adic coefficients,
+but an approximate solution should be adequate.  One needs for the
+approximate case, however, an estimate of the candidate acceptance
+rate p above to make sure that the approximation is good enough.  This
+solution doesn't require the sender's software to be any more secure
+than is in the sender's interest.
+
+In steganography, like cryptography, the different layers of
+abstraction forcibly interfere with each other.  The pun here was that
+an RSA key (represented by a modular integer) was being put into a
+different representation where it didn't work.  These kinds of
+level-shifting behavior are all-too-common, and are the cause of much
+protocol failure.
+
+Eric
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00254" HREF="msg00254.html">even more steganography talk</A></STRONG>
+<UL><LI><EM>From:</EM> jim@bilbo.suite.com (Jim Miller)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00272.html">Re: Standard for SteGAnography</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00268.html">Re: Standard for SteGAnography</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00254.html">even more steganography talk</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00255.html">Re:  New mailing list?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00267"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00267"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

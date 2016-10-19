@@ -1,0 +1,134 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Slightly faster checking for encrypted messages to me -->
+<!--X-From-R13: usvaarlNfuryy.cbegny.pbz -->
+<!--X-Date: Sun, 3 Sep 95 08:18:22 PDT -->
+<!--X-Message-Id: 199509031517.IAA26595@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Slightly faster checking for encrypted messages to me</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00122.html">Date Prev</A>][<A HREF="msg00114.html">Date Next</A>][<A HREF="msg00115.html">Thread Prev</A>][<A HREF="msg00235.html">Thread Next</A>][<A HREF="index.html#00113">Date Index</A>][<A HREF="threads.html#00113">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Slightly faster checking for encrypted messages to me</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Slightly faster checking for encrypted messages to me</LI>
+<LI><em>From</em>: <A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A></LI>
+<LI><em>Date</em>: Sun, 3 Sep 1995 08:17:14 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+One idea we have often discussed is to use a public message pool such
+as a newsgroup or mailing list reflector as a means of receiving
+messages anonymously.  Each message would be encrypted with my public
+key (or that of my pseudonym), but with the identifying information
+stripped.  Then I need to scan them all to see which ones are encrypted
+to me.  Those are the ones which decrypt under the public key system to
+a correctly padded session key.  Doing it this way eavesdroppers can't
+even tell how much mail my nym is receiving.
+
+The problem is that doing a PK decrypt is time consuming, and if we had
+to do it to all the anonymous mail traffic in the world it could become
+impractical.
+
+I had hoped that Shamir's idea which I posted earlier would help with
+this, but I can't see an application.  His idea helps to check for
+specific signatures, which is a thing anyone can do, but he lets you do
+it faster.  We need a faster way to do a check which only the holder of
+the secret key can do.
+
+I have thought of a small improvement based on Shamir's ideas, though.
+Use Rabin encryption rather than RSA.  In this system the decryption
+involves taking square roots.  This is done by taking the square root of
+the ciphertext mod p and q (the two secret primes) and using the Chinese
+Remainder Theorem to get the square root mod n.  (This is also done in
+RSA with eth roots.)
+
+If p and q are 3 mod 4, you can get the square root of x mod p as x^((p+1)/4)
+mod p.  This is done for p and q and you then combine them.  So the
+amount of work is pretty much the same as for RSA.
+
+However a speedup is possible to do a quicker check for a validly formed
+encrypted message.  The idea is that the encrypted message is of the form
+M^2 mod n.  This means that it is a quadratic residue mod n, and also
+therefore a q.r. mod p and q.  So the speedup is simply to check whether
+it is a q.r. mod one of the primes and to reject it if not.  This takes
+about half the amount of time to actually try the decryption.
+
+All valid messages will pass the test, and half of the invalid messages
+will be rejected.  So this is not very strong, but it is perhaps better
+than nothing.  Maybe Shamir will come up with some idea for this
+problem.
+
+As I wrote before, testing for a q.r. is done by raising to the (p-1)/2
+power mod p, and seeing if the answer is 1.  I think this can be done
+in such a way that if it does come out to be 1 we can use our
+intermediate results to calculate the (p+1)/4 needed for the square
+root very quickly.
+
+Also, BTW Rabin encryption is not specifically patented, only the
+relatively-untested and almost-expired patent which covers all public
+key systems (with the failed knapsack algorithm as its specific
+embodiment) would supposedly prevent its use.  However even PKP is
+apparently becoming more reluctant to throw its weight around on this
+patent, while they are still quite possessive about RSA.  So perhaps a
+migration to Rabin is in order.
+
+Hal
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00122.html">Re: Crypto '95: Robert Morris</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00114.html">Re: Crypto '95: Robert Morris</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00115.html">Re: Florida Drivers Permits and a Hello</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00235.html">Re: Slightly faster checking for encrypted messages to me</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00113"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00113"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

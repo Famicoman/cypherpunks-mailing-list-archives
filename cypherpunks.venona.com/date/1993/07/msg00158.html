@@ -1,0 +1,148 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: emacs stuff -->
+<!--X-From-R13: rvpuvaNpltahf.pbz ([nex Svpuva) -->
+<!--X-Date: Fri, 9 Jul 93 11:05:19 PDT -->
+<!--X-Message-Id: 9307091804.AA03813@cygnus.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9307082128.AA02549@merde.dis.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>emacs stuff</TITLE>
+<LINK REV="made" HREF="mailto:eichin@cygnus.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00130.html">Date Prev</A>][<A HREF="msg00164.html">Date Next</A>][<A HREF="msg00130.html">Thread Prev</A>][<A HREF="msg00192.html">Thread Next</A>][<A HREF="index.html#00158">Date Index</A>][<A HREF="threads.html#00158">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>emacs stuff</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:shipley@merde.dis.org">shipley@merde.dis.org</A></LI>
+<LI><em>Subject</em>: emacs stuff</LI>
+<LI><em>From</em>: <A HREF="mailto:eichin@cygnus.com">eichin@cygnus.com</A> (Mark Eichin)</LI>
+<LI><em>Date</em>: Fri, 9 Jul 93 11:04:56 PDT</LI>
+<LI><em>Cc</em>: <A HREF="mailto:mrose@stsci.edu">mrose@stsci.edu</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: Peter shipley's message of Thu, 08 Jul 1993 14:28:15 -0700 &lt;<A HREF="msg00130.html">9307082128.AA02549@merde.dis.org</A>&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;&gt; ;;; * They do "ps auxww" (SunOS) on your machine while you're
+&gt;&gt; ;;;     decrypting/signing.
+	It should be possible, with pgp 2.2, to eliminate this
+vulnerability.
+
+&gt;&gt; ;;; * They type C-h v *pgp-passphrase* in your emacs after you've
+	That's easy to clear optionally. What's hard to clear is "m-x
+view-lossage" which has the raw characters. (I think emacs should have
+support for safe reading and clearing, but I don't know if rms would
+go for it. You'd need an excuse *other* than passwords.)
+
+&gt;&gt; ;;; * They watch over your shoulder as you type it. (It's not invisible.)
+	Didn't read-password or read-no-echo ever make it into an
+emacs release?  Here are some ancient bits that I use. 
+				_Mark_ &lt;eichin@athena.mit.edu&gt;
+				MIT Student Information Processing Board
+				Cygnus Support &lt;eichin@cygnus.com&gt;
+
+
+;; ucbvax!brahms!weemba	Matthew P Wiener/UCB Math Dept/Berkeley CA 94720
+;;; GNU Emacs library to read in passwords from the minibuffer
+;;; Standard GNU copying privileges apply
+
+(setq minibuffer-local-no-echo-map (make-keymap))
+
+(mapcar '(lambda (x) (aset minibuffer-local-no-echo-map (car x) (cdr x)))
+	(cdr minibuffer-local-map))
+
+(let ((i ?\040))
+  (while (&lt; i ?\177)
+    (aset minibuffer-local-no-echo-map i 'read-char-no-echo)
+    (setq i (1+ i))))
+
+(aset minibuffer-local-no-echo-map ?\177 'delete-char-no-echo)
+
+;; This function squirrels each typed-in character away.
+(defun read-char-no-echo () (interactive)
+  (setq no-echo-list (append no-echo-list (list (this-command-keys)))))
+
+;; This function erases the last character from the input list.
+(defun delete-char-no-echo () (interactive)
+  (setq no-echo-list (nreverse (cdr (nreverse no-echo-list)))))
+
+;; This is the function the user actually uses.
+(defun read-string-no-echo (prompt)
+  "Get a password from the minibuffer, prompting with PROMPT."
+  (let (no-echo-list)
+    (read-from-minibuffer prompt nil minibuffer-local-no-echo-map)
+    (mapconcat 'identity no-echo-list nil)))
+
+
+;;;;;;;;;;;;;;;;;;;;;This crudity is just for demo!;;;;;;;;;;;;;;;;;;;;
+(defun read-password ()
+  "Prompts for a password, and doesn't echo it, stores it in 'secret'"
+  (interactive)
+  (setq secret (read-string-no-echo "Password: ")))
+
+
+(defun shell-password ()
+  "Prompts for password, no echo, and sends it to the shell"
+  (interactive)
+  (process-send-string (get-buffer-process (current-buffer)) 
+		       (concat
+			(read-string-no-echo "Password: ")
+			"\n")))
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00130" HREF="msg00130.html">No Subject</A></STRONG>
+<UL><LI><EM>From:</EM> Peter shipley &lt;shipley@merde.dis.org&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00130.html">No Subject</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00164.html">Hmm...hardware secure phone?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00130.html">No Subject</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00192.html">No Subject</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00158"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00158"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

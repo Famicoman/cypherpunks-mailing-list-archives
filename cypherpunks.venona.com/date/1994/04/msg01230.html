@@ -1,0 +1,202 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Entropy, WNSTORM and steganography -->
+<!--X-From-R13: enenpuryNcevfz.cbyl.rqh (Oefra Dnl Oenpuryvna) -->
+<!--X-Date: Sun, 24 Apr 94 11:19:36 PDT -->
+<!--X-Message-Id: 9404241806.AA03586@prism.poly.edu -->
+<!--X-Content-Type: text -->
+<!--X-Reference: gate.Xs38kc1w165w@dxm.ernet.in -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Entropy, WNSTORM and steganography</TITLE>
+<LINK REV="made" HREF="mailto:rarachel@prism.poly.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01223.html">Date Prev</A>][<A HREF="msg01232.html">Date Next</A>][<A HREF="msg01184.html">Thread Prev</A>][<A HREF="msg01191.html">Thread Next</A>][<A HREF="index.html#01230">Date Index</A>][<A HREF="threads.html#01230">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Entropy, WNSTORM and steganography</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:rishab@dxm.ernet.in">rishab@dxm.ernet.in</A></LI>
+<LI><em>Subject</em>: Re: Entropy, WNSTORM and steganography</LI>
+<LI><em>From</em>: <A HREF="mailto:rarachel@prism.poly.edu">rarachel@prism.poly.edu</A> (Arsen Ray Arachelian)</LI>
+<LI><em>Date</em>: Sun, 24 Apr 1994 14:06:55 -0400 (EDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01184.html">gate.Xs38kc1w165w@dxm.ernet.in</A>&gt; from "rishab@dxm.ernet.in" at Apr 23, 94 01:34:56 am</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Thanks for the algorithm... (I didn't find such a beast in my statistics
+books, so, I'll use yours as I mentioned earlier...)
+
+Actually when I came up with WNSTORM, I knew nothing about cyphers or
+crypts, and had no idea about what PK systems were...  I was a clueless
+crypto-virgin...  But somehow the idea snuck into my head that I could
+emulate frequency hopping transmissions with a computer, and do it far
+better than in the physical world.
+
+Again, by now, you know how WNSTORM works, so for the others on this list
+I'll recap....  Basically WNSTORM takes in a byte of plaintext, splits it
+into its idividual bits and scatters these bits into a random number window
+of variable size.  The random window can be anywhere from 2 bytes to the
+limit set by the user.  (WNSTORM.C handles a limit of upto 31 bytes per
+rnd window, although chaning a single #define would get around this.)
+
+Two arrays are used for this purpose: DataBit[i] and DataByte[i].  DataBit
+array contains bit values (ie: 1,2,4,8,16...128.)  These can be moved around.
+ie: if DataBit[2]=128, this means that in the current window, what was 2^2 or
+bit value 4 in the plaintext is now bit 7 (or bit value 128) in the cyphertext.
+
+However, you also need to look at the DataByte[2] array to see which byte this
+actual bit lives in.  If dataByte[2]==7 then our bit is in (stream[2] &amp; 128).
+
+For each plaintext character a window/stream of random numbers is generated.
+The size of this channel is determined by a maxchnl variable.  This value
+is mod'ed with limitchnl which the user sets.  This is to prevent out of
+bounds errors.  The DataBit[] array elements are either swapped, rotated,
+interlaced, or otherwise shuffled.  The DataByte array elements are chosen
+on each pass based on random values and the passkey.
+
+All these actions are based on some formulas which take in the passphrase
+and the previous random number window.  Obviously making a single change in
+the cyphertext will cause the total loss of transmission for the rest of
+the file...
+
+Now, I did insert a somewhat "smart" statistical bit-fix routine that would
+correct changes made by the insertion of the cyphertext bits into the
+random number window.  Since any bit can be 1 or 0, there's a 50% chance
+that a bit targeted for replacement by a cyphertext bit will change.  The
+odds of a whole byte not changing are very slim of course (1/2)^8, however
+the bitfix function will for all eight cyphertext bits will try to see if
+the target bit was changed.  If it was it will try to find a byte with the
+opposite value in another byte.  (ie: if we clear bit 128 in byte four, the
+bitfix function may set bit 128 in byte two.)  If the bitfix fails to find
+a corresponding free bit in the stream, it will set another free bit of whatever
+value it can find.
+
+The bitfix function targets its "victim" bits (ie: those bits in the random
+number window which were not replaced by the cyphertext bits) randomly so
+that there won't be much of a chance of detecting the changes made by the
+bitfix function...
+
+The bitfix function is only used durring encryption.  It makes no difference
+for decryption since the algorithm uses the past window of data for the next
+commands, so any changes made in the current window won't have any ill
+effects.
+
+Now, for the purposes of random numbers, the Borland C 3.1's random number
+generator is kinda shitty, so I've put in an option to allow WNSTORM to read
+random numbers from a device or file.  This would allow an external hardware
+device (or device driver) to be hooked into WNSTORM.   This also allows
+WNSTORM to be used for steganography.
+
+In a Stego mode, two more programs are needed to interface with WNSTORM.  They
+are extractors and injectors.  These are format dependant.  They may either
+extract the low bytes of an image, sound, or other media, or if enough data
+is available to hide the cyphertext, they may extract the low bit(s) of each
+byte in the media...  The injector does the opposite of the extractor.  While
+the extractor removes data from the media, the injector will take the cyphertext
+output of WNSTORM and inject it back into the media in the same place where
+the extraactor removed it.
+
+As an aside, the bitfix function does not use the random device for picking its
+victim bits.  The reason for this is that if it did, it would "eat" up data
+from a possible stego lsb file which would cause major problems in injecting
+the output back in.
+
+Originally I didn't intend for WNSTORM to be used for stego, however, not using
+it for stego has a big disadvantage (or two.)  Primarily, it produces
+cyphertext that's about 0.5*limitchnl in size.  (ie: many times the size of
+the plaintext you wish to send.)  However, using a large window size helps
+the security of WNSTORM because fewer bits in the stego file are modified,
+so there's less of a chance of detecting the presence of stego...
+
+Another problem with not using it for stego is that you should have a
+random number generator in hardware with a device driver to talk to it.  This
+is because whatever compiler you use will have a poor random number generator,
+whose idiosyncrasies could be sniffed out and compared to the cyphertext
+produced by WNSTORM, so it might be possible to sniff out which bits of the
+stream are used.
+
+However, these weaknesses aside, I'd like some suggestions for a way of
+attacking this algorithm to sniff out more weaknesses.  How would one go
+about performing cryptanalysis on a cypher which uses random garbage to
+hide and to encrypt?  Certainly chosen plaintext attacks will always fail
+because encrypting the same text with the same password 100 times will
+produce 100 different cyphertexts...
+
+(Perhaps a good use for this is in cypherpunk anon-encrypted remailers???)
+
+The one attack I devised in WNSTORM's eariler incarnation is now plugged up
+(in the previous version I split the plaintext into two halves and hid the
+nibbles in the random noise stream.  I also didn't use the random numbers
+in the window which were not replaced by cyphertext.  The attack would have
+been to do statistics on the nibbles, and also to move the whole cyphertext
+into a RAM drive and interatively change one bit, decrypt the text, see if
+there's any difference, if there is, the last bit we changed was used. This
+could give you a map of the used/unused bits.  Neither of these attacks
+will work.)
+
+I realize that I'm still an amateur at cyphers and I'm still learning, so
+my attacks on this program will be limited...  So, any of you have any
+suggestions?  (I did notice a lack of interest in this... I posted up
+announcements for WNSTORM a few weeks ago, and got only two messages from
+interested cpunks...  So anyone interested in helping determine the
+strength of this cypher?)
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01184" HREF="msg01184.html">Entropy, WNSTORM and steganography</A></STRONG>
+<UL><LI><EM>From:</EM> rishab@dxm.ernet.in</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01223.html">licence plates seen</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01232.html">Re: DId you ever think...</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01184.html">Entropy, WNSTORM and steganography</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01191.html">How to explain...</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01230"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01230"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

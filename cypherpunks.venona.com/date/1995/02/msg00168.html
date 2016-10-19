@@ -1,0 +1,241 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: "encrypt tcp connections" hacks -->
+<!--X-From-R13: fgevpx ng Fur Knx <fgevpxNlnx.arg> -->
+<!--X-Date: Sun, 5 Feb 95 17:06:28 PST -->
+<!--X-Message-Id: 199502060105.RAA07673@nando.yak.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>"encrypt tcp connections" hacks</TITLE>
+<LINK REV="made" HREF="mailto:strick@yak.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00175.html">Date Prev</A>][<A HREF="msg00169.html">Date Next</A>][<A HREF="msg00162.html">Thread Prev</A>][<A HREF="msg00180.html">Thread Next</A>][<A HREF="index.html#00168">Date Index</A>][<A HREF="threads.html#00168">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>"encrypt tcp connections" hacks</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "Perry E. Metzger" &lt;<A HREF="mailto:perry@imsi.com">perry@imsi.com</A>&gt;</LI>
+<LI><em>Subject</em>: "encrypt tcp connections" hacks</LI>
+<LI><em>From</em>: strick at The Yak &lt;<A HREF="mailto:strick@yak.net">strick@yak.net</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 05 Feb 1995 17:05:51 -0800</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Perry, could you enumerate them?  I take your opinions more
+seriously than perhaps I should, so I want to understand
+what you're saying.
+
+I'm not doing this to re-invent the wheel.  I'm doing it because
+I need it, and nothing else is working very well for me.
+
+I'm doing it because I don't see anything that's easy-to-use in wide
+use today.  I don't just want one or two encrypted applications -- like
+the Kerberos telnet and rcp -- but something to transparently provide
+privacy for all TCP sockets -- like SMTP sockets between (re)mailers,
+NNTP, X11, FTP, MUDs, etc.
+
+Let me name the ones I can think of.
+
+  1.  	Matt Blaze just announced one.  As always, he has the best
+	crypto.  But his world interface seems to be a hacked up
+	script.c.  If I lift his crypto, and make it a standard
+	module in Skronk, I can reuse 90% of his good work.
+
+  2.	Kerberos4.  I use Kerberos4 between home and work all the time.
+	However the only command I have that actually encrypts the
+	session is the "rlogin" replacement.  (But I sure use it, even 
+	if it's just DES.)
+
+	Also Kerberos administration is a nightmare.  I'm a fairly
+	knowledgeable crypto hacker and unix system administrator but
+	honestly I don't understand what I did.  If it weren't for
+	the Cygnus installation manuals giveing line-by-line
+	instructions, I wouldn't have made it.  I've taken the 
+	reference manuals to bed with me several times, but still
+	haven't gotten a grasp of how to fully use it.
+
+	And the reason big providers like The Well and Netcom won't
+	run kerberos (or at least not the last time I asked) is that
+	they would have to hire another person just to do the
+	password management etc.  Skronk should be "just plug it in
+	and it works".  There should be no reason why big providers
+	can't offer it as an option.
+
+  3.	Kerberos5.  I've been unable to build Kerberos5 on my 
+	sun3.  Honestly.  To build it, I have to have ISODE, which seems 
+	to be some enormous ISO thing that I haven't been able to build.
+
+	Again, not too encouraging for your average unix sys admin.
+
+  4.	The new telnet program with Telnet Options for authentication
+	and encrytion.  Well it won't do encryption unless you
+	can get the authentication done, and so you're back to 
+	problems 2 and 3 above.  I couldn't get it to work in 
+	an evening, and decided the world needed something better.
+	Also even if it did work, it's only Telnet.  None of the other
+	apps I named above can use it.
+
+  5.	Standards for IPng.  Vapor, as far as I know.  Is there any
+	usable code, that works in IP this generation?
+
+
+I think it comes down to the fact that, of these, only Skronk and 
+Blaze's software use a Diffee-Hellman -like Key Exchange so that
+administration stuff doesn't have to be done by humans and footnet.
+
+The real value I'm adding is not the crypto.  It's the packaging.
+When I'm done it should be possible to skronk all your current 
+clients and servers by just overriding the shared library libc.so,
+running a skronk map UDP daemon, and customizing a configuration
+file to tell the daemon what to say.
+
+
+=================
+
+As for the UDP service:
+
+&gt; UDP won't get through most firewalls.
+&gt; 
+&gt; Build in support for non-transparent firewalls (ie: telnet gatekeeper,
+&gt; c sys port).
+
+UDP packets are for automatic configuration of skronk maps.  
+Skronk maps could be announced other ways too -- including via
+manual configuration, where you put skronk maps in your SKRONK_CONF
+environment variable.
+
+I may have to spend more effort on this than I wanted to.   I have
+a SKRONK_CONF variable, and an option to say "dont ask the UDP 
+skronk map daemon" about this port, just skronk it -- but right now 
+it's only dependant on port number, not on the IP address too.
+This can be fixed.
+
+&gt; UDP Port 333 - does this imply you need to be root to use it,
+&gt; at least as a server, or are only TCP ports typically root-limited
+&gt; for low-number ports?
+&gt;                 Bill
+
+You need to be root to install it properly on your system, for the
+skronked services to become bona fide system services.  Users should
+not be able to hijack SMTP and TELNET connections to a site unless
+they're root.
+
+For people who run their own web server on a nonstandard port on a 
+machine that someone else administers -- we're back to the manual
+configuration method.  Maybe we can build a PGP service with 
+signed certificates to collect nonstandard skronked services.  
+But really I think these services will be marginal.
+
+
+
+I had thought about using DNS TXT records.  But I decided against that
+because a *lot* of people have autonomy over their workstation on
+the net, but not over their DNS records.   Linux boxen in dorm rooms
+come to mind.  Or anyone who puts a new machine on someone else's
+ethernet, grabbing an IP address via ARP.
+
+
+================= 
+
+Thanks to everyone for your comments.
+
+The discussion question is -- if we have so many hacks already -- 
+howcome they're not in use.  I hope I found the reasons and addressed
+them.  The firewalls issue bugs me a bit.  Would using a well-known
+TCP port instead of the UDP port fix the problem?  I don't think 
+so.  Firewalls will block my new TCP port as well.  Matt Ghio's
+project to tunnel through the telnet port sounds good.  Of course,
+that defeats the purpose of the firewall, which is not my aim.
+My aim is to work with the internet and within its policies, so it
+can get widespread use.
+
+How much of skronk works today?  I'm nearing alpha of a version that's
+hardwired to do DH exchange (using RSAREF2.0) and IDEA CBF (stolen from
+PGP sources) for the symmetric encryption.  But I broke it recently
+when I added hacks for servers to fake select() listening on both
+skronked and normal ports, when the program only thinks it's only
+listening on normal ports.
+
+
+I gotta go ...     strick
+
+
+==================
+
+
+p.s.	need some wizard-level help here.
+
+	I use syscall(2) when I reimplement read() write() connect()
+	accept() etc. on SunOS. 
+
+	On LINUX I borrowed code from the libc sources.
+
+	On HPUX and Solaris and AIX I'm having difficulty finding
+	a way to do what system calls do, without using the
+	manufacture's packaging.  
+
+	any help would be appreciated.
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00180" HREF="msg00180.html">Re: "encrypt tcp connections" hacks</A></STRONG>
+<UL><LI><EM>From:</EM> "Perry E. Metzger" &lt;perry@imsi.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00213" HREF="msg00213.html">Re: "encrypt tcp connections" hacks</A></STRONG>
+<UL><LI><EM>From:</EM> "Trool the Red Adept" &lt;cdbunch@bansai.ucs.uoknor.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00175.html">Re: The SKRONK protocols (version 0.6)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00169.html">Re: signature validation on secure edit messages</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00162.html">Re: Zimmermann charges dropped?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00180.html">Re: "encrypt tcp connections" hacks</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00168"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00168"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,172 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Making Remailers Widespread [REMAILERS] -->
+<!--X-From-R13: Pvyy Egrjneg <fgrjnegfNvk.argpbz.pbz> -->
+<!--X-Date: Mon, 30 Sep 1996 17:50:43 +0800 -->
+<!--X-Message-Id: 199609300728.AAA17384@netcomsv.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Making Remailers Widespread [REMAILERS]</TITLE>
+<LINK REV="made" HREF="mailto:stewarts@ix.netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02581.html">Date Prev</A>][<A HREF="msg02586.html">Date Next</A>][<A HREF="msg02627.html">Thread Prev</A>][<A HREF="msg02515.html">Thread Next</A>][<A HREF="index.html#02587">Date Index</A>][<A HREF="threads.html#02587">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Making Remailers Widespread [REMAILERS]</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:dlv@bwalk.dm.com">dlv@bwalk.dm.com</A> (Dr.Dimitri Vulis KOTM)</LI>
+<LI><em>Subject</em>: Re: Making Remailers Widespread [REMAILERS]</LI>
+<LI><em>From</em>: Bill Stewart &lt;<A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 30 Sep 1996 00:29:28 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+At 09:37 AM 9/29/96 EDT, you wrote:
+&gt;How about: maintain a list of trusted blocking-list sites (comparable to the
+&gt;list of remailers used for chaining) and when it comes the time to update the
+&gt;local copy of the blocking list, ask a random one on the list; if it's down,
+&gt;ask another random one on the list. There may even be more than one list. :-)
+
+Getting more complex, but it might be workable.
+
+
+&gt;&gt; sender-blocking list 
+...
+&gt;With most ISP's it's trivial to forge one's From: header in SMTP.
+&gt;Switching to another dime-a-dozen throwaway account is also trivial.
+&gt;Just admit that you can't block senders, and don't pretend that you
+&gt;can - false pretenses destroy one's credibility.
+
+You obviously can't source-block a determined spammer, but you can
+slow down some spam attacks, especially if they're one individual 
+using his/her regular account.  It's no panacaea, but it helps.
+Also, if you source-block based on patterns anywhere in the header,
+you can catch less capable email forgers.
+
+
+&gt;I think I see a way to accomplish this without too much trouble.
+&gt;When an e-mail is directed at u@c4.c3.c2...c1, the code that checks
+&gt;for blocking will search for the following records in the blocking list:
+&gt;u@c4.c3.c2...c1     (exact match)
+&gt;*@c4.c3.c2...c1     (replace user by *)
+&gt;u@*.c3.c2...c1      (replace leftmost .-separated piece of domain by *)
+&gt;*@*.c3.c2...c1      (both)
+&gt;and repeat until there are only 2 components left in the domain name.
+
+That'd work.  It's clunky, but there's no avoiding clunkiness
+for this sort of thing, and it does preserve privacy.
+
+&gt;Now, the question is, who would be allowed to add records containing
+&gt;'*' to the blocking list using the cookie protocol? I suggest that it be
+&gt;one of the contacts listed in Internic's database.
+
+postmaster@domain is (ostensibly) guaranteed to exist.
+The Internic database is an interesting alternative, but for this
+I suspect postmaster is good enough.  There's also the problem
+that for many domains, where smallcompany.com is virtual on an ISP,
+the Internic database will generally list someone at the ISP,
+who probably has no interest in the issue, rather than someone
+responsible for making decisions about smallcompany.com
+
+&gt;Thus a blocking record for cypherpunks@toad.com could be added by
+&gt;anyone listed in toad.com's Internic entry.  There's no need for any
+&gt;Remailer Cabal [tinc] to maintain blocking lists.
+
+For destination blocking, I agree that users should be able to 
+block their own stuff as automagically as possible.
+For source blocking, most of the need is for spams and abusers
+that have been tracked down (or identify themselves in their postings),
+and that takes human thought.  In particular, spammers are unlikely
+to block themselves from the remailers (:-), but forgers may try to block
+legitimate users.
+
+&gt;One other suggestion: instead of storing one bit of information (the
+&gt;address is on the list or not), why not have several flag bits.
+&gt;E.g., the blocking list could contain records similar to:
+&gt;hash - e.g. 160-bit SHA
+&gt;flags - e.g. reserve 32 bits
+
+Interesting.  I suspect the state of the art would be to collect
+the bits with a disclaimer that there isn't any code to interpret them :-),
+but it does let you build a blocking database that's usable as capabilities
+grow.
+Any suggestions for flags besides block/allow one-way, block/allow two-way,
+and max-size?  I'm thinking of doing a remailer that instead of sending
+you a message, it sends you a retrieval cookie and lets you send it back
+to collect the message; blocking that would be another flag.
+
+The other kind of blocking that needs adding is blocking by
+words in message bodies - the spammer that caused me to shut down
+my remailer and not bring it back up was posting hate messages
+with somebody else's name and email signed at the bottom.  
+It only took one or two to generate a flood of flames to the victim,
+and my current remailer couldn't block any followups.
+Also, since the spammer wasn't generating the flames himself,
+his spam slipped under the remailer's spam counter, just as
+hipcrime's did.  This sort of blocking also lets you block
+things like the hipcrime spam and MAKE MONEY FAST.
+But it's a much more sensitive problem - anybody who can add things
+to the body-checking list can start doing real censorship,
+and it's probably best to leave that to individual operators to block,
+or at least to turn on by hand rather than default.
+
+#			Thanks;  Bill
+# Bill Stewart, +1-415-442-2215 stewarts@ix.netcom.com
+# &lt;A HREF="<A  HREF="http://idiom.com/~wcs">http://idiom.com/~wcs</A>"&gt; 	
+# You can get PGP software outside the US at ftp.ox.ac.uk/pub/crypto
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02581.html">Re: active practice in America</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02586.html">Re: Tools for Rendering Censorship Firewalls Ineffective</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02627.html">Re: Making Remailers Widespread [REMAILERS]</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02515.html">[AP] Afghanistan</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02587"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02587"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,192 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: netscape's response -->
+<!--X-From-R13: gpznlNtbg.arg (Fvzbgul Q. [nl) -->
+<!--X-Date: Wed, 20 Sep 95 00:09:43 PDT -->
+<!--X-Message-Id: ac85072c28021004746c@[205.199.118.202] -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: netscape's response</TITLE>
+<LINK REV="made" HREF="mailto:tcmay@got.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01382.html">Date Prev</A>][<A HREF="msg01353.html">Date Next</A>][<A HREF="msg01385.html">Thread Prev</A>][<A HREF="msg01361.html">Thread Next</A>][<A HREF="index.html#01352">Date Index</A>][<A HREF="threads.html#01352">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: netscape's response</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:jsw@neon.netscape.com">jsw@neon.netscape.com</A> (Jeff Weinstein), <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: netscape's response</LI>
+<LI><em>From</em>: <A HREF="mailto:tcmay@got.net">tcmay@got.net</A> (Timothy C. May)</LI>
+<LI><em>Date</em>: Wed, 20 Sep 1995 00:21:18 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+At 5:53 AM 9/20/95, Jeff Weinstein wrote:
+
+&gt;  Of course none of this reduces the magnitude of the screw up/bug/design
+&gt;flaw/whatever.  I really can't say which of these it was since I wasn't
+&gt;around at the time that this code was being written.  I must admit that
+&gt;the RNG seed code was not an area that I thought to examine when I took
+&gt;over our security library.
+
+In _retrospect_ (:-}), the approach taken by Goldberg and Wagner seems
+pretty obvious. Where PGP, for example, asks the user to go through a
+laborious process of "generating entropy" through ostensibly-random
+keyboard button presses, Netscape does not do this. Nor does it, for
+example, "listen" to a microphone input for some amount of time (to at
+least make a plausible pretense of gathering entropy), nor does it measure
+a Zener diode, or count clicks of a Geiger counter, or whatever.
+
+The very speed of Netscape's PRNG process suggests the usual weakness in
+PRNGs: simply not enough entropy. That is, a limited search space allows
+the guessing of a seed or entry point in a deterministic process.
+
+
+&gt;  This was a bad mistake on our part, and we are working hard to fix it.
+&gt;We have been trying to identify sources of random bits on PCs, Macs, and
+&gt;all of the many unix platforms we support.  We are looking at stuff that
+&gt;is system dependent, user dependent, hardware dependent, random external
+&gt;sources such as the network and the user.  If anyone has specific
+&gt;suggestions I would love to hear them so that we can do a better job.
+
+I think a reasonable way to generate several hundred seemingly random (or
+at least highly unpredictable) bits is the "swirling the mouse" approach
+mentioned by several people. All implementations of Netscape involve mice,
+I assume, and this is a fairly fast way of generating hard-to-guess bits.
+Colin Plumb has code to do this, as has been mentioned. (I'm not saying
+that some number of "mouse swirlings" will generate some number of bits of
+entropy...this depends on the platform, the granularity of mouse
+measurements, etc. Better to take several times as many bits as needed and
+distill them down, with MD5 or other hash functions....can't have too many
+bits of entropy to start with!)
+
+This could be done fairly quickly by Netscape, and doesn't assume the
+platform has microphones to "measure background noise" or other exotic and
+nonstandard inputs.
+
+Years ago, I recall articles in sci.crypt about getting "pretty good random
+numbers" from complicated measurements of disk accesses on a local machine,
+ticks of the system clock, times between keyboard button presses, etc., all
+mixed and convolved together. Not perfect, of course, but if enough bits
+are started with (e.g, 2000) when "only" 126 or 512 or whatever are
+ultimately used, this "mixing" can probably be pretty damned good. At
+least, I doubt any t-shirts will be won.
+
+
+&gt;  Do you mean that cypherpunks offered to review the netscape code
+&gt;if only we made all the source available on the net?  I think that it
+&gt;is unrealistic to expect us to release all of our source code to the
+&gt;net.
+&gt;
+&gt;  We will be having at least some of our code reviewed by a
+&gt;wider audience, but I don't yet know which code, or how wide a review
+&gt;group.  If anyone has specific suggestions for pieces of code that
+&gt;you would like to see widely reviewed (such as RNG and seed generation)
+&gt;let me know.
+&gt;
+&gt;  I realize that some cypherpunks think that we should make all of
+&gt;our code publicly available.  In an ideal world that would be great,
+&gt;but we live in a world with politicians, crooks, lawyers, stockholders,
+&gt;etc...  Don't expect to see us posting our entire security
+&gt;library source code to cypherpunks.
+
+I think a better approach is to modularize the functions, so that a "PRNG"
+chunk could be shown without "damaging" Netscape's market situation. (I
+doubt the crypto section is seen as Netscape's market edge, and use of
+industry-verified crypto modules would be a net plus, anyway.)
+
+In other words, keep secret (arguably) the things you don't want
+competitors to have access to. But things like crypto modules are rarely
+trade secrets--if only because the cores are so often licensed anyway--and
+can be shown and vetted without affecting the rest of the product.
+
+(I said "arguably" because many will argue for showing all of the source
+code, anyway, as the almost-ultimate check on integrity and reliabilty. And
+there may be subtle security flaws that hinge on the overall program, not
+just specific parts.)
+
+
+&gt;  I would love to hear your suggestions for good sources of entropy
+&gt;on any systems that our products run on.
+
+See above. This has been a recurring topic in sci.crypt and Cyherpunks---so
+recurring, in fact, that several of us have expressed bemusement at seeing
+"yet another "How do I generate entropy" argument."
+
+I guess we all (save for Mssrs. Goldberg and Wagner) tacitly assumed that a
+modern product claiming to have strong crypto would use commonly-accepted
+techniques for generating enough entropy. (Commonly used in RSA's crypto
+products, and in PGP.)
+
+I suggest you take RSADSI up on their offer to advise you. (Or Cylink, as
+the case may soon be.)
+
+--Tim May
+
+---------:---------:---------:---------:---------:---------:---------:----
+Timothy C. May              | Crypto Anarchy: encryption, digital money,
+tcmay@got.net  408-728-0152 | anonymous networks, digital pseudonyms, zero
+Corralitos, CA              | knowledge, reputations, information markets,
+Higher Power: 2^756839      | black markets, collapse of governments.
+"National borders are just speed bumps on the information superhighway."
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01361" HREF="msg01361.html">Re: netscape's response</A></STRONG>
+<UL><LI><EM>From:</EM> "Jeff Weinstein" &lt;jsw@netscape.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01382.html">MIME</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01353.html">Re: Investing on Information We Get Here</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01385.html">Re: netscape's response</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01361.html">Re: netscape's response</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01352"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01352"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

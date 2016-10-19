@@ -1,0 +1,161 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: [crypto] crypto&#45;protocols for trading card games -->
+<!--X-From-R13: [vxr Tyrgpure <syrgpuNnva.oyf.pbz> -->
+<!--X-Date: Wed, 29 May 1996 20:38:47 +0800 -->
+<!--X-Message-Id: 9605290634.AA09375@outland.ain_dev -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.SUN.3.91.960528235540.23126A&#45;100000@tipper.oit.unc.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: [crypto] crypto-protocols for trading card games</TITLE>
+<LINK REV="made" HREF="mailto:fletch@ain.bls.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01900.html">Date Prev</A>][<A HREF="msg01904.html">Date Next</A>][<A HREF="msg01896.html">Thread Prev</A>][<A HREF="msg01918.html">Thread Next</A>][<A HREF="index.html#01898">Date Index</A>][<A HREF="threads.html#01898">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: [crypto] crypto-protocols for trading card games</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: [crypto] crypto-protocols for trading card games </LI>
+<LI><em>From</em>: Mike Fletcher &lt;<A HREF="mailto:fletch@ain.bls.com">fletch@ain.bls.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 29 May 1996 02:34:23 -0400</LI>
+<LI><em>In-Reply-To</em>: Your message of "Wed, 29 May 1996 00:15:18 EDT."            &lt;<A HREF="msg01896.html">Pine.SUN.3.91.960528235540.23126A-100000@tipper.oit.unc.edu</A>&gt; </LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; In the not too distant past there was a fad for collectible trading card 
+&gt; games, the most famous of which was Magic, The Gathering (tm). These 
+
+	Oy, don't mention that name.  I spent waaay too much money
+on cards (Ah, my foolish youth.  Anyone want to buy a slightly used
+Chaos Orb? :).
+
+&gt; games combined the collecting and trading of baseball cards with traditional
+&gt; aspects of card playing. Cards were issued by a central 
+&gt; authority/publisher (Wizards of the Coast in the case of MtG). Each 
+&gt; player uses his or her own deck; cards that are not played remain secret; 
+&gt; however the same deck mut be used in each round of a match. tournament 
+&gt; games are adjudicated by an umpire.
+&gt; 
+&gt; Design a set of crypto protocols to support the issuing, trading, and 
+&gt; playing of such card games in real time (100ms compute time per move)
+
+	Well, here goes nothing for the playing part:
+
+	Each player should submit a signed copy of their deck (i.e. a
+listing of all the cards therin) to the umpire (if you don't want the
+even umpire seeing the deck contents until afterwards, make them
+submit a bit-committed symetric key and encrypt the deck manifest with
+it).  Each individual card in the deck should have a unique identifier
+which should be noted on the manifest.  Identifiers wouldn't need to
+be sequential (in fact they might leak info to the opponent if they
+were), but duplicates of the same card should each have its own id.
+Depending on how you want to run things, you could allow (and probably
+should require) players to submit new a ID-&gt;card list before each
+round begins.
+
+	So my deck might look like:
+
+ID	Card
+--------------------
+309487	Prodigal Sorcerer
+008461	Land (Plains)
+663542	Land (Forrest)
+....
+
+	Before each round, opponents would exchange lists of card IDs.
+Whenever a player needs to "draw", the other player takes an ID at
+random off the list of IDs (and marks is as "used").  At the end of
+each round the players submit a transcript of the game to the umpire
+who then checks that all the cards played were in the decks, that no
+duplicates of the same id/card were used, or changes of cards (i.e. ID
+440315 was supposed to be a "Zombie" but the owning player said it was
+a "Yawgmoth's Daemon").
+
+	If you want to do away with the umpire (for casual play
+between two people), have opponents swap the encrypted deck manifest
+and bit commit to key used.  Afterwards they can double check for
+cheating themselves.  Something you might want to allow is letting a
+player include extra IDs which map to "no card, pick again".  This
+would allow players to disguise the exact size of their deck (although
+this would only allow for puffing up a deck, not making it appear
+smaller).
+
+	As for issuing and trading cards, maybe store cards as signed
+certificates (something along the lines of "card name &amp; serial number"
+signed by the owner, then by the issuer).  This would make trading a
+bit of a problem as you couldn't give the card away without the issuer
+(Online clearing for Magic cards? :).  And there's the problem of how
+do you tell who actually owns the card (if the issuer keeps a list of
+serial number-&gt;owners that might work, but again that needs online
+clearing).  I missed all the discussion on digital bearer bonds a
+while back, but something like that might could be applied here.
+
+	Don't know if that's what you were looking fore, but it's all
+I can think of at this late hour and I'm sure someone will shoot holes
+all through it anyhow. :) What do you think, sirs?
+
+---
+Fletch                                                     __`'/|
+fletch@ain.bls.com  "Lisa, in this house we obey the       \ o.O'    ______
+404 713-0414(w)      Laws of Thermodynamics!" H. Simpson   =(___)= -| Ack. |
+404 315-7264(h) PGP Print: 8D8736A8FC59B2E6 8E675B341E378E43  U      ------
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01896" HREF="msg01896.html">[crypto] crypto-protocols for trading card games</A></STRONG>
+<UL><LI><EM>From:</EM> Simon Spero &lt;ses@tipper.oit.unc.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01900.html">Re: [Fwd: --&gt; CRISIS on USENET -- SIGN THE PROTEST STATEMENT VIAE-MAIL]</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01904.html">Internet traffic is monitored.</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01896.html">[crypto] crypto-protocols for trading card games</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01918.html">Re: [crypto] crypto-protocols for trading card games</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01898"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01898"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

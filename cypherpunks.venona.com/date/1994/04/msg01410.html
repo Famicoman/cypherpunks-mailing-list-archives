@@ -1,0 +1,504 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Anonymous remailer for Waffle -->
+<!--X-From-R13: xnsxnNqrfreg.unpxgvp.ay (Ynsxn) -->
+<!--X-Date: Wed, 27 Apr 94 17:17:40 PDT -->
+<!--X-Message-Id: s0yeLc1w165w@desert.hacktic.nl -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Anonymous remailer for Waffle</TITLE>
+<LINK REV="made" HREF="mailto:kafka@desert.hacktic.nl">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01484.html">Date Prev</A>][<A HREF="msg01480.html">Date Next</A>][<A HREF="msg01478.html">Thread Prev</A>][<A HREF="msg01504.html">Thread Next</A>][<A HREF="index.html#01410">Date Index</A>][<A HREF="threads.html#01410">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Anonymous remailer for Waffle</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Anonymous remailer for Waffle</LI>
+<LI><em>From</em>: <A HREF="mailto:kafka@desert.hacktic.nl">kafka@desert.hacktic.nl</A> (Kafka)</LI>
+<LI><em>Date</em>: Wed, 27 Apr 94 01:01:51 MET</LI>
+<LI><em>Organization</em>: National Obscurity Agency</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+I made a simple remailer for Waffle. Please don't flame me
+on the code.
+
+You install it by putting an entry in your /waffle/system/aliases
+file.
+
+The arguments are
+
+        remail &lt;remailer-username&gt; &lt;uucpname&gt; &lt;node&gt;
+
+If the username of your remailer is "anon", your uucpname is
+"foobar", and your full nodename is "bla.org", you have to put
+the following line in /waffle/system/aliases:
+
+        anon | remail anon foobar foobar.bla.org
+
+FUTURE
+
+I want to make it penet style, but with support of PGP,
+chaining and a database of (passworded) anon accounts.
+
+Future versions will read the uucpname from the
+/waffle/system/static file. (I was too lazy to do that now).
+
+To make it possible to reply, I think the following approach
+will do: the 'reply-to:' address will be
+
+    "&lt;anon@some.system.org&gt; (NickName Anon-ID=XXXXXX)"
+
+where XXXXXX is the number of the anon account you want
+to send mail to, and NickName your (possible) nickname.
+
+Header-fields:
+
+X-Anon-To: (newsgroup or e-mail address)
+X-Anon-Encrypted: PGP (to let the remailer know it is encrypted)
+
+
+Please let me know your comments...
+
+    Patrick :)
+
+
+
+---------------------- cut here ---------------------------
+#include &lt;stdio.h&gt;
+#include &lt;dos.h&gt;
+#include &lt;time.h&gt;
+#include &lt;io.h&gt;
+#include &lt;sys\types.h&gt;
+#include &lt;sys\stat.h&gt;
+#include &lt;fcntl.h&gt;
+
+#define MAIL 0
+#define NEWS 1
+
+main(int argc, char *argv[])
+{
+    const char *Months[]={"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                          "Jul","Aug","Sep","Oct","Nov","Dec", NULL};
+    const char *Days[]={"Mon","Tue","Wed","Thu","Fri","Sat","Sun",NULL};
+
+    char UnixDate[30];
+    char type = 0;
+    char c[1024];
+    FILE *f;
+    char to[1024];
+    char from[60];
+    char subj[128];
+    char cmd[128];
+    char *fname;
+    char *template = "XXXXXX";
+
+    struct dosdate_t d;
+	struct time t;
+ 
+    c[0] = '\0';
+
+    if (argc &lt; 4)
+    {
+        printf("Usage: remail &lt;remailer-username&gt; &lt;uucpname&gt; &lt;node&gt;\n");
+        printf("Example: remail remail desert desert.hacktic.nl\n");
+        return;
+    }
+    while (strlen(gets(c)) != 0 &amp;&amp; ! feof(stdin)) {
+
+        if (strstr(c, "Subject: ") != NULL)
+            strcpy(subj, &amp;c[9]);
+
+        if (strstr(c, "From: ") != NULL)
+            strcpy(from,&amp;c[6]);
+
+        if (strstr(c, "X-Anon-To: ") != NULL)
+            strcpy(to,&amp;c[11]);
+
+    }
+
+    if (strstr(to, "@") != NULL) &amp;&amp; (strstr(to, "!") != NULL)
+        type = MAIL;
+    else
+        type = NEWS;
+
+    gettime(&amp;t);
+    _dos_getdate(&amp;d);
+
+    sprintf(UnixDate, "%s, %d %s %d %02d:%02d:%02d GMT", Days[d.dayofweek], \
+            d.day, Months[d.month-1], d.year,t.ti_hour, t.ti_min, t.ti_sec);
+
+    if (type == MAIL)
+    {
+        fname = mktemp(template);
+
+        f = fopen(fname, "wt");
+
+        fprintf(f, "From %s %s remote from %s\n", argv[1], UnixDate, argv[2]);
+        fprintf(f, "From: %s@%s\n", argv[1], argv[3]);
+        fprintf(f, "To: %s\n", to);
+        fprintf(f, "Subject: %s\n", subj);
+        fprintf(f, "Date: %s\n\n", UnixDate);
+
+        while (! feof(stdin))
+            putc(getc(stdin), f);
+
+        fclose(f);
+        sprintf(cmd, "rmail -f %s -u %s %s &lt; %s", argv[1], argv[1], to, fname);
+        system(cmd);
+        unlink(fname);
+    } else if (type == NEWS)
+    {
+        fname = mktemp(template);
+
+        f = fopen(fname, "wt");
+
+        fprintf(f, "Path: %s!%s\n", argv[1], argv[2]);
+        fprintf(f, "From: %s@%s\n", argv[1], argv[3]);
+        fprintf(f, "Subject: %s\n", subj);
+        fprintf(f, "Date: %s\n", UnixDate);
+        fprintf(f, "Newsgroups: %s\n\n", to);
+
+        while (! feof(stdin))
+            putc(getc(stdin), f);
+
+        fclose(f);
+        sprintf(cmd, "rnews &lt; %s", fname);
+        system(cmd);
+        unlink(fname);
+    }
+}
+
+---------------------- cut here ---------------------------
+
+begin 600 remail.exe
+M35I, !@  0 @  X ___* H          /@    $ ^U!J&lt;@              
+M                       !                                    
+M                                                            
+M                                                            
+M                                                            
+M                                                            
+M                                                            
+M                                                            
+M                                                            
+M                                                            
+M                                                            
+M                      "Z&lt; (NB1:- K0PS2&amp;++@( BQXL ([:HY( C :0
+M (D&gt;C ")+J@ Z($!Q#Z* (O'B]BY_W_\\J[C84,F. 5U]H#-@/?9B0Z* +D!
+M -/C@\,(@^/XB1Z. (S:*^J+/F $@?\  G,'OP "B3Y@!(''H 5R* ,^^ -R
+M(K$$T^]'.^]R&amp;8,^8 0 = &gt;#/O@# '4.OP 0.^]W!XO]ZP/IW &amp;+WP/:B1Z@
+M (D&gt;I "AD  KV([ M$I7S2%?T^?ZCM*+Y_LSP"Z.!HT"OTX%N: %*\_\\ZJ#
+M/LH#%'9'@#Z2  -R0'&lt;'@#Z3 !YR-[@!6+L" ,TA&lt;BJT9XL&gt;R@/-(7(@M$B[
+M 0#-(7(70*.H $B.P+1)S2%R"K@!6+L  ,TA&lt;P/I6P&amp;T ,T:B1:6 (D.F  *
+MP'0,N$  CL"[&lt;  FQ@&lt;!,^TNC@:- KX\!;].!&gt;C0 /\VB #_-H8 _S:$ .@Y
+M 5#H-@8NC@:- E97ODX%OTX%Z*T 7U[#5E&lt;NC@:- C/ B_"Y+P F @2 U !&amp;
+MXO&lt;M7 UT";D9 +HO .C&lt; %]&gt;PXOLM$R*1@+-(;D. +I( .G5 !ZX #7-(8D&gt;
+M= ",!G8 N 0US2&amp;)'G@ C 9Z +@%-&lt;TAB1Y\ (P&amp;?@"X!C7-(8D&gt;@ ",!H( 
+MN  EC,J.VKJ@ &lt;TA'\,&gt;N  EQ19T ,TA'QZX!"7%%G@ S2$?'K@%)&lt;46? #-
+M(1\&gt;N 8EQ1:  ,TA'\.!_CP%= 0RY.L"M/^+UXO&gt;.]]T(R: /_]T&amp;('^/ 5T
+M!B8Z9P'K!"8X9P%W!B:*9P&amp;+TX/#!NO9.]=T&amp;XO:)H _ ";&amp;!_\&amp;= &lt;F_U\"
+M!^NQ)O]7 @?KJL.T0+L" ,TAP[D&gt; +I6 "Z.'HT"Z.K_N , 4.@4!0   0!5
+MB^R![)0)5E&lt;6C4;64!ZXJ@!0N1H Z/L&amp;%HU&amp;QE &gt;N,0 4+D0 .CK!L=&amp;^B !
+MQH:H^P"#?@0$?1.X)P%0Z+$&lt;6;A&lt; 5#HJ1Q9Z0 #ZV.XC0%0C8:H^U#H(2)9
+M60O = ^-AK'[4(V&amp;[/90Z-(A65FXEP%0C8:H^U#H ")960O = ^-AJ[[4(V&amp;
+M;/=0Z+$A65FXG@%0C8:H^U#HWR%960O = ^-AK/[4(V&amp;J/=0Z) A65F-AJC[
+M4.@_&amp;5E0Z*,A60O = CW!HP"( !T@[BJ 5"-AJCW4.BD(5E9"\!T!L9&amp;_P#K
+M!,9&amp;_P&amp;-1O!0Z&amp;$$68U&amp;]%#HBP-9BD;SM !0BD;PM !0BD;QM !0_W;VBD;U
+MM #1X(U6U /"B]C_-XI&amp;]+0 4(I&amp;^+0 T&gt;"-5L8#PHO8_S&gt;XK %0C4:H4.AA
+M((/$$H!^_P!T ^D) ?]V^N@A&amp;5F)1ORXS %0_W;\Z+@565F+^(M&gt;!O]W!(U&amp;
+MJ%"+7@;_=P*XSP%05^B[%8/$"HM&gt;!O]W!HM&gt;!O]W KCJ 5!7Z*05@\0(C8:H
+M]U"X]P%05^B4%8/$!HV&amp;[/90N/\!4%?HA!6#Q :-1JA0N P"4%?H=16#Q ;K
+M2_\%?2;_#HH"? R+'I0"_P:4 HH'ZPBXB@)0Z/,668M="O]%"H@'M #K(5?_
+M#HH"? R+'I0"_P:4 HH'ZPBXB@)0Z,P665#H^QI96?&lt;&amp;C (@ '2M5^A=$EG_
+M=OR-AJCW4(M&gt;!O]W HM&gt;!O]W K@7 E"-AFSV4.AB'X/$#(V&amp;;/90Z"D06?]V
+M_.C"!5GI^@" ?O\!= /I\0#_=OKH#QA9B4;\N#$"4/]V_.BF%%E9B_B+7@;_
+M=P2+7@;_=P*X- )05^BM%(/$"(M&gt;!O]W!HM&gt;!O]W KA! E!7Z)84@\0(C8;L
+M]E"X3@)05^B&amp;%(/$!HU&amp;J%"X6P)05^AW%(/$!HV&amp;J/=0N&amp;4"4%?H9Q2#Q ;K
+M2_\%?2;_#HH"? R+'I0"_P:4 HH'ZPBXB@)0Z.4568M="O]%"H@'M #K(5?_
+M#HH"? R+'I0"_P:4 HH'ZPBXB@)0Z+X565#H[1E96?&lt;&amp;C (@ '2M5^A/$5G_
+M=ORX=@)0C89L]E#H91Z#Q :-AFSV4.@L#UG_=OSHQ0197UZ+Y5W#58OL@SZ"
+M B!U!;@! .L3BQZ" M'CBT8$B8=.!?\&amp;@@(SP%W#58OL5E&gt;_ 0"+=@B+Q@O 
+M=!XS_^L.B]Z#Q@+_-^C,'EE  _B#/ !T!XL&lt;@#\ =&gt;9'@WX&amp; '0,_W8&amp;Z*\&gt;
+M604#  /X@?\ ('(#Z8  B\&lt;%#P!0Z,L*68O0"\!T&lt;(M&gt;!(D7@\(/@^+PBW8(
+MB\8+P'0J@SP ="7K%8O&gt;@\8"_S=2Z/4(65F+T(O:Q@&lt; 0H,\ '0/BQR /P!U
+MW^L&amp;B]K&amp;!P!"B]K&amp;!P!"@WX&amp; '0:B]K'!P$ @\("_W8&amp;4NB["%E9B]"+VL8'
+M $*+PBO'ZP(SP%]&gt;7&lt;(&amp; %6+[+1#,L"+5@3-(7()BUX&amp;B0\SP.L$4.A. 5W#
+M58OLM$.P 8M6!(M.!LTA&lt;@0SP.L$4.@S 5W#58OL5HMV!+0JS2&amp;(1 2(%(AT
+M 8E, EY=PU6+[%:+=@2T+,TAB"R(3 &amp;(= *(5 -&gt;7&lt;/#58OL5HMV" OV=1[K
+M#O\.@@*+'H("T&gt;/_ETX%@SZ" @!UZ^CR^?\6A +H&gt;_KH^_F#?@8 =1,+]G4(
+M_Q:&amp; O\6B +_=@3H"_I97EW"!@!5B^PSP%!0_W8$Z*;_7&lt;-5B^RX 0!0,\!0
+M_W8$Z)3_7&lt;,SP%"X 0!0,\!0Z(7_P[@! %!0,\!0Z'G_PU6+[%:+=@2T*LTA
+MB0R)5 )&gt;7&lt;-5B^Q6BW8$M"S-(8D,B50"7EW#N  WS2&amp;*PK0 PU6+[+@!-XI6
+M!,TA7&lt;-5B^Q6BW8$"_9\%8/^6'X#OE&lt; B3;Z XJ$_ .8B_#K#??&gt;@_XC?^G'
+M!OH#__^)-I0 N/__7EW" @!5B^Q6BW8$5NB\_XO&amp;7EW" @!5B^RX $2+7@3-
+M(9(E@ !=PU6+[(/L(E97!HM^"AX'BUX(@_LD=UB ^P)R4XM&amp;#(M.#@O)?1&amp; 
+M?@8 = O&amp;!2U']]GWV(/9 (UVWN,/D2O2]_.1]_.(%$;C"&gt;OQ*]+W\X@41@O 
+M=?6-3M[WV0/._$Z*!"P*&lt;P0$.NL# D8$JN+OL "J!XM&amp;"E]&gt;B^5=P@P 58OL
+M,\!0_W8&amp;_W8$N H 4+  4+!A4.AJ_UW"! !5B^R+7@31XX&amp;GS /__;1"BD8*
+MBUX$BTX(BU8&amp;S2%R NL%4.CD_IE=PU6+[%:+=@B+5@8+]G4#OHX%_W8$"])U
+M!;A6!.L"B\)05N@P!EE94.B0_[A:!%!6Z T;65F+QEY=P@8 58OL@^P"5E&gt;+
+M=@:+?@16,\!0@SW_=06X @#K [@!  $%BP50Z)[_B_"-1OY05NA%_5E9"\!T
+MUXO&amp;7UZ+Y5W"! !5B^Q65Q[%=@3$?@C\T&gt;GSI1/)\Z0?7UY=P@@ 58OLBUX$
+MT&gt;/WA\P# @!T!K@% %#K$K0_BUX$BTX(BU8&amp;S2%R NL$4.@&gt;_EW#N@4 .Q;*
+M W,KB]K1X\&gt;'S ,  (O:L033X\:'C@+_B\+3X 6* HO:T^.)AY@"0CL6R@-R
+MU:". IA0Z"O^60O =0:!)HP"__VX  )0]P:, @ "= 6X 0#K C/ 4#/ 4+B*
+M E#H[!B#Q B@G@*84.CW_5D+P'4&amp;@2:&lt; O_]N  "4/&lt;&amp;G (  G0%N ( ZP(S
+MP% SP%"XF@)0Z+@8@\0(PU6+[+@! % SP%!0_W8$Z&amp;3^@\0(7&lt;-5B^RT08M6
+M!,TA&lt;@0SP.L$4.A5_5W#BL;H @"*PM00AN#H @"&amp;X 20)Q1 )ZK#58OL@&gt;R6
+M %97QT;N  #'1NQ0 ,=&amp;Z@  ZT97N?__,L#RKO?125_#-H@%1_Y.['4O4U%2
+M!HV&amp;:O\K^(V&amp;:O]05_]V"/]6"@O =07'1NH! ,=&amp;[%   7[NC;YJ_P=:65O#
+M!OR-OFK_B7[\BW[\BW8&amp;K K =!(\)701-H@%1_Y.['_NZ*S_Z^GIU0.)=O"L
+M/"5TYXE^_#/)B4[RB4[^B$[UQT;X___'1O;__^L!K#+DB]"+V(#K((#[8',3
+MBI]I!(/[%W8#Z8@#T&gt;,N_Z=-#^E^ X#] '?X@T[^ &gt;O0@/T =^V#3OX"Z\6 
+M_0!WXH!^]2MT XA6]&gt;NU@V;^W^L$@T[^(+4%ZZ&gt; _0!W3?=&amp;_@( =2F#3OX(
+MM0'KD^DS XM^!#:+!8-&amp;! * _0)S$@O &gt;0;WV(-._@*)1OBU ^EO_X#]!'77
+MB4;V_L7I8O^ _01SRK4$_T;VZ57_DBPPF(#] G&lt;9M0*'1O@+P'S1T&gt;"+T-'@
+MT&gt; #P@%&amp;^.DS_X#]!'6;AT;V"\!TM='@B]#1X-'@ \(!1O;I%_^#3OX0Z67_
+M@4[^  &amp;#9O[OZ5G_MPCK"K&lt;*ZPJW$+/I MK&amp;1O4 B%;[,]*(5OJ+?@0VBP7K
+M$+&lt;*QD;Z 8A6^XM^!#:+!9E'1XEV!O=&amp;_A  = 4VBQ5'1XE^!(U^NPO =0T+
+MTG4)@W[V '4'Z6C^@T[^!%)05XK'F%"*1OI04^B#^Q8'BU;V"])] ^GR .G]
+M (A6^XEV!HU^NHM&gt;!#;_-T-#B5X$]T;^( !T$#:+%T-#B5X$%@?HG?VP.JH6
+M!UKHE/TVQ@4 QD;Z (-F_ON-3KHK^8?/BU;V.]%_ HO1Z9\ B78&amp;B%;[BWX$
+M-HL%@T8$ A8'C7Z[,N0VB06Y 0#IP@")=@:(5ON+?@3W1OX@ '4--HL]@T8$
+M AX'"__K"S;$/8-&amp;! 2,P O'=04&gt;![]B!.A5_3M.]G8#BT[VZ84 B78&amp;B%;[
+MBWX$BT[V"\E] [D&amp; %=1C5Z[4U*X 0 C1OY0BT;^J0 != FX" "#1@0*ZP&gt;#
+M1@0(N 8 4.CR!!8'C7Z[]T;^" !T&amp;(M6^ O2?A'H]_PF@#TM=0%)*]%^ XE6
+M\B: /2UT"XI&amp;]0K =!1/)H@%@W[R 'X*BT[V"\E] _].\NC%_(OWBW[\BU[X
+MN 4 (T;^/04 =1.*9ON _&amp;]U#8-^\@!_!&lt;=&amp;\@$ ZQN _'AT!8#\6'41@T[^
+M0$M+@V[R GT%QT;R   #3O+W1OX" '4,ZP:P(.A^_$L[V7_V]T;^0 !T"[ P
+MZ&amp;W\BD;[Z&amp;?\BU;R"])^)RO**]HFB@0\+70(/"!T!#PK=0&lt;FK.A(_$E+A\KC
+M![ PZ#W\XOF'RN,2*]DFK#:(!4?^3NQ_ ^@P_.+P"]M^"8O+L"#H&amp;OSB^&gt;E:
+M_(EV!HM^!/=&amp;_B  =0LVBSV#1@0"'@?K!S;$/8-&amp;! 2X4  J1NP#1NXFB07W
+M1OX0 '0'1T&lt;FQP4  .D;_(MV\(M^_+ EZ,[[K K =?B ?NQ0?0/HR?L'@W[J
+M '0%N/__ZP.+1NY?7HOE7&lt;(( +4+GPOJ"ZH+&amp; PE#&amp;,,:@QO#-,+F QV#'H,
+M?@SR#)\-0@UB#&gt;$.'0\=#QT/Q0O+"U6+[%97BWX$_W8&amp;Z&amp;&lt;568OP0%#_=@97
+MZ$L-@\0&amp;B\&lt;#QE]&gt;7&lt;-5B^R+1@2+U('J  ([PG,'HYP ,\#K"&lt;&lt;&amp;E  ( +C_
+M_UW#58OLBT8$BU8&amp; P:&lt; (/2 (O("])U$('!  )R"CO,&lt;P:'!IP ZPG'!I0 
+M" "X__]=PU6+[/]V!.BD_UE=PU6+[(M&amp;!)E24.BW_UE97&lt;.ZR@3K [K/!+D%
+M +1 NP( S2&amp;Y)P"ZU 2T0,TAZ4CR58OLBU8(M$2*1@:+7@2+3@K-(7(,@WX&amp;
+M '4$B\+K!NL$4.BU]UW#5E&gt;+](M&lt;!H/K!'(..Q[^!'0%Z$( ZP/H P!?7L,Y
+M'OP$=".+=P+V! %T!HDV_@3K(#LV_ 1T#8O&gt;Z%0 BT&lt;"H_X$ZPV+WC/ H_P$
+MH_X$HP %4^CV_EO#_P\['OP$=!B+=P*+!*@!=0\#!XD$BS\#^XEU HO&gt;ZP/H
+M,@"+/P/[BP6H 70!PP$'B_&lt;#\(E&lt; HO?BW\&amp;.]]T#HD^  6+=P2)=02)? ;#
+MQP8 !0  PXLV  4+]G00BWP&amp;B5P&amp;B5T$B7\&amp;B7&lt;$PXD&gt;  6)7P2)7P;#5E&gt;+
+M](M$!@O =%(%!0!R-B7^_ST( ',#N @ @S[\! !T'XL&gt;  4+VW0-B],Y!W,:
+MBU\&amp;.]IU]&gt;AF .LAZ(H ZQSH' #K%S/ ZQ.+\(/&amp;"#DW&lt;^GH:___!XO#!00 
+M7U[#4#/ 4%#H-OY;6R4! '0),])24.@H_EM;6% SVU-0Z!W^6UL]__]T%(O8
+MB1[\!(D&gt;_@180(D'@\,$B\/#6S/ PU SVU-0Z/;]6UL]__]T%HO8H?X$B4&lt;"
+MB1[^!%A B0&gt;#PP2+P\-8,\##*0&gt;+\P,WB_X#^$")!(E&lt; HEU H/&amp;!(O&amp;PXOL
+M4U!14.@5_UN+V O =!\&gt;!_R+^(MV_HL,@\8$5H/I!='I\Z6)1O[H)/Y;BU[^
+M@\0&amp;PXO"@\((.]%W-8O1.Q[^!'4/B0?_!P/#4U#H2_U;6^L&gt;B_L#^(E= BO0
+M*1&gt;+]P/RB7P"0HD5B\N+W^@W_HO9@\,$PU9758OLBUX(BT8*"\!T-PO;="V#
+MZP2+#TF+T(/"!8/B_H/Z"',#N@@ .\IR#'&lt;%@\,$ZPCHA__K ^A/_XO#ZPU0
+MZ&amp;7^ZP93Z)#],\!;75]&gt;P_\F- 4  (\&amp;!@6/!@@%CP8*!2Z,'M(2B38,!8D^
+M#@7\C@:0 +Z  #+D)JQ C,6'UI.+-HH 1D:Y 0" /I(  W(1C@:, (O^L7\R
+MP/*NXVZ \7]0B\$#PT E_O^+_"OX&lt;ER+YP8?%@=12?.D,L"JCMV'\H?9B\.+
+MT$/H&amp;0!W!W) Z!( =_D\('0(/ UT!#P)=&gt;@RP.OD"\!T!T*J"L!U 4.&amp;X#+ 
+M^&gt;,5K$DL(G0/!"(\7'4'@#PB=0*L20OVP^GJ[ED#RBZ.'M(2B1X"!4,#VXOT
+MB^PKZW+FB^6)+@0%XPZ)=@"#Q0(VK K X/IT\#/ B48 +HX&gt;TA*+-@P%BSX.
+M!?\V"@7_-@@%H0(%HX0 H00%HX8 _R8&amp;!597BPZ* %'H-_U9B_@+P'0B'AX'
+MCAZ, #/V_/.D'XOX!O\VC@#H&amp;?U;B]@'HQ %"\!U ^E=[C/ N?__@#T = R)
+M/X/# O*N)C@%=?2)!U]&gt;H1 %HX@ PP    !5B^R#["Y6'E&lt;&amp;%@&gt;+1@B,V@O 
+M= :Q!-/H \*)1O*+=@:)=O2,7O:X 2F-?M*)?OB,1OI&amp;S2&amp;*!#P@= L\"70'
+M/ UT T;K[[@!*8U^XHE^_(Q&amp;_LTA!HX&amp;D "+=@2_@ "Y?P#\K(3 = 6JXOBP
+M *H'51Z-7O*.'I  NH  N !+-O\V+@ V_S8P "Z,%CX4+HDF/!3-(?HNCA8^
+M%"Z+)CP4^S:/!C  -H\&amp;+@ ?77,&amp;4.@7\^L$M$W-(0=?'UZ+Y5W#58OL@^P(
+M5E&gt;+?@0+_W4=N!(%4.@3!UD+P'4+QP:4  ( ,\#IU0"X 0#ISP"X&amp;@50Z/8&amp;
+M68E&amp;^@O =0G'!I0  @#IAP!7Z*D/604% (E&amp;_H%^_H  ?@C'!I0 % #K;?]V
+M_NC!^UF+\ O =0C'!I0 " #K6(-^_@5U"&lt;8$ ,9$ 0WK*HI&amp;_@3^B 1&amp;Z&amp;7R
+MB 1&amp;N"(%4%;HY/E968OP5U#HV_E968OPQ@0-1BMV_O\V$ 7_=OJ-1OQ0Z$SP
+MB_@+P'40QP:4  @ 5NB,^EFX___K*_\6A )75O]V^NAC_H/$!HE&amp;^/]V_.AN
+M^EE6Z&amp;GZ68-^^/]U!;C__^L",\!?7HOE7&lt;-5B^PSP%#_=@3H)0!968O0@_K_
+M=!KW1@8" '0&amp;]\(! '4$,\#K"&lt;&lt;&amp;E  % +C__UW#58OLBTX(M$.*1@:+5@3-
+M(7(#D&gt;L$4.B^\5W#58OLBU8$.Q;* W()N 8 4.BI\&gt;L/B]K1X\&gt;'S ,  %+H
+M P!97&lt;-5B^RT/HM&gt;!,TA&lt;@S1X\&gt;'S ,  #/ ZP10Z'KQ7&lt;-5B^R#[ 2+1@0[
+M!LH#&lt;@:X!@!0ZUN+7@31X_&gt;'S ,  G0%N $ ZTRX $2+7@3-(7(^]L* =36X
+M 4(SR8O1S2%R+E)0N )",\F+T&lt;TAB4;\B5;^6EER&amp;;@ 0LTA&lt;A([5OYR"7&lt;%
+M.T;\&lt;@+KMS/ ZP10Z 7QB^5=PU6+[%97BWX$OO__.7T.=5^#?08 =!R#/0!]
+M"5?H5@!9"\!U2_=% @0 = ?_=0CH'?E9@'T$ 'P+BD4$F%#H!?]9B_#'10( 
+M ,=%!@  QP4  ,9%!/^#?0P =!0SP%!0_W4,Z+OQ4.@O\UG'10P  (O&amp;7UY=
+MPU6+[%97BWX$"_]U!&gt;AN .MF.7T.= 6X___K7H,] 'PI]T4"" !U"HO'!04 
+M.44*=4;'!0  B\&lt;%!0 Y10IU.(M%"(E%"NLPZRZ+108#!4"+\"DU4(M%"(E%
+M"E"*10284.B+#8/$!CO&amp;= WW10(  G4&amp;@TT"$.N?,\!?7EW#58OL@^P"5E?'
+M1OX  (L^R@.^B@+K$O=$ @, = A6Z&amp;+_6?]&amp;_H/&amp;$(O'3PO =&gt;&gt;+1OY?7HOE
+M7&lt;-5B^R#[ )65XMV",=&amp;_@  B]Y&amp;B@^*P3QR=0BZ 0"_ 0#K((#Y=W4%N@(#
+MZPB ^6%U#;H""&lt;=&amp;_H  OP( ZP0SP.MIB@Q&amp;@/DK= ^ /"MU'X#Y='0%@/EB
+M=16 ^2MU HH,@^+\@\H$QT;^@ &amp;_ P" ^71U!H'* $#K'8#Y8G4&amp;@&lt;H @.L/
+MH?0#)0# "]"+PJD @'0#@\] QP:&amp; JHFBUX&amp;B1&gt;+7@2+1OZ)!XO'7UZ+Y5W"
+M!@!5B^R#[ 16BW8*_W8&amp;C4;^4(U&amp;_%#H-/^)1 (+P'0@@'P$ 'TG_W;\BT;^
+M"T8$4/]V".C-!(/$!HA$! K ?0W&amp;1 3_QT0"   SP.M!BD0$F%#H&amp;N]9"\!T
+M!8%, @ "N  "4/=$ @ "= 6X 0#K C/ 4#/ 4%;HX F#Q @+P'0'5NB?_5GK
+MPL=$#   B\9&gt;B^5=P@@ 5KZ* H!\! !\$Z'* [$$T^ %B@*+UH/&amp;$#O"=^&gt; 
+M? 0 ? 0SP.L"B\9&gt;PU6+[.C/_XO0"\!U!#/ ZPU2_W8$_W8&amp;,\!0Z"3_7&lt;-5
+MB^RXYB!0_W8$_W8&amp;C48(4.CV\%W#58OL5E&gt;+=@2#/ !]"HM4!@,40HOZZPN+
+M!)DSPBO"B]"+^/=$ D  =2R+3 J#/ !]'&gt;L)28O9@#\*=0%'B\)*"\!U\.L0
+MB]E!@#\*=0%'B\)*"\!U\(O'7UY=P@( 58OL5E&gt;+=@2+?@I6Z#?]60O = 6X
+M___K1X/_ 740@SP ?@M6Z'S_F2E&amp;!AE6"(%D E_^QP0  (M$"(E$"E?_=@C_
+M=@:*1 284.A\[H/$"(/Z_W4*/?__=06X___K C/ 7UY=PU6+[(/L!%:+=@2*
+M1 284.C=[UF)5OZ)1OR#^O]U!3W__W0=@SP ?0U6Z!/_F0%&amp;_!%6_NL+5N@&amp;
+M_YDI1OP95OZ+5OZ+1OQ&gt;B^5=PU97OQ0 OHH"ZQ.+1 (E  ,]  -U!5;H?OQ9
+M@\80B\=/"\!UYE]&gt;PU6+[%:+=@3W1 (  G0#Z,C__W0&amp;BT0(B40*4(I$!)A0
+MZ$8'@\0&amp;B00+P'X(@V0"WS/ ZQZ#/ !U#HM$ B5__@T@ (E$ NL(QP0  (-,
+M A"X__]&gt;7&lt;(" %6+[%:+=@3_!%;H! !97EW#58OL5HMV! OV=0:X___IEP"#
+M/ !^#?\,BUP*_T0*B@?I@P"#/ !\5/=$ A !=4WW1 (! '1&amp;@4P"@ "#? 8 
+M= Q6Z%/_"\!TS&gt;O Z\GW1 (  G0#Z!K_N $ 4+B&lt;!5"*1 284.B:!H/$!@O 
+M=2.*1 284.BF^ED] 0!T!H-, A#KB8M$ B5__@T@ (E$ NEZ_X ^G 4-=0?W
+M1 )  '2N@V0"WZ"&lt;!;0 7EW#N(H"4.A._UG#58OL@^P"5E&gt;+?@0&gt;!PO_=!JP
+M (HEN?___/*N]]%)= N+/A %"_^)?OYU"S/ ZRJ#1OX"BW[^BST+_W3OB@4*
+MP'3I.N!UZ8O9@#D]=&gt;*+=@3SIH?+==E'B\=?7HOE7&lt;-5B^Q65XM^!(OWZP.(
+M%$;_#HH"? Z+'I0"_P:4 HH'M #K"+B* E#HLOY9B] ]__]T!8/Z"G75@_K_
+M=0@[]W4$,\#K$&lt;8$ /&lt;&amp;C (0 '0$,\#K HO'7UY=PU6+[%97'@&gt;+?@2+=@:+
+M3@C1Z?SSI7,!I(M&amp;!%]&gt;7&lt;-5B^R#[ I65XM^!%?HX@=9B]"#^@9] ^F; (OW
+M _*#QOJX)@505NAW!UE9"\!T ^F# ,9$ B['1OY! .MRBD;^B 3'1OQ! .M=
+MBD;\B$0!QT;Z00#K1XI&amp;^HA$ \=&amp;^$$ ZS&amp;*1OB(1 3'1O9! .L;BD;VB$0%
+M,\!05^B$^%E9/?__=02+Q^LO_T;V@W[V6G[?_T;X@W[X6G[)_T;Z@W[Z6GZS
+M_T;\@W[\6GZ=_T;^@W[^6GZ(,\!?7HOE7&lt;-5B^R+3@2T/(M6!LTA&lt;@+K!%#H
+M-^I=P@0 58OLBUX$*\DKTK1 S2%=P@( 58OL@^P$5E&gt;+=@:+?@CWQ@# =0BA
+M] ,E , +\#/ 4/]V!.@E^%E9B4;^]\8  71X(S[V XO'J8 !=0&gt;X 0!0Z-_I
+M@W[^_W4C@S[Z P)T"O\V^@/HR^GI[0#WQX  = 0SP.L#N $ B4;^ZPSWQ@ $
+M=#&gt;X4 !0Z]SWQO  =!G_=@0SP%#H3_^+^ O ?0/IM0!7Z/CW6&gt;L2_W8$_W;^
+MZ#;_B_@+P'ULZ9P 5O]V!.B= %E9B_@+P'Q:,\!05^B)\5E9B4;\J8  =!Z!
+MS@ @]\8 @'0&gt;)?\ #2  4+@! %!7Z&amp;;Q@\0&amp;ZPKWQ@ "= 17Z/[^]T;^ 0!T
+M&amp;O?&amp;  %T%/?&amp;\ !T#K@! %!0_W8$Z#SW@\0&amp;"_]\+_?&amp;  -T!;@ $.L",\"+
+MUH'B__@+T%+W1OX! '0$,\#K [@  5H+T(O?T&gt;.)E\P#B\=?7HOE7&lt;-5B^R#
+M[ *P 8M.!O?! @!U"K "]\$$ '4"L "+5@2Q\").!@K!M#W-(7(:B4;^BT8&amp;
+M)?^X#0" BU[^T&gt;.)A\P#BT;^ZP10Z(SHB^5=PU6+[+CF(%"XF@)0_W8$C48&amp;
+M4.@XZUW#58OL5HMV!O\,5HI&amp;!)A0Z 4 65E&gt;7&lt;-5B^Q65XM^!HI&amp;!**&gt;!8,]
+M_WTZ_P6+70K_10J(!_=% @@ =0/I]0" /IX%"G0*@#Z&gt;!0UT ^GD %?HDO=9
+M"\!U ^G8 +C__^G7 .G/ /=% I  =0?W10(" '4&amp;@TT"$.OC@4T"  &amp;#?08 
+M=$6#/0!T"5?H6?=9"\!URHM%!O?8B06+70K_10J@G@6(!_=% @@ =0/IA@" 
+M/IX%"G0'@#Z&gt;!0UU&gt;%?H)O=9"\!T;^N5ZVN*1028T&gt;"+V/&gt;'S , "'03N ( 
+M4#/ 4%"*10284.A_Z(/$"( ^G@4*=1_W10)  '48N $ 4+@N!5"*10284.C.
+M!8/$!CT! '48N $ 4+B&gt;!5"*10284.BV!8/$!CT! '0*]T4"  )U ^D__Z"&gt;
+M!;0 7UY=PU6+[+B: E#_=@3HSOY965W#58OL@^P"5E&gt;+?@2+1@:)1O[W10((
+M '0IZQI7BUX(_T8(B@&gt;84.BB_EE9/?__=04SP.E5 8M&amp;!O].!@O ==SI10'W
+M10)  '4#Z=\ @WT&amp; '4#Z9@ BT4&amp;.T8&amp;&lt;T^#/0!T"5?H,_99"\!UQ8I%!)C1
+MX(O8]X?, P (=!.X @!0,\!04(I%!)A0Z)#G@\0(_W8&amp;_W8(BD4$F%#H[P2#
+MQ 8[1@9R ^G@ .N'Z=L BP4#1@9\&amp;X,] '4*N/__*T4&amp;B07K#%?HT_59"\!T
+M ^EB__]V!O]V"/]U"N@C^X/$!HL% T8&amp;B06+1@8!10KIF@"*1028T&gt;"+V/&gt;'
+MS , "'03N ( 4#/ 4%"*10284.@.YX/$"/]V!O]V"(I%!)A0Z&amp;T$@\0&amp;.T8&amp;
+M&lt;V'I!__K7(-]!@!T/&gt;LO_P5]%(M="O]%"HMV"/]&amp;"(H$B &gt;T .L/5XM&gt;"/]&amp;
+M"(H'4.A&lt;_5E9/?__=0/ISOZ+1@;_3@8+P'7'ZQG_=@;_=@B*10284.@+ X/$
+M!CM&amp;!G,#Z:G^BT;^7UZ+Y5W"!@!5B^R#[ 165XM&amp;!#L&amp;R@-R"K@&amp; %#H&gt;^7I
+MIP"+1@A /0( &lt;@V+7@31X_&gt;'S ,  G0%,\#IC #_=@C_=@;_=@3H".&gt;#Q :)
+M1OY /0( &lt;@V+7@31X_&gt;'S , 0'4%BT;^ZV*+3OZ+=@8&gt;!XO^B][\K#P:="T\
+M#70%JN+TZQSB\ 93N $ 4(U&amp;_5#_=@3HO&gt;:#Q 9;!_R*1OVJ._MU NN9ZR!3
+MN $ 4/?9&amp;\!04?]V!.C9Y8/$"(M&gt;!-'C@8_, P "6RO[EU]&gt;B^5=PU6+[%97
+MBW8$BWX*.70.=0R#?@@"?P:!__]_=@:X___II "#/C(% '4.@?Z: G4(QP8R
+M!0$ ZQ.#/C % '4,@?Z* G4&amp;QP8P!0$ @SP = ^X 0!0,\!04%;HGO:#Q CW
+M1 ($ '0'_W0(Z*WL68-D O/'1 8  (O&amp;!04 B40(B40*@WX( G0^"_]V.L&lt;&amp;
+MA +0)H-^!@!U&amp;%?H3&gt;U9B48&amp;"\!U ^EW_X-, @3K ^EN_XM&amp;!HE$"HE$"(E\
+M!H-^" %U!(-, @@SP%]&gt;7&lt;-5B^Q65XM^!HMV!%?_=@C_-.C%^(/$!@$\BQS&amp;
+M!P"+QU]&gt;7&lt;(&amp; %6+[(M&gt;!,8' +@))%"-1@10_W8&amp;C48(4.B%YEW#58OLBUX$
+MQ@&lt; N DD4(U&amp;!%#_=@;_=@CH:&gt;9=PU6+[%97_(M^!!X'B]&lt;RP+G___*NC77_
+MBWX&amp;N?__\J[WT2OYA_?WQ@$ = *D2='I\Z5S :227UY=PU6+[%97C-B.P/PS
+MP(O8BWX&amp;B_&lt;RP+G___*N]]&amp;+_HMV!/.FBD3_BEW_*\-?7EW#58OL5E&lt;&gt;!_R+
+M?@:+]S+ N?__\J[WT8M^!/.DBT8$7UY=PU6+[%&gt;,V([ BWX$,\#\N?__\JZ1
+M]]!(7UW#58OL5E&gt;+7@:*!Y@+P'4%BT8$ZT@&gt;!_R+?@2+WS/ N?__\J[WT8?*
+MBWX&amp;B^\SP+G___*N0??1B_6LA_N'RO*NB]]U!#O*&lt;P6[ 0#K#8?*XPF+P4GS
+MIHO(==V+PTA?7EW#58OL@&gt;R( %97BWX$BW8&amp;.S[* W(*N 8 4.B"XNG? (M&amp;
+M"$ ] @!S!3/ Z=$ B]_1X_&gt;'S , "'0/N ( 4#/ 4%!7Z$_C@\0(B]_1X_&gt;'
+MS , 0'4._W8(5E?HJ "#Q ;IG "+W]'C@:?, __]B7;ZBT8(B4;^ZTW_3OZ+
+M7OK_1OJ*!XA&amp;_3P*=03&amp;! U&amp;BD;]B 1&amp;C89X_XO6*]"!^H  ?"&lt;K\%905^A;
+M (/$!HO0.\9T$H/Z_W4%N/__ZSV+1@@K1O[K,8VV&gt;/^#?OX =:F-AGC_*_"+
+MQ@O =B%6C89X_U!7Z"  @\0&amp;B] [QG0.@_K_=,6+1@@#PBO&amp;ZP.+1@A?7HOE
+M7&lt;-5B^R+7@31X_&gt;'S ,! '0&amp;N 4 4.L?M$"+7@2+3@B+5@;-(7(/4(M&gt;!-'C
+M@8_, P 06.L$4.ABX5W#5E&lt;S_[Z* CL^R@-S%O=$ @, = 56Z$?P68/&amp;$$&lt;[
+M/LH#&lt;NI?7L-65[\$ +Z* NL0]T0" P!T!5;HF?!93X/&amp;$ O_=&gt;Q?7L,     
+M                    0F]R;&amp;%N9"!#*RL@+2!#;W!Y&lt;FEG:'0@,3DY,2!"
+M;W)L86YD($EN=&amp;PN $YU;&amp;P@&lt;&amp;]I;G1E&lt;B!A&lt;W-I9VYM96YT#0I$:79I9&amp;4@
+M97)R;W(-"D%B;F]R;6%L('!R;V=R86T@=&amp;5R;6EN871I;VX-"@          
+M                                        H 6@!0              
+M -0 V #&lt; .  Y #H .P \ #T /@ _    0  ! $( 0P!$ $4 1@!' $  $IA
+M;@!&amp;96( 36%R $%P&lt;@!-87D 2G5N $IU; !!=6&lt; 4V5P $]C= !.;W8 1&amp;5C
+M $UO;@!4=64 5V5D %1H=0!&amp;&lt;FD 4V%T %-U;@!86%A86%@ 57-A9V4Z(')E
+M;6%I;" \&lt;F5M86EL97(M=7-E&lt;FYA;64^(#QU=6-P;F%M93X@/&amp;YO9&amp;4^"@!%
+M&gt;&amp;%M&lt;&amp;QE.B!R96UA:6P@&lt;F5M86EL(&amp;1E&lt;V5R="!D97-E&lt;G0N:&amp;%C:W1I8RYN
+M; H 4W5B:F5C=#H@ $9R;VTZ( !8+4%N;VXM5&amp;\Z( !  "5S+" E9" E&lt;R E
+M9" E,#)D.B4P,F0Z)3 R9"!'350 =W0 1G)O;2 E&lt;R E&lt;R!R96UO=&amp;4@9G)O
+M;2 E&lt;PH 1G)O;3H@)7- )7,* %1O.B E&lt;PH 4W5B:F5C=#H@)7,* $1A=&amp;4Z
+M("5S"@H &lt;FUA:6P@+68@)7,@+74@)7,@)7,@/" E&lt;P!W= !0871H.B E&lt;R$E
+M&lt;PH 1G)O;3H@)7- )7,* %-U8FIE8W0Z("5S"@!$871E.B E&lt;PH 3F5W&lt;V=R
+M;W5P&lt;SH@)7,*"@!R;F5W&lt;R \("5S     $0'1 =$!P  "0(             
+MB@(   H" 0           )H"   " @(           "J @  0P(#        
+M    N@(  $("!            ,H"                                
+M                                                            
+M                                                            
+M                                                            
+M                                                            
+M                                                %  !8 )@ F $
+MH *@                                         $#__P      $P("
+M! 4&amp;" @(%!4%$_\6!1$"_________________P4%____________________
+M_P__(P+_#_____\3__\" @4/ O___Q/__________R/_____(_\3_P!435  
+M+B0D)    ! H;G5L;"D  !04 105%!04% ( % ,$% D%!04%!04%!044%!04
+M%!04%!04% \7#P@4%!0'%!84%!04%!04%!0-%!04%!04%!04%! *#P\/" H4
+M% 84$@L.%!01% P4% T4%!04%!04 '!R:6YT('-C86YF(#H@9FQO871I;F&lt;@
+M&lt;&amp;]I;G0@9F]R;6%T&lt;R!N;W0@;&amp;EN:V5D#0H                         
+M     $-/35-014, 0T]-4U!%0P!C(   6%A86%A8   -       1$!80%A 6
+1$  "[@D    0U!(    0Y1-%
+ 
+end
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01504" HREF="msg01504.html">Anonymous remailer for Waffle</A></STRONG>
+<UL><LI><EM>From:</EM> hughes@ah.com (Eric Hughes)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01484.html">Re: Liberating Schneier's Code?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01480.html">No Subject</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01478.html">Accounts...</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01504.html">Anonymous remailer for Waffle</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01410"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01410"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

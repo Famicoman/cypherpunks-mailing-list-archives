@@ -1,0 +1,181 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Tagging data to detect thieves -->
+<!--X-From-R13: [nep.DvathrggrNUE80.EB.QE.Q[G.SRG -->
+<!--X-Date: Thu, 11 Mar 93 19:05:22 PST -->
+<!--X-Message-Id: 9303120305.AA09556@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Tagging data to detect thieves</TITLE>
+<LINK REV="made" HREF="mailto:Marc.Ringuette@GS80.SP.CS.CMU.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00309.html">Date Prev</A>][<A HREF="msg00310.html">Date Next</A>][<A HREF="msg00316.html">Thread Prev</A>][<A HREF="msg00398.html">Thread Next</A>][<A HREF="index.html#00317">Date Index</A>][<A HREF="threads.html#00317">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Tagging data to detect thieves</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Tagging data to detect thieves</LI>
+<LI><em>From</em>: <A HREF="mailto:Marc.Ringuette@GS80.SP.CS.CMU.EDU">Marc.Ringuette@GS80.SP.CS.CMU.EDU</A></LI>
+<LI><em>Date</em>: Thu, 11 Mar 1993 21:47-EST</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I've done some further thinking on the text tagging problem,
+spurred by a question on sci.crypt about tagging pictures
+(under the subject line "Permanent signatures for pictures").
+
+Here's a summary.
+
+----
+
+Let's say Dow Jones wants to sell newswire subscriptions to individuals,
+but someone is anonymously forwarding their articles to a newsgroup.  Can
+they succeed in tagging the text to detect the thief?  The idea is to
+make some small twiddle to each subscriber's copy of the text, so that
+the stolen copy can be matched with some subscriber and their
+subscription cancelled.
+
+Short answer:  the thieves win.  At first, I thought the answer
+was the opposite.
+
+----
+
+There are two issues which must be addressed in order to show that
+the tagger wins:
+
+  1.  The taggee must not be able to "smooth away" all of the tag bits.
+  2.  The taggee must not be able to cross-correlate multiple copies
+      of the data in question in order to produce a "clean" version.
+
+Regarding issue #1, the basic techique is to alter a few features of
+your data which are important enough that your opponent can't afford to
+randomize ALL such bits.  In the case of text, small changes in word
+choice are a good candidate.  Two criteria are:
+
+   A.  The changes must be "important" enough that the thief can't
+       smooth them all away.
+   B.  The changes shouldn't be "important" enough that the newswire
+       becomes worthless!
+
+The tagger has an advantage in this case, though.  He can change, say,
+1 in 1000 of these "important, non-smoothable-away" candidate bits.  If
+the thief wants to cancel them out and only has a single copy of the
+picture, he must somehow canonicalize _all_ of the candidate tag bits,
+or some very large proportion of them.
+
+So if your tagging process does a little bit of "damage" to your
+data, like in the map-maker case of adding an extra small street
+here and there, then the opponent must either try to detect exactly
+where your damage is, or must make wholesale changes to the data (such
+as removing all small roads altogether).  The thief, in trying to cover
+up your damage, must make a thousand times as much damage.  Choose your
+damage level appropriately so that your level of damage isn't too much
+but the thief's is.
+
+----
+
+Issue #2, thieves cross-correlating between multiple copies of the data,
+is a bit more subtle.  
+
+Here's the scenario:
+
+  Dow Jones has 10,000 customers, 64 of whom are in a conspiracy to steal
+  and re-sell the newswire.  Dow Jones tries various tagging strategies,
+  altering whitespace and word choice individually for each subscriber.
+  The thieves try to cross-correlate between their copies of the text
+  in order to "cancel out" the tags from the copy which they wish to re-sell.
+
+Can Dow Jones detect the thieves and cancel their subscriptions?
+
+In the discussion below, when Dow Jones "twiddles a bit" of their
+newswire, they do so by substituting a word's synonym at a chosen
+location, using a separate (possibly biased) coin flip for each
+subscriber.  Here are the strategies I've considered.  
+
+  Dow Jones strategy:  twiddle some bits with probability 0.5.
+     If the thieves use majority vote, each thief will have a reasonably
+     high correlation with the output bits.  (In fact, the probability of a
+     match will exceed 50% by approximately the chance of a tie vote among
+     the thieves, which is about 0.8/sqrt(n) where n is the number of
+     thieves.  This computation is a bit hairy.)
+  Thief countermeasure:  reliably detect which bits are being twiddled
+      (by cross-checking between, say, 64 different subscriptions)
+      and flip a fair coin to determine the output.  There's a chance
+      of only 2 in 2^64 that the thieves fail to detect the twiddle.
+
+  Dow Jones strategy:  twiddle some bits with low probability (e.g. p=0.01).
+      Reasonably often, the bit values will be the same for all thieves.
+      If the thieves use the flip-a-coin strategy, we can determine which
+      tag bits they've failed to detect, and identify them that way.
+  Thief countermeasure:  use a majority vote.
+
+  Dow Jones strategy:  hybrid of the two.
+  Thief countermeasure:  hybrid of the two.  Flip a coin if the vote is 
+       fairly even, go with the majority if the vote is uneven.  For
+       example, get 64 subscriptions, go with the majority vote if 
+       fewer than 16 dissenters, flip a fair coin otherwise.
+
+This last strategy for the thieves is the one I can't beat.
+
+Theoretical help, anyone?
+
+-- Marc Ringuette (mnr@cs.cmu.edu)
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00398" HREF="msg00398.html">Cypher: Subject naming proposal</A></STRONG>
+<UL><LI><EM>From:</EM> Jim C &lt;collins@socrates.umd.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00309.html">Re:  HIDE: embedding msgs into snd &amp; graphics</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00310.html">CYPHERPUNKS=EMAIL HARASSEMENT?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00316.html">spread spectrum; secret sharing</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00398.html">Cypher: Subject naming proposal</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00317"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00317"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

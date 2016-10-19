@@ -1,0 +1,757 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: my favorite random&#45;numbers&#45;in&#45;software package (unix) -->
+<!--X-From-R13: [ngg Pynmr <znoNpelcgb.pbz> -->
+<!--X-Date: Sat, 30 Sep 95 12:35:48 PDT -->
+<!--X-Message-Id: 199509301946.PAA15565@crypto.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>my favorite random-numbers-in-software package (unix)</TITLE>
+<LINK REV="made" HREF="mailto:mab@crypto.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02259.html">Date Prev</A>][<A HREF="msg02260.html">Date Next</A>][<A HREF="msg02283.html">Thread Prev</A>][<A HREF="msg02265.html">Thread Next</A>][<A HREF="index.html#02264">Date Index</A>][<A HREF="threads.html#02264">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>my favorite random-numbers-in-software package (unix)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: my favorite random-numbers-in-software package (unix)</LI>
+<LI><em>From</em>: Matt Blaze &lt;<A HREF="mailto:mab@crypto.com">mab@crypto.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 30 Sep 1995 15:46:45 -0400</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+About a week ago I posted my (Don Mitchell's really) truerand() routine
+for Unix.  truerand() needs some post-processing before use; it cannot
+be used directly.  Here's a more complete version; the main interface is
+randbyte(), which returns (in about a third of a second) one really
+random byte (based on 64 truerand() bits) that can be used directly.
+As an added bonus, the library also throws in a shs-2 function and the
+basic truerand() code.
+
+The basic idea is that you exploit randomness in the drift between
+the processor clock and the rate at which interval timer interrupts
+occur.  Such drift occurs even on idle processors.  randbyte() assumes
+that there's at least about .4 bits of "entropy" per interrupt, which is 
+(probably) a safe assumption on modern processors.  Randomness introduced
+by the OS (scheduler, etc.) can add to the overall entropy, but shouldn't
+be relied upon by itself.
+
+An advantage to this approach (using clock skew) is that the randomness
+doesn't depend on external events like user input, network traffic or
+processor load.  That makes it especially attractive for generating keys
+on unattended servers, e.g., for generating Diffie-Hellman exponents.
+Note, however, that very (very) slow and heavily-loaded processors may
+not provide enough cycles to the truerand process between interrupts for
+these assumptions to hold.  Also, all bets are off on processors that use
+a single clock source for both interval timing and CPU clocking.
+
+This code is very BSD/SunOS-centric and is completely untested elsewhere.
+
+Read the comments for scary warnings about testing on your own platform
+before using it for anything serious like generating keys.
+
+-matt
+
+=======================cut here==============
+#!/bin/sh
+# This is a shell archive (produced by GNU sharutils 4.1).
+# To extract the files from this archive, save it to some FILE, remove
+# everything before the `!/bin/sh' line above, then type `sh FILE'.
+#
+# Existing files will *not* be overwritten unless `-c' is specified.
+#
+# This shar contains:
+# length mode       name
+# ------ ---------- ------------------------------------------
+#   1270 -rw-r--r-- makefile
+#   1246 -rw-r--r-- randbyte.c
+#   2886 -rw-r--r-- truerand.c
+#   7142 -rw-r--r-- shs.c
+#    149 -rw-r--r-- randtest.c
+#
+touch -am 1231235999 $$.touch &gt;/dev/null 2&gt;&amp;1
+if test ! -f 1231235999 &amp;&amp; test -f $$.touch; then
+  shar_touch=touch
+else
+  shar_touch=:
+  echo
+  echo 'WARNING: not restoring timestamps.  Consider getting and'
+  echo "installing GNU \`touch', distributed in GNU File Utilities..."
+  echo
+fi
+rm -f 1231235999 $$.touch
+#
+# ============= makefile ==============
+if test -f 'makefile' &amp;&amp; test X"$1" != X"-c"; then
+  echo 'x - skipping makefile (file already exists)'
+else
+  echo 'x - extracting makefile (text)'
+  sed 's/^X//' &lt;&lt; 'SHAR_EOF' &gt; 'makefile' &amp;&amp;
+# makefile for librand
+# tested on Sparc-20 (SunOS 4.x) and P100 (BSDI) only.
+# You're on your own elsewhere.  Read the comments for scary warnings.
+#
+# Usage: int randbyte();
+#
+#* The authors of this software are Don Mitchell, Matt Blaze &amp; Jack Lacy.
+#*              Copyright (c) 1995 by AT&amp;T.
+#* Permission to use, copy, and modify this software without fee
+#* is hereby granted, provided that this entire notice is included in
+#* all copies of any software which is or includes a copy or
+#* modification of this software and in all copies of the supporting
+#* documentation for such software.
+#*
+#* This software may be subject to United States export controls.
+#*
+#* THIS SOFTWARE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR IMPLIED
+#* WARRANTY.  IN PARTICULAR, NEITHER THE AUTHORS NOR AT&amp;T MAKE ANY
+#* REPRESENTATION OR WARRANTY OF ANY KIND CONCERNING THE MERCHANTABILITY
+X
+SRCS=randbyte.c truerand.c shs.c
+OBJS=randbyte.o truerand.o shs.o
+CC=gcc
+CFLAGS=
+# No -O in CFLAGS! On some compilers, this optimizes out the counter...
+X
+librand.a: $(OBJS)
+X	ar rcv librand.a $(OBJS)
+X	ranlib librand.a
+X
+randtest: randtest.c $(SRCS)
+X	cc -DDEBUGRND randtest.c $(SRCS) -o randtest
+X
+librand.shar: makefile $(SRCS) randtest.c
+X	shar makefile $(SRCS) randtest.c &gt; librand.shar
+SHAR_EOF
+  $shar_touch -am 0930150995 'makefile' &amp;&amp;
+  chmod 0644 'makefile' ||
+  echo 'restore of makefile failed'
+  shar_count="`wc -c &lt; 'makefile'`"
+  test 1270 -eq "$shar_count" ||
+    echo "makefile: original size 1270, current size $shar_count"
+fi
+# ============= randbyte.c ==============
+if test -f 'randbyte.c' &amp;&amp; test X"$1" != X"-c"; then
+  echo 'x - skipping randbyte.c (file already exists)'
+else
+  echo 'x - extracting randbyte.c (text)'
+  sed 's/^X//' &lt;&lt; 'SHAR_EOF' &gt; 'randbyte.c' &amp;&amp;
+/*
+X *	Random byte interface to truerand()
+X *	Matt Blaze 5/95
+X *	eight really random bits
+X *	usage: 
+X *		unsigned char r; int randbyte();
+X *		r=randbyte();
+X *	randbyte() takes about .3 seconds on most machines.
+X */
+/*
+X * The author of this software is Matt Blaze.
+X *              Copyright (c) 1995 by AT&amp;T.
+X * Permission to use, copy, and modify this software without fee
+X * is hereby granted, provided that this entire notice is included in
+X * all copies of any software which is or includes a copy or
+X * modification of this software and in all copies of the supporting
+X * documentation for such software.
+X *
+X * This software may be subject to United States export controls.
+X *
+X * THIS SOFTWARE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR IMPLIED
+X * WARRANTY.  IN PARTICULAR, NEITHER THE AUTHORS NOR AT&amp;T MAKE ANY
+X * REPRESENTATION OR WARRANTY OF ANY KIND CONCERNING THE MERCHANTABILITY
+X * OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
+X */
+X
+int randbyte()
+{
+X	unsigned long truerand();
+X	unsigned char *shs();
+X	unsigned long r[2];
+X	unsigned char *hash;
+X
+X	r[0]=truerand(); r[1]=truerand();
+X	hash = shs(r,sizeof(r));
+#ifdef DEBUGRND
+X	printf("%011o %011o %02x\n",r[0],r[1],*hash &amp; 0xff);
+#endif
+X	return ((int) (*hash)) &amp; 0xff;
+}
+SHAR_EOF
+  $shar_touch -am 0930145795 'randbyte.c' &amp;&amp;
+  chmod 0644 'randbyte.c' ||
+  echo 'restore of randbyte.c failed'
+  shar_count="`wc -c &lt; 'randbyte.c'`"
+  test 1246 -eq "$shar_count" ||
+    echo "randbyte.c: original size 1246, current size $shar_count"
+fi
+# ============= truerand.c ==============
+if test -f 'truerand.c' &amp;&amp; test X"$1" != X"-c"; then
+  echo 'x - skipping truerand.c (file already exists)'
+else
+  echo 'x - extracting truerand.c (text)'
+  sed 's/^X//' &lt;&lt; 'SHAR_EOF' &gt; 'truerand.c' &amp;&amp;
+/*
+X *	Physically random numbers (very nearly uniform)
+X *	D. P. Mitchell 
+X *	Modified by Matt Blaze 2/95
+X */
+/*
+X * The authors of this software are Don Mitchell and Matt Blaze.
+X *              Copyright (c) 1995 by AT&amp;T.
+X * Permission to use, copy, and modify this software without fee
+X * is hereby granted, provided that this entire notice is included in
+X * all copies of any software which is or includes a copy or
+X * modification of this software and in all copies of the supporting
+X * documentation for such software.
+X *
+X * This software may be subject to United States export controls.
+X *
+X * THIS SOFTWARE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR IMPLIED
+X * WARRANTY.  IN PARTICULAR, NEITHER THE AUTHORS NOR AT&amp;T MAKE ANY
+X * REPRESENTATION OR WARRANTY OF ANY KIND CONCERNING THE MERCHANTABILITY
+X * OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
+X */
+X
+/*
+X * WARNING: depending on the particular platform, truerand() output may
+X * be biased or correlated.  In general, you can expect about 16 bits of
+X * "pseudo-entropy" out of each 32 bit word returned by truerand(),
+X * but it may not be uniformly diffused.  You should therefore run
+X * the output through some post-whitening function (like MD5 or DES or
+X * whatever) before using it to generate key material.  (RSAREF's
+X * random package does this for you when you feed truerand() bits to the
+X * seed input function.)
+X *
+X * Test these assumptions on your own platform before fielding a system
+X * based on this software or these techniques.
+X *
+X * This software seems to work well (at 16 bits per truerand() call) on
+X * a Sun Sparc-20 under SunOS 4.1.3 and on a P100 under BSDI 2.0.  You're
+X * on your own elsewhere.
+X */
+X
+#include &lt;signal.h&gt;
+#include &lt;setjmp.h&gt;
+#include &lt;sys/time.h&gt;
+#include &lt;math.h&gt;
+#include &lt;stdio.h&gt;
+X
+static jmp_buf env;
+static unsigned count;
+static unsigned ocount;
+static unsigned buffer;
+X
+static int
+tick()
+{
+X	struct itimerval it, oit;
+X
+X	timerclear(&amp;it.it_interval);
+X	it.it_value.tv_sec = 0;
+X	it.it_value.tv_usec = 16665;
+X	if (setitimer(ITIMER_REAL, &amp;it, &amp;oit) &lt; 0)
+X		perror("tick");
+}
+X
+static void
+interrupt()
+{
+X	if (count)
+X		longjmp(env, 1);
+X	(void) signal(SIGALRM, interrupt);
+X	tick();
+}
+X
+static unsigned long
+roulette()
+{
+X
+X	if (setjmp(env)) {
+X		count ^= (count&gt;&gt;3) ^ (count&gt;&gt;6) ^ ocount;
+X		count &amp;= 0x7;
+X		ocount=count;
+X		buffer = (buffer&lt;&lt;3) ^ count;
+X		return buffer;
+X	}
+X	(void) signal(SIGALRM, interrupt);
+X	count = 0;
+X	tick();
+X	for (;;)
+X		count++;	/* about 1 MHz on VAX 11/780 */
+}
+X
+unsigned long
+truerand()
+{
+X
+X	count=0;
+X	(void) roulette();
+X	(void) roulette();
+X	(void) roulette();
+X	(void) roulette();
+X	(void) roulette();
+X	(void) roulette();
+X	(void) roulette();
+X	(void) roulette();
+X	(void) roulette();
+X	(void) roulette();
+X	return roulette();
+}
+X
+int
+n_truerand(n)
+int n;
+{
+X	int slop, v;
+X
+X	slop = 0x7FFFFFFF % n;
+X	do {
+X		v = truerand() &gt;&gt; 1;
+X	} while (v &lt;= slop);
+X	return v % n;
+}
+X
+X
+X
+SHAR_EOF
+  $shar_touch -am 0930143395 'truerand.c' &amp;&amp;
+  chmod 0644 'truerand.c' ||
+  echo 'restore of truerand.c failed'
+  shar_count="`wc -c &lt; 'truerand.c'`"
+  test 2886 -eq "$shar_count" ||
+    echo "truerand.c: original size 2886, current size $shar_count"
+fi
+# ============= shs.c ==============
+if test -f 'shs.c' &amp;&amp; test X"$1" != X"-c"; then
+  echo 'x - skipping shs.c (file already exists)'
+else
+  echo 'x - extracting shs.c (text)'
+  sed 's/^X//' &lt;&lt; 'SHAR_EOF' &gt; 'shs.c' &amp;&amp;
+/*
+X * The authors of this software are Jim Reeds and Jack Lacy
+X *              Copyright (c) 1992, 1994 by AT&amp;T.
+X * Permission to use, copy, and modify this software without fee
+X * is hereby granted, provided that this entire notice is included in
+X * all copies of any software which is or includes a copy or
+X * modification of this software and in all copies of the supporting
+X * documentation for such software.
+X *
+X * This software may be subject to United States export controls.
+X *
+X * THIS SOFTWARE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR IMPLIED
+X * WARRANTY.  IN PARTICULAR, NEITHER THE AUTHORS NOR AT&amp;T MAKE ANY
+X * REPRESENTATION OR WARRANTY OF ANY KIND CONCERNING THE MERCHANTABILITY
+X * OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
+X */
+X
+/*
+X * Secure Hash Standard
+X * proposed NIST SHS
+X * coded for byte strings: number of bits is a multiple of 8
+X *
+X * Copyright (c) 1992, 1994 AT&amp;T Bell Laboratories
+X * Coded by Jim Reeds 5 Feb 1992
+X * Enhanced by Jack Lacy 1993, 1994
+X */
+X
+/*
+X * unsigned char * shs(char *s, int n);
+X *
+X * input:  
+X *                s character array to be hashed
+X *                n length of s in BYTES
+X * output:
+X *                return value: address of 5 unsigned longs holding hash
+X *
+X * machine dependencies:
+X *                assumes a char is 8 bits
+X */
+X
+/*
+X * passes test on:
+X *                gauss (vax)
+X *                3k (cray)
+X *                slepian (MIPS)
+X *                bird (sparcstation II)
+X */
+X
+#include &lt;sys/types.h&gt;
+#include &lt;stdio.h&gt;
+X
+typedef struct {
+X    long totalLength;
+X    unsigned long h[5];
+X    unsigned long w[80];
+} SHS_CTX;
+X
+unsigned char *shs();
+#ifdef SOLARIS2X
+#define bzero(b, l)             memset(b, 0, l)
+#define bcopy(s, d, l)          memcpy(d, s, l)
+#define bcmp(s, d, l)           (memcmp(s, d, l)? 1 : 0)
+#endif
+X
+static long nbits;
+static unsigned long *h;
+static unsigned long *w;
+static void shs1();
+/*
+static void packl (unsigned long);
+static void pack (unsigned char, unsigned char, unsigned char, unsigned char);
+static void shs1(void);
+static void opack(unsigned char);
+*/
+X
+#define MASK        (unsigned long)0xffffffffL        /* in case more than 32 
+bits per long */
+X
+/*
+X * stick one byte into the current block; process the block when full
+X */
+static void opack(c)
+X  unsigned char c;
+{
+X	int n32, nd32, shiftbits;
+X	register unsigned long x, mask, y;
+X	
+X	nd32 = (int)(nbits &gt;&gt; 5);  /* nbits/32 */
+X	n32 = (int)(nbits &amp; 0x1f); /* nbits%32 */
+X	shiftbits = 24-n32;
+X	
+X	x = (unsigned long)(c&lt;&lt;shiftbits);
+X	mask = (unsigned long)(0xff &lt;&lt; shiftbits);
+X	mask = ~mask;
+X	
+X	y = w[nd32];
+X	y = (y &amp; mask) + x;
+X	w[nd32] = y;
+X	
+X	nbits += 8;
+X	if(nbits==512){
+X		nbits = 0;
+X		shs1();
+X	}
+}
+X
+static void pack(c0, c1, c2, c3)
+X  unsigned char c0, c1, c2, c3;
+{
+X	int nd32;
+X	
+X	nd32 = (int)(nbits &gt;&gt; 5);
+X	w[nd32] = (u_long)(((u_long)c0&lt;&lt;24) | ((u_long)c1&lt;&lt;16) | ((u_long)c2&lt;&lt;8) | 
+(u_long)c3);
+X	
+X	nbits += 32;
+X	if(nbits==512){
+X		nbits = 0;
+X		shs1();
+X	}
+}
+X
+/*
+X * stick a 4 byte number into the current block
+X */
+static void
+packl(x)
+X  unsigned long x;
+{
+X	pack((unsigned char)(x&gt;&gt;24), (unsigned char)(x&gt;&gt;16),
+X	     (unsigned char)(x&gt;&gt;8), (unsigned char)(x&gt;&gt;0));
+}
+X
+/*
+X * process one block
+X */
+static void
+shs1()
+{
+X	unsigned long *wp;
+X	unsigned long temp;
+X	unsigned long A, B, C, D, E;
+X	int t;
+X	
+#define S(n,x) (u_long)(((x)&lt;&lt;(n))|((MASK&amp;(x))&gt;&gt;(32-(n))))
+X	
+X	wp = w;
+X	t = 8;
+X	do {
+X		wp[16] = S(1, (u_long)(wp[13]^wp[8]^wp[2]^wp[0]));
+X		wp[17] = S(1, (u_long)(wp[14]^wp[9]^wp[3]^wp[1]));
+X		wp[18] = S(1, (u_long)(wp[15]^wp[10]^wp[4]^wp[2]));
+X		wp[19] = S(1, (u_long)(wp[16]^wp[11]^wp[5]^wp[3]));
+X		wp[20] = S(1, (u_long)(wp[17]^wp[12]^wp[6]^wp[4]));
+X		wp[21] = S(1, (u_long)(wp[18]^wp[13]^wp[7]^wp[5]));
+X		wp[22] = S(1, (u_long)(wp[19]^wp[14]^wp[8]^wp[6]));
+X		wp[23] = S(1, (u_long)(wp[20]^wp[15]^wp[9]^wp[7]));
+X		wp += 8;
+X		t--;
+X	} while (t &gt; 0);
+X	
+X	A = h[0];
+X	B = h[1];
+X	C = h[2];
+X	D = h[3];
+X	E = h[4];
+X	
+X	t = 0;
+X	while (t&lt;20) {
+X		temp = S(5,A) + E + w[t++];
+X		temp += (unsigned long)0x5a827999L + ((B&amp;C)|(D&amp;~B));
+X		E = D; D = C; C = S(30,B); B = A; A = temp;
+X	}
+X	while (t&lt;40) {
+X		temp = S(5,A) + E + w[t++];
+X		temp += (unsigned long)0x6ed9eba1L + (B^C^D);
+X		E = D; D = C; C = S(30,B); B = A; A = temp;
+X	}
+X	while (t&lt;60) {
+X		temp = S(5,A) + E + w[t++];
+X		temp += (unsigned long)0x8f1bbcdcL + ((B&amp;C)|(B&amp;D)|(C&amp;D));
+X		E = D; D = C; C = S(30,B); B = A; A = temp;
+X	}
+X	while (t&lt;80) {
+X		temp = S(5,A) + E + w[t++];
+X		temp += (unsigned long)0xca62c1d6L + (B^C^D);
+X		E = D; D = C; C = S(30,B); B = A; A = temp;
+X	}
+X	h[0] = MASK&amp;(h[0] + A);
+X	h[1] = MASK&amp;(h[1] + B);
+X	h[2] = MASK&amp;(h[2] + C);
+X	h[3] = MASK&amp;(h[3] + D);
+X	h[4] = MASK&amp;(h[4] + E);
+}
+X
+#define CHARSTOLONG(wp,s,i) {*wp++ = (u_long)((((u_long)(s[i])&amp;0xff)&lt;&lt;24)|(((u_
+long)(s[i+1])&amp;0xff)&lt;&lt;16)|(((u_long)(s[i+2])&amp;0xff)&lt;&lt;8)|(u_long)(s[i+3]&amp;0xff));}
+X
+X
+void
+shsInit(mdContext)
+X  SHS_CTX *mdContext;
+{
+X	nbits = 0;
+X	mdContext-&gt;h[0] = (unsigned long)0x67452301L;
+X	mdContext-&gt;h[1] = (unsigned long)0xefcdab89L;
+X	mdContext-&gt;h[2] = (unsigned long)0x98badcfeL;
+X	mdContext-&gt;h[3] = (unsigned long)0x10325476L;
+X	mdContext-&gt;h[4] = (unsigned long)0xc3d2e1f0L;
+X	mdContext-&gt;totalLength = 0;
+}
+X
+X
+void
+shsUpdate(mdContext, s, n)
+X  SHS_CTX *mdContext;
+X  unsigned char *s;
+X  unsigned int n;
+{
+X	register unsigned long *wp;
+X	long nn = n;
+X	long i;
+X	
+X	w = mdContext-&gt;w;
+X	h = mdContext-&gt;h;
+X	mdContext-&gt;totalLength += n;
+X	
+X	nbits = 0;
+X	n = n/(u_long)64;
+X	wp = w;
+X	
+X	while(n&gt;0){
+X		CHARSTOLONG(wp,s,0);
+X		CHARSTOLONG(wp,s,4);
+X		CHARSTOLONG(wp,s,8);
+X		CHARSTOLONG(wp,s,12);
+X		CHARSTOLONG(wp,s,16);
+X		CHARSTOLONG(wp,s,20);
+X		CHARSTOLONG(wp,s,24);
+X		CHARSTOLONG(wp,s,28);
+X		CHARSTOLONG(wp,s,32);
+X		CHARSTOLONG(wp,s,36);
+X		CHARSTOLONG(wp,s,40);
+X		CHARSTOLONG(wp,s,44);
+X		CHARSTOLONG(wp,s,48);
+X		CHARSTOLONG(wp,s,52);
+X		CHARSTOLONG(wp,s,56);
+X		CHARSTOLONG(wp,s,60);
+X		n--;
+X		wp = w;
+X		s = (s + 64);
+X		shs1();
+X	}
+X	i=nn%64;
+X	while(i&gt;3) {
+X		CHARSTOLONG(wp,s,0);
+X		s = (s + 4);
+X		nbits += (u_long)32;
+X		i -= 4;
+X	}
+X	while (i) {
+X		opack((unsigned char)*s++);
+X		i--;
+X	}
+}
+X
+void
+shsFinal(mdContext)
+X  SHS_CTX *mdContext;
+{
+X	long nn = mdContext-&gt;totalLength;
+X	w = mdContext-&gt;w;
+X	h = mdContext-&gt;h;
+X	
+X	opack(128);
+X	while(nbits != 448)opack(0);
+X	packl((unsigned long)(nn&gt;&gt;29));
+X	packl((unsigned long)(nn&lt;&lt;3));
+X	
+X	/* if(nbits != 0)
+X	   handle_exception(CRITICAL,"shsFinal(): nbits != 0\n");*/
+}
+X
+unsigned char *
+shs(s, n)
+X  unsigned char *s;
+X  long n;
+{
+X        SHS_CTX *mdContext;
+X	static SHS_CTX mdC;
+X	static unsigned char ret[20];
+X	int i;
+X	
+X	mdContext = &amp;mdC;
+X
+X	shsInit(mdContext);
+X	shsUpdate(mdContext, s, n);
+X	shsFinal(mdContext);
+X	for (i=0; i&lt;5; i++) {
+X		ret[i*4] = (mdContext-&gt;h[i]&gt;&gt;24)&amp;0xff;
+X		ret[i*4+1] = (mdContext-&gt;h[i]&gt;&gt;16)&amp;0xff;
+X		ret[i*4+2] = (mdContext-&gt;h[i]&gt;&gt;8)&amp;0xff;
+X		ret[i*4+3] = (mdContext-&gt;h[i])&amp;0xff;
+X	}
+X        
+X	return ret;
+}
+X
+/*int fread(char *, int, int, FILE *);*/
+X
+unsigned long *
+fShsDigest(in)
+X  FILE *in;
+{
+X	SHS_CTX *mdContext;
+X	SHS_CTX mdC;
+X	unsigned char buffer[1024];
+X	long length, total;
+X
+X	mdContext = &amp;mdC;
+X	
+X	bzero(buffer, 1024);
+X
+X	total = 0;
+X	shsInit(mdContext);
+X	while ((length = fread(buffer, 1, 1024, in)) != 0) {
+X		total += length;
+X		shsUpdate(mdContext, buffer, length);
+X	}
+X	shsFinal(mdContext);
+X
+X	return mdContext-&gt;h;
+}
+X
+X
+X
+SHAR_EOF
+  $shar_touch -am 0930142495 'shs.c' &amp;&amp;
+  chmod 0644 'shs.c' ||
+  echo 'restore of shs.c failed'
+  shar_count="`wc -c &lt; 'shs.c'`"
+  test 7142 -eq "$shar_count" ||
+    echo "shs.c: original size 7142, current size $shar_count"
+fi
+# ============= randtest.c ==============
+if test -f 'randtest.c' &amp;&amp; test X"$1" != X"-c"; then
+  echo 'x - skipping randtest.c (file already exists)'
+else
+  echo 'x - extracting randtest.c (text)'
+  sed 's/^X//' &lt;&lt; 'SHAR_EOF' &gt; 'randtest.c' &amp;&amp;
+main(argc,argv)
+int argc; char **argv;
+{
+X	int count;
+X
+X	if (argc==1)
+X		count = 0;
+X	else
+X		count = atoi(argv[1]) + 1;
+X	while (--count)
+X		randbyte();
+}
+SHAR_EOF
+  $shar_touch -am 0930150095 'randtest.c' &amp;&amp;
+  chmod 0644 'randtest.c' ||
+  echo 'restore of randtest.c failed'
+  shar_count="`wc -c &lt; 'randtest.c'`"
+  test 149 -eq "$shar_count" ||
+    echo "randtest.c: original size 149, current size $shar_count"
+fi
+exit 0
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02259.html">Re: NetScape's dependence upon RSA down for the count!</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02260.html">Re: NetScape's dependence upon RSA down for the count!</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02283.html">Re: NetScape's dependence upon RSA down for the count!</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02265.html">Re: my favorite random-numbers-in-software package (unix)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02264"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02264"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

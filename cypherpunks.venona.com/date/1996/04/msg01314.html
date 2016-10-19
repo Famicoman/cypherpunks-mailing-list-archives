@@ -1,0 +1,114 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: A better entropy estimation method for random.c/noise.sys? -->
+<!--X-From-R13: "Rrenatrq [hgnag" <IyxatAjyNG@vJ.nfo.pbz> -->
+<!--X-Date: Mon, 22 Apr 1996 14:06:01 +0800 -->
+<!--X-Message-Id: 199604220324.XAA09211@unix.asb.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>A better entropy estimation method for random.c/noise.sys?</TITLE>
+<LINK REV="made" HREF="mailto:WlkngOwl@UNiX.asb.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01302.html">Date Prev</A>][<A HREF="msg01304.html">Date Next</A>][<A HREF="msg01299.html">Thread Prev</A>][<A HREF="msg01304.html">Thread Next</A>][<A HREF="index.html#01314">Date Index</A>][<A HREF="threads.html#01314">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>A better entropy estimation method for random.c/noise.sys?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A></LI>
+<LI><em>Subject</em>: A better entropy estimation method for random.c/noise.sys?</LI>
+<LI><em>From</em>: "Deranged Mutant" &lt;<A HREF="mailto:WlkngOwl@UNiX.asb.com">WlkngOwl@UNiX.asb.com</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 21 Apr 1996 23:14:57 +0000</LI>
+<LI><em>Comments</em>: Authenticated sender is &lt;wlkngowl@unix.asb.com&gt;</LI>
+<LI><em>Organization</em>: What organization?</LI>
+<LI><em>Priority</em>: normal</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+I've been hacking with the hashing method used in noise.sys and 
+decided to throw it away, since it did more to overestimate the 
+entropy.
+
+Until I find something better an xor-checksum of the ast N samples 
+seems to do fine. Alternating samples generate no entropy and samples 
+with periods &lt;= N seem to generate less than 1 bit per sample.
+
+The method (in pseudo-code) is as follows:
+
+  delta = abs( LastSample - sample )
+  LastSample = sample
+
+  hash ^= delta  /* until I can think of a better hashing algorithm */
+  swap delta, lastNtable[ indexNtable ]
+  indexNtable = (indexNtable+1) mod N
+  hash ^= delta
+
+  t = counter /* counts the number of samples so far */
+  counter++
+  swap t, lastseen[ hash &amp; (TABLESIZE-1) ]
+  diff = lastseen[ hash &amp; (TABLESIZE-1) ] - t
+
+  if diff&lt;=N, assume no entropy (or fractional entropy?)
+  otherwise return log2(diff)
+
+
+Comments?
+Rob. 
+
+---
+Send a blank message with the subject "send pgp-key"
+to &lt;WlkngOwl@unix.asb.com&gt; for a copy of my PGP key.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01302.html">Re: Smartcards are coming to the US</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01304.html">Betting  (Re: [Yadda Yadda Yadda]....)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01299.html">Re: Jim Bell, Apology to list.  Was: [Yadda Yadda Yadda]</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01304.html">Betting  (Re: [Yadda Yadda Yadda]....)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01314"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01314"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

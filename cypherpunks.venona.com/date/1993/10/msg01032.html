@@ -1,0 +1,227 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Subliminal Channels -->
+<!--X-From-R13: Yney Zhv Pneehf <xyoneehfNbjyarg.evpr.rqh> -->
+<!--X-Date: Thu, 21 Oct 93 21:58:07 PDT -->
+<!--X-Message-Id: 9310220454.AA24592@flammulated.owlnet.rice.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Subliminal Channels</TITLE>
+<LINK REV="made" HREF="mailto:klbarrus@owlnet.rice.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01026.html">Date Prev</A>][<A HREF="msg01029.html">Date Next</A>][<A HREF="msg01026.html">Thread Prev</A>][<A HREF="msg01040.html">Thread Next</A>][<A HREF="index.html#01032">Date Index</A>][<A HREF="threads.html#01032">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Subliminal Channels</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Subliminal Channels</LI>
+<LI><em>From</em>: Karl Lui Barrus &lt;<A HREF="mailto:klbarrus@owlnet.rice.edu">klbarrus@owlnet.rice.edu</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 21 Oct 93 23:54:34 CDT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+A while ago I sent a post on subliminal channels - I had a chance to work
+a larger example.
+
+A subliminal channel is a communication channel that cannot be read by
+those for whom it is not intended.  The problem is sometimes phrased as
+a prisoner's dilemma: two prisoners are allowed to communicate with each
+other by exchanging messages.  They are able to digitally sign the messages
+to protect against spoofing.  However, the warden will not allow the
+messages to be encrypted - only plaintext and the digital signature will
+be passed.  All parties agree to these conditions and communication
+begins.
+
+Unknown to the warden, the prisoners are still able to coordinate their
+plans by using a subliminal channel to communicate, in full view of the
+warden!  Essentially, the prisoners use some piece of shared knowledge to
+hide their real communication in the digital signature of an innocuous
+message.  The warden sees the innocent message, checks that the signature
+is valid, and passes it along.  The prisoner checks the signature to see
+if the warden didn't alter the message, and then extracts the real message
+from the digital signature.
+
+This topic came up when previously on the list, people were discussing
+the fact that encrypted communication over HAM radio is illegal - only
+authentication codes may be transmitted.  I mentioned that actually, this
+restraint can be sidestepped by embedding encrypted communication a la
+subliminal channel style.  YES, I KNOW THIS IS ILLEGAL AND I'M NOT
+SUGGESTING ANYBODY DO IT!  I just pointed it out.
+
+What may be more important is that a subliminal channel may lurk in the
+digital signature standard (DSS).  In turn, this is important because from
+time to time proposals are made concerning national id cards, national
+health cards, etc.  If some agency is going to authenticate or otherwise
+digitally sign an identification card, they may also embed information
+into the signature.  The DSS has been described as "very hospitable to
+subliminal channels."  Imagine what records could be kept on you if various
+information were embedded in the digital signature of documents you own.
+
+First, a description and example of El Gamal authentication, and then of
+the subliminal channel based on El Gamal.
+
+
+
+El Gamal authentication:
+
+The sender picks a prime p, primitive element g, and random integer r.
+The public information is the triple (K,g,p), where 
+K = g^r mod p
+
+To authenticate a message M, the sender picks another random integer r'
+such that gcd(r',p-1) = 1, and computes 
+X = g^r' mod p
+
+Then, the sender solves for Y in the equation 
+M = r X + r' Y mod p-1
+
+The triple (M,X,Y) is the message and the signature - this is what is 
+transmitted to the receiver.  r and r' are kept secret.
+
+The receiver computes
+A = K^X X^Y mod p
+
+and accepts the message as authentic if
+A = g^M mod p
+
+
+
+El Gamal Example:
+
+p = 224737, r = 5135, g = 2
+K = 2^5135 mod 224737 = 136800
+The triple (136800, 2, 224737) is public.
+
+To send the message M = 12345, the sender picks r' = 89321
+gcd(89321,224736) = 1 so r' is ok.  Now compute X = 2^89321 mod 224737
+                                                  = 87880
+
+Solve for Y in: 12345 = 5135 87880 + 89321 Y mod 224736
+          ==&gt;   18433 = 89321 Y mod 224736
+          ==&gt;   Y = 207929
+
+The triple (12345, 87880, 207929) is the message and the signature.
+
+The receiver gets (12345, 87880, 207929) and knows (136800, 2, 224737).
+A = 136800^87880 87880^207929 mod 224737 = 160740
+g^M mod p = 2^12345 mod 224737 = 160740
+
+These are equal and the message is accepted as authentic.
+
+
+
+El Gamal Subliminal Channel:
+
+Now the interesting part is the subliminal channel.  The sender and 
+receiver must share the knowledge of random number r.
+
+To send the subliminal message M, where gcd(M,p) = 1, using a cryptogram
+C, the sender calculates 
+X = g^M mod p
+
+and solves for Y in
+C = r X + M Y mod p-1
+
+The triple (C,X,Y) is transmitted to the receiver.
+
+The receiver computes 
+A = (g^r)^X X^Y mod p 
+
+and accepts the message as authentic if 
+A = g^C mod p
+
+To extract the subliminal message, the receiver calculates
+M = Y^-1 (C - r X) mod p-1
+
+
+
+El Gamal Subliminal Channel Example:
+
+Suppose the sender and receiver share the knowledge r = 5135
+
+The sender wants to send M = 11111 using the innocent message C = 12345.
+The sender calculates X = 2^11111 mod 224737 = 20944
+and solves for Y in : 12345 = 5135 20944 + 11111 Y mod 224736
+               ==&gt;    Y = 194447
+
+The triple sent to the receiver is (12345, 20944, 194447).
+
+The warden can check this if he wants, to very the signature:
+A = 136800^20944 20944^194447 mod 224737 = 160740
+g^C mod p = 2^12345 mod 224737 = 160740
+
+so the warden verifies the signatures.  Convinced nothing fishy is
+going on here, he passes on the message.
+
+The receiver checks authenticity and is successful.  However, now the
+subliminal message is extracted:
+M = 194447^-1 (12345 - 5135 20944) mod 224736 = 11111
+
+The subliminal message is successfully extraced, and the prisoners have
+passed information right by the warden.
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a
+
+iQCVAgUBLMdlZoOA7OpLWtYzAQGLnAP/a21A7r4baW8I3PZiV50+mu8M7p+Xgcwj
+kx2pLkB0l+YHfonQDDIsqHdtEVASvcFeviFnKMkV9eGK/PPDI4DnfIdK/N0lDKq3
+whyHZy91lCpnCCMKhoJ0UZ3Ss1JPogWNqdiKjPtWJhw+iZA86AQjrJ2bmwyWnCvP
+d+ZSgxeVhP8=
+=hqum
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01026.html">An Intro to DC-Nets</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01029.html">hi/.  .</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01026.html">An Intro to DC-Nets</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01040.html">Re:  Subliminal Channels</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01032"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01032"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

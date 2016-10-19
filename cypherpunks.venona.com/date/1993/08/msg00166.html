@@ -1,0 +1,149 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: PGP Bug? -->
+<!--X-From-R13: "I. Yvaarl" <xvaarlNfcbg.Qbybenqb.SRG> -->
+<!--X-Date: Mon, 9 Aug 93 10:21:45 PDT -->
+<!--X-Message-Id: 199308091717.AA19879@spot.Colorado.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>PGP Bug?</TITLE>
+<LINK REV="made" HREF="mailto:kinney@spot.Colorado.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00161.html">Date Prev</A>][<A HREF="msg00169.html">Date Next</A>][<A HREF="msg00176.html">Thread Prev</A>][<A HREF="msg00168.html">Thread Next</A>][<A HREF="index.html#00166">Date Index</A>][<A HREF="threads.html#00166">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>PGP Bug?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: PGP Bug?</LI>
+<LI><em>From</em>: "W. Kinney" &lt;<A HREF="mailto:kinney@spot.Colorado.EDU">kinney@spot.Colorado.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 9 Aug 1993 11:17:48 -0600 (MDT)</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+Cypherpunks --
+
+Looking at the code for doing conventional encryption in PGP, I've come across 
+something that doesn't look right. It's with the 10-byte header block that PGP 
+adds to the beginning of files -- 8 bytes of random data with the last two 
+bytes repeated to use for key verification.
+
+Indicating omissions by "[...]", the code in crypto.c looks like this:
+
+int idea_encryptfile(char *infile, char *outfile, 
+	boolean attempt_compression)
+{
+[...]
+	byte ideakey[16];                &lt;------- KEEP AN EYE ON THIS BUFFER
+	struct hashedpw *hpw;
+
+[... a call to GetHashedPassPhrase to set the key]
+
+
+	/* Now compress the plaintext and encrypt it with IDEA... */
+	squish_and_idea_file( ideakey, f, g, attempt_compression );
+
+[...]
+}
+
+
+static int squish_and_idea_file(byte *ideakey, FILE *f, FILE *g, 
+	boolean attempt_compression)
+{
+
+[...]
+
+	idea_file( ideakey, ENCRYPT_IT, t, g, fsize(t) );
+
+[...]
+}
+
+
+static
+int idea_file(byte *ideakey, boolean decryp, FILE *f, FILE *g, word32 lenfile)
+{	
+[...]
+#define RAND_PREFIX_LENGTH 8
+
+[...]
+
+	if (!decryp)	/* encrypt-- insert key check bytes */
+	{	/* There is a random prefix followed by 2 key check bytes */
+
+		memcpy(textbuf, ideakey+IDEAKEYSIZE, RAND_PREFIX_LENGTH);
+                       ^^^^^^^^^^^^^^^^^^^^
+
+But ideakey is only a sixteen byte buffer! Looks like we're copying junk from 
+the stack here, instead of generating a strong random number to put in the 
+prefix...
+
+
+
+And now a question for the crypto gurus out there. The reason I came across the 
+above is because I'm adding conventional encryption to some Mac code I had 
+laying around, and I wanted to support PGP-format files. I had been thinking 
+about the problem of verifying decryption keys, and the solution I had come up 
+with to use in my code was to MD5 hash the plaintext when I encrypted it, then 
+encrypt the hash with the same key and store it in a resource to use as a key 
+verification block. When the file is decrypted, so is the verification block, 
+and all you have to do to verify the key is MD5 the plaintext again and compare 
+the new hash to the original hash. My question is, can anyone think of any 
+weaknesses with doing it that way? (I can still support PGP data formats if I 
+do...)
+
+
+                                  -- Will
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00161.html">ANON: Re: how does it work</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00169.html">Re: ANON: Re: how does it work</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00176.html">Re: ANON: Re: how does it work</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00168.html">Libertaria in Cyberspace</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00166"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00166"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

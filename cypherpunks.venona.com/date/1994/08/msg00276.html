@@ -1,0 +1,140 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: fast 386 DES code figures -->
+<!--X-From-R13: zcqNargpbz.pbz ([vxr Rhibf) -->
+<!--X-Date: Sat, 6 Aug 94 09:08:35 PDT -->
+<!--X-Message-Id: 199408061608.JAA27681@netcom12.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199408060726.AAA00390@unix.ka9q.ampr.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: fast 386 DES code figures</TITLE>
+<LINK REV="made" HREF="mailto:mpd@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00275.html">Date Prev</A>][<A HREF="msg00277.html">Date Next</A>][<A HREF="msg00268.html">Thread Prev</A>][<A HREF="msg00278.html">Thread Next</A>][<A HREF="index.html#00276">Date Index</A>][<A HREF="threads.html#00276">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: fast 386 DES code figures</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:karn@unix.ka9q.ampr.org">karn@unix.ka9q.ampr.org</A> (Phil Karn), <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: fast 386 DES code figures</LI>
+<LI><em>From</em>: <A HREF="mailto:mpd@netcom.com">mpd@netcom.com</A> (Mike Duvos)</LI>
+<LI><em>Date</em>: Sat, 6 Aug 1994 09:08:18 -0700 (PDT)</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00268.html">199408060726.AAA00390@unix.ka9q.ampr.org</A>&gt; from "Phil Karn" at Aug 6, 94 00:26:01 am</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Phil Karn &lt;karn@unix.ka9q.ampr.org&gt; writes:
+
+ &gt; I've completely translated the encrypt and decrypt routines
+ &gt; to assembler, with no calls or jumps inside either routine.
+ &gt; I picked up Richard Outerbridge's seriously clever initial
+ &gt; and final permutation algorithm from Schneier, along with a
+ &gt; few of his other tricks.
+
+I should confess that I am probably the only person on the list
+who has not yet read Schneier.  So I apologize in advance if the
+following comments turn out to be redundant.
+
+ &gt; What still bugs me is that Schneier lists the speed of one
+ &gt; commercial DES implementation as 40,600 encryptions/sec on a
+ &gt; 33 Mhz 486.  I just don't see how that's possible without
+ &gt; using a lot more memory for lookup table space (I use only
+ &gt; 2K, which is nice in a DOS environment).
+
+Since 2k is exactly what is needed for a precomputed table which
+combines the S-boxes and the wirecrossing, I will assume this is
+the approach you used.
+
+Given this data structure, there are a number of cute tricks
+which will get DES down to around 30 machine instructions per
+each of the 16 rounds on a machine with enough registers and a
+decent set of addressing modes.
+
+The important trick is to reorder the S-boxes so that you do
+lookups on the odd numbered ones and the even numbered ones
+separately.  (1,3,5,7,2,4,6,8) works nicely.  This permits the
+results to be ORed together in two groups of four with all the
+necessary indexing held in a single 32 bit register, which can be
+appropriately repositioned each time.  The precomputed key
+schedule needs to be adjusted to reflect the new order.  Note
+that with this ordering, the blocks of six bits used for lookup
+are byte aligned if you consider the even and odd S-boxes
+separately.
+
+If you store the upper two bits of lookup table addressing in the
+precomputed key schedule and shift both it and the right hand
+block left two bits, all explicit table indexing vanishes and you
+can accumulate the result of a lookup with a single indexed OR
+instruction.
+
+I'm not sure what 30-something instructions per round translates
+into for a 33 Mhz 486, but 40,600 encryptions per second doesn't
+sound too outrageous using the above approach.
+
+-- 
+     Mike Duvos         $    PGP 2.6 Public Key available     $
+     mpd@netcom.com     $    via Finger.                      $
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00278" HREF="msg00278.html">Re: fast 386 DES code figures</A></STRONG>
+<UL><LI><EM>From:</EM> Phil Karn &lt;karn@unix.ka9q.ampr.org&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00268" HREF="msg00268.html">fast 386 DES code figures</A></STRONG>
+<UL><LI><EM>From:</EM> Phil Karn &lt;karn@unix.ka9q.ampr.org&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00275.html">Improved remailer reordering</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00277.html">fast 386 DES code figures</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00268.html">fast 386 DES code figures</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00278.html">Re: fast 386 DES code figures</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00276"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00276"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

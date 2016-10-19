@@ -1,0 +1,331 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Analysis of PGP keyserver web of trust -->
+<!--X-From-R13: @rny.[pPhearggNngg.pbz (@rny [pPheargg) -->
+<!--X-Date: Sat, 3 Feb 1996 14:03:06 +0800 -->
+<!--X-Message-Id: 9602030545.AA06363@lever.dr.att.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Analysis of PGP keyserver web of trust</TITLE>
+<LINK REV="made" HREF="mailto:Neal.McBurnett@att.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00196.html">Date Prev</A>][<A HREF="msg00188.html">Date Next</A>][<A HREF="msg00367.html">Thread Prev</A>][<A HREF="msg00194.html">Thread Next</A>][<A HREF="index.html#00193">Date Index</A>][<A HREF="threads.html#00193">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Analysis of PGP keyserver web of trust</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Analysis of PGP keyserver web of trust</LI>
+<LI><em>From</em>: <A HREF="mailto:Neal.McBurnett@att.com">Neal.McBurnett@att.com</A> (Neal McBurnett)</LI>
+<LI><em>Date</em>: Fri, 2 Feb 96 21:45:43 PST</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+I wrote a Java program to analyze the the PGP web of trust and I've
+documented it on some web pages.  They include information on the
+strongly connected components (the largest has 1291 keys in it), the
+longest "shortest-path" (21 signatures long), the 'central trustee'
+and 'central truster', the mean path length (6.4, by one definition), etc.
+
+	<A  HREF="http://bcn.boulder.co.us/~neal/pgpstat/">http://bcn.boulder.co.us/~neal/pgpstat/</A>
+
+(For those who saw the earlier version, I've fixed some small bugs.)
+
+There is a lot of useful information here for folks who want to
+improve the connectivity of the public PGP web of trust.
+
+Cheers,
+
+Neal.McBurnett@att.com  503-331-5795  AT&amp;T Bell Labs, Denver/Portland
+WWW: <A  HREF="http://bcn.boulder.co.us/~neal/Home.html">http://bcn.boulder.co.us/~neal/Home.html</A>  (with PGP key)
+
+- -----------------------------------------------------------------------
+
+                           PGP Keyserver Statistics
+                                       
+   This is an analysis of the web of trust among users of the leading
+   technology in the world of secure email communications, Pretty Good
+   Privacy (PGP). See the [1]PGP Frequently Asked Questions for more
+   information on PGP itself and other related tools.
+   
+   There is a set of public key servers around the world which allow PGP
+   users to register their keys and publicly sign each other's keys via
+   [2]email and [3]WWW interfaces. This analysis is based on the public
+   keyring obtained from
+   [4]<A  HREF="ftp://ftp.uit.no/pub/crypto/pgp/keys/pubring.pgp">ftp://ftp.uit.no/pub/crypto/pgp/keys/pubring.pgp</A> on _1 Jan 1996_.
+   For comparative analysis, here is the [5]Jan 1 version (7,976,108
+   bytes long). I could also provide a shorter and simpler file format
+   which just lists which keyIDs signed which keyIDs. If there is
+   interest, updates can be provided.
+   
+Overall Statistics
+
+
+Public keys submitted ('pub'):          19124
+Signatures ('sig'):                     28031
+Total number of unique keys referenced: 21107
+Revoked keys:                           839
+
+Self-signed keyIDs:                     7300
+Other unique keyID-signs-keyID pairs:   17908
+
+   Note that less than half of the keys are signed by themselves. People
+   should _always sign their own UserID_ on their own key! Otherwise,
+   someone else can surreptitiously change the email address in order to
+   encourage correspondents to send email to the wrong place.
+   
+   Only about 1/3 of the keys are signed by at least one another key, and
+   only 1/6 have 2 signatures.
+   
+     To be a "good PGP-citizen", you should
+     * Be very careful about signing keys. Have first-hand knowledge
+       based on hard-to-forge communications that the key's fingerprint
+       (pgp -kvc) in your keyring matches the user's real fingerprint.
+     * Sign the keys of at least two other people
+     * Get at least two signatures on your own key.
+     * Extra credit: Sponsor a [6]key-signing party
+       
+Strongly-Connected Components
+
+   A 'strongly-connected' set of keys is defined as a set in which every
+   key leads to every other key via some chain of signatures (aka
+   signature path). Note that we are not incorporating any PGP-specific
+   rules for establishing trust (e.g. the default CERT_DEPTH of 4, the
+   default requirement for two 'marginally trusted' introducers to
+   establish trust, etc.).
+   
+   After running pgp -kc on the keyring (with MIT PGP 2.6.2, for almost 2
+   days...) the number of signatures dropped from 28031 to 25810,
+   presumably because some old signatures where thrown out. The analysis
+   here was done with the original keyring, so all versions of PGP will
+   not recognize all the signatures which are accepted here.
+   
+   Note that the program used for this analysis (pgpstat.java) so far
+   only deals with keyID-keyID relationships, rather than dealing
+   separately with each keyID/UserID pair. It does properly ignore
+   revoked keys.
+
+Size of 'strong': largest strongly-connected component: 1291
+Size of 'signees': keys signed by 'strong':             2775
+Size of 'signers': keys which sign 'strong':            2001
+
+   The [7]largest strongly-connected component of this keyring (the set
+   names 'strong') has 1291 keys in it. The [8]next-largest
+   strongly-connected component has only 16 keys in it. There are another
+   1484 keys which are directly or indirectly signed by at least one key
+   in 'strong' but which do not sign any key in 'strong' and are thus not
+   in the strongly-connected component, for a total of 2775 keys in the
+   'signees' set that can be reached from the 'strong' set. Similarly,
+   there are a total of 2001 keys in the 'signers' set which directly or
+   indirectly sign at least one key in the strong component.
+   
+Shortest-Path Distances
+
+   Using a breadth-first search of the keyspace, we can calculate the
+   shortest path from one keyID to other keyIDs it has directly or
+   indirectly signed.
+
+Mean distance from strong keyIDs to signees:    6.41189
+Mean distance to strong keyIDs from signers:    6.70961
+
+Maximum shortest-path distance:                 21
+
+   First, for each key in 'strong', we compute the mean length of the
+   shortest path necessary to reach each key in 'signees': 6.41189. Next
+   we do the converse, following paths of signatures into the strong
+   component rather than out of it. The mean distances are different
+   because a different set of keys is involved: signers vs signees.
+   
+   Finally, we note that there are several pairs of keys which have a
+   shortest path distance of 21 between them. Here is the [9]example
+   path, between these two keys:
+
+6CB05C95 Karl F. Scheibner &lt;scheibner@llnl.gov&gt;
+82996935 Brett Dubroy &lt;1:225/357@fidonet.org&gt;
+
+   Anyone who is along this path can improve the tightness of the web of
+   trust by finding someone they know further along the path and
+   carefully signing their key.
+   
+Centers of Trust: the Central Trustee and Central Truster
+
+   By examining the shortest-path data more closely we can identify the
+   keys which are closest to the 'center' of the web of trust. The
+   'central trustee' is the key which is signed most directly by others:
+   the key which has the shortest mean distance from all of the
+   'signers'. Here is the current "top 10":
+
+Mean    Max     KeyID           UserID
+4.17191 11      CE766B1F        Paul C. Leyland &lt;pcl@foo.oucs.ox.ac.uk&gt;
+4.30235 12      53AAF259        Klaus-Peter Kossakowski, DFN-CERT &lt;kpk@cert.dfn
+.de&gt;
+4.37881 12      32DD98D9        Vesselin V. Bontchev &lt;bontchev@complex.is&gt;
+4.38381 12      D410B7F5        DFN-CERT &lt;dfncert@cert.dfn.de&gt;
+4.4043  13      DA0EDC81        Phil Karn &lt;karn@unix.ka9q.ampr.org&gt;
+4.4073  12      F82CEA91        Simon Cooper &lt;sc@sgi.com&gt;
+4.43778 13      C1B06AF1        Derek Atkins &lt;warlord@MIT.EDU&gt;
+4.46527 13      466B4289        Theodore Ts'o [SIGNATURE] &lt;tytso@mit.edu&gt;
+4.47576 12      C7A966DD        Philip R. Zimmermann &lt;prz@acm.org&gt;
+4.48426 12      8E0A49D1        Wolfgang Ley, DFN-CERT &lt;ley@cert.dfn.de&gt;
+
+   You can also get the [10]full list by mean distance.
+   
+   Here is the [11]distance to the cental trustee from the each of the
+   signers along with info on how many keys sign and are signed by each
+   key.
+   
+   The converse of this is the 'central truster', the key which trusts
+   other keys most directly:
+
+Mean    Max     KeyID           UserID
+
+3.91928 10      32DD98D9        Vesselin V. Bontchev &lt;bontchev@complex.is&gt;
+3.97694 11      C7A966DD        Philip R. Zimmermann &lt;prz@acm.org&gt;
+4.0191  12      DA0EDC81        Phil Karn &lt;karn@unix.ka9q.ampr.org&gt;
+4.0418  12      0DBF906D        Jeffrey I. Schiller &lt;jis@mit.edu&gt;
+4.05838 11      CE766B1F        Paul C. Leyland &lt;pcl@foo.oucs.ox.ac.uk&gt;
+4.08396 12      7B7AE5E1        Germano Caronni &lt;caronni@tik.ee.ethz.ch&gt;
+4.08973 11      4D0C4EE1        Jeffrey I. Schiller &lt;jis@mit.edu&gt;
+4.13405 12      666D0051        Assar Westerlund &lt;assar@pdc.kth.se&gt;
+4.17333 12      5826CF8D        John Gardiner Myers &lt;jgm+@cmu.edu&gt;
+4.17982 12      466B4289        Theodore Ts'o [SIGNATURE] &lt;tytso@mit.edu&gt;
+
+   You can also get the [12]full list by mean distance.
+   
+   Here is the [13]distance to each of the 'signees' from the central
+   truster, along with info on how many keys sign and are signed by each
+   key.
+   
+Further Questions
+
+   Many other aspects of the web of trust could be explored.
+     * It is important that the web be multiply-connected. p Good
+       software to do bi-connectivity (or tri-connectivity, etc.) for
+       directed graphs would be useful, especially if it identifies the
+       most significant articulation points (keys which are critical for
+       the connection of big pieces of the web).
+     * Identification of large cliques or near-cliques (sets of keys
+       which all sign each other, related to coloring problem, very
+       hard.)
+     * Software to generate a high-level graphical view would be useful.
+       For example, a directed-acyclic-graph of the connectivity of the
+       larger strongly-connected components would be interesting.
+     * It shouldn't be too hard to make pgpstat.java into a server which
+       could answer custom queries (shortest path from x to y, size of
+       component that x is in, suggestions for who might be able to sign
+       your key (e.g. other keys from the strongly-connected component
+       which are in your domain), etc.)
+       
+Tools
+
+   The analysis tool, pgpstat.java, is an application written in the very
+   nice new language [14]Java (Perl just doesn't have any decent
+   hierarchical data structure support...). Source code will probably be
+   made available after some cleaning-up for others who want to explore
+   different keyrings or other avenues of analysis.
+   
+   Performance note: the algorithms used here mostly scale linearly in
+   time complexity, based on the sum of the numbers of keys and
+   signatures. In particular this is true for the code that finds the
+   strongly-connected components (thanks to a favorite professor of mine,
+   Bob Sedgewick, and his "Algorithms" book!)
+   
+   The one notable exception is finding the centers of trust and the
+   longest shortest-path, which is quadratic in the size of the connected
+   set, but doesn't have to be computed nearly as often, as a practical
+   matter. The full analysis took less than 30 minutes using one
+   processor on a Sun Sparc 1000 (50 Mhz?). There are lots of
+   opportunities for optimization, and hopefully non-quadratic algorithms
+   for at least approximating the center/longest path problems.
+   
+   Please let me know if you have any feedback on this analysis.
+     _________________________________________________________________
+                                      
+   [15]Neal McBurnett &lt;neal.mcburnett@att.com&gt;
+
+References
+
+   1. <A  HREF="http://www.quadralay.com/www/Crypt/PGP/pgp00.html">http://www.quadralay.com/www/Crypt/PGP/pgp00.html</A>
+   2. <A  HREF="http://www.pgp.net/pgp/email-key-server-info.html">http://www.pgp.net/pgp/email-key-server-info.html</A>
+   3. <A  HREF="http://www.pgp.net/pgp/www-key.html">http://www.pgp.net/pgp/www-key.html</A>
+   4. <A  HREF="ftp://ftp.uit.no/pub/crypto/pgp/keys/pubring.pgp">ftp://ftp.uit.no/pub/crypto/pgp/keys/pubring.pgp</A>
+   5. file://localhost/home/neal/public_html/pgpstat/public-keys.960101.pgp
+   6. <A  HREF="http://www.quadralay.com/www/Crypt/PGP/pgp06.html#608">http://www.quadralay.com/www/Crypt/PGP/pgp06.html#608</A>
+   7. file://localhost/home/neal/public_html/pgpstat/strong-from
+   8. file://localhost/home/neal/public_html/pgpstat/strong2
+   9. file://localhost/home/neal/public_html/pgpstat/maxpath
+  10. file://localhost/home/neal/public_html/pgpstat/strong-from
+  11. file://localhost/home/neal/public_html/pgpstat/signers
+  12. file://localhost/home/neal/public_html/pgpstat/strong-to
+  13. file://localhost/home/neal/public_html/pgpstat/signees
+  14. <A  HREF="http://www.javasoft.com/">http://www.javasoft.com/</A>
+  15. <A  HREF="http://bcn.boulder.co.us/~neal/Home.html">http://bcn.boulder.co.us/~neal/Home.html</A>
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQBVAwUBMRL1t8KbwnFPAGm1AQHizwIAn+HiF7ohgcxlYAI9OS4St9FFghzCQ+8v
+TQYKssbcqS06Y0kkeTYyKFBRfwTrulxugE+aq6Jchpw2vo0C6YvEdA==
+=mXbe
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00194" HREF="msg00194.html">Re: Analysis of PGP keyserver web of trust</A></STRONG>
+<UL><LI><EM>From:</EM> Simon Spero &lt;ses@tipper.oit.unc.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00196.html">Sometimes ya just gotta nuke em</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00188.html">Re: OFFSHORE RESOURCES</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00367.html">RE: Sometimes ya just gotta nuke em</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00194.html">Re: Analysis of PGP keyserver web of trust</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00193"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00193"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

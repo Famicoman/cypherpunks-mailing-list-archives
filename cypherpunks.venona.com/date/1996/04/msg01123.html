@@ -1,0 +1,143 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: why compression doesn't perfectly even out entropy -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Fri, 19 Apr 1996 12:11:33 +0800 -->
+<!--X-Message-Id: 199604182255.PAA13373@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: why compression doesn't perfectly even out entropy</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01125.html">Date Prev</A>][<A HREF="msg01154.html">Date Next</A>][<A HREF="msg01111.html">Thread Prev</A>][<A HREF="msg01146.html">Thread Next</A>][<A HREF="index.html#01123">Date Index</A>][<A HREF="threads.html#01123">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: why compression doesn't perfectly even out entropy</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: why compression doesn't perfectly even out entropy</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 18 Apr 1996 15:55:45 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+From: daw@cs.berkeley.edu (David Wagner)
+&gt; My entropy cruncher takes in random noise from a number of diverse
+&gt; sources (some possibly of dubious quality).  I take *all* the noise
+&gt; and run it through a hash function to distill entropy.
+&gt; 
+&gt; Now I need to have some method to estimate when I have enough entropy
+&gt; in the random noise I'm crunching.  First rule: be conservative.
+&gt; One can never have too much entropy in the input to the hash function.
+&gt; 
+&gt; Therefore, I suggest making a *copy* of the input noise stream,
+&gt; running it through Jon Wienke's "this shouldn't happen" filter, and
+&gt; feeding the result to some entropy estimator.  When the entropy
+&gt; estimator says "I've got 1000 bits of entropy", I stop crunching.
+&gt; 
+&gt; This is conservative design, folks.  Using Wienke's filter in this manner
+&gt; can't be any weaker than not using it at all. (agreed?)
+
+I see two problems with this.
+
+The first is whether this mysterious black box, the entropy estimator,
+is really possible.  In practice the only way to know how much entropy
+you've gotten is to have a model for how the data is being generated,
+and to deduce from that an estimate of the entropy rate.  So the entropy
+estimator can't be a general-purpose calcluation, but it must be one
+which is specifically chosen, developed and tuned for the specific source
+of entropy you are dealing with.
+
+Given this, what is the point of filtering?  You already have a model.
+If you want to be conservative, why not just take 50% more bits than your
+model says you needed?
+
+The other problem is the functioning of this filter.  I haven't followed
+Jon's proposals closely, but at one point he was talking about
+histogramming the input and throwing out data which he had seen too
+often.  Now this is an implicit model as well - it assumes that the data
+is supposed to be uniformly distributed on a per-byte (or whatever the
+data elements are) basis.
+
+Suppose your random noise from dubious sources includes some timing
+values which vary in the range 90-110, roughly normally distributed.  You
+have good reason to believe that it actually is a normal distribution,
+and that there are 2 or 3 good bits of entropy per sample.  If you didn't
+use Jon's filter you could just collect data, hash it, and figure that
+each datum gave you this much entropy.
+
+But now if you throw Jon's filter in there, it may start throwing out all
+the values in the range 90-110.  Where are the 0-80's?, it wonders.  Where
+are the 120's and up?  There are way too many 100's here!  If the filter
+isn't smart about the data like your model is, it could end up throwing
+the whole data set out.  Your entropy counter would be spinning its
+wheels waiting for more data, and you'd think you never got enough.
+
+So I think the lesson is that there is only one way to estimate entropy,
+and that is to study your source.  I have to agree with Perry that this
+filtering concept is not the way to go.  It is a red herring that lures
+you in the direction of automatic entropy estimation, and that is really
+not safe.
+
+Hal Finney
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01146" HREF="msg01146.html">Re: why compression doesn't perfectly even out entropy</A></STRONG>
+<UL><LI><EM>From:</EM> "Perry E. Metzger" &lt;perry@piermont.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="01200" HREF="msg01200.html">Re: why compression doesn't perfectly even out entropy</A></STRONG>
+<UL><LI><EM>From:</EM> daw@cs.berkeley.edu (David Wagner)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01125.html">Announce: new Microsoft CryptoAPI mailing list</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01154.html">Re: [Explanation] Re: "STOP SENDING ME THIS SHIT"</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01111.html">Re: why compression doesn't perfectly even out entropy</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01146.html">Re: why compression doesn't perfectly even out entropy</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01123"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01123"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

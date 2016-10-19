@@ -1,0 +1,294 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: NetScape's dependence upon RSA down for the count! -->
+<!--X-From-R13: Rnivq_O Intare <qnjNQE.Prexryrl.SRG> -->
+<!--X-Date: Mon, 2 Oct 95 14:27:04 PDT -->
+<!--X-Message-Id: 199510022126.OAA06234@lagos.CS.Berkeley.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: NetScape's dependence upon RSA down for the count!</TITLE>
+<LINK REV="made" HREF="mailto:daw@CS.Berkeley.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00382.html">Date Prev</A>][<A HREF="msg00398.html">Date Next</A>][<A HREF="msg00350.html">Thread Prev</A>][<A HREF="msg00387.html">Thread Next</A>][<A HREF="index.html#00373">Date Index</A>][<A HREF="threads.html#00373">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: NetScape's dependence upon RSA down for the count!</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:jbass@dmsd.com">jbass@dmsd.com</A></LI>
+<LI><em>Subject</em>: Re: NetScape's dependence upon RSA down for the count!</LI>
+<LI><em>From</em>: David_A Wagner &lt;<A HREF="mailto:daw@CS.Berkeley.EDU">daw@CS.Berkeley.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 2 Oct 1995 14:26:54 -0700 (PDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:nethack@dmsd.com">nethack@dmsd.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:hacknetscape@c2.org">hacknetscape@c2.org</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+In article &lt;9509301910.AA10970@dmsd.com&gt; you write:
+&gt; 
+&gt; The "messenger attack" as described in my earlier posts regarding
+&gt; public key encryption and key management seems to apply to NetScape's SSL.
+&gt; I have a Fifty dollar bill for the first person to submit to the mail box
+&gt; nethack@dmsd.com a working Unix server (with cleartext session logs) which
+&gt; accepts all connections on a unix based host to the www port and redirects
+&gt; them to netscape.com leaving a clear text log of each session's SSL packets
+&gt; in /tmp by session.  All entries become the property of DMS Design. The winner
+&gt; and I will submit a claim for one of Community COnneXion's "I HACKED NETSCAPE"
+&gt; tee shirts as a server hack. (Have Fun!!)
+&gt; 
+
+This is a trivial program!  I can't believe anyone considers this
+technically difficult.  But hey, who am I to question, if you'll
+pay $50!
+
+Ok, let me back that up with real code.  Here's a proxy I've been
+using for experimenting, in lieu of root access &amp; tcpdump.
+
+Usage: proxy localport remotehost remoteport &gt; capturefile
+
+Try:
+
+$ ./proxy 2999 www.netscape.com 80 &gt; capturefile &amp;
+$ netscape <A  HREF="http://localhost:2999/home/welcome.html">http://localhost:2999/home/welcome.html</A> &amp;
+
+or
+
+$ ./proxy 3999 alpha.mkn.co.uk 443 &gt; capturefile &amp;
+$ netscape <A  HREF="https://localhost:3999/">https://localhost:3999/</A> &amp;
+
+Here's the source.  It's a bit unstable, and could be a improved
+a little, but was fine for a quick kludge.  So feel free send the
+$50 to the following address at your convenience!! :-)
+
+David Wagner
+UC Berkeley
+330 Soda Hall
+Berkeley, CA  94720
+
+
+#include &lt;stdio.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/param.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;sys/time.h&gt;
+#include &lt;netinet/in.h&gt;
+#include &lt;netdb.h&gt;
+#include &lt;ctype.h&gt;
+
+/* dump bytes, sorta similar to tcpdump's style */
+dump(char *p, int len)
+{
+	int	i, j;
+
+	while (len &gt; 0) {
+		for (i=0; i&lt;16 &amp;&amp; i &lt; len; i++) {
+			printf("%2.2x", (unsigned char) p[i]);
+			if (i &amp; 1)
+				printf(" ");
+		}
+		j = i;
+		for (; i&lt;16; i++) {
+			printf("  ");
+			if (i &amp; 1)
+				printf(" ");
+		}
+		printf("    # ");
+		for (i=0; i&lt;j; i++)
+			printf("%c", (isprint(p[i])) ? p[i] : '.');
+		printf("\n");
+
+		len -= j; p += j;
+	}
+	printf("\n");
+}
+
+/* copy one message; guaranteed not to block */
+int fromto(int from, int to)
+{
+	static char	buf[2048];
+	int	len;
+
+	len = read(from, buf, sizeof(buf));
+	switch(len) {
+		case 0:		return(0); /* EOF */
+		case -1:	perror("read"); exit(1);
+	}
+	dump(buf, len);
+	return(write(to, buf, len));
+}
+
+/* kludge to deal with select fd_set * parameters weirdness */
+/* #define	FSC(x)	((fd_set *) x) */
+#define	FSC(x)	((int *) x)
+
+/* repeatedly copy both ways */
+proxy(int xfd, int yfd)
+{
+	fd_set	fs;
+	char	buffer[2048];
+	int	done = 0;
+
+	while (!done) {
+		FD_ZERO(&amp;fs);
+		FD_SET(xfd, &amp;fs); FD_SET(yfd, &amp;fs);
+		if (select(64, FSC(&amp;fs), FSC(0), FSC(0), (struct timeval *) 0)
+							== -1) {
+			perror("select"); exit(1);
+		}
+		if (FD_ISSET(xfd, &amp;fs))
+			if (fromto(xfd, yfd) &lt;= 0)
+				done = 1;
+		if (FD_ISSET(yfd, &amp;fs))
+			if (fromto(yfd, xfd) &lt;= 0)
+				done = 1;
+	}
+}
+
+int remoteinit(char *addr, int port)
+{
+	struct sockaddr_in si;
+	int fd;
+	struct hostent *hp;
+	char    hostname[MAXHOSTNAMELEN];
+
+	memset(&amp;si, 0, sizeof(struct sockaddr_in));
+	si.sin_family = AF_INET;
+	si.sin_addr.s_addr = inet_addr(addr);
+	si.sin_port = port;
+	if (si.sin_addr.s_addr == -1)
+		hp = gethostbyname(addr);
+	else
+		hp = gethostbyaddr((char *)&amp;si.sin_addr.s_addr,
+					sizeof(struct sockaddr_in), AF_INET);
+	if (hp == NULL) {
+		fprintf(stderr, "unknown host %s\n", addr); exit(1);
+	}
+	si.sin_family = hp-&gt;h_addrtype;
+	memcpy(&amp;(si.sin_addr), hp-&gt;h_addr, hp-&gt;h_length);
+	strncpy(hostname, hp-&gt;h_name, MAXHOSTNAMELEN-1);
+ 	if (si.sin_family == AF_INET)
+		printf("Connecting to %s (%s)\n", hostname,
+			inet_ntoa(*(struct in_addr *)&amp;si.sin_addr.s_addr));
+	else
+		printf("Connecting to %s\n", hostname);
+
+	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) &lt; 0) {
+		perror("socket"); exit(1);
+	}
+	if (connect(fd, &amp;si, sizeof(si)) &lt; 0) {
+		perror("connect"); exit(1);
+	}
+	return(fd);
+}
+
+int localinit(int port)
+{
+	struct sockaddr_in thissock;
+	int	s, i;
+
+	if ((s = socket(AF_INET, SOCK_STREAM, 0)) &lt; 0) {
+		perror("socket"); exit(1);
+	}
+
+	memset((char *)&amp;thissock, 0, sizeof(struct sockaddr_in));
+	thissock.sin_family = AF_INET;
+	thissock.sin_port = port;
+	thissock.sin_addr.s_addr = htonl(INADDR_ANY);
+ 
+	i = 1;
+	setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&amp;i, sizeof(int));
+
+	if (bind(s, (struct sockaddr *)&amp;thissock, sizeof(struct sockaddr_in)) &lt; 0) {
+		perror("bind"); exit(1);
+	}
+	if (listen(s, 5) &lt; 0) {
+		perror("listen"); exit(1);
+	}
+
+	return(s);
+}
+
+usage()
+{
+		fprintf(stderr, "Usage: proxy localport remotehost remoteport\n");
+		exit(1);
+}
+
+
+int main(int argc, char **argv)
+{
+	int	partialxfd, xfd, yfd, i, localport, remoteport;
+	struct sockaddr_in thatsock;
+	char *remotehost;
+
+	if (argc != 4)
+		usage();
+	localport = atoi(argv[1]);
+	remotehost = argv[2];
+	remoteport = atoi(argv[3]);
+	if (localport &lt; 1024 || remoteport &lt;= 0)
+		usage();
+
+	partialxfd = localinit(localport);
+
+	for (;;) {
+		i = sizeof(struct sockaddr_in);
+		if ((xfd = accept(partialxfd, (struct sockaddr *)&amp;thatsock, &amp;i)) &lt; 0) {
+			perror("accept"); exit(1);
+		}
+  
+		yfd = remoteinit(remotehost, remoteport);
+		proxy(xfd, yfd);
+	}
+}
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00382.html">Re: DNS Security ( was Re: NetScape's dependence upon RSA down...)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00398.html">Re: One-Time-Pad generation from audio device</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00350.html">Re: NetScape's dependence upon RSA down for the count!</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00387.html">Re: NetScape's dependence upon RSA down for the count!</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00373"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00373"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,311 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: CHALLENGE response -->
+<!--X-From-R13: Oabalzbhf <abobqlNercynl.pbz> -->
+<!--X-Date: Tue, 22 Sep 1998 19:58:34 +0800 -->
+<!--X-Message-Id: 199809230100.DAA27355@replay.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: CHALLENGE response</TITLE>
+<LINK REV="made" HREF="mailto:nobody@replay.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01134.html">Date Prev</A>][<A HREF="msg01138.html">Date Next</A>][<A HREF="msg01149.html">Thread Prev</A>][<A HREF="msg01622.html">Thread Next</A>][<A HREF="index.html#01158">Date Index</A>][<A HREF="threads.html#01158">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: CHALLENGE response</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>Subject</em>: Re: CHALLENGE response</LI>
+<LI><em>From</em>: Anonymous &lt;<A HREF="mailto:nobody@replay.com">nobody@replay.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 23 Sep 1998 03:00:57 +0200</LI>
+<LI><em>Comments</em>: This message did not originate from the Sender address above.It was remailed automatically by anonymizing remailer software.Please report problems or inappropriate use to theremailer administrator at &lt;abuse@replay.com&gt;.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+&gt; What form are your primes (did you use Maurers idea to increase the
+&gt; relative hardness of factoring compared to discrete log, or did you
+&gt; just use more smaller primes?)  How many primes have you used, and how
+&gt; many CPU hours did it take to calculate the discrete log to discover e?
+
+N is the product of two primes, but each p-1 has about 16 small prime factors
+(about 25-35 bits) to allow calculating the discrete log efficiently.  With
+this choice of primes it took about three hours to run the discrete log.
+
+&gt; Also is the code for finding discrete logs given the prime
+&gt; factorisation of the modulus available?
+
+Here you go.  This uses cryptolib by Jack Lacy of AT&amp;T (not to be
+confused with cryptlib by Peter Gutmann), available from
+<A  HREF="ftp://ftp.funet.fi/pub/crypt/cryptography/libs/cryptolib_1.1.tar.gz">ftp://ftp.funet.fi/pub/crypt/cryptography/libs/cryptolib_1.1.tar.gz</A>
+
+
+/* Calculate discrete log using various algorithms */
+/* Algorithms based on Handbook of Applied Cryptography by Menezes et al */
+
+#include "libcrypt.h"
+
+
+/* Modular multiplication - m1*m2 mod n */
+static void
+bigMultiplyN (BigInt m1, BigInt m2, BigInt n, BigInt result)
+{
+    BigInt tmp = bigInit(0);
+    bigMultiply (m1, m2, tmp);
+    bigMod (tmp, n, result);
+    freeBignum (tmp);
+}
+
+
+/* Modular addition, m1+m2 mod n */
+static void
+bigAddN (BigInt m1, BigInt m2, BigInt n, BigInt result)
+{
+    bigAdd (m1, m2, result);
+    if (bigCompare (result, n) &gt;= 0)
+        bigSubtract (result, n, result);
+}
+
+
+/* Iterate the pollard rho.  Modify x, a, b with next values */
+static void
+prhoiter (BigInt base, BigInt val, BigInt mod, BigInt order,
+    BigInt *x, BigInt *a, BigInt *b)
+{
+    int xgroup;
+
+    /* First decide what group x is in */
+    /* This is a cheat to be fast */
+    xgroup = ((unsigned)(*x)-&gt;num[0]+1) % 3;
+
+    switch (xgroup) {
+    case 0:
+        bigMultiplyN (*x, val, mod, *x);
+        bigAddN (*b, one, order, *b);
+        break;
+    case 1:
+        bigMultiplyN (*x, *x, mod, *x);
+        bigAddN (*a, *a, order, *a);
+        bigAddN (*b, *b, order, *b);
+        break;
+    case 2:
+        bigMultiplyN (*x, base, mod, *x);
+        bigAddN (*a, one, order, *a);
+        break;
+    }
+}
+
+
+/* Pollard rho algorithm for discrete log */
+
+BigInt
+pollardrho (BigInt base, BigInt val, BigInt mod, BigInt order)
+{
+    BigInt
+        x = bigInit(1),
+        a = bigInit(0),
+        b = bigInit(0),
+        x2 = bigInit(1),
+        a2 = bigInit(0),
+        b2 = bigInit(0);
+    int cnt = 0;
+
+    for ( ; ; ) {
+        prhoiter (base, val, mod, order, &amp;x, &amp;a, &amp;b);
+        prhoiter (base, val, mod, order, &amp;x2, &amp;a2, &amp;b2);
+        prhoiter (base, val, mod, order, &amp;x2, &amp;a2, &amp;b2);
+        if (bigCompare (x, x2) == 0)
+            break;
+        if (++cnt % 1000 == 0) {
+            printf ("%d\r", cnt);
+            fflush (stdout);
+        }
+    }
+    if (cnt &gt;= 1000)
+        printf ("\n");
+
+    if (bigCompare (b, b2) &lt; 0)
+        bigAdd (order, b, b);
+    bigSubtract (b, b2, b);
+    if (bigCompare (a2, a) &lt; 0)
+        bigAdd (order, a2, a2);
+    bigSubtract (a2, a, a);
+        
+    if (bigCompare (b, zero) == 0) {
+        printf ("Pollard rho failed\n");
+        exit (1);
+    }
+    getInverse (b, order, b2);
+    bigMultiplyN (a, b2, order, a);
+    return a;
+}
+
+
+/*
+ * Do the CRT with multiple congruences.  congs are the values that the
+ * answer should be congruent to, mods are the moduli for each congruence.
+ * n tells how many in each array.
+ */
+static BigInt
+crtmult (BigInt congs[], BigInt mods[], int n)
+{
+    int i;
+    BigInt prod = bigInit(0);
+    BigInt prod1 = bigInit(0);
+    BigInt sum = bigInit(0);
+    BigInt quot = bigInit(0);
+    BigInt rem = bigInit(0);
+    BigInt dum = bigInit(0);
+    BigInt inv = bigInit(0);
+    BigInt term = bigInit(0);
+
+    /* Compute product of moduli */
+    bigCopy (one, prod);
+    for (i=0; i&lt;n; ++i) {
+        bigMultiply (prod, mods[i], prod1);
+        bigCopy (prod1, prod);
+    }
+
+    for (i=0; i&lt;n; ++i) {
+        bigDivide (prod, mods[i], quot, dum);
+        bigDivide (quot, mods[i], dum, rem);
+        getInverse (rem, mods[i], inv);
+        bigMultiplyN (congs[i], quot, prod, term);
+        bigMultiplyN (term, inv, prod, term);
+        bigAddN (term, sum, prod, sum);
+    }
+
+    return sum;
+}
+
+
+/* Pohlig-Hellman discrete log algorithm for composites */
+/* Return the exponent such that base^exponent == val modulo mod. */
+/* Group order is product of factors[], of which there are n */
+/* Assume each factor is to the first power */
+
+BigInt
+phlog (BigInt base, BigInt val, BigInt mod, BigInt factors[], int n)
+{
+    BigInt
+        prod = bigInit(0),
+        prod1 = bigInit(0),
+        exp = bigInit(0),
+        dum = bigInit(0),
+        b = bigInit(0),
+        v = bigInit(0);
+    BigInt *dlogs;
+    BigInt dl;
+    int i;
+
+    dlogs = (BigInt *) malloc (n * sizeof (BigInt));
+
+    /* Compute product of factors to get group order */
+    bigCopy (one, prod);
+    for (i=0; i&lt;n; ++i) {
+        bigMultiply (prod, factors[i], prod1);
+        bigCopy (prod1, prod);
+    }
+
+    /* Sanity check */
+    bigPow (base, prod, mod, b);
+    if (bigCompare (b, one) != 0) {
+        printf ("Inconsistency in group order on b\n");
+        fBigPrint (b, stdout);
+    }
+    bigPow (val, prod, mod, v);
+    if (bigCompare (v, one) != 0) {
+        printf ("Inconsistency in group order on v\n");
+        fBigPrint (v, stdout);
+    }
+
+    for (i=0; i&lt;n; ++i) {
+        bigDivide (prod, factors[i], exp, dum);
+        bigPow (base, exp, mod, b);
+        bigPow (val, exp, mod, v);
+
+        printf ("Trying dlog with factor: "); fBigPrint (factors[i], stdout);
+        printf ("b: "); fBigPrint (b, stdout);
+        printf ("v: "); fBigPrint (v, stdout);
+
+        /* Special case for 2, pollardrho doesn't work too well on it */
+        if (bigCompare (factors[i], two) == 0) {
+            if (bigCompare (b, v) == 0) {
+                dlogs[i] = bigInit(1);
+            } else if (bigCompare (v, one) == 0) {
+                dlogs[i] = bigInit(0);
+            } else {
+                printf ("Inconsistent b, v for factor == 2\n");
+                exit (1);
+            }
+        } else {
+            /* Now find log of v mod b, has group order factors[i] */
+            dlogs[i] = pollardrho (b, v, mod, factors[i]);
+        }
+        printf ("dl: "); fBigPrint (dlogs[i], stdout);
+        bigPow (b, dlogs[i], mod, b);
+        if (bigCompare (b, v) != 0) {
+            printf ("Error in discrete log calc!\n");
+            exit (1);
+        }
+    }
+
+    /* Combine results with CRT */
+    dl = crtmult (dlogs, factors, n);
+
+    return dl;
+}
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01134.html">Re: Stego-empty hard drives... (fwd)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01138.html">Re: Stego-empty hard drives... (fwd)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01149.html">Re: CHALLENGE response</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01622.html">CTIA Daily News from WOW-COM - September 21, 1998</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01158"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01158"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

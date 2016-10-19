@@ -1,0 +1,202 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: message depots -->
+<!--X-From-R13: wvzNovyob.fhvgr.pbz (Xvz [vyyre) -->
+<!--X-Date: Wed, 3 Nov 93 19:12:21 PST -->
+<!--X-Message-Id: 9311040308.AA14472@bilbo.suite.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>message depots</TITLE>
+<LINK REV="made" HREF="mailto:jim@bilbo.suite.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00067.html">Date Prev</A>][<A HREF="msg00072.html">Date Next</A>][<A HREF="msg00070.html">Thread Prev</A>][<A HREF="msg00068.html">Thread Next</A>][<A HREF="index.html#00071">Date Index</A>][<A HREF="threads.html#00071">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>message depots</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: message depots</LI>
+<LI><em>From</em>: <A HREF="mailto:jim@bilbo.suite.com">jim@bilbo.suite.com</A> (Jim Miller)</LI>
+<LI><em>Date</em>: Wed, 3 Nov 93 20:54:03 -0600</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:Jim_Miller@suite.com">Jim_Miller@suite.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+The mailing list has been pretty quite today.  How about a new(?) idea to kick  
+around...
+
+
+One of the main unsolved problems with anonymous remailer networks is that,  
+somewhere, there has to be a remailer that knows the mapping from your  
+anonymous identity to your real identity (or at least your real e-mail  
+address).  This means that you will have to trust the person running the  
+remailer.
+
+It seems to me that as long as remailers use a message *delivery* paradigm,  
+this problem is unsolvable.  However, there is another paradigm that can be  
+used which can solve this problem.  I call it the "message depot" paradigm.
+
+It wastes a lot of bandwidth and cpu cycles.  However, I believe that in the  
+not too distant future we'll have more bandwidth than we know what to do with  
+(Telecosm).  Perhaps someday we'll also have more cpu cycles than we'll know  
+what to do with (cray on a chip).  When that day arrives, this idea will become  
+practical.  Until then, it will probably just be a toy.  Still...
+
+
+Here how I see it working...
+
+
+Simplest case:  One message depot
+
+Not too different from a message-only BBS where all messages are encrypted.
+
+If Bob wants to send a secure message to Alice and defeat traffic analysis, he  
+will encrypt the message with Alice's public key and send it to the message  
+depot.  Alice (and everyone else) periodically grabs *all* new messages from  
+the message depot and attempts to decrypt them.  Alice finds that she can  
+decrypt one of them; the one from Bob.  If Bob signed the message before  
+encrypting it, and Alice has Bob's public key, she can verify the signature.   
+Of course, this doesn't means she knows who "Bob" is, just that "Bob" sent the  
+message.  Replace "Bob" with you favorite 'nym.
+
+Since everybody is periodically downloading all new messages, the message depot    
+doesn't know which message goes to which person.  Also, since the only clue to  
+the sender's identity is the message signature, the message recipient may not  
+know the identity of the sender.  (It would depend on how the recipient got the  
+sender's public key.)
+
+
+Scaling Up a Step:  Multiple message depots
+
+Place a dozen message depots in the picture.  They each publish a unique public  
+key, which means that people can send encrypted messages to the depots as end  
+points.  The depots would poll each other for new messages to see if there is a  
+message encrypted with their public keys.
+
+Example: Depot A polls depot B for new messages.  Depot A attempts to decrypt  
+the new messages.  It finds one that it can decrypt.  Upon decrypting the  
+message, the depot sees a depot command and more message.  The one and only  
+depot command will be: "PUT THE REMAINDER OF THE MESSAGE IN YOUR MESSAGE POOL  
+AS A NEW MESSAGE".  Any message the depot cannot decrypt will be discarded.
+
+How is this useful?  Well, by nesting a message in layers of digital envelopes,  
+a sender can effectively move the message around the set of message depots  
+until it reaches a depot that the final recipient polls.
+
+Lets say that Bob knows that Alice polls Depot E, yet, for some reason, Bob  
+doesn't want to send the message directly to Depot E.  What does he do?  He  
+first signs the message with his private key (if he wants to), then encrypts it  
+with Alice's public key, appends the depot command and encrypts everything with  
+Depot E's public key, appends another depot command and encrypts everything  
+with Depot B's public key.  He then sends the result to Depot B.
+
+Depot B decrypts the message, sees the depot command, strips it off and places  
+the remainder in its message pool as a new message.  Some time later, Depot E  
+polls Depot B for new messages.  Depot B obliges.  Depot E attempts to decrypt  
+the messages, finds that it can decrypt one of them.  It sees the depot  
+command, strips and posts the remainder of the message to its message pool.   
+Eventually, Alice polls Depot E for new messages.  And you can guess the rest.
+
+If Bob doesn't know which message depot Alice polls, he can send copies to a  
+number of different depots and hope that Alice will find it.  If he sent it to  
+*all* depots, Alice will eventually get the message (unless she stops polling  
+altogether).
+
+Messages depots will delete messages after a configurable amount of time.   
+Also, the depots will not keep track of who has sucked down which set of "new"  
+messages.  This implies that the people polling the depots will have to tell  
+the depot they want all messages since a given time.  The client-side polling  
+software can easily keep track of this for the user.
+
+
+
+Interfacing to the rest of the world:
+
+To support sending messages to specific e-mail addresses or news groups,  
+somebody will have to run a remailer that polls the message depots.  A sender  
+will encrypt a remailer command and a message using the remailer's public key  
+and direct it to the depot that the remailer polls.  The remailer will find the  
+message and interpret the remailer command.  The command could be "SEND THIS TO  
+&lt;an Internet address&gt;", or "POST THIS TO &lt;a newsgroup&gt;", or whatever.
+
+Replies would have to travel back through the depot net.  The body of the  
+message can indicate a message depot to "reply" to.
+
+
+I believe most of this message depot idea can be automated.
+
+
+As you can see, this mechanism consumes lots of bandwidth and lots of cpu.  But  
+it does not require that you trust any part of the system except the part that  
+sits in front of you.  I also believe that it successfully defeats traffic  
+analysis.
+
+
+"All the smarts will be at the fringes of the network." 
+
+
+	- the guy who is writing Telecosm (and whose name escapes me).
+
+
+Jim_Miller@suite.com
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00068" HREF="msg00068.html">Re: message depots</A></STRONG>
+<UL><LI><EM>From:</EM> tcmay@netcom.com (Timothy C. May)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00067.html">Re: ANON: mail concerns</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00072.html">ID of anonymous posters via word analysis?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00070.html">punk hardware list possibilities</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00068.html">Re: message depots</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00071"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00071"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

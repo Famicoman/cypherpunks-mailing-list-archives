@@ -1,0 +1,189 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Setting up a Magic Money server -->
+<!--X-From-R13: nabalzbhfNrkgebcvn.jvzfrl.pbz -->
+<!--X-Date: Sun, 13 Feb 94 14:31:16 PST -->
+<!--X-Message-Id: 199402122015.AA06992@xtropia -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Setting up a Magic Money server</TITLE>
+<LINK REV="made" HREF="mailto:anonymous@extropia.wimsey.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00755.html">Date Prev</A>][<A HREF="msg00720.html">Date Next</A>][<A HREF="msg00738.html">Thread Prev</A>][<A HREF="msg00720.html">Thread Next</A>][<A HREF="index.html#00699">Date Index</A>][<A HREF="threads.html#00699">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Setting up a Magic Money server</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Setting up a Magic Money server</LI>
+<LI><em>From</em>: <A HREF="mailto:anonymous@extropia.wimsey.com">anonymous@extropia.wimsey.com</A></LI>
+<LI><em>Date</em>: Sat, 12 Feb 1994 12:15:34 -0800</LI>
+<LI><em>Comments</em>: This message was anonymously remailed. Do not reply to the address in the From: line, unless you wish to report a problem. Thank you.</LI>
+<LI><em>Remailed-By</em>: remail@extropia.wimsey.com</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Magic Money seems to have reached a usable state. (Open mouth, insert foot,
+bite down firmly :-) ) Someone needs to set up the first server. Here's how:
+
+You can set up a Magic Money server on any machine with a net connection.
+You need to be able to run a program when mail comes in. You do not need
+root access. Running a Magic Money server is no harder than running a
+cypherpunks remailer. Unlike a remailer, there is no possibility of your
+server being used to harass or mailbomb anyone.
+
+Get Magic Money and PGP Tools (needed to compile it) from csn.org. 
+Get pgptl10c.zip and mgmny10e.zip. If mgmny10e.zip isn't up yet, get 
+mgmny10d.zip and fix the bug in mms_mint() by moving the free(fp); to 
+the end of the function. This is the only change in version e. This 
+version has been reported to work on both big and little endian machines. 
+
+If your machine has assembly-language speedups, get them from the pgp23a
+source code. Use the same defines PGP uses to compile on your machine,
+and take out the NO_ASM define in my makefile. This will speed up your
+server quite a bit.
+
+Compile the client and the server. Define UPTON or one of the other modmult 
+functions, because I have had problems with Smith's modmult. The hash file
+is currently set to about half a meg. It grows if it fills up. If you need
+to use less disk space, change the settings in mm.h.
+
+Put the server program "s" in one directory, and the client program "c" in 
+another. Put something random (i.e. unknowable to an attacker) in a file
+called rand.dat in each directory. The programs won't work without this. 
+The directories should be otherwise empty. 
+
+Go to the server directory and run "s i" to initialize the server. It will
+ask you for the name of your server, size of your key, name of your coins,
+and denominations to use. Powers of 2 make good denominations. For example,
+you might use 1,2,4,8... up to 32768. With these 16 coin values, you can
+transfer any sum up to 65535 with 16 or fewer coins.
+
+After you have entered all the information, the server generates a PGP key
+pair, and an e/d list pair. Your server's ascii-armored public key is saved 
+to bank.asc. You will need to distribute this key to everyone who wants to
+use your server.
+
+Copy bank.asc into the directory with the client. In that directory, run
+"c -i" to setup the client. The client generates a key, then creates a
+message "output.asc" which should be sent to the server. For example, if
+"client" and "server" were subdirectories in a common directory, you could
+run "s &lt; ../client/output.asc &gt; ../client/reply.asc" from the server's
+directory. Now go back to the client directory and run "c reply.asc" to
+finish setting up your client. You will be running this sequence a lot if
+you play with the system, so write a script.
+
+Your client now knows the name of your coins, and has the elist. This
+information is updated automatically when the server discovers the client's
+copy is out of date.
+
+Go back to the server directory and run "s m &lt;x&gt;" where x is one of your
+higher-value coins. You will have problems if you are using version d and
+did not fix the bug as described above. This mints a coin and writes it out
+to coins.dat.
+
+Go back to the client directory and run "c ../server/coins.dat". The client
+reads the coin, checks it, and asks you for values of new coins to create.
+Create several smaller coins. The client keeps prompting you until you have
+created coins with a value equalling that of the old coin.
+
+The client creates another "output.asc". Run your script to pass it through
+the server, and run "c reply.asc" to process the results. The client now
+takes the signed coins from the server and the blinding factors from 
+proto.dat, and unblinds the coins. The result is written to allcoins.dat.
+
+Now run "c -p" to withdraw coins from allcoins.dat. Enter the denominations
+to withdraw, and 0 to end. Now you have a coins.dat in the client's
+directory, so run "c coins.dat" to process it. It will count up the coins
+you withdrew, and prompt you for new coin values again, then produce another
+output.asc for the server. You can create a second client in another
+directory, and pass coins from one to the other.
+
+Try creating a "msg.txt" file in the server's directory. The client will
+then display the contents of the message whenever it processes a reply from
+the server. The client waits for a keypress after the message.
+
+Now that you know the server works, set it up so that incoming mail to your
+account is passed to the server, and the output from the server is sent back
+to the person who sent the mail. If you want to use the same account for
+the server and regular mail, have users put a specific word in the subject
+line of messages to the server.
+
+Announce your server, including its public key from bank.asc. You might want
+to provide binaries of the client for DOS, either by ftp or by automatic
+mail. You might also want to write a better makefile for the Unix version.
+
+Now you need to mint and distribute some, but not too much, money for people
+to play with. Give a few coins to the first x people who send a message to 
+your system. Later you can have lotteries, post puzzles and simple ciphers 
+for people to break, etc. to put more money into circulation. But keep your
+money scarce. People should be able to get a few coins to play with, but
+they should always want more than they have. Good luck!
+
+                                              Pr0duct Cypher
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a
+
+iQCVAgUBLVyldMGoFIWXVYodAQGo4AP/SQz82XRtWC1W/qjGQWouVDn/82TBBGne
+ktNIfmPE92lPpH0V3f7EizBs466AEXTwaxq5qVpj4Fx6low1ceiaKBQxhNosB8Wa
+BydiS2E2iC6kQ1RPj5jb6UOdLTQzl2MM7UrI8J3KpxszQWjhbgM/5ddHoDXgqs/J
+VjjeM/iqNF8=
+=2ggl
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00755.html">Re: Actively Sabotaging Clipper and Capstone?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00720.html">Setting up a Magic Money server</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00738.html">Re: UNSUBSCRIBERS PLEASE READ</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00720.html">Setting up a Magic Money server</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00699"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00699"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

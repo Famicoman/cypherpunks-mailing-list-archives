@@ -1,0 +1,165 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Limiting Reuse of Certificates -->
+<!--X-From-R13: X[YSZESKNqrycuv.pbz -->
+<!--X-Date: Sat, 13 Jan 1996 00:27:54 +0800 -->
+<!--X-Message-Id: 01HZW0SKW2K29BX1TS@delphi.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Limiting Reuse of Certificates</TITLE>
+<LINK REV="made" HREF="mailto:JMKELSEY@delphi.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00759.html">Date Prev</A>][<A HREF="msg00695.html">Date Next</A>][<A HREF="msg02593.html">Thread Prev</A>][<A HREF="msg00774.html">Thread Next</A>][<A HREF="index.html#00708">Date Index</A>][<A HREF="threads.html#00708">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Limiting Reuse of Certificates</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Limiting Reuse of Certificates</LI>
+<LI><em>From</em>: <A HREF="mailto:JMKELSEY@delphi.com">JMKELSEY@delphi.com</A></LI>
+<LI><em>Date</em>: Thu, 11 Jan 1996 15:37:57 -0500 (EST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+[To: cypherpunks list ## Date: 01/11/96 02:25 pm ##
+ Subject: Limiting reuse of certificates. ]
+
+&gt;Date: Mon, 08 Jan 1996 17:31:24 -0500 (EST)
+&gt;From: Michael Froomkin &lt;froomkin@law.miami.edu&gt;
+&gt;Subject: Certificates: limiting your liability with reuse limitations
+
+&gt;Suppose I am a CA.  I am worried that by issuing a certificate with
+&gt;a lifespan of more than 2 milliseconds I am opening myself up to
+&gt;unlimited liability if for some reason, despite my best efforts, I
+&gt;issue an erroneous certificate.
+
+&gt;I know I can put an expiration date on the certificate, but that's
+&gt;not enough.  I can accumulate a lot of exposure in a few seconds,
+&gt;much less weeks.
+
+&gt;I know I can put a reliance limit in the X.509 ver 3 certificate,
+&gt;but that's not enough.  Even a $1 limit could be used many millions
+&gt;of times.
+
+&gt;Is it feasabile to say: Can only be relied on once per
+&gt;day/week/month? Is this something the relying parties can reasonably
+&gt;be expected to monitor?
+
+This is a hard problem.  The only way I can see to do this is to
+require interaction with the CA (or its proxy) for each signature.
+The good news is that if you're doing certificate revokation lists
+online, then there is probably already some interaction with the
+server to verify that a certificate is still valid, before it is
+accepted.
+
+The trick here is to flip around who has to check the CRL server.
+
+a.   Bob forms
+     D = document he wants signed,
+     ID_B = Bob's ID,
+and sends to Alice
+     M_0 = ID_B, D.
+
+b.   Alice forms
+     T = timestamp
+and sends to the Server
+     M_1 = T, hash(ID_B, D), Sign_{SK_A}(T, hash(ID_B, D)).
+
+c.   The Server verifies the timestamp, the signature, and that
+Alice is currently allowed to sign things (her certificate is valid
+and hasn't been overused today).  If not, it drops the connection
+and ends the protocol.  If things all check out, however, it forms
+     M_2 = T, Sign{SK_S}(T, hash(ID_B, D), Certificate_A).
+
+d.   Alice now has (until the timestamp T becomes too stale) an
+authorization to sign D.  She does so, and sends to Bob (who's been
+waiting all this time)
+     M_3 = T, ID_B, D, Certificate_A, M_2, Sign_{SK_A}(ID_B, D).
+
+Now, the trick is to redefine valid signatures as only those that
+look like M_3.  The recipient has to verify the timestamp, and that
+he hasn't received an identical signature from Alice recently, and
+has to verify the two signatures.
+
+(I make no promises about the soundness of this protocol--it's meant
+to illustrate the idea, not to be used directly.)
+
+Other than that, I can't think of anything that will fit the bill.
+
+&gt;A. Michael Froomkin        | +1 (305) 284-4285; +1 (305) 284-6506 (fax)
+&gt;Associate Professor of Law |
+&gt;U. Miami School of Law     | froomkin@law.miami.edu
+&gt;P.O. Box 248087            | <A  HREF="http://www.law.miami.edu/~froomkin">http://www.law.miami.edu/~froomkin</A>
+&gt;Coral Gables, FL 33124 USA | It's warm here.
+
+Note:  Please respond via e-mail as well as or instead of posting,
+as I get CP-LITE instead of the whole list.
+
+   --John Kelsey, jmkelsey@delphi.com
+ PGP 2.6 fingerprint = 4FE2 F421 100F BB0A 03D1 FE06 A435 7E36
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBMPV110Hx57Ag8goBAQFVggP+P9ilz7cM8BQX+nDgjByG4avAoHxgDpDw
+cWsx7dw31MQsPCEkzvuvCcwf36e4xEQd3jKMh5rYmWrYRAMQAoB4yGm7ixN4tqXH
+1g6Xw9QPCLnW4OJvjfynzFfKb5i8KcvOSBnCXzOd1Z/LYEI23/6phdNd9rRf/YjL
+mxbKS7gDrHI=
+=dn6t
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00759.html">Re: (none)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00695.html">Re: BIG NEWS: PRZ investigation dropped!</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02593.html">Re: (none)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00774.html">Mitnick: Markoff responds to Platt's CuD "Takedown" critique</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00708"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00708"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

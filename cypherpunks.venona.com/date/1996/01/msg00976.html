@@ -1,0 +1,159 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Microsoft's CAPI -->
+<!--X-From-R13: [ngg Pynmr <znoNerfrnepu.ngg.pbz> -->
+<!--X-Date: Wed, 17 Jan 1996 23:25:30 +0800 -->
+<!--X-Message-Id: 199601171502.KAA16060@nsa.tempo.att.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Microsoft's CAPI</TITLE>
+<LINK REV="made" HREF="mailto:mab@research.att.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00958.html">Date Prev</A>][<A HREF="msg00979.html">Date Next</A>][<A HREF="msg00958.html">Thread Prev</A>][<A HREF="msg01013.html">Thread Next</A>][<A HREF="index.html#00976">Date Index</A>][<A HREF="threads.html#00976">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Microsoft's CAPI</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Microsoft's CAPI</LI>
+<LI><em>From</em>: Matt Blaze &lt;<A HREF="mailto:mab@research.att.com">mab@research.att.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 17 Jan 1996 10:02:27 -0500</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I attended a meeting at Microsoft the other day at which they
+described their Crypto API project.  As CAPIs go, it's reasonable
+enough; nothing particularly exciting about it or especially wrong
+with it (though they don't yet support nonblocking calls to crypto
+modules).
+
+They've defined 23 cryptographic services (establish key, encrypt,
+etc.) that an application is expected to use for its cryptographic
+needs.  The idea is to hide the crypto details (and keys) from
+applications, and to make it easy to switch from, say, wimpy
+export-approved crypto to good crypto just by switching to another DLL
+at load-time.  The cryptography used depends on the crypto modules in
+use at runtime.  The API will be part of the WIN32 interface.  The
+next version of NT (and windows 95, I think), to be released in a few
+months will support loading ``Cryptographic Service Providers'' (CSPs)
+that contain the crypto functions that sit below the API.  They have
+(or will have soon) an application development kit to allow you to
+write code that uses the API, and a CSP development kit to let you
+write the crypto functions.
+
+The interesting part is that they say they've made a deal with the
+government to allow applications that use the API to be exportable as
+long as they don't also try to implement crypto on their own.
+Ordinarily, the government claims that ``crypto with a hole''
+(applications that call a crypto API) are just as export-controlled as
+crypto functions themselves, so this is something of a surprise and
+would represent considerable forward progress.  But, of course,
+there's a catch.
+
+The OS will not load just any old CSP.  CSPs have to be signed by
+Microsoft.  The kernel contains a (hardcoded?) 1024 RSA public key
+that it uses to check the signature when the user tries to load a CSP.
+If the signature check fails, the CSP won't load.  Microsoft says it
+will sign any CSP from anyone AS LONG AS THEY CERTIFY THAT THEY WILL
+FOLLOW THE EXPORT RULES.  So you can get your CSP signed if you use
+exportable cryptography or if you agree not to send it outside the US
+and Canada, etc.  But an end user can't just compile crypto code and
+use it as a CSP, even for his or her own use, without getting it
+signed by Microsoft first (actually, the CSP development kit does
+allow this, but it uses a special version of the OS).
+
+I'm not sure whether this whole thing is good or bad.  One important
+issue is whether MS will really sign anyone's CSP or whether they will
+start charging high fees or making business-based decisions on who's
+CSPs they will allow (with they sign Netscape's CSP, for example).
+They say they won't even look or keep a copy of your CSP (at my
+suggestion, they are probably going to change the process so that you
+send them a hash of your CSP instead of your CSP code when you get the
+signature).  For now they promise to sign CSPs for anyone who returns
+the export certificate, at no charge.
+
+We (Jack Lacy and I) will probably implement, get signed, and give
+away a CryptoLib-based CSP (not for export) for which we will also
+make source available so people examine the source to their crypto
+(most CSPs will, presumably, not include source).
+
+Despite all this, I think it will be easy to get around the CSP
+signature requirements and use homebrew, unsigned crypto even with
+pre-compiled .exe files from other sources.  I suspect it will be easy
+to write a program, for example, that takes an executable program
+and converts CryptoAPI calls to calls that look like just another DLL.
+And I'm sure someone will write a program to patch the NT/Windows
+kernel to ignore the signature check.  Needless to say, it would be
+nice if someone outside the US were to write and distribute programs
+to do this.  It would also be nice if someone would write a Unix/Linux
+version of the API/CSP mechanism.  It might make it possible to export
+applications for those platforms as well.
+
+I haven't tried any of this out yet, but they say they will have beta
+versions of the API and CSP developers kits out in a few weeks.  They
+say that the API kit will not be export-controlled but the CSP kit
+will be.  They plan to announce all this at the RSA conference this
+week.
+
+-matt
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01013" HREF="msg01013.html">Re: Microsoft's CAPI</A></STRONG>
+<UL><LI><EM>From:</EM> scox@factset.com (Sean Cox)</LI></UL></LI>
+<LI><STRONG><A NAME="01007" HREF="msg01007.html">Re: Microsoft's CAPI</A></STRONG>
+<UL><LI><EM>From:</EM> abostick@netcom.com (Alan Bostick)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00958.html">LP RELASE: Government must end attacks on electronic privacy</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00979.html">Re: Information Sent by Netscape during Queries</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00958.html">LP RELASE: Government must end attacks on electronic privacy</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01013.html">Re: Microsoft's CAPI</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00976"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00976"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,137 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Ssh "security hole": proposed fix -->
+<!--X-From-R13: Rnivq [nmvrerf <znmvrerfNcn.qrp.pbz> -->
+<!--X-Date: Sat, 22 Jul 95 17:30:45 PDT -->
+<!--X-Message-Id: 9507230027.AA10524@venus.pa.dec.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Ssh "security hole": proposed fix</TITLE>
+<LINK REV="made" HREF="mailto:mazieres@pa.dec.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00766.html">Date Prev</A>][<A HREF="msg00668.html">Date Next</A>][<A HREF="msg00378.html">Thread Prev</A>][<A HREF="msg00798.html">Thread Next</A>][<A HREF="index.html#00768">Date Index</A>][<A HREF="threads.html#00768">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Ssh "security hole": proposed fix</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:ylo@cs.hut.fi">ylo@cs.hut.fi</A>, <A HREF="mailto:ssh@clinet.fi">ssh@clinet.fi</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Ssh "security hole": proposed fix</LI>
+<LI><em>From</em>: David Mazieres &lt;<A HREF="mailto:mazieres@pa.dec.com">mazieres@pa.dec.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 22 Jul 1995 17:27:41 -0700</LI>
+<LI><em>In-Reply-To</em>: message from mazieres on Sat, 15 Jul 95 23:15:49 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Well, a while ago I suggested the following as simplified (and
+therefore easier to find bugs in) ssh protocol:
+
+&gt; PREAMBLE:
+&gt; 
+&gt; (1)  A -&gt; B: A
+&gt; (2)  B -&gt; A: Cb, PKsb, PKb
+&gt; (3)  A -&gt; B: {Kab}_PKsb, {A, B, Cb}_Kab
+&gt; (4)  B -&gt; A: {{A, B, Cb, Kab, PKsb}_SKb}_Kab
+&gt; 
+&gt; SSH_AUTH_RHOSTS:
+&gt; 
+&gt; (5)  A -&gt; B:  0
+&gt; 
+&gt; SSH_AUTH_RHOSTS_RSA:
+&gt; SSH_AUTH_RSA:
+&gt; 
+&gt; (5)  A -&gt; B: {{A, B, Cb, Kab}_SKa, PKa}_Kab
+&gt; 
+&gt; SSH_AUTH_PASSWORD:
+&gt; 
+&gt; (5)  A -&gt; B: {Ka}_Kab
+
+I was assuming that you would basically have to tolerate
+man-in-the-middle style attacks if A did not know PKb before the
+exchange.  However, I have since realized that it is easy to have
+one's public key in an NFS mounted home directory when talking to a
+host one has never talked to before.  Thus, B can know PKa even if A
+does not know PKb.  This is enough to prevent man in the middle
+attacks if we modify the protocol slightly:
+
+PREAMBLE:
+
+(1)  A -&gt; B: A
+(2)  B -&gt; A: Cb, PKsb, PKb
+(3)  A -&gt; B: {Kab}_PKsb, {A, B, Cb}_Kab
+(4)  B -&gt; A: {{A, B, Cb, Kab, PKsb}_SKb}_Kab
+
+SSH_AUTH_RHOSTS:
+SSH_AUTH_PASSWORD:
+
+(5)  A -&gt; B:  0
+
+SSH_AUTH_RHOSTS_RSA:
+SSH_AUTH_RSA:
+
+(5)  A -&gt; B: {{A, B, Cb, Kab, PKsb}_SKa, PKa}_Kab
+                              ^^^^
+IF AUTHENTICATION NOT SUFFICIENT:
+
+(6)  B -&gt; A: {"Passwd:"}_Kab
+(7)  A -&gt; B: {Ka}_Kab                           ; Ka is A's password
+
+David
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00798" HREF="msg00798.html">ssh protocol</A></STRONG>
+<UL><LI><EM>From:</EM> Tatu Ylonen &lt;ylo@cs.hut.fi&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00766.html">HOUDINI ON CRYPTO</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00668.html">Re: Non-US mixmaster sites</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00378.html">Re: Ssh "security hole": proposed fix</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00798.html">ssh protocol</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00768"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00768"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

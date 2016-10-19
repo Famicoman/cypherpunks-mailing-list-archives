@@ -1,0 +1,195 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: secure phone on a PCI card? (Re: authentication suggestion for secure phone) computationally infeasible jobs for MITMs) -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Sat, 11 Oct 1997 07:40:56 +0800 -->
+<!--X-Message-Id: 199710102210.XAA05811@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199710102057.NAA02969@comsec.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: secure phone on a PCI card? (Re: authentication suggestion for secur</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00592.html">Date Prev</A>][<A HREF="msg00588.html">Date Next</A>][<A HREF="msg00578.html">Thread Prev</A>][<A HREF="msg00489.html">Thread Next</A>][<A HREF="index.html#00605">Date Index</A>][<A HREF="threads.html#00605">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: secure phone on a PCI card? (Re: authentication suggestion for secure phone) computationally infeasible jobs for MITMs)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:eb@comsec.com">eb@comsec.com</A></LI>
+<LI><em>Subject</em>: Re: secure phone on a PCI card? (Re: authentication suggestion for secure phone) computationally infeasible jobs for MITMs)</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 10 Oct 1997 23:10:04 +0100</LI>
+<LI><em>CC</em>: <A HREF="mailto:cypherpunks@Algebra.COM">cypherpunks@Algebra.COM</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg00578.html">199710102057.NAA02969@comsec.com</A>&gt; (message from Eric Blossom onFri, 10 Oct 1997 13:57:09 -0700)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+Eric Blossom &lt;eb@comsec.com&gt; writes:
+&gt; &gt; If it cost a lot extra, that could be a problem, yes.  I am unclear on
+&gt; &gt; how much extra this would cost.  Apart from an EEPROM, it's a protocol
+&gt; &gt; and software update right?
+&gt; 
+&gt; The units currently have 2K bytes of EEPROM and 256K bytes of FLASH.
+&gt; [...]  There's plenty of room for long term storage of a reasonable
+&gt; set of public keys.  Private or symmetric keys present a problem,
+&gt; since then you've got a long term secret to store somewhere.
+
+What's the difference betwen storing public keys and private keys?
+Are you concerned that someone will tamper with the unit and replace
+the keys.  (Borrow the phone while you're out, reset the EEPROM, and
+make a series of calls to put in MITM keys.)  Could be dangerous.
+You could use a pin, but then you need an input device.
+
+However, you could also argue that if someone can borrow your phone
+for a while they can give it free "upgrade", and replace the RNG, or
+whatever anyway, so it doesn't make any difference?  I don't think it
+does.
+
+I kind of liked the persistency authentication idea as a candidate for
+your remote upgrade.  You could do it with symmetric keys or with
+asymmetric keys.  It's just a trade off which depends on how many keys
+you're allowing.  If space is short, you could do something more
+clever, say:
+
+- Exchange (and store in a table) a symmetric key with each new phone
+- Lookup keys by phone number (or unit serial number if you don't have ANI)
+- Authenticate using nonce and stored key.
+
+Overhead: 16 bytes per phone
+
+Allow say 50 callers = 800 bytes.  Perhaps you want a button to push
+(hold go secure down for over 5 seconds, say) to store a caller in
+this table.  (Prevents attacker flushing your table by making a load
+of dud calls).  Or perhaps just wrap around and discard least used
+numbers/serial numbers.
+
+&gt; &gt; [phone on PCI/PCMCIA card]
+&gt; 
+&gt; I can pretty much be done all in software on a laptop.  
+&gt; 
+&gt; The primary thing you lose is the simple integration with the
+&gt; telephone.  A small (cheap) hardware hack can work around this.  Yes,
+&gt; I know you'd prefer not to have any non-standard hardware, but on the
+&gt; other hand, if the system is a pain in the ass to use, nobody is going
+&gt; to use it.
+
+Fancy organising this cheap hardware hack?  I reckon you'd get a few
+buyers.  I'll pledge to buy 3 at a reasonable price.  
+
+Do you have the software for PCs/MACs?  Would this cheap hardware hack
+work with PGPfone as is?  (PGP Inc don't seem to be doing much work on
+PGPfone right now).
+
+btw the hardware hack I presume is impedance matching to allow phone
+to plug into 3.5mm jack audio and mic socket?  Any hardware people
+care to give soldering instructions?
+
+&gt; &gt; I think Eric's phone uses a 14.4k modem chip (or lower?) so it's not
+&gt; &gt; the bit rate as such, but more the lack of higher quality audio
+&gt; &gt; compression codecs which are possible in hardware.  (Right?)  
+&gt; 
+&gt; The unit currently runs at 14.4k.  A 4800 b/s fallback mode is
+&gt; currently under development.
+
+GSM laptop secure phone, here we come :-)
+
+&gt; &gt; Also the fact that with PGPfone you're using PC speakers, and room
+&gt; &gt; microphone probably makes it seem worse than it could be.
+&gt; 
+&gt; Fixable with software and MIPS (you've got those).  Take a look at
+&gt; those nice USR and Polycom full duplex speaker phones.  There's
+&gt; nothing magic in them.  Notice the neat little song they play when you
+&gt; power them up.  It's a training tone used to compute the impulse
+&gt; response of the room.
+
+I'm not sure what PGPfone's problem is, but when I tried it, it
+sounded like an off tune radio station, but worse.  Even turning off
+encryption entirely (to preserve the precious cycles for the audio
+codec) didn't help much.
+
+Perhaps I should retry it now with 166Mhz K5 pentium in place of
+120Mhz AMD 486 at the time.
+
+&gt; &gt; [integrating with GSM phone]
+&gt; 
+&gt; Pretty much everything you need is already there.  It's a question of
+&gt; integration.
+
+It's a damn, damn, shame that no-one is doing this.
+
+We couldn't bribe you to do it next could we?
+
+I was kind of figuring that eventually we'll get there with a bit of
+software because cellular phones and laptops functionality will merge,
+and the bandwidth and processing power will be there.  Still a laptop
+with your hardware hack, would be ok for now.
+
+Adam
+-- 
+Now officially an EAR violation...
+Have *you* exported RSA today? --&gt; <A  HREF="http://www.dcs.ex.ac.uk/~aba/rsa/">http://www.dcs.ex.ac.uk/~aba/rsa/</A>
+
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00578" HREF="msg00578.html">Re: secure phone on a PCI card? (Re: authentication suggestion for secure phone) computationally infeasible jobs for MITMs)</A></STRONG>
+<UL><LI><EM>From:</EM> Eric Blossom &lt;eb@comsec.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00592.html">Re: America as a Shake Down Extortion State</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00588.html">Attitude and Assumptions</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00578.html">Re: secure phone on a PCI card? (Re: authentication suggestion for secure phone) computationally infeasible jobs for MITMs)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00489.html">Re: Secure phone</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00605"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00605"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

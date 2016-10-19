@@ -1,0 +1,899 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Practical Pencil &#38; Paper Encryption (computerizable) -->
+<!--X-From-R13: evpuneqeNargpbz.pbz (Dvpuneq Z. Dboregfba) -->
+<!--X-Date: Fri, 4 Feb 94 09:39:48 PST -->
+<!--X-Message-Id: 199402041738.JAA19453@mail.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Practical Pencil &amp; Paper Encryption (computerizable)</TITLE>
+<LINK REV="made" HREF="mailto:richardr@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00231.html">Date Prev</A>][<A HREF="msg00233.html">Date Next</A>][<A HREF="msg00239.html">Thread Prev</A>][<A HREF="msg00233.html">Thread Next</A>][<A HREF="index.html#00232">Date Index</A>][<A HREF="threads.html#00232">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Practical Pencil &amp; Paper Encryption (computerizable)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Practical Pencil &amp; Paper Encryption (computerizable)</LI>
+<LI><em>From</em>: <A HREF="mailto:richardr@netcom.com">richardr@netcom.com</A> (Richard L. Robertson)</LI>
+<LI><em>Date</em>: Fri, 4 Feb 1994 09:37:57 -0800 (PST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:richardr@netcom.com">richardr@netcom.com</A> (Richard L. Robertson)</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Bruce Schneier   &lt;schneier@chinet.chinet.com&gt;
+
+     in Message-ID: &lt;CEtKr4.7B7@chinet.chinet.com&gt;
+              Date: Wed, 13 Oct 1993 05:04:13 GMT
+           Subject: Pencil and paper encryption algorithm
+
+proposed a pencil-and-paper encryption algorithm that could be used
+without computers, but was still secure against computer-aided
+attacks.  
+
+I answered with what I felt were several practical usage problems
+with his proposed methodology that made it infeasible to reliably
+encrypt and decrypt messages in a finite time.
+
+During a much needed vacation from the practical realities of work
+and life, I have attempted to come up with a simplified message
+encryption algorithm that meets Bruce's criteria and is practical
+in use.
+
+I took as design constraints that an inexpensive (&lt; $30) pocket
+calculator was acceptable for performing any necessary
+calculations, but that something as big and complex as an HP-48 or
+an Apple Newton was unacceptable. I also changed the requirement
+from "secure against computer-aided attacks" to "highly resistant
+against computer aided attacks".
+
+My first attempt used a simple, multiple memory, non-programmable
+Radio Shack checkbook pocket calculator. While the methodology met
+the "resistance" criterion, it failed the practical test of error-
+free calculation in a finite time. It turned out to be possible to
+get reliable encryption and decryption by applying the result
+cross-checking techniques used in hand pencil-and-paper
+calculation, however the time required for error-free encryption
+was exorbitant.
+
+By relaxing the design constraints to allow limited programmability
+in the pocket calculator, I was able to adequately address the
+problem of speed of error-free encryption calculations. 
+
+The constraint that I adopted was that the calculator's program
+steps must be simple and compact enough for the user to be able to
+memorize and to be able to re-enter the program into the calculator
+each time that it was used to encrypt or decrypt a message. I
+believe that this satisfies the reasonable requirement that there
+be no incriminating evidence left lying around in the calculator
+between encryption sessions.
+
+The following encryption procedure was tested using an $18 Radio
+Shack Model EC-4021 programmable scientific calculator. The
+algorithms were modified as necessary to conform to the practical
+limitations of the calculator keypad and limited programming
+capabilities.
+
+With only moderate training time (a couple of hours) I was able to
+reliably encrypt and decrypt messages at a rate of 8-10 characters
+per minute. The primary speed limitation was the actual tran-
+scription on the results by pencil onto paper.
+
+I would appreciate any and all comments, criticisms, error corrections
+and suggestions for improvements.
+
+
+Richard Robertson           richardr@netcom.com
+
+------------------------------------------------------------
+            A "Pencil and Paper" Encryption Algorithm
+                     for Pocket Calculators
+
+              Copyright 1993   Richard L. Robertson
+
+Contents
+
+     A:   Encryption Confusion Generators
+     B:   Substitution Cipher Technique
+     C:   Transposition Cipher Technique
+     D:   Encryption Key Management
+     E:   Cryptographic Hardness
+     F:   Message Encryption Example
+     G:   Sample Message Key Generation
+
+
+
+A:   Encryption Confusion Generators
+
+The core confusion generator chosen is a variation on the non-
+linear equation Logistic Difference Equation (LDE). This is
+selected for its adequate PRNG properties and its simplicity of
+calculation.
+
+The standard basic LDE can be written as 
+
+     X[n+1] = R * X[n] * (1 - X[n])
+          where     R = 4, and
+                    0 &lt; X[n] &lt; 1
+
+While the output of the LDE has reasonable unpredictability, this
+basic formulation has limited cryptographic usefulness, partly
+because of limited sequence length and partly because the seed can
+be derived with sufficient information about successive values,
+even if "jitterized" (as described by Terry Ritter).
+
+By revising the constraints slightly to
+
+               3.99 &lt; R &lt; 4.0
+
+the resulting output is "sub-chaotic" but still has very good PRNG
+properties. Another advantage of using R &lt; 4.0 is that rounding
+errors in calculations do not cause any numerical values that
+result in the PRNG sequence degenerating from calculation errors.
+Extensive numerical trials on a 486 PC with 15-digit (decimal)
+floating point calculations have not uncovered any values of R or
+X[n] that result in short or degenerate PRNG sequences.
+
+The average length of a pseudo-random sequence from a (modified)
+LDE is a function of the number of digits of precision used in the
+calculations. For 9-digit fractional numbers, the expected length
+of a pseudo-random sequence is ~ 3 * 10^4 and there are ~ 3 * 10^4
+independent sequences. The sequence length is adequate for pencil
+and paper encryption since messages would rarely exceed 200
+characters.
+
+To develop a reasonably secure cryptographic methodology using the
+modified LDE as the confusion generator, proceed as follows:
+
+1 -  Select two non-linear (LDE) confusion generators
+
+               G1 = R * X * (1 - X),  and
+               G2 = R'* Y* (1 - Y)
+
+               where R' = 0.999 * R (used because of limitations in
+                                   the number of memory registers
+                                   in the pocket calculator)
+
+2 -  The cryptographic key (or seed) consists of the values
+
+          R, X[0] and Y[0],  where
+
+               0 &lt; X[0]  &lt; 1  is a 9-digit key
+               0 &lt; Y[0]  &lt; 1  is a 9-digit key
+               3.99 &lt; R &lt; 4.0 is a 7-digit key
+
+     The total key length is 25 digits, giving a key space size of
+     10^25.  The keys are short enough to be easily memorized.  (If
+     you are not convinced of this assertion, consider how many
+     phone numbers, PIN numbers, bank account numbers, etc that the
+     average person routinely commits to memory)
+
+
+3 -  Select a non-linear combiner for the output of two confusion
+     generators.
+
+          This is the first level of serious cryptographic
+          strength.
+
+     We will chose the function
+
+          K = G1 &lt;*&gt; G2
+
+          where &lt;*&gt; is the floating point multiplication operator
+          with rounding (see Knuth, Seminumerical Algorithms for
+          details).
+
+               At little inspection will show that it is not possible to
+     recover the values G1 and G2 from a given K because K is not
+     uniquely factorable. The rounding performed during the
+     multiplication discards information necessary for factoring.
+
+     In fact, for any 0 &lt; K &lt; 1, *all* values of G1 &gt; K are valid
+     factors of K. Rephrased, for any K {0 &lt; K &lt; 1} and for any p
+     {1 &gt; p &gt; K, there exists at least one q {1 &gt; q &gt; K} such that
+     K = p &lt;*&gt; q.
+
+          Note: Because of rounding, numbers of the form K =
+          (1/b)^n (where b is the base) are the only
+          exceptions to this statement. For K = (1/b)^n, q =
+          1-(1/b)^n is not a factor of K. 
+
+     Recovering a sequence of G1 and G2 values from a sequence of
+     K values, and from that recovering the cryptographic keys R,
+     X[0] and Y[0], requires solving a series of simultaneous non-
+     linear high-order polynomial equations.  I am not aware of any
+     practical way to do this in the literature.
+
+     Brute force recovery of the sequence of n-digit G1 and G2
+     values requires checking a minimum of 10^(n*3) n-tuples 
+     {G1,G2,G'1,G'2,G''1,G''2} to determine which are possible
+     solutions for the generator functions G1 and G2.
+
+4 -  Choose a domain transformation from quasi-continuous floating
+     point to the finite to select digits from K to use for data
+     encryption.
+
+          This is the second level of serious cryptographic
+          strength.
+
+     Choose any algorithm for selecting a cipher value K' of either
+     1 or 2 digits from "around the middle" of the value K to use
+     for performing the encryption. Because the confusion
+     generators G1 and G2 are independent and have reasonably
+     uniform digit distributions, the nonlinear combination K = G1
+     &lt;*&gt; G2 also has a reasonably uniform digit distribution. 
+
+     For any particular 1-digit value K', there are 10^8 possible
+     values of K that could have generated it.  For any particular
+     2-digit value K', there are 10^7 possible corresponding values
+     for K.
+
+5a - Use the sequence {K'} as the key for a Vigenere cipher
+
+5b - Use the sequence {K'} to control a pseudo-random transposition
+     cipher.
+
+5c - Combine (5a) and (5b). Use (5a) to "bit-level" the message
+     text, then use (5b) to superencipher the output of (5a).
+
+          This would require two complete encryption steps and is
+          probably too labor and time intensive to be worth while
+          for pencil and paper encryption.
+
+In summary, the steps for calculating the encryption sequence K'
+are as follows:
+
+               X [n+1] = R * X[n] * (1 - X[n])
+               Y [n+1] = .999 * R * Y[n] * (1 - Y[n])
+
+               K [n+1] = X[n+1] * Y[n+1]
+               K'[n+1] = 1 or 2 low-order digits of int (10^5 * K[n+1])
+
+
+B:   Substitution Cipher Technique
+
+In this system, the key consists of a series {K'} of 2-digit values
+that is as long as the message. These are added to the plaintext
+message characters modulo 100, considered the alphabet as numbered
+from Sp=00, A=01 to Z=26, etc. This is your basic Vigenere cipher
+with the cipher key as long as the message.
+
+Decryption performs the same series of steps on the ciphertext
+message characters except that subtraction modulo 100 is used.
+
+Given that the K' form an unpredictable sequence, this is
+equivalent to a one-time pad Vernam cipher where the one-time pad
+does not have to be transmitted to the receiver. The message
+recipient can regenerate the series {K'} from knowledge of the
+cipher key &lt;R,X[0],Y[0]&gt;. 
+
+The only problems that need to be addressed are the resistance of
+the sequence {K'} to computer-assisted attack and how to manage the
+necessary set of secret keys {&lt;R,X[0],Y[0]&gt;}, since one key-tuple
+is consumed by each message.
+
+
+In summary, the steps for encrypting a message M are as follows:
+
+        compute K[n] as described above
+        C[n] = 2 low-order digits of int (10^5 * K[n]) + M[n]
+
+        where  M[n] is the nth plaintext character, and
+               C[n] is the nth ciphertext character
+
+
+and the steps for decrypting a ciphertext C are as follows:
+
+        compute K[n] as described above
+        M[n] = 2 low-order digits of 
+               int (100001 - (10^5 * K[n]) + C[n])
+
+        where  M[n] is the nth plaintext character, and
+               C[n] is the nth ciphertext character
+
+C:             Transposition Cipher Technique
+
+In this system, the key consists of a series {K'} of 1-digit values
+that is longer than the message.
+
+     1 -  Write down the plaintext message into blocks of length 10
+          (because the calculator operates in decimal mode). Repeat
+          the message at least once because the algorithm will
+          encipher more characters than are in the message. The
+          exact number of excess characters enciphered is random
+          but bounded.
+
+          If the message text is:
+               "Now is the time for all good men to come to the
+               aid of their party."
+
+          then this is written in blocks of 10 as:
+
+                       1234567890
+
+                       |Now is the|
+                       | time for |
+                       |all good m|
+                       |en to come|
+                       | to the ai|
+                       |d of their|
+                       | party.Now|
+                       | is the ti|
+                       |me for all|
+
+           Repeat the message text as required.
+
+     2 -  Calculate the sequence of 1-digit numbers {K'}
+
+     3 -  For each value K', select and output the next unused
+          character in column K'. Mark the selected character as
+          used.
+
+     4 -  Repeat this process until all characters in the base
+          message have been transmitted.
+
+
+Decryption proceeds as follows:
+
+     1 -  Calculate the sequence of 1-digit numbers {K'}
+
+     2 -  Get the next ciphertext character and place it in the
+          next available column K'
+
+     3 -  Repeat this process for all ciphertext characters.
+
+     4 -  The row in which that last character is placed is the
+          last row of the message. Discard any rows following that
+          row because they are just random padding added by the
+          encryption algorithm.
+
+Transposition ciphers are substantially harder to attack than
+substitution ciphers and normally require a lot of hand work. 
+Normally they are attacked by anagramming when there is some
+knowledge of the expected message contents.
+
+I would assert, based on a moderate literature search, that this
+pseudo-random transposition has no known effective methods for
+attack because there are no fixed column boundaries and character
+positions are pseudo-random. 
+
+If the cryptographic key &lt;R,X[0],Y[0]&gt; is changed with each message
+there should be no way short of brute force anagramming or a brute
+force key space search to break this cipher because the
+cryptographic cipher values are never exposed for cryptanalysis.
+
+
+D:   Key Management
+
+     To make the subsitution cipher encryption useful the key must
+     be changed with each message because it is a one-time pad
+     method. The encryption method has already addressed and
+     eliminated the need for the sender to transmit a copy of the
+     OTP to the receiver by having the receiver independently
+     recreated the OTP used to encrypt the message. 
+
+     While having a separate, unique encryption key for each
+     message is less important for the transposition cipher, it
+     does strengthen the cipher against any attack if the key can
+     be easily changed for each message.  
+
+     In order to not have to transmit each key used to generate the
+     OTP for each message to the receiver, a technique must be
+     developed that provides a similar facility. If this can be
+     accomplished, then the only secret that the sender and
+     receiver must share is a single, small master key. Sharing a
+     small amount of secret information is a fairly easy problem to
+     solve in practice.
+
+     Inspection of the method for generating the encryption
+     confus*ion sequence shows a way to accomplish the desired key
+     management. Consider the sequence of values {K[i]}.  It is
+     obvious from the earlier discussion that there are only two
+     ways to be able to predict subsequent values K[n+1] from the
+     series of values {K[1] ... K[n]}:
+
+       -  obtain the generating seeds for G1 and G2 by brute force
+          examining sets of possible values {G1[i],G2[i]} obtained
+          by factoring {K[i]}. This would require examining at
+          least ~ 10^24 (2^80) possible sets {G1[i],G2[i]} and as
+          such is not feasible with current computing technology.
+
+       -  obtain the generating seeds for G1 and G2 by solving a
+          set of simultaneous high-order nonlinear system of
+          equations. This is an extremely hard problem that is not
+          (as far as my literature search has taken me) amenable to
+          solution at this time.
+
+     In  order to make the problem slightly harder for the crypt-
+     analyst, the key generation algorithm chosen will not use the
+     sequence {K[i]} directly so as not to expose the actual values
+     K[n], but will use K[n] as a starting point for another
+     nonlinear combiner. Again, the algorithms have been adjusted
+     to compensate for the limitations of the pocket calculator.
+
+To generate a cryptographically (reasonably) secure sequence of
+encryption keys using the modified LDE as the confusion generator,
+proceed as follows:
+
+1 -  Select two non-linear (LDE) confusion generators
+
+               G1 = R * X * (1 - X),  and
+               G2 = R'* Y* (1 - Y)
+
+               where R' = 0.999 * R (used because of limitations in
+                                   the number of memory registers
+                                   in the pocket calculator)
+
+2 -  The master cryptographic key (or seed) consists of the values
+
+        R, X[0] and Y[0],  where
+
+               0 &lt; X[0] &lt; 1   is a 9-digit key
+               0 &lt; Y[0] &lt; 1   is a 9-digit key
+               3.99 &lt; R &lt; 4.0 is a 7-digit key
+
+     The total key length is 25 digits, giving a key space size of
+     10^25.  The keys are short enough to be easily memorized.  (If
+     you are not convinced of this assertion, consider how many
+     phone numbers, PIN numbers, bank account numbers, etc that the
+     average person routinely commits to memory)
+
+
+3 -  Select a non-linear combiner for the output of two confusion
+     generators.
+
+          This is the first level of serious cryptographic
+          strength.
+
+     We will chose the function
+
+          K = G1 &lt;*&gt; G2
+
+          where &lt;*&gt; is the floating point multiplication operator
+          with rounding (see Knuth, Seminumerical Algorithms for
+          details).
+
+4 -            To generate the Nth message key iterate the basic sequence
+     generator N times. Then use the values K[N] ... to alter the
+     generator parameters R, X and Y as follows:
+
+               R &lt;- 3.99 + (K[n]/100)
+               X &lt;- K'[n+1] where K'[i] &lt;&gt; K[i] because the
+                              generating parameters are different
+               Y &lt;- K'[n+2]
+               R &lt;- 3,99 + (K'(n+3)/100)
+
+5 -  The final resulting values &lt;R,X,Y&gt; become the cryptographic
+     key for the Nth message being encrypted or decrypted and are
+     used as described above for message encryption and decryption.
+     Only the value N must be transmitted with the message, not the
+     values of the message key &lt;R,X,Y&gt;, because the receiver can
+     recreate the message key from N and the master key shared by
+     the sender and receiver.
+
+     The only additional requirement for security is that no key be
+     reused. This is easy to implement by having the sender number
+     the messages as they are encrypted. The receiver verifies that
+     a message is valid by rejected any message where the message
+     number N is less than the message number of the last message
+     received. This will prevent replay attacks in the event that
+     an opponent obtains a message key.
+
+In summary, the steps for calculating the encryption key &lt;R,X,Y&gt;
+for the Nth message are as follows:
+
+          Repeat N times:
+               X [i+1] = R * X[i] * (1 - X[i])
+               Y [i+1] = .999 * R * Y[i] * (1 - Y[i])
+               K [i+1] = X[i+1] * Y[i+1]
+               {end repeat}
+
+          R &lt;- 3.99 + (K[N]/100)
+             calculate K[N+1]
+          X &lt;- K'[N+1]
+             calculate K'[N+2]
+          Y &lt;- K'[N+2]
+             calculate K'[N+3]
+          R &lt;- 3.99 + (K'[N+3]/100)
+
+     The message encryption key conists of the values &lt;R,X,Y&gt; at
+     the conclusion of this calculation.
+
+
+E:   Cryptographic Hardness
+
+Key space searches:
+
+     The key space size is ~ 10^25 (~ 2^80), which is too large for
+     brute force search with currently available computing
+     resources.
+     Because the key values are random 9-digit numbers there is no
+     possible dictionary attack.
+
+
+Known Plaintext:
+
+     A known plaintext attack will immediately give the cipher
+     sequence {K'}. However, an absolute minimum of 3 sequential
+     values of the sequence {K} are needed to derive the encryption
+     key &lt;R,X[0],Y[0]&gt;. For the 2-digit sequence {K'} used in the
+     substitution cipher, this requires checking the validity of
+     the encryption keys derived from the (at least) 10^21 (2^70)
+     possible triples {K1,K2,K3}. This is well beyond current
+     computational capabilities.
+
+     Since each key &lt;R,X[0],Y[0]&gt; is used only once, possession of
+     the key for one message does not give the opponent any direct
+     value in a known plaintext attack. To determine the key for
+     subsequent messages, at least 3 successive keys must be
+     accumulated in order for the cryptanalyst to attack the key
+     management.
+
+Chosen Plaintext:
+
+     No advantage over known plaintext.
+
+Key Management:
+
+     Same problems (or worse) for the cryptanalyst as aKnown
+     Plaintext attack.
+
+Differential Cryptanalysis:
+
+     I don't see that this is applicable because the key changes
+     with each message.
+
+
+F:   Message Encryption Example:
+
+     Sample message to be enciphered
+
+           "Now is the time for all good men to come to
+           the aid of their party."
+
+     Message buffer is padded with repeats of the message, but
+     it would be better to pad with randomly chosen text.
+
+     The encryption calculations were performed on a Radio Shack
+     Model EC-4021 programmable scientific calculator.
+
+           Image of Message Text Buffer
+
+     =========================================
+     : 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 0 :
+     =========================================
+0    | N | O | W |   | I | S |   | T | H | E |
+     +---+---+---+---+---+---+---+---+---+---+
+1    |   | T | I | M | E |   | F | O | R |   |
+     +---+---+---+---+---+---+---+---+---+---+
+2    | A | L | L |   | G | O | O | D |   | M |
+     +---+---+---+---+---+---+---+---+---+---+
+3    | E | N |   | T | O |   | C | O | M | E |
+     +---+---+---+---+---+---+---+---+---+---+
+4    |   | T | O |   | T | H | E |   | A | I |
+     +---+---+---+---+---+---+---+---+---+---+
+5    | D |   | O | F |   | T | H | E | I | R |
+     +---+---+---+---+---+---+---+---+---+---+
+     |   | P | A | R | T | Y | . | N | O | W | &lt;- Message ends at
+     =========================================    this line
+7    |   | I | S |   | T | H | E |   | T | I |
+     +---+---+---+---+---+---+---+---+---+---+ Buffer is loaded with
+8    | M | E |   | F | O | R |   | A | L | L | repeated copies of the
+     +---+---+---+---+---+---+---+---+---+---+ message text
+9    |   | G | O | O | D |   | M | E | N |   |
+     +---+---+---+---+---+---+---+---+---+---+
+10   | T | O |   | C | O | M | E |   | T | O |
+     +---+---+---+---+---+---+---+---+---+---+
+11   |   | T | H | E |   | A | I | D |   | O |
+     +---+---+---+---+---+---+---+---+---+---+
+12   | F |   | T | H | E | I | R |   | P | A |
+     +---+---+---+---+---+---+---+---+---+---+
+13   | R | T | Y | . | N | O | W |   | I | S |
+     +---+---+---+---+---+---+---+---+---+---+
+14   |   | T | H | E |   | T | I | M | E |   |
+     +---+---+---+---+---+---+---+---+---+---+
+15   | F | O | R |   | A | L | L |   | G | O |
+     +---+---+---+---+---+---+---+---+---+---+
+16   | O | D |   | M | E | N |   | T | O |   |
+     +---+---+---+---+---+---+---+---+---+---+
+17   | C | O | M | E |   | T | O |   | T | H |
+     +---+---+---+---+---+---+---+---+---+---+
+18   | E |   | A | I | D |   | O | F |   | T |
+     +---+---+---+---+---+---+---+---+---+---+
+19   | H | E | I | R |   | P | A | R | T | Y |
+     +---+---+---+---+---+---+---+---+---+---+
+
+============================================================
+
+     Substitution Encipherment of Sample Text
+
+     The Message Encryption Key 
+
+            X[0] = 0.123456789     register K1
+            R    = 3.995678901     register K2
+            Y[0] = 0.234567891     register M
+
+            Calculator set to No Rounding (2nd Fn - Tab - .)
+                       ie, show all decimal digits
+
+     Substitution Cipher Character Translation Table
+
+            Sp 00   J  10     T  20
+            A  01   K  11     U  21
+            B  02   L  12     V  22
+            C  03   M  13     W  23
+            D  04   N  14     X  24
+            E  05   O  15     Y  25
+            F  06   P  16     Z  26
+            G  07   Q  17     .  27
+            H  08   R  18
+            I  09   S  19      
+
+
+      Plain Text converted to decimal representation
+
+     =========================================
+     : 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 0 :
+     =========================================
+0    | 14| 15| 23| 00| 09| 19| 00| 20| 08| 05|
+     +---+---+---+---+---+---+---+---+---+---+
+1    | 00| 20| 09| 13| 05| 00| 06| 15| 18| 00|
+     +---+---+---+---+---+---+---+---+---+---+
+2    | 01| 12| 12| 00| 07| 15| 15| 04| 00| 13|
+     +---+---+---+---+---+---+---+---+---+---+
+3    | 05| 14| 00| 20| 15| 00| 03| 15| 13| 05|
+     +---+---+---+---+---+---+---+---+---+---+
+4    | 00| 20| 15| 00| 20| 08| 05| 00| 01| 09|
+     +---+---+---+---+---+---+---+---+---+---+
+5    | 04| 00| 15| 06| 00| 20| 08| 05| 09| 18|
+     +---+---+---+---+---+---+---+---+---+---+
+6    | 00| 16| 01| 18| 20| 25| 27| * |         &lt;-  * := EOM
+     +---+---+---+---+---+---+---+---+
+
+
+     Cipher Text in decimal representation
+
+     =========================================
+     : 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 0 :
+     =========================================
+0    | 03| 96| 69| 02| 83| 49| 28| 31| 22| 13|
+     +---+---+---+---+---+---+---+---+---+---+
+1    | 21| 63| 92| 03| 90| 45| 72| 08| 26| 34|
+     +---+---+---+---+---+---+---+---+---+---+
+2    | 15| 65| 62| 01| 34| 84| 50| 12| 62| 83|
+     +---+---+---+---+---+---+---+---+---+---+
+3    | 07| 41| 71| 33| 72| 64| 38| 96| 73| 25|
+     +---+---+---+---+---+---+---+---+---+---+
+4    | 16| 96| 06| 57| 93| 39| 8 | 47| 60| 96|
+     +---+---+---+---+---+---+---+---+---+---+
+5    | 29| 49| 88| 37| 39| 37| 61| 24| 68| 38|
+     +---+---+---+---+---+---+---+---+---+---+
+6    | 60| 90| 25| 96| 67| 84| 65| * |         &lt;-  * := EOM
+     +---+---+---+---+---+---+---+---+
+
+
+
+============================================================
+
+
+     Transposition Encrypted Message Text
+
+     The Message Encryption Key 
+
+          X[0] = 0.123456789       register K
+          R    = 3.995678901       register K2
+          Y[0] = 0.234567891       register M
+
+          Set calculator rounding to 0 decimal digits
+                  (2nd Fn - Tab - 0)
+
+                  ie, show only integer portion of answer
+
+            Encrypted message in blocks of 10 letters
+
+                       |HO T NR IT||AM ES OWOT|
+                       | FE D EMLD||IF LOG  M |
+                       |HC ORN  AE||OIOTOE MEI|
+                       |TFTN TA LO||TE APH. DR|
+                       |OSC ITW IE||Y|*               &lt;-* := EOM
+
+     =========================================
+     : 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 0 :
+     =========================================
+0    | H | O |   | T |   | N | R |   | I | T |
+     +---+---+---+---+---+---+---+---+---+---+
+1    | A | M |   | E | S |   | O | W | O | T |
+     +---+---+---+---+---+---+---+---+---+---+
+2    |   | F | E |   | D |   | E | M | L | D |
+     +---+---+---+---+---+---+---+---+---+---+
+3    | I | F |   | L | O | G |   |   | M |   |
+     +---+---+---+---+---+---+---+---+---+---+
+4    | H | C |   | O | R | N |   |   | A | E |
+     +---+---+---+---+---+---+---+---+---+---+
+5    | O | I | O | T | O | E |   | M | E | I |
+     +---+---+---+---+---+---+---+---+---+---+
+6    | T | F | T | N |   | T | A |   | L | O |
+     +---+---+---+---+---+---+---+---+---+---+
+7    | T | E |   | A | P | H | . |   | D | R |
+     +---+---+---+---+---+---+---+---+---+---+
+8    | O | S | C |   | I | T | W |   | I | E |
+     +---+---+---+---+---+---+---+---+---+---+
+9    | Y | * |                                 &lt;- * := EOM
+     +---+---+
+ 
+
+============================================================
+
+
+            Decrypted Transposition Message
+
+     =========================================
+     : 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 0 :
+     =========================================
+0    | N | O | W |   | I | S |   | T | H | E |
+     +---+---+---+---+---+---+---+---+---+---+
+1    |   | T | I | M | E |   | F | O | R |   |
+     +---+---+---+---+---+---+---+---+---+---+
+2    | A | L | L |   | G | O | O | D |   | M |
+     +---+---+---+---+---+---+---+---+---+---+
+3    | E | N |   | T | O |   | C | O | M | E |
+     +---+---+---+---+---+---+---+---+---+---+
+4    |   | T | O |   | T | H | E |   | A | I |
+     +---+---+---+---+---+---+---+---+---+---+
+5    | D |   | O | F |   | T | H | E | I | R |
+     +---+---+---+---+---+---+---+---+---+---+
+6    |   | P | A | R | T | Y*| . | N | O | W | * := Last char
+     +---+---+---+---+---+---+---+---+---+---+                received
+7    |   | I | S |   |           |   | T | I |
+     +---+---+---+---+           +---+---+---+    all partially
+8    | M | E |   | F |           | A | L |         filled rows 
+     +---+---+   +---+           +---+---+         after the row 
+9    |   |       | O |           | E |                           with the last
+     +---+       +---+           +---+                           char received
+10   | T |       | C |           |   |                           are discarded
+     +---+       +---+           +---+
+11   |   |                       | D |
+     +---+                       +---+
+12                               |   | 
+                                 +---+
+
+     The actual shape of any particular received message block will
+     vary randomly with the key and the length of the message
+     transmitted.  
+
+
+============================================================
+
+
+
+     Transposition column selection table
+
+     The Message Encryption Key 
+
+          X[0] = 0.123456789       register K1
+          R    = 3.995678901       register K2
+          Y[0] = 0.234567891       register M
+
+          Set calculator rounding to 0 decimal digits
+               (2nd Fn - Tab - 0)
+
+               ie, show only integer portion of answer
+
+
+     =========================================
+     : 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 0 :
+     =========================================
+0    | 9 | 2 | 7 | 2 | 4 | 1 | 9 | 1 | 5 | 8 |
+     +---+---+---+---+---+---+---+---+---+---+
+1    | 1 | 4 | 4 | 1 | 6 | 6 | 6 | 3 | 8 | 4 |
+     +---+---+---+---+---+---+---+---+---+---+
+2    | 4 | 4 | 0 | 1 | 8 | 9 | 5 | 9 | 2 | 1 |
+     +---+---+---+---+---+---+---+---+---+---+
+3    | 3 | 7 | 1 | 3 | 7 | 5 | 6 | 1 | 1 | 0 |
+     +---+---+---+---+---+---+---+---+---+---+
+4    | 6 | 7 | 1 | 8 | 4 | 2 | 3 | 8 | 9 | 8 |
+     +---+---+---+---+---+---+---+---+---+---+
+5    | 5 | 9 | 3 | 2 | 9 | 7 | 4 | 0 | 0 | 0 |
+     +---+---+---+---+---+---+---+---+---+---+
+6    | 1 | 4 | 5 | 8 | 8 | 9 | 8 | 2 | 9 | 3 |
+     +---+---+---+---+---+---+---+---+---+---+
+7    | 6 | 8 | 5 | 3 | 2 | 7 | 7 | 8 | 8 | 0 |
+     +---+---+---+---+---+---+---+---+---+---+
+8    | 4 | 3 | 4 | 1 | 2 | 5 | 0 | 8 | 0 | 2 |
+     +---+---+---+---+---+---+---+---+---+---+
+9    | 6 | 7 | 2 | 1 | 1 | 2 | 6 | 4 | 1 | 3 |
+     +---+---+---+---+---+---+---+---+---+---+
+10   | 2 | 6 | 6 | 1 | 8 | 9 | 5 | 1 | 2 | 8 |
+     +---+---+---+---+---+---+---+---+---+---+
+
+
+
+G:   Sample Message Key Generation
+
+
+     The Master Encryption Key 
+
+            X[0] = 0.567890123     register K1
+            R    = 3.998901234     register K2
+            Y[0] = 0.345678912     register M
+
+            Calculator set to No Rounding (2nd Fn - Tab - .)
+                       ie, show all decimal digits
+
+     Calculate the Message Encryption Key for the 5th message
+
+         Repeat calculation of K[i] 5 times
+                K[1] = 0.886684581
+                K[2] = 0.025546435
+                K[3] = 0.246545962
+                K[4] = 0.268216342
+                K[5] = 0.589846665
+
+          R &lt;- 3.99 + (K[5]/100) = 3.995898467
+                K'[6] = 0.337260078
+          X &lt;- K'[6] = 0.337260078
+                K'[7] = 0.83623299
+          Y &lt;- K'[7] = 0.83623299
+                K'[8] = 0.208478335
+          R &lt;- 3.99 + (K'[8]/100) = 3.992084783
+
+     The resulting Message Encryption Key for message #5 is:
+
+          X[0] = 0.381353099       register K1
+          R    = 3.992084783       register K2
+          Y[0] = 0.546680583       register M
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00231.html">Re: New remailer up.</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00233.html">removing a key from the keyserver. (eeps)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00239.html">Review of APPLIED CRYPTOGRAPHY in Cryptologia</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00233.html">removing a key from the keyserver. (eeps)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00232"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00232"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

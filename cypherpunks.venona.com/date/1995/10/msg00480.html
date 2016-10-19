@@ -1,0 +1,157 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: New Netscape bug (in version 1.12) -->
+<!--X-From-R13: wfjNarba.argfpncr.pbz (Xrss Irvafgrva) -->
+<!--X-Date: Wed, 4 Oct 95 00:27:41 PDT -->
+<!--X-Message-Id: 44td0c$3um@tera.mcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199510031438.HAA06918@orac.engr.sgi.com -->
+<!--X-Reference: 199510040204.WAA22162@clark.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: New Netscape bug (in version 1.12)</TITLE>
+<LINK REV="made" HREF="mailto:jsw@neon.netscape.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00472.html">Date Prev</A>][<A HREF="msg00487.html">Date Next</A>][<A HREF="msg00472.html">Thread Prev</A>][<A HREF="msg00492.html">Thread Next</A>][<A HREF="index.html#00480">Date Index</A>][<A HREF="threads.html#00480">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: New Netscape bug (in version 1.12)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: New Netscape bug (in version 1.12)</LI>
+<LI><em>From</em>: <A HREF="mailto:jsw@neon.netscape.com">jsw@neon.netscape.com</A> (Jeff Weinstein)</LI>
+<LI><em>Date</em>: 4 Oct 1995 07:27:08 GMT</LI>
+<LI><em>Distribution</em>: world</LI>
+<LI><em>Newsgroups</em>: mcom.list.cypherpunks</LI>
+<LI><em>Organization</em>: Netscape Communications Corp.</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00426.html">199510031438.HAA06918@orac.engr.sgi.com</A>&gt; &lt;<A HREF="msg00472.html">199510040204.WAA22162@clark.net</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+In article &lt;<A HREF="msg00472.html">199510040204.WAA22162@clark.net</A>&gt;, rjc@clark.net (Ray Cromwell) writes:
+&gt; &gt; In article &lt;DFv6uo.4so@sgi.sgi.com&gt;, Ray Cromwell &lt;rjc@clark.net&gt; writes:
+&gt; &gt; 
+&gt; &gt; &gt; This bug doesn't seem to crash Netscape, instead, it crashes my XServer
+&gt; &gt; &gt; as soon as the mail window pops op. I'm too tired right now to try to
+&gt; &gt; &gt; analyze it, but it might be another stack bug, this time, in the X
+&gt; &gt; &gt; libraries because Netscape isn't doing any sanity checking.
+&gt; &gt; 
+&gt; &gt; This is a bug in your X server, not in netscape.  The X server should
+&gt; &gt; never crash no matter what you send to it.
+&gt; 
+&gt;   That's true, but it is also true that Netscape should also be
+&gt; performing some sanity checking on input rather than relying on 
+&gt; the supporting libraries to be secure. Remember, a hole is a hole.
+&gt; The last sendmail bug was a buffer overflow in syslog, however,
+&gt; sendmail still got patched to do bounds checking on the strings
+&gt; it was passing to syslog. 
+&gt; 
+&gt;   It looks like this is only bug on BSDI2.0/XAccel, and NT3.5/NS1.1. But
+&gt; is it wise for netscape to be sending 10,000 character strings to GUI
+&gt; functions anyway? 
+
+  While I agree that we should probably truncate this string to something
+smaller than 10000 characters(I've already filed a bug on it here), it
+is perfectly legal X protocol to send 10,000 characters to the X server.
+How do I decide what is too long?  For example, when tracking down buffer
+overflow problems for the security patch, we found an undocumented
+static buffer limit of 64 bytes for the hostname passed to gethostbyname()
+on IRIX.  Before we stumbled across this problem, we had a discussion
+about what length we should truncate host names to.  People thought
+that 128 characters was a reasonable limit, but it turned out that it
+was too long.
+
+  If the X server crash is what I think it is, it could still be hit
+if we limit the string length, depending on the user's font selections
+in their .Xdefaults.
+
+  The fact is that if we are passing documented legal values into X,
+unix, windows, or some other system software, we may still tickle
+some bug in the system.  We can't test against every patch level of
+every piece of software that our code may run against.  If that code
+crashes its a bug in that code, and there is little we can do about
+it other than try to play by the documented rules.
+
+  That said, there are probably still bugs in Netscape that will
+cause it to crash.  We took care to try to find all such bugs that
+occured on the stack, which could be used to insert code and
+jump to it.  That was the best we could do in the timeframe of
+the security patch.  For 2.0 we are doing complete code reviews
+to look for any sort of overflows, stack or not, as well as other
+latent bugs.  We are also beefing up our QA to try to find more
+of these types of bugs.
+
+	--Jeff
+
+-- 
+Jeff Weinstein - Electronic Munitions Specialist
+Netscape Communication Corporation
+jsw@netscape.com - <A  HREF="http://home.netscape.com/people/jsw">http://home.netscape.com/people/jsw</A>
+Any opinions expressed above are mine.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00492" HREF="msg00492.html">Re: New Netscape bug (in version 1.12)</A></STRONG>
+<UL><LI><EM>From:</EM> sameer &lt;sameer@c2.org&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00518" HREF="msg00518.html">Re: New Netscape bug (in version 1.12)</A></STRONG>
+<UL><LI><EM>From:</EM> Ray Cromwell &lt;rjc@clark.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00426" HREF="msg00426.html">Re: New Netscape bug (in version 1.12)</A></STRONG>
+<UL><LI><EM>From:</EM> tomw@orac.engr.sgi.com (Tom Weinstein)</LI></UL></LI>
+<LI><STRONG><A NAME="00472" HREF="msg00472.html">Re: New Netscape bug (in version 1.12)</A></STRONG>
+<UL><LI><EM>From:</EM> Ray Cromwell &lt;rjc@clark.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00472.html">Re: New Netscape bug (in version 1.12)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00487.html">Re: The Evolution of Cooperation (Towards a mathematical theory of reputation?)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00472.html">Re: New Netscape bug (in version 1.12)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00492.html">Re: New Netscape bug (in version 1.12)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00480"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00480"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

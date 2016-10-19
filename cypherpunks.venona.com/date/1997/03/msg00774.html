@@ -1,0 +1,293 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: [ANNOUNCE] hash cash postage implementation -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Fri, 28 Mar 1997 08:57:18 &#45;0800 (PST) -->
+<!--X-Message-Id: 199703281652.QAA03299@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>[ANNOUNCE] hash cash postage implementation</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00764.html">Date Prev</A>][<A HREF="msg00766.html">Date Next</A>][<A HREF="msg00787.html">Thread Prev</A>][<A HREF="msg00776.html">Thread Next</A>][<A HREF="index.html#00774">Date Index</A>][<A HREF="threads.html#00774">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>[ANNOUNCE] hash cash postage implementation</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: [ANNOUNCE] hash cash postage implementation</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 28 Mar 1997 16:52:26 GMT</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+A partial hash collision based postage scheme
+
+I've been talking about a partial hash collision based postage scheme
+on the crypto lists for the last few days. The idea of using partial
+hashes is that they can be made arbitrarily expensive to compute (by
+choosing the desired number of bits of collision), and yet can be
+verified instantly.
+
+A first cut implementation of these ideas can be fetched from here:
+
+   * hashcash.tgz
+   * PGP signature of hashcash.tgz
+
+I will describe what the implementation allows by example, using the program
+so you can follow along if you wish.
+
+There is an integrated partial hash collision generator (hashcash mint) and
+remailer plug-in. The remailer plug-in should be easy to hook into typeI
+remailers. typeII or nymserver would require modifying the mixmaster
+client/remailer, the code has been designed to make this relatively easy to
+do, and link directly into mixmaster, or alpha or newnym.
+
+Compiling
+
+        % gcc -O6 -c *.c
+        % gcc -o hashcash hashcash.o sha1.o
+        % gcc -o sha1 sha1file.o sha1.o
+        % gcc -o sha1test sha1test.o sha1.o
+        %
+
+The functions provided by the program are
+
+Run with no arguments and it prints a list of flags and terse usage
+instructions.
+
+Speed test:
+
+        % hashcash -t
+        speed: 7218 hashes per sec
+        %
+
+This tells you the number of hashes it can search per second. (Note, the
+implementation of sha1 it is using is not optimised, it is my reference
+implementation. I have another speed freak sha1 implementation which needs
+1/2 hrs work, and has the same interface, so I'll plug it in later. It's
+commented in sha1.c).
+
+Estimate time required to find 17-bit partial hash collision:
+
+        % hashcash -t -17
+        speed: 7274 hashes per sec
+        find: 17 bit partial sha1 collision
+        estimate: 9 seconds
+        %
+
+(varies quite widely from estimated time)
+
+Calculate a 17 bit collision on string "flame"
+
+(flame is a now dead remailer):
+
+        % hashcash -17 flame
+        speed: 7274 hashes per sec
+        find: 17 bit partial sha1 collision
+        collision: 09948flame356018443
+        tries: 57450
+        %
+
+The collision is actually found on the hash of the date since Jan 1 1970 in
+days (5 digit leading zero filled) and string given.
+
+So the collision is found on:
+
+        % echo -n 09948flame | sha1
+        fbbea210abafe3e72afe7849eaea2052e309e017
+        %
+
+The collision that was found can be seen manually as the collision is
+constrained to be the MSbits of the digest:
+
+        % echo -n 09948flame356018443 | sha1
+        fbbead76da651cf856f7466fed9624d3ada061d9
+        %
+
+You can manually see that the first 20 bits match. (Note we asked for a 17
+bit hash, but it generates a 17 bit or larger hash. We just got lucky and
+got an extra 3 bits, which would happen about 1 time in 8).
+
+The hashcash client can also report on a collision:
+
+        % hashcash flame 09948flame356018443
+        collision: 20 bits
+        %
+
+You can check on the validity period as compared to todays date:
+
+        % hashcash flame 09948flame356018443 28
+        validity: 28 days remaining
+        collision: 20 bits
+        %
+
+You can check that a hash has a requested number of bits:
+
+        % hashcash -25 flame 09948flame356018443
+        collision: 20 bits
+        required: 25 bits
+        rejected: too few bits
+        %
+
+The exit status is set to failure if any of the tests fail: ie if there are
+too few bits, or if you do a validity check and the hash has expired, or
+isn't yet in it's validity period.
+
+Double spending protection
+
+You can also ask the hashcash client to remember collisions within a
+selected validity period.
+
+        % hashcash -d -25 flame 09948flame356018443 28
+        validity: 28 days remaining
+        collision: 20 bits
+        required: 20 bits
+        database: not double spent
+        adding: 28 09948flame356018443
+        %
+
+The collision will only be added if all the tests pass (in validity period,
+required number of bits). The exit status also tells you if the hash was ok.
+
+The database would grow indefinately as the mailer accepted new payments, so
+the validity period is stored in the database, and at the next use of the
+database after the validity period expires, the collision will be discarded.
+There is no need to keep expired collisions around because we wouldn't
+accetp it anyway because it's out of date, so who cares if we've previously
+accepted it. A validity period of 0 means valid forever, and it will never
+be discarded from the database.
+
+An example of double spending
+
+A new test now is whether a hash has been presented before, so we the above
+command and expect it to be rejected as already spent, because it is in the
+database:
+
+        % hashcash -d -25 flame 09948flame356018443 28
+        validity: 28 days remaining
+        collision: 20 bits
+        required: 25 bits
+        rejected: too few bits
+        database: double spent
+        %
+
+(exit status is set to failure, due to double spent cash)
+
+That's it
+
+It's very lightly tested, so if anything breaks let me know.
+
+It's got some inefficiencies in places, but working code comes first,
+efficiency later.
+
+(Also I have not tested my SHA1 implementation on a big endian machine, it
+auto-detects byte endian-ness, theoretically).
+
+Remailer applications discussed so far
+
+   * exit remailer postage per post
+   * spam filter on mail you receive, if it hasn't got a 20 bit hash, or 1c
+     digicash you have a program which bounces it with a notice explaining
+     the required postage, and where to obtain software from. This would put
+     spammers out of business overnight, as 1,000,000 x 20 = 100 MIP years
+     which is going to be more compute than they've got, and 1,000,000 x 1c
+     = $10,000 is going to be more than they are likely to make through
+     sales interest from the spam.
+   * good behaviour bond for nymserver users. The nymserver user pays the
+     nymserver (in a largish hash collision, or $25 digicash) for a
+     replyable nymserver account. They agree an contract with the penalty
+     clause that breaking the contract means the nymserver keeps the
+     digicash/collision, and disables the account. They user's identity
+     isn't known, but to join in again they have to pay up another large
+     hash collision or more digicash.
+   * there are lots of other ideas to play with.
+
+How does this fit in with digicash
+
+Digicash postage on remailers, and mail would be useful, however there are a
+number of problems with digicash:
+
+   * It is more onerous to set up an account (form filling etc)
+   * Not many people have accounts
+   * It's only anonymous for the payer anonymous (and not anonymous for the
+     seller)
+
+So my suggestion is that we have remailers which accept either hash
+collision postage, or digicash postage. The advantages of this approach are:
+
+   * Hashcash may provide a stop gap measure until digicash becomes more
+     widely used
+   * Hashcash is free, all you've got to do is burn some cycles on your PC.
+     It is in keeping with net culture of free discourse, where the
+     financially challenged can duke it out with millionaires, retired
+     government officials, etc on equal terms.
+   * Hashcash may provide us with a fall back method for controling spam if
+     digicash goes sour (gets outlawed or required to escrow user
+     identities).
+
+Any comments, code, etc gratefully received.  A couple of remailers
+alpha testing it would be nice also.
+
+Adam
+
+-- 
+Have *you* exported RSA today? --&gt; <A  HREF="http://www.dcs.ex.ac.uk/~aba/rsa/">http://www.dcs.ex.ac.uk/~aba/rsa/</A>
+
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00764.html">Re: remailer spam throttle</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00766.html">Re: your mail</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00787.html">Re: CypherPunks Hash Distribution Network / Combined thread</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00776.html">Re: [ANNOUNCE] hash cash postage implementation</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00774"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00774"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

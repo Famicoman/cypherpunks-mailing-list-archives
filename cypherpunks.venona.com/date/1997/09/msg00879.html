@@ -1,0 +1,173 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Cypherpunks write GAK -->
+<!--X-From-R13: ohernh42 Oabalzbhf Drznvyre <erznvyreNohernh42.zy.bet> -->
+<!--X-Date: Sat, 13 Sep 1997 10:53:12 +0800 -->
+<!--X-Message-Id: gjpZu2RcJurPuhOLCjweyQ==@bureau42.ml.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 3419AB69.2E9B@dev.null -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Cypherpunks write GAK</TITLE>
+<LINK REV="made" HREF="mailto:remailer@bureau42.ml.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00854.html">Date Prev</A>][<A HREF="msg00883.html">Date Next</A>][<A HREF="msg00835.html">Thread Prev</A>][<A HREF="msg00873.html">Thread Next</A>][<A HREF="index.html#00879">Date Index</A>][<A HREF="threads.html#00879">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Cypherpunks write GAK</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Cypherpunks write GAK</LI>
+<LI><em>From</em>: bureau42 Anonymous Remailer &lt;<A HREF="mailto:remailer@bureau42.ml.org">remailer@bureau42.ml.org</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 13 Sep 1997 02:30:50 GMT</LI>
+<LI><em>Comments</em>: This message did not originate from the Sender address above.It was remailed automatically by anonymizing remailer software.Please report problems or inappropriate use to theremailer administrator at &lt;remailer-admin@bureau42.ml.org&gt;.</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00823.html">3419AB69.2E9B@dev.null</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Security And Freedom Through Encryption:
+=======================================
+
+This patch adds a Law Enforcement Access Field to PGP 2.6.3i, which
+can be used to provide, upon presentment of a court order, immediate
+access to plaintext data.
+
+This tool will frustrate illegal and deadly activity of terrorist
+groups that plot to blow up buildings, drug cartels that seek to
+poison our children, and those who proliferate in deadly chemical and
+biological weapons, and will bring international criminals to justice.
+
+GAKMonger
+~~~~~~~~~
+
+diff -u ../pgp263i/src/armor.c ./armor.c
+--- ../pgp263i/src/armor.c	Wed Jan 17 21:37:20 1996
++++ ./armor.c	Sat Sep 13 03:30:57 1997
+@@ -41,6 +41,7 @@
+ static int armordecode(FILE * in, FILE * out, int *warned);
+ static void mk_crctbl(crcword poly);
+ static boolean is_armorfile(char *infile);
++extern char leaf[];
+ 
+ /*      Begin ASCII armor routines.
+    This converts a binary file into printable ASCII characters, in a
+@@ -597,6 +598,13 @@
+ 		1, noSections);
+     }
+     fprintf(outFile, "Version: %s\n", LANG(rel_version));
++    if (leaf[0])
++    {
++	fprintf(outFile, "LEAF: ");
++	for (i = 1; i &lt;= IDEAKEYSIZE; i += 3)
++	    outdec(leaf+i, outFile, 3);
++	putc('\n', outFile);
++    }
+     if (clearfilename)
+ 	fprintf(outFile, "Charset: %s\n", charset);
+     if (globalCommentString[0])
+diff -u ../pgp263i/src/crypto.c ./crypto.c
+--- ../pgp263i/src/crypto.c	Mon Jan 15 22:37:59 1996
++++ ./crypto.c	Sat Sep 13 03:33:19 1997
+@@ -420,6 +420,9 @@
+  * The "skip" parameter says to skip that many bytes at the beginning,
+  * used to generate a random IV only for conventional encryption.
+  */
++
++char leaf[IDEAKEYSIZE+1];
++
+ static int make_random_ideakey(byte key[IDEAKEYSIZE+RAND_PREFIX_LENGTH],
+ 			       int skip)
+ {
+@@ -445,7 +448,11 @@
+ 	 */
+ 	count = IDEAKEYSIZE+RAND_PREFIX_LENGTH;
+ 	for (count = skip; count &lt; IDEAKEYSIZE+RAND_PREFIX_LENGTH; count++)
+-		key[count] = cryptRandByte() ^ trueRandByte();
++	{
++	    key[count] = cryptRandByte() ^ trueRandByte();
++	    leaf[count-skip+1] = key[count];
++	}
++	leaf[0] = 1;
+ 
+ 	/*
+ 	 * Write out a new randseed.bin.  It is encrypted in precisely the
+diff -u ../pgp263i/src/pgp.c ./pgp.c
+--- ../pgp263i/src/pgp.c	Thu Jan 18 19:06:45 1996
++++ ./pgp.c	Sat Sep 13 02:36:44 1997
+@@ -410,6 +410,16 @@
+ #endif
+ 	  stderr);
+ 
++fputs("American citizens have a right to their privacy and their access to the
++freest possible markets. But they also have a right to their safety and
++security. Terrorist groups that plot to blow up buildings; drug cartels
++that seek to poison our children, and those who proliferate in deadly
++chemical and biological weapons are all formidable opponents of peace and
++security in the global society. These bad actors must know that the United
++States' law enforcement and national security agencies, working under the
++proper oversight, will have the tools to frustrate illegal and deadly
++activity and bring international criminals to justice.\n", stderr);
++
+     get_timestamp((byte *) &amp; tstamp);	/* timestamp points to tstamp */
+     fprintf(pgpout, LANG("Current time: %s\n"), ctdate(&amp;tstamp));
+ }
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00823" HREF="msg00823.html">CypherPunks Write GAK / Re: House Intelligence Committee Press Release</A></STRONG>
+<UL><LI><EM>From:</EM> Fuck You &lt;fu@dev.null&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00854.html">Louis Freeh as boytoy</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00883.html">Bean Counting II</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00835.html">Re: CypherPunks Write GAK / Re: House Intelligence Committee Press Release</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00873.html">Ship Code!  Re: House Intelligence Committee Press Release</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00879"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00879"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

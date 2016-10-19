@@ -1,0 +1,181 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Java configurability -->
+<!--X-From-R13: Oqnz Eubfgnpx <nqnzNyvtugubhfr.ubzrcbeg.bet> -->
+<!--X-Date: Mon, 26 Feb 1996 11:01:06 +0800 -->
+<!--X-Message-Id: 199602260229.VAA24656@homeport.org -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Java configurability</TITLE>
+<LINK REV="made" HREF="mailto:adam@lighthouse.homeport.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02084.html">Date Prev</A>][<A HREF="msg02087.html">Date Next</A>][<A HREF="msg02102.html">Thread Prev</A>][<A HREF="msg02091.html">Thread Next</A>][<A HREF="index.html#02086">Date Index</A>][<A HREF="threads.html#02086">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Java configurability</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A> (Cypherpunks Mailing List)</LI>
+<LI><em>Subject</em>: Java configurability</LI>
+<LI><em>From</em>: Adam Shostack &lt;<A HREF="mailto:adam@lighthouse.homeport.org">adam@lighthouse.homeport.org</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 25 Feb 1996 21:29:53 -0500 (EST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Alex Strasheim wrote:
+
+| What are we talking about specifically when we talk about security
+| oriented configurability?  Rather than just turning java(script) on and
+| off, wouldn't it be useful to piggyback off of the X.509 system that's
+| already in place?
+
+| For every CA's or server's cert, they'd just have to add two checkboxes:  
+| whether or not to run java applets or javascript code from servers 
+| vouched for by those certs.  Is that what people mean when they talk 
+| about configurability, or just the ability to shut down java*script) all 
+| together?
+
+	I mean the ability to shut down Java or JavaScript (hereafter
+called J-code), but not only from a user point of view.  Its
+ludicrously easy to convince users to do things that they shouldn't be
+doing, so not only do we need a Java off and JavaScript off button
+within Netscape, but we also need a means to enforce it at a company
+wide level.
+
+	Think about it from the point of view of a business.  There's
+this Java software.  You keep reading about how its not really secure
+in the press.  Do you trust your users to do the right thing?  You
+know how they'll do things like arbitrarily change their IP address
+on you.
+
+	So, what do we want as a business?  We want the ability to
+define trust.  We want to be able to say what our users can do with
+the machines &amp; software we put on their desktop.  We want to be able
+to provide them with applets to run.
+
+	This generates a set of needs.  First, we need to be able to
+tell Netscape about our corporate policy.  The logical place to do
+that is at the HTTP proxy on our firewall.  (Or possibly at a
+different port on the machine.)
+
+	Once we have the ability to provide "MUST obey" directives, we
+need to ask what those directives should be.  Obviously, we might want
+the ability to turn J-code off when passing through this
+gateway.
+
+	Next, we would want the ability to allow SELECTED or approved
+J-code through.  How do we select it?  It comes from an approved
+source.  That source verifies that it created/vetted the code with a
+digital signature.  (With an expiration date on it, please.  Code
+should need to be re-certified in the light of new bugs in J.)
+
+	The certificate would need to sign a block with at least:
+
+	{&lt;Code block&gt;
+	&lt;Valid through&gt;
+	&lt;Java Version&gt;
+	&lt;Policies approved&gt;}
+
+	Policies?  Thats right.  Java has the potential to do some
+really nifty stuff at the corporate level.  Purchasing agents, travel
+&amp; reimbursement, etc are the obvious ones.  But those might well need
+to be allowed access to disk or network resources.  The fact that I
+allow a bit of code signed by the NSA to run doesn't mean I want it to
+be as privledged as code written locally.
+
+	Now, the fact that Vericode thinks this code should get disk
+access doesn't mean your company does.  So the policy there is a
+MAXIMUM level of access that the J-code should get.  I might set it at
+less, say, only allowed access to accounting_gw, on port 3456, between
+9AM and 5PM.  (I think time controls are a loss, but lots of people
+seem to like them.)
+
+	So what would go into a config file?  Things should start
+based on a global prohibition.  'That which is not explicitly allowed
+is forbidden.'  With the permission of the company, it should be
+possible to swap this towards todays setup 'That which is not
+forbidden is allowed.'  However, I doubt many companies will go for
+that.  None with smart security people will.
+
+	So, having prohibited everything, we now consider if we should 
+allowing any of these J-code things to run.  And how do we
+discriminate?  Signatures.  So we need to put keys (and fingerprints)
+into the config file.
+
+	Once we have keys in the file, we start assigning them
+privledges.  "Can examine this file."  "Can examine this list of
+files."  "Can write in /tmp, assuming that its less than 80% full."
+"Can edit the file /etc/passwd."
+
+	So, is it more clear what I'm looking for?
+
+	(Incidentally, X.509 is a bear.  Read Carl Ellison's comments
+last November, and also Ross Anderson's 'Robustness Principles' paper.)
+
+-- 
+"It is seldom that liberty of any kind is lost all at once."
+					               -Hume
+
+
+-- 
+"It is seldom that liberty of any kind is lost all at once."
+					               -Hume
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="02091" HREF="msg02091.html">Re: Java configurability</A></STRONG>
+<UL><LI><EM>From:</EM> Simon Spero &lt;ses@tipper.oit.unc.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02084.html">Re: ViaCryptPGP 4.0?! (was Re: PGP integrated into Z-Mail)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02087.html">Percy the Python loves IPG</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02102.html">Re: Crypto Export Legislation?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02091.html">Re: Java configurability</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02086"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02086"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

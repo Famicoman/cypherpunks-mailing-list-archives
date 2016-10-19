@@ -1,0 +1,153 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: "S1" encryption system (was: this looked like it might be interesting) -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Wed, 9 Aug 95 16:00:53 PDT -->
+<!--X-Message-Id: 199508092259.PAA10092@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>"S1" encryption system (was: this looked like it might be interesting)</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00372.html">Date Prev</A>][<A HREF="msg00377.html">Date Next</A>][<A HREF="msg00370.html">Thread Prev</A>][<A HREF="msg00381.html">Thread Next</A>][<A HREF="index.html#00373">Date Index</A>][<A HREF="threads.html#00373">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>"S1" encryption system (was: this looked like it might be interesting)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: "S1" encryption system (was: this looked like it might be interesting)</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 9 Aug 1995 15:59:48 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I suppose the unstated implication is that this might be Skipjack.
+
+I have looked at the program a bit and have a few observations:
+
+There is an obvious typo in the "g" function, whose first parameter
+should be 0 or 1, but which tests it for 0, 1, or 2.  This suggests an
+amateur effort.  The coding style in general suggests a lack of familiarity
+with C (absence of "for" loops, with equivalent "while" loops substituted).
+
+The program appears to be based on a hardware-based description of the
+algorithm, judging from comments and style.
+
+The algorithm uses two fixed arrays F and G.  Comments indicate that F
+was designed as four independent arrays F0, F1, F2, and F3.  These are
+suposed to be non-linear.  Each takes 8 bits in and 8 bits out.  G is
+two arrays, each 8 bits in and 1 bit out.  The comments indicate that
+it is supposed to be "pseudo-linear".  G1 is the odd parity function.
+G0[i] is 0 0 1 1 0 1 1 0 0 1 repeated over and over.  This is unusual
+because it is period 10 (the second 5 bits are the inverse of the first
+5).  I don't know whether there would be a more concise algorithmic
+representation of G0.
+
+Key size is 80 bits.  The program implements the ability to hold 5 keys
+at once.  Block size is 64 bits.  The keys are expanded internally into a
+large array.  I haven't looked at the key scheduling in detail.
+
+The encrypt and decrypt block functions have fixed xor's applied to the
+64 bits of input and output.  This appears to be cryptographically
+useless (or at least not very useful), similar to the initial
+permutation in DES.  It is curious that xor's are used here rather than
+a permutation.  That may represent an attempt to design the cipher to
+run well in software.
+
+The encryption function itself is a modified Feistel type cipher, with
+the blocks broken into 8 pieces and xor'd with functions involving F,
+G, the key and other pieces in a reversable pattern.  The loop iterates
+32 times but only two of the 8 pieces are changed each iteration so
+each 8 bit piece actually gets modified only 8 times.  The pattern is:
+
+	piece 6 modified by pieces 4, 5, 2, 3
+	piece 7 modified by pieces 4, 5, 0, 1
+	piece 0 modified by pieces 6, 7, 4, 5
+	piece 1 modified by pieces 6, 7, 2, 3
+	piece 2 modified by pieces 0, 1, 6, 7
+	piece 3 modified by pieces 0, 1, 4, 5
+	piece 4 modified by pieces 2, 3, 0, 1
+	piece 5 modified by pieces 2, 3, 6, 7
+
+repeated 8 times.  Decryption goes in the inverse order as is typical of
+these ciphers.
+
+The key is basically 80 bits, however there is a function S1_create_key
+which pads it with 16 bits of 0 and then encrypts it with two overlapping
+encryptions using the all-zeros key.  The resulting 96 bit key is then
+fed as input to S1_load_key which decrypts it and checks for the 0's to
+ensure validity.
+
+I am not much of a cryptanalyst, but from what I understand the overall
+security of a Feistel-type cipher like this depends a great deal on the
+structure of the F (and in this case G) boxes.  I would not be at all
+qualified to analyze those.  So potentially this may be a strong cipher
+or it may be weak.  The actual implementation does as I remarked show
+some signs of amateur programming skills.  In addition to the points
+mentioned it is curious that the G arrays are initialized with a list of
+256 values rather than taking advantage of the apparent regularities
+noted.
+
+Hal Finney
+hfinney@shell.portal.com
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00381" HREF="msg00381.html">Re: "S1" encryption system (was: this looked like it might be interesting)</A></STRONG>
+<UL><LI><EM>From:</EM> Matt Blaze &lt;mab@crypto.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00383" HREF="msg00383.html">Re: "S1" encryption system (was: this looked like it might be interesting)</A></STRONG>
+<UL><LI><EM>From:</EM> "Josh M. Osborne" &lt;stripes@va.pubnix.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00372.html">Re: Crypto = Competitive Advantage?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00377.html">Bank Fees and E-Cash</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00370.html">PGP at work?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00381.html">Re: "S1" encryption system (was: this looked like it might be interesting)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00373"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00373"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

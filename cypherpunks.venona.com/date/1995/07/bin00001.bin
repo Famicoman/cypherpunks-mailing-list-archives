@@ -1,0 +1,140 @@
+# I-CoDe.SCR By EPMD
+#
+# I-code is a public/private message encoder/decoder script that uses
+# strict KEY matching decoders when a encoded message is received to
+# help against flooding and people trying to simulate this script.
+#
+# This Encoding Method was brought to my attention when i looked at
+# morse.irc and realized how much better it code be.
+#
+# Yes some code for this script is ripped from morse.irc ;)
+#
+# FUTURE ADDITIONS :
+#  /ime    << encoded actions
+#  /itopic << encoded topics
+#  /kick   << encoded kicks
+#  More Strict Key Match Decoders
+
+^set novice off
+
+alias i-echo echo \(i\) $0-
+
+/i-echo Loading I-CoDe (this may take a minute so be patient) By EPMD
+
+alias ihelp {
+  /i-echo I-CoDe HELP :
+  /i-echo   /isay <message>        - sends encoded message to your current channel.
+  /i-echo   /imsg <nick> <message> - sends encoded message to nick.
+}
+
+@ icode.key = [i]
+
+@ icode.match.1 = [FOGFHIGFGDCACNGOGBGNGFCAGIGPGIGPCAGDGBHECADOCAGNGBGGGJGBCOGD]
+@ icode.match.2 = [FOHHGBGJHE]
+@ icode.match.3 = [FOGNHDGHCACFGIGPGIGPCACDGJGOGDGMHFGEGFCADMHAHHGECOGIDO]
+@ icode.match.4 = [FOGNHDGHCACFGIGPGIGPCAGNGBGJGOCICJCAHLHDHEHCHFGDHECAHAGBHDHDHHGECACKHADLCAHHGIGJGMGFCIHADNGHGFHEHAHHGFGOHECICJCJCAHLHAHCGJGOHEGGCICCCFHDDKCFHDDKCFGEDKCFGEDKCFHDDKCFHDDKCFHDFMGOCCCMHACNDOHAHHFPGOGBGNGFCMHACNDOHAHHFPHAGBHDHDHHGECMHACNDOHAHHFPHFGJGECMHACNDOHAHHFPGHGJGECMHACNDOHAHHFPGHGFGDGPHDCMHACNDOHAHHFPGEGJHCCMHACNDOHAHHFPHDGIGFGMGMCJDLHNHN]
+@ icode.match.5 = [FOGFHIGFGDCACNGDGMGPHDGFCACFGIGPGIGP]
+@ icode.match.6 = [FOGFHIGFGDCACNGOGBGNGFCAGDGNGFCAGHGDGDCACNGPCAGNGBGGGJGBCAGNGBGGGJGBCOGD]
+@ icode.match.7 = [FOHHGBGJHECACFGDGNGF]
+@ icode.match.8 = [FOGFHIGFGDCACNGOGBGNGFCAGBGOHEGJGLCAGNGBGGGJGBCADODOCAGNGBGGGJGBCOHEHIHE]
+@ icode.match.9 = [FOHHGBGJHECACFGBGOHEGJGL]
+@ icode.match.10 = [FOGFHIGFGDCACNGOGBGNGFCAGBGOHEGJGNGBGJGMCAGNGBGJGMCAHCGPGPHEEAGPHCGJGHGJGOGBGMCOGOGFHEHHGFHDHECOGDGPGNCADMCAGNGBGGGJGBCOHEHIHE]
+@ icode.match.11 = [FOHHGBGJHECACFGBGOHEGJGNGBGJGM]
+@ icode.match.12 = [FOGFHIGFGDCAHCGNCACNHCGGCAGNGBGGGJGB]
+@ icode.match.13 = [FOGFHIGFGDCAHCGNCACNHCGGCAGNGBGGGJGBCOGD]
+@ icode.match.14 = [FOGFHIGFGDCAHCGNCACNHCGGCAGNGBGGGJGBCOHEHIHE]
+@ icode.match.15 = [FOGBHDHDGJGHGOCACNGNGBHEGDGICOGEGFGDGPGEGFDLFOGBHDHDGJGHGOCAGNGBHEGDGICOGEGFGDGPGEGFCAACGJAC]
+
+/i-echo    >> I-CoDe Strict Key Match Decoders now loaded into memory.
+@ tmpcount = 1
+while (icode[match][$tmpcount]) {
+  @ match.decode = [$match.decode $decode($icode[match][$tmpcount])]
+  //eval $decode($icode[match][$tmpcount])
+  @ tmpcount = tmpcount + 1
+}
+
+alias nickonly {^assign FUNCTION_RETURN $left($index(! $0) $0)}
+
+SET MAX_RECURSIONS 100
+@ null = []
+@ icode.codes = []
+@ icode.codes = icode.codes ## [           ]
+@ icode.codes = icode.codes ## [          ]
+@ icode.codes = icode.codes ## [          ]
+@ icode.codes = icode.codes ## [          ]
+@ icode.codes = icode.codes ## [          ]
+@ icode.codes = icode.codes ## [       ]
+@ icode.index = icode.index ## [a b c d e f g h i j k l m n o p q r s t u v w x y z ]
+@ icode.index = icode.index ## [1 2 3 4 5 6 7 8 9 0 ]
+@ icode.index = icode.index ## [! @ # $ % ^ & * - = + ` ~ ; : ' " , / ? \ | ]
+
+^on ^raw_Irc "% PRIVMSG % :* i" {
+  if ([$left($2 1)]==[#]) {
+    /i-echo Nick : $nickonly($0) [$2]
+  }
+  { /i-echo Nick : $nickonly($0) [MSG]}
+  /i-echo Decoded : $util.icodetrans($strip(: $3) $4-)
+}
+
+alias util.icodetrans {
+  if ([$icode.key]==[$match.decode]) {^assign -match.decode}
+	# clears old morse code line... & reassigns
+	@ icodecd = []
+
+	if ([$1] != [i]) { @ icodecd = util.icodetrans($1-) }
+	@ mct.count = 0
+	@ mctwd = [$0]
+	@ mctword = []
+	while (mct.count < @mctwd){
+		@ tempmct = []
+		while (mid($mct.count 1 $0) != [] && mct.count < @mctwd)
+		{
+		  @ tempmct = tempmct ## mid($mct.count 1 $0)
+		  @ mct.count = mct.count + 1
+		}
+
+		@ mctindex = rmatch($tempmct $icode.codes) - 1
+		if (mctindex >= 0)
+		{ @ mctword = mctword ## word($mctindex $icode.index) }
+		{
+		  if (tempmct != [])
+			{ @ mctword = mctword ## tempmct }
+		}
+
+		@ mct.count = mct.count + 1
+	}
+	@ function_return = mctword ## [ ] ## icodecd
+}
+
+alias util.icodecode {
+	# clears old morse code line... & reassigns
+	@ icodecode = []
+
+	if ([$1] != [$1000]) { @ icodecode = util.icodecode($1-) }
+	@ mc.count = 0
+	@ mcwd = strip( $0)
+	@ mcword = []
+	@ mcsep = []
+	while (mc.count < @mcwd){
+		@ tempmc = mid($mc.count 1 $mcwd)
+		@ mc.count = mc.count + 1
+		@ mcindex = rmatch($tempmc $icode.index) - 1
+		if (mcindex >= 0)
+		{
+		  @ mcword = mcword ## mcsep ## word($mcindex $icode.codes)
+		}
+		{ 
+		  if (tempmc != [] && tempmc != [] && tempmc != [])
+			{ @ mcword = mcword ## [] ## tempmc }
+		}
+		@ mcsep = []
+	}
+	@ function_return = mcword ## [ ] ## icodecode
+}
+
+alias isay {//say $util.icodecode($0-) i}
+alias imsg {//msg $0 $util.icodecode($1-) i}
+
+/i-echo    >> Loaded MAIN Decoder ENGINE.
+
+/i-echo I-CoDe LOADED (/ihelp for help)

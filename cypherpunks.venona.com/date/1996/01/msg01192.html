@@ -1,0 +1,148 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: HAVAL (was Re: crypto benchmarks) -->
+<!--X-From-R13: yhyyNnpz.bet (Xbua Zhyy) -->
+<!--X-Date: Sun, 21 Jan 1996 12:29:31 +0800 -->
+<!--X-Message-Id: 31017081.19731341@smtp.ix.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199601202200.RAA09207@UNiX.asb.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: HAVAL (was Re: crypto benchmarks)</TITLE>
+<LINK REV="made" HREF="mailto:lull@acm.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01186.html">Date Prev</A>][<A HREF="msg01172.html">Date Next</A>][<A HREF="msg01180.html">Thread Prev</A>][<A HREF="msg01196.html">Thread Next</A>][<A HREF="index.html#01192">Date Index</A>][<A HREF="threads.html#01192">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: HAVAL (was Re: crypto benchmarks)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Wei Dai &lt;<A HREF="mailto:weidai@eskimo.com">weidai@eskimo.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: HAVAL (was Re: crypto benchmarks)</LI>
+<LI><em>From</em>: <A HREF="mailto:lull@acm.org">lull@acm.org</A> (John Lull)</LI>
+<LI><em>Date</em>: Sat, 20 Jan 1996 23:04:57 GMT</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01180.html">199601202200.RAA09207@UNiX.asb.com</A>&gt;</LI>
+<LI><em>Organization</em>: Windsmith</LI>
+<LI><em>References</em>: &lt;<A HREF="msg01180.html">199601202200.RAA09207@UNiX.asb.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Wei:
+
+I didn't see your original post, but did see Deranged's response.  I
+would be interested to see whatever you come up with.
+
+On Sat, 20 Jan 1996 16:57:07 +0000, Deranged Mutant
+&lt;WlkngOwl@UNiX.asb.com&gt; wrote:
+
+&gt; &gt; The biggest problem I have with HAVAL now is that with 4 or 5 passes the
+&gt; &gt; transform functions are larger than 10k even with compiler optimzation for
+&gt; &gt; size.  Since the Pentium L1 instruction cache is only 8k, this makes HAVAL
+&gt; &gt; with 4 or 5 passes extremely slow.  Do you have ideas how I can fit the 
+&gt; &gt; transform functions into L1 cache?
+&gt; 
+&gt; You might do some creative optimization to use more registers than it 
+&gt; does.  I haven't looked at it in a while.  The code was so huge and 
+&gt; slow compared to optimized MD5 and SHS that I have up using it for an 
+&gt; unfinished encrypted file system.
+
+The reference implementation is TERRIBLE for small caches.  You can
+shrink it significantly, however, by simply looping 4x across code
+that does the basic round operation for each of the 8 rotations --
+something like:
+
+  for( i = 4; --i; )
+  { FF_1(t7, t6, ...);
+    FF_1(t6, t5, ...);
+    FF_1(t5, t4, ...);
+    FF_1(t4, t3, ...);
+    FF_1(t3, t2, ...);
+    FF_1(t2, t1, ...);
+    FF_1(t1, t0, ...);
+    FF_1(t0, t7, ...);
+  }
+
+The basic macro for this is almost unchanged from the reference
+implementation.
+
+You can shrink it even further by, instead of coding the basic macro 8
+times for each round, writing a round step that works on an array of 9
+words (out of an array of 16), using 8 words as input and producing
+the ninth as output.  You then have a two-level loop that invokes this
+4x8 times, walking your working set 1 element in the array each time,
+and every 8 passes moving the 8 current variables back where they
+belong.
+
+The first pass through the loop, you use elements 15..8 as input, and
+produce element 7.  The second pass, you use elements 14..7 as input,
+and produce element 6, etc.  After 8 passes, you move elements 7..0
+back up to 15..8, and start the inner loop over.
+
+Alternatively, you can begin with an array of 40 words (only 8 of
+which contain data), use a single loop that invokes the basic
+processing 32 times, walk your working set 1 word each time, and only
+move the working set back where it belongs at the end of the full
+round.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01196" HREF="msg01196.html">Re: HAVAL (was Re: crypto benchmarks)</A></STRONG>
+<UL><LI><EM>From:</EM> Wei Dai &lt;weidai@eskimo.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01180" HREF="msg01180.html">Re: HAVAL (was Re: crypto benchmarks)</A></STRONG>
+<UL><LI><EM>From:</EM> "Deranged Mutant" &lt;WlkngOwl@UNiX.asb.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01186.html">Re: Guerilla Internet Service Providers</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01172.html">Re: Wipe Swap File</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01180.html">Re: HAVAL (was Re: crypto benchmarks)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01196.html">Re: HAVAL (was Re: crypto benchmarks)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01192"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01192"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

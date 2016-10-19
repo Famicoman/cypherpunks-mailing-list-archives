@@ -1,0 +1,121 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Potential defense against timing attack on Diffie&#45;Hellman -->
+<!--X-From-R13: Pvyy Egrjneg <fgrjnegfNvk.argpbz.pbz> -->
+<!--X-Date: Fri, 15 Dec 1995 07:50:56 +0800 -->
+<!--X-Message-Id: 199512130721.XAA21709@ix7.ix.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Potential defense against timing attack on Diffie-Hellman</TITLE>
+<LINK REV="made" HREF="mailto:stewarts@ix.netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00356.html">Date Prev</A>][<A HREF="msg00442.html">Date Next</A>][<A HREF="msg00350.html">Thread Prev</A>][<A HREF="msg00347.html">Thread Next</A>][<A HREF="index.html#00346">Date Index</A>][<A HREF="threads.html#00346">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Potential defense against timing attack on Diffie-Hellman</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Potential defense against timing attack on Diffie-Hellman</LI>
+<LI><em>From</em>: Bill Stewart &lt;<A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 12 Dec 1995 23:21:09 -0800</LI>
+<LI><em>Cc</em>: <A HREF="mailto:mab@research.att.com">mab@research.att.com</A>, <A HREF="mailto:smb@ulysses.att.com">smb@ulysses.att.com</A>, <A HREF="mailto:pck@cryptography.com">pck@cryptography.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+The timing attack on Diffie-Hellman depends on assumptions
+about what multiplications are being made, and in what order.
+But you don't need to do them in order.
+
+The standard approach to calculating Y**x mod m is to calculate
+        Y[1] = Y, Y[2] = Y**2, Y[3] = Y**4, .... Y[logx] = Y**(logx), 
+and while you're doing this keep a running total r[i], where 
+        r[i] = (bit[x,i]) ? (r[i-1]*Y[i]) : r[i-1]
+all arithmetic modulo m (and all indices possibly off by one :-)
+
+This may be a bit memory-intensive for a smartcard, but there's
+no need to calculate these partial products in order; precompute
+the Y[i], pick a random permutation of 1..(logx), and compute
+the partial products in that order.  This still leaks the number
+of 0 and 1 bits in x, but it doesn't say what they are.
+You probably still should multiply r[i-1]*Y[i] whether you're 
+going to need it or not; I don't think the method hides enough
+information otherwise, but that needs more analysis.
+
+Cost - mostly administrative, plus the memory, since keeping track
+of permutations of small integers is cheap relative to bignum 
+multiplication and modulo calculations.  You also need a random 
+number generator of some sort; LFSRs seem to be an easy way to 
+do permutations on the fly, so seed them with something decent.
+
+How effective is it?  I'm not sure - I'd need to do a lot more analysis
+than I've done so far, and the long version of Paul's paper would
+help :-)  But at first glance it looks like it makes it much harder;
+no two calculations are in the same order, so feeding the system
+related Y = g**y mod m each time doesn't tell you much.
+
+As a further annoyance to the listener, split the permutation
+at random into two or three pieces, compute their products separately,
+and then multiply those partial products together.  (Don't try this at
+home without analyzing whether it may leak more information than it
+conceals...)  At very minimum, take two numbers you've got lying
+around and multiply them every once in a while :-)
+
+#--
+#				Thanks;  Bill
+# Bill Stewart, Freelance Information Architect, stewarts@ix.netcom.com
+# Phone +1-510-247-0663 Pager/Voicemail 1-408-787-1281
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00356.html">Re: PGP/PINE integration</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00442.html">Re: ADDRESS DATABASE?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00350.html">Re: Potential defense against timing attack on Diffie-Hellman</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00347.html">e-mail forwarding, for-pay remailers</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00346"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00346"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

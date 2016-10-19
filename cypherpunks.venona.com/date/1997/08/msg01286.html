@@ -1,0 +1,253 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: snuffle.c (was Re: Reuter on Bernstein Ruling) -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Wed, 27 Aug 1997 07:19:34 +0800 -->
+<!--X-Message-Id: 199708262215.XAA01021@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 1.5.4.32.19970826160822.006e89a4@pop.pipeline.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>snuffle.c (was Re: Reuter on Bernstein Ruling)</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01285.html">Date Prev</A>][<A HREF="msg01281.html">Date Next</A>][<A HREF="msg01269.html">Thread Prev</A>][<A HREF="msg01288.html">Thread Next</A>][<A HREF="index.html#01286">Date Index</A>][<A HREF="threads.html#01286">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>snuffle.c (was Re: Reuter on Bernstein Ruling)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:jya@pipeline.com">jya@pipeline.com</A></LI>
+<LI><em>Subject</em>: snuffle.c (was Re: Reuter on Bernstein Ruling)</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 26 Aug 1997 23:15:28 +0100</LI>
+<LI><em>CC</em>: <A HREF="mailto:enoch@zipcon.net">enoch@zipcon.net</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg01269.html">1.5.4.32.19970826160822.006e89a4@pop.pipeline.com</A>&gt; (message fromJohn Young on Tue, 26 Aug 1997 12:08:22 -0400)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+snuffle and unsnuffle are only 64 lines each... so here they are.  You
+need snefru also (snuffle for those not following is a construction to
+convert a hash function into an encryption function ... Bernstein's
+example is set up to use snefru ... a hash function).
+
+Hash function seem be generally exportable, though they are several
+constructs which allow you to convert a hash function into an
+encryption function, so it's not too clear why they should be exempt.
+
+Probably one reason is that hash functions are used to create and
+check signatures, and signature checking and making code
+(authentication only) also seems to be allowed for export.
+
+I expect you could come up with some creative ways of using
+authentication systems to provide encryption too.
+
+We've already got an MD5 and SHA1 in perl, now all we need is a nice
+small implementation (probably in perl) of the below which can be used
+for a .sig :-)
+
+So I guess you guys are now allowed to talk about snuffle
+implementation and it's design... any comments/reposts etc?
+
+Shall we reimplement it in perl?
+
+Adam
+
+== snuffle.c =================8&lt;==============================
+#include &lt;stdio.h&gt;
+#include "snefru.h"
+
+#define NMAX 10000
+
+main(argc,argv)
+int argc;
+char *argv[];
+{
+ register int ch;
+ static unsigned char x[NMAX];
+ register unsigned char y = 0;
+ static unsigned char h[NMAX];
+ static unsigned char m[32];
+ static unsigned char l[64];
+ static unsigned char k[64];
+ register int n = 64;
+ register int i;
+ register WORD32 *wm = &amp;m[0];
+ register WORD32 *wl = &amp;l[0];
+ register int level = 3;
+
+ SetupHash512();
+
+ for (i = 0;i &lt; 64;i++)
+   x[i] = k[i] = h[i] = 0;
+   /* What matters is x[9...63], y, k[0...63], h[0...63]. */
+
+ i = 0;
+ while (((ch = getchar()) != EOF) &amp;&amp; (ch != '\n'))
+   if (i &lt; 64)
+     k[i++] = (unsigned char) ch;
+   else if (i &lt; 119)
+     x[i++ - 55] = (unsigned char) ch;
+ if (argv[1])
+   for (i = 0;argv[1][i] &amp;&amp; (i &lt; 64);i++)
+     h[i] = argv[1][i];
+
+ while ((ch = getchar()) != EOF)
+  {
+   if (!(n &amp; 31))
+    {
+     for (i = 0;i &lt; 64;i++)
+       l[i] = k[i] ^ h[n - 64 + i];
+     Hash512(wm,wl,level,8);
+    }
+
+   x[n] = x[n - 24] + x[n - 55] + ((unsigned char) ch);
+   h[n] = x[n] + m[n &amp; 31];
+   y += h[n];
+   (void) putchar((char) y);
+
+   n++;
+   if (n == NMAX)
+    {
+     for (i = 0;i &lt; 64;i++)
+      {
+       x[(n &amp; 31) + i] = x[n - 64 + i];
+       h[(n &amp; 31) + i] = h[n - 64 + i];
+      }
+     n = (NMAX &amp; 31) + 64;
+    }
+  }
+}
+==============================8&lt;==============================
+
+= unsnuffl.c =================8&lt;==============================
+#include &lt;stdio.h&gt;
+#include "snefru.h"
+
+#define NMAX 10000
+
+main(argc,argv)
+int argc;
+char *argv[];
+{
+ register int ch;
+ static unsigned char x[NMAX];
+ register unsigned char y = 0;
+ static unsigned char h[NMAX];
+ static unsigned char m[32];
+ static unsigned char l[64];
+ static unsigned char k[64];
+ register int n = 64;
+ register int i;
+ register WORD32 *wm = &amp;m[0];
+ register WORD32 *wl = &amp;l[0];
+ register int level = 3;
+
+ SetupHash512();
+
+ for (i = 0;i &lt; 64;i++)
+   x[i] = k[i] = h[i] = 0;
+   /* What matters is x[9...63], y, k[0...63], h[0...63]. */
+
+ i = 0;
+ while (((ch = getchar()) != EOF) &amp;&amp; (ch != '\n'))
+   if (i &lt; 64)
+     k[i++] = (unsigned char) ch;
+   else if (i &lt; 119)
+     x[i++ - 55] = (unsigned char) ch;
+ if (argv[1])
+   for (i = 0;argv[1][i] &amp;&amp; (i &lt; 64);i++)
+     h[i] = argv[1][i];
+
+ while ((ch = getchar()) != EOF)
+  {
+   if (!(n &amp; 31))
+    {
+     for (i = 0;i &lt; 64;i++)
+       l[i] = k[i] ^ h[n - 64 + i];
+     Hash512(wm,wl,level,8);
+    }
+
+   h[n] = ch - y;
+   y = ch;
+   x[n] = h[n] - m[n &amp; 31];
+   (void) putchar((char) (x[n] - x[n - 24] - x[n - 55]));
+
+   n++;
+   if (n == NMAX)
+    {
+     for (i = 0;i &lt; 64;i++)
+      {
+       x[(n &amp; 31) + i] = x[n - 64 + i];
+       h[(n &amp; 31) + i] = h[n - 64 + i];
+      }
+     n = (NMAX &amp; 31) + 64;
+    }
+  }
+}
+==============================8&lt;==============================
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01288" HREF="msg01288.html">Re: snuffle.c (was Re: Reuter on Bernstein Ruling)</A></STRONG>
+<UL><LI><EM>From:</EM> Kent Crispin &lt;kent@songbird.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01269" HREF="msg01269.html">Re: Reuter on Bernstein Ruling</A></STRONG>
+<UL><LI><EM>From:</EM> John Young &lt;jya@pipeline.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01285.html">Re: need confirmation of DVD/CSS crack in China ...</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01281.html">Re: Socio-Economic Cults (Re: Cypherpunk Cults)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01269.html">Re: Reuter on Bernstein Ruling</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01288.html">Re: snuffle.c (was Re: Reuter on Bernstein Ruling)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01286"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01286"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

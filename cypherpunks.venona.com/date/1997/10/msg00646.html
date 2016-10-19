@@ -1,0 +1,227 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: new "communication key" semantics &#38; PFS -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Sun, 12 Oct 1997 05:30:21 +0800 -->
+<!--X-Message-Id: 199710112101.WAA05210@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>new "communication key" semantics &amp; PFS</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00647.html">Date Prev</A>][<A HREF="msg01802.html">Date Next</A>][<A HREF="msg00647.html">Thread Prev</A>][<A HREF="msg01802.html">Thread Next</A>][<A HREF="index.html#00646">Date Index</A>][<A HREF="threads.html#00646">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>new "communication key" semantics &amp; PFS</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:ietf%2Dopen%2Dpgp@imc.org">ietf-open-pgp@imc.org</A></LI>
+<LI><em>Subject</em>: new "communication key" semantics &amp; PFS</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 11 Oct 1997 22:01:05 +0100</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A>, <A HREF="mailto:hal@rain.org">hal@rain.org</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+Now that we're considering (within the IETF OpenPGP standardisation
+framework) the prospect of having a separate communications key, and
+storage key, there are some aspects of communications keys which are
+currently less than ideal because of their current misuse to also
+function as storage keys.
+
+This argues for a new functionality to be given to communication only
+keys.  This is all tied up with the idea of Perfect Forward Secrecy
+(PFS), which is basically the statement of the fact that
+communications keys are more sensitive than storage keys, because your
+attacker by definition has a copy of the encrypted communication.
+(You're sending over an open network where copying all traffic is a
+low cost exercise for a savvy system cracker, or spook, or industrial
+espionage).  
+
+In contrast an attacker often will have to break into your premises to
+obtain the data protected by your storage keys.  Another aditional
+vulnerability of communication keys is that the US government is very
+interested in obtaining copies of them via their "key escrow"/"key
+recovery"/GAK initiative.  The strongest anti-GAK statement you can
+make is to use forward secrecy.  I've raised this point before, but
+the meme doesn't seem to have penetrated yet.
+
+Hal Finney &lt;hal@rain.org&gt; wrote:
+&gt; Adam mentioned the idea of forward secrecy in email communications.
+&gt; I'm not sure how that would work technically, but it sounds like
+&gt; an interesting possibility.  
+
+It ties in quite well with what is in my view proper handling of
+communication keys.  If we can break the tie with one key being used
+for both storage and communication, we can start to reflect in the
+protocol better security practice in the handling of communication
+keys.
+
+Forward secrecy is one way of looking at it.  It doesn't have to be
+real interactive forward secrecy as you might get in an SSH session,
+or an SSL session, or some of the IPSEC standards, though these are
+other examples which could server as examples showing that forward
+secrecy is a good idea, for anyone who would like to argue against it.
+
+The basic principle is that you want to have communication keys which
+don't live for a long time.  So one form of weak forward secrecy you
+could have would be to mark your El Gamal or RSA communications for
+much more frequent update, by giving it a short expiry date.  Say once
+per week.
+
+Some people currently do this manually anyway.  For example see Dave
+Wagner's web page (www.cs.berkeley.edu/~daw/) where he describes what
+he does with keys.  (He has a long term signature only key which he
+uses to sign short lived "communication only" keys which he discards
+after expiry).  What I am arguing for essentially is building this
+kind of improved communication key handling into the OpenPGP spec for
+keys marked as "communication only".
+
+
+In addition I think it would be nice to enable a new kind of
+communications key which is based on discrete log so that people who
+choose to use PGP protocols for more interactive email transfer
+protocols than SMTP can generate keys very quickly.  I was originally
+thinking that this would have to be DH, but perhaps you can simulate
+DH PFS with El Gamal by securely wiping the private parameters of
+expired communications keys, and keeping the public modulus and g
+value.  (This has similarities with the quick method in PGP5.x of
+generating El Gamal keys with precomputed shipped primes that you
+already have).  The advantage being that you may be trying to generate
+keys frequently, so you may not want to wait for a full new 4096 bit
+El Gamal or 2048 bit RSA key generation, when you are not anticipating
+the sudden delay in sending messages.
+
+
+I was originally thinking it would be done by having a new DH key type
+(in addition to RSA, El Gamal, DSA).  
+
+(Incidentally Hal, you may recognise in this the reason for some of my
+annoyance that PGP Inc is mislabelling El Gamal as "DH" -- with my
+earlier ideas on this proposal there would have been a _real_ DH.  It
+also gets around objections to do with not being able to decide what
+DH keys are (as they are negotiated not randomly generated directly)
+which Hal raised as a reason why PFS (at least with DH) would disallow
+functionality where key capabilities are included in the public
+communications key encrypted packet, the last time this was discussed.
+Clearly you could work around this restriction if you had to -- just
+include the information in an extra packet encrypted with the
+contained key and some symmetric algoirthm for example, though this
+may limit algorithm choice at least for that packet).
+
+You can use PFS in an asynchronous "where possible" mode for
+non-interactive email transport situations.  That is you would perhaps
+send new communications keys parameters with each message that defines
+in it's key sub-packet preferrences that it is capable of using
+communications only keys, and will be able to handle "recipients comms
+key as part of message".  This might make sense where comms keys are
+being updated too quickly to burden a key server with, or where comms
+keys are not public (an aditional use for Hal's described no-export
+flag for signatures, but here applied to communications keys), but are
+specific to that communicating pair. (For paranoid people who are
+changing comms keys on each receipt, you would need to do this).
+
+As soon as one party has replied to a mail from the other, you can
+switch to forward secrecy.  This would lead to emails such as "hi, can
+you reply to this message please".  These are kind of similar to the
+"hi can you send me your public key" you get back from people when you
+haven't included your public key in your mail to them, and they don't
+have access to a keyserver.
+
+You can also then use this new "communications only" key setup to cope
+with fully interactive email delivery for systems using email
+transports other than standard SMTP.
+
+You should probably overlap sending communications keys if you aren't
+relying on keyservers due to frequency of key update, or for
+convenience for people without access to keyservers, so that the
+person sending you email is less likely to have no current
+communications key for you if you are using keys sent in the message.
+So towards the end of the month (if you had a policy of using
+communications only keys with monthly updates) replacing keys monthly
+start sending the next months communications key also, marked as not
+for use until it's starting date.
+
+(The use of very transient communications keys I think would imply a
+need for two communications keys: you'll need a long term
+communications key which is used for initial non-PFS mail in order to
+set up PFS.)
+
+With the separation of storage and communications keys all the
+architecture has much better security decisions:
+
+- We are able to treat communications with variable amounts of
+  sensitivity, by giving different key expiry time periods to comms only
+  keys.
+
+- We are also able to secure and escrow our long term data storage in
+  mail box folders, or PGP encrypted files without having to live with
+  a GAKware compliant implementation of snoopware.  We can storage
+  escrow keys appropriately without all the name calling and bad PR
+  caused by enraged crypto anarchists, and crypto consultants.
+
+You _know_ it makes sense :-) 
+
+Adam
+-- 
+Now officially an EAR violation...
+Have *you* exported RSA today? --&gt; <A  HREF="http://www.dcs.ex.ac.uk/~aba/rsa/">http://www.dcs.ex.ac.uk/~aba/rsa/</A>
+
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00647.html">PolicyMaker &amp; GAK compliance</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01802.html">Great Products to Improve Yourself and Your Life</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00647.html">PolicyMaker &amp; GAK compliance</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01802.html">Great Products to Improve Yourself and Your Life</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00646"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00646"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

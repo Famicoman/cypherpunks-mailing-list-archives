@@ -1,0 +1,148 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Server congestion -->
+<!--X-From-R13: Bvrgr Pebbxf <Bvrgr.PebbxfNpy.pnz.np.hx> -->
+<!--X-Date: Mon, 28 Aug 95 02:40:29 PDT -->
+<!--X-Message-Id: "swan.cl.cam.:027060:950828094002"@cl.cam.ac.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199508280041.RAA22255@Csli.Stanford.EDU -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Server congestion</TITLE>
+<LINK REV="made" HREF="mailto:Piete.Brooks@cl.cam.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01379.html">Date Prev</A>][<A HREF="msg01415.html">Date Next</A>][<A HREF="msg01364.html">Thread Prev</A>][<A HREF="msg01385.html">Thread Next</A>][<A HREF="index.html#01389">Date Index</A>][<A HREF="threads.html#01389">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Server congestion</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Christian Wettergren &lt;<A HREF="mailto:cwe@Csli.Stanford.EDU">cwe@Csli.Stanford.EDU</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Server congestion</LI>
+<LI><em>From</em>: Piete Brooks &lt;<A HREF="mailto:Piete.Brooks@cl.cam.ac.uk">Piete.Brooks@cl.cam.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 28 Aug 1995 10:39:56 +0100</LI>
+<LI><em>Cc</em>: Piete Brooks &lt;<A HREF="mailto:Piete.Brooks@cl.cam.ac.uk">Piete.Brooks@cl.cam.ac.uk</A>&gt;, <A HREF="mailto:CYPHERPUNKS@toad.com">CYPHERPUNKS@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: Your message of Sun, 27 Aug 1995 17:41:37 -0700. &lt;<A HREF="msg01364.html">199508280041.RAA22255@Csli.Stanford.EDU</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; I talked about acks of acks in a previous message, and I guess is was
+&gt; somewhat vague there.
+
+... and maybe based on a false premis ?
+
+&gt; What happened, according to my uninformed view, during the SSL2
+&gt; challenge was that the server got congested, and had problems with
+&gt; both answering to key allocation requests and ack replies.
+
+Correct.
+
+&gt; I guess that the load of the machine was so high that it lost packets in the
+&gt; input queues.
+
+NO.
+
+The load was very *LOW*.
+The problem was that the single threaded server was spending most of its time
+talking to clients which failed to complete their interactions, and timed out.
+The earlier client "ACK" code didn't hang around long enough, and gave up.
+Later code kept trying ....
+
+&gt; Client -----&gt; UDP/Key allocation req ----&gt; 
+
+Nope -- basic fault here !! TCP not UDP !!
+
+&gt; One problem was that the client believed that the ACK had arrived
+&gt; at the server if it had sent it off, not counting with the possibility
+&gt; of the ACK being lost on the way.
+
+Not the case.
+It uses a reliable bytestream, and the client does not consider a keyspace
+ACKed until it get back the "OK" response from the server.
+This makes it "at least once", but that isn't a problem.
+
+&gt; I instead propose that the Server sends a acknowledgement
+&gt; back to the client once it has received an ACK from a client.
+
+It does, in the reliable bytestream ...
+
+&gt; The client has to handle the case that either the Ack or the
+&gt; Server-ack is lost.
+
+As above -- "at least once" -- it just retries.
+
+&gt; I propose it doesn't retransmit immediately,
+&gt; but rather waits until next time it has to ack something, and 
+&gt; piggybacks the old ack onto the new one.
+
+brclient waits a bit and tries again, before asking for the next.
+
+&gt; If the client is unable to retrieve a block from the server, I suggest
+&gt; it just picks a random block and starts working on it. I may very
+&gt; well not be allocated to someone else, and then the client was able
+&gt; to do something good in the meantime even though it didn't get a
+&gt; proper key alloc. 
+
+Nah.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01385" HREF="msg01385.html">Re: Server congestion</A></STRONG>
+<UL><LI><EM>From:</EM> Christian Wettergren &lt;cwe@Csli.Stanford.EDU&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01364" HREF="msg01364.html">Server congestion</A></STRONG>
+<UL><LI><EM>From:</EM> Christian Wettergren &lt;cwe@Csli.Stanford.EDU&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01379.html">oops, re last message</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01415.html">Re: (Fwd) Re: Law enforcement and PGP ban in Australia</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01364.html">Server congestion</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01385.html">Re: Server congestion</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01389"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01389"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

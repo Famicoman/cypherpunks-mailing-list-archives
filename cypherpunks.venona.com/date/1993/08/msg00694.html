@@ -1,0 +1,223 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Blinding messages -->
+<!--X-From-R13: Yney Zhv Pneehf <xyoneehfNbjyarg.evpr.rqh> -->
+<!--X-Date: Tue, 24 Aug 93 12:46:53 PDT -->
+<!--X-Message-Id: 9308241945.AA20679@flammulated.owlnet.rice.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Blinding messages</TITLE>
+<LINK REV="made" HREF="mailto:klbarrus@owlnet.rice.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00695.html">Date Prev</A>][<A HREF="msg00697.html">Date Next</A>][<A HREF="msg00707.html">Thread Prev</A>][<A HREF="msg00698.html">Thread Next</A>][<A HREF="index.html#00694">Date Index</A>][<A HREF="threads.html#00694">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Blinding messages</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Blinding messages</LI>
+<LI><em>From</em>: Karl Lui Barrus &lt;<A HREF="mailto:klbarrus@owlnet.rice.edu">klbarrus@owlnet.rice.edu</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 24 Aug 93 14:45:01 CDT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Earlier Perry asked for references to blinding methods.  I can provide
+one, but the mathematics is fairly simple and straightforward, so I'll
+just talk about it here.  Any good intro text on number theory, or even
+some crypto books (Denning, Seberry &amp; Peiprzyk) will have all the math
+you need to know.
+
+Conceptually, when you blind a message, nobody else can read it.  A
+property about blinding is that under the right circumstances if another 
+party digitally signs a blinded message, the unblinded message will 
+contain a valid digital signature.
+
+So if Alice blinds the message "I owe Alice $1000" so that it reads (say)
+"a;dfafq)(*&amp;" or whatever, and Bob agrees to sign this message, later
+Alice can unblind the message Bob signed to retrieve the original.  And
+Bob's digital signature will appear on the original, although he didn't
+sign the original directly.
+
+Mathematically, blinding a message means multiplying it by a number (think
+of the message as being a number).  Unblinding is simply dividing the
+original blinding factor out.
+
+One thing protocols that involve signing blinded messages have to watch
+for are messages that you don't really want to sign.  If someone asks
+you to digitally sign a random stream of symbols, remember that what you
+sign may be unblinded to reveal a contract, etc.  Techniques of getting
+around this seem to be cut-and-choose protocols, which I won't get into
+here.
+
+Judy Moore's paper "Protocol Failures in Cryptosystems" - appeared in
+IEEE Proceedings, May 1988, Vol. 76, No.5, and also appears in the big 
+IEEE Crypto book Simmons edited - discusses this as the "Notory Protocol."
+I'll excerpt from her paper:
+
+1) To setup the notary protocol, Alice chooses RSA parameters p, q, e, d
+   She publishes her public key e, and n = pq
+
+Bob now wants to trick Alice into signing a message which says she owes
+him some money.
+
+2) Bob now chooses an arbitrary number x.  He computes y = x^e mod n.
+   e is Alice's public key and everyone knows it.
+
+Bob can now use y (bliding factor) to obtain forgeries on another 
+document.
+
+3) Bob forms the messages he wants, and muliplies in the blinding factor 
+   y.  He calulates m' = ym
+4) Alice agrees to sign a message m' which is total gibberish.  She
+   computes s = m'^d mod n and returns the result s to Bob.
+
+5) Bob then calculates s' = s x^-1.
+
+   A valid signature on m' is m'^d mod n = (ym)^d mod n
+                                         = y^d m^d mod n
+                                         = x m^d mod n
+
+   so all Bob has to do is remove x from what Alice signed and he has
+   m^d mod n, Alice's digital signature on message m.
+
+An example with numbers (I'm currently learning Scheme so I will give
+the Scheme code I used):
+
+Alice chooses p = 43, q = 47, thus n = 2021
+              d = 5, gcd(d,phi(n)) = 1, so e = 773 (* see note below)
+
+Bob chooses x = 314, y = x^e mod n
+                       = 314^773 mod 2021
+                       = (expt-mod 314 773 2021)
+                       = 1271
+
+Bob creates the message m = 99, which means Alice owes him money.
+Bob blinds the message by calculating m' = ym
+                                         = 1271 99
+                                         = (modulo (* 1271 99) 2021)
+                                         = 527
+
+Alice agrees to sign 527, a message which is possible unintelligible.
+She calculates s = m'^d mod n
+                 = 527^5 mod 2021
+                 = (expt-mod 527 5 2021)
+                 = 360
+
+Bob takes Alice's signed message s = 360 and unblinds it.
+He calculates s' = s x^-1
+First he calculates x^-1 = 354 (*see note below)
+Then, s' = 360 364
+         = (modulo (* 360 354) 2021)
+         = 117
+
+As a check, say Alice decides to sign the original message m=99.
+Then, the signed message would be m^d mod n
+                                = 99^5 mod 2021
+                                = 117
+
+So Bob does indeed have a message which is his original message with
+Alice's digital signature on it.  Be more careful next time, Alice.
+
+* Note:
+
+There are two ways I know of to calculate the inverse of a number.
+
+First, x = a^((phi(n)-1) mod n will yeild x, the inverse of a mod n.
+
+But, sharp eyed people will note you need phi(n) to calculate this way
+- - and only Alice knows the factorization of n.  So she can calculate
+e, the inverse of d mod phi(n) as:
+
+e = d^((phi(phi(n))-1) mod phi(n)
+  = 5^(phi(1932)-1) mod 1932
+  = 5^(264-1) mod 1932
+  = 5^263 mod 1932
+  = (expt-mod 5 263 1932)
+  = 773
+
+Now how does Bob calculate the inverse of x mod n?  He does not know
+the factorization of n.
+
+Well, for the purposes of this problem I did now how n factors so I
+used it :-)
+
+BUT, there is a way you can calculate the inverse of a number mod n
+without knowing how n factors.  The algorithm is related to Euclid's,
+the one that you can use to tell if two numberse a relatively prime.
+Essentially, you run through Euclid's forwards, and then in the reverse
+direction, grouping and substituting, and the inverse will pop out.
+
+Once you do it by hand it will be clear, and you won't ever want to do
+it by hand again :-)
+
+If you use Mathematica, it will let you do PowerMod[x, -1, n] to
+calculate the inverse of x mod n.  But Scheme won't since the three
+integers for expt-mod must be positive.
+
+
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a
+
+iQCVAgUBLHpvRoOA7OpLWtYzAQEpfwP/XjhLspMqeXfFeL6GiZ9QNEyZulYx+uWr
+ZgvyaPWwYbZ8PuO/ee4cglR2KydRao7Z/W6KbJo87Ugkts9dZp/tnAHO/PUCpgMf
++IFUaqwCYwUN6r7KQo8pWoj7H55+o7FP5snI9774OFNiKSrwiGaMzXzpta+jPR9U
+cwoYLF+8HSU=
+=zigb
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00695.html">Re: No digital coins (was: Chaum on the wrong foot?)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00697.html">Re: No digital coins (was: Chaum on the wrong foot?)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00707.html">Re: No digital coins (was: Chaum on the wrong foot?)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00698.html">Digital Gold</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00694"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00694"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

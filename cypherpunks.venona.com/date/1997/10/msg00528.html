@@ -1,0 +1,199 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Defeating MITM with Eric's Secure Phone -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Fri, 10 Oct 1997 04:04:30 +0800 -->
+<!--X-Message-Id: 199710091908.UAA00790@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199710091653.LAA14615@email.plnet.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Defeating MITM with Eric's Secure Phone</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00530.html">Date Prev</A>][<A HREF="msg00535.html">Date Next</A>][<A HREF="msg00515.html">Thread Prev</A>][<A HREF="msg00529.html">Thread Next</A>][<A HREF="index.html#00528">Date Index</A>][<A HREF="threads.html#00528">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Defeating MITM with Eric's Secure Phone</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:kelsey@plnet.net">kelsey@plnet.net</A></LI>
+<LI><em>Subject</em>: Re: Defeating MITM with Eric's Secure Phone</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 9 Oct 1997 20:08:15 +0100</LI>
+<LI><em>CC</em>: <A HREF="mailto:cryptography@c2.net">cryptography@c2.net</A>, <A HREF="mailto:cypherpunks@Algebra.COM">cypherpunks@Algebra.COM</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg00515.html">199710091653.LAA14615@email.plnet.net</A>&gt; (kelsey@plnet.net)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+John Kelsey &lt;kelsey@plnet.net&gt; writes:
+&gt; Adam Back &lt;aba@dcs.ex.ac.uk&gt; writes:
+&gt; [computationally infeasible jobs for MITMs]
+&gt; I prefer to work on the more immediately useful problem: How can I
+&gt; secure my use of the (very nicely done) Comsec secure phones using
+&gt; existing infrastructure?  I am concerned with the MITM voice
+&gt; impersonation attack, since that's the easiest attack on the
+&gt; system.
+
+We were discussing this problem before turning to talking about
+automated methods.  I think Eric Blossom suggested this earlier on:
+
+&gt; 1.	Exchange PGP-encrypted e-mail establishing a set of
+&gt; sixteen different words, labeled for 0..f in each direction.
+&gt; Thus:
+&gt; 
+&gt; 0. Dilbert 1. Alpha 2. Cable 3. Swordsman ... f. Marxist
+&gt; 
+&gt; Now, the checksum reading is very hard to spoof.  Suppose I
+&gt; get 0x33f. I say ``My checksum is Swordsman Swordsman
+&gt; Marxist, or 33f.''
+
+It seems like a good solution.  An interesting question might be how
+many times can you use the same table without starting to leak values.
+Perhaps it doesn't matter that much because the MITM can't exactly use
+brute force on the problem otherwise you will know he's there.  He has
+to act non-passively to extract information.  (Presuming the protocol
+exchanges part of the information hashed for the challenge is
+encrypted with the negotiated key).
+
+&gt; Now, the problem with this is that it's too cumbersome.
+
+What would be nice would be able to have information on one sheet of
+paper which you could continue to use for lots of communications,
+without need for calculator, or computer, or more emailed tables.
+
+&gt; The simplest way to do this seems to be to just exchange a
+&gt; six-digit hex value as a one-time password for a given
+&gt; secure phone call.  This is done using PGP or some other
+&gt; mail encryption package, and can legitimately be used to
+&gt; exchange a long list of one-time passwords at once. Then,
+&gt; use Windows' calculator application to add your one-time
+&gt; password to the checksum.  Thus:
+&gt; 
+&gt; 1. I pull up Alice's latest encrypted e-mail, and get
+&gt; today's phone password.
+&gt; 
+&gt; 2. I open the Windows calculator, set it to View/Scientific
+&gt; and hex mode, and type in the password (a six-digit hex
+&gt; number) and ``+.''
+&gt; 
+&gt; 3. I call Alice, say hello, and push the ``SECURE'' button.
+&gt; 
+&gt; 4. I type the six digit hex checksum into my calculator.
+&gt; 
+&gt; 5. I read the first three digits of the result to her.  She
+&gt; reads the next three to me.
+
+I considered this approach (XOR and + function) earlier in this
+thread.  I don't think it works because the functions are commutative.
+(Unless I'm missing some aspect of the system, perhaps the
+interlock... it's a while since I've read the protocols.)
+
+Here's why I think it doesn't work: We have Alice, Mallet and Bob.
+
+Alice &amp; Bob exchange via email password 123456.  The displayed digits
+of the hash of Alice/Mallet's DH parameters are: 222222.  The
+displayed digits of Mallet/Bob's DH parameters are: 333333.
+
+Alice computes 123456 + 222222 = 345678; Alice says to Mallet: "345"
+Bob computes 123546 + 333333 = 456789; Bob says to Mallet: "789"
+
+Mallet recovers the first 3 digits of the passphrase from what Alice
+said:	345 - 222 = 123
+
+Mallet recovers the last 3 digits of the passphrase from what Bob
+said:	789 - 333 = 456
+
+Mallet has recovered the passphrase and can now spoof Alice to Bob and
+Bob to Alice, he says: 456+222 = 678 to Alice, and 456+333 = 789 to
+Bob.
+
+Same story with XOR, only it's harder to compute.
+
+I think you need an encryption function.  It depends on how many times
+you wanted to re-use the passphrase.  The "encryption" function could
+be very weak for one use.  For lots of uses you'd need a real
+encryption function.  Problem is encryption functions aren't typically
+very easy to perform as mental arithmetic exercises; and
+non-programmable calculators don't help much.
+
+The table solution gets around this problem nicely, because it is a
+secure way of using a one time password.  Possibly a relatively secure
+way of re-using that password even, if mallet has to become active to
+obtain information, and gets detected on occasions when he doesn't
+yet have sufficient information.
+
+Adam
+-- 
+Now officially an EAR violation...
+Have *you* exported RSA today? --&gt; <A  HREF="http://www.dcs.ex.ac.uk/~aba/rsa/">http://www.dcs.ex.ac.uk/~aba/rsa/</A>
+
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00529" HREF="msg00529.html">Re: Defeating MITM with Eric's Secure Phone</A></STRONG>
+<UL><LI><EM>From:</EM> Bill Frantz &lt;frantz@netcom.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00550" HREF="msg00550.html">Re: Defeating MITM with Eric's Secure Phone</A></STRONG>
+<UL><LI><EM>From:</EM> Human Gus-Peter &lt;hgp@dev.null&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00515" HREF="msg00515.html">Defeating MITM with Eric's Secure Phone</A></STRONG>
+<UL><LI><EM>From:</EM> "John Kelsey" &lt;kelsey@plnet.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00530.html">Re: Internet Via Electric Lines?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00535.html">Re: EU Rejects GAK</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00515.html">Defeating MITM with Eric's Secure Phone</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00529.html">Re: Defeating MITM with Eric's Secure Phone</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00528"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00528"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

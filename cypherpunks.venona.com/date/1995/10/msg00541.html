@@ -1,0 +1,179 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: FORGED CANCELS of posts on n.a.n&#45;a.m -->
+<!--X-From-R13: qyiNojnyx.qz.pbz (Re. Rvzvgev Hhyvf) -->
+<!--X-Date: Thu, 5 Oct 95 07:36:05 PDT -->
+<!--X-Message-Id: FXyHcD15w165w@bwalk.dm.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 44pmiq$h7t@segfault.monkeys.com -->
+<!--X-Reference: V0BgcD4w165w@bwalk.dm.com -->
+<!--X-Reference: 45040d$8cd@cougar.vut.edu.au -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: FORGED CANCELS of posts on n.a.n-a.m</TITLE>
+<LINK REV="made" HREF="mailto:dlv@bwalk.dm.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00540.html">Date Prev</A>][<A HREF="msg00542.html">Date Next</A>][<A HREF="msg00579.html">Thread Prev</A>][<A HREF="msg00589.html">Thread Next</A>][<A HREF="index.html#00541">Date Index</A>][<A HREF="threads.html#00541">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: FORGED CANCELS of posts on n.a.n-a.m</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: FORGED CANCELS of posts on n.a.n-a.m</LI>
+<LI><em>From</em>: <A HREF="mailto:dlv@bwalk.dm.com">dlv@bwalk.dm.com</A> (Dr. Dimitri Vulis)</LI>
+<LI><em>Date</em>: Thu, 05 Oct 95 07:54:26 EDT</LI>
+<LI><em>Organization</em>: Brighton Beach Boardwalk BBS, Forest Hills, N.Y.</LI>
+<LI><em>References</em>: &lt;44pmiq$h7t@segfault.monkeys.com&gt;, &lt;<A HREF="msg00490.html">V0BgcD4w165w@bwalk.dm.com</A>&gt;, &lt;<A HREF="msg00579.html">45040d$8cd@cougar.vut.edu.au</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+In article &lt;<A HREF="msg00579.html">45040d$8cd@cougar.vut.edu.au</A>&gt;, gerdw@cougar.vut.edu.au (David Gerard) writes:
+
+&gt;One thing that occurs to me: suppose I go to control, collect cancel messages,
+&gt;and build myself a collection of M1's that will work with a given M2?
+&gt;
+&gt;That is, I can't actually invert the hashing function. But if a given
+&gt;hash function is standard, then I can eventually build up a collection of
+&gt;M1s for M2s that will let me cancel quite a few things I may want to.
+
+Good point -- if M1 is known to be small in size (say, a 128-bit MD5 of the
+article body + newsgroups + message-id + date + secret passphrase), then an
+organization with a lot of $$$$$$$ and computing resources (like Co$ or NSA)
+might even try to pre-compute M2 = H(M1) for many possible M1's, sort the
+result by M2, and build a (partial) lookup table of inverted H. This would be a
+humongous table. Would someone bother to do it just to cancel a few Usenet
+messages? Possibly.
+
+But I see an easy fix: change Hujskonen and Franz's original proposal so that
+an article posted with message-id X contains the header "Cancel-lock: M2",
+where M2 is now H(X + M1), not just H(M1). This way, even if two different
+articles happen to share the lock M2, they'll need different keys M1's to be
+cancelled because their unique message-id's are different. A pre-computed table
+of inverse values of H would be useless. To cancel a given X, a brute force
+attacker would have to compute M2 = (X + M1) for all possible M1's. Hopefully,
+the article X will expire naturally long before this can be done. :)
+
+And in article &lt;<A HREF="msg00523.html">9510042317.AA14344@sulphur.osf.org</A>&gt;, Rich Salz &lt;rsalz@osf.org&gt; writes:
+
+&gt;&gt;If the cancel cannot be authenticated (e.g., because the original article lacks
+&gt;&gt;the "Cancel-lock: M2" header, or the cancel lacks the "Cancel-key: M1" header
+&gt;&gt;such that H(M1)=M2), then INN should forward the unauthenticated cancel to one
+&gt;&gt;or more "collection centers" so the author of the original article may be
+&gt;&gt;notified.
+&gt;
+&gt;So if 70% of Usenet follows this scheme a handful of forged cancels can easily
+&gt;cause melt down.
+
+(Thank you for looking at this!)
+
+If 70% of Usenet followed this convention and refused to honor unauthenticated
+cancels and supersedes's, then forged cancels would be much less harmful than
+they are now, and there would be less need to notify the victims and to track
+down the perpetrators.
+
+Perhaps, not _every site should send out notifications. The purpose of getting
+notifications from multiple sites is to compare the Path: header and see where
+it was forged. I suppose notifications from just 5--10 well-positions sites
+would often suffice. But if these sites are well-known, then an attacker might
+put their names in the Path: of the forged cancel, to bypass the notification
+and still propagate the cancel to a lot of other sites.
+
+We can start implementing this scheme gradually, first by patching our posting
+software to insert the "Cancel-lock:/Cancel-Key:" headers, and by running a few
+"watchers" based on Homer Wilson Smith's Lazarus that'll notify the poster when
+an article with a Cancel-lock: header is being cancelled without a matching
+Cancel-Key: -- in all newsgroups, not just in a.r.s. Notifications about
+articles without a "Cancel-Key:" header can be added much later, if ever.
+
+&gt;&gt;Each "collection center" deamon should wake up periodically (say, every hour),
+&gt;&gt;group the collected unauthenticated cancels by message-ids of the cancelled
+&gt;&gt;articles, and e-mail the (distinct) addresses (other than "usenet@*" or
+&gt;&gt;"news@*") mentioned in the "From:", "Sender:", "Authorized:", and
+&gt;&gt;"X-Cancelled-By:" headers, quoting the unauthenticated cancel and the Path's as
+&gt;&gt;seen at many different sites that forwarded the cancels. This way, if the
+&gt;&gt;unauthenticated cancel is indeed forged, its author will see within hours that
+&gt;&gt;it has been fraudulently cancelled _and_ will automatically receive enough
+&gt;&gt;"Path:" samples from all over the world to see where it was posted, by
+&gt;&gt;comparing the "Path:" headers in several forwarded copies.
+&gt;
+&gt;I can post a handful of articles and forge the From line, and create my
+&gt;own Cancel-lock headers by "rolling the dice."  I can then get their mailbox
+&gt;bombed by forging cancels.  A little more complicated then "sendsys-bombing"
+&gt;but not much more so.
+
+Yes -- someone can post an article with random noise in the Cancel-lock:
+header, and it would be impossible to cancel except by NoCeM.
+
+As for mailbombing, one can do it much easier by forging a sendsys in the
+victim's name, or by e-mailing the victim megabytes of junk from a phoney
+"From:" address. This is done, but not too often because the perp is likely to
+be tracked down and beaten up. :) Why would someone use this attack and not
+straight forged sendsys?
+
+One could address this by limiting the number of notifications e-mailed to one
+address or even to one site in a period of time.
+
+---
+
+&lt;a href="<A  HREF="mailto:dlv@bwalk.dm.com">mailto:dlv@bwalk.dm.com</A>"&gt;Dr. Dimitri Vulis&lt;/a&gt;
+Brighton Beach Boardwalk BBS, Forest Hills, N.Y.: +1-718-261-2013, 14.4Kbps
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00490" HREF="msg00490.html">Re: FORGED CANCELS of posts on n.a.n-a.m</A></STRONG>
+<UL><LI><EM>From:</EM> dlv@bwalk.dm.com (Dr. Dimitri Vulis)</LI></UL></LI>
+<LI><STRONG><A NAME="00579" HREF="msg00579.html">Re: FORGED CANCELS of posts on n.a.n-a.m</A></STRONG>
+<UL><LI><EM>From:</EM> gerdw@cougar.vut.edu.au (David Gerard)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00540.html">Re: FORGED CANCELS of posts on n.a.n-a.m</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00542.html">Certificates, Attributes, Web of Trust</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00579.html">Re: FORGED CANCELS of posts on n.a.n-a.m</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00589.html">Re: FORGED CANCELS of posts on n.a.n-a.m</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00541"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00541"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

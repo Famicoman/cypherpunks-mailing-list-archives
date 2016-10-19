@@ -1,0 +1,203 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: RSA has been proved correct -->
+<!--X-From-R13: @nguna Lbbx <ambbxNotn.pbz> -->
+<!--X-Date: Sun, 6 Aug 95 18:51:07 PDT -->
+<!--X-Message-Id: Pine.3.89.9508061931.B8642&#45;0100000@maria.bga.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9508050806.AA22214@ua.MIT.EDU -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: RSA has been proved correct</TITLE>
+<LINK REV="made" HREF="mailto:nzook@bga.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00260.html">Date Prev</A>][<A HREF="msg00264.html">Date Next</A>][<A HREF="msg00245.html">Thread Prev</A>][<A HREF="msg00266.html">Thread Next</A>][<A HREF="index.html#00263">Date Index</A>][<A HREF="threads.html#00263">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: RSA has been proved correct</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:solman@MIT.EDU">solman@MIT.EDU</A></LI>
+<LI><em>Subject</em>: Re: RSA has been proved correct </LI>
+<LI><em>From</em>: Nathan Zook &lt;<A HREF="mailto:nzook@bga.com">nzook@bga.com</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 6 Aug 1995 20:50:52 -0500 (CDT)</LI>
+<LI><em>Cc</em>: "Timothy C. May" &lt;<A HREF="mailto:tcmay@sensemedia.net">tcmay@sensemedia.net</A>&gt;, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00245.html">9508050806.AA22214@ua.MIT.EDU</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+On Sat, 5 Aug 1995 solman@MIT.EDU wrote:
+
+&gt; Tim quoth:
+&gt; 
+&gt; |&gt; I was reading the logic programming/theorem proving chapter of my new
+&gt; |&gt; Russell and Norvig book on AI, and came across something I once knew about
+&gt; |&gt; but had forgotten: the Boyer-Moore theorem prover was applied to the RSA
+&gt; |&gt; algorithm and the correctness of it was verified. Correctness in the sense
+&gt; |&gt; of showing that outputs match formal specs, for all inputs.
+&gt; 
+&gt; |&gt; The paper is: Boyer, R.S and Moore, J.S. (1984). Proof checking the RSA
+&gt; |&gt; public key encryption algorithm, "American Mathematical Monthly,"
+&gt; |&gt; 91(3):181-189.
+&gt; 
+&gt; Given the enormous difficulty of ensuring security in a world of
+&gt; ubiquitous distributed computing, I'm as big a fan as any of formal
+&gt; methods. But Tim's post hammers home the big fault of formal methods:
+&gt; the possibility that people will come to rely upon them. I have
+&gt; paranoid visions of people finally accepting formal methods in a decade
+&gt; or so, and then becoming dependent on them... forgeting the enormous
+&gt; potential for error that will always exist in such systems.
+&gt; 
+&gt; If somebody told me that intentionally letting a few violent criminals
+&gt; free each year is a good idea because it would keep me on my toes, I
+&gt; would think that person is an idiot. But I'm not entirely convinced that
+&gt; it is a bad idea to avoid formal methods because they could breed
+&gt; complacency.
+&gt; 
+&gt; Cheers,
+&gt; 
+&gt; JWS
+
+The problem is that these "formal methods" are themselves unproved and, 
+in the general sense, unprovable.  Using a computer program to verify RSA 
+is like using number theory to verify some proof in set theory--you may 
+succede, but so what?  The RSA algorithm works because of some basic (and 
+not quite so basic) facts of number theory.  Number theory is assumed in 
+the design of computers, of processors, of operating systems, and of 
+programs.
+
+To put the question succinctly, would you trust a theorem "prover" to 
+verify its own accuracy?
+
+
+The RSA algorithm:
+
+Select primes p and q  and an exponenet e, such that gcd(e,p-1) = 
+gcd(e,q-1) = 1.  (In practice, we would want log_2(q) &lt;&lt; e &gt;&gt; log_2(p).
+Publish e and pq.  Find d_1, d_2 such that d_1 and d_2 are inverses of e 
+in Z_p-1 and Z_q-1 respectively.  A message Y (from 0 to pq-1) is 
+transformed into X = Y^e mod qp.  When you recieve a message X, let X_1 = 
+X mod p and X_2 = X mod q.  Let Y_1 = X_1^d_1 mod p and Y_2 = X_2^d_2 mod 
+q.  Use the Chinese Remainder Theorem to find Z (from 0 to pq-1) such 
+that Z = Y_1 mod p1 and Z = Y_2 mod p2.
+
+Theorem: Z = Y.
+Pf:
+Let p_1 = p and p_2 = q
+a) Observe that in F_p_i, (Y^e)^d_i = Y^(e*d_i) = Y^(r*(p-1)+1) = 
+        Y^((p-1)*r) * Y= (Y^(p-1))^r * Y = 1^r * Y = Y.
+
+b)  There exist p,q,e triples.
+  If we let the order of our selection be p,e,q then we observe that we are
+  free in our selection of p, and that our selection of e is not very 
+  constrained.  ((p-1/)2 +- 1 being obvious examples).  We then observe 
+  than any arithmatic progression of integers which does not obviously 
+  consist entirely of composites must contain an infinite number of 
+  primes, and observe that the condition that gcd(q-1,e) = 1 defines just 
+  such a progression.
+  
+c) The d's can be found
+  See Euclid's Algorithm
+
+c) Z_pq is the (ring) direct sum of Z_p and Z_q
+
+QED
+
+(Observe that the Chinese Remainder Theorem works on arbitrary ring direct 
+sums.)
+
+
+Why this excercise?  Because not _one_ of the cited theorems is modern.  
+The only thing in this proof unknown to Fermat, Galios, Euclid, and the 
+Middle Age Chinese is that bit about arithmatic progressions and primes, 
+which may have been known to Fermat or Euclid.  If I am informed that a 
+theorem "prover" has "verified" this theorem, then I am led to believe 
+that the "prover" is not obviously broken.  My confidence (as an 
+algorithm--this is a separate issue from decryption resistance) in RSA has 
+_NOTHING_ to do with what some theorem "prover" may or may not have to 
+say about it.  Such statements serve only to inform that these "provers" 
+are broken (if they don't like it), or that they concievably do "verify" 
+proofs (if they do).
+
+OTOH, the theorems and axiom systems corresponding to these theorem 
+"provers" are very complex, and quite subtle at points.  Plug in the 
+lastest attempt at Fermat's Last (as opposed to his Little) theorem, and 
+tell me if its good.  Do the classification of finite groups.  I know, 
+there is a 125-page attempt at the Poincare' conjecture.  Try it.  If 
+these "provers" find heretofore unobserved flaws, THEN I'll concede that 
+they would be useful tools in mathematics--in uncovering flaws.  But they 
+_still_ don't "prove" that these theorems are correct.  They only 
+convince themselves.  But convincing me that I should believe them 
+involves convincing me that there has been no failure in the program--at 
+any of the levels I've previously discussed.  And, by the way, this is why 
+the general mathematical community is still suspicious of the 4-color 
+theorem.  In fact, the orginal "proof" contained a number of flaws.  
+All discovered were all easily patched, but the fact that they existed in 
+the first place means that we have no reason to believe that something 
+subtle is yet to be discovered.
+
+Nathan
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00266" HREF="msg00266.html">Re: RSA has been proved correct</A></STRONG>
+<UL><LI><EM>From:</EM> Ray Cromwell &lt;rjc@clark.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00245" HREF="msg00245.html">Re: RSA has been proved correct</A></STRONG>
+<UL><LI><EM>From:</EM> solman@MIT.EDU</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00260.html">Encrypted internet traffic to Singapore??</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00264.html">FC's Typs? (NewsClip)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00245.html">Re: RSA has been proved correct</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00266.html">Re: RSA has been proved correct</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00263"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00263"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

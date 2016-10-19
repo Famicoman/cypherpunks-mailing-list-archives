@@ -1,0 +1,211 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Security of andrew.cmu.edu anon&#45;server? -->
+<!--X-From-R13: [nggurj X Uuvb <zt5a+Nnaqerj.pzh.rqh> -->
+<!--X-Date: Sun, 27 Feb 94 11:20:30 PST -->
+<!--X-Message-Id: whQAfJC00awNAXsUpX@andrew.cmu.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199402270043.QAA29512@jobe.shell.portal.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Security of andrew.cmu.edu anon-server?</TITLE>
+<LINK REV="made" HREF="mailto:mg5n+@andrew.cmu.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01458.html">Date Prev</A>][<A HREF="msg01463.html">Date Next</A>][<A HREF="msg01438.html">Thread Prev</A>][<A HREF="msg01439.html">Thread Next</A>][<A HREF="index.html#01460">Date Index</A>][<A HREF="threads.html#01460">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Security of andrew.cmu.edu anon-server?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Security of andrew.cmu.edu anon-server?</LI>
+<LI><em>From</em>: Matthew J Ghio &lt;<A HREF="mailto:mg5n%2B@andrew.cmu.edu">mg5n+@andrew.cmu.edu</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 27 Feb 1994 11:31:17 -0500 (EST)</LI>
+<LI><em>Cc</em>: Matthew J Ghio &lt;<A HREF="mailto:mg5n%2B@andrew.cmu.edu">mg5n+@andrew.cmu.edu</A>&gt;</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01438.html">199402270043.QAA29512@jobe.shell.portal.com</A>&gt;</LI>
+<LI><em>References</em>: &lt;<A HREF="msg01438.html">199402270043.QAA29512@jobe.shell.portal.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Anonymous asked:
+
+&gt; What kind of encryption is the anonymous contact system at andrew
+&gt; using?  I think someone said that it used a home-brew cipher.  How
+&gt; secure might such a system be against cryptanalysis (or just brute
+&gt; force key searches?)  Or has it been changed to use something like
+&gt; DES or IDEA?  (In the former case, DES, it might not be completely
+&gt; secure, unless you used 3DES or something.)   If someone could
+&gt; break the code, they could find out _EVERYONE'S_ mail address
+&gt; that ever posted using an anon address from that remailer...
+
+I assume from this statement that you haven't looked at my code.  Send
+me email and I'll give you a copy...  or maybe someone that I gave it to
+could put it up on an FTP site, so you can get it anonymously.
+
+Yes, the cipher is of my own design.  First off, I can assure you that a
+brute-force keysearch will not work.  The cipher employs three 36
+element substitution arrays, which gives a total of 3x36! possible keys,
+or over 10^42.  DES has about 7.2 x 10^16 possible keys and IDEA about
+10^38.
+
+It might be possible to mount some sort of cryptanalysis attack on the
+cipher.  In my design I tried quite hard to eliminate all such
+possibilities.  But, first, let me explain how the encryption works.
+
+The plaintext is converted to an ascii representation using only the
+letters a thru z and the numbers 0 to 9.  (Until the actual cyphertext
+output, this is represented internally using the numbers 0 thru 35.) 
+Random padding is then added, preceeded by a legnth byte to tell the
+decryptor how much padding to remove.  I currently have it set to use 3
+to 5 bytes of random padding, although I could change this at any time. 
+(If you request multiple addresses, they will be of different legnths.) 
+This is then encrypted.  The cipher consists of 6 rounds of encryption.
+
+In each encryption round, two of the three substitution tables are used.
+ Each round uses a different combination of substitution tables.  The
+encryption begins at the start of the data, reading in each byte (which
+only takes on the values from 0 to 35), adding to it the previous
+encrypted byte, modulo 36, and encrypting it with the first substitution
+array.  In this way, feedback from the cipher is used to increase the
+entropy of the output.  Since each byte is a function of the previous
+byte, which is a function of the byte before it, each byte is indirectly
+a function of all previous bytes.  Since the first byte has no previous
+byte, it is encrypted using only the substitution array.  To eliminate
+that weak point, the resulting output is encrypted again, using the
+second substitution array, in reverse; that is, starting at the end and
+going to the beginning.  In this way, every complete round encrypts each
+byte such that it is directly a function of at least one other byte, and
+indirectly a function of the entire string.
+
+Altering one byte of the input of a single round causes the entire
+output to change.  However, altering two bytes will only change most of
+the output to one of 36 possibilities, since only one byte of data is
+used for the cipher feedback.  This is the reason that multiple rounds
+are used.  Since there are 6 rounds used, but at most 5 bytes of random
+padding, the six rounds are sufficient to completely distribute the
+randomness of the padding throughout the entire string.  This eliminates
+the possibility that an attacker might gain some information about the
+cipher by finding matching portions of different encrypted strings which
+had different random padding.
+
+One possible technique for shortening a keysearch might be possible if a
+particular encrypted string was not a function of every byte of the key
+(substitution arrays).  In such an attack, the cracker would only need
+to guess certain relevant elements of your substitution array.  This
+would save them from having to attempt all possible keys.  However, this
+attack is not feasible because of the large number of encryption
+operations used.  For each byte, there are 12 substitution operations
+performed, four on each substitution array.  With a 30 character string
+(most are around 30 or 40, some are longer) that adds up to 360
+substitutions.  The probability that any given element will not be
+chosen in a particular substitution, is 35/36, or 97.2%.  This means
+that with 360 substitutions, the probablity that any particular element
+won't be chosen is (.972)^360=.000039  The possibility that one of the
+array elements would not be chosen is 108 times that amount (since there
+are 108 array elements), or 0.42%  Not a statistically significant
+amount, considering that if your attacker had a plaintext in that .42%,
+it would only require him not to have to guess one element of the
+substitution array - but the last element of a substitution is always
+obvious anyway - it's the only remaining element that was not yet used! 
+So this doesn't help the attacker at all.  The only thing that would
+help the attacker is if there were two unused elements in the same
+substitution array, in which case, he would only have to try half as
+many keys.  The chances of that happening, however, are one-third of
+.42% of .42%.  So .0006% of the time the key search can be reduced from
+10^42 to 5x10^41.  I'm certainly not losing any sleep over that
+possibility.
+Things are a bit easier with shorter strings.  For example, with a 20
+character string, the possibility that two elements in the same array
+would not be used is increased to .52%.  That's still not statistically
+significant tho.  In order to gain any real advantage from this (greater
+than 50% chance that you could reduce your keysearch), you'd have to
+have a string of less than 15 characters or so.  However - the shortest
+possible email address (such as y@z.com) would take 10 characters after
+being converted to ascii format, plus the minimum of three bytes of
+random padding, the legnth byte, and two checksum bytes, which comes out
+to an absolute minimum of 16 ascii bytes.  So I really don't see how
+someone could gain any significant advantage here.
+
+One final possibility is that if an attacker could guess the
+substitutions for the first 5 rounds, and the first half of the sixth
+round, the substitutions in the final encryption pass in the last round
+could be solved for.  This doesn't seem to be much of a problem,
+however, since reducing the keysearch to a cipher with eleven encryption
+passes instead of twelve doesn't reduce the complexity by any
+significant amount.
+
+To further frustrate cryptanalysis, after the third, fourth, and fifth
+rounds, a transpositional encryption operation is performed.  The
+checksum bytes are inserted following the first and second rounds.  In
+this way, the checksum is hidden in the encrypted data and is not
+obvious to the attacker.
+
+I'd be very interested to hear from anyone who believes they have a
+serious cryptanalysis method which could possibly reduce the security of
+this cypher by a significant amount.
+
+I think the fact that this is run on a multi-user unix system is a far
+greater problem than any cryptanalysis effort.  If a hacker could gain
+access to the file server here, or got my account password, they could
+steal the encryption keys.  There isn't much I can do about that, except
+to encourage more people to run this type of system.  In that way,
+addresses could be chained thru more than one remailer.  If the security
+at one site was compromised, it would not reveal the entire path to the
+recipient's address.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01438" HREF="msg01438.html">Security of andrew.cmu.edu anon-server?</A></STRONG>
+<UL><LI><EM>From:</EM> nobody@shell.portal.com</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01458.html">standard for stegonography?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01463.html">anonymous mail</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01438.html">Security of andrew.cmu.edu anon-server?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01439.html">[julf@penet.fi: Re: VIRTUAL meeting needed]</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01460"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01460"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

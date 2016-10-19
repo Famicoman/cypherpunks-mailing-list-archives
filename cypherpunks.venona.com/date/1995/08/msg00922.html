@@ -1,0 +1,182 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: SSL Challenge #2 -->
+<!--X-From-R13: Wna Ubyqoret <vntbyqorNpnyhz.pfpyho.hjngreybb.pn> -->
+<!--X-Date: Sat, 19 Aug 95 13:42:32 PDT -->
+<!--X-Message-Id: 199508192042.QAA29044@calum.csclub.uwaterloo.ca -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: SSL Challenge #2</TITLE>
+<LINK REV="made" HREF="mailto:iagoldbe@calum.csclub.uwaterloo.ca">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00910.html">Date Prev</A>][<A HREF="msg00923.html">Date Next</A>][<A HREF="msg00900.html">Thread Prev</A>][<A HREF="msg00918.html">Thread Next</A>][<A HREF="index.html#00922">Date Index</A>][<A HREF="threads.html#00922">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: SSL Challenge #2</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: SSL Challenge #2</LI>
+<LI><em>From</em>: Ian Goldberg &lt;<A HREF="mailto:iagoldbe@calum.csclub.uwaterloo.ca">iagoldbe@calum.csclub.uwaterloo.ca</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 19 Aug 1995 16:42:15 -0400 (EDT)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Is there a standard way we're supposed to get together to divvy up the
+keyspace?  Not knowing of any, I'll just announce that I'm working
+on those keys that start with "a", from 0xafffffffff down to 0xa000000000.
+
+I seem to be getting about 200000 to 400000 keys/sec, so it should take
+about another 2 days (assuming the machines stay up that long...).
+
+If anyone wants to join in, feel free.  Get original source from
+<A  HREF="http://pauillac.inria.fr/~doligez/ssl/slave.c">http://pauillac.inria.fr/~doligez/ssl/slave.c</A> (Damien's code),
+and patch it with the diff at the bottom.  Note: I don't think there's
+any crypto in the diff, and the rest of the sources are in France, so this
+should be OK with the spooks. But you never know...
+
+Compile the patched source on anything you can get, and run
+
+./slave -t -d csclub.uwaterloo.ca 9114
+
+The IP is 129.97.134.11 if you need it.  You can add -v or -V for more
+verbosity, and -n num if you have num processors.
+
+   - Ian "REALLY hoping I didn't screw up the code..."
+
+--- dist/slave.c	Thu Aug 17 15:19:52 1995
++++ slave.c	Sat Aug 19 13:54:25 1995
+@@ -297,18 +297,18 @@
+   register int i;
+ 
+   /* set up the block of data */
+-#define x0 0xb894890e
+-#define x1 0x2eb90ebf
+-  x2 = 0x00074450 + ((~stpoint &lt;&lt; 4) &amp; 0xff000000);
+-#define x4 0xa784af30
+-#define x5 0x6913f879
+-#define x6 0x539b2520
+-#define x7 0x75ae60a0
+-#define x8 0x90ebbf51
+-#define x9 0xe10c2cf8
+-#define x10 0x11ac18ea
+-#define x11 0x2114834c
+-#define x12 0x000080b6
++#define x0 0x9109c0fb
++#define x1 0x15a61060
++  x2 = 0x00368f3f + ((~stpoint &lt;&lt; 4) &amp; 0xff000000);
++#define x4 0x7bea0730
++#define x5 0x61eb659d
++#define x6 0x7441bbfa
++#define x7 0x5f3a45e8
++#define x8 0x38e6d5c6
++#define x9 0xa1a88cd6
++#define x10 0xf82ecaae
++#define x11 0x0296e2c8
++#define x12 0x000080a4
+ #define x13 0x00000000
+ #define x14 0x00000188
+ #define x15 0x00000000
+@@ -506,7 +506,7 @@
+   int w;
+   
+   strcpy (progname, "worker");
+-  nice (40);
++  nice (5);
+   while (1){
+     sock = open_socket ();
+     if (sock == -1){
+@@ -547,7 +547,11 @@
+ 
+   Verb1 ("SIGCHLD received\n");
+   while (1){
++#if 0
+     pid = wait3 ((void *) &amp;chldstat, WNOHANG, NULL);
++#else
++    pid = waitpid ((pid_t)-1, (void *) &amp;chldstat, WNOHANG);
++#endif
+     if (pid &lt;= 0) break;
+     Verb2 ("got child: %ld\n", pid);
+     for (i = 0; i &lt; nproc; i++){
+@@ -610,6 +614,7 @@
+     }
+   }
+   if (!ignore_ttys){    /* then look at ttys */
++#if 0
+     d = opendir ("/dev");
+     if (d == NULL) fatal ("opendir");
+     while (1){
+@@ -629,6 +634,7 @@
+       }
+     }
+     if (errno) fatal ("readdir");
++#endif
+   }
+ }
+ 
+@@ -901,7 +907,7 @@
+   if (entry == NULL) fatal ("gethostbyname");
+   memcpy (&amp;serverhost, entry, sizeof (serverhost));
+ 
+-  sanity_check ();
++  /* sanity_check (); */
+   speed_test ();
+   init_devices ();
+   supervisor ();
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00918" HREF="msg00918.html">Re: SSL Challenge #2</A></STRONG>
+<UL><LI><EM>From:</EM> Checkered Daemon &lt;cdaemon@goblin.punk.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00910.html">Re: So, NSA can break 64-bit keys</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00923.html">Spooks and Hackers Inc</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00900.html">SSL Challenge #2</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00918.html">Re: SSL Challenge #2</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00922"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00922"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

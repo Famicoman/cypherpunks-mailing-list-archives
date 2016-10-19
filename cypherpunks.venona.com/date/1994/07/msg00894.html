@@ -1,0 +1,185 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Why triple encryption instead of split+encrypt? -->
+<!--X-From-R13: Xbua Rbhprhe <wbuaqbNzvpebfbsg.pbz> -->
+<!--X-Date: Mon, 18 Jul 94 11:03:17 PDT -->
+<!--X-Message-Id: 9407181803.AA19912@netmail2.microsoft.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Why triple encryption instead of split+encrypt?</TITLE>
+<LINK REV="made" HREF="mailto:johndo@microsoft.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00916.html">Date Prev</A>][<A HREF="msg00893.html">Date Next</A>][<A HREF="msg00735.html">Thread Prev</A>][<A HREF="msg00926.html">Thread Next</A>][<A HREF="index.html#00894">Date Index</A>][<A HREF="threads.html#00894">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Why triple encryption instead of split+encrypt?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Why triple encryption instead of split+encrypt?</LI>
+<LI><em>From</em>: John Douceur &lt;<A HREF="mailto:johndo@microsoft.com">johndo@microsoft.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 18 Jul 94 10:57:50 PDT</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+
+&gt;From:  &lt;solman@MIT.EDU&gt;
+&gt;Date: Friday, July 15, 1994 2:45AM
+
+&gt;Although I mentioned "true" secret splitting at the end of my post, I was
+&gt;refering to non-redundant secret splitting in most of the post. That is,
+&gt;for each 128 bit block, you split it into two 64 bit blocks. Obviously you
+&gt;have to make sure that in the inverse of the split, each bit of the 128 is
+&gt;dependent on multiple bits in both 64 bit parts.
+
+I read this as something like the following:
+
+int munge[16] = {0x0, 0xE, 0xD, 0x3, 0xB, 0x5, 0x6, 0x8,
+                 0x7, 0x9, 0xA, 0x4, 0xC, 0x2, 0x1, 0xF};
+
+for (int i = 0; i &lt; num_blocks/2; i++)
+  {
+  unsigned int s0 = source[2*i], s1 = source[2*i+1];
+  unsigned int d0 = 0, d1 = 0;
+  for (int j = 0; j &lt; 8; j++)    // 32-bit ints assumed
+    {
+    d0 |= munge[(s0&gt;&gt;(4*j)) &amp; 0xF] &lt;&lt; (4*j);
+    d1 |= munge[(s1&gt;&gt;(4*j)) &amp; 0xF] &lt;&lt; (4*j);
+    }
+  dest0[i] = (d1 &amp; 0xAAAAAAAA) | (d0 &amp; 0x55555555);
+  dest1[i] = (d1 &amp; 0x55555555) | (d0 &amp; 0xAAAAAAAA);
+  }
+
+This fragment splits alternating bits from each contiguous pair of 64-bit
+blocks in the source[] array into two blocks, each of which is placed
+into one of the two dest[] arrays.  The inner loop first makes each bit
+in the pre-split data dependent on the three other bits in the same
+nibble.  Is this consistent with your suggestion?
+
+&gt;This is obviously not as secure as traditional secret splitting, but you
+&gt;don't need it to be because this isn't a threshold scheme. You just need
+&gt;to guarantee that knowing one half does not allow you to reassemble the
+&gt;other half.
+
+I believe these claims hold true for the above code.
+
+&gt;I am claiming that you can allow the crypt analyst to remove
+&gt;half of the entropy from the plaintext (did I phrase that right? probably
+&gt;not :( ) and the other half will still require successful cryptanalysis
+&gt;of DES and since you can't tell if you're right until you get both halves,
+&gt;meet in the middle does not work.
+
+Yes and no.  Meet-in-the-middle does not work, per se, or more precisely
+has no applicability.  Recall that meet-in-the-middle is a method of
+extending a known-plaintext attack on a single encryption to multiple
+encryptions by means of an enormous amount of memory to hold intermediate
+results.  In the split+encrypt proposal (as I have implemented it above),
+a known-plaintext attack can be applied directly, with only twice as much
+computation as that needed for a single encryption, and no need for large
+amounts of memory.
+
+The cryptanalytic approach is simple:
+
+     1) Split the known plaintext, P, with the splitting algorithm, into
+        P0 and P1.
+
+     2) Apply known-plaintext attack to P0 and C0 to determine key K0.
+
+     3) Apply known-plaintext attack to P1 and C1 to determine key K1.
+
+&gt;So, is a secret splitting algorithm that does NOT increase redundancy
+&gt;followed by DES with different keys on both halves as secure as triple
+&gt;DES?
+
+No.  It is not even as secure as double DES, since cryptanalysis of the
+former has the same computational complexity as the latter, but without
+the extreme memory requirements of meet-in-the-middle.
+
+&gt;I believe so, but I would like your opinions on the issue before
+&gt;I consider implementing this.
+
+MHO.
+
+&gt;If it works it would be especially nice
+&gt;because it allows arbitrary extension of keysize without substantially
+&gt;increasing the time required for computation.
+
+A noble goal.  It would also have allowed multi-threaded crypto code on
+multiprocessor machines to perform the separate encryptions in parallel.
+
+&gt;I have a hunch that if I'm wrong, its because the time required to do secure
+&gt;non-redundant secret splitting is as large as the time I'm saving.
+
+&gt;JWS
+
+JD
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6
+
+iQCVAgUBLirAX0GHwsdH+oN9AQH9uQQAswJhWwuB57y/V2ETz0epmFCKqk9JAwLC
+WWF9P5sNoOIHDK0soACURcvRCAWnUMJnXspbQ+0B2nQa7aWFLgD9lbm9obvbZREP
+9q1dAqjK1yKxu1qxunk3wsdc7tyDMJzdOwGnpUOR1Gs7hqDOtVbs3wG9napzBY4h
+2ndBT/BtJec=
+=QDW9
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00926" HREF="msg00926.html">Re: Why triple encryption instead of split+encrypt?</A></STRONG>
+<UL><LI><EM>From:</EM> solman@MIT.EDU</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00916.html">Re: Expose on North's Arm Smuggling</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00893.html">Card Playing Protocol?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00735.html">Re: Why triple encryption instead of split+encrypt?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00926.html">Re: Why triple encryption instead of split+encrypt?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00894"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00894"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

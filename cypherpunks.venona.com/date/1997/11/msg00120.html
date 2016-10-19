@@ -1,0 +1,166 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: the one Unbreakable crypto scheme. -->
+<!--X-From-R13: ohernh42 Oabalzbhf Drznvyre <abobqlNohernh42.zy.bet> -->
+<!--X-Date: Mon, 3 Nov 1997 15:53:03 +0800 -->
+<!--X-Message-Id: II3U8FPHjnZhca9XSBZfUg==@bureau42.ml.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>the one Unbreakable crypto scheme.</TITLE>
+<LINK REV="made" HREF="mailto:nobody@bureau42.ml.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00154.html">Date Prev</A>][<A HREF="msg00117.html">Date Next</A>][<A HREF="msg00296.html">Thread Prev</A>][<A HREF="msg00117.html">Thread Next</A>][<A HREF="index.html#00120">Date Index</A>][<A HREF="threads.html#00120">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>the one Unbreakable crypto scheme.</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>Subject</em>: the one Unbreakable crypto scheme.</LI>
+<LI><em>From</em>: bureau42 Anonymous Remailer &lt;<A HREF="mailto:nobody@bureau42.ml.org">nobody@bureau42.ml.org</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 3 Nov 1997 05:40:17 GMT</LI>
+<LI><em>Comments</em>: This message did not originate from the Sender address above.It was remailed automatically by anonymizing remailer software.Please report problems or inappropriate use to theremailer administrator at &lt;remailer-admin@bureau42.ml.org&gt;.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+/* Generic xor handler.
+
+   With no args, xors stdin against 0xFF to stdout.  A single argument is a
+   file to read xor-bytes out of.  Any zero in the xor-bytes array is treated
+   as the end; if you need to xor against a string that *includes* zeros,
+   you're on your own.
+
+   *Hobbit*, 960208 */
+
+#include &lt;stdio.h&gt;
+#include &lt;fcntl.h&gt;
+
+char buf[8192];
+char bytes[256];
+char * py;
+
+/* do the xor, in place.  Uses global ptr "py" to maintain "bytes" state */
+xorb (buf, len)
+  char * buf;
+  int len;
+{
+  register int x;
+  register char * pb;
+
+  pb = buf;
+  x = len;
+  while (x &gt; 0) {
+    *pb = (*pb ^ *py);
+    pb++;
+    py++;
+    if (! *py)
+      py = bytes;
+    x--;
+  }
+} /* xorb */
+
+/* blah */
+main (argc, argv)
+  int argc;
+  char ** argv;
+{
+  register int x = 0;
+  register int y;
+
+/* manually preload; xor-with-0xFF is all too common */
+  memset (bytes, 0, sizeof (bytes));
+  bytes[0] = 0xff;
+
+/* if file named in any arg, reload from that */
+#ifdef O_BINARY				/* DOS shit... */
+  x = setmode (0, O_BINARY);		/* make stdin raw */
+  if (x &lt; 0) {
+    fprintf (stderr, "stdin binary setmode oops: %d\n", x);
+    exit (1);
+  }
+  x = setmode (1, O_BINARY);		/* make stdout raw */
+  if (x &lt; 0) {
+    fprintf (stderr, "stdout binary setmode oops: %d\n", x);
+    exit (1);
+  }
+#endif /* O_BINARY */
+  
+  if (argv[1])
+#ifdef O_BINARY
+    x = open (argv[1], O_RDONLY | O_BINARY);
+#else
+    x = open (argv[1], O_RDONLY);
+#endif
+  if (x &gt; 0) {
+    read (x, bytes, 250);		/* nothin' fancy here */
+    close (x);
+  }
+  py = bytes;
+  x = 1;
+  while (x &gt; 0) {
+    x = read (0, buf, sizeof (buf));
+    if (x &lt;= 0)
+      break;
+    xorb (buf, x);
+    y = write (1, buf, x);
+    if (y &lt;= 0)
+      exit (1);
+  }
+  exit (0);
+}
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00154.html">Re: S/MIME</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00117.html">PGP 50i Beta 8a for Unix.</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00296.html">Re: Smartcards - Drivers Licenses in New Jersey</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00117.html">PGP 50i Beta 8a for Unix.</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00120"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00120"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

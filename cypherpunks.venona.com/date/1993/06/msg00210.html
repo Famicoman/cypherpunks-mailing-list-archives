@@ -1,0 +1,145 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: random access into an encrypted file? -->
+<!--X-From-R13: @vpxrl [npRbanyq <v6g4Nwhcvgre.fha.pfq.hao.pn> -->
+<!--X-Date: Sun, 6 Jun 93 10:31:26 PDT -->
+<!--X-Message-Id: Pine.3.05.9306061357.C11011&#45;c100000@jupiter -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9306061150.AA07264@alumni.cco.caltech.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: random access into an encrypted file?</TITLE>
+<LINK REV="made" HREF="mailto:i6t4@jupiter.sun.csd.unb.ca">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00214.html">Date Prev</A>][<A HREF="msg00209.html">Date Next</A>][<A HREF="msg00205.html">Thread Prev</A>][<A HREF="msg00207.html">Thread Next</A>][<A HREF="index.html#00210">Date Index</A>][<A HREF="threads.html#00210">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: random access into an encrypted file?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Mark Edward Zimmerman &lt;<A HREF="mailto:zimm@alumni.cco.caltech.edu">zimm@alumni.cco.caltech.edu</A>&gt;</LI>
+<LI><em>Subject</em>: Re: random access into an encrypted file?</LI>
+<LI><em>From</em>: Nickey MacDonald &lt;<A HREF="mailto:i6t4@jupiter.sun.csd.unb.ca">i6t4@jupiter.sun.csd.unb.ca</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 6 Jun 1993 13:51:00 -0300 (ADT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00205.html">9306061150.AA07264@alumni.cco.caltech.edu</A>&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Mark:
+
+There are two possible ways to encrypt the file as they go to the disk,
+and I think which you choose would determine what problems an fseek would
+encounter...
+
+As I understand the conversation so far, the talk is to make the encrypted
+disk software a device driver.  Imagine what a typical device driver must
+do.  The operating system wishes to see all files as long strings
+(streams) of bytes and the disk drive wishes to see all "files" as a
+collection of sectors (of a fixed size).  The device driver converts a
+request for file position 'x' to a request to locate sector 'y'.  Even if
+you only want one byte from the file, a whole sector gets read in.
+
+So heres where you have to decide which way you are going to encrypt the
+file.  If you are going to encrypt each sector in isolation, then when the
+operating system requests a certain file location, that maps to a certain
+sector which is read in, decrypted (in isolation from the rest of the
+sectors) and then a particular byte is readily available.
+
+If however you use a different scheme whereby the whole file is encrypted
+as a single entity (which would be difficult to impossible to do using the
+device driver metaphor, but there are other ways to wedge encryption into
+the system) then presumably you need to decrypt from the very beginning
+any time you need to seek into the file, which is what I think you were
+worried about.
+
+If you are familiar with data compression products, then here is a
+comparison of the two techniques:  If you use something like stacker,
+which is implemented as a device driver, then you have access to any byte
+of any file at any time.  If you use something like pklite (the .exe
+compressor) then you can never seek into the file (to load an overlay for
+example).  You have to read the whole file and decompress it in order
+access the bytes individually as uncompressed data.
+
+(That is not a perfect metaphor, as pklite files are self decompressing
+when they execute, not when the operating system accesses them, but it
+does serve to show the limitations imposed my higher level file management.)
+
+---
+Nick MacDonald               | NMD on IRC
+i6t4@jupiter.sun.csd.unb.ca  | PGP 2.1 Public key available via finger
+
+
+On Sun, 6 Jun 1993, Mark Edward Zimmerman wrote:
+
+&gt; I'm enjoying the discussion of encrypting file systems, but have a
+&gt; perhaps-naive question: can the methods recently proposed here work
+&gt; for fast "random" access of bytes from the middle of a possibly-large
+&gt; file?
+
+&gt; Specifically, over the years I have written some free-text
+&gt; information-retrieval programs which build complete inverted indices
+&gt; to every word in a chosen text file (which may be many megabytes long,
+&gt; limited by disk space, not by RAM) --- and in order to fetch and
+&gt; display text quickly from an arbitrary point in the file, my programs
+&gt; do a lot of fseek() operations.  If a file is encrypted under various
+&gt; schemes, I wonder how long it would take to fetch byte 100,000,000?
+&gt; Could it cause me some performance problems?  :-)
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00205" HREF="msg00205.html">random access into an encrypted file?</A></STRONG>
+<UL><LI><EM>From:</EM> zimm@alumni.cco.caltech.edu (Mark Edward Zimmerman)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00214.html">Re: CryptoStacker</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00209.html">My Poll.</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00205.html">random access into an encrypted file?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00207.html">random access into an encrypted file?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00210"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00210"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

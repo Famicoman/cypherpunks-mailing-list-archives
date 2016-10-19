@@ -1,0 +1,204 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: De Re ASN.1 and encoding rules ( was Re: X.509,...) -->
+<!--X-From-R13: Evzba Ecreb <frfNgvccre.bvg.hap.rqh> -->
+<!--X-Date: Mon, 2 Oct 95 17:11:33 PDT -->
+<!--X-Message-Id: Pine.SOL.3.91.951002141516.6137B&#45;100000@chivalry -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9510021511.AA10057@tis.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>De Re ASN.1 and encoding rules ( was Re: X.509,...)</TITLE>
+<LINK REV="made" HREF="mailto:ses@tipper.oit.unc.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00384.html">Date Prev</A>][<A HREF="msg00392.html">Date Next</A>][<A HREF="msg00361.html">Thread Prev</A>][<A HREF="msg00438.html">Thread Next</A>][<A HREF="index.html#00381">Date Index</A>][<A HREF="threads.html#00381">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>De Re ASN.1 and encoding rules ( was Re: X.509,...)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Carl Ellison &lt;<A HREF="mailto:cme@TIS.COM">cme@TIS.COM</A>&gt;</LI>
+<LI><em>Subject</em>: De Re ASN.1 and encoding rules ( was Re: X.509,...)</LI>
+<LI><em>From</em>: Simon Spero &lt;<A HREF="mailto:ses@tipper.oit.unc.edu">ses@tipper.oit.unc.edu</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 2 Oct 1995 17:13:21 -0700 (PDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00361.html">9510021511.AA10057@tis.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+In his message Carl make several statements, some of which I agree with,
+and some which I disagree with. Since I'm a protocol wonk, and since I've
+been doing ASN.1 and PER/BER stuff recently, I'd like to respond to some
+of his points. 
+
+(I spent most of last week off work with a nasty cold,
+semi-comatose on the couch, smothered in vapo-rub, surrounded by the 93
+specs for ASN.1, BER/DER, and PER, and with nothing on TV but the OJ trial.
+What a choice :-)
+
+[A lot of this is leading up to a big rant about the truly ghastly 
+packet formats given to us by STT, which I've found loosens more mucus 
+than a gallon of cough syrup, and with much the same affect on your 
+mental state :-)]
+
+I'm not going to be defending BER (BrainDamaged Encoding Rules), because, 
+lets face it, they suck. I'm also not going to be defending X.500, 
+because, to a first approximation it completely sucks too. 
+
+In this message I'm just going to address the issue of the inherent
+in-efficiency- I'll address the rest in a follow-up message, most
+specifically the claim that making mashalling and de-mashalling hard on
+the implementor is a good thing. 
+
+It's hard to speak to the issue of code size, since the ISODE compilers,
+which are frequently used as a benchmark in this area are so goddam
+awful. Even the most naive compilers will generally generate code orders
+of magnitude smaller. Instead, we'll take a look at bits on the wire,
+and compare the struct dump to what can be done by a 20th century
+compiler using a smart set of encoding rules (PER - the packed encoding
+rules). 
+
+[ as a side note, I recently wrote some code that had to parse and 
+process X.509 certificates - this was for my SSL Keep-Away proxy (it 
+needed to crunch the certificate, look for hostname matches in any CN
+values, and possible convert the DN into RFC1485 text format). The 
+source was only a few K. I was using C++ though (and this didn't hurt 
+for once)]
+
+
+Lets use 3DES as our example. We'll start with a naive specification:
+
+--
+LongLong ::= OCTET STRING (SIZE(8)) -- a long long is 8 bytes, er, long
+DesKey ::= LongLong
+ThreeDes ::= SEQUENCE {
+	IV LongLong,
+	K1 DesKey,
+	K2 DesKey,
+	K3 DesKey
+}
+--
+Lets apply the packed encoding rules to this: 
+ThreeDes is a SEQUENCE. It has no optional components, so no bits are added
+to the encoding. 
+The first item, IV, is an OCTET STRING of fixed length 8 bytes. Since the 
+length is fixed, no length is encoded - the 8 bytes of the IV are 
+appended to the encoding. The same applies to each of the des keys.
+ 
+Thus, we have a bits on the wire total of 32 bytes. The same as in the 
+hand crafted encoding. The encoding and decoding are then implemented as 
+memcpys. If more information is known about the alignment and position 
+in memory  of the fields, and of the key within the buffer, these memcpys can 
+be coaleced- this is a local optimisation, rather than a requirement that 
+every interoperable implementation use the same language with the same 
+compiler.
+
+Now, this example is pretty simple, but with not much thought, we can set 
+about improving it to generate fewer bits on the wire. I'll avoid the 
+obvious kludge, which is to strip of the parity bytes on each key to save 
+three bytes - instead we'll look to the big wins. 
+
+There are several different ways of using 3des which can help us reduce
+the size of the encodings in some cases. The first thing we can do is
+support variable size IVs (like in rfc1851). We'll restrict the IV to be
+either 1 or 2 32 bit chunks. Then we can add extra support for 1des mode
+of 3des where all the keys are the same. 
+
+Here's the new definitions:
+
+--
+Long ::= OCTET STRING (SIZE(4))
+
+ThreeDes ::=SEQUENCE {
+	IV SEQUENCE OF (SIZE(1..2) LONG,
+	Key1 DesKey,
+	Key2 DesKey OPTIONAL,
+	Key3 DesKey OPTIONAL
+}
+--
+Now lets see how the PER treat this value. 
+The first thing we encode is the sequence. Since this sequence has 
+optional components, we stick one bit onto the output stream for each 
+field - if the bit is one, the optional element is present - otherwise, 
+it ain't.  Since there are two optional components, we need two bits.
+
+Next, we need to encode the IV. Since this field is of variable length, 
+we do need to encode a length this time. The length is constrainted to 
+be between 1 and 2 - a range of 1- the minimum number of bits needed to 
+encode this is 1, and so a 1 bit field is appended to the encoding. 
+
+Now we encode the longs in the IV; because these values are OCTET 
+STRINGS, we need to align ourself on an octet boundary, if we're not 
+there already. Once we've emitted any necessary pad bits, we encode the 
+IV as the indicated number of 4 byte values. After that we encode the 
+first key as described above, and if the second and third key are 
+present, we encode those as well. 
+
+If there is room for 3 bits in the byte preceding this encoding (a
+likely occurence, especially if the application supports several
+different key types (RC4 &amp; IDEA, etc)), this encoding is still 32 bytes
+in the worst case, and 12 in the best case. 
+
+To be continued... (unless I get flamed off the list)
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00438" HREF="msg00438.html">Re: De Re ASN.1 and encoding rules ( was Re: X.509,...)</A></STRONG>
+<UL><LI><EM>From:</EM> Carl Ellison &lt;cme@TIS.COM&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00361" HREF="msg00361.html">Re: X.509, S/MIME, and evolution of PGP</A></STRONG>
+<UL><LI><EM>From:</EM> Carl Ellison &lt;cme@TIS.COM&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00384.html">Re: Certificate proposal &amp; X509 clarifications</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00392.html">Re: `Hack Microsoft' challenge is NYT Computer News Daily's top story</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00361.html">Re: X.509, S/MIME, and evolution of PGP</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00438.html">Re: De Re ASN.1 and encoding rules ( was Re: X.509,...)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00381"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00381"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

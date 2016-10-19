@@ -1,0 +1,259 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: pseudo random: THE CODE -->
+<!--X-From-R13: znehvfuvNargpbz.pbz -->
+<!--X-Date: Mon, 19 Feb 1996 04:03:03 +0800 -->
+<!--X-Message-Id: Pine.3.89.9602181140.A871&#45;0100000@netcom18 -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199602181409.WAA01614@ratbox.rattus.uwa.edu.au -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>pseudo random: THE CODE</TITLE>
+<LINK REV="made" HREF="mailto:maruishi@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01512.html">Date Prev</A>][<A HREF="msg01521.html">Date Next</A>][<A HREF="msg01545.html">Thread Prev</A>][<A HREF="msg01594.html">Thread Next</A>][<A HREF="index.html#01509">Date Index</A>][<A HREF="threads.html#01509">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>pseudo random: THE CODE</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:packrat@tartarus.uwa.edu.au">packrat@tartarus.uwa.edu.au</A></LI>
+<LI><em>Subject</em>: pseudo random: THE CODE</LI>
+<LI><em>From</em>: <A HREF="mailto:maruishi@netcom.com">maruishi@netcom.com</A></LI>
+<LI><em>Date</em>: Sun, 18 Feb 1996 11:41:17 -0800 (PST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01545.html">199602181409.WAA01614@ratbox.rattus.uwa.edu.au</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+On Sun, 18 Feb 1996, Bruce Murphy wrote:
+
+&gt; In message &lt;<A HREF="msg01430.html">199602172002.MAA09152@netcom20.netcom.com</A>&gt;, 
+&gt;   maruishi@netcom.com wrote:
+&gt; &gt; 
+&gt; &gt; I was trying to think of a way to come up with true random numbers...
+&gt; &gt; And knowing a bit of UNIX socket TCP/IP programming I made a small little
+&gt; &gt; program that generates random numbers by measuring the mili-second timing ies
+&gt; &gt;  a TCP packet to bounce back, from another network. 
+&gt; &gt;   My program simply send some data to port 7 (echo port) of a network on an i
+&gt; &gt; nternal list. Then timing it, randomly picks a different network to send to. 
+&gt; 
+&gt; Interesting idea. Trends may be externally visible, You would probably
+&gt; want to normalize it, and you would find that there was quite a few
+&gt; deterministic elements of network load -&gt; delay.
+&gt; 
+&gt; Oh, did I mention clock granularity?
+&gt; 
+&gt; In short you really aren't going to get 'random numbers' from such a
+&gt; scheme, but that's not to say you couldn't have fun playing with it,
+&gt; you might even find some use for the ways of calculating immediate
+&gt; network load around a node. Especially with regard to interception of
+&gt; packets and allowing for time discrepancies whilst doing so.
+&gt; 
+&gt; Altogether off topic, but could maybe be developed into an idea with,
+&gt; maybe a 30% change of being Perrygrammed. Keep working.
+&gt; 
+&gt; &lt;invisible to perry&gt;
+&gt; Bounce me the code, could be interesting
+&gt; &lt;/invisible to perry&gt;
+&gt; 
+&gt; --
+&gt; Packrat (BSc/BE;COSO;Wombat Admin)
+&gt; Nihil illegitemi carborvndvm.
+&gt; 
+Here is the code. Its pretty quick and dirty.
+
+#include &lt;sys/types.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;netinet/in.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;time.h&gt;
+#include &lt;netdb.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/time.h&gt;
+#include &lt;time.h&gt;
+
+#define NET_NUM 1/*change this to the number of networks in
+				the list below******************************/
+struct timezone tz;
+struct sockaddr_in addr;
+unsigned int bits;
+
+main(int argc, char **argv)
+{
+struct timeval tv;
+register FILE *fin, *key, *nets;
+int sock, c, dt, i, net;
+unsigned char *packet;
+unsigned char ch;
+
+if(argc != 3)
+{
+printf("Usage: %s [key.file.path] [number of bits in key]\n", argv[0]);
+exit(1);
+} 
+		if((key = fopen(argv[1], "wb")) == NULL)
+		{
+			perror("file open");
+			exit(1);
+		}
+net = 1;
+packet = (unsigned char *)malloc(16);/*you can of course change this value*/
+memset(packet, "X", 16);
+bits = atoi(argv[2]);
+bits = bits / 8; /*how many bytes?*/
+	for(i = 0; i&lt;bits; i++)
+	{
+		sock = con(getn(net));/*Make a connection and return the 
+socket.*/
+		if((fin = fdopen(sock, "r")) == NULL)
+		{
+			perror("fdopen");
+			close(sock);
+			exit(1);
+		}
+		(void) gettimeofday(&amp;tv, &amp;tz);
+sendto(sock,packet, 16, 0, (struct sockaddr *) &amp;addr,sizeof(struct 
+sockaddr));
+		write(sock, "\r\n", 2);
+		while ((c = getc(fin)) != '\n') ;
+		dt = deltaT(&amp;tv);
+		close(sock);
+		fclose(fin);
+		ch = dt % 255;
+		fputc(ch, key);
+		net = dt % NET_NUM;
+	}/*for*/
+}
+
+int con(char *where)
+{
+struct sockaddr_in addr;
+struct hostent *host_;
+register FILE *fin, *fp;
+int sock, c, dt;
+char *packet;
+unsigned char ch;
+
+(void) bzero((char *)&amp;addr, sizeof(struct sockaddr_in));
+	addr.sin_addr.s_addr = inet_addr(where);
+	if((int)addr.sin_addr.s_addr == -1)
+	{
+			host_ = gethostbyname(where);
+		if (host_ != NULL)
+			bcopy(host_-&gt;h_addr, (char *)&amp;addr.sin_addr, 
+host_-&gt;h_length);
+		else
+			{
+			printf("Host not found.\n");
+			exit(1);
+			}
+	}
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(7);
+		
+		sock = socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
+		if (sock &lt; 0) {
+			fprintf(stderr,"error: socket() failed\n");
+			perror("socket");
+			return;
+		}
+	if(connect(sock, (struct sockaddr*) &amp;addr, sizeof(addr))&lt;0)
+	{
+		close(sock);
+		fprintf(stderr, "socket connection error\n");
+		perror("connection");
+		exit(1);
+	}
+	return sock;
+}
+
+/**************put your network list down here************/
+char *getn(int num)
+{
+char *nets[] = 
+	{
+	"127.0.0.1"
+	};
+return nets[num];
+}
+
+/*This part is taken from traceroute.*/
+deltaT(tp)
+struct timeval *tp;
+{
+	struct timeval tv;
+
+	(void) gettimeofday(&amp;tv, &amp;tz);
+	tvsub(&amp;tv, tp);
+	return (tv.tv_sec*1000 + (tv.tv_usec + 500)/1000);
+}
+
+tvsub(out, in)
+register struct timeval *out, *in;
+{
+	if ((out-&gt;tv_usec -= in-&gt;tv_usec) &lt; 0)   {
+		out-&gt;tv_sec--;
+		out-&gt;tv_usec += 1000000;
+	}
+	out-&gt;tv_sec -= in-&gt;tv_sec;
+}
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01545" HREF="msg01545.html">Re: True random numbers</A></STRONG>
+<UL><LI><EM>From:</EM> Bruce Murphy &lt;packrat@ratbox.rattus.uwa.edu.au&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01512.html">Off-topic, but pertinent...</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01521.html">Re: A Cyberspace Independence Refutation</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01545.html">Re: True random numbers</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01594.html">Re: True random numbers</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01509"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01509"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

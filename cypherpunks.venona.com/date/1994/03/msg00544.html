@@ -1,0 +1,297 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: The blind anon&#45;server -->
+<!--X-From-R13: Enzrre <fnzrreNfbqn.orexryrl.rqh> -->
+<!--X-Date: Sun, 13 Mar 94 14:38:39 PST -->
+<!--X-Message-Id: 199403132238.OAA18638@soda.berkeley.edu -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>The blind anon-server</TITLE>
+<LINK REV="made" HREF="mailto:sameer@soda.berkeley.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00550.html">Date Prev</A>][<A HREF="msg00551.html">Date Next</A>][<A HREF="msg00550.html">Thread Prev</A>][<A HREF="msg00551.html">Thread Next</A>][<A HREF="index.html#00544">Date Index</A>][<A HREF="threads.html#00544">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>The blind anon-server</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: The blind anon-server</LI>
+<LI><em>From</em>: Sameer &lt;<A HREF="mailto:sameer@soda.berkeley.edu">sameer@soda.berkeley.edu</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 13 Mar 1994 14:38:24 -0800 (PST)</LI>
+<LI><em>Pgp-Strong-Print</em>: 3C AE E4 00 C2 6A 81 FF  49 4E EE 0C CD CD 1D 80</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+file://soda.berkeley.edu/pub/cypherpunks/remailer/blind-server.docs
+
+	This server is running in testing mode.
+	Please contact Sameer if you'd like to help test it.
+
+
+---------- The Blind Anon-Server ----------
+
+by Sameer Parekh &lt;sameer@soda.berkeley.edu&gt; Copyright 1994
+
+
+Introduction
+
+	I hatched up the Blind Anon Server because of Eric Hughes's
+comments about the safety in ignorance. I wanted to run an anon
+server, maybe similar to Julf's remailer, but I did *not* want to know
+the connection between anon-ids and real IDs. I still wanted it to be
+easy to use so that someone who wanted to send mail to an anonymous
+person need only send it to a standard mail address, instead of using
+Hal's remailer return address block, which is an incredible pain to
+use.
+	The system I have hatched up is relatively secure. If you take
+the proper steps to secure your identity from me, even if I were
+keeping complete logs, I would still know nothing of your true
+identity and if my records were subpoenaed, I could freely hand over
+the contents of my records without any worry that the privacy of my
+users will be violated.
+	The system requires all commands to be pgp signed. Thus you
+will create a public/private keypair for your anonymous identity, and
+all administrative commands to the list regarding this identity must
+be signed by that key. You can send list commands from *any* address--
+an anon remailer, a friend's address, Julf's remailer, whatever.. and
+as long as it is signed by your identity's key, all will be well.
+
+Setup
+	First you have to create your alias on the anonymous
+server. Creating the alias is easy, but setting it up to work right
+takes a bit of effort and bookkeeping on your part. (Maybe I'll write
+a client which can take care of all the bookkeeping.)
+	Create a pgp keypair with a User ID of the form "Psuedonym
+&lt;alias@sitename&gt;". Send your public key to
+admin@sitename with the subject line, "addkey". This
+will create for you an anonymous id which can be accessed via
+"alias@sitename". You should only send one key to the
+server in any single addkey request.
+	You have to choose an account name which hasn't been used
+before. In order to get the list of all account names which have been
+used and are not available, send a message with the subject "sendused
+address" to admin@sitename and the list of
+unavailable names will be sent to address, with the body of your request
+tacked on to the top, so you can use a remailer for the "address"
+and the body can be an encrypted mailing block-- you need not
+reveal your identity to me in any case.
+
+	Starting an account gives you 100 credits.
+	Now if you would like to send a message to someone from 
+your newly formed alias, you can send a signed message to the 
+administration address (admin@sitename) with the "mailmessage" 
+command. For example:
+
+::mailmessage recipient
+Subject:  here's the plans to the stealth bomber
+Keywords: bomber
+
+	Here's the plans...
+--END OF MESSAGE--
+
+	The message will be sent out from sitename just as if you
+had sent it out using a standard mail program from sitename.
+
+	Then comes the more complex part. You have to tell my
+anonserver how mail to your alias will actually get to you. There are
+various levels of security which you can use. Because the remailernet
+is not very reliable, the idea is that you setup a number of paths
+which mail can get to you through, so that if one path goes down you
+can still use the other paths to get mail. You can either configure it
+so that mail to you goes through every path (for reliability with less
+security) or one path chosen at random (more secure but less
+reliable).
+	To add a path to your list of paths, you must send a signed
+message to the list, with the lines
+
+::addpath firsthop
+PATH INFORMATION GOES HERE
+--END OF PATH--
+
+	The firsthop is the first hop along the path between my anon
+server and you. It *can* be your address, in which case there is a
+good deal of reliability, but you get absolutely no good security. The
+"path information" is what gets tacked onto the top of the body before
+the message gets sent to the first hop. Suppose your firsthop was
+Hal's remailer, hfinney@shell.portal.com.. You would have something like:
+
+::addpath hfinney@shell.portal.com
+::
+Encrypted: PGP
+
+-----BEGIN PGP MESSAGE-----
+Version: 2.3a
+
+hEwCKlkQ745WINUBAfwPrO+z9LMBz7boyyC7gUqX/QCEZkXmJCeZYoskgtH5qqbi
+y4mYUL5a0ApbzrhPs8ULkPnW2c4Pfr1AfYSSgvrzpgAAAEvJtPOuQsW8IVQfl+iW
+CAr2gd5jax+t75qbux5U/RRxlbsq4cOeGrO/i/6Km6m71Vsdj0rquEQBvREnXxdj
+81YsBM9QlFNxQAB8rrQ=
+=Ylli
+-----END PGP MESSAGE-----
+--END OF PATH--
+
+	That pgp message is encrypted for Hal's remailer. When Hal's remailer gets the message, it will have this block on the front of the body. Hal's remailer can then decrypt it.. Maybe on the inside of this block you can put:
+
+::
+Anon-Send-To: &lt;yourrealaddress&gt;
+
+	So then there's only one remailer on the chain between
+myserver and your real address. For more security you can embed
+*another* hop to another remailer with another encrypted address
+block. This can continue for as long as you want. The longer the path,
+the more secure, but the less reliable.
+
+	Once the path has been added, you will be sent mail (through
+the anon server) encrypted with your key (all mail to your alias will
+be sent out encrypted with your key) with the pathnumber that your
+command created. Store this path number in a safe place, because you
+will need to use it when you test all your paths for reliability.
+	You can create multiple paths in this fashion. The remailer
+defaults to "spray" mode-- this means that mail to your alias will be
+sent through *each* of your paths. This adds reliability at the
+expense of security. (It makes traffic analysis easier.)
+	If you would like to turn off spray mode, send a command to
+admin@sitename:
+
+::randmode
+
+	To turn spray mode on:
+
+::spraymode
+
+
+	You can actually use this spray mode for more than just an
+anon-server. If you'd like to create a mailing list, you can generate
+a keypair, distribute to everyone on the mailing list the secret key,
+and everyone can send into the anon server a path to themselves. Using
+spray mode, mail to the address will go out to every path. This of
+course means that anyone can subscribe or unsubscribe (Removing paths
+is described below) people to/from the list.
+
+The Credit Scheme
+
+	When you startup an account, you get 100 credits. When
+mail is sent out along one of the paths, credit is deducted from the
+account-- 1 credit per 512 bytes of traffic. Note that if you are in
+spray mode credits are deducted for *every* path which is active for
+your alias.
+	If your account does not have enough credit, when a message
+comes in you will get mail detailing the size of the message that was
+lost and the amount of credits you have in your account. (Size is
+listed in 512 byte blocks)
+
+Removing paths
+
+	If a certain path which you have active flakes out and becomes
+ineffective, you need some way of turning that path off so you're not
+paying for it in spray mode, and so you don't lose mail in random
+mode. That's what the disablepath command is for. To run the
+disablepath command you simply send the command (signed, as always) to
+admin@sitename:
+
+::disablepath pathnumber
+
+	Pathnumber, here, is the number of the path which was assigned
+when you created that path. Hence it is useful for you to keep good
+records of your active and disabled paths.
+	It is possible to reenable a path once it has been
+disabled. In order to do this you need to remember the path number
+*and* the remailer that it's associated with. To recover a path you
+just send:
+
+::recoverpath firsthop pathnum
+
+	And the path with the number pathnum is reactivated, with the
+firsthop that you give it in the recover command.
+
+
+Path Verification
+
+	You will likely want to keep tabs such that you know when a
+given path flakes out on you. For this reaon the "regping" option is
+available. This command lets you tell the system how often you want
+the anon-server to send a message through every path of yours, with
+the pathnumber in the message (encrypted, of course) so that you can
+keep tabs on which paths are flaking out on you.
+	To set your ping frequency, use the regping command:
+
+::regping frequency
+
+	Where frequency can be none, hourly, daily, or
+weekly. Remember that you are still being charged for these
+testpings. The system defaults to weekly.
+	To get a list of all your active paths, use the command
+"showpaths".  This command will send out a listing of the 
+pathnumber and first hop of each of your active paths:
+
+::showpaths
+
+
+Defeating Traffic Analysis
+
+	The system works in concert with remail@sitename, which does
+the work to defeat traffic analysis. All mail to each path is first
+sent through remail@sitename for added difficulty in traffic analysis.
+
+	remail@sitename is a standard cypherpunks remailer with PGP
+with a few added features. All outgoing mail is not delivered immediately
+upon receipt. Outgoing messages are stored in a pool until five minutes
+after each hour, when all messages in the pool are delivered in a random
+order, ignoring the order in which they came in.
+	Every minute there is also a chance that a random uuencoded 
+message is injected into the remailernet. Each message injected into
+the remailer net is sent through a random path of the remailers in
+the remailernet, usually between five and 20 hops.
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00550.html">Cypher??</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00551.html">Barlow v. Denning on AOL (OFFICIAL)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00550.html">Cypher??</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00551.html">Barlow v. Denning on AOL (OFFICIAL)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00544"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00544"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

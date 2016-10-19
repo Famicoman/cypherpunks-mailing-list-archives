@@ -1,0 +1,163 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: spam detector algorithm? -->
+<!--X-From-R13: Uert Pebvyrf <tertNvqrngu.tbyqraorne.pbz> -->
+<!--X-Date: Mon, 9 Oct 95 19:38:07 PDT -->
+<!--X-Message-Id: 199510100222.AA06590@ideath.goldenbear.com -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>spam detector algorithm?</TITLE>
+<LINK REV="made" HREF="mailto:greg@ideath.goldenbear.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00849.html">Date Prev</A>][<A HREF="msg00853.html">Date Next</A>][<A HREF="msg00995.html">Thread Prev</A>][<A HREF="msg00949.html">Thread Next</A>][<A HREF="index.html#00845">Date Index</A>][<A HREF="threads.html#00845">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>spam detector algorithm?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: spam detector algorithm?</LI>
+<LI><em>From</em>: Greg Broiles &lt;<A HREF="mailto:greg@ideath.goldenbear.com">greg@ideath.goldenbear.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 9 Oct 1995 19:22:36 -0700 (PDT)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+
+I've been mulling over algorithmic/computational ways to spot spams
+for some time now. I think I might've come up with a way to represent
+messages (and compare representations) that would be useful to remailer
+operators who don't want to let spams (where "spam" == many messages with
+identical or very similar content) through their remailers. Any such 
+technique will really only be useful at the last remailer in a chain, at
+least until people start sending encrypted spams (and there doesn't seem to
+be so much incentive for sending those). 
+
+My proposed method is this: break the body of a message down into a list of
+words (with their frequencies). Eliminate words in that list which aren't in 
+the "standard dictionary" (which ideally will contain many of the words used
+in the messages but doesn't need to have all of them). Alphabetize the list
+of words which remain.  Plot a point in 3d space for each word in that list
+where its X coordinate is its position in the alphabetized list, its Y
+coordinate is its position in the dictionary, and its Z coordinate is its
+frequency (of appearance in the original text). This should produce a curve 
+which "describes" the original text; messages which use many of the same
+words as the original (and don't use any new words) and have similar usage
+counts should produce similar curves. 
+
+My assumption (which needs some testing) is that even moderately intelligent
+auto-spams (e.g., which assemble canned sentences into paragraphs or canned
+paragraphs into messages) are going to be similar enough that they'll
+eventually generate similar curves as other messages - the order in which
+the words appear doesn't matter (and isn't preserved). I'm also assuming
+that adding enough words to change the curve's shape would make the
+resulting messages nonsensical or wierd enough that they're unlikely to
+be useful for people who want their spams to get read. Evildoers solely
+interested in generating volume without coherence can just quote 
+libertarian/objectivist texts (ha, ha, just a joke for all of you people 
+who keep slamming "commies") or pick words/characters at random. 
+
+I'm assuming - and this may be an erroneous assumption - that it's feasible
+to algorithmically describe and compare curves/lines in 3d space. My math
+is weak and spotty, but I think that's college-level (high-school, even?)
+math. It seems like one might compare equations which describe the curves for
+similarity (e.g., one curve might be x=2y+1 (in 2d space) and another might be
+x=2y+1.2, where "y=10" initially for each), and also compare the areas 
+demarcated by the lines for similarity. My reason for including word frequency
+as a third dimension is to dampen the effect of an intelligent spammer 
+throwing in a few early "A" words (e.g., "aardvark abcess absolute") or "Z"
+words to skew the curve.
+
+Any thoughts about this? Interesting? Stupid? Like I said, my math is weak. 
+My intention is to try to cobble up a 2d version of this to see how it runs
+but I thought I'd see if anyone can point out why it can't work, or if it's
+useful enough that someone with a better math background than I've got 
+wants to take this idea somewhere better. 
+
+One side effect to the deployment of spam detectors may be that the remailer
+pinging services will need to move to using encrypted packets. It'd be 
+possible for the remailer operators to identify and specially handle 
+reliability measuring packets but that seems broken. Ideally, they should be
+indistinguishable from ordinary remailer messages. At least until money is
+involved, nobody's likely to give them special treatment - but even relatively
+small charges for remailing would make it more attractive for a remailer
+operator to try to skew the results of the pinging services so as to direct
+more traffic to themselves (my remailer recently hit Raph's Top Three again
+and that always brings a big traffic hit - it'll probably drop out again
+pretty soon and things'll be slow again. If I was getting $.10 for every
+message, though, I might care more about keeping it in the top 3.) My
+initial plan would be to include code in a spam detector which simply
+MD5's messages which don't seem to have identifiable words, and watches for
+a repeat of those hashes in, say, the last 100 messages seen; this would
+force someone who wants to send an encrypted spam (or uses a spam-detecting
+remailer to reach a non-detecting remailer) from encrypting once and sending
+1000 times; they'd have to encrypt 1000 times to send 1000 times, which may
+be enough of a performance drain on them to make spamming less attractive. 
+My impression is (speak up if I'm wrong) that requiring encryption for the
+ping packets wouldn't be an enormous burden on the pinging services because
+the new generation of software sends fewer pinging packets such that the
+CPU time required isn't an issue. 
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBMHnYyn3YhjZY3fMNAQFnAgP/fBEaa7SObeu9wyqMCO6OW8rEraOtmxRG
+ynWeZVVvrtHgwuaS0NlhU4IMHVj/Laks4n6bbEbNRktfl/F5+HBvova52JQhoUkb
+7EjEsRh57OwXHuVxJl/zODIH+qNd9lZP6+Tv7Vk2/SXVj3oRFD1jIZBUx6rBBZvf
+ZOaimDcSemw=
+=LjFV
+-----END PGP SIGNATURE-----
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00849.html">Re: Certificate proposal</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00853.html">Re: Crypto's Role in Evil?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00995.html">Re: Man in the Middle Revisited (but not for the last time)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00949.html">Re: spam detector algorithm?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00845"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00845"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

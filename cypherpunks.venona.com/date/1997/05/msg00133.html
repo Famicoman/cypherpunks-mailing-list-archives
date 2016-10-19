@@ -1,0 +1,371 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: chained stego &#38; interfaces to remailers -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Sat, 3 May 1997 05:28:50 +0800 -->
+<!--X-Message-Id: 199705022113.WAA01710@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>chained stego &amp; interfaces to remailers</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00113.html">Date Prev</A>][<A HREF="msg00122.html">Date Next</A>][<A HREF="msg00116.html">Thread Prev</A>][<A HREF="msg00126.html">Thread Next</A>][<A HREF="index.html#00133">Date Index</A>][<A HREF="threads.html#00133">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>chained stego &amp; interfaces to remailers</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>Subject</em>: chained stego &amp; interfaces to remailers</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 2 May 1997 22:13:44 +0100</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@algebra.com">owner-cypherpunks@algebra.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Introduction
+
+(Skip down to "Chained Stego" if this intro is obvious for you)
+
+Some users are in countries where crypto is illegal, and would still
+like the ability to communicate with others on topics which are
+considered illegal in their countries (an example being documenting
+civil rights abuses).
+
+For them using encryption is not an option unless they combine with
+steganography.
+
+Also in countries where using crypto is legal, people still would like
+to have the ability to discuss topics which are considered illegal in
+their country (an example exporting cryptographic code, perhaps)
+
+For these users they do have the option of using encryption.  However
+for some serious users of crypto, they may wish to hide the fact that
+they are sending encrypted communications to anyone at all, as well as
+hiding _who_ they are communicating with via mixmaster remailers, and
+hiding the contents of their communications via the use of encryption.
+Using remailers and using encryption shows up under traffic analysis
+even in freer countries, and if you were using steganography, you
+would be above suspicion, apparently never having sent an encrypted
+message at all, or at least not having sent one during the time in
+question.
+
+A useful capability to address the needs of these classes of users
+would be to be able to send messages to a remailer by
+steganographically encoding them in publically published material,
+Examples being: messages posted to USENET, messages posted to mailing
+lists, material made available on web pages (text, images, audio
+files), CUSeeMe video streams, etc.
+
+Such a system would allow a person in a country where crypto is
+outlawed to participate anonymously in discussions in the remaining
+free parts of the world without appearing to be using cryptography.
+
+The simple approach is to set up stego to remailer gateways which scan
+newsgroups and mailing lists.  (It might be a useful to integrate this
+function into the Eternity server, as it is already doing quite a bit
+of scanning of newsgroups, and scanning newsgroups is relatively
+expensive, so we may as well scan for multiple message types while we
+are scanning).
+
+So, to send an anonymous message, a person PGP encrypts their message,
+and manipulates the encrypted message to remove the statistical
+properties identifying it as a PGP message (by removing
+"-----BEGIN..." headers, the fixed PGP formatting inside that, and the
+bias caused by the use of RSA), PGP stealth version 2.x would be
+suitable for this purpose.
+
+Next a suitable steganographic encoding is required.  A simple method
+would be perhaps an in-your-face approach, to include a randomly
+distributed, randomly changing .sig:
+
+==
+Use a random number, go to jail, so lock me up already.
+QGRjcy5leC5hYy51az4gKEhpZ2ggU2VjdXJpdHkpiQCVAgUQMli+7B98EdWB2LS9
+AQFF0gQAjiAOPPCs7s0VCHoFI2IWMEcAeQInmnl2p+6rpsvIxjX1v3wBqqstgBu5
+aCLY9Uns+iKjzcnt5DTj6NPhJ8EOlefwgHUssiBLTsw7tOvT9fQwcIXOE5ikGP7j
+RObTq3a2Vtz4/O/YgN0KQnWcqTDuadeP17cJ2bbaWJpZiGDyWGSJARUDBRAySOsk
+
+The stego remailer gateway has to be able to put back together the
+multiple parts in the correct sequence.  The Date: field from the post
+would be enough information to allow this.
+
+
+Chained Stego
+
+However there is another problem: the remailer gateway knows the
+identity of the stego users.  The stego users therefore have to trust
+the stego gateway not to tell the authorities in their country.  They
+also have to trust that the gateway is not actually be run by their
+own countries censorship board.  The price for misplacing trust and
+revealing your use of encryption may be death in some of these
+countries.
+
+It would be nice if we could chain the stego function, so that the
+amount of trust required of each element could be reduced, in a
+similar way to chaining through remailers acheives this.
+
+So (here we get to the actual content of this post, the above having
+been introduction), we could arrange that the stego user encrypts with
+a selection of stego gateways public keys.  The steps to send to
+gateways A and then B are:
+
+1. encrypt with B's public key, normalise output (with pgp stealth)
+2. encrypt with A's public key, normalise output
+3. encode normalised output from 2 into an innocuous looking USENET post
+
+The process by which the stego message is recovered is then more
+complex, and has higher overhead.  Each stego gateway has to scan
+newsgroups for stego messages, and forward it's potential partially
+decrypted stego messages to the other stego gateways.  Then each of
+those remailers decrypts, and if the result is more stego noise, again
+forward back to the other stego gateways.  The problem here is when do
+we stop!  Remember if we pick a message, and apply our stego decoding
+method to it we get something which looks indistinguishable to a stego
+message whether there exists a stego message or not.
+
+Also how much of USENET do we scan?  The stego gateways will be
+sending a lot of partially decrypted potential stego messages between
+themselves.
+
+One potential solution to the infinite loop problem is to include with
+the message a note to the gateway stating how many times this has been
+decrypted.  After a few hops it can be discarded.  If the max hops is
+2, and there are 3 gateways A, B and C.  The messages created by the
+single encrypted message are:
+
+round 1: A, B, and C decrypt and forward to each other
+
+round 2: B, and C decrypt
+
+     C discards the output; 
+     B forwards the message to the requested remailer
+
+(We presume that multiply encoding to the same remailer is not useful,
+if A can decode by denormalising and decrypting twice, you may just as
+well have addressed it to A normalised and encrypted once).  
+
+B does not know which person's USENET post this came from.  He does
+not know where it is going (to another USENET group via a chain of
+remailers, or to an indivdual)
+
+However B does know that remailer A knows who the message is from.
+
+Presume there are n remailers.  For hops which go through h remailers,
+collusion is required by all h remailers to obtain the identity of the
+poster.  If the attacker owns k of those remailers, that is k of the
+remailers are colluding to discover the identity of the stego user,
+then the if k &lt; h the attacker will never discover the identity of any
+posters using chains of length h.
+
+If k &gt;= h the attacker will discover the identity of a stego user only
+in cases where the chain includes all of the hops. (C(n,k) is choose k
+of n function computed with n!/((n-k)!k!)
+
+			k!(n-h)!
+Prob = C(k,h)/C(n,h) =  --------
+			n!(k-h)!
+
+Some sample values, n = 8 values of h = hops, and k = no of rogue
+gateways
+
+h= \k|
+hops\|   1   2   3   4   5   6  7
+---------------------------------
+  1  | .13 .25 .38 .50 .63 .75 .88 
+  2  | .00 .04 .11 .21 .36 .54 .75 
+  3  | .00 .00 .02 .07 .18 .36 .63 
+  4  | .00 .00 .00 .01 .07 .21 .50 
+  5  | .00 .00 .00 .00 .02 .11 .38 
+  6  | .00 .00 .00 .00 .00 .04 .25 
+  7  | .00 .00 .00 .00 .00 .00 .13 
+
+Now interestingly it seems to me that this figure is per stego
+message, so if you chose different gateway chains on each message your
+cumulative chance of being caught would be worse than if you just
+chose a chain and stuck to it.
+
+You're trying to minimise your cumulative chance of being identified.
+If you use a chain, and the jack boots don't kick down your door for a
+few weeks, you hope it is a good chain.
+
+Of course there is a chance that gateways could be taken over and your
+chain would then become a compromised chain.  
+
+An additional danger if a gateway is compromised and it's key is
+revealed, the attacker can then go back through it's saved messages
+and look for messages which came from the newly acquired gateway, or
+went to it, to see how many more chains this compromises.  It would
+seem like a good idea for the gateways to ensure forward secrecy by
+re-keying reasonably frequently.
+
+To do better than this, we could make the stego gateways to act like
+middlemen remailers.  That is a gateway will always communicate with
+other gateways via a remailer.  Now gateway B does not know which of
+gateways A or C decoded the message from the newsgroup.  So he has to
+attack them all.
+
+Better still, the gateways can be completely hidden.  They can use a
+message pool to communicate.  This has higher overhead, but now the
+fact that gateway B knows either A or C decoded the message does not
+help much because gateway B can't physically locate A and C.
+
+An alternative to the suggestion of including a count of the number of
+decryptions that have taken place so far to avoid infinite loops, is
+to do the job probablistically.
+
+Say that each remailer says that it will only accept mesages where the
+low order 3 bits after decryption are "101".  This rule doesn't apply
+to the first hop, which knows that the message hasn't circulated
+anyway, as it has just pulled it from the newsgroup.  So the first
+gateway decodes, forwards to the other gateways.  Each gateway
+decodes, and if the desired bit pattern comes out, sends the decrypted
+message to the other remailers.
+
+This way we place no restriction on the number of hops, avoid
+revealing who the first hop is explicitly, but ensure that the
+messages which are not stego at all die naturally, and don't propogate
+for ever between the gateways.
+
+Also the "101" is likely enough to come up quite by chance, and the
+number of actual stego messages is small compared to just ordinary
+USENET posts that seeing a "101" doesn't prove anything conclusive
+after 1 hop.  However after several hops (if an attacker owns several
+of the gateways), the probability of getting multiple "101"s in a row
+points increasingly to a stego message, whereas if we relied on a
+header stating how many hops, no information would be leaked by the
+attacker handling multiple hops in the middle of the chain.
+
+So it's a trade off between lower overall overhead whilst allowing
+multiple hops, whilst increasing the susceptability of the system to
+leaked information to an attacker who owns multiple rogue gateways.
+
+However these are all very high overhead because they have DC net like
+overheads, you send a copy to everything to everyone always, so you
+have a perfect mix.
+
+You can trade off this security to obtain lower bandwidth.  Here's one
+suggestion of how to do this.  Obviously we can't include with each
+partial decryption instructions on who to remail it to (because if you
+found some instructions, that would reveal immediately that it was a
+stego message).  However, we can interpret the random bit patterns as
+remailer instructions.  Say there are n gateways, we can number the
+gateways consecutively and take the decrypted message mod n - 1 to
+produce the index number of a gateway to send to next.  We can include
+a count of decryptions so far to reduce overhead.
+
+Another way to avoid infinite loops with this variation is to take the
+decrypted message mod ((n - 1) + j), anything over n-1 gets discarded.
+Messages naturally die out statistically at a speed determined by the
+ratio of j / n - 1, after h hops there is probability:
+
+	(j / n - 1) ^ h
+
+that the message will get discarded.
+
+Provided the stego users account for a small amount of traffic, their
+use would likley be lost in the large pool of noise even if they stuck
+to a particular chain.
+
+Or they could themselves use normally distributed selections
+of random chains.  However if they did this, their cumulative chance
+of sending through only rogue gateways on one post would increase.
+
+Interestingly this setup has different properties to mixmaster mixes,
+with this arrangement traffic analysis gives you nothing, as the
+inputs are hidden, and the traffic is perfectly normally distributed.
+(Presuming that the stego users create random chains also).  Cover
+traffic between gateways adds nothing.
+
+You probably need cover traffic on output however, so that the
+gateways send constant, or at least evenly distributed amounts of
+traffic off into the remailer net, so that one persons posting can not
+be correlated with exits from the gateway network.
+
+Some delay in the gateway network would help also.  Random delay is
+different to mixing in this instance because there is already lots of
+mixing going on, the point is to ensure that an exit from the gateway
+network is not observable at fixed time periods after posts from
+particular suspected stego users.  If there are many users this should
+average out.
+
+Note also, that when a message does decode to a message, the gateway
+should generate a random replacement message and forward that to a
+random remailer with the same probability as for other non-decoding
+messages, otherwise receiving a message would skew the statistics.
+
+Given that the stego user has an interest in sticking to a chain, this
+is less secure than sending copies of partially decrypted potential
+messages to all gateways.  Either he doesn't stick to his chain, thus
+increasing his odds of being detected, or he uses his fixed chain and
+runs the risk that this statistic shows through.  If there are many
+stego users each with different fixed randonly chosen chains, the fact
+that chains are fixed would be less likely to reveal information as
+the random chains would tend to cancel out, and themselves have the
+same normal distribution as the non-stego traffic.
+
+Comments?
+
+More efficient ways to get around the weakness of a single remailer
+gateway hop?
+
+Adam
+-- 
+Have *you* exported RSA today? --&gt; <A  HREF="http://www.dcs.ex.ac.uk/~aba/rsa/">http://www.dcs.ex.ac.uk/~aba/rsa/</A>
+
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00113.html">Re: FC: Responses to Tim May's criticism of SAFE, and a rebuttal</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00122.html">Re: Bypassing the Digicash Patents</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00116.html">Re: Power Blocs in the Crypto Debate</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00126.html">SafePassage Web Proxy follow-up</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00133"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00133"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

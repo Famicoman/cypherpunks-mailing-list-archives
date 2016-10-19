@@ -1,0 +1,293 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: fast modular reduction (proof?) -->
+<!--X-From-R13: qnavfpuNven.hxn.qr (Vnqzhg Rnavfpu) -->
+<!--X-Date: Thu, 7 Sep 95 08:00:41 PDT -->
+<!--X-Message-Id: 9509071459.AA01801@elysion.iaks.ira.uka.de -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: fast modular reduction (proof?)</TITLE>
+<LINK REV="made" HREF="mailto:danisch@ira.uka.de">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00420.html">Date Prev</A>][<A HREF="msg00407.html">Date Next</A>][<A HREF="msg00420.html">Thread Prev</A>][<A HREF="msg00453.html">Thread Next</A>][<A HREF="index.html#00450">Date Index</A>][<A HREF="threads.html#00450">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: fast modular reduction (proof?)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: fast modular reduction (proof?)</LI>
+<LI><em>From</em>: <A HREF="mailto:danisch@ira.uka.de">danisch@ira.uka.de</A> (Hadmut Danisch)</LI>
+<LI><em>Date</em>: Thu, 7 Sep 1995 16:59:31 +0200</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+&gt; In the following pseudocode, B is the radix in which the numbers are 
+&gt; represented (2^32 for a 32-bit machine), n is the length of modulus in 
+&gt; blocks, U is B^(n+1) mod the modulus, X is the number to be reduced, k+1 
+&gt; is the length of X, and Y is the result.
+&gt; 
+&gt; 1. Y = X
+&gt; 2. For i from k down to n+1, repeat steps 3 and 4
+&gt; 3.	Y = Y - Y[i] * B^i + Y[i] * U * B^(i-n-1)
+&gt; 4.	If Y &gt;= B^i, then Y = Y - B^i + U * B^(i-n-1)
+
+
+
+
+To do a proof I rewrite the algorithm:
+
+
+
+n = len(modulus)                   // modulus &lt; B^n
+
+Y = X                              // obviously Y = X mod modulus
+
+
+K =  B ^ (n+1) - U                 // U = B ^ (n+1) mod modulus,
+                                   // therefore K = 0 mod modulus
+				   // furthermore K &gt; 0
+
+
+for (i=len(Y)-1 ; i&gt;n  ;  i--)
+ {
+
+   F = B ^ (i-n-1) * K             // F &gt; 0
+                                   // F = 0 mod modulus
+
+   Y -=  Y[i] * F                  // Y shrinking, but
+                                   // Y still the same mod modulus
+
+
+   if ( Y &gt;= B^i )
+      Y -= F                       // again shrinking,
+                                   // still the same mod modulus
+
+ }
+
+
+This shows that Y was shrinking, but is still equal to X mod modulus.
+
+
+
+
+
+
+
+
+
+To see whether Y really shrinks enough:
+
+  Y = sum(i=0..len(Y)-1)  Y[i] * B^i
+
+
+In the step Y = Y - Y[i] * B^i the highest block of Y is deleted (what
+could be done fast by reducing the length of Y). 
+
+  Now  Y &lt; B^i
+
+
+
+
+
+Afterwards the same value mod modulus is added to keep Y constant: 
+
+  Y = Y + Y[i] * U * B^(i-n-1).
+
+
+  Y[i]&lt;B   -&gt;  Y[i]+1  &lt;= B
+  
+  U &lt; modulus &lt; B^n , therefore U &lt; B^n
+
+  -&gt;    (Y[i]+1) * U &lt; B * B^n  = B^(n+1)
+
+  -&gt;    Y[i] * U  &lt; B^(n+1) - U
+
+  -&gt;    Y[i] * U *  B^ (i-n-1 )  &lt; F
+
+
+
+
+  Therefore after doing the addition
+
+    Y &lt; B^i + F
+
+
+
+
+  Check of the last step:
+
+  0 &lt;= U &lt; B^n therefore 
+
+  B^n  &lt;  B^(n+1) - U  &lt;= B^(n+1)
+
+  Therefore in every loop
+
+
+  B^(i-1) &lt; F &lt;= B^i
+
+
+  -&gt;   Y-F  &lt; B^i
+
+
+
+Partial Correctness:
+
+
+
+
+
+
+Y = X                              [ Y = X mod 
+                                     Y &lt; B^len(X) ]
+
+
+K =  B ^ (n+1) - U                 [ K = 0 mod
+                                     
+                                     B^n &lt; K &lt;= B^(n+1) ]                
+                                   
+				   
+
+
+for (i=len(X)-1 ; i&gt;n  ;  i--)
+ {
+        [ Y = X mod  ,  Y &lt; B^(i+1) ]
+
+
+   F = B ^ (i-n-1) * K 
+   
+        [ F = 0 mod  ,   B^(i-1) &lt; F &lt;= B^i  ]
+
+        [ 0 &lt;= Y[i] &lt; B ]
+
+        [ Y[i] * F  = 0 mod ,
+          0 &lt;= Y[i] * F  &lt; B^(i+1) ]
+
+
+        [ Y &gt;= Y[i] * B^i  -&gt;  Y &gt;= Y[i] * F ]
+
+   Y -=  Y[i] * F
+
+        [ Y = X mod ,
+          Y &lt; B^i + F  (reason see above) ,
+          Y &gt;= 0 ]
+          
+
+
+
+   if ( Y &gt;= B^i )
+      Y -= F                       // again shrinking,
+                                   // still the same mod modulus
+
+
+
+      [ Y = X mod ,
+        Y &gt;= 0    ,
+        Y &lt; B^i ]
+
+ }
+
+
+
+Last i was n+1, therefore
+
+  Y = X mod ,  Y &gt;= 0 , Y &lt; B^(n+1)
+
+
+This is not enough,  Y &lt; B^n is requested. The loop can't be done once
+more because i-n-1 would become negative.
+
+k+1 was the length of X, and  n the length of the modulus. You walk
+down from k to n+1 . In every loop you remove one block of the
+number. This means you have to do len(X)-len(modulus) loops. In the
+pseudocode you do only len(X)-len(modulus)-1 loops.
+
+
+
+One loop seems to be missing. This may be a
+result of confusion whether your Y starts with Y[0] or Y[1]. 
+
+
+I do understand the algorithm as:
+
+n = len(modulus)
+U = B^n  mod modulus
+K = B^n - U                         // = 0 mod modulus,  0 &lt; K &lt; B^n
+Y = X
+
+for(i=len(X)-1 ; i&gt;= n ; i--)       // squeeze Block i in Number Y
+ {                                  // Y &lt; B ^ (i+1)
+
+   F = B ^ ( i-n )  * K             // F = 0 mod modulus
+
+   Y -= Y[i] * F                    // subtract  Y[i] * B^i, now Y &lt; B ^ i
+                                    // add the equivalent Y[i] * B^(i-n)*U &lt;= F
+                                    // now Y &lt; B^i + F
+
+   if ( Y &gt;= B[i] )
+     Y -= F                         // now Y &lt; B^i
+
+ }
+
+Last i was n, therefore Y &lt; B^n , Y = X mod modulus , 
+but perhaps still Y &gt;= modulus.
+
+Ok, algorithm understood and agreed (after modifying the loop counter).
+
+Any more agreement or disagreements?
+
+Hadmut
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00420.html">Cryptography Technical Report Server (CTRS) needs submissions!</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00407.html">Re: not a flame please read and think about this</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00420.html">Cryptography Technical Report Server (CTRS) needs submissions!</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00453.html">Re: fast modular reduction (proof?)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00450"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00450"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

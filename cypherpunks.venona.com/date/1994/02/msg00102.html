@@ -1,0 +1,216 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: SuperPing1.2 -->
+<!--X-From-R13: abobqlNdjregl.bet -->
+<!--X-Date: Tue, 1 Feb 94 22:55:29 PST -->
+<!--X-Message-Id: 199402020651.WAA05123@mail.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>SuperPing1.2</TITLE>
+<LINK REV="made" HREF="mailto:nobody@qwerty.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00101.html">Date Prev</A>][<A HREF="msg00109.html">Date Next</A>][<A HREF="msg00231.html">Thread Prev</A>][<A HREF="msg00110.html">Thread Next</A>][<A HREF="index.html#00102">Date Index</A>][<A HREF="threads.html#00102">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>SuperPing1.2</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: SuperPing1.2</LI>
+<LI><em>From</em>: <A HREF="mailto:nobody@qwerty.org">nobody@qwerty.org</A></LI>
+<LI><em>Date</em>: Tue, 1 Feb 1994 22:51:52 -0800</LI>
+<LI><em>Comments</em>: This is anonymous mail.</LI>
+<LI><em>Remailed-By</em>: Qwerty Uiopas &lt;qwerty@netcom.com&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+This may not be elegant, but it works well in my account. It checks
+the entire Cypherpunk remailer network connections and is user friendly.
+
+-Xenon
+
+#!/usr/bin/perl
+# Change this to reflect where your system has perl.
+
+# SuperPing version 1.2: Ping Cyperpunk remailer connections.
+# Now pings in both directions, as I have learned they are NOT equivalent.
+# Brought to you by Xenon &lt;na38138@anon.penet.fi&gt;.
+# Thanks to Alan Barrett for teaching me some perl.
+
+# Warning: outputs ~40 e-mails at a time. May give "too many processes"
+# error towards the end if you haven't killed all of your stopped jobs.
+# Increase the sleep(sec) time if needed. 
+
+# Be careful. If mail bounces between any two remailers in either
+# direction, "Mr. Remailer Operator" will obtain a full mailbox! 
+
+# To test the program, comment out all the remailers in the list and add
+# YOUR address at least three times to the list of "remailers".
+
+# You MUST make a file called .PingFile that contains:
+#::
+#Request-Remailing-To: your.address
+#
+#Ping!
+#
+#-----Begin Test-----
+#Test
+#-----End Test-----
+
+# Will also function as a convenient method to shut down all remailers at
+# once by making .PingFile 500K instead of 1K. Not recommended if you
+# value your life ;-). 
+
+# List of remailers (not complete). Make any line a comment to remove that
+# line's remailer. cicada and pmantis are not meant for heavy traffic so I
+# have removed them. Soda is commented for no particular reason.
+
+@Rm = (
+"catalyst@netcom.com",
+"remailer@dis.org",
+"ebrandt@jarthur.claremont.edu",
+"remailer@merde.dis.org",
+"qwerty@netcom.com",
+"elee7h5@rosebud.ee.uh.edu",
+"hfinney@shell.portal.com",
+#"hh@soda.berkeley.edu",
+);
+
+#Nicknames for output and subject lines.
+
+@Nick = (
+"catalyst",
+"dis.org",
+"jarthur",
+"merde",
+"qwerty",
+"rosebud",
+"shell",
+#"soda",
+);
+
+# Select a marking character for this SuperPing session.
+@Mark = ("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O",
+"P","Q","R","S","T","U","V","W","X","Y","Z");
+
+srand(time);
+$M = $Mark[rand(26)];
+
+# Strings, since lines got too long below.
+# Obviously this could be written better using sendmail but I'm writing
+# perl code without KNOWING any perl.
+
+  $A = "(echo \"::\" ; echo \"Request-Remailing-To: ";
+  $B = " ; echo \"\" ; cat .PingFile) | mail -s \"$M.";
+
+# Send a "Ping!" between all combinations of two remailers, in both
+# directions. $Num is a count that ends up in the Subject line. Each number
+# is used twice, with a &lt; and &gt; telling which direction the mail went. Change
+# "system" to "print" to see the Unix commands being produced. 
+
+foreach $Sec (0..$#Rm) {
+    foreach $First ($Sec+1..$#Rm) {
+     $Num++ ;
+
+     $C = " $Nick[$First] &gt; $Nick[$Sec]\" " ;
+     system "$A$Rm[$Sec]\"$B$Num$C$Rm[$First]";
+     print "$M.$Num $Nick[$First] &gt; $Nick[$Sec]\n";
+     sleep(1) ;
+ 
+     $C = " $Nick[$First] &lt; $Nick[$Sec]\" " ;
+     system "$A$Rm[$First]\"$B$Num$C$Rm[$Sec]";
+     print "$M.$Num $Nick[$First] &lt; $Nick[$Sec]\n";
+     sleep(1) ;
+   }
+}
+
+
+# Output (with only catalyst, qwerty and rosebud checked) looks like this:
+
+# S.1 qwerty &gt; catalyst
+# S.1 qwerty &lt; catalyst
+# S.2 rosebud &gt; catalyst
+# S.2 rosebud &lt; catalyst
+# S.3 rosebud &gt; qwerty
+# S.3 rosebud &lt; qwerty
+
+# These are printed out as the program progresses and they also appear as
+# the Subject of each piece of mail.
+
+# alias g '(grep Subject: /usr/spool/mail/n/name | sort -t. +1 -n) | more'
+# will make the command "g" give a list of received pings, in order. /n/name
+# is your part of the mail spool. You should also check that the received
+# pings really came from the second remailer instead of getting short
+# circuited by the first remailer.
+
+# Sample output mail as received by a remailer:
+# 
+#From: Your name &lt;your.address&gt;
+#Message-Id: &lt;numbers@your.site&gt;
+#To: qwerty@netcom.com
+#Subject: S.1 qwerty &gt; catalyst
+#Status: R
+#
+#::
+#Request-Remailing-To: catalyst@netcom.com
+#
+#::
+#Request-Remailing-To: your.address
+#
+#Ping!
+#
+#-----Begin Test-----
+#Test
+#-----End Test-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00101.html">New Remailer Up.</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00109.html">NxM DES</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00231.html">Re: New remailer up.</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00110.html">Re: SuperPing1.2</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00102"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00102"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

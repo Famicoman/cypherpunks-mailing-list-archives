@@ -1,0 +1,231 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Certificate proposal -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Mon, 9 Oct 95 16:54:56 PDT -->
+<!--X-Message-Id: 199510092353.QAA16167@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: ac9ea8f3010210049f44@[205.199.118.202] -->
+<!--X-Reference: 199510091903.MAA22499@jobe.shell.portal.com -->
+<!--X-Reference: 9510091934.AA27962@alpha -->
+<!--X-Reference: 199510092054.NAA12060@jobe.shell.portal.com -->
+<!--X-Reference: 9510092146.AA28192@alpha -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Certificate proposal</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00840.html">Date Prev</A>][<A HREF="msg00822.html">Date Next</A>][<A HREF="msg00819.html">Thread Prev</A>][<A HREF="msg00957.html">Thread Next</A>][<A HREF="index.html#00821">Date Index</A>][<A HREF="threads.html#00821">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Certificate proposal</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Certificate proposal</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 9 Oct 1995 16:53:46 -0700</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00776.html">ac9ea8f3010210049f44@[205.199.118.202]</A>&gt; 	&lt;<A HREF="msg00787.html">199510091903.MAA22499@jobe.shell.portal.com</A>&gt; 	&lt;<A HREF="msg00804.html">9510091934.AA27962@alpha</A>&gt; 	&lt;<A HREF="msg00798.html">199510092054.NAA12060@jobe.shell.portal.com</A>&gt; &lt;<A HREF="msg00819.html">9510092146.AA28192@alpha</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+m5@dev.tivoli.com (Mike McNally) writes:
+&gt;I'm a little confused, I guess.  What is it about certificates that
+&gt;you'll trust with such confidence?  How do you know that the guarantor
+&gt;of a certificate wasn't spoofed by an MITM attack?  How do you know
+&gt;that the certificate itself wasn't spoofed?
+
+I believe that the certificate wasn't spoofed by an MITM attack because 
+the certificate issuing process requires face to face contact with some
+proof of identity, in at least one way of doing this.  The certificate
+wasn't spoofed because I got the key of the signer through an out of band
+mechanism, such as seeing it printed in the newspaper.
+
+The main requirement is to have some contact between Alice and the rest
+of the world which doesn't go through the MITM, and the same for Bob.  By
+using certificates, this contact only has to be done once (for each of
+them).  There is no need for Alice and Bob themselves to have a face to
+face meeting, nor for Alice and Charlie, Alice and Dave, Bob and Charlie,
+Bob and Dave, Dave and Charlie, etc.  Just the one will suffice.
+
+&gt;I think it's more correct to say that the MITM attack is acknowledged
+&gt;to be possible, but realistically no more of a threat than in a
+&gt;certificate model.   And note the "I think", and this warning that I
+&gt;could be wrong.  (Or I could be an MITM...  bwahahahaha!)
+
+I'm not sure whether this is because you think MITM is so difficult as
+to be almost impossible in any model, or whether you think that an MITM
+attack is possible in some cases against relatively naive users, but that
+certificates won't help at all in that case.
+
+Let me make clear how I would see a MITM attack working.  There are two
+main flavors, the permanent and the transitory.  Here is how the
+permanent MITM could work.
+
+Alice's ISP provides all of her email services.  She has created and
+published a public key, but the ISP has detected this and replaced it
+with a fake key.  Everyone who tries to send to her using that key gets
+their message decrypted and read by the ISP, then re-encrypted using
+Alice's real key and delivered to her mailbox.  This much would be
+relatively easy.
+
+But it is not enough.  If Alice gets hold of a good key for Bob, she will
+send messages to him using that key.  The ISP can't read those messages.
+If she signs them, Bob will notice that the signature doesn't check
+against his copy of Alice's key (the one which the ISP has installed in
+place of Alice's real one), and the ISP will be caught.
+
+Therefore the ISP is going to have to make sure that every single key
+Alice gets is a fake one, one for which the ISP has the secret key.
+When Alice get's Bob's key, Charlie's, everybody's, the ISP has to
+replace those with fake versions.  Then again it can do its
+translate-and-replace trick on messages going in both directions.  This
+is obviously a much more difficult task, but if people acquire keys in
+limited, stereotyped and automated ways, it could conceivably be done.
+
+With this, what more could trip the MITM up?  Well, if anybody ever
+included any keys within the body of a message, those would have to be
+detected and substituted.  Even key fragments might have to be handled,
+although it is unlikely that this would be noticed.
+
+The biggest threat would be if Alice used a different method to get
+someone's keys, her own or anybody's that she communicates with.  She
+could use a different ISP or use some "out of band" (off-net) method.
+If she went to a key signing party the jig would be up.
+
+Does this mean that the MITM attack is impossible?  Not necessarily.
+I'll bet there are plenty of people who only use one ISP (AOL or MSN)
+and who have never been to a key signing party.  Maybe they've never
+even met someone in real life whom they communicate with on the net.  A
+lot of people could fall into this category.
+
+This is where the certificate comes in handy.  A certificated key from a
+signer whose key Alice is able to verify out of band will not be
+forgeable by the MITM.  Likewise if Alice's key distributed on the nets
+is signed by a trusted certificator then other people can have confidence
+that there is no MITM involved.  Basically the certificate is a way of
+forcing people, at least once, to go around their ISP.  And once is
+enough.
+
+Now let me describe the other form of MITM attack, the transitory one.
+In this one the attacker doesn't care if he's caught, he just wants to
+peek at a few (possibly crucial) messages.  Here again his attack is to
+replace Alice's public key in the databases with a bogus one, and to
+intercept her communications.  Or maybe he is attacking SSL or some
+other protocol where one side sends their public key to the other.
+Then it is even easier to send a fake one.  People who trust and use
+that key will lose their privacy.
+
+This attack is obviously a lot easier to mount in some contexts.
+Again, the use of a certificate should prevent these, and in fact SSL
+does use certificated keys.  The MITM will not be able to supply a
+certificated key with the name/address information for Alice.
+(Netscape currently doesn't check to see whether the name in the key is
+valid, so it is not getting much benefit from the use of certificates.
+I hope it is clear that abandoning certificates or using ones without
+any name or address information would make SSL very unsafe.)
+
+&gt;Oh now wait a sec here; I don't think anybody's advocated using
+&gt;"untested" keys.  It's still perfectly reasonable to establish
+&gt;networks of reliable information focused on a key.
+
+&gt;If I electronically "encounter" Alice and decide to begin a secure
+&gt;conversation, we initiate a key exchange.  I can then go to as many
+&gt;already-trusted entities as I like in an attempt to verify that as
+&gt;many attributes that are claimed to be associated with the key are
+&gt;really there as I desire.  If Alice wants to buy a widget from me, I
+&gt;can ask other businesses whether they've ever had problems collecting
+&gt;from that key.  If I want to buy a widget from Alice, I can ask
+&gt;friends whether they've gotten good widget from that key.  If I'm
+&gt;interested in a little e-hanky-panky, I can ask around the sleazier
+&gt;corners of the net to see whether Alice is the kiss-and-post type.
+
+What if you just want to talk to her securely?  I asked before what
+"attributes" would handle that case, and the answer that at least Tim
+gave was that talking to the key is talking to Alice.  I don't buy
+that, at least not yet.
+
+(Don't get me wrong - I don't have anything against attributes.  I love
+Chaum's pseudonymous credentials.  I'm just worried that unless we have a
+foundation of secure communication that the rest of the edifice isn't
+going to stand.)
+
+&gt;Somebody's going to have to explain to my thick skull how it is that a
+&gt;certificate system makes this process any different, fundamentally.  I
+&gt;mean, it may be that there's more superficial security, but I don't
+&gt;see where there's any additional risk truly introduced by using the
+&gt;key itself as a "True Name".  Maybe the real question is, how does a
+&gt;certificate system give me the confidence that there really is an
+&gt;"Alice" according to some definition of "really" that satisfies me?
+
+OK, I wrote at length above on how certificates can help against two
+forms of MITM attacks.  What do you think?  Maybe it is hard to imagine
+a long-term successful MITM attack, but wouldn't you feel uncomfortable
+with an SSL which used uncertificated keys?
+
+Hal
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00776" HREF="msg00776.html">Re: Certificate proposal</A></STRONG>
+<UL><LI><EM>From:</EM> tcmay@got.net (Timothy C. May)</LI></UL></LI>
+<LI><STRONG><A NAME="00787" HREF="msg00787.html">Re: Certificate proposal</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00804" HREF="msg00804.html">Re: Certificate proposal</A></STRONG>
+<UL><LI><EM>From:</EM> m5@dev.tivoli.com (Mike McNally)</LI></UL></LI>
+<LI><STRONG><A NAME="00798" HREF="msg00798.html">Re: Certificate proposal</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00819" HREF="msg00819.html">Re: Certificate proposal</A></STRONG>
+<UL><LI><EM>From:</EM> m5@dev.tivoli.com (Mike McNally)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00840.html">Re: Certificate proposal</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00822.html">Re: Certificate proposal</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00819.html">Re: Certificate proposal</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00957.html">Re: Certificate proposal</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00821"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00821"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,150 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: FW: Windows for Workgroups 3.11 -->
+<!--X-From-R13: Pynap Irore <oynapjNzvpebfbsg.pbz> -->
+<!--X-Date: Thu, 7 Jul 94 08:47:23 PDT -->
+<!--X-Message-Id: 9407071449.AA11623@netmail2.microsoft.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>FW: Windows for Workgroups 3.11</TITLE>
+<LINK REV="made" HREF="mailto:blancw@microsoft.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00361.html">Date Prev</A>][<A HREF="msg00387.html">Date Next</A>][<A HREF="msg00292.html">Thread Prev</A>][<A HREF="msg00281.html">Thread Next</A>][<A HREF="index.html#00351">Date Index</A>][<A HREF="threads.html#00351">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>FW: Windows for Workgroups 3.11</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: FW: Windows for Workgroups 3.11</LI>
+<LI><em>From</em>: Blanc Weber &lt;<A HREF="mailto:blancw@microsoft.com">blancw@microsoft.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu,  7 Jul 94 08:42:58 TZ </LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Below is the reply which I received internally on the question of 
+whether WfW uses RSA:
+
+----------
+From: Michael Ginsberg
+To: Blanc Weber
+Cc: Cypherpunks Mailing List Redistribution
+Subject: RE: Windows for Workgroups 3.11
+Date: Thursday, July 07, 1994 8:22AM
+
+[The following can be distributed outside of Microsoft, and 
+redistributed thereafter, as long as it remains unaltered and is 
+reproduced in it's entirety, including this header]
+
+In the Windows for Workgroups 3.11 fax enhancement, we provide the 
+ability to send "email format" messages over fax.  These are messages 
+that do not lose their original format during faxing, so that they are 
+still editable (ie: if you send a Microsoft Word document, the receiver 
+gets an actual Microsoft Word document, not just printed pages).  One 
+feature of this format is that we allow security enhancements to be 
+applied to the message before transmission.  These enhancements are 
+encryption (either secret key or public key) and signature (based on 
+public key).  I will describe a bit about how we implement these features.
+
+1&gt; Secret key encryption
+	This is exposed to the user as password encryption.  The user chooses 
+a password (of as long a lenght as the user desires, composed of 
+characters with ASCII values 1 through 255) and we hash it down to 64 
+bits.  These 64 bits are used to encrypt the message (including all 
+attachments, text, properties, etc) using RSA's RC4 algorithm.  A 
+header is then placed on the message with sufficient information for 
+routing (subject, sender, receiver, time stamps, as well as a marker 
+identifying the encryption type).  The receiver enters the password to 
+decrypt (the same as the encrypting password), and we verify that the 
+password is correct by decrypting the message and seeing if it's valid 
+(ie: has the right internal structure to be a mail message).
+
+2&gt; Public key encryption
+	We allow the user to generate public/private key pairs.  These key 
+pairs are 512-bit RSA key pairs.  The private part is stored encrypted 
+(with the user's "fax security" password) on the user's hard drive, and 
+the public part is stored in plain (binary form).  The user exchanges 
+his public keys with other users in various ways.  If the user sends a 
+fax with public key encryption, we first generate a random 64 bit 
+number, and encrypt the message with RC4 using that number (similar to 
+password encryption above).  We then scatter the 64 bits in a 64 byte 
+(randomly initialized) buffer and encrypt that buffer using RSA's RSA 
+encryption scheme, using both the sender's private key and the 
+recipient's public key.  We then send the encrypted message and header 
+containing routing information and the 64 byte block.  The recipient 
+performs a similar operation, using his private and the sender's public 
+key to obtain the 64 bit "secret key", and then decrypting the message.
+
+3&gt; Digital signature
+	While the above encryption schemes are performed on entire messages, 
+we provide a method for digitally signing attachments.  Microsoft Mail 
+allows the entering of plain text into a message, as well as the 
+embedding of entire files.  It is these files which we sign.  Signature 
+is accomplished by computing a 128 bit hash of the file using RSA's MD5 
+message digest algorithm.  This 128 bit hash is then embedded in a 64 
+byte buffer, and it is encrypted using the sender's private key.  The 
+buffer (along with some header information) is pre-pended to the 
+document, and it's extension is changed to .aws, so that our applet to 
+view signatures is called upon double clicking or "running" the signed 
+document.  Anyone receiving the document can see the validity of the 
+signatures (by hashing themselves, and then decrypting the stored 
+hash).  If you sign a signed document, the signatures are cumulative, 
+so multiple people can sign the same document.  Signatures are either 
+valid (hashes match), invalid (hashes differ), or unverifyable (you 
+don't have the sender's public key).
+
+--Michael Ginsberg, Software Design Engineer, Microsoft Corporation.
+mikegins@microsoft.com
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00361.html">Re: Counting bits</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00387.html">Re: Counting Bits</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00292.html">FW: Windows for Workgroups 3.11</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00281.html">Re: Most People don't Think about Security</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00351"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00351"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

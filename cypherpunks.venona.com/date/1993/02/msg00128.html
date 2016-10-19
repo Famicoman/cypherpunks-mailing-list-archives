@@ -1,0 +1,152 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Compressed/Encrypted Voice using Modems -->
+<!--X-From-R13: guhtNcunagbz.pbz ([heqrevat Fuht) -->
+<!--X-Date: Wed, 10 Feb 93 08:47:10 PST -->
+<!--X-Message-Id: m0nMKUy&#45;000k1hC@phantom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 1993Feb10.101337.17788@extropia.wimsey.bc.ca -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Compressed/Encrypted Voice using Modems</TITLE>
+<LINK REV="made" HREF="mailto:thug@phantom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00127.html">Date Prev</A>][<A HREF="msg00129.html">Date Next</A>][<A HREF="msg00127.html">Thread Prev</A>][<A HREF="msg00139.html">Thread Next</A>][<A HREF="index.html#00128">Date Index</A>][<A HREF="threads.html#00128">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Compressed/Encrypted Voice using Modems</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Compressed/Encrypted Voice using Modems</LI>
+<LI><em>From</em>: <A HREF="mailto:thug@phantom.com">thug@phantom.com</A> (Murdering Thug)</LI>
+<LI><em>Date</em>: Wed, 10 Feb 93 11:41:19 EST</LI>
+<LI><em>Cc</em>: <A HREF="mailto:thug@phantom.com">thug@phantom.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00127.html">1993Feb10.101337.17788@extropia.wimsey.bc.ca</A>&gt;; from "miron@extropia.wimsey.com" at Feb 10, 93 10:13 am</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+miron@extropia.wimsey.com (Miron Cuperman) writes:
+&gt; sdw@sdwsys.lig.net (Stephen D. Williams) writes:
+&gt; 
+&gt; &gt;Also, from a previous note, you wouldn't want to turn off V.42/V.42bis
+&gt; &gt;since that is where the error correction is.  Also, even on compressed
+&gt; &gt;data, you get some additional bandwidth because it does packetized 
+&gt; &gt;synchronous data.  This gets close to 8bits/byte instead of 10 (start,
+&gt; &gt;stop).
+&gt; 
+&gt; I think that you *do* want to turn off V.42.  V.42 does error
+&gt; correction by using error detection and retransmission.  This
+&gt; introduces variable delay and throughput, which are unacceptable in
+&gt; a real-time application like voice.
+&gt; 
+&gt; I think that error correction through error correction codes is
+&gt; the way to go.
+
+Exactly.  v.42/v.42bis packetizes the data stream and, depending on the
+CODEC, would have adverse effects on voice quality.
+
+I don't know if CELP requires an error-free transmittion stream from
+codec to codec.  If it doesn't then that's great, I hope it self-synchronizes
+itself after a byte or two of garbage coming through. Big deal, so you hear
+a click or pop of static, so what.. you get that with analog lines.
+
+On the other hand, since this stream will also be encrypted, it is unlikely
+that errors could not mangle the entire conversation, and screw up the
+encryption.  A single byte of garbage can unsync both encryption/decryption
+sides and things could get very messy.
+
+Here's how to deal with error checking/correction.  You CAN use v.42/v.42bis
+if both crypto-phones offer somekind of FIFO chip in between the modem and
+the crypto-chip.  This can smooth out a packety/bursty stream into a smooth
+24kbps data stream. However, the resending of large packets by v.42 might
+cause some wierd sound delays similar to what you hear on satellite circuits.
+
+The best solution, as suggested by Miron is to use forward error correction.
+There is plenty of bandwidth in a 19.2/21.6/24.0/28.8 kbps connection to
+send CELP nybbles or bytes each along with their own ECC code. I believe a
+4 bits of CELP would require 3 bits of ECC.  In any case, there is enough
+bandwidth on a 19.2 kbps modem carrier to send a fully encrypted and fully
+forward error corrected 9600 bps CELP stream. Let's assume we use a 4-bit
+ECC code for each 4 bits of data, thus doubling our bandwidth.
+
+Here's how it would look:
+
+                                           9.6kbps    19.2kbps
+sending:                                    |           |
+                                            v           v 
+voice ----&gt; CELP ------------&gt;     IDEA    --- ECC -------------v 
+            coder    9.6kbps     encryption    coding         raw 19.2 
+                                                             modulation
+                                                                v 
+                                                 9.6kbps  19.2k |
+receiving:                                        |         |   |
+                                                  v         v   |
+voice &lt;---- CELP &lt;------------     IDEA       &lt;------ ECC ------+ 
+           decoder   9.6kbps     decryption           correction
+
+
+
+
+Thug 
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00139" HREF="msg00139.html">Re: Compressed/Encrypted Voice using Modems</A></STRONG>
+<UL><LI><EM>From:</EM> miron@extropia.wimsey.com (Miron Cuperman)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00127" HREF="msg00127.html">Re: Compressed/Encrypted Voice using Modems</A></STRONG>
+<UL><LI><EM>From:</EM> miron@extropia.wimsey.com</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00127.html">Re: Compressed/Encrypted Voice using Modems</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00129.html">Timed-Release Crypto</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00127.html">Re: Compressed/Encrypted Voice using Modems</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00139.html">Re: Compressed/Encrypted Voice using Modems</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00128"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00128"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

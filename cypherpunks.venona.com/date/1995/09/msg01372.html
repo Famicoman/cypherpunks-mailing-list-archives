@@ -1,0 +1,177 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: SSL implementation problem at Netscape -->
+<!--X-From-R13: qnjntareNsyntfgnss.cevaprgba.rqh (Rnivq O. Intare) -->
+<!--X-Date: Wed, 20 Sep 95 00:29:58 PDT -->
+<!--X-Message-Id: 43o47v$fsd@cnn.Princeton.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 43kki8$os7@charm.magnus.acs.ohio&#45;state.edu -->
+<!--X-Reference: david&#45;1909951219130001@192.0.2.1 -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: SSL implementation problem at Netscape</TITLE>
+<LINK REV="made" HREF="mailto:dawagner@flagstaff.princeton.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01356.html">Date Prev</A>][<A HREF="msg01358.html">Date Next</A>][<A HREF="msg01726.html">Thread Prev</A>][<A HREF="msg01413.html">Thread Next</A>][<A HREF="index.html#01372">Date Index</A>][<A HREF="threads.html#01372">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: SSL implementation problem at Netscape</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>Subject</em>: Re: SSL implementation problem at Netscape</LI>
+<LI><em>From</em>: <A HREF="mailto:dawagner@flagstaff.princeton.edu">dawagner@flagstaff.princeton.edu</A> (David A. Wagner)</LI>
+<LI><em>Date</em>: 20 Sep 1995 04:10:39 GMT</LI>
+<LI><em>Cc</em>: <A HREF="mailto:iang@cs.berkeley.edu">iang@cs.berkeley.edu</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Newsgroups</em>: sci.crypt</LI>
+<LI><em>Organization</em>: Princeton University</LI>
+<LI><em>References</em>: &lt;43kki8$os7@charm.magnus.acs.ohio-state.edu&gt; &lt;david-1909951219130001@192.0.2.1&gt;</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:daw@cs.berkeley.edu">daw@cs.berkeley.edu</A>, <A HREF="mailto:iang@cs.berkeley.edu">iang@cs.berkeley.edu</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+It looks like there's some confusion about the Netscape security problem
+Ian Goldberg (iang@cs.berkeley.edu) and I found, as mentioned recently
+on cypherpunks.  If we'd foreseen that such a silly bug would receive so
+much attention, I think we would've tried to prepare a more comprehensive
+description...  But we didn't.
+
+Anyhow, let's see what I can clear up for you now.
+
+[Note: Ian isn't here right now, so he hasn't had a chance to look at this.
+Any errors are mine, any opinions are mine, etc.]
+
+In article &lt;david-1909951219130001@192.0.2.1&gt; from sci.crypt,
+David Sternlight &lt;david@sternlight.com&gt; wrote:
+&gt; If the above is, in fact, accurate it appears to apply to previous
+&gt; versions of Netscape, not the 2.0 versions for which the public beta goes
+&gt; out next week.
+
+We haven't tried it on v2.0, as we only have a copy of v1.1 right now.
+But the front-page New York Times article today said that the next version
+also has the same flaw, and that it'll be fixed before release.
+
+A Netscape official press release is available at
+
+	<A  HREF="http://www.netscape.com/newsref/std/random_seed_security.html">http://www.netscape.com/newsref/std/random_seed_security.html</A>
+
+Also our prototype code can be found at
+
+	<A  HREF="ftp://ftp.csua.berkeley.edu/pub/cypherpunks/cryptanalysis/unssl.c">ftp://ftp.csua.berkeley.edu/pub/cypherpunks/cryptanalysis/unssl.c</A>
+
+&gt;                In addition the flat statement that "keys can now be found
+&gt; in appx 1 min." is not, as it seems, a general one but (if one reads the
+&gt; details) requires a number of special assumptions, applies only to some
+&gt; machines, and applies only if one can develop certain collateral
+&gt; information.
+
+You are partially correct.
+
+It all depends on the threat model.  If the attacker has user-level access
+(e.g. an account) on the machine where you run Netscape, your encrypted
+sessions can be broken quickly.  (Our tools took about 1 minute on 1
+machine, but was just a proof of concept -- I believe the time could be
+significantly reduced, and automated completely.)  This model is not
+entirely unreasonable IMHO.
+
+
+If the attacker is simply sniffing the wire somewhere between you and
+the https: server, and has no account on your machine, things are a bit
+more complicated.  Ian &amp; I are still discussing this case, but I'll
+mention a few of our observations:
+
+* the time, pid, and ppid are mixed together in such a way that there
+	is certainly no more than 47 bits of entropy (which is a far cry
+	from the 128 bits claimed for their commercial domestic version).
+* the attacker can guess the current time to within a few seconds easily.
+* maybe the attacker can get this down to about 10 msec uncertainty,
+	possibly even less in some cases.
+* the ppid is often 1 (e.g. when you start up Netscape from a X-windows menu).
+* if not 1, the ppid is often just a bit smaller than the pid.
+* on personal workstations, the pid and ppid are often quite small.
+* one can remotely determine pid's by talking to sendmail on the attacked
+	machine and bouncing mail -- the pid will usually be in the Message-ID.
+	(if the attacker host runs sendmail, which is a usual case)
+	because pids are assigned sequentially, this leaves very little
+	uncertainty in Netscape's pid.
+* there's no notion of pid or ppid on MS-DOS: God only knows what
+	Netscape does there.  maybe it's just seeded from the time!!
+* the PRNG is never reseeded for the duration of a cached connection.
+
+While we don't yet know exactly how long it would take to break Netscape's
+PRNG in this threat model, I think it's clear that Netscape's current
+implementation is insufficient and insecure.
+
+
+You mention that our attack is only applicable to certain machines.  You
+may well be correct -- this is one area where our experiments were still
+proceeding when the media descended on us today.  &lt;chuckle&gt;  Certainly the
+Solaris 2.0 and HP-UX versions of Netscape v1.1 are vulnerable: we tested
+them ourselves.  Ian told me he got email from people who are trying unssl.c
+on other architectures, and apparently the SunOS 4.x.x version is vulnerable
+too (and tests of other machines are in progress).
+
+We don't know about e.g. PC's yet -- this is another area we were still
+working on.  I will note that Netscape didn't try to claim that any version
+was safe from this flaw, for what that's worth...
+
+Hopefully this will be quickly fixed by Netscape, and then we can all stop
+worrying about it! :-)
+
+David Wagner, daw@cs.berkeley.edu, speaking {for,to} himself
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01413" HREF="msg01413.html">Re: SSL implementation problem at Netscape</A></STRONG>
+<UL><LI><EM>From:</EM> jsw@neon.netscape.com (Jeff Weinstein)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01356.html">Re: netscape's response</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01358.html">Re: [NOISE] Unabomber - crypto-anarchist?!?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01726.html">Re: Netscape sub rosa?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01413.html">Re: SSL implementation problem at Netscape</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01372"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01372"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

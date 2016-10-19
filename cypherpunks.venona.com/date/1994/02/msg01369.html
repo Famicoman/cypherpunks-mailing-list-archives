@@ -1,0 +1,161 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Compiling Magic Money Under BC++ 3.1 IDE -->
+<!--X-From-R13: zcqNargpbz.pbz ([vxr Rhibf) -->
+<!--X-Date: Fri, 25 Feb 94 12:55:19 PST -->
+<!--X-Message-Id: 199402252056.MAA21889@mail.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Compiling Magic Money Under BC++ 3.1 IDE</TITLE>
+<LINK REV="made" HREF="mailto:mpd@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01377.html">Date Prev</A>][<A HREF="msg01380.html">Date Next</A>][<A HREF="msg01377.html">Thread Prev</A>][<A HREF="msg01371.html">Thread Next</A>][<A HREF="index.html#01369">Date Index</A>][<A HREF="threads.html#01369">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Compiling Magic Money Under BC++ 3.1 IDE</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Compiling Magic Money Under BC++ 3.1 IDE</LI>
+<LI><em>From</em>: <A HREF="mailto:mpd@netcom.com">mpd@netcom.com</A> (Mike Duvos)</LI>
+<LI><em>Date</em>: Fri, 25 Feb 1994 12:56:03 -0800 (PST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:mpd@netcom.com">mpd@netcom.com</A> (Mike Duvos)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Earlier this morning I grabbed the latest version of Magic Money
+from csn.org and compiled it under the Borland C++ 3.1 IDE. Since
+the Borland C compiler is one of the more paranoid ones around, I
+thought I would briefly list the things I had to do in order to
+get zero warnings and zero errors.
+
+The sources I started with were MGMNY10E.ZIP and PGPTL10C.ZIP.
+
+After #defining MSDOS you will find that it is a good idea to
+#include &lt;stdlib.h&gt; in almost every module.  This prototypes
+quite a few of the commonly used functions which would otherwise
+cause the compiler to complain.  A few modules will require
+&lt;mem.h&gt;, &lt;string.h&gt;, and &lt;time.h&gt; since they call functions in
+these modules which are not in &lt;stdio.h&gt; or &lt;stdlib.h&gt;.
+
+The C library function "randomize" is defined in &lt;stdlib.h&gt;. This
+conflicts with the Magic Money function of the same name which
+initializes the MD5 based RNG used to generate coin ids. I
+changed the name of the Magic Money one to "random_init".
+
+There is no prototype for pgp_randombyte.  Since this function
+returns "byte", not "int", this could be painful on any compiler
+which treats these types of function returns differently.
+Complete prototypes for (*output) and (*lookup) need to be
+provided in the function header of pgp_check_sigs and also for a
+different function pointer (*output) used in PGPKGEN.
+
+The Borland compiler always warns on "if (a=b)" because it
+assumes the user mistyped "if (a==b)".  To get rid of the
+warning, you have to say "if (0!=(a=b)) which is optomized out by
+the compiler.  This occurs in a number of places, including the
+macro for multiplication mod 65537 in idea.c.
+
+There is a reference to an undefined pgp_pubkey in fifo.c which
+goes away if you #include "pgptools.h".  You then also have to
+toss in "mpilib.h" and "md5.h" to make "pgptools.h" happy.
+
+It appears that mpilib.c has been persuaded to compile the UPTON
+modmult instead of the SMITH modmult.  Unfortunately, there are a
+few modules which fail to #include the definition of UPTON and
+still call stage_smith_modulus and smith_modmult.  Sticking in a
+#define to UPTON at the top of "mpilib.h" fixes this.
+
+The conditional code which allows prior definition of external
+versions of mp_setp, mp_addc, mp_subb, mp_smul, and mp_rotl
+written in assembly language for some strange reason causes the
+compiler to generate externals to _P_SETP, _P_ADDC, _P_SUBB,
+_P_SMUL, and _P_ROTL instead of _mp_setp, _mp_addc, _mp_subb,
+_mp_smul, and _mp_rotl in modules which reference these routines.
+It does not seem to have this effect in mpilib.c where these
+routines are defined.  Deleting the corresponding #ifdefs cures
+this.
+
+The compiler correctly points out that pgp_extract_rsa never uses
+the variable "pk" passed to it.  At the cost of a few machine
+cycles, you can silence the compiler by putting "pk=pk" as the
+first executable statement in this function.
+
+The function pgp_randombyte hashes a variable "time" without
+first initializing its value.  It might be nice to change "time"
+to "timestamp" and do a "time(&amp;timestamp) unless it was the
+authors intention to utilize uninitialized memory.  If the server
+is executed more than one time within a second, it can generate
+indentical random values.  This could be a problem when
+batch-processing mail. Including a fast timer register in the MD5
+hash in addition to the time of day in seconds would likely
+eliminate this risk.
+
+The program uses "safemalloc" and "mm_safeopen" to access memory
+and files, but does a very large number of "fread" and "fwrite"
+calls without checking to see if they completed successfully.  A
+"safefread" and "safefwrite" might be a good idea so the server
+does not continue happily on as the hash file fills up the disk.
+
+I was thinking I might put the DOS executables for Magic Money in
+my FTP directory, in case anyone wants to play with them but
+doesn't wish to compile them from source.  Send me some mail if
+you would like me to do this.
+
+
+-- 
+     Mike Duvos         $    PGP 2.3a Public Key available    $
+     mpd@netcom.com     $    via Finger.                      $
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01377.html">dockmaster addresses</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01380.html">Re: your mail</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01377.html">dockmaster addresses</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01371.html">I have FOIA'd the Clipper Key Escrow databases</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01369"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01369"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

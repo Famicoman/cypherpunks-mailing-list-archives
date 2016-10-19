@@ -1,0 +1,210 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: RATINGS: proposal -->
+<!--X-From-R13: vnafzvguNjrnfry.pp.tngrpu.rqh (Wna Ezvgu) -->
+<!--X-Date: Tue, 22 Feb 94 13:04:35 PST -->
+<!--X-Message-Id: 9402222102.AA22043@weasel.gatech.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>RATINGS: proposal</TITLE>
+<LINK REV="made" HREF="mailto:iansmith@weasel.cc.gatech.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01179.html">Date Prev</A>][<A HREF="msg01186.html">Date Next</A>][<A HREF="msg01196.html">Thread Prev</A>][<A HREF="msg01186.html">Thread Next</A>][<A HREF="index.html#01188">Date Index</A>][<A HREF="threads.html#01188">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>RATINGS: proposal</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: RATINGS: proposal</LI>
+<LI><em>From</em>: <A HREF="mailto:iansmith@weasel.cc.gatech.edu">iansmith@weasel.cc.gatech.edu</A> (Ian Smith)</LI>
+<LI><em>Date</em>: Tue, 22 Feb 1994 16:02:36 +0500</LI>
+<LI><em>Reply-To</em>: Ian Smith &lt;<A HREF="mailto:iansmith@cc.gatech.edu">iansmith@cc.gatech.edu</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Eric: I was about to send this to the cpunx list, but got your message
+first. I'll send this to you first, and maybe we can hash out
+something better before 'going public' with it... here it is. I had
+not thought about the possibility of rating multiple messages in one
+"rating message." My scheme doesn't address this, although simple
+changes could accomplish it. I'm not sure that I understand why a mail
+message could be rated multiple times by the same rator, unless you
+mean that one might define "axes of rating", like "content",
+"spelling", "novelty", etc.  I think that such a scheme is good, but
+is starting to place more load on the rator.  I had hoped that I could
+use a slider widget, and have the user generate somewhat reasonable
+ratings just by setting the slider to a value between 0 and 100 and
+hitting a "rate" button. This would automagically put in motion the
+scheme outlined below.
+
+As an MUA implementor, here's my first cut of a proposal for a rating
+system that would hopefully meet the goals that eric outlined and be
+quickly implementable.
+
+1) Mail to cypherpunks-ratings will be gatewayed back to all members
+of the list if it has the following lines in its body [Headers are
+ignored...] Lines in brackets are optional:
+
+[whitespace]
+Target-Message-Id: &lt;messageId&gt;
+Rating: &lt;integer&gt;
+[Comment: &lt;newline terminated string&gt;]
+[Subtopic: &lt;one word string&gt;]
+[Rating-originator: &lt;newline terminated identity string: preferably
+PGP public key ident]
+
+[PGP signature]
+
+Body lines which don't have the syntax mentioned above are ignored.
+
+The comment field is intended to allow the person doing the rating to
+give info about his rating or the rated message to the rated message
+reader, when the message is read. I.e. when I read a message from the
+cypherpunk list from joe blow which has been rated by
+iansmith@cc.gatech.edu with a comment of "this message is fantastic"
+I can get something like:
+
+From: joe blow
+Subject: foobar
+Rating-Comment: (iansmith@cc.gatech.edu) this message is fantastic! 
+Rating: 100
+
+Similarly the subtopic field is to provide an automatic version of
+what is now being done by hand with ADMIN: and RATING: in subject
+fields or the like.  This would allow a mail user agent to provide
+some automatic content help, provided that a displayed mail message
+meets enough of its criteria for this (have enough ratings been
+received? do 75% of the ratings agree on the subtopic for the mail
+message? etc).
+
+The PGP information is intended to facilitate "rating reputations" so
+that MUAs could be configured to "trust" ratings from people with good
+reputations for rating in ways that meet the user's idea of "goodness."
+
+Now, this strategy doesn't say anything about what the numeric rating
+scale means. I favor a 0-100 scale, with 0 being a "don't read this,
+its crap" and 100 being "must read." Although ideally this should be a
+curve with 50 being very common and 100's and 0's being very uncommon,
+it seems unlikely to me that such a system would occur in practice, as
+the common case (50) is the MOST unlikely to motivate someone to issue
+a rating message.  I'm not sure what to do about this problem.
+
+When the mail messages is echoed out to the ratings mailing list, it
+would bear the additional header line: 
+X-Mail-Rating: cypherpunks
+
+This would allow the MUA of the recipient to easily recognize the
+"ratings mail" messages and not display them to the user.  The MUA
+should be building a database or otherwise storing the ratings of mail
+messages, so that when it displays a message it can bring up the
+appropriate ratings information.  This allows clever user interfaces
+to be constructed based on ratings information, especially
+reputation-based arragements.  Consider our message from Joe Blow
+above and the message display below:
+
+From: joe blow
+Subject: foobar
+
+PGP-Signed-Message-Ratings: 7
+PGP-Signed-Rating-Average: 67.5
+PGP-Signed-Common-Subtopic: DIGICASH
+Highest-Rator-Comment: Good discussion of Chaum's methods
+Lowest-Rator-Comment:  Stupid rehash of Chaum's approach
+
+Now back the MUA implementation: This database (or other storage)
+which I have been discussing is somewhat irritating in its complexity
+and storage requirements, but mostly unavoidable because of the
+ordering properties of the problem. It is quite likely that one will
+receive ratings *before* the mail message itself arrives (in fact,
+this may be exactly what you want!) so the MUA will be forced to "sit
+on" ratings for messages it hasn't seen yet. 
+
+To make the database/storage problem a bit more managable, MUA's can
+delete ratings information when they delete a mail message.  However,
+it seems like a good idea to keep this information lying around for
+potential searches of an archive of a mailing list. I.e. "Give me
+messages which have the rating subtopic of DIGICASH and average
+ratings over 50"
+
+Major problems with this scheme:
+
+1) Heavy dependance on Message-Id: field of messages and not all
+messages bear one of these. I don't see that is avoidable, since we
+must uniquely identify mail messages and the Message-Id is designed to
+do this.
+
+2) This scheme rewards people who wait on the mail message ratings to
+come in then read the mailing list.  This could be problematic if we
+get into a situation where people who should be doing the rating
+aren't reading messages (and rating them) because they are waiting on
+others to do so.  I'm not really sure how to address this problem;
+timeliness cannot be used a factor when considering ratings, because
+of the speed differences in different peoples mail transport system
+(its unfair to penalize those that have long mail delays or are
+vacation).  I think that perhaps some sort of "carrot" should be used
+to encourage to rate messages, but I'm not sure what this carrot would
+be.
+
+
+what do ya think?
+ian
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01186" HREF="msg01186.html">Re: RATINGS: proposal</A></STRONG>
+<UL><LI><EM>From:</EM> "Robert A. Hayden" &lt;hayden@krypton.mankato.msus.edu&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="01182" HREF="msg01182.html">RATINGS: proposal</A></STRONG>
+<UL><LI><EM>From:</EM> hughes@ah.com (Eric Hughes)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01179.html">RE: the black budget</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01186.html">Re: RATINGS: proposal</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01196.html">RE: the black budget</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01186.html">Re: RATINGS: proposal</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01188"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01188"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

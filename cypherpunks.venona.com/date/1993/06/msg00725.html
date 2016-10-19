@@ -1,0 +1,204 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: remailer ideas &#38; proposals -->
+<!--X-From-R13: ""Z. Rrgjrvyre"" <yq231782Nybatf.ynapr.pbybfgngr.rqh> -->
+<!--X-Date: Wed, 30 Jun 93 00:14:52 PDT -->
+<!--X-Message-Id: 9306300657.AA26896@longs.lance.colostate.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>remailer ideas &amp; proposals</TITLE>
+<LINK REV="made" HREF="mailto:ld231782@longs.lance.colostate.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00730.html">Date Prev</A>][<A HREF="msg00727.html">Date Next</A>][<A HREF="msg00730.html">Thread Prev</A>][<A HREF="msg00739.html">Thread Next</A>][<A HREF="index.html#00725">Date Index</A>][<A HREF="threads.html#00725">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>remailer ideas &amp; proposals</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: remailer ideas &amp; proposals</LI>
+<LI><em>From</em>: ""L. Detweiler"" &lt;<A HREF="mailto:ld231782@longs.lance.colostate.edu">ld231782@longs.lance.colostate.edu</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 30 Jun 93 00:57:13 -0600</LI>
+<LI><em>Cc</em>: <A HREF="mailto:ld231782@longs.lance.colostate.edu">ld231782@longs.lance.colostate.edu</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+The remailer details have always been one of the most persistent,
+relevant, and interesting aspects of this group. I'm really pleased to
+see e.g. Hal Finney's attempts to automate a testing process, and
+others' interests in methods of increasing reliability and security. 
+Unfortunately, it seems to me the same problems keep popping up unresolved.
+
+Here are a few brief ideas.
+
+1. `dropping' messages
+
+Here is an idea: if a remailer drops a message or forwards it
+successfully it could broadcast a message to a group such as misc.test.
+ There are all kinds of problems with autoresponders replying to these
+kinds of messages but I think anyone who has the audacity to run an
+autoresponder despite no clear mandate to do so is asking for trouble
+anyway. Regarding traffic analysis, see below.
+
+Also, Miron Cuperman was running an anonymous pool mailing list, last I
+heard email pool0-request@extropria.wimsey.com with `subscribe' in the
+subject line to get on it. Is this still running? Is anybody playing
+with this? What are people doing with this anyway?
+
+Now, for some *really* radical ideas. If cypherpunk remailers were
+truly impervious to traffic analysis then we wouldn't *care* if
+detailed statistics on mail messages were broadcast to the world,
+because correlations would be intractable to determine so it wouldn't matter.
+
+So, I propose that remailers actually start posting to a list somewhere
+*all* internal traffic. This will create an excellent incentive for
+them to implement traffic-analysis-thwarting (TAT?) mechanisms. Of
+course, the mechanisms should be implemented before they start
+broadcasting this information!
+
+The broadcasting of this information is like built-in accountability.
+If people see trends they can notify operators of their weaknesses. It
+actually *encourages* the development of traffic analysis and thereby
+improved safeguards.  Also, it helps us paint an excellent *overall*
+picture of remailer use and increase their exposure to the `unwashed masses'.
+
+BTW, I would like to see a list that keeps track of the professed
+`logging' practices and historical reliability of the various remailers. 
+
+2. Embedded messages
+
+I've been thinking about the whole idea of message transmission in
+SMTP, and it strikes me as very sloppy. We have this system where
+intermediate hosts can tack on junk at the beginning and ending of
+messages (such as `Received' lines, overflow headers, etc.) without
+violating any standards. I think this should change--an explicit
+standard handling this modification should be in place and anyone that
+doesn't adhere to it can be blamed for `violating the standard' and
+maybe even cleaning up their act.
+
+Here is one such proposed standard. I'd like to see what everyone
+thinks. I proposed something similar a long time ago.
+
+Here is the idea: when a message is submitted to a host, the host is
+responsible for maintaining a very precise map of what the message
+appeared as when it went `in', and what was added in the process,
+`out'.  Here is one such way to make this explicit:
+
+Have a `x-message-format' line. The way this header works is that it
+represents the structure of the message in lines. Each new remailer,
+when it adds *anything* *anywhere* in the message is also responsible
+for correctly updating the x-message-format line, under the following standard.
+
+The line contains text tags, followed by a colon, followed by a number
+of lines representing that field in the message. Also, the use of
+paranthesis makes the idea of `embedding' explicit. Each level of
+paranthesis represents a `wrapper'. A mailer may add any number of new
+fields anywhere in a message and then `wrap' the whole thing in
+parenthesis.  Fields are separated by spaces.  The fields collectively
+name all lines in the message in sequential order.
+
+For example, the first mailer might create a root x-message-format-line like:
+
+x-message-format: (headers:4 body:10 signature:3)
+
+Then passing through one intermediate remailers, we might get a
+`recieved' status line added, at the *beginning*:
+
+x-message-format: (recd:1 (headers:4 body:10 signature:3))
+
+And some goofy Fidonet gateway may find it necessary to stick something on the end:
+
+x-message-format: ((headers:4 body:10 signature:3) fidofooter:4)
+
+Of course, under the standard it would make sense to have categories of
+the tag specifications, so for example any tag that represents a header
+would have something in its text like `header' so it could be identified.
+
+We might even have text fields inside the embedded message routing
+structure that identify the names, errors-to emails address, etc. of
+the intermediate hosts.
+
+The point is that with all this the recipient has a transparently clear
+picture of what constitutes the original message and what was added as
+intermediate fluff, which currently SMTP is frighteningly and
+embarrassingly lax in identifying. The idea of the *original message*
+vs. *intermediate fluff* is absolutely critical and we deserve
+sophisticated protocols that preserve the distinction.  (Gad, it's
+amazing what remailers do to messages. They will mess with lines that
+contain only hyphens or '&gt;' quote any line that begins `From'. I find
+all this highly atrocious.)
+
+So, what does anyone think?
+
+The problems I can see are in the proliferation of tags. Maybe a
+central authority needed to regulate them to be sensible and unique (a
+registry). Also, is it the case that some headers can get too large?
+The solution I have for this is to break up the x-message-format line
+into multiple lines:
+
+x-message-format1:
+x-message-format2:
+
+where successive lines actually represent one level of nested parenthesis.
+
+Note: I don't know if the inherent `sloppiness' in SMTP will ever be
+successfully evaded given its widespread entrenchment. However, I
+believe protocols superior to it in that regard are inevitable in their adoption.
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00739" HREF="msg00739.html">Re: remailer ideas &amp; proposals</A></STRONG>
+<UL><LI><EM>From:</EM> zane@genesis.mcs.com (Sameer)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00730.html">Wired tidbit about NSA</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00727.html">Kleinpaste's Charcoal anonymous server</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00730.html">Wired tidbit about NSA</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00739.html">Re: remailer ideas &amp; proposals</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00725"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00725"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

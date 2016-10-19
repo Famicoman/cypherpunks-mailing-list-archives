@@ -1,0 +1,178 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Looking for code to run an encrypted mailing list -->
+<!--X-From-R13: nobfgvpxNargpbz.pbz (Oyna Pbfgvpx) -->
+<!--X-Date: Wed, 6 Mar 1996 22:12:41 +0800 -->
+<!--X-Message-Id: 3/8Ox8m9L0/D085yn@netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 2.2.32.19960304053309.00bd5ec8@mail.software.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Looking for code to run an encrypted mailing list</TITLE>
+<LINK REV="made" HREF="mailto:abostick@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00218.html">Date Prev</A>][<A HREF="msg00261.html">Date Next</A>][<A HREF="msg00172.html">Thread Prev</A>][<A HREF="msg00211.html">Thread Next</A>][<A HREF="index.html#00209">Date Index</A>][<A HREF="threads.html#00209">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Looking for code to run an encrypted mailing list</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:jpp@software.net">jpp@software.net</A></LI>
+<LI><em>Subject</em>: Re: Looking for code to run an encrypted mailing list</LI>
+<LI><em>From</em>: <A HREF="mailto:abostick@netcom.com">abostick@netcom.com</A> (Alan Bostick)</LI>
+<LI><em>Date</em>: Mon, 04 Mar 1996 21:24:07 -0800</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00154.html">2.2.32.19960304053309.00bd5ec8@mail.software.net</A>&gt;</LI>
+<LI><em>Organization</em>: Arrogant Opinions 'R' Us</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00154.html">2.2.32.19960304053309.00bd5ec8@mail.software.net</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+In article &lt;<A HREF="msg00154.html">2.2.32.19960304053309.00bd5ec8@mail.software.net</A>&gt;,
+John Pettitt &lt;jpp@software.net&gt; wrote:
+
+&gt; I'd like to run an encrypted mailing list  - the model I'm linking of is this ..
+&gt; 
+&gt; Poster cryptes mail with pgp using list exploder key. List exploder decrypts
+&gt; mail and recrypts with keys for all current list members and then sends the
+&gt; mail.
+&gt; 
+&gt; [I don't want all the list members to need to know every other list members
+&gt; public key]
+
+Is this the right way to go about doing this?
+
+If the mailing list has N members, then, for each message posted to the
+list, the list processor must decrypt the message and then reencrypt it
+N times.  If it is using PGP, that means:
+
+(1) decrypting the incoming message's IDEA session key with the list
+processor's RSA private key;
+
+(2) decrypting the incoming message using the IDEA session key;
+
+foreach $listmember (@mailinglist)
+{
+(3) generate an IDEA session key for message to listmember;
+
+(4) encrypt the message with that IDEA session key;
+
+(5) encrypt the session key with listmember's RSA public key;
+
+(6) send the encrypted message and encrypted IDEA session key to listmember;
+}
+
+PGP does each encryption seamlessly . . . but in a large list, that's 
+a lot of encryptions to do.  
+
+It seem's to me that it would be more efficient simply to:
+
+(1) decrypt the incoming message's IDEA session key using the list
+processor's RSA private key;
+
+foreach $listmember (@mailinglist)
+{
+(2) encrypt that same IDEA session key with listmember's RSA public key;
+
+(3) send listmember the encrypted message and the encrypted IDEA session
+key;
+}
+
+This saves one IDEA decryption and N IDEA encryptions of the message. 
+It also saves the need to generate N random session keys, demanding 128N
+bits of randomness from randseed.bin .
+
+It means, however, that the list processing software couldn't use PGP, but
+has to implement RSA public-key cryptography independently and
+compatibly with PGP, so that listmembers could use PGP to encrypt and
+decrypt list messages.
+
+(That is, unless the API for PGP 3.0 will be sufficiently robust to
+allow fancy session key management like this.)
+
+According to Schneier, RSA is about 100 times slower than IDEA. (He says
+it's 100 times slower than DES in software, and DES are about the same
+speed.) The faster method still requires N RSA encryptions of the
+128-byte session key.  Processing time is cut in half for a message of 
+about 13kbytes' length; longer messages save more, shorter ones less.
+
+And it occurs to me that, since RSA encryptions are commutative, the
+list processor could encrypt the session key with the recipient's public
+key *before* it decrypted it with its private key, so that the session
+key is never available in cleartext to the list processor operator.
+
+(Do pseudopunks write pseudocode? ;-) )
+
+- -- 
+   Alan Bostick             | "If I am to be held in contempt of court,
+Seeking opportunity to      | your honor, it can only be because the court
+develop multimedia content. | has acted contemptibly!"
+Finger abostick@netcom.com for more info and PGP public key
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQB1AwUBMTvdZuVevBgtmhnpAQEEowMAuo9Z3t8lmE9SH0pSoTXeIIxjwqG/uWWQ
+kSgichHXmun8X+q+wjRu7iGTaDF1WabvOXUIPOftjZgo7xN5MN5awbEgGmrCidXd
+ClUQWX/qvH0h+IxcoSURsJOX8MFLMRlP
+=0Cwo
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00154" HREF="msg00154.html">Looking for code to run an encrypted mailing list</A></STRONG>
+<UL><LI><EM>From:</EM> John Pettitt &lt;jpp@software.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00218.html">Phil Zimmermann, Cyber Rebel</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00261.html">Re: SEAL cipher info requested (something actually list related!)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00172.html">Re: Looking for code to run an encrypted mailing list</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00211.html">Re: Looking for code to run an encrypted mailing list</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00209"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00209"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

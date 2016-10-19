@@ -1,0 +1,169 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Remailer reply addresses -->
+<!--X-From-R13: tgbnyNna&#45;grnyynpu.pbz (Uenunz Fbny) -->
+<!--X-Date: Thu, 14 Apr 94 13:01:52 PDT -->
+<!--X-Message-Id: 199404141958.UAA20685@an&#45;teallach.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Remailer reply addresses</TITLE>
+<LINK REV="made" HREF="mailto:gtoal@an-teallach.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00624.html">Date Prev</A>][<A HREF="msg00631.html">Date Next</A>][<A HREF="msg00585.html">Thread Prev</A>][<A HREF="msg00592.html">Thread Next</A>][<A HREF="index.html#00642">Date Index</A>][<A HREF="threads.html#00642">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Remailer reply addresses</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A></LI>
+<LI><em>Subject</em>: Re: Remailer reply addresses</LI>
+<LI><em>From</em>: <A HREF="mailto:gtoal@an%2Dteallach.com">gtoal@an-teallach.com</A> (Graham Toal)</LI>
+<LI><em>Date</em>: Thu, 14 Apr 1994 20:58:57 +0100</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Ah!  I'm glad conversation on this thread has picked up - I was afraid
+no-one was interested.
+
+:Graham's suggestion about automatic remailer reply chains reminded me of
+:a simpler system which I would like to see.
+
+:Suppose one site, somewhere, would create new mail addresses upon request,
+:and map them to encrypted remailer chain blocks.  (These are nested remailer
+:requests, where the outer layer is encrypted for the first remailer and tells
+:it where to send the message, the next layer is encrypted for the 2nd remailer
+:and tells it where to send, and so on.  No remailer sees anything more than
+:where it is sending the message and where it received it from.)  A new account
+:is created which maps, say, to a file which has one of these "anonymous return
+:addresses" in it.  Any mail incoming for that address simply gets sent to the
+:remailer in the file, with the ARA stuck in front of it.
+
+That's pretty much what I was thinking of, except you don't need the
+pseudonym server.  I find this stuff easier to talk about with examples
+than in general, so here's what I'm thinking about:
+
+I mail to first remailer (R1).  The remailer inserts my reply address into
+the mail, encrypted, and either mails it to the recipient if I gave one,
+or to the next remailer if I specified a remailer chain - or to another
+remailer at random on it's own whim if it feels like doing so.
+
+Let's assume it's going to another remailer then.  This next remailer (R2)
+takes the header block with my reply address in it, and prepends what *it*
+sees as the reply address, ie remailer R1.  It then encodes this into an
+identically-structured reply block, and inserts *that* in the mail instead
+of the original reply block, before passing it on.
+
+This can be repeated as often as desired - the mail will always have
+only two parts where-ever it turns up - an encrypted reply-block and the
+text.  Let's say it ends up on the n'th remailer, Rn.
+
+When the real recipient gets the mail and replies to it, the reply goes
+to remailer Rn, and Rn can decode the header block.  The decoded header block
+contains an address, and extra text which happens to be a fully-formatted
+header block itself.  This extracted, smaller, header block is put back into
+the mail instead of the one which was just decoded, and the mail is sent
+back to the address that was extracted.
+
+eventually it goes through umpteen remailers, and R2 passes it back
+to R1.  R1 decodes the header block, finds *only* the address - no
+nested header block, and passes the mail back to the user at that
+address.
+
+So the whole thing is really a trivial protocol - just
+
+  &lt;start of header block marker, for remailer to locate it&gt;
+  email address
+  djhfkjsdhfdshf (opaque text from previous encryptions) kjfhkdhfkdhfkd
+  dfkdfkjdfkhdf  (possibly on multiple lines) jhldkjodkfdjfljdlfkjldjdl
+  &lt;end of header block marker&gt;
+
+Sure, this could be extended to put all sorts of neat features in
+the encrypted area, but I rather like the simplicity of just keeping
+it to a plain username@site on a single line.
+
+
+:With this software I could do something which cannot be done today.  I could
+:send mail to which someone could hit "r" to reply, and receive that reply,
+:without any one person knowing my pseudonym.  This is not that much to ask
+:for!  I'd say it is the bare minimum for the use of pseudonyms on the net,
+:yet we don't have it, after all this time.  And look how close we are to
+:being able to do it.
+
+Absolutely!  That's what I want too.
+
+:With this basic system in place, some of Graham's ideas about time-limited
+:or use-limited pseudonyms could be applied as well.  Other extensions people
+:have suggested would have the pseudonym server hold messages in inboxes until
+:people trigger a dump to a freshly created anonymous address.  A lot of things
+:are possible.
+
+I agree entirely except I don't see the need for a pseudonym server - just
+the normal remailer reply address should be enough (so that people who
+can't create aliases can run this stuff on remailers out their personal
+accounts) which is why I think the blinded reply addresses should be in
+the *body* of the mails.  (Smart mail software would scan the text for
+these and handle stuff like indentation etc.  It doesn't seem too difficult
+- I already use procmail for something like this where I scan for PGP
+blocks in mail and decrypt them on receipt where possible)
+
+:But we should walk before we run.  Right now I don't feel that we are even
+:crawling yet.
+
+hh@soda seems to have shown us how to walk :-)
+
+G
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00624.html">PGP encryption</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00631.html">Rejected mail</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00585.html">Re: Remailer reply addresses</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00592.html">USWA</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00642"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00642"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

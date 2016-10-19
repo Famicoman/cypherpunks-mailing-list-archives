@@ -1,0 +1,479 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Technical Description of PGP 5.5 -->
+<!--X-From-R13: Pvyy Egrjneg <fgrjnegfNvk.argpbz.pbz> -->
+<!--X-Date: Wed, 15 Oct 1997 16:08:40 +0800 -->
+<!--X-Message-Id: 3.0.3.32.19971015004322.0068ca64@popd.ix.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Technical Description of PGP 5.5</TITLE>
+<LINK REV="made" HREF="mailto:stewarts@ix.netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00762.html">Date Prev</A>][<A HREF="msg00766.html">Date Next</A>][<A HREF="msg01817.html">Thread Prev</A>][<A HREF="msg00773.html">Thread Next</A>][<A HREF="index.html#00763">Date Index</A>][<A HREF="threads.html#00763">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Technical Description of PGP 5.5</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:cryptography@c2.net">cryptography@c2.net</A></LI>
+<LI><em>Subject</em>: Technical Description of PGP 5.5</LI>
+<LI><em>From</em>: Bill Stewart &lt;<A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 15 Oct 1997 00:43:22 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Jon Callas presented a technical description of PGP5.5 at this 
+month's Bay Area Cypherpunks meeting, as well as flak catching on the 
+politics discussion; Phil Zimmermann and other PGP folks also helped.
+This posting is an attempt to summarize the technical parts
+and leave the politics for other messages.  Perhaps there's been some
+technical discussion on OpenPGP, but feel free to forward this there if not.
+
+1) PGP 5.5 API Toolkit -  It's the core of the PGP5.5 GUI and SMTP tools.
+	It'll be out Real Soon Now.  It's a major change from the 
+	PGP 5.0 Toolkit, which is based on ViaCrypt's older code.
+	The toolkit knows about all the features in the message
+	formats, so even if the application programs from PGP
+	don't provide a given friendly or hostile feature,
+	you can still write it yourself, and so can the Bad Guys.
+
+2) PGP 5.* message format - unchanged - uses the multiple recipients,
+	without any indication of or dependence on relationships
+	between the recipients.  The format is approximately
+		Recipient Record 1 - KeyID1, E(sessionkey, PubKey1)  ....
+		Recipient Record N - KeyIDN, E(sessionkey, PubKeyN)
+		Message - E(Message, sessionkey)
+	KeyID is the 32-bit KeyID, rather than a fingerprint.
+	I don't know if the format or the PGP 5.x software can 
+	generate or accept messages with recipient records for
+	two different keys with the same keyid (or whether it matters
+	if the keys are for DH*, RSA, or both.)
+		* DH can be spelled "E L  G A M A L" -- Blame Cylink :-)
+
+	While 5.0 did introduce new data formats, they're not stealthy,
+	and features like the SMTP filters depend on being able to
+	know how many recipient-key records a message contains,
+	where their boundaries are, and what their KeyIDs are.
+
+3) PGP 5.* public key format - The 5.5 features are actually present 
+	in the 5.0 key record formats, but there wasn't any 
+	implementation that used the extra fields.  
+	The record for keys is about like this, though I may have some
+	of the details wrong.  The record for the RSA Keys uses the 
+	old format; this format is for newer keys.
+
+	Key Record type 
+	KeyID
+	UserName
+	Algorithm ID - the interesting combo is ElGamal and DSA
+	Encryption Key
+	OptionalCMRK_1: (Mandatory/Optional flag1, Msg Recovery KeyID1)
+	 .....
+	OptionalCMRK_N: (Mandatory/Optional flagN, Msg Recovery KeyIDN)  
+		(Note: the format allows multiple records, PGP5.5 only 
+		generates one, though it might accept and use multiple.
+		Nobody indicated whether more than one CMRK indicates
+		that the sender should encrypt to all CMRKs, pick one,
+		or do something interesting like secret-share.)
+		(Note: the KeyID is a 32-bit KeyID, not the full 
+		fingerprint, 	which has amusing deadbeef attacks. 
+		(Unless I remembered wrong.))
+	Signature Key 
+	Self-Signature on (Encryption Key, Signature Key, UserName)
+		(I don't know if the self-signature includes the CMRKs,
+		but I think it includes the user names.)
+	Optional_Signature_1: (Signature KeyID1, Signature1)  .....
+	Optional_Signature_N: (Signature KeyIDN, SignatureN) 
+		(I don't remember if it's just the KeyID or the 
+		full fingerprint.)
+		(Note: Signatures are only on the signature key,
+		so you can change the encryption key and keep your
+		collection of web of trust signatures; this is secure
+		because the encryption key is signed with YOUR sig key,
+		and your sig key is signed by your friends' sig keys.)
+
+	The signature structure is interesting, since it lets you
+	implement forward secrecy somewhat conveniently - 
+	just change your encryption key.  	I don't know if the 
+	5.0 / 5.5 implementations can easily handle multiple
+	records for the same KeyID, so there may be some 
+	transition issues, but that's an implementation question, 
+	not a data format question.
+
+	The CMRK** is obviously the new and controversial feature.
+	The key is attached to the recipient's key, not the 
+	sender's program, which has some implications in who 
+	has to participate in any message escrow activities 
+	and where they take place.  To some extent this is planned, 
+	and to some extent it's just the consequences of what parts 
+	of the system you have control over and what you don't.
+	This approach has the recipient publish a CMRK KeyID,
+	and has the sender decide whether to use it,
+	rather than having the sender's system specify who 
+	gets the CMR copy.  
+	- Since this is the data format, it doesn't have any control 
+	over what the sender really does; 	any enforcement is in the 
+	sender's or recipient's client or in the SMTP mail filters.  
+	- The format just contains the CMR KeyID, not the key itself;
+	looking up the key is a separate job.
+		(** Corporate Message Recovery Key?  Cover My Rear Key?)
+
+	NOT TALKED ABOUT, but possibly relevant: www.pgp.com says:
+		"Using PGP’s Administrative Wizard, for example, 
+		administrators can set key generation configurations; 
+		require encryption for all email messages sent by a set 
+		of users; enable corporate message recovery; and 
+		limit the ability of users 	to perform certain actions, 
+		such as key generation."
+	I assume the parts about key generation are limitations on the
+	client, either generating PGP Crippleware?  It can't be 
+	that heavy a restriction, since users could use PGP5.0,
+	or 2.6.2 if the rest of the company can accept RSA keys,
+	but it's sounds disturbing and it would be nice to see 
+	documentation.  Could it be limits in the keyserver instead?
+
+	Also not talked about - CERTIFICATE SERVER, and 
+		CERTIFICATE SERVER REPLICATION ENGINE
+	which has lots of cool LDAP directory lookup stuff.  
+	The web page didn't say anything about policy administration 
+	on the server, but it's another obvious hook, assuming people 
+	in a company use it (e.g. a key server could only store keys 
+	with CMRKey set to Mandatory, though I don't know if the 
+	initial PGP CS version does that sort of thing.)
+
+4) PGP 5.5 Implementation and GUI - 
+	- When you generate a 5.5 DH key, you have the option of 
+	specifying a CMRK and setting the Mandatory/Optional flag.
+	I don't remember if there's an option to force you to use the 
+	CMRK, or to set a default CMRK or default value for the 
+	Mandatory flag, but the PGP folks kept saying things about 
+	always asking you things and always letting you know 
+	when it's going to do things.
+	- The PGP 5.5 implementation puts at most one CMRK in the 
+	record, though it doesn't choke on receiving multiples.
+	- If you receive a key record containing CMRKs, PGP 5.5 stores
+	them; I don't remember if it alerts the user at that point or
+	only when the user uses the key later on.
+	- If you encrypt a message using 5.0, it ignores the CMRK.
+	- When you are encrypting a message, the GUI lets you pick 
+	what keys to encrypt to.  If one of the keys has a CMRK, 
+	if the Mandatory flag is not set, it asks if you want to 
+	set the CMRK as a recipient.
+	If the Mandatory flag is set, it puts the CMRK as a recipient.
+	Either way, you can delete the recipient, and it doesn't 
+	enforce it, and it also makes the CMR keys show up in red etc.
+	It will nag you if you delete a mandatory, but won't stop you.
+	(I think I got those details right.....)
+	Also, if there's a CMRK KeyID, and your keyring doesn't 
+	contain the key for that KeyID, it asks if you want to fetch 
+	it from the keyserver.
+
+	- As far as I remember, if you have a CMRK Mandatory set on 
+	one of your keys, and you receive a message addressed to 
+	your key, it doesn't check if the message was also addressed 
+	to your CMRK.
+	A Bad Guy could build an implementation that did this, but
+	the messages are interoperable with PGP 5.0 and don't contain
+	any indication that any recipients use or are CMRKs, so it's
+	easy to work around if they do.  And a Bad Guy could also build
+	in Passphrase Leakage or other evil things anyway.
+
+	Again, the CMRK belongs to the recipient, not the sender,
+	and deciding to encrypt to it belongs to the recipient.
+	The ViaCrypt BusinessGAK version had a feature that let you
+	compile in a Message Recovery Key that the sender was forced to
+	use (which was a clone of the Always-Encrypt-To-Self code.)
+	This is #defined out in both 5.0 and 5.5; the PGP folks 
+	tried to see what happened if they #defined it in when 
+	compiling, and it nicely dumped core when they used it.
+
+5) SMTP filters - PGP Policy Management Agent for SMTP
+	is really separate programs for Incoming and Outgoing mail.
+	None of the PGP 5.5 features do more than nag you about using 
+	them; they don't have an enforcement mechanism.  The 
+	SMTP filters, on the other hand, are designed for enforcement,
+	and some of the interesting security and control issues
+	come from the interaction between the filters and the PGP5.5.
+	The PGP folks said that their particular implementation
+	was a quick and basic job using the toolkit -
+	so even though it's not particularly draconian or intrusive,
+	it's easy for people to write their own that are more hostile.
+
+	Neither filter, for instance, saves copies or forwards copies
+	of mail to an archive or corporate enforcers or runs scripts -
+	all they do is pass or bounce the mail (with configurable message).  
+	But you could write one that did, if you were that type of company.
+	Source is not provided ("Look, we have to have _something_ to sell"),
+	but some of the toolkit example code will be fairly similar.
+
+	The filters don't look inside encrypted packets (so they
+	don't have to manage private keys or other dangerous things).
+	This does mean that they can check for encryption or signatures,
+	but can't check if there's a signature inside an encrypted message.
+
+6) Incoming SMTP filter - Really simple
+	Remember - CMRKs are attached to the recipient, not the sender;
+	this is the only place you can enforce that for your employees.
+	Incoming mail is checked to see if it's acceptable, and either
+	passed to a "real" SMTP server or bounced with a message
+	(typically includes a policy statement or URL and/or
+	a pointer to a key server handling the CMRKs.)
+		Note that all the filtering is based on KeyIDs - 
+		not email senders or email recipients or transport info.
+	Messages can be rejected if they're unencrypted, or rejected if 
+	the encryption recipients don't include one of a set of keys.
+	Unless I'm remembering wrong if the list of keys was not
+	dependent on the recipients, so you can't do things like
+	"If Recipient=PurchasingClerk Require PurchasingBoss", 
+	though you can require "One Recipient in set 
+		PurchasingBoss, SalesBoss, EngrBoss", etc.
+	Unfortunately, this pushes the company toward using one CMRkey,
+	since it's not very flexible, though it can easily handle 
+	multiples.
+
+	There may have been an option to accept signed mail,
+	or that may have only been in the Outgoing SMTP server.
+
+	There wasn't an option to reject unencrypted mail.  
+	(You could probably fake this by accepting unencrypted messages 
+	while also requiring encrypted messages to include a recipient 
+	whose key is not published anywhere and not publishing that 
+	keyid so nobody runs a deadbeef attack on it.  
+	I haven't verified this...)
+
+	There wasn't an option to email a copy to the archive;
+	you could write your own, but presumably any site that wants to
+	save copies of all encrypted messages is already saving copies
+	of all unencrypted messages already.  Or they're really
+	only making sure there's a CMRKed copy of the session key
+	so they can decrypt the message on the late recipient's disk
+	after he gets hit by a bus or a subpoena.
+
+7) Outgoing SMTP filter - more complex.
+	IF Sender_IPaddr in LIST, Evaluate RULE (parameter KeyIDList) -&gt;
+	-&gt; Accept (fwd to SMTP server)  OR Reject with parameterized 
+	bouncemessage.  You only get one list of IP addresses, and you 
+	can only accept/reject, but the rulesets are flexible, and you 
+	can chain multiple filters together (the filter can run on 
+	Port 25 but can also run on other ports, and can forward to 
+	an SMTP server on other ports, so you can stack a bunch of 
+	these on a single box and chain them together.)
+		Note that this doesn't look at the sender's or 
+		recipients' email addresses, just the sender's 
+		IP address.  This is sometimes limiting 
+		(consider mail servers with multiple users, or 
+		multi-user machines, or people who do multiple 
+		functions from one machine), but it's more secure than 
+		trusting easily forged information like the sender and 
+		sender's address.  A fancier system would include these 
+		in filtering capability.  That capability may have been
+		left out on purpose, or it may just be limited 
+		development time.
+	(I don't remember if you can use multiple rulesets, 
+	but you can stack.)  I also don't remember 
+	all the possible rules, but this is close:
+	- Require Encryption  (yeah!)
+	- Require Encryption to Key on KeyIDList 
+		-- remember that CMRKs are attached to recipients' keys,
+		not to senders' keys or mail packages, so the senders 
+		have to include any required keys themselves unless the 
+		recipients' CMRK keys are administered jointly with 
+		the SMTP server.  (Sending them enough bounce messages 
+		may give them a hint, but the sender's PGP5.5 system 
+		won't do it automatically.)
+		Thus, it's easy for CompanyA BuildingA to make sure that
+		messages to CompanyA BuildingB employees are encrypted 
+		to one of CompanyA's CMRKs, but it doesn't have a clue 
+		about CompanyB's CMRKs or RandomRecipient's CMRKs, 
+		though if the recipients put their keys and CMRKs on 
+		some public keyserver a more sophisticated (and slower)
+		SMTP gateway could check.
+	- Require Signature (Remember that it can't look inside 
+		encrypted messages, so it only does this for 
+		unencrypted signed messages.)
+	- Require Signature from KeyIDList - since this ruleset is 
+		used along with IP address lists, you could require 
+		things like
+		"All email from Purchasing's machines are signed by 
+			Purchasing"
+		"All email from the PR department is signed by the 
+			Marketroid Key"
+		"All email from PR users is also signed by 
+			someone technical" :-)
+		"All email from technical people is signed by 
+			Corporate Security" :-(
+		"All email from the company president's key is signed by 
+			PR and Legal" (Note that this doesn't let you say 
+			"All email purporting to be from the company 
+				president" 
+			since it doesn't read email headers.)
+		"All mail from the company president's real key is 
+			signed by the company president or her secretary"
+	- Block encrypted mail, block signed mail (I think both of 
+		these were there, and if they weren't, you could 
+		implement them by some combination of features.)
+	- Clear Text	- you can allow this or block it.
+
+Storage Keys vs. Signature Keys vs. Message Encryption Keys -
+	As described above, PGP5.* does use separate keys &amp; algorithms
+	for signatures and encryption, except for the old RSA keys.
+	Storage Keys are a different issue - the main distinctions
+	between storage keys and message encryption keys are
+	- storage keys are used by the owner, while message encryption 
+		keys are used by someone other than the owner for 
+		items that will be given to the owner.
+	- storage keys are useful when you have the storage media,
+		message encryption keys are useful when you have a
+		copy of the message, either legitimate or eavesdropped.
+	- message encryption cyphertext gets mailed; stored
+		cyphertext just sits there :-)
+
+	PGPdisk is a pure storage key system, and perhaps there 
+	would have been less political furor if PGP had done 
+	Corporate Storage Recovery Keys, but it's not a mainstream 
+	product for PGP Inc., and only runs on Macs.  
+	Doing the storage job right means integrating with
+	backup servers (disk drives get crashed or scribbled
+	far more often than employees get hit by trucks...)
+	which isn't PGPInc's specialty.
+
+	In reality, users often use PGP for storage, including for
+	messages they've received (depending on their mail GUI)
+	and for files on disks (encrypted to themselves.)
+	File-by-file encryption is easier to back up securely than
+	whole-disk encryption, which requires either dumping the whole 
+	disk to backup media or copying to the backup in the clear.
+	The latter is especially useful if the backup server is also
+	an encrypted storage system, but the copying may be a security
+	risk, unless you do really fancy things, 	and there's the 
+	whole question of whether the backup storage is encrypted 
+	with the same keys as the primary (hit-by-truck risk) or with 
+	a different key (corporate message access equivalence risk.)
+
+Business environment and documentation - [Mostly non-technical]
+	PGP is a real business.  They've got deadlines, 
+	they've got accountants, they've got people beating them up 
+	to ship code by the end of the quarter so they can bill people,
+	they've got customers telling them they won't buy stuff until 
+	they get Feature X added or removed, all the usual stuff.
+	The design consultants who used to do their export controlled 
+	web site left them a maze of twisty little CGI scripts, 
+	all different, so getting actual technical documentation out 
+	has taken far more work than anybody had time to do before 
+	a release date.  (Some documentation is claimed to exist :-)
+	Their SMTP packages could have had far more features, but they
+	felt this at least minimally met their requirements, and there
+	was some thought toward extensibility.
+
+	While 5.0 did introduce new data formats, they're not stealthy,
+	because they haven't seen much (any?) paying-customer demand,
+	and features like the SMTP filters depend on being able to
+	know how many recipient-key records a message contains,
+	where their boundaries are, and what their KeyIDs are.
+	So they recommend that people who want stealth go work OpenPGP
+	and build formats that work to pressure PGP Inc. into using it.
+
+	One of Phil's goals had been to design a system that provided 
+	the business message recovery features their customers were 
+	asking for without providing access to users' private or 
+	signature keys, as a counter-argument to the GAK advocates 
+	who claim they need it.	[ As might be expected, 
+	much heated discussion occurred on this issue.  :-) ]
+
+	Some things that time pressure makes it difficult to
+	think about, or at least implement, beside stealth, 
+	are features like secret-sharing the session keys to CMRKs
+	(it's not possible to do this cleanly, without affecting
+	a bunch of other things), or making session key recovery
+	a difficult and slow process so it doesn't get done often
+	(e.g. zeroing the bottom N ~ 32-40 bits of session key
+	so recovery requires some brute force as well as the keys.)
+	Building in the ability to crack messages using a single
+	master key is really bad (though at least it can be a
+	different master key per user or per message); perhaps when
+	5.6 or 6.0 handles multiple CMRKs it will implement them
+	by secret-sharing rather than making them each full recipients.
+
+- Customers -
+	Some of the customers do want to "recover" all their users' 
+	traffic. Others wanted to make sure that mail to a customer 
+	service rep got encrypted to the other customer service reps 
+	also, or at least to the rep's boss, so someone could handle
+	the business if the original recipient was away.
+
+	One of the more obnoxious customers was implementing CAK by
+	having the Corporate Security department generate keys and
+	hand them to the users on floppies; this gives them a less
+	obnoxious approach that they're willing to try.
+
+	One of the customers was really paranoid about making sure
+	their employees didn't leave their CAD drawings encrypted
+	and then steal them or extort money from the company for
+	decrypting the plaintext when they quit; apparently the
+	idea of using a document management system like programmers
+	use for source code control had never occurred to them....
+				Thanks!
+					Bill
+Bill Stewart, stewarts@ix.netcom.com
+Regular Key PGP Fingerprint D454 E202 CBC8 40BF  3C85 B884 0ABE 4639
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00773" HREF="msg00773.html">Re: Technical Description of PGP 5.5</A></STRONG>
+<UL><LI><EM>From:</EM> Kent Crispin &lt;kent@bywater.songbird.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00762.html">Re: Telstra Australia admits it lied about net</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00766.html">Just say "Huh?" to key recovery concerns...keep OpenPGP pure</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01817.html">Re: ipnat problems continued</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00773.html">Re: Technical Description of PGP 5.5</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00763"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00763"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

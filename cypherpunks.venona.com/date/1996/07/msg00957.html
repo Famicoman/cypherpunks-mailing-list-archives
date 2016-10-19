@@ -1,0 +1,218 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Opiated file systems -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Tue, 16 Jul 1996 16:20:38 +0800 -->
+<!--X-Message-Id: 199607152049.VAA00313@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199607151158.HAA28540@unix.asb.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Opiated file systems</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00925.html">Date Prev</A>][<A HREF="msg00944.html">Date Next</A>][<A HREF="msg01121.html">Thread Prev</A>][<A HREF="msg01017.html">Thread Next</A>][<A HREF="index.html#00957">Date Index</A>][<A HREF="threads.html#00957">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Opiated file systems</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:WlkngOwl@unix.asb.com">WlkngOwl@unix.asb.com</A></LI>
+<LI><em>Subject</em>: Re: Opiated file systems</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 15 Jul 1996 21:49:55 +0100</LI>
+<LI><em>CC</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg00878.html">199607151158.HAA28540@unix.asb.com</A>&gt; (WlkngOwl@unix.asb.com)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Rob &lt;WlkngOwl@unix.asb.com&gt; writes:
+&gt; &gt; Some more thoughts on encrypted file system design criteria.
+&gt; &gt; A wish list:
+&gt; &gt; 
+&gt; &gt; - Choice of secret key encryption algorithms (IDEA, 3DES, MDC, Blowfish)
+&gt; 
+&gt; Nice in theory. Awful in practice.  Requires code for managing keys, 
+&gt; encrypting and decrypting for ea. algorithm be resident in memory.  
+
+No need to have all the code in memory, I think you ought to be able
+to keep the code in an overlay, or something of that nature.
+
+&gt; For some systems (MSDOS), free memory is at a premium... (one of the 
+&gt; reasons SecureDrive is popular is because it takes only 2.5k).  It's 
+&gt; not worth wasting memory for handling several algorithms when only 
+&gt; one is going to be used in most cases.
+
+I take your point about memory consumption under DOS, though
+presumably it would be possible these days to load data high.  I think
+SFS supports this for instance.
+
+&gt; [...]
+&gt;  
+&gt; &gt; - High performance (hand optimised assembler for each architecture)
+&gt; 
+&gt; So much for maintaining code across platforms.
+
+Only the secret key algorithms, 80x86 code would be the highest
+priority coz they're the slowest (well the old ones are).  You're
+going to need very OS specific code for the low level parts of the
+file system anyway.
+
+&gt; &gt; - Compression
+&gt; 
+&gt; Not worthwhile.  Use a Stacker or JAM driver over the encrypted 
+&gt; partition on a PC, for instance.  Keep compression and crypto 
+&gt; separate utilities... keeps bugs from one interfering with another 
+&gt; and reduces complexity of both drivers; also, if one wants crypto 
+&gt; w/out compression or compression w/out crypto, no wasted memory (see 
+&gt; above about RAM being at a premium).
+
+One of the requirements some earlier posters gave was that they would
+like to be able to accesss the same data with different OSes (the
+example was to access the same partition with linux,win95, and winNT).
+Double space isn't available for unix.  (There was a read-only version
+for linux, but this seems to be currently unmaintained.)
+
+So one reason to include a compression module would be for portability
+of data.
+
+I agree with your points about separating concerns and keeping crypto
+and compression reasonably separate to keep bugs in compression code
+having the potential to affect crypto code.  It would probably be
+prudent to use OS segment protection, and page locking to protect
+crypto code and data from being accidentally overwritten, and written
+to swap respectively.
+
+&gt; &gt; - Ability to chain algorithms (IDEA and then 3DES for example)
+&gt; 
+&gt; Why?  Doesn't necessarily increase security, esp. considering the 
+&gt; performance hit (memory... see above, time, key management).
+
+Hmm, say that you were using MDC with md5 as the hash (before
+Dobertin's recent pronouncements, naturally no one would do this now),
+if Dobertin comes through with the general case you might wish you had
+combined it with 3DES...
+
+For the paranoid only, but a nice option I think,
+
+&gt; [uncontenious stuff]
+
+&gt; &gt; - Facility for duress key, with the real data hidden in the unused
+&gt; &gt;   space of the first encrypted drive.  To increase the plausible
+&gt; 
+&gt; Huh?!?
+
+Encrypted filesystems are for hiding data from other parties.  If your
+threat model includes law enforcement such a feature would be most
+useful.  You would have data which you would not mind agents
+obtaining, and have the "real" data hidden in a second file system.
+
+When you are supeonaed for your key, you reveal the 1st file systems
+key.  That key does not reveal anything about the 2nd partition, not
+even it's existance.
+
+The second file system would be hidden in the blocks not used with the
+1st file system.  To access the 2nd file system you would need to tell
+the file system driver the keys for both file systems -- the 1st key
+so that it could find which were the unused blocks in the 1st file
+system, the 2nd key for access to the hidden file system.
+
+&gt; &gt;   deniability all unused blocks within a file system should be filled
+&gt; &gt;   with garbage, so that it is not possible to tell if there is more
+&gt; &gt;   data there.
+&gt; 
+&gt; If the algorithm is good, this shouldn't matter.  The only way a 
+&gt; person could tell if a sector is unused is if that person was able to 
+&gt; mount the partition already.
+
+Yes, that's the idea -- your 1st key has been supeoned is the threat
+model.
+
+&gt; &gt; - File system steganographically hidden in files on another file
+&gt; &gt;   system (encrypted or not).  Support for a wide selection of file
+&gt; &gt;   formats (Aiff, Wave, Midi, JPEG, GIF, RGB, MPEG).
+&gt; 
+&gt; Now this is getting nutty!!!  Never mind the size, 
+
+4 gig disks are cheap these days
+
+&gt; compleixty and amazing slowness of such a driver...  you'd have to
+&gt; have audio or video files of gigabytes in size to be able to store
+&gt; anything of use.
+
+Indeed you would.  So?
+
+&gt; &gt; - Ability to use stegoed file system in files on an unencrypted
+&gt; &gt;   file system, and boot from a floppy to access stegoed file system,
+&gt; &gt;   with no other traces left on hard disk.
+&gt; 
+&gt; Why?  The authorities would wonder why you have an 8 Gig JPG on your 
+&gt; disk and figure you're using it for stego, or you're crazy, or both, 
+&gt; and have you committed.
+
+Nah, you'd buy some video editing equipment, perhaps a photo-CD
+recorder, start a business doing photo-retouching (I know someone who
+does this btw, they use DAT tapes just to shift the Gbs they get
+through), video editing, whatever.  All quite plausible.
+
+Adam
+--
+only quiche eaters need ritalin...
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00878" HREF="msg00878.html">Opiated file systems</A></STRONG>
+<UL><LI><EM>From:</EM> "Deranged Mutant" &lt;WlkngOwl@unix.asb.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00925.html">CookieScan 0.0 rev 0</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00944.html">Re: Can't block caller ID in Massachusetts?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01121.html">Re: Opiated file systems</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01017.html">Re: Opiated file systems</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00957"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00957"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,137 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: How to make someone else lose ecash -->
+<!--X-From-R13: Wna Ubyqoret <vnatNQE.Prexryrl.SRG> -->
+<!--X-Date: Mon, 15 Jan 96 16:14:41 PST -->
+<!--X-Message-Id: 199601160014.QAA20158@lagos.CS.Berkeley.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>How to make someone else lose ecash</TITLE>
+<LINK REV="made" HREF="mailto:iang@CS.Berkeley.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02493.html">Date Prev</A>][<A HREF="msg02501.html">Date Next</A>][<A HREF="msg00920.html">Thread Prev</A>][<A HREF="msg02507.html">Thread Next</A>][<A HREF="index.html#02503">Date Index</A>][<A HREF="threads.html#02503">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>How to make someone else lose ecash</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: How to make someone else lose ecash</LI>
+<LI><em>From</em>: Ian Goldberg &lt;<A HREF="mailto:iang@CS.Berkeley.EDU">iang@CS.Berkeley.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 15 Jan 1996 16:14:25 -0800 (PST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:ecash@digicash.com">ecash@digicash.com</A></LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:iang@CS.Berkeley.EDU">iang@CS.Berkeley.EDU</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I don't recall seeing this on cypherpunks or on ecash@digicash.com;
+it's being sent to both places, so set your replies appropriately.
+
+Dave and I were discussing the ecash protocols when we discovered
+what seems to be a way for Eve (a passive eavesdropper) to cause
+anyone to lose money.  Note that she doesn't gain anything from it.
+
+Eve watches for any message that contains pcoins (a list of onl_coin).
+These messages are the Payment (from user to shop) and Deposit (from
+shop to mint).  Neither of these are required to be encrypted.
+
+An onl_coin is the following:
+
+onl_coin =
+      [
+        int     keyversion              ; low 5 bits are denomination
+        MPI     n                       ; coin number
+        MPI     sig                     ; encrypted coin signature
+      ]
+
+sig is (f(n)^(1/h) XOR f(payment_hdr)), encrypted in the mint's public key.
+
+The reason sig is encrypted is so that the payment header can't be
+changed and so that Eve can't learn f(n)^(1/h).  However, n is sitting
+there all nice and cleartext.
+
+Therefore: when Eve sees such a message, she uses the same value of n
+to withdraw a coin from her bank account, and then spends it (she could
+just pay it to herself).  Eve does not gain or lose anything, but if
+she can deposit the coin before the original coin that she saw gets to
+the mint, the original coin will not clear.  If Eve has the ability
+to drop or delay packets, she can accomplish this easily.  The result
+is that whoever withdrew the coin originally has lost the use of that
+coin.
+
+Note that this is the same problem as if two users just happen to use
+the same value of n when they withdraw coins.  We don't really care
+about that, since the probability is trivial.  However, this attack
+lets Eve produce the same effect _on purpose_.
+
+How can we prevent this?  Well, since a shop has no way of using the
+value n except for just sending it on to the mint, we lose nothing by
+encrypting it.  Thus, an onl_coin should be:
+
+onl_coin =
+      [
+	    int     keyversion              ; low 5 bits are denomination
+	Encrypt_with_mint_public_key(
+	    MPI     n                       ; coin number
+	    MPI     sig                     ; (f(n)^(1/h) XOR f(payment_hdr))
+	)
+      ]
+
+Note that it's not really necessary to have sig already encrypted if
+we're going to encrypt it again.  Actually, I think an onl_coin
+should have an additional field (bankID) to the fields listed
+above, but that's another argument for another time.
+
+   - Ian "Back from the North and ready to party!"
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02493.html">Re: New Puzzle Palace?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02501.html">Re: Phil Z getting through customs</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00920.html">Re: Eggs at Customs (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02507.html">PGP for CP/M?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02503"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02503"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

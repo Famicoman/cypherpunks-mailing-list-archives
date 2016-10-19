@@ -1,0 +1,450 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: On Feistel Networks, S&#45;Boxes, and Block Cipher Design -->
+<!--X-From-R13: fpuarvreNpuvarg.puvarg.pbz (Pehpr Epuarvre) -->
+<!--X-Date: Sun, 2 Oct 94 19:00:41 PDT -->
+<!--X-Message-Id: m0qrchp&#45;0002FQC@chinet -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>On Feistel Networks, S-Boxes, and Block Cipher Design</TITLE>
+<LINK REV="made" HREF="mailto:schneier@chinet.chinet.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00031.html">Date Prev</A>][<A HREF="msg00033.html">Date Next</A>][<A HREF="msg00031.html">Thread Prev</A>][<A HREF="msg00039.html">Thread Next</A>][<A HREF="index.html#00037">Date Index</A>][<A HREF="threads.html#00037">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>On Feistel Networks, S-Boxes, and Block Cipher Design</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: On Feistel Networks, S-Boxes, and Block Cipher Design</LI>
+<LI><em>From</em>: <A HREF="mailto:schneier@chinet.chinet.com">schneier@chinet.chinet.com</A> (Bruce Schneier)</LI>
+<LI><em>Date</em>: Sun, 2 Oct 1994 21:00:45 -0500 (CDT)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+   ON FEISTEL NETWORKS, S-BOXES, AND BLOCK CIPHER DESIGN
+
+
+Claude Shannon defined the cryptographic principles of confusion
+and diffusion.  Fifty years after this paper was written, these
+principles are still the cornerstone of good block cipher design.
+
+Confusion serves to hide any relationship between the plaintext,
+the ciphertext, and the key.  Remember how linear and
+differential cryptanalysis can exploit even a slight relationship
+between these three things?  Good confusion makes the
+relationship statistics so complicated that even these powerful
+cryptanalytic tools won't work.
+
+Diffusion serves to spread the influence of individual plaintext
+or key bits over as much of the ciphertext as possible.  This
+also serves to hide statistical relationships, and make
+cryptanalysis more difficult.
+
+Confusion alone is enough.  A cipher that consisted of a single
+lookup table of 64 bits of plaintext to 64 bits of ciphertext
+based on a key would be plenty strong.  The problem is that large
+lookup tables require large amounts of memory to implement: 1020
+bytes of memory for the above table.  The whole point of block
+cipher design is to create something that looks like a large
+lookup table, but with much smaller memory requirements.
+
+The trick is to repeatedly mix confusion (with much smaller
+tables) and diffusion in a single cipher in different
+combinations.  This is called a product cipher.  Sometimes a
+block cipher that incorporates layers of substitution and
+permutation is called a substitution-permutation network, or even
+a SP network.
+
+Look back at function f of DES.  The expansion permutation and P-
+box perform diffusion; the S-boxes perform confusion.  The
+expansion permutation and P-box are linear; the S-boxes are
+nonlinear.  Each operation is pretty simple on its own, but
+together they work pretty well.
+
+DES also illustrates a few more principles of block cipher
+design.  The first is the idea of an iterated block cipher.  This
+simply means taking a simple round function and iterating it
+multiple times.  Two-round DES isn't very strong; it takes five
+rounds before all of the output bits are dependent on all of the
+input bits and all of the key bits.  Sixteen-round DES is strong;
+32-round DES is even stronger.
+
+Feistel Ciphers
+
+Most block algorithms that have appeared in the literature are
+Feistel Ciphers.  The idea dates from the early 1970s.  Take a
+block of length n and divide it into two halves of length n/2:  L
+and R.  Of course, n must be even.  You can define an iterated
+block cipher where the output of the ith round is determined from
+the output of the previous round:
+
+        L_i = R_(i-1)
+        R_i = L_(i-1) XOR f(R_(i-1),K_i)
+
+K_i is the subkey used in the ith round, and f is an arbitrary
+round function.
+
+You've seen this concept in DES, Lucifer, FEAL, Khufu, Khafre,
+LOKI, and others.  Why is it such a big deal?  First off, the
+function is guaranteed to be reversible.  Because XOR is used to
+combine the left half with the output of the round function, it
+is necessarily true that
+
+        L_(i-1) XOR f(R_(i-1),K_i) XOR f(R_(i-1),K_i) = L_(i-1)
+
+A cipher that uses this construction is guaranteed to be
+invertible as long as the inputs to f in each round can be
+reconstructed.  It doesn't matter what f is; f does not have to
+invertible.  We can design f to be as complicated as we please,
+and we don't have to implement two different algorithms--one for
+encryption and another for decryption.  The structure of a
+Feistel network takes care of all this automatically.
+
+Simple Relations
+
+DES has the property that if E_K(P) = C, then E_K'(P') = C',
+where P', C', and K' are the bitwise complements of P, C, and K. 
+This property reduces the complexity of a brute-force attack by a
+factor of two.  LOKI has complementation properties that reduce
+the complexity of a brute-force attack by a factor of 256.
+
+A simple relation can be defined as [KNU94]:
+
+        If E_K(P) = C, then E_f(K)(g(P,K) = h(C,K)
+
+where f, g, and h are simple functions.  By simple I mean that
+they are easy to compte, much easier than an iteration of the
+block cipher.  In DES, f is the bitwise complement of K, g is the
+bitwise complement of P, and h is the bitwise complement of C. 
+This is a result of XORing the key into part of the text.
+
+In a good block cipher, there are no simple relations.  Methods
+for finding some of these weaknesses are in [KWA91B].
+
+No Weak Keys
+
+In a good block cipher, all keys are equally strong.  Algorithms
+with a small number of weak keys, like DES, are generally no
+problem.  The odds of picking one at random are very small, and
+it's easy to test and discard them.  However, these weak keys can
+sometimes be exploited if the block cipher is used as a one-way
+hash function.
+
+Strength Against Differential and Linear Cryptanalysis
+
+The study of differential and linear cryptanalysis has shed
+significant light on the theory of good block cipher design.  The
+inventors of IDEA introduced the concept of differentials, a
+generalization of the basic idea of characteristics [LAI91B]. 
+They argued that block ciphers can be designed in such a way to
+be resistant against this attack; IDEA is the result of that work
+[LAI91B].  This concept was further formalized in [NYB93],
+where Kaisia Nyberg and Lars Knudsen showed how to make block
+ciphers that were provably secure against differential
+cryptanalysis.
+
+Linear cryptanalysis is newer, and it is less clear what generic
+design techniques will protect a cipher against linear
+cryptanalysis.  Knudsen has made some progress, considering some
+necessary (but not necessarily sufficient) criteria for what he
+calls practically secure Feistel ciphers: ciphers that are
+resistant to both linear and differential cryptanalysis [KNU94]. 
+Nyberg introduced an analogy to the concept of differentials in
+differential cryptanalysis in linear cryptanalysis [NYB94]. 
+Other work that extends the idea of linear cryptanalysis can be
+found in [PRE94A,KAL94B].
+
+Interestingly enough, there seems to be a duality between
+differential and linear cryptanalysis.  This duality becomes
+apparent both in the design of techniques to construct good
+differential characteristics and linear approximations
+[BIH95,MAT95], and also in the design criteria for making
+algorithms that are secure against both attacks [CHA95]. 
+Exactly where this line of research will lead is still unknown.
+
+S-Box Design
+
+The strength of various Feistel ciphers--and specifically their
+resistance to differential and linear cryptanalysis--is tied
+directly to their S-boxes.  This has prompted a spate of research
+on what constitutes a good S-box.
+
+An S-box is simply a substitution: a mapping of m-bit inputs to
+n-bit outputs.  Above I talked about a single lookup table of 64-
+bit inputs to 64-bit outputs; that would be a single 64x64-bit S-
+box.  A general S-box with an m-bit input and an n-bit output is
+called a mxn-bit S-box.  S-boxes are generally the only non-
+linear step in an algorithm; they are what give a block cipher
+its security.  In general, the bigger they are the better.
+
+DES has eight different 6x4-bit S-boxes.  Khufu and Khafre have a
+single 8x32-bit S-box.  In IDEA the modular multiplication step
+is effectively the S-box; it is a 32x32-bit S-box.  The larger
+this S-box, the harder it is to find useful statistics about it
+to attack [GOR83].  Also, while random S-boxes are usually not
+optimal to protect against differential and linear attacks, it is
+easier to find strong S-boxes if the S-boxes are larger.  Most
+random S-boxes are nonlinear, nondegenerate, and have have strong
+resistance to linear cryptanalysis--and the fraction that does
+not goes down rapidly as the number of input bits decreases
+[OCO91,OCO94,OCO94A].
+
+The size of m is more important than the size of n.  Increasing
+the size of n reduces the effectiveness of differential
+cryptanalysis, but it increases the effectiveness of linear
+cryptanalysis to a much greater degree.  In fact, if n &gt;= 2m - m,
+then there is definitely a linear relation of the input and
+output bits of the S-box.  And if n &gt;= 2m, then there is a linear
+relation of only the output bits [BIH95].
+
+Much of this work involves the study of Boolean functions.  In
+order to be secure, the Boolean functions used in S-boxes must
+satisfy specific conditions.  They should not be linear, nor
+should they be close to linear [ADA90,NYB91,NYB93A].  There
+should be a balance of zeros and ones, and no correlations
+between different combinations of bits.  The output bits should
+behave independently when any single input bit is complemented. 
+These design criteria are also related to the study of bent
+functions.
+
+One property that seems very important is the diffusion of
+information: how many output bits of an S-box change when some
+subset of the input bits are changed.  This is called the
+avalanche effect.  It's easy to impose conditions on Boolean
+functions so that satisfy certain avalanche criteria, but
+constructing them is a harder task.  The strict avalanche
+criteria (SAC) guarantees that exactly half of the output bits
+change when one input bit changes [WEB86].
+
+A few years ago cryptographers proposed choosing S-boxes so that
+the different distribution table for each S-box is uniform.  This
+would provide immunity against differential cryptanalysis by
+smoothing out the differentials in any particular round
+[ADA92,DAW91A,DAW91,NYB91].  LOKI is an example of this
+design.  However, this approach can sometimes aid in differential
+cryptanalysis [BIH92B].  Actually, a better approach is making
+sure that the maximum differential is as small as possible. 
+Kwangjo Kim proposed five criteria for the construction of S-
+boxes [KIM93A], similar to the design criteria for the DES S-
+boxes.
+
+Choosing good S-boxes is not an easy task, and there are many
+competing ideas on how to do it.  Four general approaches can be
+identified:
+
+     Choose randomly:  It is clear that small random S-boxes are
+     insecure, but large random S-boxes may be good enough. 
+     Random S-boxes with 8 or more inputs are quite strong.  And
+     even more strength is added if the S-boxes are both random
+     and key-dependent.  IDEA uses both large and key-dependent
+     S-boxes.
+
+     Choose and test:  Some ciphers generate random S-boxes and
+     then test them for the requisite properties.  See [ADA90]
+     for an example of this approach.
+
+     Man-made:  This technique uses little mathematics; S-boxes
+     are generated using more intuitive techniques.  Bart Preneel
+     stated that "...theoretically interesting criteria are not
+     sufficient [for choosing Boolean functions for S-boxes]..."
+     and that "...ad hoc design criteria are required" [PRE93].
+
+     Math-made:  Generating S-boxes according to mathematical
+     principles so that they have proven security against
+     differential and linear cryptanalysis, and good diffusive
+     properties.  See [NYB94A] for an excellent example of this
+     approach.
+
+There has been some call for a combination of he "math-made" or
+"man-made" approaches [ROB94], but the real debate seems to be
+between randomly-chosen S-boxes and S-boxes--whether created or
+culled--that have certain properties.  Certainly the latter
+approach has the advantage of being optimal against known
+attacks--linear and differential cryptanalysis--but it offers
+unknown protection against unknown attacks.  The designers of DES
+knew about differential cryptanalysis, and the DES S-boxes were
+optimized against it.  They did not seem to know about linear
+cryptanalysis, and the DES S-boxes are very weak against it
+[MAT95].  Random S-boxes in DES would be weaker against
+differential cryptanalysis and stronger against linear
+cryptanalysis.
+
+On the other hand, random S-boxes may not be optimal against
+known attacks but they can be made sufficiently large and
+therefor sufficiently resistant.  And they are more likely to be
+sufficiently resistant against unknown attacks.  The debate is
+still going on, but my personal feeling is that S-boxes should be
+as large as possible, random, and key-dependent.
+
+
+[ADA92] C.M. Adams, "On Immunity Against Biham and Shamir's
+     'Differential Cryptanalysis,'" Information Processing
+     Letters, v. 41, n. 2, 1992, pp. 77-80.
+
+[ADA90] C.M. Adams and S.E. Tavares, "The Structured Design of
+     Cryptographically Good S-Boxes," Journal of Cryptology, v.
+     3, n. 1, 1990, pp. 27-41.
+
+[BIH95] E. Biham "On Matsui's Linear Cryptanalysis," Advances in
+     Cryptology--EUROCRYPT '94 Proceedings, Springer-Verlag,
+     1995, to appear.
+
+[BIH92B] E. Biham and A. Shamir, Differential Cryptanalysis of
+     the Data Encryption Standard, Springer-Verlag, 1993.
+
+[CHA95] F. Chabaud and S. Vaudenay, "Links Between Differential
+     and Linear Cryptanalysis," Advances in Cryptology--EUROCRYPT
+     '94 Proceedings, Springer-Verlag, 1995, to appear.
+
+[DAW91A] M.H. Dawson and S.E. Tavares, "An Expanded Set of Design
+     Criteria for Substitution Boxes and their Use in
+     Strengthening DES-like Cryptosystems," IEEE Pacific Rim
+     Conference on Communications, Computers, and Signal
+     Processing, IEEE, Victoria, BC, Canada, 9-10 Mary 1991, pp.
+     191-195.
+
+[DAW91] M.H. Dawson and S.E. Tavares, "An Expanded Set of S-box
+     Design Criteria Based on Information Theory and its Relation
+     to Differential-like Attacks," Advances in Cryptology--
+     EUROCRYPT '91 Proceedings, Springer-Verlag, 1991, pp. 352-
+     367.
+
+[GOR83] J.A. Gordon and R. Retkin, "Are Big S-boxes Best?"
+     Cryptography, Proceedings of the Workshop on Cryptography,
+     Burg Feuerstein, Germany, March 29-April 2, 1982, Springer-
+     Verlag, 1983, pp. 257-262.
+
+[KAL94B] B.S. Kaliski and M.J.B. Robshaw, "Linear Cryptanalysis
+     Using Multiple Approximations,"  Advances in Cryptology--
+     CRYPTO '94 Proceedings, Springer-Verlag, 1994.
+
+[KIM93A]  K. Kim, "Construction of DES-like S-boxes Based on
+     Boolean Functions Satisfying the SAC,"  Advances in
+     Cryptology--ASIACRYPT '91 Proceedings, Springer-Verlag,
+     1993, pp. 59-72.
+
+[KNU94] L.R. Knudsen, "Practically Secure Feistel Ciphers," Fast
+     Software Encryption, Cambridge Security Workshop
+     Proceedings, Springer-Verlag, 1994, pp. 211-221.
+
+[KWA91B] M. Kwan and J. Pieprzyk, "A General Purpose Technique
+     for Locating Key Scheduling Weakness in DES-like
+     Cryptosystems," Advances in Cryptology--ASIACRYPT '91
+     Proceedings, Springer-Verlag, 1991, pp. 237-246.
+
+[LAI91B] X. Lai, J. Massey, and S. Murphy, "Markov Ciphers and
+     Differential Cryptanalysis," Advances in Cryptology--
+     EUROCRYPT '91 Proceedings, Springer-Verlag, 1991, pp. 17-38.
+
+[MAT95] M. Matsui, "On Correlation Between the Order of the S-
+     boxes and the Strength of DES," Advances in Cryptology--
+     EUROCRYPT '94 Proceedings, Springer-Verlag, 1995, to appear.
+
+[NYB91] K. Nyberg, "Perfect Nonlinear S-boxes," Advances in
+     Cryptology--EUROCRYPT '91 Proceedings, Springer-Verlag,
+     1991, pp. 378-386.
+
+[NYB93A] K. Nyberg, "On the Construction of Highly Nonlinear
+     Permutations," Advances in Cryptology--EUROCRYPT '92
+     Proceedings, Springer-Verlag, 1991, pp. 92-98.
+
+[NYB94] K. Nyberg, "Provable Security Against Differential
+     Cryptanalysis," presented at the rump session of Eurocrypt
+     '94, May 1994.
+
+[NYB94A] K. Nyberg, "Differentially Uniform Mappings for
+     Cryptography,"  Advances in Cryptology--EURORYPT '93
+     Proceedings, Springer-Verlag, 1994, pp. 55-64.
+
+[NYB93] K. Nyberg and L.R. Knudsen, "Provable Security Against
+     Differential Cryptanalysis," Advances in Cryptology--CRYPTO
+     '92 Proceedings, Springer-Verlag, 1993, pp. 566-574.
+
+[OCO91] L. O'Connor, "Enumerating Nondegenerate Permutations,"
+     Advances in Cryptology--EUROCRYPT '93 Proceedings, Springer-
+     Verlag, 1994, pp. 368-377.
+
+[OCO94] L. O'Connor, "On the Distribution of Characteristics in
+     Bijective Mappings," Advances in Cryptology--EUROCRYPT '93
+     Proceedings, Springer-Verlag, 1994, pp. 360-370.
+
+[OCO94A] L. O'Connor, "On the Distributino of Chracteristics in
+     Composite Permutations," Advances in Cryptology--CRYPTO '93
+     Proceedings, Springer-Verlag, 1994, pp. 403-412.
+
+[PRE93] B. Preneel, "Analysis and Design of Cryptographic Hash
+     Functions," Ph.D. diss., Katholieke Universiteit Leuven, Jan
+     1993.
+
+[PRE94A] B. Preneel and V. Rijmen, "On Using Maximum Liklihood to
+     Optimize Recent Cryptanalytic Techniques, " presented at the
+     rump session of EUROCRYPT '94, May 1994.
+
+[ROB94] M.J.B. Robshaw, "Block Ciphers," Technical Report TR-601,
+     RSA Laboratories, Jul 1994.
+
+[WEB86] A.F. Webster and S.E. Tavares, "On the Design of S-
+     Boxes," Advances in Cryptology--CRYPTO '85 Proceedings,
+     Springer-Verlag, 1986, pp. 523-534.
+
+From owner-cypherpunks  Sun Oct  2 18:43:52 1994
+Return-Path: &lt;owner-cypherpunks&gt;
+Received: by toad.com id AA08291; Sun, 2 Oct 94 18:43:52 PDT
+Received: from MIT.EDU (SOUTH-STATION-ANNEX.MIT.EDU) by toad.com id AA08285; Sun, 2 Oct 94 18:43:48 PDT
+Received: from HODGE-PODGE.MIT.EDU by MIT.EDU with SMTP
+	id AA25039; Sun, 2 Oct 94 21:43:44 EDT
+Received: by hodge-podge.MIT.EDU (5.57/4.7) id AA22715; Sun, 2 Oct 94 21:43:41 -0400
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00031.html">ADMIN: Re: List Down?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00033.html">Re: Nom de guerre public key</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00031.html">ADMIN: Re: List Down?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00039.html">Impact of Free Strong Crypto (Essay of sorts)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00037"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00037"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,180 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: MAIL: anonymous, positive reputations -->
+<!--X-From-R13: Yney Zhv Pneehf <xyoneehfNbjyarg.evpr.rqh> -->
+<!--X-Date: Tue, 21 Sep 93 12:21:33 PDT -->
+<!--X-Message-Id: 9309211918.AA17309@flammulated.owlnet.rice.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>MAIL: anonymous, positive reputations</TITLE>
+<LINK REV="made" HREF="mailto:klbarrus@owlnet.rice.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00534.html">Date Prev</A>][<A HREF="msg00545.html">Date Next</A>][<A HREF="msg00532.html">Thread Prev</A>][<A HREF="msg00549.html">Thread Next</A>][<A HREF="index.html#00544">Date Index</A>][<A HREF="threads.html#00544">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>MAIL: anonymous, positive reputations</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: MAIL: anonymous, positive reputations</LI>
+<LI><em>From</em>: Karl Lui Barrus &lt;<A HREF="mailto:klbarrus@owlnet.rice.edu">klbarrus@owlnet.rice.edu</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 21 Sep 93 14:18:23 CDT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Earlier, Graham mentioned some concerns about anonymous mail;
+specifically it isn't easy to respond to the author, most messages are
+off topic, etc.  (hopefully not referring to my posts sent through
+remailers :-) on topics like the cypherpunks gopher and caching
+remailers...)
+
+And some people are asking about marking anonymous mail (gopher plug:
+check the article "Why Mark Anonymous Mail?" at the gopher site in the
+"Anonymous Mail" section, contributed by Hal Finney sometime ago).
+
+Currently, I sign my posts sent through anonymous remailer, sometimes
+including my address at the bottom of the post itself.  I know others
+do this as well - Hal Finney, probably others I can't think of.
+
+I am working on (and off as time constraints crop up) a positive
+reputation scheme for anonymous mail.  My stab at this is somewhat
+modest: a program that sifts through elm mail folders (similar to the
+elm frm command) and produces a formatted list containing message
+number, email address of author (frm sometimes reports name and I like
+email addresses instead), and subject.  
+
+BUT, instead of printing email address, if the message is pgp signed,
+report the signature instead.  Under this program, the fact that an
+anonymous remailer was used is somewhat transparent since you would
+see who signed the document sent through a remailer.  This would allow
+somebody to build up a positive reputation attached to a pgp signature
+(which could be fairly anonymous) and possibly help guide anonymous
+mail kill file users.
+
+Naturally, it would be best if it were easy to respond to an anonymous
+mail, if this were incorporated into mail programs, etc. but I have
+two problems: time constraints, and disk quota (I can't lay out the
+source code for elm, pgp, whatever else).
+
+I'm to the point where the script I include below does what I want
+expect check for digital signatures on letters.  Since there isn't a
+pgp library (yet), the next step will be difficult since I'd rather
+not pipe the message through pgp just to get the signature, although
+for testing I'll implement something in the next few weeks.
+
+Here is the script: if anybody has input, speak up!  I named it scan
+after the mh command it is a poor imitation of.
+
+Usage: 'scan foldername returns a formatted list of mail in the folder
+"foldername"
+Ug, I see an improvement I will make tonight: using getenv() to get my
+home directory instead of plugging it in directly:
+
+- ----------8&lt; cut here &gt;8----------
+#!/usr/local/bin/perl
+#report email address and subject of messages in an elm folder
+#frm sometimes reports name and not email address - not that I
+#  guarantee this works in all cases
+#simple version of mh scan command
+#Karl L. Barrus &lt;klbarrus@owlnet.rice.edu&gt;
+
+chdir "/home/klbarrus/Mail" || die "Can't cd to ~/Mail\n";
+
+while (@ARGV) {
+  $file = shift @ARGV;
+
+  if (-T $file) {
+    if (-z $file) { #zero length folders with no messages
+      print "Folder $file has no messages\n";
+    }
+    elsif (!open(FOLDER, "/home/klbarrus/Mail/$file")) {
+      print STDERR "Can't open $file\n";
+    }
+    else {
+      $state = 1;          #Look for a new message
+      $num = 0;
+
+      while (&lt;FOLDER&gt;) {
+        if (/^From[^:]/) { #Delimits a new message
+          $num++;          
+          $from = "";
+          $subject = "";
+          $state = 2;      #Look for From: and Subject:
+        }
+        if ($state == 2) { #Already found a message; looking for headers
+
+          /^Subject: (.*)/ &amp;&amp; ($subject = $1);    #match subject
+          /^From: (.+)/ &amp;&amp; ($from = $1);          #match "From: add"
+          /^From: (.+) &lt;(.+)&gt;/ &amp;&amp; ($from = $2);   #match "From: name &lt;add&gt;"
+          /^From: (.+) \((.+)\)/ &amp;&amp; ($from = $1); #match "From: add (name)"
+
+          if ($from ne "" &amp;&amp; $subject ne "") { #found both headers
+            $state = 1; #go back to looking for message delimiter
+            write;
+          }
+        }
+      }
+    }
+  }
+  elsif (-d $file) {
+    print STDERR "$file is a directory\n";
+  }
+}
+
+exit;
+
+format STDOUT_TOP =
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00534.html">Re: Master Key: A Clipper Story</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00545.html">Re: Cypherpunks &amp; GOPHER</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00532.html">jarthur is running pgp 2.3</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00549.html">Re: crypto import</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00544"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00544"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,260 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: PKZ and NON&#45;RSA -->
+<!--X-From-R13: Rnivq Qbyfgba <0005542837Nzpvznvy.pbz> -->
+<!--X-Date: Wed, 22 Sep 93 06:38:28 PDT -->
+<!--X-Message-Id: 60930922131606/0005542837NA1EM@mcimail.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>PKZ and NON-RSA</TITLE>
+<LINK REV="made" HREF="mailto:0005542837@mcimail.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00584.html">Date Prev</A>][<A HREF="msg00586.html">Date Next</A>][<A HREF="msg00584.html">Thread Prev</A>][<A HREF="msg00587.html">Thread Next</A>][<A HREF="index.html#00600">Date Index</A>][<A HREF="threads.html#00600">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>PKZ and NON-RSA</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: cypherpunks &lt;<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>&gt;</LI>
+<LI><em>Subject</em>: PKZ and NON-RSA</LI>
+<LI><em>From</em>: David Colston &lt;<A HREF="mailto:0005542837@mcimail.com">0005542837@mcimail.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 22 Sep 93 13:16 GMT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+When I posted the offer for source code to a non-RSA public key
+yesterday, little did I know that I would be beseiged by requests.
+I will therefore send the paper on the matter to cypherpunks and
+ask that anyone wanting a copy of the source send me a floppy. 
+Any size or density is okay.
+
+As a preamble to this paper, I'd like to note why and how it was
+developed. After the first release of PGP, Phil told me he was 
+worried about using RSA. I offered to come up with another scheme
+and originally designed a version of Rabin. I asked Phil to post
+a copy of that paper on sci.crypt since I do not have internet
+access. There were few responces, none of which attacked the 
+safety of the method, but mainly stated that it was a version of
+Rabin.
+
+Nothing was ever done with that proposal. A year latter, 2.0 PGP
+was due to be released and I came up with the current public key
+system. Again, Phil ignored it. Posts on sci.crypt were totally
+ignored by anyone with the ability to judge the math. Phil was
+then approached by the customs folks and I recieved a call from
+him in December of last year. By that time I was tired of waiting
+around for Phil and had coded QPK (Quick Public Key) in PDS 7.1.
+
+At any rate, I suggested that Phil foward a copy of the program to
+RSA and see if they would challenge that program in court. He
+declined. It became apparant that Phil wanted to stick with the
+original RSA concept and would refuse to do anything with another
+approach, although he did stick an bite in 2.1 to flag an encryption
+as being non-RSA.
+
+At any rate, I believe that RSA would not attempt to defend the 
+original public key patent in court, since it smacks of over kill.
+They attempt in the RSA pattent to claim any encryption method 
+involving a polynomial modulo another number. This is clearly prior
+art, since Ceaser used m+1 mod n as an encrytion method.
+
+The program I generated has been posted on Compuserve, Bix, and GEnie
+for over a year with no feed back from anyone, even though I am
+resonably sure that RSA is aware of its existance. They have not
+challenged it because there has been no publicity. I would welcome
+a court challenge on the whole idea of crypto patents. The customs
+thing is meerly a way for RSA to challenge Phil and scare off others
+while avoiding a test of their patents.
+
+
+The "paper" follows.
+
+
+
+
+   FOR THE MATHEMATICALLY ORIENTED - HOW A QUICK PUBLIC KEY WORKS.
+
+Math notation:
++                 plus
+-                 minus
++-                plus or minus
+*                 multiplication
+/                 division
+^                 exponent
+&lt;&gt;                unequal
+=                 equals
+==                congruent
+&lt;                 less than
+&gt;                 greater than
+INT               truncated integer round
+SQR               square root
+(                 open expression
+)                 close expression
+x^-1  modulo p    the multiplicative inverse of x in the field of p
+x... y            the range of values
+XOR               exclusive or
+N                 a number equal to P times Q, where P and Q are prime
+
+Variables in capital letters are permanent and those in small letters
+are temporary.
+
+                              BACKGROUND
+
+Because the "secret key" function of many public keys  methods are so
+slow, most cryptographers use these functions only to "boot strap"
+into a conventional key system, which is faster to send the actual
+message. Most of the conventional key systems use comparatively small
+numbers in relation to the size of the public N as a "random seed
+number". The holder of the secret key may actually have a larger
+amount of computer time to decipher the starting point of the
+conventional algorithm than to decipher the actual message. It would
+seem to be a good idea, if a public key function could take advantage
+of the actual message size required to speed up the public key
+process. The range of message sizes is described below, but generally
+speaking we a discussing messages less than SQR(Q) in actual size.
+
+Imagine a series of related equations modulo a prime, P. These
+equations have the formula ((e * e + e)/2 * L + C) modulo P. The
+value, C, is a constant determined by the rule (L - 1) * (1 / (2 * L))
+modulo P == C. For L = 1, C = 0. Therefore, if L is known, the
+expression ((e * e + e)/2) modulo P may be determined, even if e is
+unknown.
+
+Each value of L has an area or series of areas, in which the value of
+e becomes discoverable, WITHOUT resorting to a modular square root.
+ie. Let r == ((e * e + e)/2 * L + C) modulo P. If e is in the correct
+range relative to L, then (r * L * 8 + (L - 2) * (L - 2)) will have an
+integer square root and the value, e, may be determined with ease. The
+range of values of e, for any value of L, which have this property and
+the location of those values vary greatly. The following illustrates a
+public key approach for L = 12, but other values of L may also be
+used. Perhaps I should also note that the particular L, which a secret
+key holder uses need not be public knowledge, but is not all that
+sensitive.
+
+       ESTABLISHING A QUICK PUBLIC KEY (Q.P.K.) BASED ON L = 12
+
+A person wishing to receive public messages, which he/she alone can
+decrypt calculates N = P * Q. Where P and Q are a randomly selected
+prime numbers, Q being the larger.
+
+A == (11 * 24^-1 ) modulo Q
+B == (2 * A) modulo Q
+D = Q - B
+If D &gt; (Q - 1)/2 then set D = Q - D - 1.
+F = (Q - 1)/2 - D
+
+NOTE: We may chose to use the F for all of the following calculations
+      instead of D. This applies to no value of L lower than 12 and F
+      is not valid for most sequences higher than 12. F may be an even
+      safer value to use, for reasons which are too long to discuss
+      here. L is NOT super-sensitive information.
+
+Let Y1 ... Y2 be a range of numbers with in the limits:
+(D - k) and (D + k), where k = INT(SQR(2 * Q / 12)).  Y1 may be
+randomly selected from any point in this range, but Y2 may not be
+larger than (D + k), and Y2 - Y1 is the maximum message size.
+
+A message range for N, public information, is then created by using
+Chinese remainder theorem to find the modular intersection Q == Y1
+and P == x, x being a random number in the range x &gt; 0, x &lt; P.
+This intersection is called S. A check is made to verify the
+following:
+
+A' = (11 * 24^-1) modulo N
+B' == (2 * A') modulo N
+D' = N - B'
+If D' &gt; (N - 1)/2 then Set D' = N - D' - 1
+NOTE: P, Q, D, F, Y1, Y2, k, A, AND B are secret values.
+
+                          Q.P.K. ENCRYPTION
+
+A public key for short messages consists of S and N.
+
+To send a Message the sender calculates:
+e = (S + Message)
+((e * e + e)/2) modulo N == Cipher
+
+                          Q.P.K. DECRYPTION
+
+t ==  Cipher modulo Q
+f == (t * 12 + A) modulo Q
+g = SQR(f * 8 * 12 + 100)
+
+NOTE: If g is NOT an integer value, the message is rejected as
+      invalid. If g modulo (2 * L) &lt;&gt; (L - 2) then Q is repetitively
+      added to g until g modulo (2 * L) == (L - 2).
+
+z = (g - 10)/24
+e == ((B - 1) + z) modulo Q
+If e &gt; (Q - 1)/2 then set e = (Q - 1) - e.
+Message = e - Y1
+
+For other values of L:
+A == ((L - 1) * 2^-1* L^-1)) modulo Q
+k = INT(SQR(2 * Q / L))
+NOTE: If L = 1 then D = 0 and the message range is 1... k.
+      If L = 2 then the message range is D... (Q - 1)/2 and these
+      values modulo Q are already perfect squares &lt; Q.
+f == (t * L + A) modulo Q
+g = SQR(f * 8 * L + (L - 2) ^ 2)
+z = (g - (L - 2)/(L * 2))
+
+If anyone wants the source code for this drop a disk to:
+
+Colston &amp; Associates
+5111 Rogers Ave. Suite 507
+Fort Smith, AR 72903
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00584.html">Re: a horrible conspiracy revealed</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00586.html">a horrible conspiracy revealed!</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00584.html">Re: a horrible conspiracy revealed</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00587.html">Former S.O.F. Editor Supports PGP in Newspaper</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00600"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00600"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

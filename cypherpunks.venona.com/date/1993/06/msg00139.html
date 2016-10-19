@@ -1,0 +1,112 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: DOS disk encryptor -->
+<!--X-From-R13: Sevp Pybffbz <roNjryy.fs.pn.hf> -->
+<!--X-Date: Thu, 3 Jun 93 22:41:19 PDT -->
+<!--X-Message-Id: 93Jun3.224101pdt.13930&#45;2@well.sf.ca.us -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>DOS disk encryptor</TITLE>
+<LINK REV="made" HREF="mailto:eb@well.sf.ca.us">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00135.html">Date Prev</A>][<A HREF="msg00138.html">Date Next</A>][<A HREF="msg00126.html">Thread Prev</A>][<A HREF="msg00144.html">Thread Next</A>][<A HREF="index.html#00139">Date Index</A>][<A HREF="threads.html#00139">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>DOS disk encryptor</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: DOS disk encryptor</LI>
+<LI><em>From</em>: Eric Blossom &lt;<A HREF="mailto:eb@well.sf.ca.us">eb@well.sf.ca.us</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 3 Jun 1993 22:40:39 -0700</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Ryan,
+ 
+Good luck on building the DOS disk encryptor.  I belive that what you 
+need to do is write a standard DOS disk driver (that can be installed in 
+CONFIG.SYS) that implements the READ and WRITE primitives.  I belive 
+that they use the same entry point (the STRATEGY entry) in the driver.  
+You would basically just call the BIOS routines to do the actual i/o.  
+ 
+You don't have to worry about the FAT etc, just encrypt everything.  You 
+will probably want to use DES or IDEA and run it in CBC mode or Counter 
+Mode.  You would use the DISK BLOCK NUMBER as a piece of the key 
+material (or part of the Initialization Vector), hence, even if the same 
+data appeared multiple places on the drive, it would appear different on 
+the surface.  There is a good description of operation modes in "Modern 
+Cryptology: a Tutorial" by Gilles Brassard (Springer Verlag Lecture 
+Notes in Computer Science #325, 1988).  Denning's book covers it too.
+ 
+I'd probably start out getting it running on a floppy.  After that, just 
+use a separate partition to make life easier.  The driver is handed 
+physical (or logical) block numbers, and these map directly to the 
+physical drive block number by adding the offset of the beginning of 
+partition.  At driver init time, you read the partition table on the 
+hard disk, looking for a "system type" that identifies the partition as 
+one of your encrypted ones.  Prompt for the pass phrase, and store it in 
+the driver.  I assume that your concern is somebody physically grabbing 
+the disk drive.  I don't have a problem with the pass phrase in memory, 
+as long I have physical control of the system.
+ 
+In some of the DOS references, there used to be a sample RAM DISK device 
+driver.  You could use it as the skeleton to get the entry points
+right, and then just encrypt the block and call the BIOS to do the 
+i/o.
+ 
+Have fun,
+Eric Blossom
+ 
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00135.html">Software infrastructure</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00138.html">Term software develo</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00126.html">good day</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00144.html">subscribe</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00139"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00139"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,181 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Software infrastructure -->
+<!--X-From-R13: abobqlNfbqn.orexryrl.rqh -->
+<!--X-Date: Tue, 1 Jun 93 23:30:32 PDT -->
+<!--X-Message-Id: 9306020704.AA01148@soda.berkeley.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Software infrastructure</TITLE>
+<LINK REV="made" HREF="mailto:nobody@soda.berkeley.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00063.html">Date Prev</A>][<A HREF="msg00065.html">Date Next</A>][<A HREF="msg00017.html">Thread Prev</A>][<A HREF="msg00068.html">Thread Next</A>][<A HREF="index.html#00057">Date Index</A>][<A HREF="threads.html#00057">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Software infrastructure</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Software infrastructure</LI>
+<LI><em>From</em>: <A HREF="mailto:nobody@soda.berkeley.edu">nobody@soda.berkeley.edu</A></LI>
+<LI><em>Date</em>: Wed, 2 Jun 93 00:04:21 -0700</LI>
+<LI><em>Remailed-By</em>: Eric Hollander &lt;hh@soda.berkeley.edu&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Subject: Software infrastructure
+
+I like Eric's idea of a terminal program which can support encryption
+easily.  Here are some thoughts.
+
+As Eric indicates, the issue is not so much building encryption into the
+program but rather of having _hooks_ by which extra functionality can be
+added.  Encryption should be just one capability.  Another might be to
+automatically drop into a stand-alone zmodem package like dsz or gsz
+so we don't have to re-implement zmodem ourselves.
+
+We had some related discussion on this last year when we were talking
+about the "crypto dongle".  This was going to be a black box which
+would sit on the serial line between your PC and modem (or terminal and
+host computer) and would do encryption/decryption as the characters
+passed through it.
+
+Doing it in the terminal program, I could envision a hook which watched
+constantly for particular strings to be received from the host, like
+"-----BEGIN PGP MESSAGE-----".  Several such watchdogs could be active
+at once.  When one of them matches, it fires off a program.  Or perhaps
+it just starts logging the incoming data to a file, and when it matches
+another string it fires a program.  A simple scripting language could
+control these activities.
+
+The result would be that when you receive an encrypted message, you
+just list it out to your terminal and then, automatically, PGP fires up
+and asks you for your pass phrase (unless you SET it ahead of time in
+the PC's environment).  It then displays the message for you.
+
+This simple model has several deficiencies.  When I log into a Unix system,
+or Compuserve, or Portal's "Online" service, and read my mail, it is often
+shown to me a page at a time.  This is so that I can read long messages
+more easily.  Then after each message I can delete it, save it, reply to
+it, etc.  If I do reply or if I want to create a new message it will drop
+me into a text editor to compose the message.
+
+The result is that the mail program you are running on the host computer
+may do some munging on the PGP message, like inserting "Press RETURN for
+next page" or perhaps some terminal control characters.  These would have
+to be filtered out before PGP could run on the file, or you would have to
+be able to suppress them when you read this message.
+
+Also, assuming we could capture the message and run PGP on it automatically,
+the resulting decrypted message will have to be saved and given a file
+name.  Then if the user wants to reply to it he is going to have to leave
+his terminal and run an editor.  (At least, that's what I have to do now.)
+
+Plus, this only deals with the message-receiving problem, not the sending
+problem.
+
+I'm not sure what the solution is.  Maybe the PC program needs to be more
+than a terminal program, and become more of a whole mail-processing
+program.  Maybe you should just download your mail file en masse from the
+host to your PC, pre-process it to replace (in place) the incoming encrypted
+messages with plaintext versions (annotated to show validated signatures),
+then run a PC program which will display one message at a time, let you
+reply, save, etc.  This way the decryptions are done before you even look
+at the mail file and incoming encrypted mail is treated on a first class
+basis (the same as other mail).
+
+Then for outgoing mail you'd like to be able to drop into a user-defined
+editor which is run with a command line causing his file to be saved to
+some temp file name.  Then we can automatically encrypt the outgoing mail
+for him based on the destination, add a remailer chain if requested, etc.  
+Then he gives a command and all his replies and new mail are uploaded and
+sent.
+
+This would be pretty tough to do since there are so many different ways
+of sending and receiving mail on host computers.  This would again have
+to be a customizable part of the program, where we could provide modules
+to deal with the common cases of Unix running "mail", elm, mh, etc., and
+perhaps some of the commercial services.  BBS's would ideally be handled
+as well.  Hackers could contribute scripts for supporting their favorite
+mail system.
+
+I don't know anything about SLIP, or POP, or any other fancy ways of
+hooking a PC up to a workstation.  I just use it as a terminal.  Would
+these other protocols help solve the problems above, problems of how
+we marry an encryption program which must run on the PC with mail-handling
+programs which run on another computer?
+
+Hal Finney
+74076.1041@compuserve.com
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.2
+
+iQCVAgUBLAwkEagTA69YIUw3AQEuxQQAjeC/gwPHkLQZ0IladVRxiRdgARdE7ziu
+WWdmsHpaZ2tlq8wAXpSFbMpSZ3MS1U1TT/c/wB2DJOCuWkhs2y6WYoZiqrHz3hjA
+JyBSkpM1F3dYcZ8MchrjLZsur9KwXe0mIvM7VMu2Fdq+sMMgNwzEzqJoWhulAsnl
+weuBaeOjv7k=
+=zEUv
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00068" HREF="msg00068.html">Re: Software infrastructure</A></STRONG>
+<UL><LI><EM>From:</EM> J. Michael Diehl &lt;mdiehl@triton.unm.edu&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00075" HREF="msg00075.html">Software infrastructure</A></STRONG>
+<UL><LI><EM>From:</EM> Eric Hughes &lt;hughes@soda.berkeley.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00063.html">whistle for Whistleblowing!</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00065.html">Re: WH email petition.</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00017.html">Re: Software infrastructure</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00068.html">Re: Software infrastructure</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00057"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00057"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

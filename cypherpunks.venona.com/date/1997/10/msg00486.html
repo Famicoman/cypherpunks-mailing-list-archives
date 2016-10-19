@@ -1,0 +1,181 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: computationally infeasible jobs for MITMs (Re: Secure phone) -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Thu, 9 Oct 1997 06:55:21 +0800 -->
+<!--X-Message-Id: 199710082248.XAA01618@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 3.0.3.32.19971008132417.00b0c6d0@labg30 -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>computationally infeasible jobs for MITMs (Re: Secure phone)</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00458.html">Date Prev</A>][<A HREF="msg00477.html">Date Next</A>][<A HREF="msg00439.html">Thread Prev</A>][<A HREF="msg00466.html">Thread Next</A>][<A HREF="index.html#00486">Date Index</A>][<A HREF="threads.html#00486">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>computationally infeasible jobs for MITMs (Re: Secure phone)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:jad@dsddhc.com">jad@dsddhc.com</A></LI>
+<LI><em>Subject</em>: computationally infeasible jobs for MITMs (Re: Secure phone)</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 8 Oct 1997 23:48:33 +0100</LI>
+<LI><em>CC</em>: <A HREF="mailto:eb@comsec.com">eb@comsec.com</A>, <A HREF="mailto:jamesd@echeque.com">jamesd@echeque.com</A>, <A HREF="mailto:cypherpunks@Algebra.COM">cypherpunks@Algebra.COM</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg00439.html">3.0.3.32.19971008132417.00b0c6d0@labg30</A>&gt; (message from JohnDeters on Wed, 08 Oct 1997 13:24:17 -0500)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+John Deters &lt;jad@dsddhc.com&gt; writes:
+&gt; It would be easy enough to "trick" the MITM into exposing their
+&gt; existance anyway, just by using digits that come up in conversation.
+&gt; Humans would be able to come up with unique situations that the MITM
+&gt; would find all but impossible to predict.  "Hey, Eric, I noticed
+&gt; that the third digit of your IP address' second octet is the same as
+&gt; the second digit of our exchange.  How's by you?"  A sudden dropout
+&gt; of sound (or "accidental" loss of connection) while the MITM
+&gt; recognizes the trap and tries to backpedal will be instantly
+&gt; noticed.  Human protocols are resilient, whereas mathematical
+&gt; protocols are precise.
+
+I wonder if we can come up with a way to formalise this technique and
+automate it.  I think it was James voiced something similar earlier in
+the thread.
+
+Using your example, the MITM faces a couple of problems: he has to
+think on his toes, and think real fast.  Perhaps he can't think fast
+enough.
+
+Second problem, perhaps if he doesn't speak soon enough, he will have
+blown it, because you are speaking continuously, and the second part
+of the sentence constructs a problem from information already stated.
+The first time the information is stated, the MITM doesn't have enough
+information to change it.
+
+Say he changed it to: "Hey eric I noticed the second digit..." (second
+instead of third), just in case this would help him.  Well he doesn't
+know what the challenge will be so he may just have created an
+impossible to spoof problem for himself.  (The second digit probably
+won't meet the challenge in the second part of the sentence).  So this
+would force the MITM to construct a replacement challenge which does
+match.  Given the short notice, and already decided first part, he may
+have difficulty constructing a plausible sounding challenge which
+meets his criteria.  "Is the ummm... square of your first digit".
+
+
+How about this for a computerised method to do something similar.  Aim
+of the game: to make the MITMs job computationally infeasible.
+
+Say that we leave some noise in the speech channel.  Some of it isn't
+really noise but encrypted data.  Say perhaps first stegoed packet is:
+
+	E(k1, nonce) = packet1
+
+and second stegoed packet is:
+
+	E(k2, nonce) = packet2
+
+and finally there is a mask which controls which bits of the noise are
+actually encrypted data, and which are parts of the actual message.
+
+Send this last:
+
+	E(k3, mask)
+
+Then send the three keys k1, k2, k3.
+
+Then check that the packets1 and 2 reconsituted according to the mask
+both decrypt to the same nonce.
+
+The idea is that because of the mask, the MITM doesn't know which bits
+to replace.  So he tries to construct his own challenge meeting that
+protocol.  Fair enough he can do this.  But he will degrade the voice
+quality because he will replace some more signal with noise.  Can we
+tune this protocol so that the recipient can detect the extra noise?
+
+Well, ok, if the recipient can detect the noise, surely the MITM can
+too?  Yes but, choosing different bits to reduce the noise isn't free,
+and the hope is that you can construct a system with an expensive
+noise estimation function which is agreed to as part of the protocol.
+So you find out 10 seconds into the conversation that there is a MITM.
+
+The MITM has to compute this noise function in real time, to avoid
+introducing lag.
+
+It's not very good, but I'm sending it along anway, so that perhaps
+y'all can improve on it,
+
+Adam
+-- 
+Now officially an EAR violation...
+Have *you* exported RSA today? --&gt; <A  HREF="http://www.dcs.ex.ac.uk/~aba/rsa/">http://www.dcs.ex.ac.uk/~aba/rsa/</A>
+
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00466" HREF="msg00466.html">Re: computationally infeasible jobs for MITMs (Re: Secure phone)</A></STRONG>
+<UL><LI><EM>From:</EM> John Deters &lt;jad@dsddhc.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00510" HREF="msg00510.html">Re: computationally infeasible jobs for MITMs (Re: Secure phone)</A></STRONG>
+<UL><LI><EM>From:</EM> Bill Stewart &lt;stewarts@ix.netcom.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00439" HREF="msg00439.html">Re: Secure phone</A></STRONG>
+<UL><LI><EM>From:</EM> John Deters &lt;jad@dsddhc.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00458.html">Re: copyright &amp; privacy (was Re: "Matchcode" technology sparks privacy flames.....)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00477.html">access to storage keys, NOT comms keys! (Re: What's really in PGP 5.5?)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00439.html">Re: Secure phone</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00466.html">Re: computationally infeasible jobs for MITMs (Re: Secure phone)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00486"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00486"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

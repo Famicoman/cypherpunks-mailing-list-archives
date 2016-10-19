@@ -1,0 +1,234 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: MPJ Encryption Algorithm -->
+<!--X-From-R13: "[vxr Xbuafba" <rknolgr!fzgcyvax!zvxrwNhharg.GG.@SF> -->
+<!--X-Date: Fri, 1 Oct 93 16:43:40 PDT -->
+<!--X-Message-Id: 9309017495.AA749522149@smtplink.exabyte.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>MPJ Encryption Algorithm</TITLE>
+<LINK REV="made" HREF="mailto:exabyte!smtplink!mikej@uunet.UU.NET">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00042.html">Date Prev</A>][<A HREF="msg00044.html">Date Next</A>][<A HREF="msg00042.html">Thread Prev</A>][<A HREF="msg00035.html">Thread Next</A>][<A HREF="index.html#00034">Date Index</A>][<A HREF="threads.html#00034">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>MPJ Encryption Algorithm</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:wcs@anchor.ho.att.com">wcs@anchor.ho.att.com</A>, <A HREF="mailto:prz@acm.org">prz@acm.org</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: MPJ Encryption Algorithm</LI>
+<LI><em>From</em>: "Mike Johnson" &lt;<A HREF="mailto:exabyte%21smtplink%21mikej@uunet.UU.NET">exabyte!smtplink!mikej@uunet.UU.NET</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 01 Oct 93 17:35:49 MDT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Bill Stewart writes:
+&gt; Sounds interesting; do you have any comparisons between it and IDEA
+&gt; about either encryption strength, speed, or design philosophy?
+
+The full design philosophy for MPJ is in my thesis.  Since then, I learned
+about differential cryptanalysis and was relieved to see that MPJ is fairly
+resistant to that.  Here is a short summary:
+
+Algorithm Key size Block size Rounds    Strength*  SW Speed   HW Speed
+
+DES        56 bits  64 bits   16/2       22-55     slow       fast
+3DES      112 bits  64 bits   (16*3)/2   24-58     slower     fast
+IDEA      128 bits 128 bits   16         65-110    fast       fast
+Skipjack   80 bits 128 bits   32            79     ?          ?
+MPJ       128 bits 128 bits   10         70-120    medium     very fast
+MPJ2     &gt;=64 bits 128 bits   &gt;=10       50-128    &lt;=medium   &lt;=very fast
+
+*Strength is a GUESS at log base 2 of the complexity of breaking it.
+
+Algorithm Legal status       Back door?  Origin
+
+DES       Public Domain      No          IBM/NBS-&gt;NIST/NSA
+3DES      Public Domain      No          IBM
+IDEA      Patented           No          Switzerland
+Skipjack  Classified         LEAF        NSA
+MPJ       Public Domain      No          USA - University of Colorado at
+                                               Colorado Springs (UCCS)
+MPJ2      Not yet released   No          USA
+
+DES Design philosophy:
+(1) Fit in small chip
+
+(2) Use involution for reversibility (only half of block changes with each
+round)
+
+(3) Use polyalphabetic nonlinear s-boxes of limited size (requires great care
+to avoid differential cryptanalysis)
+
+(4) Some design criteria still classified.
+
+3DES Design philosophy:
+
+(1) Cascade existing known algorithm
+
+(2) Avoid weak key situations
+
+(3) Try not to require too much more key than the strength of the algorithm
+justifies (i.e. just 2 instead of 3 keys are used).
+
+(4) Apply a bandaid.  Making one compound block cipher would have been more
+secure, but not all the s-box design criteria are known.
+
+IDEA Design philosophy:
+
+(1) Use unrelated arithmetic operations on different fields.
+
+(2) Use only 32 bit arithmetic operations for speed on a computer.
+
+(3) Arrange the structure of the algorithm to do proper confusion/diffusion.
+
+(4) Very small code and memory space used in computer.
+
+Skipjack design philosophy (guessed):
+
+(1) Similar to DES, but with a block size of 128 bytes.
+
+(2) No attack known to the NSA will be more than a bit or two better than
+exhaustive key search.
+
+(3) Learn from the mistakes of DES (i.e. avoid weak keys and complementation
+symmetries DES suffers from).
+
+(4) Restrict knowledge of the algorithm as much as possible.
+
+MPJ Design philosopy:  
+
+(1) Relax some of the size limits of DES &amp; IDEA to gain security, but make
+sure it fits on a PC.  
+
+(2) Avoid fragile fixed s-box &amp; subkey design of DES, but copy its product
+cipher structure.  
+
+(3) Change the whole block with each round instead of just half (i.e. 10 MPJ
+rounds is as effective as 20 DES-type rounds).  
+
+(4) Make every output bit a strong function of every bit of the input and
+every bit of the key within 3 rounds.
+
+(5) Use such simple operations in a complex and nonlinear fashion that
+mathematical breakthroughs are not a threat (as with RSA).  
+
+(6) Make the substitution steps reversible through a very clever construction
+of reversible substitution arrays directly from the key.  
+
+(7) Make key scheduling slow (to discourage exhaustive search for keys), but
+make the algorithm very fast, especially in dedicated hardware.  
+
+(8) Make creative use of nonlinearity, bit twiddling, and rounds to thwart an
+analytical attack using massive quantities of known or chosen plain text.
+
+MPJ2 Design philosophy:
+
+(1) Generalize the key scheduling to accommodate variable length keys.
+
+(2) Generalize to n rounds.
+
+(3) Attempt to do key scheduling on the fly in cases where the memory
+required for precomputed internal keys take up too much RAM.
+
+Common elements:  All of these block cipher algorithms use repeating rounds
+of "confusion and diffusion" or "substitution and permutation" weaker ciphers
+to form a stronger product cipher.  All of them are secure, even if the
+cipher becomes known.  Skipjack is classified more to prevent knowledge of
+design criteria and cryptanalysis secrets, and to allow the forced insertion
+of a back door (LEAF) than for the security of the algorithm (just ask Dr.
+Denning).  DES and 3DES can raise the price of unauthorized disclosure of
+secrets above the average individual's means.  The others have the potential
+of raising the price of eavesdropping by breaking crypto algorithms to above
+the budgets of organized crime, hostile governments, and terrorists.  None of
+them prevent other technological solutions to spying, such as placing bugs
+closer to the target individual, office, or computer system.
+
+General rules of the game in CRYPTOGRAPHY and CRYPTANALYSIS:
+
+1.  There is always a way to crack any practical cryptosystem.
+
+2.  Your opponent will not tell you if she has broken your cryptosystem and
+is reading your mail.
+
+3.  The longer any one cryptosystem is in use, and the more widely it is
+used, the more likely it is that someone has broken it, or at least
+discovered a weakness in it and not told anyone about it.
+
+4.  The more widely used a cryptosystem is, the more profitable it is to try
+to break it (for either noble or ignoble purposes).
+
+5.  Exclusive control of the ability to communicate securely is a powerful
+force that can easily be corrupted.
+
+6.  Putting all your eggs in one basket is unwise.  Use more than one
+cryptosystem, and change keys regularly -- even if you don't suspect
+compromise.
+
+7.  Insecure cryptosystems often appear on the surface to be secure.  They
+are often sold for good money.
+
+DISCLAIMERS:
+
+DISCUSSIONS ABOVE ARE FROM MEMORY AND MAY NOT BE ACCURATE.  ALL DATA CLAIMING
+TO BE GUESSWORK IS.  PROVING ANY CRYPTOSYSTEM SECURE IS USUALLY IMPOSSIBLE. 
+INVENTERS OF CRYPTO ALGORITHMS ARE NOT QUALIFIED TO JUDGE THEM.
+
+                                         Mike Johson
+                                         mpj@csn.org
+
+This message contains writings protected under the First Amendment of the
+Constitution of the United States of America.  Censorship is forbidden.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00042.html">[Question EFF yielding of crypto authority to NIST]</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00044.html">Re: TRAVELLER'S ADVISORY</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00042.html">[Question EFF yielding of crypto authority to NIST]</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00035.html">secretive API</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00034"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00034"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

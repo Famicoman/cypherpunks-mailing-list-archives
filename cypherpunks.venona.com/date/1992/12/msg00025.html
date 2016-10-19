@@ -1,0 +1,196 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: digital banking, file formats, etc. -->
+<!--X-From-R13: Yney Z. Pneehf <oneehfNgerr.rte.hu.rqh> -->
+<!--X-Date: Wed, 2 Dec 92 18:17:58 PST -->
+<!--X-Message-Id: 9212030217.AA07111@tree.egr.uh.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>digital banking, file formats, etc.</TITLE>
+<LINK REV="made" HREF="mailto:barrus@tree.egr.uh.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00024.html">Date Prev</A>][<A HREF="msg00032.html">Date Next</A>][<A HREF="msg00176.html">Thread Prev</A>][<A HREF="msg00037.html">Thread Next</A>][<A HREF="index.html#00025">Date Index</A>][<A HREF="threads.html#00025">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>digital banking, file formats, etc.</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: digital banking, file formats, etc.</LI>
+<LI><em>From</em>: Karl L. Barrus &lt;<A HREF="mailto:barrus@tree.egr.uh.edu">barrus@tree.egr.uh.edu</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 2 Dec 92 20:17:19 -0600</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+This is a run through of Hal Finney's summary of the bank protocol.
+Here is what I envision the digital bank working like, with rough  
+sketches of file formats, conspicuously similar to the remailer's  
+:-):
+
+1) Alice chooses x, r
+   Alice computes B = r^3 * f(x) mod n
+   Alice sends the following message to the bank via an anonymous  
+remailer
+
+    ::
+    withdraw
+    &lt;account name&gt;
+    &lt;B = r^3 * f(x) mod n&gt;
+    Reply-To: &lt;an anonymous remailer&gt;
+    &lt;remailing request to Alice encrypted with appropriate remailer  
+public key&gt;
+
+In the final version, this message will be encrypted as well
+
+2) Bank computes D = B^(1/3)
+   checks &lt;account name&gt; for balance, withdraws if ok
+   Bank sends to appropriate remailer
+
+    ::
+    Encrypted: PGP
+
+    &lt;remailing request included in Alice's mail&gt;
+
+    &lt;D&gt;
+
+3) Alice computes C = f(x)^(1/3) by dividing D by r.
+   Alice gives Bob (x, C) - via anonymous mail, presumably :-)
+
+4) Bob wants to verify (x, C)
+   Bob mails to Bank via anonymous remailer
+
+    ::
+    verify
+    &lt;x&gt;
+    &lt;C&gt;
+    Reply-To: &lt;an anonymous remailer&gt;
+    &lt;remailing request to Bob encrypted with appropriate remailer  
+public key&gt;
+
+    In the final version, this message will be encrypted as well
+
+5) Bank checks x to see if its been used
+   Bank sends back to remailer
+
+    ::
+    Encrypted: PGP
+
+    &lt;remailing request included in Bob's mail&gt;
+
+    &lt;usage status: used or unused&gt;
+
+6) Bob accepts the "cash"
+   Bob sends to bank via anonymous remailer
+
+    ::
+    deposit
+    &lt;account name&gt;
+    &lt;x&gt;
+    &lt;C&gt;
+    Reply-To: &lt;an anonymous remailer&gt;
+    &lt;remailing request for Bob encrypted with appropriate remailer  
+public key&gt;
+
+7) Bank checks x, C, account name; if everything OK, deposit
+   Bank replies via anonymous remailer
+
+    ::
+    Encrypted: PGP
+
+    &lt;remailing request included in Bob's mail&gt;
+
+    &lt;message indicating deposit accepted or rejected&gt;
+
+Alice and Bob may send message to and receive messages from the bank  
+via anonymous remailers.  Or more than one...
+During the testing/development phase, account names and balances can  
+be made public (available via finger command or something like that)  
+for verification.
+Account names can be hashes of some user chosen string (Email address  
+plus random text, etc.)
+
+Customers must be able to 
+  choose: two random numbers x, r
+  compute: f(x)
+           r^3 * f(x) mod n
+           f(x)^(1/3) or C^3
+  solve: D = C r mod n for C
+
+Bank must be able to
+  solve: D^3 mod n for D
+
+So, PGP has routines which can generate random number, calculate  
+hashes, and be modified slightly to perform the necessary math.  The  
+Bank will be supported by a host of scripts and the math performing  
+PGP routines.
+
+Sometime later I will post a run through of the digital bank protocol  
+(all numbers and done with Mathematica) as an example for those who  
+are interested in an example of the protocol.
+
+Any input or comments or help will be welcome.  Or, if someone else  
+is further along than me, I volunteer!  Unfortunately, since the end  
+of the semester draws near, I will be unable to work on this very  
+much for the next few weeks.  Besides, I've got to go pick up the  
+O'Reilly and Associates Perl book to 
+move this project along...
+
+---
+/-----------------------------------\
+| Karl L. Barrus                    |
+| barrus@tree.egr.uh.edu (NeXTMail) |
+| elee9sf@menudo.uh.edu             |
+\-----------------------------------/
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00024.html">No Subject</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00032.html">uh oh, o-o</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00176.html">No Subject</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00037.html">RE: digital banking, file formats, etc.</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00025"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00025"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

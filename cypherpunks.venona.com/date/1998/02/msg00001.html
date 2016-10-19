@@ -1,0 +1,179 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Chaining ciphers -->
+<!--X-From-R13: "Xbua Yryfrl" <xryfrlNcyarg.arg> -->
+<!--X-Date: Mon, 2 Feb 1998 06:47:30 +0800 -->
+<!--X-Message-Id: 199802012242.QAA31781@email.plnet.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Chaining ciphers</TITLE>
+<LINK REV="made" HREF="mailto:kelsey@plnet.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00009.html">Date Prev</A>][<A HREF="msg00017.html">Date Next</A>][<A HREF="msg00000.html">Thread Prev</A>][<A HREF="msg00611.html">Thread Next</A>][<A HREF="index.html#00001">Date Index</A>][<A HREF="threads.html#00001">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Chaining ciphers</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "cypherpunks" &lt;<A HREF="mailto:cypherpunks@Algebra.COM">cypherpunks@Algebra.COM</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Chaining ciphers</LI>
+<LI><em>From</em>: "John Kelsey" &lt;<A HREF="mailto:kelsey@plnet.net">kelsey@plnet.net</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 1 Feb 1998 02:46:52 -0600</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+
+[ To: Cypherpunks ## Date: 02/01/98 ##
+  Subject: Re: Chaining ciphers ]
+
+&gt;Subject:      Re: Chaining ciphers
+&gt;From:         ghio@temp0201.myriad.ml.org (Matthew Ghio)
+&gt;Date:         1998/01/30
+
+&gt;One other possibility is to encrypt with plaintext block
+&gt;chaining, then superencrypt it PBC in reverse order,
+&gt;starting with the last block first. An attacker would thus
+&gt;have to decrypt the entire message before knowing whether
+&gt;the key was correct or not.
+
+I've seen proposals along these lines before (I think there
+was one by Ron Rivest).  If you have a hash function and any
+symmetric cipher, you can do this.  BEAR and LION, the two
+arbitrary-size block cipher constructions by Ross Anderson
+and Eli Biham, have this property; you have to process every
+bit of the message to check a key guess.  Using normal
+chaining modes for this kind of thing, at least with 64-bit
+block ciphers, usually exposes you to internal-collision
+kinds of attacks.
+
+&gt;&gt; One word of caution (which should be obvious, but can't
+&gt;&gt; hurt to repeat it): if you chain ciphers (e.g. DES | IDEA |
+&gt;&gt; 3DES | CAST | Blowfish), be sure to use separate keys for
+&gt;&gt; each of them; otherwise breaking the last one will give the
+&gt;&gt; key to the whole lot.
+
+&gt;Only if the cryptanalyst knows that the decryption of the
+&gt;last one was correct, which shouldn't be possible without
+&gt;also decrypting all the other layers.
+
+Actually, this isn't necessarily true.  The problem is that
+you can't guarantee that there won't be some interaction
+between those encryption operations unless you can assume
+independent keys.  The classic example is this:  Suppose the
+first cipher is double-DES encryption with DES keys (K0,K1),
+and the second and third encryptions are single-DES
+decryptions with keys K1 and K0, respectively.  You now have
+
+e_0(e_1(e_2(x)))
+
+leaking all your plaintext directly.
+
+The proof for why something like
+
+E(X) = IDEA_{K_0}(3DES_{K_1}(X))
+
+is at least as secure as 3DES is as follows:  Suppose those
+keys are random and independent, and suppose you have a way
+to break E(X).  Now, anytime you see a 3DES-encrypted block
+of data, you can break it, as well, by simply choosing a
+random IDEA key, encrypting it under that key, and then
+applying your attack on E(X).  In other words, the attack on
+E(X) implies the attack on 3DES(X), but only if the keys are
+independent.  If there is some dependency between K_0 and
+K_1 that's required for your attack on E(X), then you can't
+generalize that out to an attack on 3DES, since you don't
+know the 3DES key when you start attacking it.
+
+To take this a little further, note that an attack on E(X)
+also implies a chosen-plaintext attack on IDEA.  If I have
+an attack that allows me to break E(X), then I can choose a
+random 3DES key, pre-encrypt all my chosen plaintexts with
+it, and then request the encryption of all those plaintexts
+under the secret IDEA key.  The result is E(X), so I can now
+apply my attack to E(X).
+
+For more elaborate constructions, like
+
+E3(X) = 3DES_{K_1}(IDEA_{K_2}(Blowfish_{K_3}(X))),
+
+we can make the same kind of proof.  Suppose I can break
+E3(X).  Now, I can mount a chosen-plaintext attack on IDEA.
+I select a random encryption key and use it to encrypt all
+my chosen plaintexts under with Blowfish, and then I request
+their encryptions.  When I get the ciphertexts from that, I
+select a random 3DES key and encrypt them again.  I then
+apply my attack on E3(X) to break the system.  Thus, an
+attack on E3(X) implies an attack on 3DES, IDEA, *and*
+Blowfish.  But only if the keys are independent and random.
+
+Note:  I read CP-LITE instead of the whole list.  Please CC
+       me on replies.
+
+- --John Kelsey, kelsey@counterpane.com / kelsey@plnet.net
+NEW PGP print =  5D91 6F57 2646 83F9 6D7F 9C87 886D 88AF
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBNNRSUiZv+/Ry/LrBAQGTgAP9EhO0wyPT0HKSXqZD61YPwId8E5C4GJK2
+c/+27LBZy8WLhiD92NBc42Rzjbxbir8oWlPkSkZa565mYoaILM0CcP7S15ECyfBY
+yV2yCOlJdoUo2ea70uIucowxpc2zx2G2KPKBLmGS5P5cwNsx8h3i7KDiRfcWSIGN
+Omqf38rAy6E=
+=+f39
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00009.html">Re: Electron Microscope...</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00017.html">Would you like to join our referral program?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00000.html">Re: Chaining ciphers</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00611.html">Eureka! Sun Feb 1 '98</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00001"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00001"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

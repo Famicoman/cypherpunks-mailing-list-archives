@@ -1,0 +1,195 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: subliminal messages -->
+<!--X-From-R13: Yney Pneehf <ryrr9fsN[rahqb.GV.SRG> -->
+<!--X-Date: Tue, 20 Jul 93 17:09:27 PDT -->
+<!--X-Message-Id: 199307210008.AA21142@Menudo.UH.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>subliminal messages</TITLE>
+<LINK REV="made" HREF="mailto:elee9sf@Menudo.UH.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00363.html">Date Prev</A>][<A HREF="msg00368.html">Date Next</A>][<A HREF="msg00363.html">Thread Prev</A>][<A HREF="msg00369.html">Thread Next</A>][<A HREF="index.html#00367">Date Index</A>][<A HREF="threads.html#00367">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>subliminal messages</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: subliminal messages</LI>
+<LI><em>From</em>: Karl Barrus &lt;<A HREF="mailto:elee9sf@Menudo.UH.EDU">elee9sf@Menudo.UH.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 20 Jul 1993 19:08:07 -0500</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Eric Hughes just told me some extremely interesting information
+concerning subliminal channels and the DSS.  Apparently, the DSS is
+very hospitable towards subliminal channels.  (I won't summarize
+further since Eric may have posted to the list).
+
+Again: a subliminal channel is a channel in which an external observer
+is unaware of communication.  For example, two prisoners want to
+communicate.  The warden agrees if the messages are plaintext.  The
+prisoners agree if they can authenticate (digitally sign) the messages
+- - after all, the warden may try to spoof them.  The warden agrees to
+this arrangement (for instance, after reading up on digital signatures
+in Denning's book, which doesn't cover subliminal channels!), allowing
+the prisoners to embed their true communication in the digital
+signature of their plaintext messages.
+
+Before showing an example El Gamal subliminal channel, I'll briefly
+describe El Gamal's authentication scheme (since most people are
+familiar with or have heard of the RSA method only).  In El Gamal's
+scheme (from Seberry and Pieprzyk's "Cryptography: an Introduction to
+Computer Security"):
+
+1) Alice chooses p a prime, g a primitive element of GF(p), r a random
+   integer.  Loosely, g (being primitive) can be used to generate the
+   rest of the field GF(p) by exponentiation.
+2) Alice calculates K = g^r mod p
+   Alice publishes (K,g,p) as the public key
+3) a message M is authenticated by first choosing a second random
+   integer r' such that r' and p-1 are relatively prime
+   Alice computes X = g^r' mod p
+   Alice solves M = rX + r'Y mod p-1 for Y
+   Alice sends (M,X,Y) to B and keeps (r,r') secret
+4) Bob can verify the message M by calculating A = K^X X^Y mod p and
+   only accepts the message as authentic if and only if A = g^M mod p
+
+The example in the book is (I'm not sitting at a NeXT at the moment,
+the only place it's convenient for me to use Mathematica, or I'd use
+some larger numbers):
+
+Alice chooses p = 11, g = 2, r = 8
+Alice computes K = g^r mod p = 2^8 mod 11 = 3
+Thus (K,g,p) = (3,2,11)
+Say the message is M = 5
+Alice chooses r' = 9.  GCD(r',p-1) = 1, so they are relatively prime
+Alice computes X = g^r' mod p = 2^9 mod 11 = 6
+Alice solves M = rX + r'Y mod p-1 for Y
+             5 = 8*6 + 9*Y mod 10; yeilding Y = 3
+Alice sends out the triple (M,X,Y) = (5,6,3) to Bob.
+
+Note: M can be read.
+
+Bob now has (M,X,Y) = (5,6,3) and the public key (K,g,p) = (3,2,11)
+Bob calculates A = K^X X^Y mod p = 3^6 6^3 mod 11 = 10
+Bob calculates g^M mod p = 2^5 mod 11 = 10
+
+So, since A = 10 and g^M mod p = 10, the message is valid.
+
+Again, when I have a chance I'll plug in much larger numbers so you
+don't think it all works out by coincidence.
+
+In the El Gamal subliminal channel, somehow the random integer r is
+known by both parties.  So Alice and Bob agree on a random r before
+they ever find themselves in the position of using a subliminal
+channel.  
+
+1) Alice chooses p, g as before.  She chooses the r that she and Bob
+   share.  She calculates K as before.
+2) Alice calculates the subliminal message m, using a plaintext
+   message M, by calculating X = g^m and solving the following equation
+   for Y: M = rX + mY mod (p-1)
+3) Alice send (M,X,Y) to Bob.
+4) Bob receives (M,X,Y) and knows (p,g) which are public and the
+   secret r he shares with Alice.
+5) Bob calculates A = (g^r)^X X^Y mod p and accepts the message M as
+   authentic if A = g^M mod p (as before in El Gamal authentication).
+6) Now Bob extracts the subliminal message by computing
+   m = Y^-1 (M - rX) mod (p-1)
+
+As before, (K,g,p) = (3,2,11) is public.  r = 8 is the shared secret.
+Alice wants to send m = 9, using the plaintext message M = 5
+Alice computes X = g^m mod p = 2^9 mod 11 = 6
+Alice solves 5 = 8*6 9Y mod 10 for Y; Y = 3
+Alice sends (M,X,Y) = (5,6,3) to Bob.
+
+Bob computes A = (2^8)^6 6^3 mod 11 = 10
+Bob computes g^M mod p = 2^5 mod 11 = 10
+These are equal, so Bob accepts the message.
+Now, he extracts the subliminal message: m = Y^-1 (M - rX) mod (p-1)
+  = 3^-1 (5 - 8*6) mod 10 = 9.
+
+So, it is possible to communicate information with subliminal
+channels.  A real life example where this could occur is with ham
+radio operators.  Encrypted messages are illegal, but checksum message
+can be transmitted, so the checksum can be modified to include a
+subliminal message.  I'm just pointing this out for theoretical
+interest - I know it's illegal!
+
+Now, back to subliminal messages and the DSS.  Suppose the government
+decides to authenticate the information on your driver's license with
+DSS.  All sorts of information can be included subliminally, such as
+an arrest record, number of speeding tickets, if the person in
+question is suspicious, etc...
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3
+
+iQCVAgUBLEyIroOA7OpLWtYzAQE95gQAmrCoIB0lWTbBUOcayev0HvKUoAyz2dT4
+FSbqi65oytE+EA2RhY9BHOFeRuA8yF97Dm+tTunOUYlA3CTlGRvmfxdA98TuGD7X
+otmr0qVPJlAFsW7xqm8sJq09mozM+NMONwQJTOObaEr9UzPsgGeyGs4RVz3h29Qp
+nvxCopYQy6A=
+=4kzu
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00369" HREF="msg00369.html">Re: subliminal messages</A></STRONG>
+<UL><LI><EM>From:</EM> "Perry E. Metzger" &lt;pmetzger@lehman.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00363.html">An Ode to Sternlight (fwd)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00368.html">Re: subliminal messages</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00363.html">An Ode to Sternlight (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00369.html">Re: subliminal messages</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00367"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00367"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

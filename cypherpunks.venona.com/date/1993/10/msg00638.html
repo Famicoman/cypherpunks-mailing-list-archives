@@ -1,0 +1,177 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Breaking DES -->
+<!--X-From-R13: gbqqNgvibyv.pbz -->
+<!--X-Date: Thu, 14 Oct 93 07:40:01 PDT -->
+<!--X-Message-Id: 9310141442.AA07423@palomar.tivoli.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9310130416.AA25367@netcom5.netcom.com -->
+<!--X-Reference: 9310131433.AA06289@snark.lehman.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Breaking DES</TITLE>
+<LINK REV="made" HREF="mailto:todd@tivoli.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00641.html">Date Prev</A>][<A HREF="msg00634.html">Date Next</A>][<A HREF="msg00600.html">Thread Prev</A>][<A HREF="msg00577.html">Thread Next</A>][<A HREF="index.html#00638">Date Index</A>][<A HREF="threads.html#00638">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Breaking DES</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:pmetzger@lehman.com">pmetzger@lehman.com</A></LI>
+<LI><em>Subject</em>: Re: Breaking DES </LI>
+<LI><em>From</em>: <A HREF="mailto:todd@tivoli.com">todd@tivoli.com</A></LI>
+<LI><em>Date</em>: Thu, 14 Oct 93 09:42:18 CDT</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00600.html">9310131433.AA06289@snark.lehman.com</A>&gt;</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00569.html">9310130416.AA25367@netcom5.netcom.com</A>&gt;&lt;<A HREF="msg00600.html">9310131433.AA06289@snark.lehman.com</A>&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+"Perry E. Metzger" writes:
+ &gt; 
+ &gt; Doug Merritt says:
+ &gt; &gt; pmetzger@lehman.com said:
+ &gt; &gt; &gt;Each DES block is eight bytes. You can't use hashing -- the idea is
+ &gt; &gt; &gt;nonsense in context. Did you read the original post?
+ &gt; &gt; 
+ &gt; &gt; Yes, I did. If hashing doesn't work, you'll have to say why not.
+ &gt; 
+ &gt; &gt; It's a technique that works in most other situations.
+ &gt; 
+ &gt; You don't know anything about hashing, then.
+ &gt; 
+ &gt; When I use a hash table, it is never a substitute for storing the
+                                  ^^^^^^^^^^^^^^^^^^
+ &gt; actual value of the thing I'm hashing. Its always just a way of
+                                              ^^^^^^
+ &gt; rapidly FINDING the underlying object. I have to store the underlying
+ &gt; object in order to compare to it. As an example, in a hashed symbol
+ &gt; table, I store the actual symbols.
+ &gt; 
+
+I haven't been following this thread very closely, but I do want to
+point out some serious errors in Perry's previous paragraph.  Hashing
+can indeed be a substitute for storing the actual value of the thing
+being hashed, and it can often be used to reduce storage requirements.
+I'm not sure if it can be used in the case of a meet in the middle
+attack on double DES encryption; I'll have to leave the answer to that
+question up to those that are following this thread.
+
+I have used hashing in ways other than for *FINDING* the underlying
+object.  Often, I don't need to know the correct answer to a question
+with 100% confidence.  When I'm satisfied with an algorithm that gives
+the correct answer 99.999999999999999995% of the time I can use a good
+64 bit hash as a surrogate for the actual value that may be too costly
+to store, compare, look up, or compute.  The use of a message digest,
+like MD5, to insure message integrity is an example of this kind of
+"hashing".  Other uses include keeping a short (say 32 bit) hash value
+in memory for every record stored in secondary storage.  This allows
+very fast lookups that return negative answers, if the hash value
+isn't found there is no need to examine the values stored in secondary
+storage.  For a large class of problems one expects not to find an
+entry for the record at all for most lookups. (Knuth uses the example
+of a hyphenation dictionary that stores exceptions to some hyphenation
+algorithm.  Before applying the general algorithm consult the
+in-memory table to see if the word being hyphenated might even appear
+in the exception dictionary; there is no need to search the exception
+dictionary if it contains no words with the same hash value as the
+word being hyphenated.  An example more appropriate for this group
+might be detecting replay attempts.  One doesn't expect replay attacks
+to happen so the algorithm should be performance optimized with this
+in mind.)  Finally, there are times when space-time kinds of
+trade-offs are being made in the design of an algorithm where hashing
+can be used.  For example, if computing some value takes too long it
+may be possible to pre-compute it or cache previous computations of
+the value.  Techniques like this are easy to apply and are frequently
+used, but there are times when it is infeasible to store all of the
+values one would like to for space or even security reasons.  Instead
+one can store a hash of each value (presumably, the hash is smaller
+than the value like a 32 bit hash instead of a 64 byte value) and only
+bother to recompute the value when a matching hash indicates a high
+likelyhood that it will be useful to compute the value and check for
+an actual match.
+
+&gt; You can lead a horse to water, but you can't make him think.
+
+The discussion on this thread doesn't seem to warrant statements like
+this.  I've had the pleasure of working with some of the world's most
+talented computer scientists over the years, and I simply can't
+imagine one of them using a statement like this in the context of this
+topic thread.  Statements like this are cute and impress me with the
+cleverness and humor of the author, but in writing they are so easy to
+misinterpret.  In my opinion, they are best saved for use in social
+situations where some friendly kidding is going on, not mail groups
+where people are simply asking for help in understanding a subject
+they are unfamiliar with.
+
+Todd
+-- 
+Todd Smith                                     TIVOLI Systems, Inc.
+todd@tivoli.com                                6034 West Courtyard Dr.
+                                               Suite 210
+(512) 794-9070 [794-0623 fax]                  Austin, TX   78730
+
+
+
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00569" HREF="msg00569.html">Re: Breaking DES</A></STRONG>
+<UL><LI><EM>From:</EM> doug@netcom.com (Doug Merritt)</LI></UL></LI>
+<LI><STRONG><A NAME="00600" HREF="msg00600.html">Re: Breaking DES</A></STRONG>
+<UL><LI><EM>From:</EM> "Perry E. Metzger" &lt;pmetzger@lehman.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00641.html">Glitches in PGP Messages</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00634.html">DES: breaking, attacking</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00600.html">Re: Breaking DES</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00577.html">Re: Breaking DES</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00638"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00638"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

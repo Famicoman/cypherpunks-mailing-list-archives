@@ -1,0 +1,129 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: weak pseuodrandom number generator -->
+<!--X-From-R13: jrg!antn (Brgre Rnivqfba) -->
+<!--X-Date: Sat, 19 Jun 93 02:11:53 PDT -->
+<!--X-Message-Id: m0o6ybl&#45;0003IzC@wet.uucp -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>weak pseuodrandom number generator</TITLE>
+<LINK REV="made" HREF="mailto:wet!naga">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00566.html">Date Prev</A>][<A HREF="msg00564.html">Date Next</A>][<A HREF="msg00566.html">Thread Prev</A>][<A HREF="msg00564.html">Thread Next</A>][<A HREF="index.html#00563">Date Index</A>][<A HREF="threads.html#00563">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>weak pseuodrandom number generator</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: weak pseuodrandom number generator</LI>
+<LI><em>From</em>: wet!naga (Peter Davidson)</LI>
+<LI><em>Date</em>: Sat, 19 Jun 93 01:49 PDT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+ 
+A pseudorandom number generator recently proposed here, namely:
+ 
+int rand1(int seedval) { return (seed * 183041 % 183319 + 1); }
+ 
+needs some cleaning up.  It should be something like:
+ 
+unsigned long rand1(unsigned long n)
+{ return ( ( ( n * 183041L) % 183319 ) + 1 ); }
+ 
+where n is initally set to some seed value.  However, this is
+particularly weak, and quickly degenerates into a cycle,
+usually of length 208, as the following program will confirm:
+ 
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+ 
+unsigned long a[15000];
+ 
+unsigned long rand1( unsigned long n );
+ 
+void main(int argc, char **argv)
+{
+unsigned int i=0, j;
+ 
+if ( argc &lt; 2 )
+    return;
+ 
+a[0] = atol(argv[1]);
+while ( ++i &lt; 15000 )
+    {
+    a[i] = rand1(a[i-1]);
+    for ( j=0; j&lt;i; j++ )
+        {
+        if ( a[i] == a[j] )
+            {
+            printf(" Cycle of length %d found.\n",i-j);
+            return;
+            }
+        }
+    }
+}
+ 
+unsigned long rand1( unsigned long n )
+{
+return ( ( ( n * 183041L ) % 183319L ) + 1 );
+}
+ 
+The other generator proposed is equally weak.
+ 
+This does not demonstrate that pseudorandom number generators
+cannot be used as a basis for strong encryption.
+ 
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00566.html">correction on pgp 2.3 problem</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00564.html">that cipher I wrote</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00566.html">correction on pgp 2.3 problem</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00564.html">that cipher I wrote</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00563"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00563"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

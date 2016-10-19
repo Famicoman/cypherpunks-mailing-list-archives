@@ -1,0 +1,243 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Technical Remailer Analysis. -->
+<!--X-From-R13: obthfNab.erghea.nqqerff (Gaqreqbt) -->
+<!--X-Date: Fri, 30 Sep 94 21:35:32 PDT -->
+<!--X-Message-Id: 199410010435.AAA10221@ducie.cs.umass.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Technical Remailer Analysis.</TITLE>
+<LINK REV="made" HREF="mailto:bogus@no.return.address">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[Date Prev][<A HREF="msg00000.html">Date Next</A>][Thread Prev][<A HREF="msg00008.html">Thread Next</A>][<A HREF="index.html#00001">Date Index</A>][<A HREF="threads.html#00001">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Technical Remailer Analysis.</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Technical Remailer Analysis.</LI>
+<LI><em>From</em>: <A HREF="mailto:bogus@no.return.address">bogus@no.return.address</A> (Underdog)</LI>
+<LI><em>Date</em>: Sat, 1 Oct 1994 00:35:09 -0400</LI>
+<LI><em>Comment-1</em>: This message did not originate from the above address.</LI>
+<LI><em>Comment-2</em>: It was automatically remailed by an anonymous remailing service.</LI>
+<LI><em>Comment-3</em>: Please report inappropriate use to &lt;lmccarth@ducie.cs.umass.edu&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+Yow, I have been trying to send this for a week!
+BTW, yes I am using the bug to add this note.
+
+From: Louis Cypher (Elswhere)
+
+In this message I will analyze message reordering in remailers, and
+traffic analysis in remailer webs.
+
+Remailers which immediately resend incoming messages provide no 
+security against an attacker who is able to watch all traffic to and 
+from the remailer.  Two proposals have been suggested to solve this 
+problem, latency and reordering.  In recent discussions, the consensus 
+was that message reordering was superior to (and the actual intent of) 
+latency.  Reordering is not sufficient, a form of latency is required 
+to make it effective.
+
+In this analysis, I assume that the reordering is accomplished by 
+keeping a group of n messages at the remailer, and sending a random 
+one whenever a new message comes. This is superior to simply waiting 
+for n messages to arrive, then sending them all at once (I will show 
+this later).
+
+The attack on the reordering remailer is simple. The attacker sends a 
+stream of marked messages through the remailer.  After the waiting 
+messages have been flushed out, any incoming real message will be 
+flushed out of the remailer before more arrive, allowing it to be 
+uniquely identified coming and going.  The defense against this is to 
+only check the group and send excess messages after a time delay. This 
+delay should be the typical time for n real messages to arrive. A 
+mixing of approximately n messages is ensured by this process. If 
+there is no attack, then the mixing is not quite as good as keeping a 
+group of 2n messages.
+
+Here is the math on the reordering schemes:
+
+1) Wait for n messages, then mix and send them all.
+	The message is known to be one of those 10 (duh).
+
+2) Keep a group of n messages. Send one of the n+1 when a new one 
+	arrives.
+	The message could be any message ever sent after arrival.
+	That is not useful. How many messages does it take before we are
+	90% sure that the message has been sent?
+
+prob that the message has not been sent after x messages is (n/n+1)^x
+
+Prob that it has been sent = 1 - (n/n+1)^x
+Messages till 90% prob:  x=ln(.1)/ln(n/n+1)
+For n=10, x=24, which is much better then 10 for scheme 1.
+
+3) Accumulate b messages, then send a of them (Scheme 2 is a=1, b=n)
+  x = ln(.1)/(ln(a) - ln(b))
+  This gives the largest x  for a=1.
+  In my example of how to defend against the flood attack, a=n, b=2n
+  x = 33
+  This is misleading, because it will introduce twice the delay as 
+  scheme 2.
+  Given the same delay, a=n/2, b=n, one finds that x=16.6
+  That is better than batching, but not as good as scheme 2. The 
+  smaller x is
+  worth it, because a reordering of at least some minimum number of
+  messages is ensured.
+
+Some writer proposed changing n randomly to protect against this 
+attack. Obviously that would not work. The attack will consist of many 
+many more than n messages.
+
+The second issue for consideration is:
+Given a web of perfect remailers, how easy is it to identify 
+corespondents? Tim has been asking this one for a while.
+
+I assume that there is sufficient traffic through all remailers that 
+any message entering the web could be any message leaving the web. 
+This can be achieved, even with light traffic, by sending fake 
+messages through the web to bit buckets. While they do not improve the 
+security of the web as a whole, they help ensure that no tracking of 
+messages within the web is possible, forcing it to be treated as a 
+black box.
+I assume that no correspondents are remailers themselves, and that all 
+communications are random (random times with random people). This 
+assumtion that all communications are uniformly distributed is 
+terrible but....
+This analysis only applies to indistinguishable messages. Each 
+standard packet size can be thought of as having its own black box (a 
+good argument for message splitting and having only one packet size).
+
+To simplify the problem, I am going to treat the web as though it were 
+clock driven. Some number of messages enter and leave the web each 
+"tick" with no messages staying in the web between ticks.  This is a 
+reasonable approximation, with the "tick" being the mean time of 
+passage through the web.
+
+Define "f" as the fraction of remailer using population sending a 
+message in a given tick. This is also the probability that any 
+individual will send a message in a given tick. The probability of a 
+given pair of corespondents in a given tick is
+	f^2
+The probability of a pair of corespondents occurring m times in n 
+ticks is
+        m
+p= 1 - Sum [(f^2)^i (1 - f^2)^(n-i) n! / (i! (n-i)!)]
+       i=0
+
+Lets put some numbers in there. If people send 1 message per day on 
+average, and one tick is 30 min., then f=1/48. If you watch the web 
+for a month you will see 1440 ticks. If the chance probability of your 
+sending m messages to your co-conspirator  is too small then you have 
+been nabbed.
+The condition for that is: p &lt;&lt; (1/population)
+
+The results for m=0 to 12 (using the above numbers) are:
+
+m = 0   	p = 4.64811E-1
+m = 1   	p = 1.30173E-1
+m = 2   	p = 2.56257E-2
+m = 3   	p = 3.86587E-3
+m = 4   	p = 4.71498E-4
+m = 5   	p = 4.81967E-5
+m = 6   	p = 4.23687E-6
+m = 7   	p = 3.26538E-7
+m = 8   	p = 2.23961E-8
+m = 9   	p = 1.38336E-9
+m = 10  	p = 7.77044E-11
+m = 11  	p = 4.00273E-12
+m = 12  	p = 1.91774E-13
+
+So, for a remailer using population of 10,000 you had better send less 
+than 5 messages per month to your accomplice.  This only gets worse 
+the longer you keep it up. You can not send 4 per month, month after 
+month.
+
+So, that is enough typing for one night. I hope this will staunch the 
+RC4 legality debate for a few seconds.
+
+Summoned from Elsewhere:
+		Louis Cypher
+
+
+Here is my key:
+- -----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: 2.6
+
+mQCcAy52rloAAAEEAK2NyOHpG+yHmhbhu1wFmH7JpDUEs2q6VtYBoiQHhrbr/Duj
+cva9huWHP8OFWGWIRYQXGVNdYQTENqZ84C6uTtMZad2THzU6OWCKhC6GUTnzea9c
+kNKWj/BFI9n1461r7/y03nyZkoRT91QscQ+9vKNfDFqNy/I5W6yHUAO76TvRAICA
+AAAAAAAAAAAAAAAAAAADtBhMb3VpcyBDeXBoZXIgPEVsc2V3aGVyZT6JAJUDBRAu
+dq6UrIdQA7vpO9EBAf4YBACDO08fVgfsIU25rweXiNFUDZlj/ShOok6NPfXp7v4A
+w1AOzG+abIWd6w3Hl/bwLzN/7d3VwEj4MlPrsr3mVPWc2UhrV/KZ729Kyrlui1Xw
+1nzWorHUGTfNtlmPcbSQkojKFpid5EcHJgtOI/fEnSQcvkux5IBtBWB1VoWGrj8l
++w==
+=c18C
+- -----END PGP PUBLIC KEY BLOCK-----
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6
+
+iQCVAwUBLopED6yHUAO76TvRAQHotwQAlkXA9esn+OjVM1hrl5qcWL+MpfNEtmn6
+dn5Y8vKmyu/CJUddI+8UHmeMFAQrKczIRAetJHfN3+Vz+NARqafskpmAUDJAdCZ3
+ON6G45ERrecgb6MvbFSwzKa5+80ksysVVa3Ql74Vi0cYf4x04OUblpVBPLPKgaUP
+GyD3E0EOWY0=
+=BGnr
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00008" HREF="msg00008.html">Re: Technical Remailer Analysis.</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Next by Date:
+<STRONG><A HREF="msg00000.html">Friendly, neighborhood NSA...</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00008.html">Re: Technical Remailer Analysis.</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00001"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00001"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

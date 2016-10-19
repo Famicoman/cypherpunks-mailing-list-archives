@@ -1,0 +1,63 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+
+> 
+> 
+> I've been able to compile a working brutessl 1.02 cllient under linux
+> and gcc 2.7.0, but I get abysmal search speeds.
+> 
+> My system is a pentium 60, which, according to the docs, ought to have
+> a speed of something over 14100 kps (that's what a 486dx2/66 with no
+> rotate left macro gets).
+> 
+I get (with gcc 2.5.8) 10000 on a 486/66, which IMHO compares fine to the
+values of 27400 on my VMS AXP/166 and 15000 on my Mac PPC/80 (and 700 on my
+VAX 3400, every little bit helps :-)). The PPC version is probably
+a little bit slow, but the PPC compiler of MPW on the Mac hung
+when trying to optimize md5_digest () - I had to put that one in an
+extra file. I don't know where this 15k value mentioned in the sources for
+a 486 comes from - probably the assembly file gives quite a large gain.
+
+First, give gcc every optimization switch you can think about (I used:
+- -O2 -m486 -fomit-frame-pointer -fexpensive-optimizations -funroll-loops
+- -finline-functions -fdelayed-branch -fschedule-insns -fschedule-insns2, some
+of which are atmittedly not valid on a 486). Then, hard-code endianity (remove
+the if statements in search.c), it gives a couple of percents. Try to tag
+state_p, tmp, index, i as `register', see whether making k0...k15 `static'
+makes any difference (the Intels haven't got enough registers to make them
+all register based, so making them static can gain something). Check whether 
+your gcc has -m586 (I don't know, have to upgrade yet), may make a big 
+difference.
+
+> Is there any obvious reason this number is so much lower than
+> expected?  I'm reasonably certain gcc implemets a rotl macro, but I
+> don't know how to make use of it -- has anyone out there gotten
+> assembly.c to compile under gcc?
+> 
+I checked the assembly which gcc outputs, and to the best of my knowledge it
+optimizes the default rotate_left macro to roll (rotate left long) 
+instructions. At least, the rotate_left macro's in the C-source expand 1-to-1
+with roll instructions in the assembly output; I can't see any shiftleft/right
+being done there. It probably knows about this standard trick to do a rotate
+with two shifts. 
+
+A pity I still haven't found the time to study the GNU assembler, otherwise
+I'd made an assembly version of search.c. Anyway my living-room network can
+search over 52,000 keys per second, should be enough of a contribution :-). 
+Of course, if anybody has better versions available...
+
+- -- 
+Cees de Groot, OpenLink Software		         <cg@bofh.lake.de>
+262ui/2048: ID=4F018825 FP=5653C0DDECE4359D FFDDB8F7A7970789 [Key on servers]
+http://www.lake.de/sonst/homepages/s2449/index.html
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQEVAgUBMDxlMIG++qFPAYglAQETtggAoc0ptT7tcI3jTRINrlCj5tdQtEHGQfls
+BHD3TFmMR0/XH+6wWK79cwfnQ4y0h4Ad9PlurxHYl57sIGioBQM1mCl4vci4yW1x
+KIn99/1OnMjscCwp1jfo4BW/tqReNpkfd5MfemxDrvZgVFN5WpYOgtMUupNgATAV
+PibsuEepFSEMHGAKEX91MLRdJSzpzEgeIJi4Un4/82gvbaw4jfqUeUZ/rxT5HEr2
+imsZxwEFUOLVNctWg1iPuTqAuVhuTGjEqmdRaJTIPwLV8ygmiMD59mdNlgGkM92Q
++jjhWldUwKYLHZFLvotzZt12LKdRPbRZN6eb8tfFQ6UZfq1TwuryOw==
+=6EN2
+-----END PGP SIGNATURE-----

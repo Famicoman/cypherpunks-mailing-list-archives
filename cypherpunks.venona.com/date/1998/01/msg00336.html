@@ -1,0 +1,161 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Batch DSA -->
+<!--X-From-R13: Oabalzbhf <abobqlNDSBZOK.QA[> -->
+<!--X-Date: Sat, 10 Jan 1998 03:51:57 +0800 -->
+<!--X-Message-Id: 199801091935.UAA03400@basement.replay.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Batch DSA</TITLE>
+<LINK REV="made" HREF="mailto:nobody@REPLAY.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00320.html">Date Prev</A>][<A HREF="msg00314.html">Date Next</A>][<A HREF="msg00320.html">Thread Prev</A>][<A HREF="msg00321.html">Thread Next</A>][<A HREF="index.html#00336">Date Index</A>][<A HREF="threads.html#00336">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Batch DSA</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A>, <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Batch DSA</LI>
+<LI><em>From</em>: Anonymous &lt;<A HREF="mailto:nobody@REPLAY.COM">nobody@REPLAY.COM</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 9 Jan 1998 20:35:11 +0100 (MET)</LI>
+<LI><em>Comments</em>: This message did not originate from the Sender address above.It was remailed automatically by anonymizing remailer software.Please report problems or inappropriate use to theremailer administrator at &lt;abuse@REPLAY.COM&gt;.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Batch DSA
+
+Amos Fiat invented a way to do multiple RSA signatures using only one
+full-sized exponentiation [J Cryptology v10 n2 p75].  The trick is to
+sign each one with a different RSA key, where the keys all share the
+same modulus n but differ in their public exponents e.
+
+A similar technique allows DSA signatures to be batched.  As with
+Batch RSA, each message ends up being signed with a different DSA key,
+where the keys share the same p, q, and g values, but differ in their
+public y values, where y = g^x mod p for a secret x.
+
+These techniques may be useful for situations where heavily loaded servers
+need to digitally sign many responses.
+
+A DSA signature on a message M (where M is the hash of the actual data)
+is done as follows:
+
+	Choose a random value k.  k must be different for every signature.
+	Calculate R = g^k mod p mod q.
+	Calculate S from S*k = M + R*x mod q.
+
+Then (R, S) is the signature.
+
+The time consuming part of this is the calculation of g^k.  This is the
+only exponentiation which must be done.  All the other calculations can
+be very fast.
+
+We can't re-use a k value because it allows x to be discovered very
+easily.  If two signatures (R, S_1) and (R, S_2) use the same k value,
+we have (mod q):
+
+	S_1*k = M_1 + R*x
+	S_2*k = M_2 + R*x
+
+The capitalized values are known, the lower case k and x are the unknowns.
+We have two equations in two unknowns, which allows us to recover k and x.
+
+If different x values are used for each signature, then it should be safe
+to re-use k.  This is how Batch DSA would work.
+
+The signer would publish his public key as p, q, and g as usual, but now
+he would publish multiple y_i = g^x_i values.  The convention is that
+any message is considered signed by the key if it is signed by any of the
+y_i.
+
+To sign a batch of messages, one k value is used for all of them.  The
+same calculation as above is used:
+
+	R = g^k mod p mod q  (same for all)
+	S_i * k = M_i + R * x_i mod q
+
+The signature is (R, S_i, i), where the index i is included to tell the
+verifier which y_i to use.
+
+This is not vulnerable to the problem above of re-using k.  The multiple
+signatures have the relationships:
+
+	S_1*k = M_1 + R*x_1
+	S_2*k = M_2 + R*x_2
+	S_3*k = M_3 + R*x_3
+	...
+
+We always have more unknowns than there are equations, which hides the
+values of k and x_i.
+
+This same technique can be applied to most other discrete log signatures,
+which generally have the same structure although they differ in the details
+of how x and k are used to construct R and S.
+
+With Batch RSA, there is a tradeoff between batch size and efficiency.
+The calculations become inefficient for batch sizes larger than tens
+of messages when keys are about 1K bits.
+
+Batch DSA can efficiently handle larger batches, but it has a tradeoff
+between batch size and key size.  Each key variant requires specifying a
+full-sized y value, while with Batch RSA the variants just required
+listing a small e value (and possibly not even that, if the exponents
+are the small primes).  This will limit Batch DSA in most circumstances
+to similar batch sizes of on the order of tens of messages, otherwise
+the keys become unreasonably large.
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00320.html">Re: Microsoft Windows98 - Make your own decision.</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00314.html">Re: In God We Antitrust, from the Netly News</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00320.html">Re: Microsoft Windows98 - Make your own decision.</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00321.html">Re: In God We Antitrust, from the Netly News (fwd)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00336"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00336"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

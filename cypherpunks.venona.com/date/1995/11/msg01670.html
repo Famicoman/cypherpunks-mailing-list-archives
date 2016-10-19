@@ -1,0 +1,144 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: generating provable primes -->
+<!--X-From-R13: Irv Rnv <jrvqnvNrfxvzb.pbz> -->
+<!--X-Date: Thu, 23 Nov 95 03:08:12 PST -->
+<!--X-Message-Id: Pine.SUN.3.91.951123024142.12404A&#45;100000@eskimo.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>generating provable primes</TITLE>
+<LINK REV="made" HREF="mailto:weidai@eskimo.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01668.html">Date Prev</A>][<A HREF="msg01671.html">Date Next</A>][<A HREF="msg01191.html">Thread Prev</A>][<A HREF="msg01674.html">Thread Next</A>][<A HREF="index.html#01670">Date Index</A>][<A HREF="threads.html#01670">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>generating provable primes</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Cypherpunks &lt;<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>&gt;</LI>
+<LI><em>Subject</em>: generating provable primes</LI>
+<LI><em>From</em>: Wei Dai &lt;<A HREF="mailto:weidai@eskimo.com">weidai@eskimo.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 23 Nov 1995 03:08:00 -0800 (PST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Several days ago someone (I forgot who he was) asked about code for 
+primality tests.  I just implemented an algorithm to generate random 
+provable primes that is only about 50% slower than generating probable 
+primes.  It will be in the next version of Crypto++, but I've attached 
+code for the main function in case anyone is interested in the 
+algorithm.  Full description can be found in "Fast Generation of Prime 
+Numbers and Secure Public-Key Cryptographic Parameters" by U.M. Maurer in 
+Journal of Cryptology, Volume 8 Number 3, 1995.  The paper also describes 
+a more complicated algorithm that produces primes with a more uniform 
+distribution.
+
+There was discussion some days ago about generating strong primes 
+for DH exchange moduli.  Eric Young reported that he spent tens of hours 
+of CPU time to generate a 4096 bit prime p such that (p-1)/2 is also 
+prime.  However, there is really no reason why DH exchange moduli must be of 
+the form 2q+1 where q is a prime.  It should be sufficient that they are 
+of the form rq+1, where q is a large enough prime (say more than 256 
+bits).  The following algorithm generates a provable prime p=2rq+1, where q 
+is a prime with at least half the length of p.
+
+bignum ProvablePrime(RandomNumberGenerator &amp;rng, unsigned int bits)
+{
+	const unsigned smallPrimeBound = 29, c_opt=10;
+	bignum p;
+
+	BuildPrimeTable();
+	if (bits &lt; smallPrimeBound)
+	{
+		do
+			p.Randomize(rng, bignum::Power2(bits-1), 
+bignum::Power2(bits)-1, ODD);
+		while (TrialDivision(p, 1 &lt;&lt; ((bits+1)/2)));
+	}
+	else
+	{
+		const unsigned margin = bits &gt; 50 ? 20 : (bits-10)/2;
+		double relativeSize;
+		do
+			relativeSize = pow(2.0, 
+double(rng.GetLong())/0xffffffff - 1);
+		while (bits * relativeSize &gt;= bits - margin);
+		
+		bignum a,b;
+		bignum q = ProvablePrime(rng, unsigned(bits*relativeSize));
+		bignum I = bignum::Power2(bits-2)/q;
+		bignum I2 = I &lt;&lt; 1;
+		unsigned int trialDivisorBound = (unsigned 
+int)min((unsigned long)primeTable[primeTableSize-1], (unsigned 
+long)bits*bits/c_opt);
+		boolean success = FALSE;
+		do
+		{
+			p.Randomize(rng, I, I2, ANY);
+			p *= q; p &lt;&lt;= 1; ++p;
+			if (!TrialDivision(p, trialDivisorBound))
+			{
+				a.Randomize(rng, 2, p-1, ANY);
+				b = a.ExponentiateMod((p-1)/q, p);
+				success = (Gcd(b-1, p) == 1) &amp;&amp; 
+(b.ExponentiateMod(q, p) == 1);
+			}
+		}
+		while (!success);
+	}
+	return p;
+}
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01668.html">Re: crypto for porno users</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01671.html">Re: PGP in Canada</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01191.html">Re: crypto for porno users</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01674.html">Intelligence Community Massive Digital Data Systems Initiative</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01670"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01670"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

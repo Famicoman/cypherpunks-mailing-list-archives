@@ -1,0 +1,378 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: ideas on an encrypted BSD filesystem (LONG, technical) -->
+<!--X-From-R13: zppblNppjs.pp.hgrknf.rqh (Xvz [pQbl) -->
+<!--X-Date: Mon, 1 Mar 93 16:06:22 PST -->
+<!--X-Message-Id: 9303020004.AA01774@tramp.cc.utexas.edu -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>ideas on an encrypted BSD filesystem (LONG, technical)</TITLE>
+<LINK REV="made" HREF="mailto:mccoy@ccwf.cc.utexas.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00032.html">Date Prev</A>][<A HREF="msg00033.html">Date Next</A>][<A HREF="msg00311.html">Thread Prev</A>][<A HREF="msg00033.html">Thread Next</A>][<A HREF="index.html#00041">Date Index</A>][<A HREF="threads.html#00041">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>ideas on an encrypted BSD filesystem (LONG, technical)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: ideas on an encrypted BSD filesystem (LONG, technical)</LI>
+<LI><em>From</em>: <A HREF="mailto:mccoy@ccwf.cc.utexas.edu">mccoy@ccwf.cc.utexas.edu</A> (Jim McCoy)</LI>
+<LI><em>Date</em>: Mon, 1 Mar 1993 18:04:35 -0600 (CST)</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Greetings:
+
+I have been working on a few ideas I have to make a BSD system (like a
+386BSD system on a nice fast PC) into a secure base system for a BBS that
+is somewhat "raid-proof".  The basic plan is the encrypt the filesystem and
+use public key encryption to separate the system administrator from the
+information contained within the system and make it harder to do blanket
+searches of computer systems such as those I have seen happen in this area.
+Here is a basic outline of what I plan on doing, any comments would be
+appreciated. 
+
+
+jim
+mccoy@ccwf.cc.utexas.edu
+
+-------------
+
+1. Purpose:
+
+To create a system that offers subscribers/users a greater level of privacy
+and security than offered in most BBS/unix systems.  The basic goal is to
+make a system somewhat "raid-proof".  Users have the ability to make thier
+files encrypted is such a manner that even the system administrator is
+unable to access/view the files.  Through such a system I hope to create a
+sort of userspace that can allow an administrator to detach themselves from
+the actual content of the files in the system in a sort of "common-carrier"
+or "bookseller" philosophy that will offer both the admin and the user more
+protection from over-zealous law enforcement agents and unauthorized
+intruders.  If the users so choose, they can create files that even the
+admin cannot access without modifying the system to spoof out keys during
+transmission.  
+
+The system is designed to be very difficult (if not impossible) for
+external forces to gain access to information contained therein simply
+through possession of the physical hardware of the system.  Essentially, I
+want to separate the information content of the system from the hardware
+(disk drives)  of the system by creating a wall using public key
+encryption.  Access to files can be controlled by the users to whom those
+files belong.
+
+2. Some general conventions (mostly for lack of ASCII subscripting...):
+
+X_p = X's public key
+X_r = X's private key
+X_p(X_r) = X's private key encrypted with X's public key
+X_p(X_r1,X_r2...) = Private keys X_r1, X_r2, etc encrypted with pubkey X_p
+K = one-time key used for encrypting a file
+X_p(K) = File key K encrypted using X's public key
+
+In most cases, S_r and S_r are user for the system keys, U_r and U_p for
+user keys and G_r and G_p for public group keys.
+
+3. Implementation:
+
+This system will be based upon BSD (386BSD specifically, because the source
+is there...) with the hopes of providing a set of low-level privacy and
+security options that others can use to provide secure BBS and
+general-access unix systems.  The system is in not invulnerable to external
+attack and access of user's files without thier consent (known weaknesses
+are listed after implementation details), but it tries to make the system
+as "raid-proof" as possible. This privacy/security is implemented though
+the use of an encrypted filesystem and built-in support for management of
+the keys used for this encryption through public key encryption.
+
+3.1 The filesystem 
+
+In general, the system will encrypt the users' files using DES or IDEA
+using a one-time random key.  This key will be encrypted with the user
+public key and stored with the file.  When the file is accessed the key is
+decrypted from the private-key stored in memory and the file key is found
+and the file decrypted.  Not all files are encrypted; whether or not a file
+is encrypted depends on its permissions.
+
+If a file is world-readable then it is not encrypted, if it does not have
+any r, w, or x permissions for world then the file is encrypted and the
+one-time key used for the encryption is stored in the inode structure.
+This structure contains space for holding both a "users" and a "group"
+entry for the encryption key K.  
+
+At this point the DES v IDEA choice depends on whether or not there is any
+chip out there to do IDEA in hardware.  If not, I will probably use DES
+(double or triple DES maybe...) because I can snag a card to do it and
+offload this burden from the basic system.
+
+3.2 Groups
+
+The concept of "group" is also changed.  Basically, I can't see any real
+benefit from the current implementation of groups in BSD, so I am going to
+dump it all and rebuild something in the holes left behind.  The basic goal
+of these "groups" is to implement something more like access control lists
+than the standard Berkeley groups.  At the moment, I am thinking of
+implementing two types of groups: public and personal.  
+
+3.2.1 ACLs
+
+A personal group is actually an ACL for a particular file.  This group
+appears in a ls -g as "user-acl" (i.e. user "jdoe" sees the file's group as 
+"jdoe-acl").  The default acl for files contains only the user as a member,
+but for each file they can add or remove people from the acl.  This is
+implemented by creating a default user-acl entry in the group file and
+creating an entry for the user in the systems private acl list.   When a
+user modifies the acl for a file a reference to the file is added to the
+private acl list and entries foe each user or public group added to the
+list are made in the following fashion:
+
+fileref:gid or uid:rwx:(S_p(U_p(K))):gid or uid:rwx:(S_p(U_p(K))...
+
+This holds the user id or group id, thier permissions, and the file key
+wrapped in the particular user's public key (the user added to the acl, not
+the owner of the file) and this is wrapped with the system public key.
+
+3.2.2 Public groups
+
+The other type of group are the public groups, which are somewhat similar
+to the BSD groups, but differ in how they are created and how user's are
+added.  Anyone can create a new public group.  This facility is implemented
+with an application that simply asks the user for a unique name for the new
+group.  When created the person creating the group is added to that group.
+From that point on, the membership of groups is controlled by the group
+members.  When someone wants to enlist another person in a group, they
+sponsor the user, and the other members of the group are sent a message
+indicating the person who would be joining and the sponsor (groupnames are
+automatically made to be mail aliases for all group members as well).  Each
+member of the group has the power to "blackball" a prospective member by
+returning a mail message to the group server with a no vote.  Otherwise,
+when all members return yes votes, or a specified time period has elasped,
+the person is added to the group.
+
+The membership of groups is knowledge that is limited to the members of the
+group and the system.  Groupnames and membership is not public knowledge,
+and unless you are a member of a group, a ls -g of a file with a particular
+group set to it will return only the number (group-name-&gt;gid mapping is not
+publicly accessible).  The group listing is kept wrapped in the system
+public key, and each group is assigned it's own unique public/private
+keypair.  The actual users do not know this key, it is held for them by the
+system, but they can change thier effective gid if they are a member of a
+group through a user command.  The groupfile help by the system holds
+groups in the format: 
+
+groupname:gid:G_p:U1_p(G_r):U2_p(G_r):...
+
+When a new member is "sponsored" the system uses the U_r of the sponsoring
+member to pull out the group private key from this file and puts the
+U_p(G_r) of the member they are sponsoring in a file similar to the group
+file, but holding "probationary members".  Both the group file and the
+holding file for sponsored users are wrapped with the system public key.
+
+3.3 System calls and access to privacy additions
+
+All of the addtions mentioned here are run through the kernel.  User-level
+processes have no access to these facilities otther than through a few
+functions that will be added.  Specifically, access to the additional
+entries in the inode holding the file key K and to the public and private
+keys held in memory will only be available to the kernel.  The regular
+system calls that access this sort of information (stat, for example) will
+return what they normally return under BSD.  Whether or not the data blocks
+they may access are encrypted or not is determined by the kernel and the
+keys assigned to a particular user process.
+
+There will be a few additional system calls and functions to allow people
+to change the group of thier process, perhaps to change the private/public
+key running with thier process, and some new user programs to manipulate
+the new additions will be created.  For the most part, I am trying to make
+the applications and user processes run on top of this system as
+transparently as possible.
+
+3.4 General notes
+
+These are just some notes about the system that I am lumping together under
+the category of "general".  They include known weaknesses and general notes
+on the bahavior and operation of such as system.  
+
+3.4.1 User interface to operations
+
+The only significant difference a user will notice (other than the bizarre
+permissions stuff for acls and groups) is a slight modification to the
+login sequence.  The user will enter thier login and password as always,
+and they will then be prompted for their private key wrapped in the systems
+public key.  If successful they will have full access to thier files.  If
+not they will still be able to login, but will not have a valid keypair
+assigned to them and will be unable to access files they have on the system
+that were encrypted.  I ahve not decided yet if the system will broadcast
+it's public key to the user before asking for S_p(U_r) or if I should
+assume they know it and then let it croak if they are wrong or it has
+changed (allowing them to move around in a limited fashion with a process
+without a keypair and find the new key).  I believe that the second option
+is somewhat better at defeating some spoofing methods, but I am not really
+sure... 
+
+It should be noted that the public/private keypair that I have been talking
+about as belonging to specific users should not be a keypair they
+distribute.  The key is only for access and encryption of files on the
+system and user's would be reminded often to use a completely different
+keypair for email, etc.
+
+3.4.2  Known weaknesses
+
+Snooping on the line:
+	There is nothing to prevent someone from tapping the line between
+	the system and the user.  All such communications are in cleartext
+	and by tapping the line in such a way someone can get around the
+	privacy safeguards installed in the system (they can see the
+	decrypted text come down the wire to the user and don't need to get
+	to the hardware).  It would be really nice if I could do this whole
+	thing encrypted using public key encryption, but I really don't
+	feel like writing the necessary code for client programs so that
+	non-technoid users could access the system.
+
+Compromising the system private key:
+	Through perhaps the threat of violence or other nasty force,
+	someone might be able to get the system private key out of the
+	sysadmin.  I have considered adding in a booby-trap of some sort,
+	whereby the sysadmin could perhaps transpose a predetermined
+	sequence from the private key and invoke a "slash and burn" on the
+	system.
+
+	The system private key may also be unknowingly compromised if it is
+	not guarded carefully by the admin.  This is particularly dangerous
+	because it allows someone to essentially crack the entire system
+	over time without anyone knowing.  By having access to the system
+	private key, the intruder/snooper can concievably snag private keys
+	as they come in and decrypt user files, or even change the system
+	keys and hold everything hostage...
+
+A few others that I am too tired to write down right now:
+	This is basically designed to make it hard for someone to scan
+	every user's files just by grabbing the physical hardware.  Down
+	here in the land where Steve Jackson Games had something like this
+	happen to its BBS I want to make it difficult for the intruder.
+	Not impossible, but force them to deal with each individual user as
+	more than just another directory to search through and perhaps
+	force them to be specific about what they want/are looking for if
+	they have proper authority...or maybe make it so that the sysadmin
+	could honestly say "Sorry, but even _I_ can't look at that file..." 
+
+
+3.4.3  System public and private key
+
+It may seem that I am wrapping a lot of stuff in the system public key when
+it is not necessarily needed.  This is because I hope to set things up so
+that most, if not all, system files are not encrypted.  The system protects
+those files or bits of information that might need a little bit more
+security through wrapping the piece in the system public key.  The system
+private key is entered at the console at boot time (therefore it must
+always be booted by hand), the private key entered is tucked away in memory
+and is _never_ stored on disk (not even to swap space).  
+
+The system private key seems to be the most important thing to hide,
+because if the system private key is discovered, it is possible to run the
+system in a spoof-mode or to gain access to a lot of things just through
+possesion of the hardware.  If an improper private key is entered at boot
+up time things will fail fast because the system will be unable to properly
+access most user files and the system will also be unable to attach valid
+user private keys to thier processes because it will not be able to decrypt
+the S_p(U_r) packages users send at login.  Another reason for sneaking in
+S_p as a wrapper for things is that it makes it much more difficult for
+someone with possesion of the hardware to substitute in a new
+public/private keypair for the system.  They could put it in, but the
+files and group lists wrapped with the old key would still be inaccessible.
+
+The method for legitimately changing the system's public and private keys
+will require the admin having both the public and private keys for the
+system.  This means that if an admin loses the system's private key the
+users are screwed, so the admin really needs to make sure this is not lost.
+Making a couple of copies on paper and storing them somewhere might not be
+a bad idea (I know someone who made a stencil of his asciified PGP private
+key and spray-painted it on a couple of walls of abandoned buldings around
+town.  It fits in with the other graffiti, is much less fragile than a
+floppy disk, and only he knows what the graffiti means... :)
+
+
+----------
+
+This is my basic outline, I welcome any comments or ideas people have on
+beefing this up or problems in it that I may have overlooked.
+
+jim
+
+
+
+
+	
+
+	-all comm to and from system is encrypted using idea with the
+	 session key 
+
+
+
+file system:
+	-all files compressed and encrypted with IDEA or DES (DES if I can
+	 find a nice hardware implementation [the need for speed...] and
+	 otherwise IDEA in preference to DES)
+
+	-when a file is read it is pulled up into an area of memory only
+	 the system can access and decrypted?
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00033" HREF="msg00033.html">Re: ideas on an encrypted BSD filesystem (LONG, technical)</A></STRONG>
+<UL><LI><EM>From:</EM> Peter Shipley &lt;shipley@tfs.COM&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00071" HREF="msg00071.html">Re: ideas on an encrypted BSD filesystem (LONG, technical)</A></STRONG>
+<UL><LI><EM>From:</EM> mab@vax135.att.com</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00032.html">Re: more ideas on anonymity</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00033.html">Re: ideas on an encrypted BSD filesystem (LONG, technical)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00311.html">UNSUBSCRIBE</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00033.html">Re: ideas on an encrypted BSD filesystem (LONG, technical)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00041"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00041"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

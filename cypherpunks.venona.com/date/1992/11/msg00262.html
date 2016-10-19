@@ -1,0 +1,201 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Steve Kent on certification trust paths -->
+<!--X-From-R13: tah -->
+<!--X-Date: Wed, 25 Nov 92 19:38:08 PST -->
+<!--X-Message-Id: 9211260338.AA23180@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Steve Kent on certification trust paths</TITLE>
+<LINK REV="made" HREF="mailto:gnu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00269.html">Date Prev</A>][<A HREF="msg00263.html">Date Next</A>][<A HREF="msg00269.html">Thread Prev</A>][<A HREF="msg00263.html">Thread Next</A>][<A HREF="index.html#00262">Date Index</A>][<A HREF="threads.html#00262">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Steve Kent on certification trust paths</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: cypherpunks</LI>
+<LI><em>Subject</em>: Steve Kent on certification trust paths</LI>
+<LI><em>From</em>: gnu</LI>
+<LI><em>Date</em>: Wed, 25 Nov 92 19:38:05 -0800</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Steve is one of the key folks in the Internet PEM project.  He sent this
+message last month during a discussion of why PEM uses top-down
+key certification rather than the "mesh" style that PGP uses.
+
+I hope that our (cypherpunks) experience with mesh key exchange will
+teach us a lot about whether and how it works.  Nobody has ever tried
+this before, so we are doing research!
+
+	John Gilmore
+
+------- Forwarded Message
+
+Message-Id: &lt;9210212125.AA27956@TIS.COM&gt;
+To: Peter Williams &lt;P.Williams@cs.ucl.ac.uk&gt;
+Cc: pem-dev@TIS.COM
+Subject: Re:   Perhaps OSI security is not possible in a liberal community!
+Date: Wed, 21 Oct 92 17:24:42 -0400
+From: Steve Kent &lt;kent@BBN.COM&gt;
+
+Peter,
+
+	You have receibved replies from a couple of folks (via
+pem-dev) who have expressed views on why a strictly hierarchic
+certification system is not required.  As the author of the words you
+cited in raising your question, and as an advocate of a strict
+certification hierarchy, let me respond.
+
+	It is clear that one can construct a certification system
+which is not a tree, but rather is a mesh.  The PGP approach is an
+example of such a scheme and X.509 permits this.  However, there are a
+number of advantages to a hierarchy which have motivated its use in
+the Internet:
+
+	In a pure certification mesh, one acquires certification paths
+by following chins of implied trust.  It is not at all obvious that
+this approach scales well.  The PGP folks do not yet have significant
+experience in this regard, so it will be interesting to see how the
+mesh develops over time.  Most folks who have spent considerable time
+exploring this issue believe that unbounded transitive certification,
+with no required name relationships, is a bad idea.  The rationale is
+that whatever trust one might accord to an entity may not apply
+transitively.  I may give a house key to my neighbor to be able to
+open my house under certain circumstances, but that does not suggest
+that I would give the key to whomever that neighbor provides his key.
+It seems difficult to characterize the nature of trust in these
+"lateral" arrangements and applying trust transitively is even more
+difficult.
+
+	From a user interface standpoint, it is generally agreed that
+most users are not capable of evaluating a certification path.  In PEM
+we feel that a user should know the distinguished name (or an alias
+assigned by the user locally) of a message originator/recipient, and
+some indication of the policy under which the user was certified,
+e.g., a short-hand name for the PCA.  This is about all we expect a
+user to be able to deal with.  The though of a user really paying
+attention to (much less applying meaningful value judgements to) all
+of the DNs in a certification path boggles the mind.
+
+	I won't clain to understand all the details of what PGP
+provides for managing key rings.  However, if one were to provide a
+management tool for mesh certification in general, I think it ought to
+permit a user to construct a trust graph expressing the relationships
+implied by certification paths he acquires.  The user might be able to
+express a degree of trust and a level of allowed transitive
+certification for each entity in the graph.  Disply of this info, to
+allow a user to manage the graph, would be necessary.  All in all, it
+seems to be pretty complex and it is highly questionable if most
+(many?) users could make use of this facility without getting
+confused.  But, this analysis is based on reasoned speculation, not
+actual experience.
+
+	The naming issues is a related, but somewhat indepedent topic.
+DNs provide many good features for use with a certification system.
+One wants the names to be globally unique and manageable in a
+distributed fashion.  Being able to express a through, rich name is
+important if this technology is ever to expand beyond casual use in
+R&amp;D environments.  Note that DNS names are not great choices.
+Although there are close to a million DNS host names, that represents
+a very small portion of the population that one wants to serve with a
+system like PEM.  Most DNS names are very short and will eventually
+reuslt in collisions as more individual and organizations are
+registered.  The problem is worst in the U.S. where we have adopted a
+parochial scheme with GOV, EDU, COM, ORG, and MIL at the top, vs.
+other countries which prefix their DNS names with a country code.
+What's worse is that many DNS indivdiual names are not very mnemonic
+and thus don't offer much in the way of indentification outside of a
+very narrow context.
+
+	There is sometimes confusion about the role of certificates.
+X.509 makes it clear that they serve only for identification, not
+authorization.  This is improtant because it is difficult enough to
+manage them for identification purposes without overloading
+authorization info on them.  Also, the entities who grant
+authorization may often be different from those who vouch for the
+identity of an individual (or organization) and thus this independent
+is appropriate.  Often there seems to be a desire to bind more info
+into a certificate in support of authorization, but I (and many
+others) believe this to be a mistake.  One can construct other
+certificates (like the PACs EMCA has defined) to use public key
+technology for authorization, leveraging off of certificates used for
+identification.
+
+
+	Finally, there is revocation.  We have adopted both a push and
+a pull facility for CRLs in PEM and the PEM CRL format differs
+slightly from that in X.509.  Many folks fail to appreciate the
+subtleties of CRLs at first.  Hot listing on a CRL says that either a
+key has been compromised OR a name has changed.  If we have
+fine-grained, organizationally-related names, then these names will
+change with some frequency and thus CRL entries will arise.  Because a
+certificate establishes a binding between a name and a key, it seems
+appropriate that only the entity which vouches for this binding (a CA
+of some tyep) should be able to revoke it.  That is the model we use
+in PEM and we add the important feature of having each CA advertise
+when it will issue its next CRL, so that user's know when each CRL
+they hold is obsolete.
+
+	
+	Peter, I hope this note helps explain the very terse words I
+put in the PEM key management document.
+
+Steve
+
+------- End of Forwarded Message
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00269.html">neat features that could be added to the crypto dongle</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00263.html">Sharp Wizard as a Crypto Dongle?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00269.html">neat features that could be added to the crypto dongle</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00263.html">Sharp Wizard as a Crypto Dongle?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00262"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00262"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

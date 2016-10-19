@@ -1,0 +1,923 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: diplomacy -->
+<!--X-From-R13: ovyy cnlar <ovyycNazby.pbz> -->
+<!--X-Date: Sun, 18 Jan 1998 23:35:29 +0800 -->
+<!--X-Message-Id: 34C21266.142B@nmol.com -->
+<!--X-Content-Type: multipart/mixed -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>diplomacy</TITLE>
+<LINK REV="made" HREF="mailto:billp@nmol.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00772.html">Date Prev</A>][<A HREF="msg00773.html">Date Next</A>][<A HREF="msg00961.html">Thread Prev</A>][<A HREF="msg00819.html">Thread Next</A>][<A HREF="index.html#00769">Date Index</A>][<A HREF="threads.html#00769">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>diplomacy</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:jrwayla@sandia.gov">jrwayla@sandia.gov</A>, <A HREF="mailto:mgb1964@aol.com">mgb1964@aol.com</A>, john gilmore &lt;<A HREF="mailto:gnu@toad.com">gnu@toad.com</A>&gt;,       j orlin grabbe &lt;<A HREF="mailto:kalliste@aci.net">kalliste@aci.net</A>&gt;, <A HREF="mailto:jy@jya.com">jy@jya.com</A></LI>
+<LI><em>Subject</em>: diplomacy</LI>
+<LI><em>From</em>: bill payne &lt;<A HREF="mailto:billp@nmol.com">billp@nmol.com</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 18 Jan 1998 07:32:06 -0700</LI>
+<LI><em>CC</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I sure hope the following was diplomatic enough.
+
+NSA exhibited NO SENSE OF HUMOR when I pointed out
+'deficiencies' in its crypto algorithm work.  But, too,
+the agrieve Islamic fundamentalists may not have too good
+senses of humor.
+
+But with that experience, my sensitivities are hightened.
+
+Later, guys.
+
+Back to POSTCARD COMMUNICATIONS!
+
+Sunday 1/18/98 6:24 AM
+
+Jim Allen
+
+Thanks for the call on Friday night.
+
+You said that there might be a problem in the way the interrupts
+were turned on.
+
+I told you I would give this some thought.
+
+Here is the routine to turn on the interrupts
+
+;*	Call DasIntOn(IoPointer&amp;, ErrorFlag&amp;, SystemState&amp;, IoData&amp;(0, 0),
+;*	IoParm&amp;(0, 0), LgradThres) from Visual Basic.
+
+DasIntOn	PROTO FAR, VBIoPointer:dword, VBErrorFlag:dword,
+VBSystemState:dword,
+			   VBIoData:dword, VBIoParm:dword, VBLGradThres:dword
+
+DasIntOn	PROC FAR EXPORT, VBIoPointer:dword, VBErrorFlag:dword,
+VBSystemState:dword,
+				  VBIoData:dword, VBIoParm:dword, VBLGradThres:dword
+                Prolog
+
+;* Stage 1	Get addresses of IOPointer, ErrorFlag, SystemState,
+;*		IoData, IoParm, LGradThres which point back into VB static array.
+
+		mov eax, VBIoPointer	; get VB IoPointer address
+		mov IoPointer, eax	; move it to asm
+                mov eax, VBErrorFlag    ; get VB ErrorFlag address
+		mov ErrorFlag, eax	; mov it to asm
+	        mov eax, VBSystemState  ; get VB SystemState address
+		mov SystemState, eax	; move it to asm
+                mov eax, VBIoData       ; get VB IoData address
+                mov IoData, eax      	; move it to asm
+		mov eax, VBIoParm	; get VB IoParm address
+		mov IoParm, eax		; move it to asm
+		mov eax, VBLGradThres	; get VB LGradThres address
+		mov LGradThres, eax	; move it to asm
+
+;* Stage 2	zero the interrupt counter and system state
+
+		mov IntCount, 0
+                            mov LocalSysState, 0
+
+;* Stage 3  install dummy interrupt vector
+
+		call SetDummyIntVector	  ; Set dummy IrqLevel interrupt
+
+;* Stage 4  make sure interrupt is masked on the das board
+
+		call DisableDasInt
+
+;* Stage 5  Set up Irq level in bits 4-6 of register 9
+
+		call SetDasIrqLevel
+
+;* Stage 6  set up counter 0 with number of rows AND enable
+;* hardware trigger.  This is done in Counter0SetUp.
+
+		call Counter0SetUp
+
+;* Stage 7  Enable interrupt on 8259a
+
+		call EnableIrqMask
+
+;* Stage 8  Set Irq 5 highest prority in 8259a - didn't seem to
+;* make any difference in performance
+
+	     ;	call Irg5HighestPriority
+
+;* Stage 9  Burst length set-up
+
+		call EnableDasBurstMode
+
+;* Stage 10  - clear fifo
+
+		call InitDasFifo  ; read and discard 256 fifo words
+
+;* Stage 11  Set application interrupt vector
+
+		call SetDasIntVector	  ; Set IrqLevel interrupt vector
+
+;* Stage 12  Set LocalIop to DataRows - 1.
+
+		MOV ax, DataRows - 1	; set LocalIop = DataRows
+		mov LocalIop, ax	;
+		les bx, IoPointer	; get address IoPointer%
+		mov es:[bx], ax 	; also set VB IoPointer% = 0
+
+;* Stage 13  Set hardware trigger
+
+		call SetHardwareTrigger
+
+;* Stage 14  Clear flip-flop on Pin 25
+
+		call ClearDasPin25
+
+;* Stage 15   Enable interrupt on das board
+
+		call EnableDasInt
+
+		Epilog
+		ret 24
+DasIntOn        ENDP
+
+This got a bit complicated. 
+
+The ComputerBoard clone of the Keithly-Metrabyte a/d
+converter powers-up in an UNKNOWN state.  Or at least
+partially UNKNOWN.
+
+One of the random states includes triggering spurious 
+interrupt. So a dummy handler had to be inserted to
+possibly field bad data.
+
+The attempt was made to interface directly to hardware
+without a microcontoller buffer was partially successful.
+
+Sampling at the 1 Khz rate revealed that Windows
+occasionally ‘did its own thing’ as a result of a task
+switch and, therfore, interrupts were missed.
+
+To detect when this happened we modified the 
+ComputerBoards das 1400 board so that a hardware
+count of interrupts received could be compared to
+the software count.
+
+Since the a/d values were buffered a FIFO, the FAST
+Pentium could catch up.
+
+But this caused the interrupt handler to increase in size
+from about 1 K lines, including white space and comments, 
+to 2 K lines.
+ 
+Naturally we wish to be in the problem solving, as 
+opposed to problem creating, or assignation of blame.
+
+I think we have to consider all possible problem sources.
+
+I am looking at the AC POWER INTERFACE LS SOV
+Schematic dated 11-8-96.
+
+I see that the power to the analog and digital cards was
+run via a serial port db 25 cable and connector.
+
+Pin assignment are 
+
+   	Pin		Function
+   	1		-15 G
+	2		+15 GS
+	3		+5 G
+	4		+15 G
+	5		5 GS
+	6		tied to pin 7
+	7		+15S
+     	8		15 S
+	9		5
+	10		tied to pin 10
+	11		+15
+	12		tied to pin 11
+	13		15 S
+	14		tied to pin 1
+	15		+5 GS
+	16		tied to pin 3
+	17		nc
+	18		tied to pin 5
+	19		+24 ground
+	20		tied to pin 19
+	21		+5 S
+	22		tied to pin 9
+	23		tied to pin 22
+	24		+24 volts
+	25		tied to pin 24
+
+The +24 volts runs to solenoids.
+
+The remaining power runs to both digital and analog Ics.
+
+While some are left wondering why engineers had not
+thought of running analog, digital and solenoid power 
+down an inexpensive 24 pin PC serial port cable before,
+perhaps, we might all guess, other engineers lack 
+sufficient innovative audacity.
+
+One engineer opined last summer, when I was working
+in the shop on the digital FX, that the PC Data System 
+boards may have to be redesigned.
+
+Let’s hope that such a major revision is not required.
+
+Naturally, me being a TOTAL CONSERVATIVE [as
+evidenced by Morales and my genocide court filing], 
+I plan to physically separate the analog and digital
+IC s on the digital FX.  
+
+And I am thinking about on-board power regulation to 
+keep the 80c32, analog, and digital chips super-happy.
+In the field, of course.
+
+I will leave in several hours.  In my grey rabbit.
+
+Air travel safety worries me more now.  
+
+Especially after publication of last book.
+
+Just in case, I will bring my passport.  
+
+The thought of two machines located 180 miles NW
+of Edmonton not working well is, of course, 
+chilling.
+
+I sure glad the 8051 version of PC Data System is
+working fairly well. And is MAKING money for
+Metriguard.
+
+See you on Tuesday,  Allah willing.
+
+Later
+bill
+</PRE>
+<ADDRESS>Title: <STRONG>Payne/Morales v. NSA -- Defendant's Response to Motion for Summary
+  Judgment</STRONG></ADDRESS>
+<TABLE><TR><TD BGCOLOR="#ffffff" STYLE="background-color: #ffffff; ">
+
+
+
+
+<P ALIGN=Center>
+16 January 1998<BR>
+Source: William H. Payne
+<P ALIGN=Center>
+See related files:
+<A HREF="http://jya.com/whpfiles.htm">http://jya.com/whpfiles.htm</A>
+<P>
+  <HR>
+<P>
+<CENTER>
+  <TABLE CELLPADDING="2" ALIGN="Center">
+    <TR>
+      <TD>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;
+	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</TD>
+      <TD><B>U.S. Department of Justice</B></TD>
+    </TR>
+    <TR>
+      <TD></TD>
+      <TD>United States Attorney<BR>
+	District of New Mexico</TD>
+    </TR>
+    <TR>
+      <TD COLSPAN=2>__________________________________________________________</TD>
+    </TR>
+    <TR>
+      <TD></TD>
+      <TD><SMALL>Post Office Box 607<BR>
+	Albuquerque, New Mexico 87103<BR>
+	505/766-3341<BR>
+	505/766-2868<BR>
+	FAX 505/766-8517</SMALL></TD>
+    </TR>
+    <TR>
+      <TD></TD>
+      <TD></TD>
+    </TR>
+  </TABLE>
+</CENTER>
+<P>
+<PRE>				January 5, 1998
+
+
+W.H. Payne
+P.O. Box 14838
+Albuquerque, New Mexico 87191
+
+     Re: Payne &amp; Morales v. Minihan
+     USDC NM CIV 97-0266 SC/DJS
+
+
+Dear Mr. Payne:
+
+
+     Enclosed is a court-endorsed copy of Defendant's Response to 
+<A HREF="http://jya.com/whp122397.htm">Plaintiffs' Motion for Summary Judgment</A> Based on Evidence from 
+Admissions.
+
+				Sincerely,
+
+				JOHN J. KELLY
+				United States Attorney
+
+				<I>[Signature]</I>
+
+				JAN ELIZABETH MITCHELL
+				Assistant U. S. Attorney
+
+JEM/yh
+Enclosure
+cc/enc: Arthur R. Morales
+
+<HR>
+
+<I>[Stamp]</I>
+<SMALL>FILED</SMALL>
+<SMALL>United States District Court</SMALL>
+<SMALL>District of New Mexico</SMALL>
+<SMALL>98 JAN -5 PM 3:46</SMALL>
+<SMALL>Robert M. Marsh</SMALL>
+<SMALL>District Clerk</SMALL>
+
+
+
+                 IN THE UNITED STATES DISTRICT COURT
+
+                   FOR THE DISTRICT OF NEW MEXICO
+
+
+WILLIAM H. PAYNE                    )
+ARTHUR R. MORALES                   )
+                                    )
+          Plaintiffs,               )
+                                    )
+          vs.                       ) CIVIL NO. 97-026 SC/DJS
+                                    )
+LT GEN KENNETH A. MINIHAN           )
+USAF Director, National Security    )
+Agency,                             )
+                                    )
+          Defendant.
+
+
+ <U>DEFENDANT'S RESPONSE TO PLAINTIFFS' MOTION FOR SUMMARY JUDGMENT</U>
+                <U>BASED ON EVIDENCE FROM ADMISSIONS</U>
+
+
+          Defendant Minihan responds to Plaintiff's Motion for
+Summary Judgment Based On Evidence From Admissions<SUP>1</SUP> as follows:
+
+	  1.   Commencing in October, 1997, Plaintiffs served
+numerous sets of Requests for Admissions on various employees of
+the National Security Agency and on current and past employees of
+the Sandia National Laboratory.
+
+	  2.   Counsel for Defendant was not served with copies of
+any of said Requests for Admissions until sometime after the
+individuals had been served.<SUP>2</SUP>
+
+____________________
+
+     <SUP>1</SUP>   It should be noted that the instant Motion for Summary
+Judgment constitutes Plaintiffs' second motion for summary
+judgment. Plaintiffs filed an initial Motion for Summary Judgment
+on June 4, 1997 to which Defendant responded on June 19, 1997, and
+Plaintiffs filed a Reply on July 1, 1997. Said initial Motion for
+Summary Judgment has not been ruled upon. In addition, Defendant
+filed a Motion to Dismiss Plaintiff Arthur R. Morales on September
+23, 1997, and a Motion seeking dismissal of Plaintiff William
+Payne's Freedom of Information Act action on October 3, 1997. All
+briefing by all parties has been completed on those Motions.
+
+     <SUP>2</SUP>   On October 13, 1997, Plaintiffs mailed a First Set of
+Admissions to Kenneth Minihan. However, not until November 3,
+1997, did Plaintiffs mail a copy of said First Set of Request for
+
+<HR>
+
+	  3.   Upon becoming aware that Plaintiffs had served
+Requests for Admissions on a number of individuals, on October 23,
+1997, Counsel for Defendant filed a Motion and Memorandum To Strike
+Any And All Of Plaintiffs' First Set of Requests For Admissions To
+Various Employees Of The National Security Agency And To Various
+Employees Of Sandia National Laboratory, (hereinafter "Motion and
+Memorandum.")
+
+	  4.   As grounds for the Motion and Memorandum, Defendant
+argued that Plaintiffs had blatantly disregarded this Court's Order
+pertaining to the conduct of discovery and the deadline for
+discovery in this Freedom of Information Act action.
+
+	  5.   In Defendant's Motion and Memorandum, Counsel for
+Defendant also objected to Plaintiffs' <U>sua sponte</U> decision to
+modify the Court's June 11 Order to reflect the delay of the
+Court's October 7 Order and the establishment, without leave of
+this Court, of new deadlines for discovery, motions practice, and
+the filing of the PreTrial Order. (Motion and Memorandum &#182; 9, at
+4.)
+
+	  6.   In the Motion and Memorandum, Defendant requested
+that this Court strike any and all "First Set of Request for
+Admission" propounded by Plaintiffs. (Motion and Memorandum, at 5.)
+
+	  7.   Plaintiffs responded to the Motion and Memorandum on
+November 5, 1997, specifically seeking that this Court "take no
+action in this case until Supreme court takes action on writs on
+
+____________________
+
+Admissions to Counsel for Defendant. Counsel for Defendant was not
+provided with copies of any other Requests for Admissions sent to
+employees of NSA or employees of the Sandia National Laboratory.
+
+                                2
+
+<HR>
+
+
+mandamus, prohibition, and criminal complaint affidavits filed
+against judges Svet and Campos and US Attorney Mitchell."
+(Plaintiffs' Response to Motion And Memorandum To Strike Any And
+All Of Plaintiffs' First Set Of Request For Admissions To Various
+Employees Of The National Security Agency And To Various Employees
+Of Sandia National Laboratories, &#182; 11, at 10.)
+
+	  8.   To date, no order has been issued by this Court on
+the matters raised in the Motion and Memorandum, nor has any other
+court issued any orders concerning Plaintiffs' cause of action and
+various complaints.
+
+	  9.   By their own request, Plaintiffs sought to stay a
+ruling on the Defendant's Motion and Memorandum. Absent any ruling
+on either the Motion and Memorandum or Plaintiffs' Response,
+Defendant Minihan, employees of NSA, and employees of Sandia
+National Laboratory, were not obligated to respond to the Requests
+for Admissions as provided by Fed.R.Civ.P. 36.<SUP>3</SUP> For Plaintiffs to
+now assert in their "Motion for Summary Judgment On Based On
+Evidence From Admissions" that because the individuals have not
+responded to the Requests for Admissions they are deemed admitted,
+flies in the face of their own prayer to this Court to stay a
+ruling on the Defendant's Motion to strike the Requests for
+Admissions until the Supreme Court takes action.
+
+____________________
+
+     <SUP>3</SUP>    Despite the fact that Defendant's employees and other
+individuals are not required to respond to the Requests for
+Admissions based upon the outstanding pleadings which have yet to
+be ruled on by this Court, Plaintiffs characterize that all
+admissions are admitted and then publish those admissions on the
+Internet.
+
+                                3
+
+<HR>
+
+
+	  10.   Defendant requests that this Court either rule upon
+Defendant's Motion and Memorandum granting the request to strike
+the Requests for Admissions, or grant Plaintiffs' request to stay
+this action pending the issuance of the order sought by Plaintiffs
+in another forum. Should this Court deny Defendant's Motion and
+Memorandum, Defendant respectfully requests that the individuals to
+whom Requests for Admissions are appropriate in this action be
+given the thirty days to respond to said admissions as provided by
+the Federal Rules of Civil Procedure.
+
+	  11.   Plaintiffs requested a stay. Absent a ruling from
+this Court denying their request, they cannot proceed to assert
+that the Requests for Admissions are deemed admitted. Accordingly,
+Plaintiffs' "Motion For Summary Judgment On Based On Evidence From
+Admissions" must be denied.
+
+
+				Respectfully submitted,
+
+
+				JOHN J. KELLY
+				United States Attorney
+
+				<I>[Signature]</I>
+
+				JAN ELIZABETH MITCHELL
+				Assistant U.S. Attorney
+				P.O. Box 607
+				Albuquerque, New Mexico 87103
+				(505) 766-3341
+
+
+I HEREBY CERTIFY that a true copy
+of the foregoing pleading was mailed
+to PRO SE PLAINTIFFS,
+this 5th day of January, 1998.
+
+<I>[Signature]</I>
+
+JAN ELIZABETH MITCHELL
+Assistant U. S. Attorney
+
+
+                                4
+
+<HR>
+
+</PRE>
+
+</TD></TR></TABLE><PRE>
+		 UNITED STATES DISTRICT COURT
+           FOR THE DISTRICT OF NEW MEXICO
+
+
+William H. Payne        	   	            )
+Arthur R. Morales                           )
+                                            )
+                Plaintiffs,                 )
+                                            )
+v                                           )	CIV NO 97 0266 
+					                 )	SC/DJS
+			                            )
+Lieutenant General Kenneth A. Minihan, USAF )
+Director, National Security Agency	       )
+National Security Agency		            )
+                                            )
+                Defendant                   )
+
+
+  REPLY TO DEFENDANT'S RESPONSE TO PLAINTIFFS' MOTION FOR 
+  SUMMARY JUDGMENT BASED ON EVIDENCE FROM ADMISSIONS
+
+1  COMES NOW plaintiffs Payne [Payne] and Morales [Morales] 
+
+[Plaintiffs], pro se litigants to exercise their rights 
+
+guaranteed under the Constitution, Rules of Civil  Procedure, 
+
+and Local Civil Rules to respond to Defendant's MOTION filed
+
+on 98 JAN-5 within the 14 days allowed by local rule 7.3(b)(4).
+
+2  US Attorney Mitchell [Mitchell]  writes,
+
+  Counsel for Defendant was not served with copies of any of  
+  said Requests for Admissions until sometime after the
+  individuals had been served.2
+
+Mitchell WAS SERVED
+
+  PLAINTIFFS' FIRST SET OF REQUEST FOR ADMISSION  TO  
+  NSA DIRECTOR KENNETH MINIHAN 
+
+  I HEREBY CERTIFY that a copy of the foregoing request for   
+  admissions was mailed to Jan Elizabeth Mitchell, Assistant US 
+  Attorney, 525 Silver SW, ABQ, NM 87102 this  Monday November 
+  3, 1997. 
+
+Michell was not served with any other admissions since
+
+Mitchell is not representing others.
+
+Plaintiffs' served Defendant Minihan properly.  And Minihan
+
+failed to respond to Minihan's admissions within the time
+
+allotted by law.
+
+3 US Attorney Mitchell writes,
+
+  As grounds for the Motion and Memorandum, Defendant
+  argued that Plaintiffs had blatantly disregarded this Court's   
+  Order pertaining to the conduct of discovery and the deadline 
+  for discovery in this Freedom of Information Act action.
+
+Judges Svet and Campos willfully violated Plaintiffs' right
+
+to Discovery.  And thereby earned criminal complaint affidavits
+
+filed with judge Scalia of the Supreme Court.
+
+
+4 US Attorney Mitchell writes,
+
+  In Defendant's Motion and Memorandum, Counsel for Defendant 
+  also objected to Plaintiffs' sua sponte decision to
+  modify the Court's June 11 Order to reflect the delay of the
+  Court's October 7 Order and the establishment, without leave   
+  of this Court, of new deadlines for discovery, motions   
+  practice, and the filing of the PreTrial Order. (Motion and   
+  Memorandum  9, at 4.)
+
+Judge Svet and Campos attempt to deny Plaintiffs' right to 
+
+Discovery, again, earned Svet and Campos criminal complaint
+
+affidavits.
+
+Plaintiffs exercise their right under the Federal Rules of 
+
+Civil Procedure and the Constitution to conduct Discovery
+
+WITHOUT LEAVE OF COURT!
+
+5 US Attorney Mitchell writes,
+
+   By their own request, Plaintiffs sought to stay a ruling on 
+  the Defendant's Motion and Memorandum. Absent any ruling on 
+  either the Motion and Memorandum or Plaintiffs' Response,
+  Defendant Minihan, employees of NSA, and employees of 
+  Sandia National Laboratory, were not obligated to respond to 
+  the Requests for Admissions as provided by Fed.R.Civ.P. 36.3 
+  For Plaintiffs to now assert in their "Motion for Summary 
+  Judgment On Based On Evidence From Admissions" that because   
+  the individuals have not responded to the Requests for 
+  Admissions they are deemed admitted, flies in the face of   
+  their own prayer to this Court to stay a ruling on the 
+  Defendant's Motion to strike the Requests for Admissions until 
+  the Supreme Court takes action.
+
+Plaintiffs' have REPEATEDLY asked judge Svet and Campos to
+
+disqualify themselves from any rulings on this case because
+
+Campos and Svet do NOT obey the Federal Rules of Civil 
+
+Procedure.
+
+  Replace judges Svet and Campos because these judges
+  have demonstrated, IN WRITING, they do not follow the 
+  Federal Rules of Civil Procedure.
+
+Plaintiffs' pleas are directed a replacement judge[s].  Not
+
+Svet and Campos.
+
+Therefore, Svet and Campos' failure to remove themselves does 
+
+not stop the legal process. 
+
+Mitchell cites NO law to support her claim that time 
+
+constraints imposed under Fed.R.Civ.P. 36.3 are inapplicable
+
+as a result of Svet's and Campos' failure to remove themselves.
+
+6 US Attorney Mitchell writes,
+
+  Defendant requests that this Court either rule upon
+  Defendant's Motion and Memorandum granting the request to   
+  strike the Requests for Admissions, or grant Plaintiffs' 
+  request to stay this action pending the issuance of the order 
+  sought by Plaintiffs in another forum. Should this Court deny 
+  Defendant's Motion and Memorandum, Defendant respectfully 
+  requests that the individuals to whom Requests for Admissions 
+  are appropriate in this action be given the thirty days to 
+  respond to said admissions as provided by the Federal Rules of 
+  Civil Procedure.
+
+REPLACEMENT JUDGES of the Court should realize the outcome
+
+of the lawsuit has attained international interest as a result
+
+of the
+
+  1  bungled NSA spy sting on Iran 
+  2  US government agencies NSA, NIST, and the FBI's
+     attempt to control cryptography.
+
+Mitchell's 
+  
+  DEFENDANT'S RESPONSE TO PLAINTIFFS' MOTION FOR 
+  SUMMARY JUDGMENT BASED ON EVIDENCE FROM ADMISSIONS
+
+was posted on Internet at jya.com, click cryptome
+
+  nsasuit8.htm  USA/NSA Responds to Payne/Morales Motion            
+                January 16, 1998
+
+Importance of this posting is summed-up in the Toronto Sun, 
+
+Jan. 11, 1998
+
+  US, Iran Need Each Other 
+ 
+  by Eric Margolis 
+ 
+  Iran launched a surprise charm offensive last week, 
+  throwing Washington into serious confusion.  
+
+  In a lengthy interview on CNN, Iran's new president, Mohammad   
+  Khatami, skillfully analyzed the bitter relations between the   
+  two nations and cautiously extended an olive branch to 
+  Washington, calling for an end to their 19-year cold war. 
+ 
+  Khatami's diplomatic ju-jitsu flummoxed the Clinton   
+  administration, which was busy trying to rally international 
+  support against Tehran - and to overthrow Iran's elected 
+  government.  
+ 
+  Both capitals are split over the question of relations.  
+
+  In Washington, the military establishment and conservative   
+  Republicans have inflated Iran into a bogeyman to 
+  justify military budgets and keep U.S. forces in the Mideast.  
+  ...
+
+  America incited Iraq to invade Iran in 1980. They did this to 
+  crush the Islamic revolution, then provided massive war aid to 
+  Saddam Hussein. Half a million Iranians died.  
+ 
+The US got caught involved in genocide.  Using high tech.
+
+This is one subject of this lawsuit.
+
+Albuquerque Journal Tuesday 1/13/98 carried the editorial.
+  
+  Khatami Move Is Profile in Courage
+  Richard Reeves
+  Syndicated Columnist
+
+  LOS ANGELES -  If an American leader had done what
+  Iranian President Mohammed Khatami did last Wednesday,
+  it would have been hailed as a profile in courage. ...
+
+  Miscalculation!  We armed and pampered Saddam Hussein in
+  the hope that Iraq would destroy Iran.  Now that's policy and
+  behavior to think about. Here is something to think about: If
+  Presidents Eisenhower and Kennedy had pursued any kind of
+  sensible policy toward Cuba and Fidel Castro - opposed to
+  the policy of trying to assassinate him - there never would 
+  have been a Cuban missile crisis.
+
+    I think Iranians have financed and encouraged terrorism
+  against the interests of the United States and Israel.  I   
+  would not be surprised at all if something like proof emerges 
+  soon, perhaps anonymously, from the CIA and other government 
+  agencies, where many officials have built their careers on 
+  sanctioning and isolating Iran, to try to straighten the 
+  backbones of the president and people of the United States.
+
+    If they succeed, America fails.  What would be more 
+  effective in closing down Iranian terrorism?  More hostility, 
+  sanctions and charges?  Or beginning the process toward more 
+  normal relations with a country positioned and born to be   
+  great? ...
+
+Clearly genocide fits into
+
+  Now that's policy and behavior to think about.
+
+The wired world is watching what this Court, hopefully
+
+minus judges Svet and Campos, will do.
+
+What is there to be?  A series of possibly unfortunate
+
+events?  
+
+Or does this Court order release the lawfully requested 
+
+documents to help settle this American tragedy?
+
+
+WHEREFORE.
+
+7 Have replacement judges of this Court DENY Mitchell's
+
+  Plaintiffs requested a stay. Absent a ruling from
+  this Court denying their request, they cannot proceed to 
+  assert that the Requests for Admissions are deemed admitted. 
+  Accordingly, Plaintiffs' "Motion For Summary Judgment On Based 
+  On Evidence From Admissions" must be denied.
+
+for reason that Mitchell's request to subvert both the Discovery
+
+processes and its time limits have no basis in law.  And appears 
+
+to plead to judges who do not obey the Federal Rules of Civil
+
+Procedure.
+
+9  IMMEDIATELY ORDER Defendant to release the requested 
+
+documents in the interest of national safety so that this 
+
+matter can be settled. 
+
+Aggrieved victims of  US genocide are reading these pleadings.
+
+                    Respectfully submitted, 
+ 
+ 
+                    _________________________ 
+                    William H. Payne             	   	     
+                    13015 Calle de Sandias NE          	     
+                    Albuquerque, NM 87111              	     
+ 
+ 
+                    _________________________				 
+                    Arthur R. Morales                            
+                    1024 Los Arboles NW                         
+                    Albuquerque, NM 87107                        
+ 
+                    Pro se litigants 
+ 
+ 
+CERTIFICATE OF SERVICE 
+ 
+I HEREBY CERTIFY that a copy of the foregoing memorandum
+was mailed to Lieutenant General Kenneth A. Minihan, USAF, 
+Director,  National Security Agency, National Security Agency, 
+9800 Savage Road, Fort George G. Meade, MD 20755-6000 
+and hand delivered to  John J. Kelly, US Attorney, 525 Silver 
+SW, ABQ, NM 87102 this  Tuesday January 20, 1997. 
+
+
+
+
+5
+
+
+
+</PRE>
+<ADDRESS>Title: <STRONG></STRONG></ADDRESS>
+
+
+
+
+
+<H2><FONT COLOR="Green" FACE="Arial">Model 7200 HCLT High Capacity Lumber Tester</FONT></H2>
+<FONT FACE="Arial">
+<P><IMG SRC="http://www.metriguard.com/MACHINE.GIF"></P>
+</FONT>
+<P><FONT FACE="Arial">The Metriguard Model 7200 High Capacity Lumber Tester was introduced in 1993.  This machine is now certified by grading agencies in the United States, Canada and UK. Also in use in Japan and Austria. </FONT></P>
+<FONT FACE="Arial">
+<P>Speed capacity is unknown.  We have run tests in excess of 2,000 ft/min, and have not seen any limitations or indications that it would not run faster. We expect this machine to keep up with planer developments and run in the neighborhood of 3,000 ft/min sometime within the next ten years. </P>
+<P>The machine is available with a number of options, including the recently introduced PC Data System, which adds new capability in marking options, shift reports, and internal error checking.  Yet to come in Metriguard's program of continuous improvement are automatic wood temperature compensation, automatic zero tracking, scanner inputs. </P>
+<P>Please contact <A HREF="mailto:sales@metriguard.com">Metriguard Sales office</A> for further information about how this machine can improve your lumber grading and mill profits.  </P>
+<P></P>
+<P>Return to <A HREF="http://www.metriguard.com/DEFAULT.HTM">home page </A></P>
+</FONT>
+
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00819" HREF="msg00819.html">Re: diplomacy</A></STRONG>
+<UL><LI><EM>From:</EM> nobody@REPLAY.COM (Anonymous)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00772.html">Re: (eternity) Eternity as a secure filesystem/backup medium (fwd)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00773.html">Signed document - a thought...</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00961.html">Re: (eternity) Eternity as a secure filesystem/backup medium (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00819.html">Re: diplomacy</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00769"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00769"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

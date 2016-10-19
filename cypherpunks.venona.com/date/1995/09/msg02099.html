@@ -1,0 +1,152 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Looking for advice. -->
+<!--X-From-R13: Pvyy Egrjneg <fgrjnegfNvk.argpbz.pbz> -->
+<!--X-Date: Thu, 28 Sep 95 01:40:08 PDT -->
+<!--X-Message-Id: 199509280839.BAA03015@ix6.ix.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Looking for advice.</TITLE>
+<LINK REV="made" HREF="mailto:stewarts@ix.netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02098.html">Date Prev</A>][<A HREF="msg02102.html">Date Next</A>][<A HREF="msg02086.html">Thread Prev</A>][<A HREF="msg02093.html">Thread Next</A>][<A HREF="index.html#02099">Date Index</A>][<A HREF="threads.html#02099">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Looking for advice.</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:patrick@Verity.COM">patrick@Verity.COM</A> (Patrick Horgan)</LI>
+<LI><em>Subject</em>: Re: Looking for advice.</LI>
+<LI><em>From</em>: Bill Stewart &lt;<A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 28 Sep 1995 01:36:31 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+At 09:58 PM 9/27/95 -0700, you wrote:
+&gt;For two programs communicating via TCP/IP and exchanging authentication
+&gt;information, I want to make sure that the authentication info, (user's
+&gt;name and password,) doesn't pass in the clear.  I can think of a few
+&gt;ways to handle this.  
+&gt;
+&gt;1) Encrypt via shared key using symetric encryption.
+&gt;   This works but key management is a problem.
+&gt;2) Encrypt via public keys using public key encryption.
+&gt;   There's licensing issues, and how do you generate public and private
+&gt;   pairs for all of the programs?  That could be a lot of primes!
+&gt;3) The "server" could keep user names and passwords stored as hashed values.
+&gt;   That way the "client" could do a hash (MD5?) before sending it.
+&gt;   This has the drawback of the server not having access to the unhashed
+&gt;   values...if it needs that access this method won't work.
+
+[Perry Metzger often has good comments about the order of doing things in.]
+
+Are you planning to encrypt your sessions, or not?  What threats are you 
+worried about?  What threats are you aware of but not worried about?
+How much opportunity do the users of the programs have to set up communications
+beforehand?  Is this one-shot, or will a given client and server do a lot
+of repeat business?  Are you concerned about privacy from machine to machine,
+or also from user to user?  Are you worried about man-in-the-middle attacks?
+Are you worried about protecting the user's name, or only their password?
+Are you willing to buy hardware, or do you want software-only?
+How critical is setup speed?  How slow are your processors?
+Are you worried about your TCP sessions getting hijacked once you've
+done the authentication?
+
+For some applications, Diffie-Hellman is a good answer - the basic protocol
+doesn't do authentication, but does do secure key negotiation as long as you
+either don't have a man-in-the-middle or else have authentication such as
+digital signatures on your key-parts.  Once you've created a shared key
+by DH, you can then use it to encrypt your session, or at least exchange 
+passwords securely.
+
+If you're willing to buy a bit of hardware, there are cryptographic smartcards
+that let you generate time-varying one-time passwords; some of them are decent.
+
+Phil Karn's S/Key technology (ftp-able from and I think patented by Bellcore)
+takes a nice approach using hash functions - let h^n(m) denote message m cranked
+through hash function h n times, = h(h(h(...(h(m))...))), where h is a secure
+one-way hash like MD4 that's tolerably fast.  To set up, calculate h^n(m),
+and store it in the server's password file.  When you log in for the first time,
+the server tells you n-1, you calculate h^(n-1)(m), send it as your password,
+the server hashes it to get h^n(m), and compares it with the saved value.
+If it works, the server now saves h^(n-1)(m); the next time it'll ask you for
+n-2, you give it h^(n-2)(m), the server hashes to get h^(n-1)(m), etc.
+Obviously you've got to reset after n-1 uses.
+
+If you have an environment where you can store secret keys safely on the server,
+you can use secret-key challenge-response methods effectively - the server
+sends a random number, and you send back the number, encrypted, or there are
+variants where you modify the number by 1, with or without timestamps,
+and maybe the server sends the number encrypted also.  If you can't secure
+a general-use machine, but are able to secure a machine that just does
+authentication and keep it locked in a room with only network access and power,
+pretty soon you've invented Kerberos.
+
+Do you need separate public keys for each application X user?  Depending on what
+you're trying to authenticate, you could have a public key for the application
+or even just the machine it runs on, and send passwords encrypted with that;
+again there are variants with timestamps, random challenges, etc., to deal
+with issues like replay attacks.  Or maybe you can have the server issue
+random numbers as challenges that you sign with your registered public key.
+If you do that, though, better have the server sign with _its_ public key also,
+since you'd probably rather not just go signing any random number anybody
+hands you.  And what if there's a man in the middle there helping you log on...?
+#---
+# Bill Stewart, Freelance Information Architect, stewarts@ix.netcom.com
+# Phone +1-510-247-0664 Pager/Voicemail 1-408-787-1281
+#---
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02098.html">Re: Another Netscape Bug (and possible security hole)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02102.html">No Subject</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02086.html">Looking for advice.</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02093.html">Netscape seems to fix the overflow bug</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02099"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02099"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

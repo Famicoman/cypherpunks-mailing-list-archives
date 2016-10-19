@@ -1,0 +1,171 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Remailer passphrases -->
+<!--X-From-R13: Oyrk Egenfurvz <pcNcebhfg.fhon.pbz> -->
+<!--X-Date: Fri, 15 Mar 1996 11:50:18 +0800 -->
+<!--X-Message-Id: 199603140613.AAA00470@proust.suba.com -->
+<!--X-Content-Type: text -->
+<!--X-Reference: 199603140450.XAA12195@homeport.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Remailer passphrases</TITLE>
+<LINK REV="made" HREF="mailto:cp@proust.suba.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00914.html">Date Prev</A>][<A HREF="msg00959.html">Date Next</A>][<A HREF="msg00921.html">Thread Prev</A>][<A HREF="msg00858.html">Thread Next</A>][<A HREF="index.html#00922">Date Index</A>][<A HREF="threads.html#00922">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Remailer passphrases</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:adam@lighthouse.homeport.org">adam@lighthouse.homeport.org</A> (Adam Shostack)</LI>
+<LI><em>Subject</em>: Re: Remailer passphrases</LI>
+<LI><em>From</em>: Alex Strasheim &lt;<A HREF="mailto:cp@proust.suba.com">cp@proust.suba.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 14 Mar 1996 00:13:09 -0600 (CST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00921.html">199603140450.XAA12195@homeport.org</A>&gt; from "Adam Shostack" at Mar 13, 96 11:50:33 pm</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:alex@suba.com">alex@suba.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+(warning:  I don't know much about security, so if you don't either, 
+don't take what I have to say too seriously...)
+
+&gt; 	This is a long standing debate in the security community.
+&gt; Some folks like multiple box security.  Others point out that using
+&gt; two boxes means both need to be well secured, and you have twice as
+&gt; many places to make mistakes.
+
+Ok, I see your point.  If someone compromises workstation, they can read
+all the mixmaster packets by looking at what comes in and out of blackbox. 
+But they still can't grab the passphrase and key, so old and future
+traffic is safer, and if there's a large reordering pool they'll have
+trouble matching a given incoming packet with a given outgoing packet. 
+
+&gt; 	Lets say the boxes are called workstation and blackbox.  If I
+&gt; break into workstation, I can provide bogus files for blackbox.  Since
+&gt; blackbox extends some trust to workstation, it might not be expecting
+&gt; to see a message with a return address of "`|telnet evil.fbi.gov`".
+
+It seems to me that if you're just running a remailer that only talks to
+one other machine, it ought to be possible to eliminate this kind of a
+problem.  Blackbox grabs a file from a queue on workstation, runs it
+through mixmaster, and deposits the output in an outgoing queue on
+workstation.  If the trojan file is something strange, it will just drop
+through mixmaster.  Maybe it would choke workstation on the way out, but
+blackbox -- and the passphrase -- would be safe.
+
+&gt; 	I'd argue that setting up a simple mailer which uses
+&gt; workstation as a relay host gives you as much security, and lessens
+&gt; your dependance on workstation, which we expect will be comprimised.
+
+If we leave sendmail on, we're hosed -- wouldn't bb moving packets on and
+off workstation with ssh's rcp be a lot safer? 
+
+&gt; (Of course we expect ws to be comprimised.  Why else are we setting up
+&gt; bb as a seperate machine?)
+
+Agreed.
+
+&gt; 	Turning of getty and removing the swap file strike me as a bit
+&gt; extreme.  A panic login system, otoh, that accepts a bad password and
+&gt; wipes the disk, might not be a bad idea.  (Of course, if this becomes
+&gt; popular, the bad guys will just rip out your disk and read it on
+&gt; another machine.)
+
+I admit freely that this is all extreme and impractical...  I was just
+trying to think through the problem.
+
+I was shooting for a system that would be worthless to an attacker if it
+was turned off, and which couldn't be hacked easily from the console
+without turning it off.
+
+A crypto file system directory will be worthless if the machine goes down,
+and if there's no swapfile, there's not going to be anything nasty left
+behind there.  The bad guys *can't* rip out your hard drive and read it,
+because all the good stuff is on the cfs drive -- it's just a big blob of
+idea'd data, and neither the remailer' or cfs's passphrase was ever
+written to disk.  
+
+When bb boots, it waits for the sysadmin to ssh in and mount the cfs drive
+manually, then start the remailer manually.
+
+If the attacker didn't know what you've got in place, he'd probably just
+steal the machine assuming he could get something out of it when he's got
+it back on his workbench.  If he did know the details of the system, he'd
+be faced with trying to extract the cfs and remailer passwords from the
+machine's ram without turning it off and without being able to login from
+the console -- ideally you wouldn't even have a keyboard plugged in.  (I
+have no idea how hard it would be to steal information from a running
+machine's ram -- or if it's even possible).
+
+&gt; 	Be awful tough if it only listens to ssh &amp; smtp.  Are you sure
+&gt; your kernel doesn't do anything bogus with ICMP?  Data overflows in
+&gt; ssh or smap?  DNS, syslogd, tty overloads?
+
+Actually, it only listens to ssh;  a bug there is fatal.  Same goes for
+the kernel.  We don't need dns -- to bb, the only other machine in the
+universe is workstation, and it knows the IP address.
+
+If the core system can't run without incident, you're in trouble.  But 
+couldn't you do a pretty good job of shielding it from surprises by 
+turning almost everything off and not letting it talk to the outside 
+world, except in very narrow ways?
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00921" HREF="msg00921.html">Re: Remailer passphrases</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Shostack &lt;adam@lighthouse.homeport.org&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00914.html">Re: Remailer passphrases</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00959.html">Re:LACC: PC Phones Home?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00921.html">Re: Remailer passphrases</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00858.html">Re: Remailer passphrases</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00922"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00922"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

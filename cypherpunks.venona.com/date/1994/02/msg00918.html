@@ -1,0 +1,162 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: REMAIL: simple digital postage -->
+<!--X-From-R13: Yney Zhv Pneehf <xyoneehfNbjyarg.evpr.rqh> -->
+<!--X-Date: Tue, 15 Feb 94 21:49:47 PST -->
+<!--X-Message-Id: 9402160540.AA20934@flammulated.owlnet.rice.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>REMAIL: simple digital postage</TITLE>
+<LINK REV="made" HREF="mailto:klbarrus@owlnet.rice.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00923.html">Date Prev</A>][<A HREF="msg00904.html">Date Next</A>][<A HREF="msg00917.html">Thread Prev</A>][<A HREF="msg00921.html">Thread Next</A>][<A HREF="index.html#00918">Date Index</A>][<A HREF="threads.html#00918">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>REMAIL: simple digital postage</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: REMAIL: simple digital postage</LI>
+<LI><em>From</em>: Karl Lui Barrus &lt;<A HREF="mailto:klbarrus@owlnet.rice.edu">klbarrus@owlnet.rice.edu</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 15 Feb 94 23:40:07 CST</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+&gt;How willing are remailers to try this? Both Hal Finney and Karl
+&gt;Barrus have code for remailers (Karl's is more recent, Hal's is in
+&gt;wide use).  Could their code be modified easily to accomodate a
+&gt;primitive form of stamps?
+
+Well, I know that integrating a quick and dirty (not particularly
+cryptographically sophisticated) digital money system can be done in
+Hal's code, since thats what I did at elee6ue@rosebud.ee.uh.edu for
+quite a while.  (Now elee6ue@rosebud has been restored to "ordinary"
+operation).
+
+And the one I recently wrote could be modified the same way - I just
+put it together to test cutmarks, automatically detecting pgp
+encryption, and latency delayed remailing.
+
+I was looking into a more efficient way to check the validity of cash,
+and making things bomb-proof, but sorta got sidetracked ;)
+
+The way I did it is to add to remail.pl, have the script search the
+header for a Digicash line (you use the pasting tokens as usual to
+place it in the header).  The script extracted the "cash" and searched
+for it in a list maintained by the remailer.  If found, then the
+remailing proceeded as usual, otherwise the message "Insufficient
+funds to deliver message" was sent along instead.  The cash list is
+read into memory and rewritten out, minus the value just used.
+
+The cash strings I used were random characters, which looked like this
+(all starting with the character B):
+
+BU2j4yCJgtl8wO2KvsEIIttaSOt9zEfS7giqHwEuuh3bbuTGppoElILYeW09a
+BYnIA2EQSXEJQ65U8PM2nG07ilq7zCEFqaTBXDuzeEb6YjBgVWUGNm6GPA0zS
+BmgF0hscwOHICfLNcDefkPo8PSO1ou2NQ4ecMcIPiGDu5fUEz63Wjiosj0JSD
+
+and so forth.
+
+Now with magic money a more sophisticated system may be developed.
+Perhaps I will shift elee6ue@rosebud back to a pay-for-remail system,
+or do it at the mystery middle point of the remailer chain I'm
+experimenting with.
+
+Here is an extract of the additions to remail.pl I made to implement
+this:
+
+        if (/^Digicash:/) {
+          chop ;
+          s/^.*: // ;          # remove text before colon AND blank afterwards
+          $payment = $_ ;
+        }
+}
+
+# check validity of digital cash
+# open cash file and read it all in
+  open(CASHLIST, "./digicash.list");
+  @listofcash = &lt;CASHLIST&gt;;
+  close(CASHLIST);
+  unlink "./digicash.list";
+
+#open file, check cash for validity
+#if valid, don't write it back to the file
+  open(CASHLIST, "&gt; ./digicash.list");
+
+  $paidfor = "n";
+  while (@listofcash) {
+    $validcash = shift @listofcash;
+    chop $validcash;
+    if ($validcash eq $payment) {
+      $paidfor = "y";
+      next;
+    }  
+    print CASHLIST $validcash, "\n";
+  }
+
+  close(CASHLIST);
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a
+
+iQCVAgUBLWGxcoOA7OpLWtYzAQHV2AP/T7o0N9qUE8XU/urPqx8pzL+h/Rvs2zbg
+6Lky3vu2GoMXEUmVbtbB8xl4c20kvSz5ysSkQ3B8NYXhTdAtcrgH0J2Zd1YHdCKb
+xmh+rS4xLXuiO6T/j24XqiLOcq0YiF2F2ytzgM/mi03cxN6FMZrat+8vIqLrgjfg
+ZNVvBAR46to=
+=JDF6
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00923.html">Re:  SCHEME for FULL-SPEC RETURN PATH</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00904.html">Re: Need a challenge?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00917.html">Re: RFC822 compliant, and already deployed hack for return addresses</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00921.html">money maker</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00918"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00918"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

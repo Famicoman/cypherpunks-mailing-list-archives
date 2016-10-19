@@ -1,0 +1,173 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: CASH/REMAIL: combination -->
+<!--X-From-R13: abobqlNebfrohq.rr.hu.rqh -->
+<!--X-Date: Fri, 5 Mar 93 18:21:34 PST -->
+<!--X-Message-Id: 9303060221.AA29007@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>CASH/REMAIL: combination</TITLE>
+<LINK REV="made" HREF="mailto:nobody@rosebud.ee.uh.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00221.html">Date Prev</A>][<A HREF="msg00225.html">Date Next</A>][<A HREF="msg00189.html">Thread Prev</A>][<A HREF="msg00192.html">Thread Next</A>][<A HREF="index.html#00223">Date Index</A>][<A HREF="threads.html#00223">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>CASH/REMAIL: combination</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: CASH/REMAIL: combination</LI>
+<LI><em>From</em>: <A HREF="mailto:nobody@rosebud.ee.uh.edu">nobody@rosebud.ee.uh.edu</A></LI>
+<LI><em>Date</em>: Fri, 5 Mar 93 20:26:16 -0600</LI>
+<LI><em>Remailed-By</em>: remailer03 &lt;elee7h5@rosebud.ee.uh.edu&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Karl Barrus posted some ideas for running a remailer which requires
+payments in the form of digital cash.  I have some comments.
+
+&gt; The remailer will work like the others, except valid cash must be
+&gt; included or the remailer will not forward the message.  For ease, a
+&gt; number of bills will be generated upon request, which will then be
+&gt; deposited as used.  As a side effect, bank accounts will be
+&gt; incremented as well (too bad real banks don't work like this) so
+&gt; customers may "withdraw" more bills to use for remailing messages.
+
+If I follow this, Karl will allow users to request digital-cash bills
+from the bank, then require them to send one of those along with each
+remailed message.  The bank then puts the bills back into the user's
+account(!) leaving him with as much "money" as he started with.
+
+This may be OK for an exercise to get the code working, but to really
+have any effect the remailer should not give the money back to the
+user as soon as he "spends" it.  This makes the whole thing rather
+pointless.
+
+I had an idea which would be a variant of this: make the users send
+you a postal-mail letter to authorize issuing another batch of digital
+"stamps".  The letter could include an email address to send the
+stamps to.  Maybe you could send 5 stamps per letter.
+
+This would force the user to pay 29 cents each time he wanted a set of
+stamps.  Unfortunately, he's not paying the remailer operator, but
+rather the U.S. government.  But it would still limit the ability of
+people to swamp the net with large numbers of messages.
+
+(With this system, I would not anticipate that people would have
+"accounts", but rather that Karl would just send out the digital stamps
+and let people hold it, and use them as they mailed letters.)
+
+&gt; Nathan Estey suggested to me that traffic analysis could be made more
+&gt; difficult if messages under a certain length were padded, and message
+&gt; over the length were split and remailed a piece at a time.  This will
+&gt; help, although I think it would be easier for the sender to include
+&gt; padding in the message itself (thus identical messages plus random
+&gt; padding will encrypt differently).  Plus, the message may be multiply
+&gt; encrypted and thus padding cannot be added "inside."  Maybe future
+&gt; mail software will automatically pad in addition to encrypt :-)
+
+Remailers might require standard-sized messages for their operation,
+or refuse to pass messages larger than some limit.  This, in
+conjunction with requiring per-message postage, should eliminate the
+possibilities of "volume abuse" which so worried Ted Ts'o.  ("Content
+abuse" is much less of an issue given the free-speech traditions on
+the net.)
+
+As it turns out, PGP compresses, then encrypts messages (usually):
+
+	C = Encrypt (KEY, Compress(M)).
+
+The decryption phase is then:
+
+	M = Decompress (Decrypt (KEY, C));
+
+Now, as it turns out, the decompression is self-terminating.  That
+means that you can add some junk to the message after the compression
+phase but before the encryption phase, and it will be automatically
+ignored by the decompresser:
+
+	C = Encrypt (KEY, Pad (Compress(M), N))
+
+	M = Decompress (Decrypt (KEY, C));
+
+(This represents padding the message with N bytes after compression,
+then encrypting it.)
+
+I had a patch for an earlier version of PGP which would always pad to
+1K byte boundaries using random bytes.  It was kind of annoying to use
+because it made small messages quite a bit bigger.  But I think what
+would be very nice would be a utility to encrypt a message which
+produced one or more constant-sized files as output.  Then you would
+want a corresponding program to decrypt which would put the files
+together and strip the padding.
+
+This way, all files sent to the remailer would be exactly the same
+size, and it could then act as a "Mix", as Eric described, holding a
+bunch of files in a batch, shuffling them, then sending them out.
+
+Hal
+74076.1041@compuserve.com
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.1
+
+iQCVAgUBK5gIPagTA69YIUw3AQFJrAQAqmgsGvipCPl3i1A78/FGensfPRK5qgfR
+HszULK+eggNKMJkRLc3Ed4IuSBHXOZHKJeYV7TT1li2pmwYU8a4WMMY6Eyj5tKlL
+Q/s7NRtI5ZqSvHI3K/5tiTA6N0CR8syOjaHLeoHHqtwVbUbEC3jZV+yTzEgZ35Dm
+yyrxwPghpPE=
+=5BwY
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00221.html">USENET: musings on a new MUSENET</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00225.html">No Subject</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00189.html">CASH/REMAIL: combination</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00192.html">Please unsubscribe me</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00223"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00223"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

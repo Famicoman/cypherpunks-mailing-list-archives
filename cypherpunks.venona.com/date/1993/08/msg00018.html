@@ -1,0 +1,455 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: [sci.crypt] SKIPJACK Review, Interim Report -->
+<!--X-From-R13: Rrerx Ogxvaf <jneybeqN[WF.SRG> -->
+<!--X-Date: Sun, 1 Aug 93 20:41:15 PDT -->
+<!--X-Message-Id: 9308020340.AA25883@steve&#45;dallas.MIT.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>[sci.crypt] SKIPJACK Review, Interim Report</TITLE>
+<LINK REV="made" HREF="mailto:warlord@MIT.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00013.html">Date Prev</A>][<A HREF="msg00019.html">Date Next</A>][<A HREF="msg00015.html">Thread Prev</A>][<A HREF="msg00019.html">Thread Next</A>][<A HREF="index.html#00018">Date Index</A>][<A HREF="threads.html#00018">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>[sci.crypt] SKIPJACK Review, Interim Report</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: [sci.crypt] SKIPJACK Review, Interim Report</LI>
+<LI><em>From</em>: Derek Atkins &lt;<A HREF="mailto:warlord@MIT.EDU">warlord@MIT.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 1 Aug 93 23:40:42 -0400</LI>
+<LI><em>Sender</em>: <A HREF="mailto:warlord@Athena.MIT.EDU">warlord@Athena.MIT.EDU</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+------- Start of forwarded message -------
+From: denning@guvax.acc.georgetown.edu
+Newsgroups: sci.crypt
+Subject: SKIPJACK Review, Interim Report
+Date: 1 Aug 93 22:09:27 -0400
+Distribution: world
+Organization: Georgetown University
+
+                            SKIPJACK Review
+                                    
+                             Interim Report
+                                    
+                        The SKIPJACK Algorithm
+
+
+           Ernest F. Brickell, Sandia National Laboratories
+               Dorothy E. Denning, Georgetown University
+            Stephen T. Kent, BBN Communications Corporation
+                          David P. Maher, AT&amp;T
+                  Walter Tuchman, Amperif Corporation
+                                    
+                              July 28, 1993
+
+                            (copyright 1993)
+
+
+Executive Summary
+
+The objective of the SKIPJACK review was to provide a mechanism whereby
+persons outside the government could evaluate the strength of the
+classified encryption algorithm used in the escrowed encryption devices
+and publicly report their findings.  Because SKIPJACK is but one
+component of a large, complex system, and because the security of
+communications encrypted with SKIPJACK depends on the security of the
+system as a whole, the review was extended to encompass other
+components of the system.  The purpose of this Interim Report is to
+report on our evaluation of the SKIPJACK algorithm.  A later Final
+Report will address the broader system issues.
+
+The results of our evaluation of the SKIPJACK algorithm are as
+follows:
+
+  1. Under an assumption that the cost of processing power is halved
+     every eighteen months, it will be 36 years before the cost of
+     breaking SKIPJACK by exhaustive search will be equal to the cost
+     of breaking DES today.  Thus, there is no significant risk that
+     SKIPJACK will be broken by exhaustive search in the next 30-40
+     years.
+
+  2. There is no significant risk that SKIPJACK can be broken through a
+     shortcut method of attack.
+
+  3. While the internal structure of SKIPJACK must be classified in
+     order to protect law enforcement and national security objectives,
+     the strength of SKIPJACK against a cryptanalytic attack does not
+     depend on the secrecy of the algorithm.
+
+
+
+1.  Background
+
+On April 16, the President announced a new technology initiative aimed
+at providing a high level of security for sensitive, unclassified
+communications, while enabling lawfully authorized intercepts of
+telecommunications by law enforcement officials for criminal
+investigations.  The initiative includes several components:
+
+    A classified encryption/decryption algorithm called "SKIPJACK."
+
+    Tamper-resistant cryptographic devices (e.g., electronic chips),
+    each of which contains SKIPJACK, classified control software, a
+    device identification number, a family key used by law enforcement,
+    and a device unique key that unlocks the session key used to
+    encrypt a particular communication.
+
+    A secure facility for generating device unique keys and programming
+    the devices with the classified algorithms, identifiers, and keys.
+
+    Two escrow agents that each hold a component of every device unique
+    key.  When combined, those two components form the device unique
+    key.
+
+    A law enforcement access field (LEAF), which enables an authorized
+    law enforcement official to recover the session key.  The LEAF is
+    created by a device at the start of an encrypted communication and
+    contains the session key encrypted under the device unique key
+    together with the device identifier, all encrypted under the family
+    key.
+
+    LEAF decoders that allow an authorized law enforcement official to
+    extract the device identifier and encrypted session key from an
+    intercepted LEAF.  The identifier is then sent to the escrow
+    agents, who return the components of the corresponding device
+    unique key.  Once obtained, the components are used to reconstruct
+    the device unique key, which is then used to decrypt the session
+    key.
+
+This report reviews the security provided by the first component,
+namely the SKIPJACK algorithm.  The review was performed pursuant to
+the President's direction that "respected experts from outside the
+government will be offered access to the confidential details of the
+algorithm to assess its capabilities and publicly report their
+finding."  The Acting Director of the National Institute of Standards
+and Technology (NIST) sent letters of invitation to potential
+reviewers.  The authors of this report accepted that invitation.
+
+We attended an initial meeting at the Institute for Defense Analyses
+Supercomputing Research Center (SRC) from June 21-23.  At that meeting,
+the designer of SKIPJACK provided a complete, detailed description of
+the algorithm, the rationale for each feature, and the history of the
+design.  The head of the NSA evaluation team described the evaluation
+process and its results.  Other NSA staff briefed us on the LEAF
+structure and protocols for use, generation of device keys, protection
+of the devices against reverse engineering, and NSA's history in the
+design and evaluation of encryption methods contained in SKIPJACK.
+Additional NSA and NIST staff were present at the meeting to answer our
+questions and provide assistance.  All staff members were forthcoming
+in providing us with requested information.
+
+At the June meeting, we agreed to integrate our individual evaluations
+into this joint report.  We also agreed to reconvene at SRC from July
+19-21 for further discussions and to complete a draft of the report.
+In the interim, we undertook independent tasks according to our
+individual interests and availability.  Ernest Brickell specified a
+suite of tests for evaluating SKIPJACK.  Dorothy Denning worked at NSA
+on the refinement and execution of these and other tests that took into
+account suggestions solicited from Professor Martin Hellman at Stanford
+University.  NSA staff assisted with the programming and execution of
+these tests.  Denning also analyzed the structure of SKIPJACK and its
+susceptibility to differential cryptanalysis.  Stephen Kent visited NSA
+to explore in more detail how SKIPJACK compared with NSA encryption
+algorithms that he already knew and that were used to protect
+classified data.  David Maher developed a risk assessment approach
+while continuing his ongoing work on the use of the encryption chip in
+the AT&amp;T Telephone Security Device.  Walter Tuchman investigated the
+anti-reverse engineering properties of the chips.
+
+We investigated more than just SKIPJACK because the security of
+communications encrypted with the escrowed encryption technology
+depends on the security provided by all the components of the
+initiative, including protection of the keys stored on the devices,
+protection of the key components stored with the escrow agents, the
+security provided by the LEAF and LEAF decoder, protection of keys
+after they have been transmitted to law enforcement under court order,
+and the resistance of the devices to reverse engineering.  In addition,
+the success of the technology initiative depends on factors besides
+security, for example, performance of the chips.  Because some
+components of the escrowed encryption system, particularly the key
+escrow system, are still under design, we decided to issue this Interim
+Report on the security of the SKIPJACK algorithm and to defer our Final
+Report until we could complete our evaluation of the system as a
+whole.
+
+
+2.  Overview of the SKIPJACK Algorithm
+
+SKIPJACK is a 64-bit "electronic codebook" algorithm that transforms a
+64-bit input block into a 64-bit output block.  The transformation is
+parameterized by an 80-bit key, and involves performing 32 steps or
+iterations of a complex, nonlinear function.  The algorithm can be used
+in any one of the four operating modes defined in FIPS 81 for use with
+the Data Encryption Standard (DES).
+
+The SKIPJACK algorithm was developed by NSA and is classified SECRET.
+It is representative of a family of encryption algorithms developed in
+1980 as part of the NSA suite of "Type I" algorithms, suitable for
+protecting all levels of classified data.  The specific algorithm,
+SKIPJACK, is intended to be used with sensitive but unclassified
+information.
+
+The strength of any encryption algorithm depends on its ability to
+withstand an attack aimed at determining either the key or the
+unencrypted ("plaintext") communications.  There are basically two
+types of attack, brute-force and shortcut.
+
+
+3.  Susceptibility to Brute Force Attack by Exhaustive Search
+
+In a brute-force attack (also called "exhaustive search"), the
+adversary essentially tries all possible keys until one is found that
+decrypts the intercepted communications into a known or meaningful
+plaintext message.  The resources required to perform an exhaustive
+search depend on the length of the keys, since the number of possible
+keys is directly related to key length.  In particular, a key of length
+N bits has 2^N possibilities.  SKIPJACK uses 80-bit keys, which means
+there are 2^80 (approximately 10^24) or more than 1 trillion trillion
+possible keys.
+
+An implementation of  SKIPJACK optimized for a single processor on the
+8-processor Cray YMP performs about 89,000 encryptions per second.  At
+that rate, it would take more than 400 billion years to try all keys.
+Assuming the use of all 8 processors and aggressive vectorization, the
+time would be reduced to about a billion years.
+
+A more speculative attack using a future, hypothetical, massively
+parallel machine with 100,000 RISC processors, each of which was
+capable of 100,000 encryptions per second, would still take about 4
+million years.  The cost of such a machine might be on the order of $50
+million.  In an even more speculative attack, a special purpose machine
+might be built using 1.2 billion $1 chips with a 1 GHz clock.  If the
+algorithm could be pipelined so that one encryption step were performed
+per clock cycle, then the $1.2 billion machine could exhaust the key
+space in 1 year.
+
+Another way of looking at the problem is by comparing a brute force
+attack on SKIPJACK with one on DES, which uses 56-bit keys.  Given that
+no one has demonstrated a capability for breaking DES, DES offers a
+reasonable benchmark.  Since SKIPJACK keys are 24 bits longer than DES
+keys, there are 2^24 times more possibilities.  Assuming that the cost
+of processing power is halved every eighteen months, then it will not
+be for another 24 * 1.5 = 36 years before the cost of breaking
+SKIPJACK is equal to the cost of breaking DES today.  Given the lack of
+demonstrated capability for breaking DES, and the expectation that the
+situation will continue for at least several more years, one can
+reasonably expect that SKIPJACK will not be broken within the next
+30-40 years.
+
+Conclusion 1:   Under an assumption that the cost of processing power
+is halved every eighteen months, it will be 36 years before the cost of
+breaking SKIPJACK by exhaustive search will be equal to the cost of
+breaking DES today.  Thus, there is no significant risk that SKIPJACK
+will be broken by exhaustive search in the next 30-40 years.
+
+4.  Susceptibility to Shortcut Attacks
+
+In a shortcut attack, the adversary exploits some property of the
+encryption algorithm that enables the key or plaintext to be determined
+in much less time than by exhaustive search.  For example, the RSA
+public-key encryption method is attacked by factoring a public value
+that is the product of two secret primes into its primes.
+
+Most shortcut attacks use probabilistic or statistical methods that
+exploit a structural weakness, unintentional or intentional (i.e., a
+"trapdoor"), in the encryption algorithm.  In order to determine
+whether such attacks are possible, it is necessary to thoroughly
+examine the structure of the algorithm and its statistical properties.
+In the time available for this review, it was not feasible to conduct
+an evaluation on the scale that NSA has conducted or that has been
+conducted on the DES.  Such review would require many man-years of
+effort over a considerable time interval.  Instead, we concentrated on
+reviewing NSA's design and evaluation process.  In addition, we
+conducted several of our own tests.
+
+4.1  NSA's Design and Evaluation Process
+
+SKIPJACK was designed using building blocks and techniques that date
+back more than forty years.  Many of the techniques are related to work
+that was evaluated by some of the world's most accomplished and famous
+experts in combinatorics and abstract algebra.  SKIPJACK's more
+immediate heritage dates to around 1980, and its initial design to
+1987.
+
+SKIPJACK was designed to be evaluatable, and the design and evaluation
+approach was the same used with algorithms that protect the country's
+most sensitive classified information.  The specific structures
+included in SKIPJACK have a long evaluation history, and the
+cryptographic properties of those structures had many prior years of
+intense study before the formal process began in 1987.  Thus, an
+arsenal of tools and data was available.  This arsenal was used by
+dozens of adversarial evaluators whose job was to break SKIPJACK.  Many
+spent at least a full year working on the algorithm.  Besides highly
+experienced evaluators, SKIPJACK was subjected to cryptanalysis by less
+experienced evaluators who were untainted by past approaches.  All
+known methods of attacks were explored, including differential
+cryptanalysis.  The goal was a design that did not allow a shortcut
+attack.
+
+The design underwent a sequence of iterations based on feedback from
+the evaluation process.  These iterations eliminated properties which,
+even though they might not allow successful attack, were related to
+properties that could be indicative of vulnerabilities.  The head of
+the NSA evaluation team confidently concluded "I believe that SKIPJACK
+can only be broken by brute force   there is no better way."
+
+In summary, SKIPJACK is based on some of NSA's best technology.
+Considerable care went into its design and evaluation in accordance
+with the care given to algorithms that protect classified data.
+
+4.2  Independent Analysis and Testing
+
+Our own analysis and testing increased our confidence in the strength
+of SKIPJACK and its resistance to attack.
+
+4.2.1  Randomness and Correlation Tests
+
+A strong encryption algorithm will behave like a random function of the
+key and plaintext so that it is impossible to determine any of the key
+bits or plaintext bits from the ciphertext bits (except by exhaustive
+search).  We ran two sets of tests aimed at determining whether
+SKIPJACK is a good pseudo random number generator.  These tests were
+run on a Cray YMP at NSA.  The results showed that SKIPJACK behaves
+like a random function and that ciphertext bits are not correlated with
+either key bits or plaintext bits.  Appendix A gives more details.
+
+4.2.2  Differential Cryptanalysis
+
+Differential cryptanalysis is a powerful method of attack that exploits
+structural properties in an encryption algorithm.  The method involves
+analyzing the structure of the algorithm in order to determine the
+effect of particular differences in plaintext pairs on the differences
+of their corresponding ciphertext pairs, where the differences are
+represented by the exclusive-or of the pair.  If it is possible to
+exploit these differential effects in order to determine a key in less
+time than with exhaustive search, an encryption algorithm is said to be
+susceptible to differential cryptanalysis.  However, an actual attack
+using differential cryptanalysis may require substantially more chosen
+plaintext than can be practically acquired.
+
+We examined the internal structure of SKIPJACK to determine its
+susceptibility to differential cryptanalysis.  We concluded it was not
+possible to perform an attack based on differential cryptanalysis in
+less time than with exhaustive search.
+
+4.2.3  Weak Key Test
+
+Some algorithms have "weak keys" that might permit a shortcut
+solution.  DES has a few weak keys, which follow from a pattern of
+symmetry in the algorithm.  We saw no pattern of symmetry in the
+SKIPJACK algorithm which could lead to weak keys.  We also
+experimentally tested the all "0" key (all 80 bits are "0") and the all
+"1" key to see if they were weak and found they were not.
+
+4.2.4  Symmetry Under Complementation Test
+
+The DES satisfies the property that for a given plaintext-ciphertext
+pair and associated key, encryption of the one's complement of the
+plaintext with the one's complement of the key yields the one's
+complement of the ciphertext.  This "complementation property" shortens
+an attack by exhaustive search by a factor of two since half the keys
+can be tested by computing complements in lieu of performing a more
+costly encryption.  We tested SKIPJACK for this property and found that
+it did not hold.
+
+4.2.5  Comparison with Classified Algorithms
+
+We compared the structure of SKIPJACK to that of NSA Type I algorithms
+used in current and near-future devices designed to protect classified
+data.  This analysis was conducted with the close assistance of the
+cryptographer who developed SKIPJACK and included an in-depth
+discussion of design rationale for all of the algorithms involved.
+Based on this comparative, structural analysis of SKIPJACK against
+these other algorithms, and a detailed discussion of the similarities
+and differences between these algorithms, our confidence in the basic
+soundness of SKIPJACK was further increased.
+
+Conclusion 2:  There is no significant risk that SKIPJACK can be broken
+through a shortcut method of attack.
+
+
+5.   Secrecy of the Algorithm
+
+The SKIPJACK algorithm is sensitive for several reasons.  Disclosure of
+the algorithm would permit the construction of devices that fail to
+properly implement the LEAF, while still interoperating with legitimate
+SKIPJACK devices.  Such devices would provide high quality
+cryptographic security without preserving the law enforcement access
+capability that distinguishes this cryptographic initiative.
+Additionally, the SKIPJACK algorithm is classified SECRET   NOT
+RELEASABLE TO FOREIGN NATIONALS.  This classification reflects the high
+quality of the algorithm, i.e., it incorporates design techniques that
+are representative of algorithms used to protect classified
+information.  Disclosure of the algorithm would permit analysis that
+could result in discovery of these classified design techniques, and
+this would be detrimental to national security.
+
+However, while full exposure of the internal details of SKIPJACK would
+jeopardize law enforcement and national security objectives, it would
+not jeopardize the security of encrypted communications.  This is
+because a shortcut attack is not feasible even with full knowledge of
+the algorithm.  Indeed, our analysis of the susceptibility of SKIPJACK
+to a brute force or shortcut attack was based on the assumption that
+the algorithm was known.
+
+Conclusion 3:  While the internal structure of SKIPJACK must be
+classified in order to protect law enforcement and national security
+objectives, the strength of SKIPJACK against a cryptanalytic attack
+does not depend on the secrecy of the algorithm.
+------- End of forwarded message -------
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00013.html">Re: D. Bernstein's Open Letter on NIST-PKP-DSA</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00019.html">[sci.crypt] Appendix (in LaTex) to SKIPJACK Review, Interim Report</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00015.html">NSA: The Eyes of Big Brother</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00019.html">[sci.crypt] Appendix (in LaTex) to SKIPJACK Review, Interim Report</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00018"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00018"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

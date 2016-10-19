@@ -1,0 +1,222 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: shared keys, proxy encryption (was Re: PGP 5.5 CMR/GAK: a possible solution) -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Wed, 22 Oct 1997 21:05:08 +0800 -->
+<!--X-Message-Id: 199710221246.NAA00906@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 877514566.20581.193.133.230.33@unicorn.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>shared keys, proxy encryption (was Re: PGP 5.5 CMR/GAK: a possible solut</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01045.html">Date Prev</A>][<A HREF="msg01043.html">Date Next</A>][<A HREF="msg01037.html">Thread Prev</A>][<A HREF="msg01051.html">Thread Next</A>][<A HREF="index.html#01046">Date Index</A>][<A HREF="threads.html#01046">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>shared keys, proxy encryption (was Re: PGP 5.5 CMR/GAK: a possible solution)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:mark@unicorn.com">mark@unicorn.com</A></LI>
+<LI><em>Subject</em>: shared keys, proxy encryption (was Re: PGP 5.5 CMR/GAK: a possible solution)</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 22 Oct 1997 13:46:50 +0100</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>Cc</em>: <A HREF="mailto:jon@pgp.com">jon@pgp.com</A></LI>
+<LI><em>Cc</em>: <A HREF="mailto:mab@research.att.com">mab@research.att.com</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg01034.html">877514566.20581.193.133.230.33@unicorn.com</A>&gt; (mark@unicorn.com)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+Mark Grant &lt;mark@unicorn.com&gt; writes:
+&gt; The current system sends out a user's personal key, with a tag to say that
+&gt; if I don't encrypt to the company as well, my mail will bounce. But think
+&gt; about this: how often do I want to send email to a particular person in a
+&gt; company, and ensure that only they see it? And how often do I want to send
+&gt; mail to a particular group inside a company? All I want is to ensure that
+&gt; I get a response from the company, I usually don't care who I talk to in the
+&gt; process.
+
+The CMR feature in pgp5.5 isn't so far intented to cope with this
+scenario I think.  That's because pgp5.5 I understand can only
+generate keys with one CMR request field.
+
+What you're describing is an alternate use for CMR: to allow
+sales@acme.com to have attached to it the request that messages to
+that address be encrypted for all the sales people.
+
+Well that seems reasonable in a way.  Still potentially dangerous in
+that the NSA will soon enough be asking to be on every one's CMR list.
+
+(As far as I can tell the next version (pgp6.0 or whatever) will
+include capability to create keys with multiple CMR requests.  The
+capability to handle them is already in pgp5.5 by all accounts.)
+
+The other alternative is as you say: to have group keys which are
+shared amongst the sales people.  There are problems with this in
+managing the secure distribution of the shared key: sales manager
+creates it, and emails securely to all sales team members?
+Plausible I suppose.
+
+Problem for both approaches is re-keying: what happens when Fred
+leaves the sales team to work for a competitor.  Revoke the shared key
+and start over?  Or with the CMR method, revoke just the CMR request
+for Fred, and allow key servers to remove CMR requests when presented
+with a suitable CMR request revocation cert?  (How often will senders
+check key servers for revocation certs?)  Or have short expiries on
+encryption-only keys (one per day?), so that they key update happens
+soon enough anyway.  (pgp5.x allows for short lived encryption keys
+directly because of the separation of signature and encryption keys,
+the WoT applies to the signature key).
+
+Really it seems to me that actually having half a dozen sales droids
+sharing a key, or being able to decrypt a message because they are all
+CMR enforced multiple crypto recipients is a security nightmare either
+way :-)
+
+Reckon it would be arguably more secure to have the SMTP policy
+enforcer decrypt it for them, even.
+
+Another option would be Matt Blaze's proxy encryption.  That allows
+the owner of the sales@acme.com key (perhaps the sales manager) to
+create proxy keys which can convert messages addressed to
+sales@acme.com into messages addressed to fred@acme.com,
+jane@acme.com, and the rest of the sales droids.  (I thought Dave
+Wagner came up with an example of a public key proxy function for an
+RSA or El Gamal variant or something).
+
+With proxy encryption you still have to have the proxy keys somewhere,
+but you could keep them out of Fred's hands by putting them on the
+SMTP policy server for it to convert incoming traffic.  This seems to
+be more secure than either approach.  And avoids the security risk of
+having multiple long term encryption keys used to allow access to
+communications traffic.
+
+That way at least messages aren't coming over the wire addressed to
+101 people.  And also you don't have to worry so much about quick
+propogation of revocation certs.  And when someone leaves you can
+remove their proxy key from the SMTP server.
+
+The whole problem is really quite complex, and there are no easy
+solutions to group secured mail access where people are leaving and
+joining the group at short notice.  Proxy cryptography seems to add
+something quite useful to this mix.
+
+Some form of transport level security adds something to the mix also,
+because then if you are using CMR keys, or even normal pgp2.x multiple
+recipients, or you are using long term encryption keys (as PGP Inc
+seems to be currently recommending with pgp5.x (recommended validity
+setting of `forever')) at least old traffic isn't directly vulnerable.
+
+Several people commented on using a forward secret TLS between SMTP
+servers opportunisitically (if the SMTP server supports the extension,
+then use it; if not fall back to current situation).
+
+Even without any authentication, this is a win because the main threat
+from government is massive eavesdropping and key word scanning, or
+saving of targetted users mails for later key compromise.
+Unauthenticated TLS still forces the attacker to use active attacks.
+Authentication can be added later as part of IPSEC/IPv6 key
+infrastructure.
+
+Another method of authenticating TLS is to base the authentication on
+the user's PGP WoT.  Include authentication information to the
+delivery agent which is capable of TLS, which is also exchanged inside
+the encryption envelope.  (Eg. transfer an authentication symmetric
+key k1 inside the encryption envelope; send the local TLS capable SMTP
+hub / SMTP policy enforcer the key k1.  The TLS forward secret key
+negotiation can then be authenticated using this key.  The remote TLS
+system can tack the authentication information on to the delivered
+message, in a header, or otherwise, and the recipient can check the
+authentication).
+
+&gt; So PGP's "everything private unless you choose to make it public" system
+&gt; seems backwards. Surely what we really need to meet these customer demands
+&gt; is an "everything public (within the company) unless you choose to make it
+&gt; private" system? That is, all mail to my department inside the company
+&gt; should be encrypted to a department key, shared by all members, *unless*
+&gt; it is confidential, in which case it should *only* be encrypted to me. 
+
+I think what PGP are arguing for is ability to recover stored messages
+even if they are intended for one recipient only.  As I think has been
+established this can be acheived by storage recovery, without exposing
+communications traffic to the associated risks.  It is possible that
+there is an unstated perceived user requirement, that the messaging
+standard be able to allow third party access to the communications
+traffic directly.
+
+Your description is another plausible permutation also, I think, which
+has it's own merits and security/privacy/political abuse trade-offs.
+
+Adam
+-- 
+Now officially an EAR violation...
+Have *you* exported RSA today? --&gt; <A  HREF="http://www.dcs.ex.ac.uk/~aba/rsa/">http://www.dcs.ex.ac.uk/~aba/rsa/</A>
+
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01051" HREF="msg01051.html">Re: shared keys, proxy encryption (was Re: PGP 5.5 CMR/GAK: a possible solution)</A></STRONG>
+<UL><LI><EM>From:</EM> Jon Callas &lt;jon@pgp.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01034" HREF="msg01034.html">PGP 5.5 CMR/GAK: a possible solution</A></STRONG>
+<UL><LI><EM>From:</EM> mark@unicorn.com</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01045.html">PGP Inc isn't using CMR (Re: wanted dead or alive: pgp5.5 key pair)Tue, 21 Oct 1997 18:06:04 -0700)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01043.html">Singapore TOILET ALERT</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01037.html">Re: PGP 5.5 CMR/GAK: a possible solution</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01051.html">Re: shared keys, proxy encryption (was Re: PGP 5.5 CMR/GAK: a possible solution)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01046"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01046"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

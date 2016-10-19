@@ -1,0 +1,181 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: easy avoidance of PGP signature forgeries and reuse -->
+<!--X-From-R13: qyiNojnyx.qz.pbz (Re. Rvzvgev Hhyvf) -->
+<!--X-Date: Sun, 31 Dec 1995 00:49:17 +0800 -->
+<!--X-Message-Id: y9HXgD18w165w@bwalk.dm.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.BSD.3.91.951229172352.26978C&#45;100000@usr5.primenet.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: easy avoidance of PGP signature forgeries and reuse</TITLE>
+<LINK REV="made" HREF="mailto:dlv@bwalk.dm.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00948.html">Date Prev</A>][<A HREF="msg00951.html">Date Next</A>][<A HREF="msg00927.html">Thread Prev</A>][<A HREF="msg00962.html">Thread Next</A>][<A HREF="index.html#00949">Date Index</A>][<A HREF="threads.html#00949">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: easy avoidance of PGP signature forgeries and reuse</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: easy avoidance of PGP signature forgeries and reuse</LI>
+<LI><em>From</em>: <A HREF="mailto:dlv@bwalk.dm.com">dlv@bwalk.dm.com</A> (Dr. Dimitri Vulis)</LI>
+<LI><em>Date</em>: Sat, 30 Dec 95 10:30:09 EST</LI>
+<LI><em>Comments</em>: #include &lt;standard.disclaimer&gt; || echo '+' &gt;$HOME/.rhosts</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00927.html">Pine.BSD.3.91.951229172352.26978C-100000@usr5.primenet.com</A>&gt;</LI>
+<LI><em>Organization</em>: Brighton Beach Boardwalk BBS, Forest Hills, N.Y.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+attila &lt;attila@primenet.com&gt; writes:
+&gt; 	I never paid much attention to the problem other than to avoid
+&gt;     it by forcing it --i.e. list the destination and the send inside the
+&gt;     signature block, thus:
+&gt;
+&gt;     ----------------- BEGIN PGP SIGNED TEXT
+&gt;
+&gt;     To: john doe &lt;john@box.com&gt;
+&gt;     Newsgroups: sci.crypt
+&gt;     From: jane roe &lt;jane@topsey.turvey.com&gt;
+&gt;     Subject: that's all folks!
+...
+
+
+Good - that's just what I've proposed :). However right now the overwhelming
+majority of people who PGP-sign their writings, don't include a copy of the
+headers within the signed portion.
+
+Those few who do, all seem to use different formats, so the signed headers
+cannot be easily compared to the headers in the actual envelope by a program.
+
+I propose a format below.
+
+&gt; 	with e-mail, e-letters, direct faxes, etc. it is to easy to
+&gt;     ignore the courtesy header. From a standpoint of security, you have
+&gt;     blown away each of the attacks outline in your article in so much as
+&gt;     the signature will not compute if the courtesy block is omitted.
+
+I totally agree; that's why I propose copying that info in the signed portion
+"by default".
+
+&gt; 	personally, I do not think PGP 3 should attempt to solve the
+&gt;     problem. Most of the headers involved are applied _after_ the message
+&gt;     leaves the mail program; and, PGP interfaces are virtually the same
+&gt;     as invoking an alternate editor, which gets you nothing.
+
+I don't think that a protocol for signing headers that requires mime/multipart
+is going to be widely used, especially for Usenet postings. I've thought about
+it and came up with the following idea for the syntax:
+
+----BEGIN PGP SIGNED MESSAGE----
+
+some text
+
+----BEGIN PGP SIGNED HEADERS----
+
+From: address                          [all these are optional]
+To: address[,address]...
+Newsgroups: group[,group]...
+Date: rfc 822 date
+Subject: subject
+
+----BEGIN PGP SIGNATURE----
+Version 2.6.2
+
+12341234...
+
+----END PGP SIGNATURE----
+
+The "signed headers" portion may contain the following optional fields:
+
+From: address -- the address associated with the key used to sign this message
+
+To: address[,address]... -- addresses (user@host, no names) of the recipients
+in RFC 822 To: and Cc: headers (not the Bcc: recipients). Addresses mangled
+by various gateways shouldn't verify.
+
+Newsgroups: group[,group]... -- the newsgroups from the RFC 1036 header
+
+Date: and Subject: -- should match the header
+
+The sequence of events would be:
+* pick the addressees and the newsgroups + compose the text
+* sign the signed portion
+* post/e-mail the result to the specified addressees/newsgroups.
+
+(Of course, the poster could lie and claim in the signed portion that the
+article is being posted to alt.sex.pedo when he himself posts it to misc.kids:)
+
+If a standard like this catches on, and is integrated into PGP-aware
+news/e-mail programs, then it's a simple exercise to write a little script to
+look for BEGIN PGP SIGNED HEADERS and compare the information inside it with
+the RFC 822/1036 headers outside the signed portion of the message. It could
+be done within PGP too.
+
+
+---
+
+&lt;a href="<A  HREF="mailto:dlv@bwalk.dm.com">mailto:dlv@bwalk.dm.com</A>"&gt;Dr. Dimitri Vulis&lt;/a&gt;
+Brighton Beach Boardwalk BBS, Forest Hills, N.Y.: +1-718-261-2013, 14.4Kbps
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00962" HREF="msg00962.html">Re: easy avoidance of PGP signature forgeries and reuse</A></STRONG>
+<UL><LI><EM>From:</EM> steve@miranova.com (Steven L. Baur)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00927" HREF="msg00927.html">easy avoidance of PGP signature forgeries and reuse</A></STRONG>
+<UL><LI><EM>From:</EM> attila &lt;attila@primenet.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00948.html">Re: another anonymous poster helping to destroy our rights</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00951.html">Re: Zensoren ueber Alles</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00927.html">easy avoidance of PGP signature forgeries and reuse</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00962.html">Re: easy avoidance of PGP signature forgeries and reuse</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00949"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00949"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

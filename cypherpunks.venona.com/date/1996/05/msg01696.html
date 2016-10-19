@@ -1,0 +1,423 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: "Key Escrow without Escrow Agents" -->
+<!--X-From-R13: [ngg Pynmr <znoNerfrnepu.ngg.pbz> -->
+<!--X-Date: Sat, 25 May 1996 18:53:42 +0800 -->
+<!--X-Message-Id: 199605250132.VAA09818@nsa.tempo.att.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>"Key Escrow without Escrow Agents"</TITLE>
+<LINK REV="made" HREF="mailto:mab@research.att.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01718.html">Date Prev</A>][<A HREF="msg01719.html">Date Next</A>][<A HREF="msg01713.html">Thread Prev</A>][<A HREF="msg01738.html">Thread Next</A>][<A HREF="index.html#01696">Date Index</A>][<A HREF="threads.html#01696">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>"Key Escrow without Escrow Agents"</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: "Key Escrow without Escrow Agents"</LI>
+<LI><em>From</em>: Matt Blaze &lt;<A HREF="mailto:mab@research.att.com">mab@research.att.com</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 24 May 1996 21:32:39 -0400</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Here's a draft of a (rather half-baked) data recovery scheme that I'll be
+presenting at a workshop next week.  I've included the LaTeX source below;
+sorry for the length and for the formatting (which should be reasonably
+easy to ignore for those without LaTeX).
+
+Please include me in any response, since I don't read the list these days.
+
+-matt
+======cut here====
+\documentstyle[11pt,fullpage]{article}
+
+\begin{document}
+
+\title{Key Escrow without Escrow Agents}
+
+\author{{Matt Blaze}\\
+AT\&amp;T Research\\
+Murray Hill, NJ 07974\\
+{\tt mab@research.att.com}}
+
+\date{DRAFT -- 24 May 1996 -- Extended Abstract -- DRAFT}
+
+\maketitle
+
+\begin{abstract}
+We propose a simple scheme, based on secret sharing over large-scale
+networks, for assuring recoverability of sensitive archived data
+(e.g., cryptographic keys).  In our model anyone can request a copy of
+the archived data but it is very difficult to keep the existence of a
+request secret or to subvert the access policy of the data ``owner''.
+We sketch an architecture for such a system that might be suitable for
+deployment over very large-scale networks such as the Internet.
+\end{abstract}
+
+\section{Introduction}
+
+In any system in which sensitive information must be stored for future
+use, there is a fundamental tension between ensuring the {\em secrecy}
+of data against those who are not authorized for access to it and
+ensuring its {\em availability} to those who are.  Secrecy is often
+best served by making only a small number of carefully-guarded copies
+of the data, while availability favors a policy of the widest possible
+dissemination in the hope that at least one copy will be intact at the
+time it is required.  In general, a balance has to be struck between
+these two goals based on the requirements of and resources available
+to the particular application, but in any case copies of the sensitive
+data must be controlled in some careful manner (e.g., through the use
+of an off-site, trusted backup facility employing guards and other
+effective, if expensive, security practices).
+
+Another approach is ``key escrow'', in which the sensitive data is
+encrypted so that the ciphertext can be widely copied and backed-up
+via conventional methods, but the decryption keys are controlled in
+some careful manner by trusted third parties who assume responsibility
+for revealing the keys to authorized entities in the event of an
+emergency.  One advantage of key escrow over controlled backup of the
+data itself is that keys can be escrowed at any time, even prior to
+the creation of the actual sensitive data, and one escrowed key can
+represent arbitrarily much encrypted information.  A number of key
+escrow schemes have been proposed for a variety of applications, most
+with the aim of facilitating law enforcement access to encrypted data,
+but also for commercial data recovery
+\cite{clipper}\cite{micali}\cite{tis}\cite{denning}.
+
+Third party backup, whether of data or keys, has a number of
+disadvantages, however.  The ``escrow agents'' must be highly trusted
+and carefully protected, since compromise single escrow site (or small
+set of sites, in the case of split data) can result in an irrevocable
+loss of security.  Since protecting such data is likely to be
+expensive, one escrow site can be expected to serve many different
+sets of data, making each site an attractive ``fat target'' for
+attack.  Finally, legal, liability, and conflict-of-interest issues
+sometimes make it difficult to ensure that an escrow agent will act
+only in the best interests of the data owner, especially when served
+with a legal demand to turn over keys or tempted with some inducement
+to misbehave.  One of the frequently-raised objections to
+government-run key escrow systems (e.g., the ``Clipper'' chip) is the
+fear that the escrow centers will, perhaps secretly, assist a rogue
+government in violating its citizens' privacy.
+
+In this abstract, we propose a different model for assuring both
+recoverability and protection of sensitive data based on two concepts:
+secret sharing and the decentralized nature of large, heterogeneous
+networks such as the Internet.  In our model, anyone can request a
+copy of anyone's data but it is not possible to keep the existence of
+such a request secret or to subvert the access policy of the data
+``owner'' without subverting a significant fraction of participants in
+the network.  There are no explicit ``escrow agents''; instead, key
+shares are distributed widely to ordinary networked computers spread
+across a wide variety of administrative and geographic boundaries.
+
+\section{``The Net'' as an Escrow Agent}
+
+The goal of our scheme is to make it difficult to recover escrowed
+data without the knowledge and consent of the data owner, while still
+assuring high availability in an emergency.  Its security rests on the
+premise that highly distributed systems spread over many
+administrative, political, and geographic domains (such as the
+Internet), are more robust than any single site or small set of
+sites, no matter how well protected.  Other systems, such as Eternity
+\cite{eternity}, have recognized and exploited this property of
+global networks for maintaining information availability; we simply
+expand this notion to include secrecy as well.
+
+We assume that each node (or a large number of nodes) in the network
+runs an ``escrow server'' that performs most of the steps of the
+protocol, and that there is some broadcast mechanism for reaching them
+(which could be based on existing mechanisms such as Usenet news).
+The first step in using ``the net'' as an escrow agent is to split the
+key to be escrowed using some secret sharing scheme \cite{simmons}
+with a very large number of shares (e.g., a $k$ out-of $n$ scheme
+where $k=500$ and $n=5000$, but we leave the details of determining an
+appropriate access structure to the reader).  Next, we package each
+share along with a key identifier, a digital signature of the share,
+and a policy describing the circumstances under which the share should
+be disclosed (discussed below).  Finally, we select, at random (or
+according to some other policy) as many sites as we have shares and
+send one share to each site, over a secure channel.  We then destroy
+the shares and the list of sites to which they were sent.
+
+To recover escrowed data, we broadcast a request for shares for the
+key identifier we want to recover, using some mechanism that is likely
+to be received by the shareholders' escrow servers.  Upon receipt of a
+request for shares, each escrow server logs the request and, if it
+holds a share for the key in question, checks the policy contained in
+the share package.  If the request conforms to the policy we send the
+share to the requester.  The requester (who can verify the
+authenticity of each share by checking the signature) can recover the
+key once enough shares have been received.
+
+Whether such a scheme is robust, secure, or otherwise adequate depends
+primarily on three factors: the reliability (in terms of continued
+existence, security against compromise, and ability to follow
+instructions) of the nodes that handle the key shares, the access
+structure of the secret sharing scheme, and the nature of the policy
+that each node is supposed to follow.
+
+If the nature of today's Internet is any indication, we must assume
+that the individual nodes are not very reliable, especially over time.
+Some nodes will simply disappear.  Others will maliciously fail to
+follow instructions.  Still others will fail to safeguard their
+shares, sometimes due to malice but more often as a result of mistake,
+incompetence, or failure of some underlying security mechanism.  It is
+likely that as the net grows these issues will become even more
+pronounced.  Therefore, the security of the scheme depends on a choice
+of access structures and policies that assumes that a large fraction
+of shareholders will not follow the correct protocol.
+
+The secret sharing access structure must be chosen to require enough
+shares to prevent key recovery by collusion among a few nodes, yet
+with enough redundancy to allow recovery in the likely event that most
+nodes are not available or did not retain their shares at the time key
+recovery is required.  Scale appears to help here; consider, for
+example, a 500 out of 5000 threshold scheme, which permits key
+recovery even when 90\% of nodes have failed and yet retains its
+security until 500 nodes have been compromised.  The distribution of
+nodes could also play a part here, particularly when the key is split
+with a more sophisticated access structure.  For example, key shares
+could be distributed to nodes selected across a variety of
+administrative, legal, political and geographic domains, with the
+access structure selected to require that shares be collected from
+nodes in several different categories.
+
+Each shareholder is also asked to respect the access policy included
+with the share.  The policy must be designed to facilitate emergency
+access without also permitting undetected disclosure.  Because shares
+can only be recovered by broadcasting, we can take advantage of the
+inherently public nature of requests in formulating the access
+policies.  For example, the policy might specify a public signature
+key to which the real key holder knows the corresponding secret and a
+request to delay revealing key shares for some period of time, say one
+week.  If an unauthorized request for a key is broadcast, the real key
+holder would have one week to notice the request and broadcast another
+message, signed with this key, requesting that the shareholders ignore
+the original request and turn over information that might aid in
+tracking down the source of the unauthorized request.  Policies might
+also include instructions on the minimum identification that share
+requests must include and instructions on how share requests should be
+logged (e.g., by posting to a news group or even advertisements in
+newspapers).  They might also include an expiration date beyond which
+the share is to be deleted.  We defer the question of how policies
+should be specified, but it may be sufficient for the server, upon
+receipt of a share request, to send a message to its (human) operator
+containing instructions (written in English) that were included in the
+share package.
+
+Some infrastructure is required.  Key holders would need a directory
+or other mechanism for identifying and communicating with escrow
+servers at the time the shares are created.  A broadcast mechanism for
+key recovery is also required.  It is possible that existing
+mechanisms could suffice for both these purposes (e.g., DNS for server
+identification and Usenet news for broadcasting) but more specialized
+systems would be required if this scheme were to be fielded on a large
+scale.
+
+Share distribution must be secure against both eavesdropping and
+traffic analysis.  The need for security against eavesdropping is
+obvious, since observing all the shares allows recovery keys without
+the assistance of the shareholders.  Resistance to traffic analysis is
+required to ensure that shares can only be recovered by broadcasting.
+If the identities of the shareholders are known, an attacker could
+``target'' the sites believed to be weakest, and, if successful,
+recover shares without broadcasting the request and without following
+the share access policy.  Shares could be distributed via an anonymous
+communication network or some other mechanism (such as oblivious
+transfer) that obscures the nature of the transaction from an observer
+(and perhaps even from the participants themselves).  Key identifiers
+should be chosen so that an outside attacker cannot derive the purpose
+or owner of the key from its identifier and so that shareholders do
+not know exactly what their shares are for.  In any case, the list of
+shareholders should not be retained by the key owner once the shares
+have been distributed.
+
+\subsection{Emergency Access -- ``Angry Mob Cryptanalysis''}
+
+In general, the key identifier should be stored with all copies of the
+ciphertext (since without the key ID, it is impossible to recover a
+key).  Under ordinary circumstances when a key recovery is required,
+the original key owner will initiate the request.  The owner extracts
+the key ID and broadcasts the request to the network, performing
+whatever (presumably public) logging is required by the policy that
+was sent to the shareholders.  Upon receipt of the broadcast,
+each server checks whether it is a shareholder for the requested key.
+If it is, it checks whether request satisfies the access policy
+(perhaps by transmitting a copy of the English-specified policy to the
+server operator, perhaps by automated means if the policy is more
+formally specified).  If the access policy is satisfied (e.g., a
+message announcing the request appeared in some established place, a
+certificate of the identity of the requester was included in the
+request, or whatever) and after waiting however log the policy
+specified to allow for repudiation of the request by the legitimate
+key owner, the share is transmitted back to the requestor over a
+secure channel.  The requestor can then combine the shares to recover
+the key; corrupted shares will not affect the protocol since the
+shares should have been digitally signed by the original key owner at
+the time they were distributed.
+
+Sometimes, however, an extreme emergency might make it necessary to
+recover keys in a manner contrary to the policy specified in the
+original shares.  For example, it may be necessary to recover keys
+before the policy-imposed delay has elapsed, or to obtain access in
+spite of the objections of the original key owner.  Such a situation
+is most likely to arise from some kind of law enforcement or public
+safety emergency in which the requestor makes the case that public
+policy should supersede the access policy of the key holder.  Of
+course, such a situation is fraught with difficult issues of judgement
+and policy, and fears of abuse, fraud, or coercion are among the
+primary objections raised against key escrow in general.  Our scheme
+places the burden of determining whether such an exceptional access
+request should be granted on the shareholders.
+
+Indeed, the dependence on the collective judgement of the widely
+distributed shareholder operators may be the scheme's most important
+property.  Under normal circumstances, the shareholders can be
+expected to behave approximately as specified in the share policies
+(with occasional pathological exceptions, limited in their effect by
+the nature of the secret sharing access structure).  In exceptional
+situations, however, a public appeal can be made in an attempt to
+convince the shareholders to reveal their shares in a manner not
+permitted by the stated policy (e.g., the police could broadcast an
+appeal for key shares on television news, stating the facts of the
+case under investigation).  In particular, because the identities of
+the shareholders are not known, such an appeal must be done publicly
+and in a manner designed to attract considerable attention.  It is not
+possible to secretly induce, through legal means or otherwise,
+shareholders to reveal their shares.  For some applications (e.g.,
+personal information associated with an individual), such a scheme
+could be acceptable even when key escrow is not.  (We introduce the
+rather lighthearted term ``angry mob cryptanalysis'' to refer to the
+threat of enough shareholders being convinced to violate the share
+access policy to permit key recovery.  It is distinguished from
+``rubber hose cryptanalysis,'' which involves obtaining keys by legal
+or extra-legal intimidation\footnote{The phrase ``rubber hose
+cryptanalysis'' appears to be due to Phil Karn.}.)
+
+\section{Conclusions}
+
+Key escrow is a confusing subject, especially so because there is
+little general agreement as to even its basic goals and requirements.
+We have proposed a scheme that has a number of interesting properties
+that may make it appropriate for protecting secrecy and availability in
+certain kinds of applications.  A number of open problems remain, of
+course, before such a scheme could be made completely practical.
+Areas for further study include the effects of different access
+structures, specification of policy, and economic, performance, and
+reliability analysis.
+
+Of course, we do not in complete seriousness propose this scheme as a
+general solution to the key recovery problem, but intend instead to
+open a new avenue of discussion.  In particular, the scheme appears to
+address many of the concerns of both opponents of ``government'' key
+escrow as well as many of the (stated) concerns of law enforcement.
+
+\section{Acknowledgements}
+
+Much of the inspiration for this scheme arose from Ross Anderson's
+description of the motivation and principles behind the Eternity file
+service, in conversations at Cambridge and at AT\&amp;T Bell Labs.
+
+\begin{thebibliography}{MMMM00}
+
+\bibitem[Ande96]{eternity}
+\newblock Ross Anderson.
+\newblock ``The Eternity Service.''
+\newblock Invited paper to appear at {\em Pragocrypt 96.} 30 Sep - 3
+Oct 1996, Prague.
+
+\bibitem[Denn96]{denning}
+\newblock Dorothy Denning.
+\newblock ``A Taxonomy for Key Escrow Encryption Systems.''
+\newblock {\em CACM.}  March 1996.
+
+\bibitem[Mica94]{micali}
+\newblock Silvio Micali.
+\newblock ``Fair Cryptosystems.''
+\newblock {\em MIT/LCS/TR-579.c}  Laboratory for Computer Science,
+Massachusetts Institute of Technology, Cambridge, MA, August 1994.
+
+\bibitem[NIST94]{clipper}
+\newblock National Institute for Standards and Technology.
+\newblock Escrowed Encryption Standard, {\em Federal Information
+Processing Standards Publication 185}, U.S.  Dept. of Commerce, 1994.
+
+\bibitem[Simm92]{simmons}
+\newblock G.J. Simmons.
+\newblock ``An introduction to Shared Secret and/or Shared Control
+Schemes and their Applications.''
+\newblock In {\em Contemporary Cryptolgy,} Simmons, ed. IEEE Press,
+1992.
+
+\bibitem[WLEB96]{tis}
+\newblock Stephen T. Walker, Stephen B. Lipner, Carl M. Ellison, and
+David M. Balenson.
+\newblock ``Commercial Key Recovery.''
+\newblock {\em CACM.} March 1996.
+
+
+\end{thebibliography}
+
+
+\end{document}
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01738" HREF="msg01738.html">Re: "Key Escrow without Escrow Agents"</A></STRONG>
+<UL><LI><EM>From:</EM> "Vladimir Z. Nuri" &lt;vznuri@netcom.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01718.html">Re: why is no one (apparently) worried about escrowed key length limits?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01719.html">Re: [SCARE]:  "If you only knew what we know..."</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01713.html">RE: Truth is equivalent to law? (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01738.html">Re: "Key Escrow without Escrow Agents"</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01696"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01696"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

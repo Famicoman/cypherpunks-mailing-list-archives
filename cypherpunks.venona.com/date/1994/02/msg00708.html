@@ -1,0 +1,198 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: a protocol -->
+<!--X-From-R13: wvzNovyob.fhvgr.pbz (Xvz [vyyre) -->
+<!--X-Date: Sat, 12 Feb 94 16:51:09 PST -->
+<!--X-Message-Id: 9402130044.AA01412@bilbo.suite.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>a protocol</TITLE>
+<LINK REV="made" HREF="mailto:jim@bilbo.suite.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00704.html">Date Prev</A>][<A HREF="msg00710.html">Date Next</A>][<A HREF="msg00709.html">Thread Prev</A>][<A HREF="msg00706.html">Thread Next</A>][<A HREF="index.html#00708">Date Index</A>][<A HREF="threads.html#00708">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>a protocol</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: a protocol</LI>
+<LI><em>From</em>: <A HREF="mailto:jim@bilbo.suite.com">jim@bilbo.suite.com</A> (Jim Miller)</LI>
+<LI><em>Date</em>: Sat, 12 Feb 94 18:44:24 -0600</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:Jim_Miller@bilbo.suite.com">Jim_Miller@bilbo.suite.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+An idea came to me today for a protocol for exchanging keys  
+point-to-point (inspired by the Robert Cain messages).  The protocol  
+is a just combination of the Interlock Protocol described on page 44  
+of "Applied Cryptography" and Diffie-Hellman, describe on page 275.
+
+Keeping with the terminology of the book, Alice will attempt to  
+exchange a key with Bob, and Mallet will attempt to sit in the middle  
+without being detected.
+
+As has been demonstrated in the past, I haven't read a lot of the  
+cryptography papers that are out there, so for all I know, this is a  
+well known protocol (or simple variation).  However, I haven't seen  
+it, and it seems interesting.  Anyways, on with the show...
+
+
+1) Alice sends Bob her public key.  (ala Interlock Protocol)
+
+2) Bob sends Alice his public key.
+
+3) Alice generates a Diffie-Hellman "n" value, encrypts "n" with  
+Bob's public key and sends half of the "n" message to Bob.
+
+4) Bob generates a Diffie-Hellman "g" value, encrypts "g" with  
+Alice's public key and sends half of the "g" message to Alice.
+
+5) Alice sends other half of "n" message to Bob.
+
+6) Bob puts the two halves of Alice's "n" message together and  
+decrypts it with his private key.  Bob sends the other half of his  
+"g" message to Alice.
+
+7) Alice puts the two halves of Bob's "g" message together and  
+decrypts it with her private key.
+
+Alice and Bob's each now have an "n" and a "g".  Below, I try to show  
+that they can only have the same "n" and "g" if there is no  
+man-in-the-middle.
+
+Alice chooses a random large integer x and computes:
+
+		X = (g**x) mod n
+
+Bob chooses a random large integer y and computes:
+
+		Y = (g**y) mod n
+
+Standard Diffie-Hellman stuff.
+
+
+8) Alice encrypts X with Bob's public key and sends half of X message  
+to Bob.
+
+9) Bob encrypts Y with Alice's public key and sends half of Y message  
+to Alice.
+
+10) Alice sends other half of X message to Bob.
+
+11) Bob puts the two halves of Alice's X message together and  
+decrypts it with his private key.  Bob sends the other half of his Y  
+message to Alice.
+
+12) Alice puts the two halves of Bob's Y message together and  
+decrypts it with her private key.
+
+Now Alice and Bob's each have an X and a Y.
+
+Alice computes k = (Y**x) mod n.
+
+Bob computes k' = (X**y) mod n.
+
+13) Alice encrypts a message using k and sends it to Bob.
+
+Bob decrypts message using k' and validates success of protocol.
+
+14) Bob encrypts a message using k' and sends it to Alice.
+
+Alice decrypts message using k and validates success of protocol.
+
+----------
+
+What can Mallet do to this protocol?
+
+Mallet can substitute his own public keys for Alice's and Bob's in  
+steps 1 and 2.  Mallet can then capture "n" (from Alice) and "g"  
+(from Bob), although not immediately.  Mallet forward Bob bogus "n"  
+message halves and Alice bogus "g"  message halves.  Thus Alice will  
+get a bogus g, call it g', and Bob will get a bogus n, call it n'.
+
+Mallet cannot forward the real "n" to Bob because of the interlock  
+protocol.  Similarly, Mallet cannot forward the real "g" to Alice.   
+Mallet only learns "n" in step 5 and "g" in step 6.  However, he must  
+forward half of a bogus "n" to Bob in step 3), half of a bogus "g" to  
+Alice in step 4.
+
+At the end of step 6, Alice will have n and g' and Bob will have n'  
+and g.
+
+Alice and Bob continue with the protocol and calculate X and Y.   
+Alice and Bob use the interlock protocol to exchange X and Y.  As  
+with n and g, Mallet will eventually get X and Y, but not before  
+having to forward a bogus X to Bob and a bogus Y to Alice (call them  
+X' and Y').
+
+Alice and Bob, still unaware of Mallet, compute k and k'.  However,  
+since they are using different values for n, g, X, and Y, they will  
+compute different values.  The encrypted messages in steps 13 and 14  
+will expose Mallet.
+
+I've only spent about fifteen minutes thinking about this protocol.   
+I can't say that it is without holes or even that it does what I say  
+it does.  However, I think it might have potential.  What to the  
+professionals think?
+
+Jim_Miller@suite.com
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00706" HREF="msg00706.html">Re: a protocol</A></STRONG>
+<UL><LI><EM>From:</EM> Timothy A. Ryan &lt;gymnast@Crissy.Stanford.EDU&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00704.html">Re: Strategies for getting encryption in widespread use QUICKLY</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00710.html">They`re Baaaaack!</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00709.html">forbidden mathematics (I got the joke now...)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00706.html">Re: a protocol</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00708"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00708"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,133 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: How do I choose constants suitable for Diffe&#45;Hellman? -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Sat, 3 Sep 94 08:59:03 PDT -->
+<!--X-Message-Id: 199409031558.IAA03708@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199409030207.AA17919@xtropia -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: How do I choose constants suitable for Diffe-Hellman?</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00062.html">Date Prev</A>][<A HREF="msg00065.html">Date Next</A>][<A HREF="msg00054.html">Thread Prev</A>][<A HREF="msg00102.html">Thread Next</A>][<A HREF="index.html#00063">Date Index</A>][<A HREF="threads.html#00063">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: How do I choose constants suitable for Diffe-Hellman?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: How do I choose constants suitable for Diffe-Hellman?</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 3 Sep 1994 08:58:48 -0700</LI>
+<LI><em>Newsgroups</em>: sci.crypt</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00054.html">199409030207.AA17919@xtropia</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+0x7CF5048D@nowhere.toad.com writes:
+&gt;How do I choose constants suitable for Diffe-Hellman?
+&gt;According to _Applied Cryptography_ n should be prime,
+&gt;also (n-1)/2 should also be prime. g should be a primitive 
+&gt;root of unity mod n. n should be 512 or 1024 bits long.
+&gt;Are there any other requirements?
+
+These requirements are slightly overkill, IMO.  n does have to be prime,
+but what you really want is to have g generate a "large enough" sub-group
+of the numbers from 1 to n.  One way to achive this is to have (n-1)/2
+also be prime, in which case the order of g (the length of g^0,g^1,...,1)
+is either 1, n-1, 2, or (n-1)/2.  The odds of it being 1 or 2 are
+practically nil, so you could really use a random g since a period of
+(n-1)/2 is more than good enough.  Or, you could test g by raising it to
+the (n-1)/2 power and if the answer is 1 reject it and try another g.
+That way you get one with period n-1 which is maximal.
+
+There was a program posted here last time we discussed this (maybe four
+months ago?) which sieved for both n prime and (n-1)/2 prime.  It was
+pretty fast.
+
+One thing you can do which IMO is just as good is to choose a g with a
+considerably smaller period.  There are two known ways to solve
+discrete logs; one depends on the size of n and the other depends on
+the size of the order of g(|g|).  The second one is much weaker so if
+you choose the size of |g| to provide about as much security as the
+method based on the size of n you get something like n=512, |g|=140.
+This is used in the DSS, I believe.
+
+The advantage of this is that it is faster to exponentiate g^x in DH
+since x will be only 140 bits.
+
+So, to use this, pick a prime q of 140 bits, then find a prime n equal to
+kq+1 for some k, such that n is 512 bits.  This assures that there are
+some generators g which have a period of q.  There is an easy trick to
+find one: pick a random number a &lt; n, and set g = a ^ ((n-1)/q).  It
+follows that g^q equals 1 (since it is a^(n-1)), and since q is prime it
+must be the order of g.
+
+As I said, you can always use the full DH, but you would be in good
+company using the small-q version.  One question is the size of q to use
+for n=1024.  I haven't seen a clear answer to that, but the general
+principle is that if solving discrete logs becomes X times harder, you
+should increase q by a factor of X^2.  So if DH is a million times harder
+for n=1024 than for n=512 (it's hard to tell with all of the O(1) factors
+in the formulas) then q should be 40 bits longer or about 180 bits.
+
+Hal
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00054" HREF="msg00054.html">How do I choose constants suitable for Diffe-Hellman?</A></STRONG>
+<UL><LI><EM>From:</EM> 0x7CF5048D@nowhere</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00062.html">Re: Problems with anonymous escrow 2--response</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00065.html">Credentials, Reputations, and Anonymity</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00054.html">How do I choose constants suitable for Diffe-Hellman?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00102.html">Re: How do I choose constants suitable for Diffe-Hellman?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00063"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00063"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

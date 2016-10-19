@@ -1,0 +1,346 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: general RC4 key searcher: optimisations anyone? -->
+<!--X-From-R13: Oaql Pebja <nfoNarkbe.pb.hx> -->
+<!--X-Date: Wed, 12 Jul 95 02:55:39 PDT -->
+<!--X-Message-Id: Pine.SOL.3.91.950712102618.28272C&#45;100000@eagle.nexor.co.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>general RC4 key searcher: optimisations anyone?</TITLE>
+<LINK REV="made" HREF="mailto:asb@nexor.co.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00032.html">Date Prev</A>][<A HREF="msg00038.html">Date Next</A>][<A HREF="msg00032.html">Thread Prev</A>][<A HREF="msg00079.html">Thread Next</A>][<A HREF="index.html#00060">Date Index</A>][<A HREF="threads.html#00060">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>general RC4 key searcher: optimisations anyone?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: general RC4 key searcher: optimisations anyone?</LI>
+<LI><em>From</em>: Andy Brown &lt;<A HREF="mailto:asb@nexor.co.uk">asb@nexor.co.uk</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 12 Jul 1995 10:49:35 +0100 (BST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Hi,
+
+The following program is the part of my RC4 key search program that
+actually does the searching, adapted into a small speed test.  It is
+designed to handle any size key, with any number of unknown bits, in any
+position within the key.  There are, of course, problems with it in its 
+current form:
+
+
+1.  It's too slow.  I get 50% of the performance of the bruterc4.c on 
+    utopia.hacktic.nl (~9500/sec on a 60Mhz Pentium and ~12000/sec on a 
+    Sparc 20)
+
+2.  It can only handle bit offsets of 0 (i.e. the lower n bits of the key 
+    are unknown).  I'm unsure of a really fast way of generalising this 
+    to any (contiguous) n bits.
+
+3.  There are probably bugs.
+
+
+The code is included below.  Does anyone have any comments?
+
+
+- Andy
+
+--------------------------- begin code fragment ------------------------
+
+/* RC4 Brute Force Key Searcher, by Andy Brown 1995
+   
+   This part of the package is meant to be portable between most systems
+   so that Unix users can take part in the searching.  After all, the
+   kind of really high powered systems that can make a large dent in the
+   key space are not running Windows NT.  You will, however, require
+   an ANSII compiler */
+
+
+#include &lt;stdio.h&gt;
+#include &lt;time.h&gt;
+#include &lt;ctype.h&gt;
+
+/* function declarations */
+
+int main(void);
+char *search_range(char *,unsigned long,unsigned long,char *,int,
+                   unsigned char *,unsigned char *,int);
+
+static void hex_to_bytes(char *,unsigned char *);
+
+
+#define SwapByte(a,b) ((a)^=(b),(b)^=(a),(a)^=(b))
+#define hexdigit(a) ((a)&lt;10 ? (a)+'0' : (a)-10+'A')
+#define decdigit(a) (isdigit(a) ? (a)-'0' : toupper(a)-'A'+10)
+
+
+/*****************************/
+/* Main function: test speed */
+/*****************************/
+
+int main(void)
+{
+/* The key has 20 "unknown" bits */
+
+  unsigned char *keyhex="0102030405060708090A0B0C0D000000";
+  unsigned char *first="0";
+  unsigned char ciphertext[11]=
+    { 0xF2,0xA2,0xA0,0xF6,0x0F,0xBD,0x69,0x98,0xC0,0xFF,0x4C };
+
+  char *retval;
+  time_t before,diff;
+
+  before=time(NULL);
+  retval=search_range(first,0xFFFFF,0,keyhex,0,"hello world",ciphertext,11);
+  diff=time(NULL)-before;
+
+  if(retval==NULL)
+    fprintf(stderr,"Key not found, bug in key search code\n");
+  else
+    fprintf(stderr,"Key is: %s\n%ld keys/sec\n",retval,0xFFFFFL/(long)diff);
+
+  return 0;
+}
+
+
+/***********************************/ 
+/* Search a region of the keyspace */
+/***********************************
+
+Arguments:
+  start_str:  ASCII hex representation of the first "search key"
+  testsl:     low order 32 bits of the number of keys to test
+  testsh:     high order 32 bits of the number of keys to test
+  keyhex:     ASCII hex representation of the key "skeleton"
+              Zeros appear in the key throughout the search range
+  firstbit:   zero based index of the first unknown bit
+  plaintext:  known plaintext
+  ciphertext: corresponding ciphertext
+  textsize:   number of bytes of plain/ciphertext
+
+NB: A "search key" is an offset into the searchable keyspace, not
+    a full key in itself.  It may vary from 0..(2^numbits)-1
+
+Returns:
+  NULL if the key is not found in the search range, otherwise an ASCII
+  hex representation of the key is returned.  This pointer must be
+  dynamically allocated with malloc
+*/
+
+char *search_range(char *start_str,unsigned long testsl,unsigned long testsh,
+		   char *keyhex,int firstbit,
+                   unsigned char *plaintext,unsigned char *ciphertext,
+		   int textsize)
+{
+  unsigned char *start,*key,*skeleton,state[256],index1,index2;
+  char *retval;
+  int keybytes,startbytes,x,y,counter,i,found=0;
+  unsigned long lowcounter,highcounter;
+
+/* allocate space for the key bytes and our starting value */
+
+  keybytes=strlen(keyhex)/2;
+  if(strlen(keyhex)&amp;1)
+    keybytes++;
+
+  startbytes=strlen(start_str)/2;
+  if(strlen(start_str)&amp;1)
+    startbytes++;
+
+  start=(unsigned char *)malloc(keybytes);
+  memset(start,'\0',keybytes);
+  skeleton=(unsigned char *)malloc(keybytes);
+  key=(unsigned char *)malloc(keybytes);
+
+/* convert the hex strings to bytes */
+
+  hex_to_bytes(start_str,start+keybytes-startbytes);
+  hex_to_bytes(keyhex,skeleton);
+
+/* OK, now things get time-critical.  We are about to drop into a loop
+   that prepares and tests each candidate key */
+
+  for(highcounter=0;highcounter&lt;=testsh;highcounter++)
+  {
+    for(lowcounter=0;lowcounter&lt;testsl;lowcounter++)
+    {
+    /* construct the key from the skeleton and our part */
+
+      if(!firstbit)
+      {
+	memcpy(key,skeleton,keybytes);
+	for(i=keybytes-1;i&gt;startbytes;i--)
+	  key[i]|=start[i];
+      }
+
+    /* prepare the key */
+
+      for(counter=0;counter&lt;256;counter++)
+	state[counter]=(unsigned char)counter;
+
+      x=y=0;
+      index1=index2=0;             
+
+      for(counter=0;counter&lt;256;counter++)
+      {
+	index2=(key[index1]+state[counter]+index2) &amp; 0xFF;
+      	SwapByte(state[counter],state[index2]);
+
+      	if(++index1==keybytes)
+	  index1=0;
+      }
+
+/* do two RC4 operations as a preliminary test.  If this fails then test
+   the next one, then the rest.  This should result in a lot of rejections
+   before the rest of the loop is entered */
+
+      x=(x+1) &amp; 0xFF;
+      y=(state[x]+y) &amp; 0xFF;
+      SwapByte(state[x],state[y]);
+      if(plaintext[0]==(ciphertext[0]^state[(state[x]+state[y]) &amp; 0xFF]))
+      {
+	x=(x+1) &amp; 0xFF;
+      	y=(state[x]+y) &amp; 0xFF;
+      	SwapByte(state[x],state[y]);
+      	if(plaintext[1]==(ciphertext[1]^state[(state[x]+state[y]) &amp; 0xFF]))
+      	{
+
+      /* rest of the loop.  This will only be entered, on average once
+	 every 65536 tests */
+
+	  for(i=2;i&lt;textsize;i++)
+	  {
+	    x=(x+1) &amp; 0xFF;
+	    y=(state[x]+y) &amp; 0xFF;
+	    SwapByte(state[x],state[y]);
+	    if(plaintext[i]!=(ciphertext[i]^state[(state[x]+state[y]) &amp; 0xFF]))
+	      break;
+	  }
+
+	/* if we got to the end of the loop then that's it.  We have won */
+
+	  if(i==textsize)
+	  {
+	    found=1;
+      	    goto endloops;
+	  }
+      	}
+      }
+  
+    /* increment our key segment */
+
+      i=keybytes-1;
+      do
+      {
+      	start[i]++;
+      } while(!start[i--]);
+    }
+  }
+
+/* free memory */
+
+endloops:
+  free(start);
+  free(skeleton);
+
+  if(found)
+  {
+    retval=(char *)malloc((keybytes*2)+2);
+    i=0;
+    for(i=0;i&lt;keybytes;i++)
+    {
+      retval[i*2]=hexdigit((key[i]&amp;0xF0)&gt;&gt;4);
+      retval[(i*2)+1]=hexdigit(key[i]&amp;0xF);
+    }
+    retval[i*2]='\0';
+
+    return retval;
+  }
+  else
+    return NULL;
+}
+
+
+/*******************************/
+/* convert hex string to bytes */
+/*******************************
+
+eg. "05FC9" would become 0x00,0x5F,0xC9 */
+
+static void hex_to_bytes(char *str,unsigned char *bytes)
+{
+  int i,firstzero=(strlen(str)&amp;1) ? 1 : 0;
+  unsigned char b;
+
+  i=0;
+  while(i&lt;(int)strlen(str))
+  {
+    if(firstzero)
+      firstzero=0;
+    else
+    {
+      b=(decdigit(str[i]))&lt;&lt;4;
+      i++;
+    }
+    b|=decdigit(str[i]);
+    *bytes++=b;
+    i++;
+  }
+}
+-------------------------- end code fragment -----------------------
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00032.html">Where to get the latest PGP</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00038.html">Re: Num Rat</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00032.html">Where to get the latest PGP</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00079.html">Re: general RC4 key searcher: optimisations anyone?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00060"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00060"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

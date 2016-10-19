@@ -1,0 +1,164 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: PGP&#45;out&#45;only vs. hashcash aware remailers? -->
+<!--X-From-R13: Pvyy Egrjneg <ovyy.fgrjnegNcbobk.pbz> -->
+<!--X-Date: Mon, 5 Jan 1998 04:16:27 +0800 -->
+<!--X-Message-Id: 3.0.3.32.19980104120940.00722cdc@popd.ix.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.LNX.3.95.971230173406.22460A&#45;100000@privacynb.ml.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>PGP-out-only vs. hashcash aware remailers?</TITLE>
+<LINK REV="made" HREF="mailto:bill.stewart@pobox.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00079.html">Date Prev</A>][<A HREF="msg00075.html">Date Next</A>][<A HREF="msg00074.html">Thread Prev</A>][<A HREF="msg00102.html">Thread Next</A>][<A HREF="index.html#00077">Date Index</A>][<A HREF="threads.html#00077">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>PGP-out-only vs. hashcash aware remailers?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@Algebra.COM">cypherpunks@Algebra.COM</A>,       Remailer Politics &lt;<A HREF="mailto:remailer%2Dpolitics@server1.efga.org">remailer-politics@server1.efga.org</A>&gt;,       <A HREF="mailto:remailer%2Doperators@anon.lcs.mit.edu">remailer-operators@anon.lcs.mit.edu</A></LI>
+<LI><em>Subject</em>: PGP-out-only vs. hashcash aware remailers?</LI>
+<LI><em>From</em>: Bill Stewart &lt;<A HREF="mailto:bill.stewart@pobox.com">bill.stewart@pobox.com</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 04 Jan 1998 12:09:40 -0800</LI>
+<LI><em>In-Reply-To</em>: &lt;Pine.LNX.3.95.971230173406.22460A-100000@privacynb.ml.org&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+At 05:40 PM 12/30/1997 -0400, Privacy Admin &lt;woz@privacynb.ml.org&gt; wrote:
+&gt;Since I've switched to type-I pgponly remailer I haven't had a problem
+&gt;with spammers. I've been wondering if hashcash makes sense for remailers,
+&gt;or [only] for mail2news gateways. 
+&gt;
+&gt;I guess I am looking for any means of controlling spammers using remailers
+&gt;and mail2news gateways.
+
+Hashcash won't help mail2news, except by discouraging dumb spammers,
+because news spam only needs a few messages.
+PGP-only input will cut down on most spammers, though you'll still get 
+a few, especially if they're spamming mailing lists (which makes the 
+encryption both worth the effort and useful for safety.)
+
+If you modify your remailer to only _output_ PGP-encrypted messages,
+you get hashcash-equivalence, and cut abuse substantially.
+The cost is limiting recipients to pgp users (plus known exceptions),
+but it's tough to spam people when you need to look up their PGP key
+and encrypt to it (at least you'll only get spams for high-tech stuff),
+and it's tougher for random abusers to abuse people since most targets
+don't have PGP keys, and a mailbox full of PGP junk is less annoying
+to most people than a mailbox full of human-readable hate mail.
+In particular, it's harder to send death threats to politicians
+if they don't have published PGP keys.
+
+Is this a feature that makes sense?
+
+PGP-out-only remailers aren't as useful for anonymous tip lines
+(unless the tip line has a PGP address.)  
+They're not as useful for inviting new people into your conspiracy, 
+though they're fine for conspiring with people whose keys you already know 
+(and they can be unlisted keys only used for the conspiracy.)
+If the Bank of Caribbean Cash Importers is interested in taking
+anonymous clients who contact them through remailers, they've 
+probably got a PGP key handy to send to anyway.
+They're not transparently useful for mail2news, but the remailer
+could make exceptions for known mail2news sites, or could ignore
+the problem, which is fine for posting to alt.anonymous.messages,
+though not for posting to alt.whistleblowers.
+
+How would you implement it?
+Obviously you'd need to allow some unencrypted lines at the beginning,
+at least if they have remailer syntax( ::, ##, mail headers, etc.).
+Do you cut all lines after the "-----END PGP"?  My first impression was
+yes, but after reading the Freedom Remailer source, it looks like
+this might kill messages using encrypted reply blocks, so maybe not.
+Detecting the PGP itself can be crude ("----- BEGIN PGP ENCRYPTED"...)
+or can be a bit fancier (make sure the lines are all the right length
+and limited to the correct character set), 
+or much fancier (de-armor and look for PGP blocks).
+
+Even the fancy approaches can be spoofed, since you can't go very
+deep into the headers without the right keys, so a couple lines of
+real PGP material could be included, leaving possibilities like
+	::
+	Request-Remailing-To: Your Mama
+	##
+	Subject: My Guitar Wants to Kill Your Mama
+	-----BEGIN PGP MESSAGE-----
+	Version: PGP for Personal Privacy 5.0
+	Comment: PGP allows arbitrary comments, so Decrypt This!
+
+	hQCMAynIuJ1VakpnAQP+MWng0I6TnDf/U83KCttjYZQSnPQjS59rw+M+iSmTGLIs
+	btqW5hn1HXheSb8GNifAWz2rqgdH3GqjZ5rRBDF5tZfQfV5kNNYE1XpT/CMgAsDh
+	3IkaeOumDKXON+8acl5X7NToSjml+mkxkF7kE9u5oxCEXErDjS3k2wOtv0krNfSk
+	HeyChelseaaaaaaaaaaaaaaaaaaBWAHAHHAHAHAHAHAHAHAHAHHAHAHAHAHAHAHA
+	MyGuitarWantsToKillYourMamaBWAHAHHAHAHAHAHAHAHAHAHHAHAHAHAHAHAHA
+	MyGuitarWantsToKillYourMamaBWAHAHHAHAHAHAHAHAHAHAHHAHAHAHAHAHAHA
+	MyGuitarWantsToKillYourMamaBWAHAHHAHAHAHAHAHAHAHAHHAHAHAHAHAHAHA
+	-----END PGP MESSAGE-----
+	and your little dog, too!
+
+
+But at least it's a start.
+				Thanks! 
+					Bill
+Bill Stewart, bill.stewart@pobox.com
+PGP Fingerprint D454 E202 CBC8 40BF  3C85 B884 0ABE 4639
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00102" HREF="msg00102.html">Re: PGP-out-only vs. hashcash aware remailers?</A></STRONG>
+<UL><LI><EM>From:</EM> Andy Dustman &lt;andy@neptune.chem.uga.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00079.html">Re: Microsoft</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00075.html">BOOK: Forthcoming - J Gray, _Hayek on Liberty 3rd edition_</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00074.html">My last comment (for now) on rifles</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00102.html">Re: PGP-out-only vs. hashcash aware remailers?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00077"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00077"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

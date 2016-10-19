@@ -1,0 +1,242 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: One&#45;shot remailer replies -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Tue, 6 Dec 94 10:13:17 PST -->
+<!--X-Message-Id: 199412061812.KAA23245@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 01HKB4JDI40290QGGZ@delphi.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: One-shot remailer replies</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00374.html">Date Prev</A>][<A HREF="msg00353.html">Date Next</A>][<A HREF="msg00337.html">Thread Prev</A>][<A HREF="msg00334.html">Thread Next</A>][<A HREF="index.html#00343">Date Index</A>][<A HREF="threads.html#00343">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: One-shot remailer replies</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: One-shot remailer replies</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 6 Dec 1994 10:12:49 -0800</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00337.html">01HKB4JDI40290QGGZ@delphi.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Mike Ingle &lt;MIKEINGLE@delphi.com&gt; writes:
+
+&gt;True, the path has to be there, or the message can't go. I can't think of a
+&gt;fix for that one, can you? Mostly I just don't want an endlessly growing
+&gt;amount of information out there. I want old information to die after a
+&gt;while, as keys are erased or expired.
+
+No, I can't think of a fix, although your idea at the bottom might be
+workable in some form.
+
+&gt;[ DH exchange / Key broadcast approach ]
+
+&gt;Broadcasting a list of keys is one possibility; what if someone else uses
+&gt;the same key? Birthday theorem makes this hard to prevent.
+
+You would want some confirmation that you got the key you requested.  The
+broadcasted key list could be updated to show which ones have been
+reserved already, marked with a "nonce" (a one-time use secret random
+number you sent with your request) to show who reserved them.  In this
+case you might not even need to request a specific one, just ask for one
+to be assigned to you and then look and see which one you got.  Of course
+this assumes a broadcast mechanism but perhaps this is tolerable if there
+aren't too many remailers.
+
+&gt;Pigeonhole holds a one-time reply address. Every week or two it expires and
+&gt;you send a new one. If a mail comes in, it uses it, and you send a new one.
+
+You'd have to watch out for attackers who constantly ping the pigeonhole
+address and try to see which messages leave the remailer network in a
+correlated way.
+
+&gt;Methinks I'd make it a little more robust than the existing systems (easy
+&gt;with perl) like being able to grep out a reply header anywhere in the
+&gt;message, ignore &gt; indentation, and similar safety precautions.
+
+Yes, that is a good idea.  Many of the existing remailers are also
+written in perl (calling PGP for decryption) but not much work has been
+done to improve them in this way.  I think there is recognition that the
+biggest security improvement would come with message quantizing (and not
+passing subject lines through!) and until we have that the rest is
+pretty pointless.
+
+&gt;RSAREF is useful for public key and DH. Secret sharing we have to get for
+&gt;ourselves. I looked at Shade v1.0, and it seems to be broken on
+&gt;little-endian machines. It works on an HP-UX machine, but fails on a 
+&gt;PC running linux with small-endian enabled in shade.h. The half-hour setup
+&gt;delay is not encouraging, either. Your SECSPLIT is nice and simple, but each
+&gt;shade is the size of the message. What I need is an error-correcting
+&gt;protocol to build a no-growth secret splitter.
+
+I have not looked at the Shade source.  Here is the posting I made to
+cypherpunks on Krawczyk's method.  I wasn't very well organized but if
+you read through to the end you may be able to get the gist of it:
+
+&gt; From inbox/cpz Sat Aug 13 19:00:00 1994
+&gt; From owner-cypherpunks@toad.com  Sat Aug 13 14:10:33 1994
+&gt; Date: Sat, 13 Aug 1994 14:06:25 -0700
+&gt; From: Hal &lt;hfinney@shell.portal.com&gt;
+&gt; Message-Id: &lt;199408132106.OAA13869@jobe.shell.portal.com&gt;
+&gt; To: cypherpunks@toad.com
+&gt; Subject: Secret sharing made short
+&gt; Sender: owner-cypherpunks@toad.com
+&gt; Precedence: bulk
+&gt; 
+&gt; I came upon a paper with this title in the 1993 Crypto conference proceedings,
+&gt; by Hugo Krawczyk.  He pointed out that with the Shamir-type secret splitting
+&gt; which we discuss here periodically you have considerable space expansion.
+&gt; Splitting a message of M bits into N shares causes each share to itself be M
+&gt; bits.  Krawczyk shows a simple system which basically has each share be only
+&gt; M/N bits.  (I will ignore for simplicity the issue of providing a threshold
+&gt; K&lt;N such that any K of the N shares are sufficient to restore the message.)
+&gt; 
+&gt; He achieves this be foregoing "pure" information-theoretic secrecy in favor
+&gt; of "mere" computational secrecy.  This is a reasonable tradeoff since most
+&gt; implementations of Shamir sharing end up relying on computational secrecy
+&gt; for their random numbers, anyway.
+&gt; 
+&gt; Krawczyk's idea, in the simple subset I am describing, is almost embarrassingly
+&gt; easy.  Take your message M and encrypt it using a random IDEA or DES key.
+&gt; Split the resulting cyphertext into N pieces (just carve it up) and give each
+&gt; piece to a shareholder.  Take the IDEA/DES key and Shamir-split it into
+&gt; N pieces and give those out as well.  (Shamir splitting for this case can
+&gt; be done simply by having N-1 of the pieces be totally random, and having
+&gt; the last piece be the xor of the IDEA/DES key and the N-1 random pieces.
+&gt; Only by xor'ing all N pieces can the original key be recovered.)
+&gt; 
+&gt; Everyone ends up with slightly over M/N bits; they have M/N plus the size
+&gt; of a DES or IDEA key.  But that is pretty close.  And unless IDEA or DES can
+&gt; be broken they will have to recover all of the shares in order to recon-
+&gt; struct the key and read the message.
+&gt; 
+&gt; For generalization to the K&lt;N case you still use Shamir splitting on the
+&gt; IDEA or DES key, but the message itself gets split up using an error-cor-
+&gt; recting code concept so that K pieces are enough to reconstruct the message.
+&gt; This requires M/K bits per share, plus the overhead for the DES/IDEA key.
+&gt; 
+&gt; This sounds like it would be a good enhancement to the Shamir splitting code
+&gt; that was posted here.  The IDEA or DES module could be a source of random
+&gt; bits for the Shamir splitting.  PGP's IDEA module is pretty self-contained
+&gt; and has a random-number entry point.
+&gt; 
+&gt; (Oh, well, I've come this far, I might as well finish it.  The message
+&gt; distribution scheme Krawczyk gives is this: split the message into K
+&gt; pieces.  Treat each piece as the coefficient of a K-1 degree polynomial.
+&gt; Evaluate the polynomial at X=0,...,N-1 and let the results be the shares.
+&gt; Now any K of the shares will allow the polynomial to be reconstructed, and
+&gt; by concatenating the coefficients we recover M.  This is similar to Shamir's
+&gt; scheme but is not informationally secure and has shares of size M/K.)
+&gt; 
+&gt; Hal
+
+&gt;&gt;Considering all the pros and cons, I am afraid that even the security of
+&gt;&gt;the one-shot return address is probably insufficient, especially when the
+&gt;&gt;simple "post replies to usenet encrypted with this key" is so easy and
+&gt;&gt;safe.  Granted it will be a problem once everybody starts doing that, but
+&gt;&gt;flooding is going to be hard to beat for safety.
+
+&gt;Yes, broadcast is the most secure, but it has a fundamental problem:
+&gt;security scales linearly with bandwidth. If you have a pool of 100 users and
+&gt;one of them gets a message, your uncertainty is 1 in 100. I've tried without
+&gt;success to figure out a broadcast mechanism where security scales faster
+&gt;than linearly with bandwidth.
+
+This is true, but you said you are talking about things that can be done
+today, and today Usenet already has a pool of probably a million users.
+That is plenty of security.  The problem is if everyone starts using it
+for their replies, but that won't be more than a drop in the bucket for a
+long time.
+
+&gt;We need a mechanism where there is either a circulating data stream or a
+&gt;large file on a server. An incoming message alters the data somehow,
+&gt;diffusing the changes over a large area. A request for information selects
+&gt;out some transformation of the selected data in such a way that the server
+&gt;cannot correlate the incoming message with the outgoing message. I don't see
+&gt;any way to do this.
+
+This is an interesting idea.  It is sort of like broadcast except you
+would be reducing the bandwidth requirements by only sending certain
+information to each user.  One way to formalize it would be to say that
+you have two datasets, D1 and D2.  These get combined into D12 = f(D1,D2)
+for some combinging function f.  Then we ask whether there is a g(D12)
+which allows reconstruction of just D1 or D2 in such a way that we can't
+tell which one it will get just from knowing f and g.  Plus, g must
+output data which is no larger than D1 or D2.
+
+In this strict form I don't think it can be done, because you could
+change D1 and see if g(D12) changed.  If it did, then it was getting D1,
+and if it didn't, it was getting D2.  However if we let g be a little
+bigger then perhaps it wouldn't be so clear.  I don't know...
+
+&gt;Elimination of the replay traffic-analysis problem is major progress. As for
+&gt;step-by-step coercion back to the source, I don't see a fix, and we will
+&gt;probably have to live with that unless there is a major breakthrough.
+
+Again, users may not be willing to live with it since they have an
+alternative right now in usenet.
+
+Hal
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00337" HREF="msg00337.html">One-shot remailer replies</A></STRONG>
+<UL><LI><EM>From:</EM> Mike Ingle &lt;MIKEINGLE@delphi.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00374.html">US Government Cryptographic Interfaces Meeting</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00353.html">RE: MMB question</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00337.html">One-shot remailer replies</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00334.html">Valid mail -&gt; usenet gateway for alt.security.keydist</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00343"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00343"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

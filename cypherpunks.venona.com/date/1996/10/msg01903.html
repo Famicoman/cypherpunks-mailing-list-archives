@@ -1,0 +1,816 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: [CRYPTO] Cryptography Of A Sort (COAS) update -->
+<!--X-From-R13: Rnyr Fubea <qgubeaNtgr.arg> -->
+<!--X-Date: Wed, 30 Oct 1996 07:01:35 &#45;0800 (PST) -->
+<!--X-Message-Id: 32776CB4.673A@gte.net -->
+<!--X-Content-Type: multipart/mixed -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>[CRYPTO] Cryptography Of A Sort (COAS) update</TITLE>
+<LINK REV="made" HREF="mailto:dthorn@gte.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01912.html">Date Prev</A>][<A HREF="msg01911.html">Date Next</A>][<A HREF="msg01975.html">Thread Prev</A>][<A HREF="msg01911.html">Thread Next</A>][<A HREF="index.html#01903">Date Index</A>][<A HREF="threads.html#01903">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>[CRYPTO] Cryptography Of A Sort (COAS) update</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A></LI>
+<LI><em>Subject</em>: [CRYPTO] Cryptography Of A Sort (COAS) update</LI>
+<LI><em>From</em>: Dale Thorn &lt;<A HREF="mailto:dthorn@gte.net">dthorn@gte.net</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 30 Oct 1996 06:56:52 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+[note: last post didn't have attachment]
+
+Per suggestions received for this project, I've added code to "pad" 8th bits in a
+"7-bit" text file, i.e., to "normalize" the ratio of zero-bits and one-bits somewhat.
+
+Bit-padding prior to encryption does not change the central imperative of the program,
+which is to never change any bits in a file, since bit-padding is a separate option.
+
+Attached are:  CCRP.H   ('C'-language header)
+               CCRP.C   ('C'-language code)
+               CCRP.DOC (instructions)
+               CCRP.FAQ (f.a.q.)
+
+Suggested procedure:  Start with any file; if "7-bit" ASCII, try bit-padding first.
+                      Next, perform encryption at least half a dozen times, with
+                      different pass-phrases.
+                      To decrypt, perform all steps in reverse, per documentation.
+
+Comments and questions are welcome.
+</PRE>
+<PRE>
+/* CCRP.H  28.10.1996 */
+
+typedef char     C;                       /* char (strings, null-terminated) */
+typedef double   D;                       /* double float (double precision) */
+typedef float    F;                              /* float (single precision) */
+typedef int      I;                                /* short integer (signed) */
+typedef long     L;                                 /* long integer (signed) */
+typedef unsigned int U;                          /* short integer (unsigned) */
+typedef unsigned char UC;                              /* unsigned character */
+typedef void     V;                                        /* void data type */
+
+I bitget(C *cstr, I ibit);
+V bitput(C *cstr, I ibit, I iput);
+V ifn_cryp(I *int1, I *int2, I *istk, C *cbuf, C *ctmp, I ibit, I ilen, I iopr);
+V ifn_msgs(C *cmsg, I iofs, I irow, I icol, I ibrp, I iext);
+V ifn_pack(C *cbuf, L llof, U ibuf, I iopr, struct _iobuf *ebuf);
+V ifn_read(C *cbuf, L lbyt, U ibuf, struct _iobuf *ebuf);
+V ifn_sort(I *int1, I *int2, I *istk, I imax);
+V ifn_write(C *cbuf, L lbyt, U ibuf, struct _iobuf *ebuf);
+U io_vadr(I inop);
+V io_vcls(I iclr);
+V io_vcsr(I irow, I icol, I icsr);
+V io_vdsp(C *cdat, I irow, I icol, I iclr);
+
+union REGS rg;                          /* DOS registers declaration (video) */
+U _far *uvadr = 0;                                  /* video display pointer */
+*******************************************************************************
+*******************************************************************************
+*******************************************************************************
+/* CCRP.C  Encrypt/Decrypt a DOS file */
+/*         By: Dale Thorn             */
+/*         Version 3.1                */
+/*         Rev. 29.10.1996            */
+
+#include "stdlib.h"
+#include "string.h"
+#include "stdio.h"
+#include "dos.h"
+#include "io.h"
+#include "ccrp.h"
+
+V main(I argc, C **argv) {     /* command-line arguments (input file/offset) */
+   C cmsg[23];                         /* initialize the User message string */
+   U ibit = 0;                          /* initialize the bit offset in cbuf */
+   U ibuf = 2048;                          /* set maximum file buffer length */
+   U idot;                    /* initialize the filename extension separator */
+   I ieof = 0;                                    /* initialize the EOF flag */
+   U ilen;                         /* initialize a temporary length variable */
+   U indx;                           /* initialize a temporary loop variable */
+   I iopr;                                  /* initialize the operation code */
+   U irnd = 0;                             /* initialize the randomizer seed */
+   L lbyt;                           /* initialize the file pointer variable */
+   L llof;                            /* initialize the file length variable */
+   L lrnd = 0;                      /* initialize the randomizer accumulator */
+   U _far *uvadr = 0;                               /* video display pointer */
+   struct _iobuf *ebuf;                      /* source file access structure */
+
+   C *cbuf = (C *)malloc(2048);                /* initialize the file buffer */
+   C *ctmp = (C *)malloc(2048);                /* initialize the temp buffer */
+   I *int1 = (I *)malloc(3074);             /* allocate the sort index array */
+   I *int2 = (I *)malloc(3074);     /* allocate the sort random number array */
+   I *istk = (I *)malloc(3074);             /* allocate the sort stack array */
+
+   if (argc == 1) {                       /* a command line was not supplied */
+      ifn_msgs("Usage:  CCRP(v3.1)  filename  [/e /d /p /u]  [key]",\
+               4, 24, 79, 0, 1);   /* display usage message [above] and exit */
+   }
+   if (argc &lt; 3 || argc &gt; 4) {     /* no. of parameters should be one or two */
+      ifn_msgs("Invalid number of parameters", 4, 24, 79, 1, 1);
+   }                   /* display no.-of-parameters message [above] and exit */
+   if (argv[2][0] != '/') {             /* slash preceding parameter missing */
+      ifn_msgs("Invalid operation parameter", 4, 24, 79, 1, 1);
+   }                   /* display invalid-parameter message [above] and exit */
+   strupr(argv[1]);                                /* uppercase the filename */
+   strupr(argv[2]);                          /* uppercase the operation code */
+   if (strchr("DEPU", argv[2][1]) == NULL) {            /* invalid parameter */
+      ifn_msgs("Invalid operation parameter", 4, 24, 79, 1, 1);
+   }                   /* display invalid-parameter message [above] and exit */
+   idot = strcspn(argv[1], "."); /* position of filename extension separator */
+   ilen = strlen(argv[1]);                             /* length of filename */
+   if (idot == 0 || idot &gt; 8 || ilen - idot &gt; 4) {     /* filename tests bad */
+      ifn_msgs("Invalid filename", 4, 24, 79, 1, 1);
+   }                    /* display invalid-filename message [above] and exit */
+   if (idot &lt; ilen) {                 /* filename extension separator found! */
+      if (strcspn(argv[1] + idot + 1, ".") &lt; ilen - idot - 1) {/* 2nd found! */
+         ifn_msgs("Invalid filename", 4, 24, 79, 1, 1);
+      }                 /* display invalid-filename message [above] and exit */
+   }
+   strcpy(cmsg, argv[1]);                        /* copy filename to message */
+   strcat(cmsg, " not found");                 /* add "not found" to message */
+   ebuf = fopen(argv[1], "rb+");                   /* open the selected file */
+   llof = filelength(fileno(ebuf));           /* filelength of selected file */
+   if (ebuf == NULL || llof == -1L || llof == 0) {/* length=0 or call failed */
+      fclose(ebuf);                                        /* close the file */
+      remove(argv[1]);                          /* kill the zero-length file */
+      ifn_msgs(cmsg, 4, 24, 79, 1, 1);           /* display message and exit */
+   }
+   iopr = argv[2][1] - 68;     /* opcode (1=encrypt, 0=decrypt, 12=pad bits) */
+   if (argc == 4) {                               /* a seed key was supplied */
+      ilen = strlen(argv[3]);                 /* length of optional seed key */
+      for (indx = 0; indx &lt; ilen; indx++) {     /* loop through the seed key */
+         irnd = argv[3][indx];                 /* character at byte position */
+         switch (indx % 3) {                  /* select on byte significance */
+            case 0:                                /* least significant byte */
+               lrnd += irnd;                     /* add to randomizer accum. */
+               break;
+            case 1:                            /* 2nd least significant byte */
+               lrnd += (L)irnd * 256;            /* add to randomizer accum. */
+               break;
+            case 2:                                 /* most significant byte */
+               lrnd += (L)irnd * 65536;          /* add to randomizer accum. */
+               break;
+            default:
+               break;
+         }
+      }
+      irnd = (U)(lrnd % 32640) + 1;       /* mod randomizer seed to &lt;= 32640 */
+   }
+   ifn_msgs("Please standby", 4, 24, 79, 0, 0);           /* standby message */
+
+   if (iopr &gt; 1) {                           /* operation code is 'P' or 'U' */
+      ifn_pack(cbuf, llof, ibuf, iopr, ebuf);  /* add 8th bits if 7-bit file */
+   }                                  /* NOTE: ifn_pack does NOT return here */
+   srand(irnd);                    /* initialize the random number generator */
+   for (lbyt = 0; lbyt &lt; llof; lbyt += ibuf) {   /* process in ibuf segments */
+      if (lbyt + ibuf &gt;= llof) {    /* current file pointer + ibuf spans EOF */
+         ibuf = (U)(llof - lbyt);        /* reset maximum file buffer length */
+         ieof = 1;                                    /* set the EOF flag ON */
+      }
+      ifn_read(cbuf, lbyt, ibuf, ebuf);    /* read data into the file buffer */
+      while (1) {                      /* loop to process bit groups in cbuf */
+         ilen = (rand() / 26) + 256;/* buffer seg. bit-len.: 256&lt;=ilen&lt;=1536 */
+         if (ibit + ilen &gt; ibuf * 8) {/* current bit-pointer+ilen spans cbuf */
+            if (ieof) {                                    /* EOF flag is ON */
+               ilen = ibuf * 8 - ibit; /* reset bit-length of buffer segment */
+            } else {                 /* EOF flag is OFF; adjust file pointer */
+               ifn_write(cbuf, lbyt, ibuf, ebuf);  /* write data to the file */
+               lbyt -= (ibuf - ibit / 8);/* set file ptr to reload from ibit */
+               ibit %= 8;            /* set ibit to first byte of &lt;new&gt; cbuf */
+               break;                  /* exit loop to reload cbuf from lbyt */
+            }
+         }                 /* encrypt or decrypt the current segment [below] */
+         ifn_cryp(int1, int2, istk, cbuf, ctmp, (I)ibit, ilen, iopr);
+         ibit += ilen;                 /* increment ibit to next bit-segment */
+         if (ibit == ibuf * 8) {        /* loop until ibit == length of cbuf */
+            ifn_write(cbuf, lbyt, ibuf, ebuf);     /* write data to the file */
+            ibit = 0;                /* set ibit to first byte of &lt;new&gt; cbuf */
+            break;
+         }
+      }
+   }
+   ifn_msgs("Translation complete", 4, 24, 79, 0, 1);/* disp. message &amp; exit */
+}
+
+I bitget(C *cstr, I ibit) {                 /* get a bit-value from a string */
+   I ival;                                       /* initialize the bit value */
+
+   switch (ibit % 8) {                    /* switch on bit# within character */
+      case 0:                                  /* bit #0 in target character */
+         ival = 1;                                        /* value of bit #0 */
+         break;
+      case 1:                                  /* bit #1 in target character */
+         ival = 2;                                        /* value of bit #1 */
+         break;
+      case 2:                                  /* bit #2 in target character */
+         ival = 4;                                        /* value of bit #2 */
+         break;
+      case 3:                                  /* bit #3 in target character */
+         ival = 8;                                        /* value of bit #3 */
+         break;
+      case 4:                                  /* bit #4 in target character */
+         ival = 16;                                       /* value of bit #4 */
+         break;
+      case 5:                                  /* bit #5 in target character */
+         ival = 32;                                       /* value of bit #5 */
+         break;
+      case 6:                                  /* bit #6 in target character */
+         ival = 64;                                       /* value of bit #6 */
+         break;
+      case 7:                                  /* bit #7 in target character */
+         ival = 128;                                      /* value of bit #7 */
+         break;
+      default:
+         break;
+   }
+   return ((cstr[ibit / 8] &amp; ival) != 0);      /* return value of target bit */
+}
+
+V bitput(C *cstr, I ibit, I iput) {           /* put a bit-value to a string */
+   I ival;                                       /* initialize the bit value */
+   I ipos = ibit / 8;                     /* position of 8-bit char. in cstr */
+
+   switch (ibit % 8) {                    /* switch on bit# within character */
+      case 0:                                  /* bit #0 in target character */
+         ival = 1;                                        /* value of bit #0 */
+         break;
+      case 1:                                  /* bit #1 in target character */
+         ival = 2;                                        /* value of bit #1 */
+         break;
+      case 2:                                  /* bit #2 in target character */
+         ival = 4;                                        /* value of bit #2 */
+         break;
+      case 3:                                  /* bit #3 in target character */
+         ival = 8;                                        /* value of bit #3 */
+         break;
+      case 4:                                  /* bit #4 in target character */
+         ival = 16;                                       /* value of bit #4 */
+         break;
+      case 5:                                  /* bit #5 in target character */
+         ival = 32;                                       /* value of bit #5 */
+         break;
+      case 6:                                  /* bit #6 in target character */
+         ival = 64;                                       /* value of bit #6 */
+         break;
+      case 7:                                  /* bit #7 in target character */
+         ival = 128;                                      /* value of bit #7 */
+         break;
+      default:
+         break;
+   }
+   if (iput) {                                       /* OK to set the bit ON */
+      if (!(cstr[ipos] &amp; ival)) {                   /* bit is NOT already ON */
+         cstr[ipos] += ival;                    /* set bit ON by adding ival */
+      }
+   } else {                                         /* OK to set the bit OFF */
+      if (cstr[ipos] &amp; ival) {                     /* bit is NOT already OFF */
+         cstr[ipos] -= ival;                    /* set bit OFF by subt. ival */
+      }
+   }
+}
+
+V ifn_cryp(I *int1, I *int2, I *istk, C *cbuf, C *ctmp, I ibit, I ilen, I iopr) {
+   I indx;                           /* initialize the for-next loop counter */
+
+   for (indx = 0; indx &lt; ilen; indx++) { /* loop through ilen array elements */
+      int1[indx] = indx;             /* bit offsets from current ibit offset */
+      int2[indx] = rand();         /* random number values for sort function */
+   }
+   ifn_sort(int1, int2, istk, ilen - 1);    /* Quicksort by random no. array */
+   memcpy(ctmp, cbuf, 2048);  /* copy data buffer to temp destination buffer */
+   if (iopr) {                                          /* encrypt operation */
+      for (indx = 0; indx &lt; ilen; indx++) { /* loop thru ilen array elements */
+         bitput(ctmp, indx + ibit, bitget(cbuf, int1[indx] + ibit));/*encrypt*/
+      }
+   } else {                                             /* decrypt operation */
+      for (indx = 0; indx &lt; ilen; indx++) { /* loop thru ilen array elements */
+         bitput(ctmp, int1[indx] + ibit, bitget(cbuf, indx + ibit));/*decrypt*/
+      }
+   }
+   memcpy(cbuf, ctmp, 2048);  /* copy temp destination buffer to data buffer */
+}
+
+V ifn_msgs(C *cmsg, I iofs, I irow, I icol, I ibrp, I iext) {/* display msgs */
+   io_vcls(7);                                           /* clear the screen */
+   io_vdsp(cmsg, 4, iofs, 7);                    /* display the user message */
+   if (ibrp) {                              /* OK to sound user-alert (beep) */
+      printf("\a");                                  /* sound the user-alert */
+   }
+   if (iext) {                                     /* OK to exit the program */
+      io_vcsr(5, 0, 0);                               /* relocate the cursor */
+      fcloseall();                                   /* close all open files */
+      exit(0);                                              /* return to DOS */
+   } else {                                       /* do NOT exit the program */
+      io_vcsr(irow, icol, 0);                           /* 'hide' the cursor */
+   }
+}
+
+V ifn_pack(C *cbuf, L llof, U ibuf, I iopr, struct _iobuf *ebuf) {
+   I ibit;                           /* initialize a temporary loop variable */
+   U ichr;                           /* initialize a temporary loop variable */
+   U incr;                          /* initialize the bit-pad loop increment */
+   U itmp = ibuf;                   /* make a copy of the file buffer length */
+   L lbyt;                           /* initialize the file pointer variable */
+   L lcnt = 0;                      /* initialize the current total one-bits */
+   L ltmp;                    /* initialize a copy of current total one-bits */
+   L ltot;                       /* initialize the no. of 8th bits to set ON */
+
+   for (lbyt = 0; lbyt &lt; llof; lbyt += itmp) {   /* process in itmp segments */
+      if (lbyt + itmp &gt; llof) {     /* current file pointer + itmp spans EOF */
+         itmp = (U)(llof - lbyt);        /* reset maximum file buffer length */
+      }
+      ifn_read(cbuf, lbyt, itmp, ebuf);    /* read data into the file buffer */
+      if (iopr == 17) {                              /* opcode == unpad bits */
+         for (ichr = 0; ichr &lt; itmp; ichr++) {      /* process bytes in cbuf */
+            bitput(cbuf, ichr * 8 + 7, 0);           /* set each 8th bit OFF */
+         }
+         ifn_write(cbuf, lbyt, itmp, ebuf);   /* save current buffer to file */
+      } else {                       /* opcode == pad bits - validation pass */
+         for (ichr = 0; ichr &lt; itmp; ichr++) {      /* process bytes in cbuf */
+            for (ibit = 0; ibit &lt; 8; ibit++) {       /* process bits in cbuf */
+               lcnt += bitget(cbuf, ichr * 8 + ibit);/* add 0/1 bit to total */
+               if (ibit == 7) {               /* this is the 8th bit of ichr */
+                  if (bitget(cbuf, ichr * 8 + ibit)) {  /* the 8th bit is ON */
+                     ifn_msgs("8th bit(s) are ON - can't do bit-pad", 4, 24, 79, 1, 1);
+                  }     /* can't add bits - display message (above) and exit */
+               }
+            }
+         }
+      }
+   }
+   if (iopr == 17) {                                 /* opcode == unpad bits */
+      ifn_msgs("Bit-unpadding complete", 4, 24, 79, 0, 1); /* message &amp; exit */
+   }
+   ltot = llof * 4 - lcnt;      /* set ltot as the no. of 8th bits to set ON */
+   if (ltot &gt; 0) {                 /* one-bits &lt; zero bits; commence padding */
+      if (ltot &gt; llof) {             /* one-bits required exceed total bytes */
+         ltot = llof;                 /* reset one-bits to equal total bytes */
+      }
+
+      itmp = ibuf;               /* reset the copy of the file buffer length */
+      ltmp = ltot;                  /* make a copy of the 8th bits to set ON */
+      for (lbyt = 0; lbyt &lt; llof; lbyt += itmp) {/* process in itmp segments */
+         if (lbyt + itmp &gt; llof) {  /* current file pointer + itmp spans EOF */
+            itmp = (U)(llof - lbyt);     /* reset maximum file buffer length */
+         }
+         ifn_read(cbuf, lbyt, itmp, ebuf); /* read data into the file buffer */
+         incr = (U)((llof - lbyt) / ltmp); /* set the bit-pad loop increment */
+         for (ichr = 0; ichr &lt; itmp; ichr += incr) { /* loop to set 8th bits */
+            bitput(cbuf, ichr * 8 + 7, 1);            /* set each 8th bit ON */
+            ltmp--;                   /* decrement the total one-bits padded */
+            if (ltmp == 0) {                  /* all 8th bits are now set ON */
+               break;                /* all 8th bits are ON - exit ichr loop */
+            }
+         }
+         ifn_write(cbuf, lbyt, itmp, ebuf);   /* save current buffer to file */
+         if (ltmp == 0) {                     /* all 8th bits are now set ON */
+            break;                   /* all 8th bits are ON - exit lbyt loop */
+         }
+      }
+      ifn_msgs("Bit-padding complete", 4, 24, 79, 0, 0);/* disp.message only */
+   } else {                     /* one-bits &gt;= zero bits; padding not needed */
+      ifn_msgs("Bit-padding not needed", 4, 24, 79, 1, 0);/* disp.msg.&amp; exit */
+      ltot = 0;                 /* reset one-bits required for below message */
+   }
+   io_vcsr(6, 0, 0);                                  /* relocate the cursor */
+   printf("%s%ld", "Total bits in source: ", llof * 8);/* total bits in file */
+   io_vcsr(8, 0, 0);                                  /* relocate the cursor */
+   printf("%s%ld", "Total one-bits begin: ", lcnt);   /* one-bits before pad */
+   io_vcsr(10, 0, 0);                                 /* relocate the cursor */
+   printf("%s%ld\n", "Total one-bits added: ", ltot);  /* no. one-bits added */
+   fcloseall();                                      /* close all open files */
+   exit(0);                                                 /* return to DOS */
+}
+
+V ifn_sort(I *int1, I *int2, I *istk, I imax) {  /* array Quicksort function */
+   I iext;                            /* initialize the outer-loop exit flag */
+   I ilow;                               /* initialize the low array pointer */
+   I irdx = 0;                                  /* initialize the sort radix */
+   I isp1;                               /* initialize the low stack pointer */
+   I isp2;                               /* initialize the top stack pointer */
+   I itop;                               /* initialize the top array pointer */
+   I iva1;                  /* initialize array value from low stack pointer */
+   I iva2;                  /* initialize array value from low stack pointer */
+
+   istk[0] = 0;                          /* initialize the low array pointer */
+   istk[1] = imax;                       /* initialize the top array pointer */
+   while (irdx &gt;= 0) {                          /* loop until sort radix &lt; 0 */
+      isp1 = istk[irdx + irdx];                 /* set the low stack pointer */
+      isp2 = istk[irdx + irdx + 1];             /* set the top stack pointer */
+      irdx--;                                    /* decrement the sort radix */
+      iva1 = int1[isp1];           /* get array value from low stack pointer */
+      iva2 = int2[isp1];           /* get array value from low stack pointer */
+      itop = isp2 + 1;                          /* set the top array pointer */
+      ilow = isp1;                              /* set the low array pointer */
+      while (1) {                     /* loop to sort within the radix limit */
+         itop--;                          /* decrement the top array pointer */
+         if (itop == ilow) {         /* top array pointer==low array pointer */
+            break;                               /* skip to next radix value */
+         }
+         if (iva2 &gt; int2[itop]) {   /* value @low pointer&gt;value @top pointer */
+            int1[ilow] = int1[itop];        /* swap low and top array values */
+            int2[ilow] = int2[itop];        /* swap low and top array values */
+            iext = 0;                     /* initialize outer-loop exit flag */
+            while (1) {             /* loop to compare and swap array values */
+               ilow++;                    /* increment the low array pointer */
+               if (itop == ilow) {   /* top array pointer==low array pointer */
+                  iext = 1;                   /* set outer-loop exit flag ON */
+                  break;                         /* skip to next radix value */
+               }
+               if (iva2 &lt; int2[ilow]) {   /* value @low ptr.&lt;value @low ptr. */
+                  int1[itop] = int1[ilow];  /* swap top and low array values */
+                  int2[itop] = int2[ilow];  /* swap top and low array values */
+                  break;               /* repeat sort within the radix limit */
+               }
+            }
+            if (iext) {                        /* outer-loop exit flag is ON */
+               break;                            /* skip to next radix value */
+            }
+         }
+      }
+      int1[ilow] = iva1;           /* put array value from low stack pointer */
+      int2[ilow] = iva2;           /* put array value from low stack pointer */
+      if (isp2 - ilow &gt; 1) {                     /* low segment-width is &gt; 1 */
+         irdx++;                                 /* increment the sort radix */
+         istk[irdx + irdx] = ilow + 1;            /* reset low array pointer */
+         istk[irdx + irdx + 1] = isp2;            /* reset top array pointer */
+      }
+      if (itop - isp1 &gt; 1) {                     /* top segment-width is &gt; 1 */
+         irdx++;                                 /* increment the sort radix */
+         istk[irdx + irdx] = isp1;                /* reset low array pointer */
+         istk[irdx + irdx + 1] = itop - 1;        /* reset top array pointer */
+      }
+   }
+}
+
+V ifn_read(C *cbuf, L lbyt, U ibuf, struct _iobuf *ebuf) {  /* read f/binary */
+   fseek(ebuf, lbyt, SEEK_SET);               /* set the buffer-read pointer */
+   fread((V *)cbuf, 1, ibuf, ebuf);        /* read data from the binary file */
+}
+
+V ifn_write(C *cbuf, L lbyt, U ibuf, struct _iobuf *ebuf) {/* write t/binary */
+   fseek(ebuf, lbyt, SEEK_SET);              /* set the buffer-write pointer */
+   fwrite((V *)cbuf, 1, ibuf, ebuf);        /* write data to the binary file */
+}
+
+U io_vadr(I inop) {                      /* get video address (color or b/w) */
+   rg.h.ah = 15;                                   /* video-address function */
+   int86(0x10, &amp;rg, &amp;rg);                      /* call DOS for video address */
+   if (rg.h.al == 7) {                                /* register A-low is 7 */
+      return(0xb000);                                  /* return b/w address */
+   } else {                                       /* register A-low is NOT 7 */
+      return(0xb800);                                /* return color address */
+   }
+}
+
+V io_vcls(I iclr) {                                 /* clear screen function */
+   I irow;                             /* initialize the row number variable */
+   C cdat[81];                             /* initialize the row data buffer */
+
+   memset(cdat, ' ', 80);                       /* clear the row data buffer */
+   cdat[80] = '\0';                         /* terminate the row data buffer */
+   for (irow = 0; irow &lt; 25; irow++) {          /* loop thru the screen rows */
+      io_vdsp(cdat, irow, 0, iclr);       /* display each &lt;blank&gt; screen row */
+   }
+}
+
+V io_vcsr(I irow, I icol, I icsr) {        /* set cursor position [and size] */
+   rg.h.ah = 2;                                  /* cursor-position function */
+   rg.h.bh = 0;                                           /* video page zero */
+   rg.h.dh = (C)irow;                                          /* row number */
+   rg.h.dl = (C)icol;                                       /* column number */
+   int86(0x10, &amp;rg, &amp;rg);                     /* call DOS to position cursor */
+   if (icsr) {                                      /* cursor-size specified */
+      rg.h.ah = 1;                                   /* cursor-size function */
+      rg.h.ch = (C)(13 - icsr);                     /* set cursor-begin line */
+      rg.h.cl = 12;                                   /* set cursor-end line */
+      int86(0x10, &amp;rg, &amp;rg);                  /* call DOS to set cursor size */
+   }
+}
+
+V io_vdsp(C *cdat, I irow, I icol, I iclr) {       /* display data on screen */
+   I ilen = strlen(cdat);                /* length of string to be displayed */
+   I iptr;                              /* byte-counter for displayed string */
+   U uclr = iclr * 256;                /* unsigned attribute high-byte value */
+
+   if (!uvadr) {                            /* video pointer segment not set */
+      FP_SEG(uvadr) = io_vadr(0);               /* set video pointer segment */
+   }
+   FP_OFF(uvadr) = irow * 160 + icol * 2;        /* set video pointer offset */
+   for (iptr = 0; iptr &lt; ilen; iptr ++) {      /* loop thru displayed string */
+      *uvadr = uclr + (UC)cdat[iptr];            /* put data to video memory */
+      uvadr++;                            /* increment video display pointer */
+   }
+}
+*******************************************************************************
+*******************************************************************************
+*******************************************************************************
+New  CCRP  documentation - changes as of 29.10.1996
+
+----------Command----------    ------------------Output-------------------
+
+CCRP                           Usage parameters.
+
+CCRP  filename  /e             Encrypt each byte in 'filename' so that the
+                               data cannot be seen, or, if the file was an
+                               executable file, it cannot be executed.
+
+CCRP  filename  /d             Decrypt (restore) each byte in 'filename'.
+
+CCRP  filename  /e  key        Encrypt or decrypt 'filename', but add an
+CCRP  filename  /d  key        additional factor (a key, or a password)
+                               to the encryption and decryption.
+
+                               NOTE 1: The key/password (if used) must be a
+                                       contiguous string of characters with
+                                       no blank spaces between any characters.
+
+                               NOTE 2: If a key is entered for encryption, the
+                                       same key must be entered for decryption.
+
+                               NOTE 3: Encryption may be performed 2 or more
+                                       times in sequence before decryption,
+                                       using a different key each time, for
+                                       additional encryption security.  In
+                                       such case, the decryption steps must
+                                       be performed in the reverse order
+                                       (last encryption/first decryption).
+
+                               NOTE 4: Encryption and decryption are mere
+                                       complementary processes, so that if
+                                       the decryption step were performed
+                                       first, followed by encryption, the
+                                       end effect would be the same.
+
+CCRP  filename  /p             'Pad' 8th bits in 'filename', which must be a
+                               '7-bit' ASCII file.  If any 8th bits were set
+                               before this option is invoked, a message will
+                               be displayed to that effect and changes will
+                               not occur.  If all bytes in 'filename' have
+                               ASCII values less than 128, then no 8th bits
+                               are currently set in that file.
+
+                               If the total number of 1-bits in 'filename' are
+                               greater than or equal to the number of 0-bits
+                               in the file, a message will be displayed to that
+                               effect and, as above, changes will not occur.
+
+                               This option will set only enough 8th bits to
+                               equalize the 1-bits and 0-bits in the file,
+                               or as many 8th bits as possible if the total
+                               bytes in the file (only the 8th bit can be set)
+                               are less than the number of 0-bits minus the
+                               number of 1-bits in the file.
+
+                               The purpose of bit-padding is to 'normalize' the
+                               number of 1-bits in a file before encryption, to
+                               further obscure the nature of the source text.
+
+                               The intent of CCRP is actually to NOT alter any
+                               bits during encryption, but rather to move them
+                               into random positions within the file, so that
+                               attackers cannot determine which bits belong to
+                               which bytes, etc.  Bit-padding gets around this
+                               requirement in that it can only be invoked as a
+                               command option separate from an encryption step.
+                               Note further that if bit-padding or un-padding
+                               is attempted on a file which is in an encrypted
+                               state, the file will be damaged beyond repair.
+
+CCRP  filename  /u             'Unpad' 8th bits in 'filename', which must have
+                               been a '7-bit' ASCII file prior to padding with
+                               8th bits. This option has no warnings, and when
+                               used on a file which was not originally '7-bit'
+                               ASCII text, will damage the file beyond repair,
+                               since the exact 8th bits to change back to 1's
+                               cannot be determined.
+
+
+      WARNING(!) Encryption changes the contents of a file, and if you cannot
+                 perform the decryption process properly, including the use of
+                 keys/passwords, you won't be able to recover the file at all.
+
+                 Normally, before making changes to a file, you are advised
+                 to make a backup copy of the file, but since the purpose of
+                 encryption is to make the file unreadable and unusable, to
+                 have a usable backup copy of the file on the same computer,
+                 or even in the same area that the computer is located in,
+                 wouldn't suit the primary purpose of encryption.
+
+
+NOTES: If maximum security is the objective, you might want to encrypt a file
+       several times (in several passes) with a different encryption key each
+       pass, using different programs, and mixing the encryption/decryption
+       order (OK as long as different keys are used).  Examples:
+
+ENCRYPT.BAT (encrypt the file; see Note 4 above concerning the /d switch)
+ccrp filename  /p
+bcrp filename  /d  Little_Miss_Muffet_Sat_On_Her_Tuffet
+ccrp filename  /e  The_Quick_Brown_Fox_Jumped_Over_The_Lazy_Dog
+bcrp filename  /e  We_Have_Met_The_Enemy_And_They_Are_Us
+ccrp filename  /d  Let_Him_That_Hath_Understanding_Count_The_Number_Of_The_Beast
+
+DECRYPT.BAT (decrypt the file; see Note 4 above concerning the /e switch)
+ccrp filename  /e  Let_Him_That_Hath_Understanding_Count_The_Number_Of_The_Beast
+bcrp filename  /d  We_Have_Met_The_Enemy_And_They_Are_Us
+ccrp filename  /d  The_Quick_Brown_Fox_Jumped_Over_The_Lazy_Dog
+bcrp filename  /e  Little_Miss_Muffet_Sat_On_Her_Tuffet
+ccrp filename  /u
+*******************************************************************************
+*******************************************************************************
+*******************************************************************************
+FAQ for Cryptography Of A Sort (COAS)
+Author  : Dale Thorn &lt;dthorn@gte.net&gt;
+Revised : 27 Oct 1996
+
+Q: Is COAS an actual product?
+A: COAS is an encryption engine supplied in source-code format, which
+   calls some commonly-available (and replaceable) functions included
+   with commercial computer-language libraries, which in turn perform
+   some of the rudimentary tasks required by the program.  Public Key
+   features are not currently supported in COAS, therefore, messaging
+   applications are not as well supported as is local file encryption.
+
+Q: What are the main differences between COAS and other non-messaging-oriented
+   crypto products?
+A: 1. COAS repositions bits based on multiple encoding passes using one or more
+      Pseudo-Random Number Generators (PRNG's).  Since COAS is provided only in
+      source code format, and since the source code calls the PRNG function in
+      the compiler library(s), COAS is actually independent of specific PRNG's.
+      NOTE: PRNG limitations, as described in the popular literature, do not
+            necessarily apply when repositioning bits in multiple passes, as
+            opposed to modifying bits as is normally done in other software.
+            Think of "brute force encryption" (more on this below).
+   2. COAS does not use a "key" as such, and thus does not "encrypt" the bits
+      in a text bitstream.  Instead, it uses an input value (text or numeric)
+      as an entry point into a common PRN sequence.  Since the entry point is
+      a secret, and since bits are moved using random block sizes, from their
+      original bytes into unrelated destination bytes, cryptanalytic attempts
+      must necessarily begin with brute-force guessing as to the entry points
+      in the PRN sequences, in order to associate the correct bits with their
+      original bytes of text.  Multiple encoding passes raise the number of
+      guesses exponentially.
+   3. COAS source code is extremely small, the primary intent for which was
+      to provide a sample encoding engine for local/personal computer files.
+      Due to its small size and simplicity, the source code can be easily
+      modified by casual users, who may add in their own custom routines.
+      NOTE: It cannot be overemphasized, that crypto programs which have
+            a widely-respected reputation must also be held suspect when
+            A) The very nature of those programs is to deceive, -and-
+            B) The source code is either not available, or is so complex
+               as to discourage ordinary people from working with it.
+
+Q: But if COAS uses a common, ordinary PRNG, how can it possibly be secure?
+A: I can think of two arguments against using PRNG's:
+   1. Encoded text is easy to decode by brute force on most computers, -and-
+   2. Encoded text can be seen as having regular patterns when "viewed" from
+      the vantage point of programs employing higher-dimensional mathematics.
+   Addressing the former, a single-pass encryption of a text file using the
+   typical PRNG might be breakable in as little as .000001 second on one of
+   the larger, faster computers available, however, the same approach might
+   require as many as 10^24 years if the number of encoding passes reaches
+   ten or more.  To simplify: try to guess the number I'm thinking between
+   zero and 32,000.  You can make 16 billion guesses per second, so it will
+   take only .000001 second (on average) to get the correct answer.  If you
+   had to guess ten numbers correctly (and sequentially), it would require
+   roughly (16,000^10) / 16,000,000,000 seconds, approximately 10^24 years.
+   Addressing the latter, the ability to "view" the text as a lattice in a
+   higher dimension is likewise diminished by the discontinuities inherent
+   in multi-pass encoding, when bit-group sizes are determined dynamically
+   by PRN's following the secret entry points into the PRNG sequences.
+
+Q: Since COAS only moves bits and doesn't change any of them, wouldn't that
+   make cryptanalysis much easier, since the number of 0-bits and 1-bits in
+   the encrypted file would be identical to the numbers in the source file?
+A: While the COAS encryption processes don't actually change any bits, the
+   bit-padding and de-padding options in versions 3.x and above will allow
+   you to change 8th bits to 1's in "7-bit" ASCII text, after which you do
+   any encryption steps followed (eventually) by decryption and de-padding.
+
+Q: What about the possibility that two or more encryption passes could be
+   decrypted in a single pass, as in the scenario where a third key K3 is
+   functionally equivalent to two separate encrypting keys K1 and K2?
+A: Since COAS encoding is controlled through entry points into a PRNG's
+   number sequences (adjacent encryptions may also use different PRNG's
+   and/or bit-move logic), searching for a "key" or algorithm which can
+   unpack two or more layers of coding will prove futile when all entry
+   points into the PRNG's are different, and different PRNG's are used.
+   A couple of points to consider:
+   One, the output of the PRNG (or any number series) does not describe
+   the bit move-to locations; those are determined by sorting the PRN's
+   then moving the bits according to the sequence of the original array
+   positions of the PRN's prior to sorting. Since some of the PRN's are
+   duplicates, the original array positions relative to each other will
+   be determined by chance, i.e., the vagaries of the sort process, etc.
+   Two, since the bits are moved rather than modified, and since groups
+   of bits vary in size, an attempt to find particular bits that belong
+   to specific bytes after multi-move shuffling, using any compound key
+   or algorithm in a single decoding pass, will certainly prove futile.
+
+Q: Since the personal computer implementation of COAS uses 16-bit integers to
+   initialize (set entry points into) the PRNG's, would ten encryption passes
+   be somehow equivalent to the use of a 160-bit key in conventional programs?
+A: If the conventional program used a 160-bit key in a manner similar to COAS,
+   it would still have to:  1) move bits, not change them. 2) use an indirect
+   method for specifying move locations.  3) model the processes used in COAS
+   quite closely, since there's no straightforward mathematical approach that
+   can duplicate the conditions described in the previous question and answer.
+
+Q: What's the difference between the techniques used by COAS and the use of a
+   One-Time Pad (OTP)?
+A: The theory behind the OTP assumes that (unlike the use of a Public/Private
+   key) subsequent encryptions using the same OTP key would reveal the nature
+   of the OTP, i.e., any newly-encoded files and messages would share certain
+   common identifiable characteristics which could be exploited to facilitate
+   the decryption of all files using that pad.
+   COAS, on the other hand, doesn't alter any of a file's bits, and therefore
+   does not "add" its PRNG entry points' characteristics to a file other than
+   shuffling bits in accordance with the original physical positions of PRN's
+   which have been sorted by size.
+
+Q: Is it possible for anyone to alter the contents of files encrypted by COAS
+   so that a person performing the eventual decryption would not realize that
+   the file(s) were indeed altered?
+A: Less likely than incidental or brute-force decryption.  Each bit is moved
+   once in each encryption pass, and if any bits were moved or changed, that
+   many bytes (or nearly as many, since bits are not moved in byte-divisible
+   groups, so most will end up in unrelated bytes after encryption) would be
+   affected, and the resulting bytes would not likely pass even the simplest
+   checksum test.
+
+Q: Is COAS a "weak" product (cryptographically speaking), either because of
+   limitations in its own internal algorithms, or in the commercial library
+   functions it calls?
+A: COAS can be used in ways that produce weak encryption, which is really
+   an advantage in encouraging beginners to get started, given its simple
+   user interface. Whether it can produce "strong" encryption or not is a
+   matter of opinion, where said opinion is not so much a function of the
+   product's alleged weaknesses, as it is the fact that cryptography grew
+   up from a long history of hand-ciphering and the mathematics attending
+   that growth, and the obvious resistance to new paradigms in this field.
+   While mathematical proof of encryption strength is highly desirable in
+   most applications (some would argue essential in certain applications),
+   I see things this way:  Computer software of any kind, which cannot be
+   analyzed by common persons (average programmers), whose innards cannot
+   be exposed to the masses for whatever reason, should not be used where
+   it could effect control over the lives of those people.  Looking at it
+   a different way, it's wise for any individual or group to evaluate the
+   software that's available, and make their own judgements independently
+   of "expert opinion" in the field.
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01912.html">RE: Rumours of NSA breakin</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01911.html">2nd edition Puzzle Palace?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01975.html">Re: "Montgolfiering" mindlessness</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01911.html">2nd edition Puzzle Palace?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01903"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01903"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

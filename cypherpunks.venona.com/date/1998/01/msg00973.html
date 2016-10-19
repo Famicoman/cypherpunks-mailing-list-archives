@@ -1,0 +1,228 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: (eternity) Eternity as a secure filesystem/backup medium -->
+<!--X-From-R13: "Xbua Yryfrl" <xryfrlNcyarg.arg> -->
+<!--X-Date: Thu, 22 Jan 1998 23:36:48 +0800 -->
+<!--X-Message-Id: 199801221532.JAA28790@email.plnet.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: (eternity) Eternity as a secure filesystem/backup medium</TITLE>
+<LINK REV="made" HREF="mailto:kelsey@plnet.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00976.html">Date Prev</A>][<A HREF="msg00978.html">Date Next</A>][<A HREF="msg00784.html">Thread Prev</A>][<A HREF="msg01145.html">Thread Next</A>][<A HREF="index.html#00973">Date Index</A>][<A HREF="threads.html#00973">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: (eternity) Eternity as a secure filesystem/backup medium</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "cypherpunks" &lt;<A HREF="mailto:cypherpunks@Algebra.COM">cypherpunks@Algebra.COM</A>&gt;</LI>
+<LI><em>Subject</em>: Re: (eternity) Eternity as a secure filesystem/backup medium </LI>
+<LI><em>From</em>: "John Kelsey" &lt;<A HREF="mailto:kelsey@plnet.net">kelsey@plnet.net</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 22 Jan 1998 09:33:31 -0600</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+
+[ To: cypherpunks ## Date: 01/21/98 ##
+  Subject: Re: (eternity) Eternity as a secure filesystem/backup
+medium ]
+
+&gt;Subject:      Re: (eternity) Eternity as a secure filesystem/backup
+medium
+&gt;From:         Adam Back &lt;aba@dcs.ex.ac.uk&gt;
+&gt;Date:         1998/01/18
+
+&gt;1. communications crypto used by the author in submitting
+&gt;   the document is broken
+
+This is only a threat if the authorities have a good idea
+who submitted the data, and want to prove it.  Otherwise,
+you end up with billions of encrypted documents, each
+encrypted with a moderately weak cipher.  (Even assuming
+that the cipher turns out to have only 40 bits of strength,
+this is too expensive to do for more than a handful of
+documents.)
+
+&gt;2. the eternity architecture contains encrypted documents to
+&gt;   frustrate attempts to locate documents, and to hide the
+&gt;   contents of documents from individual servers
+
+Again, this won't be too economical unless the eternity
+service is rarely used.
+
+&gt;3. communications crypto used to request and deliver
+&gt;   documents is broken thus revealing the readers identity
+
+
+&gt;So it is useful to design upgrade paths for ciphers into the
+&gt;protocols where possible.
+
+Definitely--this is always a good idea, right?
+
+&gt;Other approaches we could take are to use very conservative
+&gt;cipher key sizes and protocols combining multiple ciphers in
+&gt;ways which gives us the security of the best of the ciphers.
+
+&gt;For example:
+
+&gt;	R = random, C = 5DES( R ) || blowfish-484( M xor R )
+
+&gt;Where 5DES is say E-D-E-D-E with 5 independent DES keys.
+
+&gt;Constructs to combine in strong ways hash functions, macs,
+&gt;symmetric and asymmetric ciphers would be useful.  Is there
+&gt;much research in this area?
+
+Yes.  Massey and Maurer did a Journal of Cryptography paper
+titled ``The Importance of Being First,'' which says that
+in any chain of encryptions with different ciphers and
+independent keys, such as E_1(E_2(E_3(data))), the whole
+thing is provably as strong as the first cipher used on the
+data (E_3, in my example above).  This is really obvious,
+when you reflect that an attacker can always try to break
+data encrypted with E_3 by superencrypting it with E_1 and
+E_2, and then mounting his attack on E_1(E_2(E_3(data))).
+Of course, if keys aren't independent among the three
+ciphers, then you don't get any guarantee of this kind.
+
+The other thing to note is that if you're just generating
+keystream sequences, as you would with RC4 or SEAL, then all
+ciphers are ``first.''
+
+Rivest and Sherman also did some work on randomized
+encryption, of the kind you discuss, in the Crypto '82
+proceedings.  Your construction is very similar to one of
+theirs.  Let M = message and R = a message-sized random
+number, then in
+
+E_1(R), E_2(R XOR M)
+
+both E_1 and E_2 must be broken to learn M.  (Imagine this
+isn't the case, then either E_1 or E_2 wasn't broken.  If
+you didn't break E_2 but broke E_1, then you only learn R,
+which is useless to you--it's random and uncorrelated with
+M.  If you broke E_2 but not E_1, you would have a message
+encrypted with a one-time pad.)
+
+This generalizes nicely to
+
+E_1(R1), E_2(R2), ..., E_N(RN), E_{N+1}(R1 XOR R2 XOR ... XOR M).
+
+If those random numbers are really random, then if any one
+of those ciphers resists your attacks, the message can't be
+recovered.
+
+Now, you can also do this with things that approximate
+random functions, which they also discuss.  Thus, you might
+use:
+
+f_1(),f_2(), ..., f_n() are N independently-keyed different
+cryptographic functions that approximate random functions.
+
+The funny thing is, if you instantiate this intelligently,
+you get a message encrypted by N different stream ciphers,
+perhaps with a random parameter per message thrown in during
+keying of those ciphers.  Thus, suppose
+
+s_1(K1) = RC4(K1)
+s_2(K2) = 3DES-OFB(K2)
+s_3(K3) = SHA1-Counter-Mode(K3)
+s_4(K4) = Blowfish-OFB(K4)
+s_5(K5) = SAFER-SK128(K5).
+
+and that these keys are different per message and are all
+independent.  Then, you get the result that
+
+M XOR s_1(K1) XOR S_2(k2) XOR ... XOR s_5(k5).
+
+leaves no way to recover M unless all five s_i() can be
+guessed.
+
+Note that, in practice, this isn't likely to be useful
+unless you've done the same kind of thing for symmetric key
+distribution, random number generation, etc.  Otherwise,
+your attacker in 2050 will bypass the symmetric encryption
+entirely and factor your RSA modulus, or guess all the
+entropy sources used for your PRNG, or whatever else you can
+think of.
+
+The good news, though, is that active attacks (like chosen
+input attacks) and many side-channel attacks (e.g., timing
+attacks) turn out not to be possible if you are trying to
+mount them after the encryption has been carried out.
+
+&gt;Adam
+
+- --John Kelsey, kelsey@counterpane.com / kelsey@plnet.net
+NEW PGP print =  5D91 6F57 2646 83F9 6D7F 9C87 886D 88AF
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBNMeCqSZv+/Ry/LrBAQGxpgQAloxNjdZMf6l/7U520ZSIVuk7lFZcu0+J
+5tUyQgHtS4EAplC1OBnYc8B3pzCir6VCXinmNbClgalXhrRFfmV7vTQLZySaVv/+
+0T44TFkJ0Ldu4cTsA2ertL0jcCXiBp38mhVK2IFbPtN+04B+een8jrUYtzx/qIj5
+ztBpBb4yil8=
+=wBTR
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01145" HREF="msg01145.html">future proofing algorihtms (Re: (eternity) Eternity as a secure filesystem/backup medium)</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Back &lt;aba@dcs.ex.ac.uk&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00976.html">Re: Revenge on the Nerds  -Maureen on a rampage</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00978.html">Re: Misty???</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00784.html">Re: (eternity) Eternity as a secure filesystem/backup medium</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01145.html">future proofing algorihtms (Re: (eternity) Eternity as a secure filesystem/backup medium)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00973"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00973"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,250 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: SSL challenge &#45;&#45; broken ! -->
+<!--X-From-R13: Rnzvra.RbyvtrmNvaevn.se (Rnzvra Rbyvtrm) -->
+<!--X-Date: Wed, 16 Aug 95 01:42:51 PDT -->
+<!--X-Message-Id: 9508160842.AA27120@couchey.inria.fr -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>SSL challenge -- broken !</TITLE>
+<LINK REV="made" HREF="mailto:Damien.Doligez@inria.fr">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00669.html">Date Prev</A>][<A HREF="msg00670.html">Date Next</A>][<A HREF="msg00669.html">Thread Prev</A>][<A HREF="msg00734.html">Thread Next</A>][<A HREF="index.html#00679">Date Index</A>][<A HREF="threads.html#00679">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>SSL challenge -- broken !</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: SSL challenge -- broken !</LI>
+<LI><em>From</em>: <A HREF="mailto:Damien.Doligez@inria.fr">Damien.Doligez@inria.fr</A> (Damien Doligez)</LI>
+<LI><em>Date</em>: Wed, 16 Aug 95 10:42:43 +0200</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+SSL challenge -- broken
+
+This is to announce the solution of the SSL challenge posted by Hal
+Finney on July 17, 1995 (message-ID: &lt;3u6kmg$pm4@jobe.shell.portal.com&gt;),
+also found at: &lt;URL:<A  HREF="http://www.portal.com/~hfinney/sslchal.html">http://www.portal.com/~hfinney/sslchal.html</A>&gt;
+
+The 40-bit secret part of the key is 7e f0 96 1f a6.  I found it by a brute
+force search on a network of about 120 workstations and a few parallel
+computers at INRIA, Ecole Polytechnique, and ENS.  The key was found after
+scanning a little more than half the key space in 8 days.
+
+The cleartext of the encrypted data is as follows:
+
+The SERVER-VERIFY message is:
+
+9C B1 C7 83 D9 BB B7 75 01 6F 19 19 03 58 EC 05     MAC-DATA
+05                                                  MSG-SERVER-VERIFY
+AF 84 A7 79 F8 13 69 20 25 9B 53 A0 60 AE 75 51     CHALLENGE
+
+The CHALLENGE part is a copy of the challenge sent by the client in its
+first message.
+
+The answer is the CLIENT-FINISHED message:
+
+22 BB 23 39 55 B0 7F B6 1A B0 35 85 F7 DB C1 E5     MAC-DATA
+03                                                  MSG-CLIENT-FINISHED
+BF EB 90 F8 2C 0C E1 EA 18 AC 11 4C 83 14 21 B6     CONNECTION-ID
+
+The next message is SERVER-FINISHED:
+
+D4 CD F3 4E 38 F1 2B 1E DC FD 72 C8 34 02 CD FF     MAC-DATA
+06                                                  SERVER-FINISHED-BYTE
+23 1C 05 40 60 72 49 6E 83 BA D1 28 CC 9B 5F 63     SESSION-ID-DATA
+
+Then comes the data message sent by the client.  This is the juicy one.
+I have broken the contents into its fields (the body was just one long
+line)
+
+72 23 B5 98 0D D0 07 1A DA F1 C7 A4 40 41 5A 10     MAC-DATA
+POST /order2.cgi HTTP/1.0
+Referer: <A  HREF="https://order.netscape.com/order2.cgi">https://order.netscape.com/order2.cgi</A>
+User-Agent: Mozilla/1.1N (Macintosh; I; PPC)
+Accept: */*
+Accept: image/gif
+Accept: image/x-xbitmap
+Accept: image/jpeg
+Content-type: application/x-www-form-urlencoded
+Content-length: 472
+
+source-form=order2-cust.html&amp;
+order_number=31770&amp;
+prod_80-01020-00_Mac=1&amp;
+carrier_code=UM&amp;
+ship_first=Cosmic&amp;
+ship_last=Kumquat&amp;
+ship_org=SSL+Trusters+Inc.&amp;
+ship_addr1=1234+Squeamish+Ossifrage+Road&amp;
+ship_addr2=&amp;
+ship_city=Anywhere&amp;
+ship_state=NY&amp;
+ship_zip=12345&amp;
+ship_country=USA&amp;
+ship_phone=&amp;
+ship_fax=&amp;
+ship_email=&amp;
+bill_first=&amp;
+bill_last=&amp;
+bill_org=&amp;
+bill_addr1=&amp;
+bill_addr2=&amp;
+bill_city=&amp;
+bill_state=&amp;
+bill_zip=&amp;
+bill_country=USA&amp;
+bill_phone=&amp;
+bill_fax=&amp;
+bill_email=&amp;
+submit=+Submit+Customer+Data+
+
+This order came from Mr Cosmic Kumquat, SSL Trusters Inc.,
+1234 Squeamish Ossifrage Road, Anywhere, NY 12345 (USA).
+
+Unfortunately, Mr Kumquat forgot to give his phone number, and the
+server's reply (in two packets) is:
+
+09 12 AD FE A5 A9 BF D1 8C 8C E2 6A A3 48 B9 75    MAC-DATA
+HTTP/1.0 200 OK
+Server: Netscape-Commerce/1.1
+Date: Wednesday, 12-Jul-95 05:40:30 GMT
+Content-type: text/html
+
+1C CD C4 3D 80 F1 7B 94 11 AC E8 72 B1 99 BC FA    MAC-DATA
+&lt;TITLE&gt;Error&lt;/TITLE&gt;&lt;H1&gt;Error&lt;/H1&gt;
+The shipping address you supplied is not complete.  The street address,
+city, state, zip code, country and phone number are mandatory fields.
+Please go back and specify the full shipping address.  Thank you.
+
+
+This result was found with a quick-and-dirty distributed search program,
+which I wrote when I realized that the cypherpunks were going to be a few
+weeks late with their collective effort.  When the program was running,
+it took little more than one week to find the key (it would have taken about
+15 days to sweep the entire key space).  I ran it on almost all the machines
+I have access to, summarized in the following table:
+
+type                  speed (keys/s)    number     notes
+- --------------------------------------------------------
+DEC (alpha)           18000-33000        34
+DEC (MIPS)            2500-7500          11
+SPARC                 2000-13000         57
+HP (HPPA/snake)       15000              3
+Sony (R3000)          1100-4000          3
+Sun 3                 600                2
+Sequent B8000         100 x 10           1         (1)
+Multimax (NS532)      600 x 14           1         (1)
+KSR                   3200 x 64          1         (1) (2)
+
+Notes:
+1.  These are multiprocessor machines
+2.  The KSR spent only about 2 days on this computation.
+
+The total average searching speed was about 850000 keys/s,
+with a maximum of 1350000 keys/s (1150000 without the KSR).
+
+
+Conclusions:
+
+* Many people have access to the amount of computing power that I used.
+  The exportable SSL protocol is supposed to be weak enough to be
+  easily broken by governments, yet strong enough to resist the attempts
+  of amateurs.  It fails on the second count.  Don't trust your credit
+  card number to this protocol.
+
+* Cypherpunks write code, all right, but they shouldn't forget to run it.
+
+
+I want to thank the people at INRIA, Ecole Polytechnique, and Ecole
+Normale Superieure for giving their CPU time.  (Most of them are on
+vacation anyway...)
+
+
+You can find a copy of this text at
+&lt;URL:<A  HREF="http://pauillac.inria.fr/~doligez/ssl/announce.txt">http://pauillac.inria.fr/~doligez/ssl/announce.txt</A>&gt;
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCSAwUBMDG4dVNZwSQVabihAQGeFAPnUZil4WlauoMke9HaULDNOVf1hLXS0i9U
+VJWZsPHcihDbn6nBN9T6f3sW/S08N5YJFSCmuZzqO59c0nOAKILb6a3TsXjFEcu8
+W8UfwFsZa6gx7iuYqandhoHBEkkc5NSwMe1f+lPiV2MdclzQ4/VtZ7Oa1VB+RftD
+Am4+w/Y=
+=Fju1
+-----END PGP SIGNATURE-----
+
+**** This is a timestamp of the above message:
+
+-----BEGIN PGP MESSAGE-----
+Version: 2.6.2
+
+iQBVAwUAMDGsOeWrvYiumrHZAQF0QwIAnDWdVVTiVmUTY5lp08yPeLRoFetczb+U
+E0WVgTUJ4a16tinOPaJl/6jOpPUUPWMjkDaD2N1xw8lGqm0UgZJiGIkAkgMFATAx
+uKJTWcEkFWm4oQEBAQ8D5ixvYrpEAQYfeNXmbB46BTTnBwBPS/JjfVFEEnC0Zsoj
+cyh/WELUsZf785b23vEq9JFvZB+bq1UsJTpttl335TrW344ZYof3kl6fdEF2Jf5q
+LxQjkuP9s/OQX5iJZpHz4LUxbb+/hOwSdZ2O3LV7ETiHs9AK1+bnKfOGDyei
+=qO7V
+-----END PGP MESSAGE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00734" HREF="msg00734.html">Re: SSL challenge -- broken !</A></STRONG>
+<UL><LI><EM>From:</EM> John Pettitt &lt;jpp@software.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00669.html">next letter...</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00670.html">Re: Purple Boxes</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00669.html">next letter...</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00734.html">Re: SSL challenge -- broken !</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00679"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00679"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

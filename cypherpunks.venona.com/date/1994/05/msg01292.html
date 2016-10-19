@@ -1,0 +1,203 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Fix for pgp23a to make it 2.6 compatible -->
+<!--X-From-R13: pngnylfg&#45;erznvyreNargpbz.pbz -->
+<!--X-Date: Tue, 24 May 94 02:11:26 PDT -->
+<!--X-Message-Id: 199405240911.CAA02919@mail2.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Fix for pgp23a to make it 2.6 compatible</TITLE>
+<LINK REV="made" HREF="mailto:catalyst-remailer@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01290.html">Date Prev</A>][<A HREF="msg01295.html">Date Next</A>][<A HREF="msg01509.html">Thread Prev</A>][<A HREF="msg01296.html">Thread Next</A>][<A HREF="index.html#01292">Date Index</A>][<A HREF="threads.html#01292">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Fix for pgp23a to make it 2.6 compatible</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Fix for pgp23a to make it 2.6 compatible</LI>
+<LI><em>From</em>: <A HREF="mailto:catalyst%2Dremailer@netcom.com">catalyst-remailer@netcom.com</A></LI>
+<LI><em>Date</em>: Tue, 24 May 1994 02:11:29 -0700</LI>
+<LI><em>Comment</em>: This message is NOT from the address on the 'From:' line; it is from an anonymous remailing service.  Please report problem mail to catalyst@netcom.com.</LI>
+<LI><em>Remailed-By</em>: Remailer &lt;catalyst-remailer@netcom.com&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+I found a bug in pgp 2.3a : it's incompatible with pgp 2.6 messages made
+after September first. Here's the fix, in both uuencode and pgp armored
+format. Uudecode or pgp-extract this, and you will get a file called
+fixpgp.com. Go into the directory where your pgp 2.3a DOS executable is
+(pgp.exe) and run fixpgp. It should print "Done". That's it! 2.3a is now
+fully compatible with 2.6. If it prints "File error" pgp.exe is either
+not present or not writable. Fixpgp must be run with pgp.exe in the 
+current directory. Do not run on anything but a virgin copy of the pgp23a
+for dos distribution. If you compiled it yourself, modify the source as
+described below.
+
+                                                 Pr0duct Cypher
+
+section 1 of uuencode 4.13 of file FIXPGP.COM
+
+begin 644 FIXPGP.COM
+MN`(]NCL!S2%R*(O8N`!"N0``NH?"S2%R&amp;;1`N0$`NE,!S2%R#;0^S2&amp;T";I.W
+G`&lt;TAS2"T";I#`&lt;TAS2!P9W`N97AE`$9I;&amp;4@97)R;W(D1&amp;]N920&amp;7
+``
+end
+sum -r/size 47444/146 section (from "begin" to "end")
+sum -r/size 46454/84 entire input file
+
+
+- -----BEGIN PGP MESSAGE-----
+Version: 2.3a
+
+rGRiCmZpeHBncC5jb20AAAAAuAI9ujsBzSFyKIvYuABCuQAAuofCzSFyGbRAuQEA
+ulMBzSFyDbQ+zSG0CbpOAc0hzSC0CbpDAc0hzSBwZ3AuZXhlAEZpbGUgZXJyb3Ik
+RG9uZSQG
+=4Xbh
+- -----END PGP MESSAGE-----
+
+Now, wait a minute! This sounds like an evil NSA plot to compromise PGP!
+What, exactly, will this program do to my PGP?
+
+The short answer: it changes the byte at file offset C287 hex from a
+08 hex to a 06 hex.
+
+The long answer: take a look at crypto.c and we find:
+
+/* Return nonzero if val doesn't match checkval, after printing a
+ * warning.
+ */
+int
+version_error(int val, int checkval)
+{       if (val != checkval)
+	{       fprintf (pgpout, PSTR(
+"\n\007Unsupported packet format - you need a newer version\ 
+ of PGP for this file.\n"));
+		return(1);
+	}
+	return(0);
+}
+
+We need to disable this comparison. So looking at the object code:
+(CS at startup was 136D)
+1B8B:069F 55            PUSH    BP                                 
+1B8B:06A0 8BEC          MOV     BP,SP                              
+1B8B:06A2 8B4606        MOV     AX,[BP+06]                         
+1B8B:06A5 3B4608        CMP     AX,[BP+08]                         
+1B8B:06A8 7424          JZ      06CE                               
+1B8B:06AA 1E            PUSH    DS                                 
+1B8B:06AB B8C00F        MOV     AX,0FC0                            
+1B8B:06AE 50            PUSH    AX                                 
+1B8B:06AF 9A6A04412E    CALL    2E41:046A                          
+
+There's our comparison. [bp+06] and [bp+08] are val and checkval.
+So if we change the [bp+08] in the cmp to [bp+06], the program compares
+[bp+06] to itself. This will always be true, so PGP will not notice the
+fact that the packet number has changed to 03 from 02. Problem solved.
+
+This is the source for fixpgp.com. I used the a86 assembler.
+BTW note that PGPTools does not check version numbers, so it is always
+compatible with 2.6.
+
+; fixpgp.com : writes 06 hex to byte c287 of pgp2.3a
+; this fixes 2.6 incompatibility
+
+	org 100h
+	mov ax,03d02        ; r/w
+	mov dx,fname        ; filename
+	int 21h             ; open file
+	jc error            ; check for error
+	mov bx,ax           ; move file handle
+	mov ax,04200        ; file seek
+	mov cx,0            ; msw of offset
+	mov dx,0c287h       ; magic address
+	int 21h             ; move file pointer
+	jc error            ; check for error
+	mov ah,040h         ; write file
+	mov cx,1            ; one byte
+	mov dx,offset magic ; byte to write
+	int 21h             ; write the byte
+	jc error            ; check for error
+	mov ah,03eh         ; close file
+	int 21h             ; do it
+	mov ah,09h          ; print msg
+	mov dx,okmsg        ; it worked
+	int 21h             ; print
+	int 20h             ; and quit
+
+error:  mov ah,09h          ; print msg
+	mov dx,ermsg        ; adr of msg
+	int 21h             ; print the error
+	int 20h             ; abort
+
+fname:  db 'pgp.exe',0
+ermsg:  db 'File error$'
+okmsg:  db 'Done$'
+magic:  db 06h
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a lives!
+
+iQCVAgUBLeGxH8GoFIWXVYodAQGH9wQAhLGL4V/86DMTjw4qlfJd0gbQCAf+sFSC
+Hpf9jD1YAdUfUMRGYvp+8wNVBv9z90EHppRkU7MOT8zFJ3F0uJHvbzQgiiWp/5tO
+nyimv9D4lotqg/K7wmQwCEmys0sj0/zLOyyzAX/62YX8rmLKfTCo88V94QdEaNHS
+boBMlUSX0ys=
+=pVKf
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01290.html">Re: MIT has released PGP 2.6</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01295.html">Re: Response to Uni's "Lawsuit" Message</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01509.html">Re: Response to Uni's "Lawsuit" Message</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01296.html">(Fwd) The Guardian OnLine</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01292"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01292"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

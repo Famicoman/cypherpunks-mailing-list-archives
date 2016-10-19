@@ -1,0 +1,222 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: "random" number seeds vs. Netscape -->
+<!--X-From-R13: "Breel S. [rgmtre" <creelNcvrezbag.pbz> -->
+<!--X-Date: Wed, 20 Sep 95 14:02:02 PDT -->
+<!--X-Message-Id: 199509202101.RAA05534@frankenstein.piermont.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 43psn2$6ug@tera.mcom.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: "random" number seeds vs. Netscape</TITLE>
+<LINK REV="made" HREF="mailto:perry@piermont.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01461.html">Date Prev</A>][<A HREF="msg01460.html">Date Next</A>][<A HREF="msg01482.html">Thread Prev</A>][<A HREF="msg01453.html">Thread Next</A>][<A HREF="index.html#01466">Date Index</A>][<A HREF="threads.html#01466">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: "random" number seeds vs. Netscape</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:karlton@netscape.com">karlton@netscape.com</A> (Phil Karlton)</LI>
+<LI><em>Subject</em>: Re: "random" number seeds vs. Netscape </LI>
+<LI><em>From</em>: "Perry E. Metzger" &lt;<A HREF="mailto:perry@piermont.com">perry@piermont.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 20 Sep 1995 17:01:34 -0400</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: Your message of "20 Sep 1995 20:14:26 GMT."            &lt;<A HREF="msg01482.html">43psn2$6ug@tera.mcom.com</A>&gt; </LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:perry@piermont.com">perry@piermont.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Phil Karlton writes:
+&gt; I want to address the bug Netscape has with its currently released
+&gt; product with respect to seed generation. For the most part this is not
+&gt; a crypto issue, but rather a system issue.  Those bits of entropy can
+&gt; only be gathered in a system dependent manner.
+
+Quite true.
+
+&gt; Assumption:
+&gt;     The basic idea is to feed a sequence of information into the MD5
+&gt;     hash, expecting that some of the bits for each sub-sequence would
+&gt;     be only be guessable. If we get enough unguessable bits into the mix,
+&gt;     then the weak link in the chain would not be the seed generation.
+
+This is true. However, you must get 128 bits of entropy into the MD5
+-- this can be accompanied by as much junk as you like, but if there
+are at least 128 bits of entropy fed in, the MD5 process will distil
+it into what you want.
+
+You might want to read RFC 1750, and examine the code PGP uses for
+doing its random generation. Clients do lots of fairly random things
+while talking to netscape (click and keyboard press times, etc) that
+can be incorporated in, along with other sources of bits. You should
+grab bits whereever you can and keep them for when you need them, as
+getting 128 bits takes a while.
+
+&gt; 	On Macs and Win* systems
+&gt; 	there are "tick" counters that update 60 (or maybe only 16)
+&gt; 	times a second.
+
+PC timers inherently run at Mhz speed -- they interrupt every 100th of
+a second but you can get finer resolution by querying the clock
+chip. Does Windows let you do this?
+
+By the way, starting with the time that the program was started is
+okay but not great -- I think you probably can only safely assume a
+few bits from this.
+
+&gt;     For UNIX we feed the following into the MD5 hash:
+&gt; 
+&gt; 	ps (-el or aux depending upon system)
+
+I wouldn't do that, since it forces you to have a dependancy on
+executing a subprocess. 
+
+Were I you, I'd capture the timer on every single keystroke and mouse
+click event and feed that in to your entropy generator a la PGP.
+
+&gt; 	System specific info such as hardware serial number or
+&gt; 	system id.
+
+By definition, that isn't random. Don't use it.
+
+There are other things you can mix in, besides keystroke and mouse
+timings and positions, like system call timings for things that might
+take a bit of time.
+
+I can't speak to things on PCs, but...
+
+&gt; 	UUIDCreate if there is an ethernet card
+
+No, sorry, this is very non-random.
+
+&gt;     For MACs:
+&gt; 	Machine location (longitude and latitude)
+
+Non-random.
+
+&gt; 	User name
+
+Non-random.
+
+&gt; 	audio volume
+
+Doesn't change very often.
+
+&gt; Known weaknesses:
+&gt; 
+&gt;     If your X display is not the local machine then the X protocol can
+&gt;     be watched. Given that, the data for the reseeding of the MD5 hash
+&gt;     will be compromised. [Any scheme that relies on random user input
+&gt;     to generate a seed suffers from the same problem.]
+
+Thats true, but its better than it could be, and most users will be
+running local.
+
+&gt;     In fact, the entire X protocol issue is one that could take up
+&gt;     another 3 pages. An SSLized version of the server would help,
+&gt;     but how would anybody export it? You "xhost +" fans are doomed.
+
+You guys should quit thinking of SSL as a good idea. It might be that
+the concept is useful for backward compatibility, but don't think of
+it as the universal solution just because you developed it.
+
+&gt;     Multi-user Unix machines present a special problem. There are those
+&gt;     at Netscape that argue that anybody who has login access to your
+&gt;     machine may as well be considered to have root access. There are
+&gt;     enough known attacks that this is true to a large extent.  However,
+&gt;     I think we can do better than just giving up.
+
+I agree. Don't run on the assumption that everyone has root --
+otherwise you'll build something that produces less safety than it could.
+
+&gt; What I would like:
+&gt; 
+&gt;     Any OS has access to a number of real-world physical sources of
+&gt;     randomness. This information is not made available to a user level
+&gt;     process. How long did that last seek take? Was there any noise on
+&gt;     the microphone? It would be good if the OS could gather that
+&gt;     information and make some set of bits available to any process that
+&gt;     asks. Having this be part of all OSes would make my job easier.
+&gt; 
+&gt;     More specifically: A "getnoise()" system call in UNIX could be
+&gt;     better than anything I can do and easier. Can we convince the UNIX
+&gt;     vendors to start providing that?
+
+Actually, Ted Tso built a /dev/rand for Linux, and there are people
+trying to port it to other platforms. This is probably a better idea
+than a system call.
+
+&gt; For those that curious: being responsible for helping to fix a bug that
+&gt; is getting front page coverage in major newspapers is not nearly as
+&gt; much fun as it sounds.
+
+I've lost my share of nights to security holes announced late in the
+day that HAD to be fixed for clients within hours. Welcome to the real
+world. You play with the big boys and you get big headaches every once
+in a while.
+
+Perry
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01453" HREF="msg01453.html">Re: "random" number seeds vs. Netscape</A></STRONG>
+<UL><LI><EM>From:</EM> Phil Karlton &lt;karlton@netscape.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01482" HREF="msg01482.html">"random" number seeds vs. Netscape</A></STRONG>
+<UL><LI><EM>From:</EM> karlton@netscape.com (Phil Karlton)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01461.html">software</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01460.html">Netscape closes up 1 3/8 today!</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01482.html">"random" number seeds vs. Netscape</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01453.html">Re: "random" number seeds vs. Netscape</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01466"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01466"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

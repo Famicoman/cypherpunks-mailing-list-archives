@@ -1,0 +1,215 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: anonymous poster software -->
+<!--X-From-R13: xuvwby!repNnccyr.pbz (Sq Qnec MElfnqzva]) -->
+<!--X-Date: Thu, 22 Sep 94 01:06:26 PDT -->
+<!--X-Message-Id: m0qnhjk&#45;0004G1C@khijol.uucp -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>anonymous poster software</TITLE>
+<LINK REV="made" HREF="mailto:khijol!erc@apple.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00809.html">Date Prev</A>][<A HREF="msg00816.html">Date Next</A>][<A HREF="msg00806.html">Thread Prev</A>][<A HREF="msg00816.html">Thread Next</A>][<A HREF="index.html#00814">Date Index</A>][<A HREF="threads.html#00814">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>anonymous poster software</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: anonymous poster software</LI>
+<LI><em>From</em>: <A HREF="mailto:khijol%21erc@apple.com">khijol!erc@apple.com</A> (Ed Carp [Sysadmin])</LI>
+<LI><em>Date</em>: Thu, 22 Sep 1994 01:34:32 -0500 (CDT)</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:ecarp@netcom.com">ecarp@netcom.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+I hacked this up in a little under an hour (with distractions), so it's not
+the absolute best software - it could stand some improvement - but it works.
+It could, with very minor hacking, do as an anonymous mailer.  I wrote it
+in response to someone asking me if I could write such a thing for them in
+C.  Yes, there are lots of itty-bitty remailers and posters out there, but
+this serves the bill for being totally anonymous and it's pretty quick, being
+written in C.
+
+Besides, I didn't want to learn perl or any of that grotesque stuff - I'm a
+purist at heart ;)
+- ---------------------------------- cut here --------------------------------
+/*
+ * anonpost - strip headers from incoming message, preserving Subject:, then
+ * pass the rest of stdin to inews argv[].
+ * 
+ * Copyright 1994 by Ed Carp (ecarp@netcom.com).  All rights reserved.
+ */
+
+/*
+ * How to set this up:
+ * 
+ * 0. Change "#define INEWS" and "#define SIG"
+ *
+ * 1. cc -s -o anonpost anonpost.c -O
+ * 
+ * 2. mv anonpost /usr/local/bin  # or wherever
+ * 
+ * 3. echo "* * * * * su &lt;whoever&gt; -c '/usr/local/bin/anonpost -n alt.sexual.abuse.recovery -f anonasar@khijol.UUCP -r anonasar@khijol.UUCP &lt; /usr/spool/mail/anonasar;rm /usr/spool/mail/anonasar'" &gt;&gt; /usr/lib/crontab
+ * 
+ */
+#define INEWS "/usr/lib/news/inews "
+#define SIG "/home/anon-asar/.signature"
+#include &lt;stdio.h&gt;
+#undef NULL
+#define NULL (0)
+main (argc, argv)
+int argc;
+char **argv;
+{
+  char inews[1024];
+  char subject[128];
+  char line[1024];
+  FILE *in, *p;
+  int i;
+
+  *subject = NULL;
+  while (1)
+  {
+/*
+ * read header 
+ */
+    while (fgets (line, 1022, stdin) != (char *) NULL)
+    {
+      line[strlen (line) - 1] = NULL;
+      if (strlen (line) &lt; 2)
+	break;
+      if (strncmp (line, "Subject: ", 9) == 0)
+	strcpy (subject, line + 9);
+    }
+    if (*subject == NULL)
+      strcpy (subject, "&lt;no subject&gt;");
+    strcpy (inews, INEWS);
+    for (i = 1; i &lt; argc; i++)
+    {
+      strcat (inews, argv[i]);
+      strcat (inews, " ");
+    }
+    strcat (inews, "-t '");
+    strcat (inews, subject);
+    strcat (inews, "'");
+    if ((p = popen (inews, "w")) == (FILE *) NULL)
+    {
+      perror (INEWS);
+      exit (1);
+    }
+/*
+ * read the rest of the article, passing it to inews 
+ */
+    while (fgets (line, 1022, stdin) != (char *) NULL)
+    {
+      line[strlen (line) - 1] = NULL;
+      if ((strcmp (line, "--") == 0) || (strcmp (line, "-- ") == 0))
+      {
+	while (fgets (line, 1022, stdin) != (char *) NULL)
+	  if (strncmp (line, "From", 4) == 0)
+	  {
+	    *subject = NULL;
+	    break;
+	  }
+      }
+      if (strncmp (line, "From", 4) == 0)
+      {
+	*subject = NULL;
+	break;
+      }
+      fprintf (p, "%s\n", line);
+    }
+/*
+ * append the .signature file in the current directory 
+ */
+    if ((in = fopen (SIG, "r")) != (FILE *) NULL)
+    {
+      fprintf (p, "--\n");
+      while (fgets (line, 1022, in) != (char *) NULL)
+	fprintf (p, "%s", line);
+      fclose (in);
+    }
+/*
+ * post 
+ */
+    pclose (p);
+/*
+ * make sure we didn't get an EOF 
+ */
+    if (*subject != NULL)
+      break;
+  }
+}
+- -- 
+Ed Carp, N7EKG    			Ed.Carp@linux.org, ecarp@netcom.com
+
+Finger ecarp@netcom.com for PGP 2.5 public key		an88744@anon.penet.fi
+                       ** PGP encrypted email preferred! **
+
+"What's the use of distant travel if only to discover - you're homeless in
+your heart."  --Basia, "Yearning"
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6
+
+iQCVAwUBLoEldCS9AwzY9LDxAQFEDgP/a0OeUQ//m7KO1dUZhLb3wlI4IzYl70JR
+PcYL/x2nf+XaskdrWN0YqXqeeV6jaPk7e1xOT/bvKgYs1MADuaUgEgcd0XynYvOl
+wOFYAxYN+qWi8+rC0DTxUSysOYGUH3hgMyaN5/dqCINC8pOYIz5iO+BEQC8yN9U3
+H1GMiexO04w=
+=371T
+-----END PGP SIGNATURE-----
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00809.html">Re: MAIL: crime and remailers</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00816.html">pgp 2.6.1 available on ftp.csua.berkeley.edu</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00806.html">(FWD) New Remailer &amp; "Bit Bucket"</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00816.html">pgp 2.6.1 available on ftp.csua.berkeley.edu</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00814"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00814"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

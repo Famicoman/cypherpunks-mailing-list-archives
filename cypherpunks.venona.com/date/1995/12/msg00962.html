@@ -1,0 +1,221 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: easy avoidance of PGP signature forgeries and reuse -->
+<!--X-From-R13: fgrirNzvenabin.pbz (Egrira Z. Pnhe) -->
+<!--X-Date: Sun, 31 Dec 1995 08:40:24 +0800 -->
+<!--X-Message-Id: m2n38am8ht.fsf@diana.miranova.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: y9HXgD18w165w@bwalk.dm.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: easy avoidance of PGP signature forgeries and reuse</TITLE>
+<LINK REV="made" HREF="mailto:steve@miranova.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00950.html">Date Prev</A>][<A HREF="msg00963.html">Date Next</A>][<A HREF="msg00949.html">Thread Prev</A>][<A HREF="msg00900.html">Thread Next</A>][<A HREF="index.html#00962">Date Index</A>][<A HREF="threads.html#00962">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: easy avoidance of PGP signature forgeries and reuse</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: easy avoidance of PGP signature forgeries and reuse</LI>
+<LI><em>From</em>: <A HREF="mailto:steve@miranova.com">steve@miranova.com</A> (Steven L. Baur)</LI>
+<LI><em>Date</em>: 30 Dec 1995 15:34:22 -0800</LI>
+<LI><em>In-Reply-To</em>: dlv@bwalk.dm.com's message of 30 Dec 1995 07:30:09 -0800</LI>
+<LI><em>Organization</em>: Miranova Systems, Inc.</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00949.html">y9HXgD18w165w@bwalk.dm.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+[sample implementation for Gnus is included]
+&gt;&gt;&gt;&gt;&gt; "Dimitri" == Dimitri Vulis &lt;dlv@bwalk.dm.com&gt; writes:
+
+    Dimitri&gt; I propose a format below.
+
+See the PGP header block attached to this message as an example of
+this proposed format.
+
+    atilla&gt; with e-mail, e-letters, direct faxes, etc. it is to easy
+    atilla&gt; to ignore the courtesy header. From a standpoint of
+    atilla&gt; security, you have blown away each of the attacks outline
+    atilla&gt; in your article in so much as the signature will not
+    atilla&gt; compute if the courtesy block is omitted.
+
+    Dimitri&gt; I totally agree; that's why I propose copying that info
+    Dimitri&gt; in the signed portion "by default".
+
+    atilla&gt; personally, I do not think PGP 3 should attempt to solve
+    atilla&gt; the problem. Most of the headers involved are applied
+    atilla&gt; _after_ the message leaves the mail program; and, PGP
+    atilla&gt; interfaces are virtually the same as invoking an alternate
+    atilla&gt; editor, which gets you nothing.
+
+I agree.  Besides, this whole thing can be done with the existing PGP.
+Date: and Message-ID: are two, and they need to be signed.  Date: is a
+further problem with Gnus, since the format of the displayed date is
+user customizable, but that's a separate issue.
+
+    ...
+
+    Dimitri&gt; The "signed headers" portion may contain the following
+    Dimitri&gt; optional fields:
+
+    Dimitri&gt; From: address -- the address associated with the key used
+    Dimitri&gt; to sign this message
+
+It's easier to deal with whatever is being used as the From: in the
+message.
+
+    ...
+
+    Dimitri&gt; (Of course, the poster could lie and claim in the signed
+    Dimitri&gt; portion that the article is being posted to alt.sex.pedo
+    Dimitri&gt; when he himself posts it to misc.kids:)
+
+So you would also include the Message-ID:.
+
+    Dimitri&gt; If a standard like this catches on, and is integrated
+    Dimitri&gt; into PGP-aware news/e-mail programs, then it's a simple
+    Dimitri&gt; exercise to write a little script to look for BEGIN PGP
+    Dimitri&gt; SIGNED HEADERS and compare the information inside it with
+    Dimitri&gt; the RFC 822/1036 headers outside the signed portion of
+    Dimitri&gt; the message. It could be done within PGP too.
+
+This is basically a Good Idea, and can be implemented using existing
+tools.
+
+Here is some to code to implement it for Gnus.  Verification of the
+headers is left (at present) as an exercise for the reader.
+
+;;; Add this to your .gnus and call
+;;; gnus-article-sign-message instead of mc-sign directly.
+;;; Pgp signed messages are vulnerable to various kinds of badness due to
+;;; the separation of header information.  Fix it.
+
+(defconst gnus-pgp-included-headers '("From"
+				      "To"
+				      "Newsgroups"
+				      "Message-ID"
+				      "Date"
+				      "Subject"
+				      "Cc"
+				      "Gcc")
+  "Headers to include in signed portion of PGP signed message.")
+
+(defconst gnus-pgp-signed-headers "----BEGIN PGP SIGNED HEADERS----\n"
+  "String to use for separation in message.")
+
+(defun gnus-article-sign-message (arg)
+  "Sign a message with PGP, including outgoing headers in an included
+block, as per the suggestion of \"Dr. Dimitri Vulis\" &lt;dlv@bwalk.dm.com&gt;."
+  (interactive "p")
+  (save-excursion
+    (save-restriction
+      (gnus-inews-narrow-to-headers)
+      (goto-char (point-max))
+
+      (or (mail-fetch-field "date")
+	  (insert (concat "Date: " (gnus-inews-date) "\n")))
+      (or (mail-fetch-field "message-id")
+	  (insert (concat "Message-ID: " (gnus-inews-message-id) "\n")))))
+
+  (save-excursion
+    (goto-char (point-max))
+    (insert "\n")
+    ;; If there is already a header block (eg. after undoing a signature)
+    ;; remove it entirely, and rebuild from scratch.
+    (if (re-search-backward gnus-pgp-signed-headers nil t)
+	  (kill-region (point) (point-max)))
+    (insert gnus-pgp-signed-headers)
+    (let ((headers gnus-pgp-included-headers)
+	  header header-value)
+      (while (setq header (car headers))
+	(setq headers (cdr headers))
+	(save-excursion
+	  (save-restriction
+	  (gnus-narrow-to-headers)
+	  (setq header-value (mail-fetch-field header))))
+	(if header-value
+	    (insert (concat header ": " header-value "\n"))))
+      (insert "\n")))
+  (mc-sign arg))
+
+- -- 
+steve@miranova.com baur
+
+- ----BEGIN PGP SIGNED HEADERS----
+To: cypherpunks@toad.com
+Message-ID: &lt;<A HREF="msg00962.html">m2n38am8ht.fsf@diana.miranova.com</A>&gt;
+Date: 30 Dec 1995 15:34:22 -0800
+Subject: Re: easy avoidance of PGP signature forgeries and reuse
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+Comment: Processed by Mailcrypt 3.4, an Emacs/PGP interface
+
+iQCVAwUBMOXMhKLJZEUiepcNAQGjtgP/ZnC+TL4cbFL3RF+o8fwe2YFciqGkOWX9
+VuPK4btnvfKF/wcdMTfJoUKbSutKcwRkbLe5fAqEV3qrXwM7PgfNMlXfcgNg44It
+UhfLAaFg6ke5ArWr9EZfyFcD93OrS9qVGU7emSenmsqpdJUE6jU0HmKAQkZzP1Ak
+AYQD7ow/tzI=
+=PTV7
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00949" HREF="msg00949.html">Re: easy avoidance of PGP signature forgeries and reuse</A></STRONG>
+<UL><LI><EM>From:</EM> dlv@bwalk.dm.com (Dr. Dimitri Vulis)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00950.html">Re: Compuserve is Not "Censoring": Look to Governments for the Cause</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00963.html">new years resolutions for cypherpunks</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00949.html">Re: easy avoidance of PGP signature forgeries and reuse</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00900.html">Re: A weakness in PGP signatures, and a suggested solution (long)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00962"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00962"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

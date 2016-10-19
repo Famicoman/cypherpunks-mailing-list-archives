@@ -1,0 +1,229 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: (fwd) BSD random() &#45; any good (source included)? -->
+<!--X-From-R13: Xvz pubngr <enintrNotn.pbz> -->
+<!--X-Date: Thu, 7 Jul 94 13:20:54 PDT -->
+<!--X-Message-Id: 199407072020.PAA29377@ivy.bga.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>(fwd) BSD random() - any good (source included)?</TITLE>
+<LINK REV="made" HREF="mailto:ravage@bga.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00383.html">Date Prev</A>][<A HREF="msg00384.html">Date Next</A>][<A HREF="msg00498.html">Thread Prev</A>][<A HREF="msg00369.html">Thread Next</A>][<A HREF="index.html#00382">Date Index</A>][<A HREF="threads.html#00382">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>(fwd) BSD random() - any good (source included)?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: (fwd) BSD random() - any good (source included)?</LI>
+<LI><em>From</em>: Jim choate &lt;<A HREF="mailto:ravage@bga.com">ravage@bga.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 7 Jul 1994 15:20:36 -0500</LI>
+<LI><em>Newsgroups</em>: sci.math,sci.stat.math</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Path: bga.com!news.sprintlink.net!news.onramp.net!convex!cs.utexas.edu!bcm!news.tamu.edu!henrik
+From: henrik@stat.tamu.edu (Henrik Schmiediche)
+Newsgroups: sci.math,sci.stat.math
+Subject: BSD random() - any good (source included)?
+Date: 22 Jun 1994 21:15:35 GMT
+Organization: Department of Statistics, Texas A&amp;M University
+Lines: 140
+Message-ID: &lt;2ua9ln$4lv@news.tamu.edu&gt;
+NNTP-Posting-Host: picard.tamu.edu
+Xref: bga.com sci.math:14740 sci.stat.math:1193
+
+     Hello,
+the BSD random() function returns a pseudo random number. I would like
+to know if anyone knows how good this random number generator is and
+if it has been thouroughly tested. Below are two descriptions of the
+generator for two different sources. Looking at the source code it is
+obvious that this generator is seeded using a linear congruetial
+generator that leaves much to be desired (low bits alternate). I
+remember reading somewhere that the trinomials used by random() are
+not optimal but I can't remember the source. The generator does have
+some great advantages like being very fast and having a very long
+period, but both these advantages are meaningless if the random
+numbers it produces are not very good. Anyone know more about random()
+and if it is any good?
+
+I have include a source code implementation below (I wrote it
+originally so I could inline the code into my own application which
+spend a significant amount of time generating random numbers).
+
+   - henrik
+
+
+According to the SunOS doc's:
+
+"random () uses a non-linear additive feedback random number
+generator employing a default table of size 31 long integers
+to return successive pseudo-random numbers in the range from
+0  to (2**31)-1.  The period of this random number generator
+is very large, approximately 16*((2**31)-1)."
+
+The BSD source code (from glibc) says:
+
+"The random number generation technique is a linear feedback shift
+register approach, employing trinomials (since there are fewer terms
+to sum up that way).  In this approach, the least significant bit of
+all the numbers in the state table will act as a linear feedback shift
+register, and will have period 2^deg - 1 (where deg is the degree of
+the polynomial being used, assuming that the polynomial is irreducible
+and primitive).  The higher order bits will have longer periods, since
+their values are also influenced by pseudo-random carries out of the
+lower bits.  The total period of the generator is approximately
+deg*(2**deg - 1); thus doubling the amount of state information has a
+vast influence on the period of the generator."
+
+For table size of 31 long ints random() use the trinomial: x**31 +
+x**3 + 1. For 63 long ints it uses the trinomial x**63 + x + 1.
+
+*****************************************************************************
+
+/***
+   Code to implement random() &amp; srandom() of BSD Unix. It was taken
+   (though coded somewhat differently) from the Gnu BSD implementation.
+ ***/
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+#ifdef LONG31  /* x^31 + x^3 + 1 */
+#define SIZE  31
+#define SIZE1 30
+#define P1 3
+#define P2 0
+#else  /* LONG63: x^63 + x + 1 */
+#define SIZE  63
+#define SIZE1 62
+#define P1 1
+#define P2 0
+#endif
+
+#define LONG_MAX  0x7fffffff
+
+
+int p1=P1, p2=P2;  
+long table[SIZE];
+
+/*** return a "random" number in range [0, LONG_MAX] */
+
+long xrand ()
+{
+  int r;
+
+  table[p1] = table[p1] + table[p2]; /* add two table elements */
+  r = (table[p1] &gt;&gt; 1) &amp; LONG_MAX;   /* throw least significant bit away */
+
+  if (p1 == SIZE1) { /* increment the table indexes */
+    p1 = 0; 
+    p2 = p2 + 1; 
+  }
+  else if (p2 == SIZE1) {
+    p1 = p1 + 1;    
+    p2 = 0;
+  }
+  else {
+    p1 = p1 + 1;    
+    p2 = p2 + 1;
+  }
+
+  return (r);
+}
+
+
+/*** use a linear congruential type generator to seed the 
+     state table &amp; cycle the entire table 10 times */
+
+void sxrand (seed)
+long seed;
+{
+  int i;
+
+  table[0] = seed;
+  for (i=1; i&lt;SIZE; ++i)
+    table[i] = (table[i-1] * 1103515145) + 12345;  /* lousy */
+
+  for (i=0; i&lt;10*SIZE; ++i)
+    (void) xrand();
+}
+
+
+/*** a small test program */
+
+void main ()
+{
+  int i;
+
+  sxrand (1);  /* BSD default */
+
+  for (i=1; i&lt;=40; ++i)
+    printf ("%ld", xrand() % 10 ); /* least random bits ? */
+
+  /* 6714066113586447326208220248220881760069 (cc -DLONG63) */
+  /* 9418752338157675324663485137890734831064 (cc -DLONG31) */
+
+  printf ("\n");
+}
+
+
+
+--
+Henrik Schmiediche, Dept. of Statistics, Texas A&amp;M, College Station, TX 77843
+E-mail: henrik@stat.tamu.edu  |  Tel: (409) 862-1764   |  Fax: (409) 845-3144
+Finger for pgp 2.5 key, fingerprint: CE8F BD6C 59FC DA85  376A BB96 2E83 FF5E
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00383.html">(fwd) Re: BSD random() - any good (source included)?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00384.html">(fwd) Re: BSD random() - any good (source included)?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00498.html">Re: (fwd) Re: BSD random() - any good (source included)?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00369.html">real live Detweiler messages- anyone?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00382"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00382"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

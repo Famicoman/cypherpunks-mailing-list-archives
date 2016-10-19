@@ -1,0 +1,176 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re:  Proposal: some more standard remailer features -->
+<!--X-From-R13: usvaarlNfuryy.cbegny.pbz -->
+<!--X-Date: Tue, 5 Apr 94 22:49:54 PDT -->
+<!--X-Message-Id: 199404060550.WAA17000@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re:  Proposal: some more standard remailer features</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00220.html">Date Prev</A>][<A HREF="msg00224.html">Date Next</A>][<A HREF="msg00227.html">Thread Prev</A>][<A HREF="msg00232.html">Thread Next</A>][<A HREF="index.html#00221">Date Index</A>][<A HREF="threads.html#00221">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re:  Proposal: some more standard remailer features</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re:  Proposal: some more standard remailer features</LI>
+<LI><em>From</em>: <A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A></LI>
+<LI><em>Date</em>: Tue, 5 Apr 1994 22:50:46 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+From: rjc@gnu.ai.mit.edu (Ray)
+&gt;    Here are some proposed remailer standards some of which I have
+&gt; already implemented.
+&gt; 
+&gt; Command Formatting:
+&gt; 
+&gt;  I propose that all remailer commands start on the first non-blank line of a 
+&gt; message body and start with the string '::' followed by a command-name
+&gt; with no spaces in it. A command block should end when two blank lines are
+&gt; encountered (which are stripped from the output) or a non-blank
+&gt; line that doesn't start with '::' is encountered.
+
+Why look for *two* blank lines to end a command block?  Why not just end a
+command block when you find a line not starting with ::?
+
+&gt; Message Encapsulation:
+&gt; 
+&gt;  I propose a standard format for recursively storing messages in
+&gt; envelopes with standard formats.  Each envelope should begin with the
+&gt; command "::envelope" followed by the envelope method, followed by the
+&gt; body. The end of the "envelope" is specified with ::end METHODNAME
+
+This is reminiscent of MIME.  Have you looked at that?  They already deal
+with encapsulation as well as message splitting, I think.  You could copy
+their message formats without committing to full MIME support.  Plus it
+might be possible to add encryption and remailing support to MIME mail user
+agents by using the hooks they already provide.
+
+&gt;   I propose the header pasting token, "::@" which gets applied
+&gt; only after the message is delivered to someone (not chained).
+&gt; For example
+&gt; ::@Subject this is the subject line
+&gt; ::@From    this is the from line
+&gt; ::@x-foo   this is the x-foo: header
+
+The only thing that seems wrong about this is that the remailer apparently
+has to know whether it is sending to a person or another remailer.  I think
+you should follow instructions about pasting these header fields by what
+the user has requested rather than deciding for him.  Maybe I don't under-
+stand exactly how Ray is proposing that these commands be used.
+
+&gt;   Depending on how the remailer is set up, incoming subject headers
+&gt; may or may not be preserved.
+
+I would recommend that they not be preserved, but I suppose that is up to
+the operator.
+
+This may sound crazy, but I am concerned about adding these features which
+make the system too easy to use.  It seems that at the limit a person can
+just put "::To: friend@college.edu#remailer1#remailer2#*#*#remailer3" at
+the top of his message and his mail goes zipping down this extremely com-
+plicated path.  But the problem is that this is really deceptive in
+terms of how secure it is.  All this ease of use is at the expense of having
+to put a lot more trust into one or a few remailer operators.
+
+It's not clear that it's better to provide the temptation of easy-to-use but
+falsely secure remailers.  At least with Julf you know you're trusting him.
+With addresses like the above users may not realize how many eggs they're
+putting into that first remailer's basket.
+
+&gt; EXAMPLE MESSAGE:
+&gt; 
+&gt; ::envelope PGP
+&gt; [PRETEND EVERYTHING FROM HERE DOWN IS ENCRYPTED FOR THE REMAILER]
+&gt; ::to ann's_remailer#darkmodem
+&gt; ::@Subject Hello World
+&gt; 
+&gt; &lt;Message text&gt;
+&gt; ::end PGP
+&gt; 
+&gt; when sending this out, the remailer might encrypt the message
+&gt; for ann's remailer and split it into two pieces
+&gt;  [...]
+&gt; Now when ann's remailer receives a two parted message, it queues
+&gt; each piece until it gets the full message (timing out after a few
+&gt; days) After all pieces are received, it removes the envelopes,
+&gt; pieces the message together, and sends the message off to darkmodem
+&gt; (which may be a virtual address for lightmodem#bob's_remailer)
+
+This kind of splitting would be more useful if it were carried through
+to the end user.  Otherwise the reassembled message is conveniently
+provided for inspection by the spooks as it goes to him.  Again, I think
+MIME may provide for reassembly at the end user.
+
+&gt;  I also propose ::route which would specify preferences preferred for
+&gt; remailers when searching for other remailers to chain your
+&gt; message to. e.g.
+
+Would this be used with the "*" remailer-chooses-remailer feature?  If the
+user specifies the path then presumably there is no provision for remailers
+to make choices like these.
+
+Despite my concerns, I think Ray has so many good ideas here that it will
+be great to see his software operating.  The "market" for remailers is the
+users who want both privacy and ease of use.  Ray's enthusiasm and energy
+in putting all these ideas into code will go a long way towards finding out
+what kinds of trade-offs the market wants.
+
+Hal
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00220.html">Re: Bekenstein Bound (was: Crypto and new computing strategies)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00224.html">Chaum on Traceable Cash</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00227.html">Re: Proposal: some more standard remailer features</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00232.html">Re: Proposal: some more standard remailer features</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00221"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00221"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

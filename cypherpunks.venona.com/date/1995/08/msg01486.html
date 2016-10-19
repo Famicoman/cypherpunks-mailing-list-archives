@@ -1,0 +1,152 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Netscape's RNG -->
+<!--X-From-R13: Wna Ubyqoret <vntbyqorNpfpyho.hjngreybb.pn> -->
+<!--X-Date: Tue, 29 Aug 95 22:13:04 PDT -->
+<!--X-Message-Id: 199508300512.BAA23185@calum.csclub.uwaterloo.ca -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Netscape's RNG</TITLE>
+<LINK REV="made" HREF="mailto:iagoldbe@csclub.uwaterloo.ca">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01467.html">Date Prev</A>][<A HREF="msg01494.html">Date Next</A>][<A HREF="msg01499.html">Thread Prev</A>][<A HREF="msg01508.html">Thread Next</A>][<A HREF="index.html#01486">Date Index</A>][<A HREF="threads.html#01486">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Netscape's RNG</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Netscape's RNG</LI>
+<LI><em>From</em>: Ian Goldberg &lt;<A HREF="mailto:iagoldbe@csclub.uwaterloo.ca">iagoldbe@csclub.uwaterloo.ca</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 30 Aug 1995 01:12:50 -0400 (EDT)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Someone on the list (sorry, I forget who), suggested that Netscape's RNG
+be looked at to see if the secret part of the SSL RC4/40 master key could
+be determined more directly.
+
+I used gdb on the Solaris version.  SSL_GenerateRandomBytes() is called
+when random bytes are needed.  It initializes the RNG, if necessary, and then
+calls RNG_GenerateRandomBytes.
+
+When I run "netscape <A  HREF="https://banking.wellsfargo.com/">https://banking.wellsfargo.com/</A>",
+SSL_GenerateRandomBytes() is called 3 times; the first time, 32 bytes
+are produced (I don't know what they're for); the second time, 16 bytes
+are produced (the Challenge data); the third time, 64 bytes are produced,
+the first 16 of which are the master key (the first 11 of which are sent
+in the clear, and the next 5 are our goal).
+
+Here's my own hand-reverse-assembly of RNG_GenerateRandomBytes:
+(Correctness not actually guaranteed in any way...)
+
+-----8&lt;-----8&lt;-----
+struct RNG
+{
+    unsigned char md5bytes[0x10];
+    unsigned char randbytes[0x10];
+    int size;
+    void *md5data;
+};
+
+RNG_GenerateRandomBytes(struct RNG *i0, char *i1, int i2)
+{
+    char buf[0x20];
+    int o1,o2;
+
+    while (i2 &gt; i0-&gt;size)
+    {
+	memcpy(i1, &amp;(i0-&gt;randbytes)+0x10-i0-&gt;size, i0-&gt;size);
+	i1 += i0-&gt;size;
+	i2 -= io-&gt;size;
+	if (err = MD5_Begin(i0-&gt;md5data)) return err;
+	if (err = MD5_Update(i0-&gt;md5data, &amp;(i0-&gt;md5bytes), 0x10)) return err;
+	if (err = MD5_End(i0-&gt;md5data, &amp;(i0-&gt;randbytes), buf, 0x10)) return err;
+	i0-&gt;size = 0x10;
+	o2 = 0;
+	o1 = &amp;(i0-&gt;md5bytes[0x0f]);
+	do
+	{
+	    if ((*o1)++) break;
+	    --o1;
+	} while (++o2 &lt;= 0x0f);
+    }
+
+    /* i2 &lt;= i0-&gt;size */
+    memcpy(i1, &amp;(i0-&gt;randbytes)+0x10-i0-&gt;size, i2);
+    i0-&gt;size -= i2;
+    return 0;
+}
+-----8&lt;-----8&lt;-----
+
+It looks like that Compilers course came in handy...
+
+So it's not linear congruential.  I guess the next step is to figure out
+how it's seeded, but that not for me to do (at least not tonight...).
+
+Here's another question about a more direct method:
+The 5 secret bytes are encrypted with the server's public (RSA?) key.
+Does the server use the same public key every time?  How do you read
+the public key, given the Certificate Data (what's the format of the
+certificate)?  Is it feasible to try to attack the public key with a
+massively parallel (Internet) factoring program (a la RSA-129)?
+Assuming that the modulus is _big_, it still is worthy to note that,
+unlike cracking individual challenges, cracking the public key will
+compromise _all_ communications with that server (until they catch on
+and pay $$$ for another key (I think?)).
+
+Just some thoughts,
+
+   - Ian "it's only 10pm _here_, but it's 2am in Nova Scotia!"
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01467.html">Re: Florida Drivers Permits and a Hello</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01494.html">NIST Key Escrow meeting</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01499.html">Re: SSL brute/ng</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01508.html">Re: Netscape's RNG</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01486"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01486"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

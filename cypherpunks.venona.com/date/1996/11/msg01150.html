@@ -1,0 +1,168 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: FCPUNX:Small "Hard" Problems Wanted -->
+<!--X-From-R13: zcqNargpbz.pbz ([vxr Rhibf) -->
+<!--X-Date: Thu, 14 Nov 1996 14:21:05 &#45;0800 (PST) -->
+<!--X-Message-Id: 199611142220.OAA23433@netcom12.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: FCPUNX:Small "Hard" Problems Wanted</TITLE>
+<LINK REV="made" HREF="mailto:mpd@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01148.html">Date Prev</A>][<A HREF="msg01151.html">Date Next</A>][<A HREF="msg01096.html">Thread Prev</A>][<A HREF="msg01154.html">Thread Next</A>][<A HREF="index.html#01150">Date Index</A>][<A HREF="threads.html#01150">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: FCPUNX:Small "Hard" Problems Wanted</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:eli@gs160.sp.cs.cmu.edu">eli@gs160.sp.cs.cmu.edu</A></LI>
+<LI><em>Subject</em>: Re: FCPUNX:Small "Hard" Problems Wanted</LI>
+<LI><em>From</em>: <A HREF="mailto:mpd@netcom.com">mpd@netcom.com</A> (Mike Duvos)</LI>
+<LI><em>Date</em>: Thu, 14 Nov 1996 14:20:29 -0800 (PST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Eli Brandt &lt;eli@gs160.sp.cs.cmu.edu&gt; writes:
+
+ &gt; (I'm getting this this through fcpunks, so my reply is
+ &gt; going to you. If you reply, you can cc cypherpunks if you
+ &gt; want.)
+
+Ok.
+
+[snip]
+
+ &gt;&gt; ... I plan to test it on reduced round DES, full 16 round
+ &gt;&gt; DES, and some RSA problems of various sizes.
+
+ &gt; These are all in NP (though not necessarily NP-C), so you
+ &gt; can certainly solve them with SAT, but I'd be *very*
+ &gt; surprised if SAT were an efficient way to do it.  If
+ &gt; SAT-reduction beats the number field sieve at factoring, for
+ &gt; example, you've got a major research result.
+
+Actually, I would expect any AI algorithm which has some notion
+of convergence to beat all of the "combination of congruences"
+factoring methods, which are essentially exhaustive searches,
+albeit it under the image of some useful transformations and
+homomorphisms.
+
+SAT (boolean satisfiability) does not seem to illuminate
+factoring or other cyptographic problems in any obvious way. Even
+a prime implicant covering of a typical strong cryptographic
+function would be mondo huge in terms of memory.  Crypto problems
+map pretty nicely into circuit problems, however, and circuit
+satisfiability seems to be a nice wedge with which to attack a
+number of the most popular ones.  Of course, you can go back and
+forth between circuit and SAT problems, but thinking in terms of
+circuits allows you to add the correct additional variables to a
+problem which would be gigantic if you did the output directly in
+terms of the input bits.
+
+I will wait to see if this thing munches through DES of various
+rounds before claiming any "research results."
+
+ &gt;&gt; I already have C code to map RSA and n-round DES problems
+ &gt;&gt; into an appropriate circuit satisfiability problem
+
+ &gt; How big a SAT problem does an n-bit RSA or n-round DES
+ &gt; problem turn into?
+
+Well - the typical DES S-Box requires between 130-155 2-input
+logical operations to express its 4 bit output in terms of its 6
+bit input if you basically construct it in the obvious no-brainer
+way without attempting any clever optimization.
+
+Throw in a few XORs, and you can wire 2 round DES in about 2,500
+one and two input logical operations, and the full 16 round DES
+takes about 25,000.  I'm sure this can be improved upon greatly,
+if someone wanted to tweek the wiring diagram.
+
+What I've done to convert DES to a circuit satisfiability problem
+is to make a logical network with (56+64+64) input bits and 1
+output bit. The input consists of (key,plaintext,ciphertext).  I
+pass both the plaintext and ciphertext through the IP, and do
+half the rounds on each with the appropriate subkeys.  Then I XOR
+opposite 32 bit sections between them, OR it all together, and
+complement the output.
+
+This yields something which lights up if the key maps the
+provided plaintext into the provided ciphertext and outputs zero
+otherwise.  When it is instantated with a particular
+plaintext/ciphertext pair, this diagram can be munched by the
+previously mentioned algorithm to yield a possibly non-empty set
+of keys.
+
+RSA is a little bit more messy.  Given a modulus between 2^k &lt; N
+&lt; 2^(k-1), you can construct a circuit which when instantated
+with the modulus bits will light up if and only if the larger
+of the two distinct primes is input.  The way I do this requires
+only two multiplicative operations, one being a modular
+reciprocal of an odd number modulo 2^k, and the other being a
+multiplication.  Both of these are wired as N^2 algorithms,
+using successive approximation, although near-linear algorithms
+probably exist.
+
+As a data point, a circuit which lights up when RSA-140 is input
+can be done in about a million NANDs.  Someone has offered me
+some time on a 64 meg ultraSparc to try some RSA problems, but I
+am going to debug the C version on DES first.
+
+--
+     Mike Duvos         $    PGP 2.6 Public Key available     $
+     mpd@netcom.com     $    via Finger.                      $
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01148.html">Re: Censor John Gilmore -- EFF is a disgrace! [NOISE] [NEEDLESS TO SAY]</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01151.html">RE: Remailer Abuse Solutions</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01096.html">Re: FCPUNX:Small 'Hard' Problems Wanted</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01154.html">Playing Cards</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01150"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01150"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

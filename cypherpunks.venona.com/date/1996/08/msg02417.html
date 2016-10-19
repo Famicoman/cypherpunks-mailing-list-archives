@@ -1,0 +1,204 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Elliptic Curve Y**2 = x**3 + a * x**2 + b -->
+<!--X-From-R13: puraNpura.pbz ([nex Qura) -->
+<!--X-Date: Sun, 1 Sep 1996 12:43:41 +0800 -->
+<!--X-Message-Id: 9609010250.AA00997@pela.chen.com. -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.SUN.3.95.960829124919.16763B&#45;100000@eskimo.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Elliptic Curve Y**2 = x**3 + a * x**2 + b</TITLE>
+<LINK REV="made" HREF="mailto:chen@chen.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02368.html">Date Prev</A>][<A HREF="msg02367.html">Date Next</A>][<A HREF="msg02251.html">Thread Prev</A>][<A HREF="msg02213.html">Thread Next</A>][<A HREF="index.html#02417">Date Index</A>][<A HREF="threads.html#02417">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Elliptic Curve Y**2 = x**3 + a * x**2 + b</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:weidai@eskimo.com">weidai@eskimo.com</A> (Wei Dai)</LI>
+<LI><em>Subject</em>: Re: Elliptic Curve Y**2 = x**3 + a * x**2 + b</LI>
+<LI><em>From</em>: <A HREF="mailto:chen@chen.com">chen@chen.com</A> (Mark Chen)</LI>
+<LI><em>Date</em>: Sat, 31 Aug 1996 19:50:59 -0700 (PDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg02251.html">Pine.SUN.3.95.960829124919.16763B-100000@eskimo.com</A>&gt; from Wei Dai at "Aug 29, 96 12:59:25 pm"</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:chen@chen.com">chen@chen.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Wei Dai writes:
+&gt; On Thu, 29 Aug 1996, Tom Rollins wrote:
+&gt; 
+&gt; &gt; Questions are:
+&gt; &gt; 
+&gt; &gt;   1: How can I take the suqare root mod p ?
+&gt; 
+&gt; Here's some C++ code for taking modular square roots:
+&gt; 
+&gt; Integer ModularSquareRoot(const Integer &amp;a, const Integer &amp;p)
+&gt; {
+&gt; 	if (p%4 == 3)
+&gt; 		return a_exp_b_mod_c(a, (p+1)/4, p);
+&gt; 
+&gt; 	Integer q=p-1;
+&gt; 	unsigned int r=0;
+&gt; 	while (q%2==0)   // while q is even
+&gt; 	{
+&gt; 		r++;
+&gt; 		q &gt;&gt;= 1;
+&gt; 	}
+&gt; 
+&gt; 	Integer n=2;
+&gt; 	while (Jacobi(n, p) != -1)
+&gt; 		++n;
+&gt; 
+&gt; 	Integer y = a_exp_b_mod_c(n, q, p);
+&gt; 	Integer x = a_exp_b_mod_c(a, (q-1)/2, p);
+&gt; 	Integer b = (x.Square()%p)*a%p;
+&gt; 	x = a*x%p;
+&gt; 	Integer tempb, t;
+&gt; 
+&gt; 	while (b != 1)
+&gt; 	{
+&gt; 		unsigned m=0;
+&gt; 		tempb = b;
+&gt; 		do
+&gt; 		{
+&gt; 			m++;
+&gt; 			b = b.Square()%p;
+&gt; 			if (m==r)
+&gt; 				return Integer::ZERO;
+&gt; 		}
+&gt; 		while (b != 1);
+&gt; 
+&gt; 		t = y;
+&gt; 		for (unsigned i=0; i&lt;r-m-1; i++)
+&gt; 			t = t.Square()%p;
+&gt; 		y = t.Square()%p;
+&gt; 		r = m;
+&gt; 		x = x*t%p;
+&gt; 		b = tempb*y%p;
+&gt; 	}
+&gt; 
+&gt; 	assert(x.Square()%p == a);
+&gt; 	return x;
+&gt; }
+&gt; 
+&gt; &gt;   2: How to determine if a solution exists for a
+&gt; &gt;      selected value of x ?
+&gt; 
+&gt; The Jacobi symbol tells you whether x has a square root mod p:
+&gt; 
+&gt; // if b is prime, then Jacobi(a, b) returns 0 if a%b==0, 1 if a is
+&gt; // quadratic residue mod b, -1 otherwise
+&gt; // check a number theory book for what Jacobi symbol means when b is not
+&gt; // prime
+&gt; 
+&gt; int Jacobi(const Integer &amp;aIn, const Integer &amp;bIn)
+&gt; {
+&gt;     assert(bIn[0]==1);
+&gt; 
+&gt;     Integer b = bIn, a = aIn%bIn;
+&gt;     int result = 1;
+&gt; 
+&gt;     while (!!a)
+&gt;     {
+&gt; 	unsigned i=0;
+&gt; 	while (a[i]==0)
+&gt; 		i++;
+&gt; 	a&gt;&gt;=i;
+&gt; 
+&gt; 	if (i%2==1 &amp;&amp; (b%8==3 || b%8==5))
+&gt; 		result = -result;
+&gt; 
+&gt;         if (a%4==3 &amp;&amp; b%4==3)
+&gt;             result = -result;
+&gt; 
+&gt;         swap(a, b);
+&gt;         a %= b;
+&gt;     }
+&gt; 
+&gt;     return (b==1) ? result : 0;
+&gt; }
+&gt; 
+&gt; &gt;   3: Is the a simpler method than find a square root ?
+&gt; 
+&gt; I don't think so.  Let me know if you do find one.
+
+If you work in GF(2^m), you can use a normal basis representation
+which allows you to do much faster math.  Squaring, for example,
+becomes a simple rotation.
+
+There are also very efficient algorithms for computing inverses and
+solving quadratics.
+
+These speedups currently account for most of the performance
+improvements which elliptic curve systems offer over their
+integer-field counterparts.
+
+   - Mark -
+
+
+--
+Mark Chen 
+415/341-5539
+chen@chen.com
+D4 99 54 2A 98 B1 48 0C  CF 95 A5 B0 6E E0 1E 1D
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="02251" HREF="msg02251.html">Re: Elliptic Curve Y**2 = x**3 + a * x**2 + b</A></STRONG>
+<UL><LI><EM>From:</EM> Wei Dai &lt;weidai@eskimo.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02368.html">Re: Anti-Racist Laws Stifle Political Liberty</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02367.html">Re: Penet Bites the Dust</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02251.html">Re: Elliptic Curve Y**2 = x**3 + a * x**2 + b</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02213.html">Re: Elliptic Curve Y**2 = x**3 + a * x**2 + b</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02417"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02417"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,211 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: remailer spam throttle -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Sun, 30 Mar 1997 08:56:07 &#45;0800 (PST) -->
+<!--X-Message-Id: 199703301545.QAA03183@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 88Lc5D5w165w@bwalk.dm.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: remailer spam throttle</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00811.html">Date Prev</A>][<A HREF="msg00814.html">Date Next</A>][<A HREF="msg00800.html">Thread Prev</A>][<A HREF="msg00851.html">Thread Next</A>][<A HREF="index.html#00819">Date Index</A>][<A HREF="threads.html#00819">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: remailer spam throttle</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:dlv@bwalk.dm.com">dlv@bwalk.dm.com</A></LI>
+<LI><em>Subject</em>: Re: remailer spam throttle</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 30 Mar 1997 16:45:07 +0100</LI>
+<LI><em>CC</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg00800.html">88Lc5D5w165w@bwalk.dm.com</A>&gt; (dlv@bwalk.dm.com)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Dimitri Vulis &lt;dlv@bwalk.dm.com&gt; writes:
+&gt; Adam Back &lt;aba@dcs.ex.ac.uk&gt; writes:
+&gt; &gt; [remailer encrypts data, sends recipient encrypted data, and keeps
+&gt; &gt; the key the recipient requests decryption if he wishes]
+&gt; &gt;
+&gt; &gt; I think this solves remailer resource objections.
+&gt; 
+&gt; yes, this sort of solves the storage problem.
+&gt; 
+&gt; Thinking how this might work...
+&gt; 
+&gt; Alice's remailer gets an e-mail for Bob.
+&gt; 
+&gt; Alice's remailer generates 2 pseudo-random numbers, K and L, and uses
+&gt; K to encrypt the message with a symmetric cryptoscheme.
+&gt; 
+&gt; Alice's remailer sends the encrypted message and L to Bob with the
+&gt; following note: if you want to receive the key to decrypt this
+&gt; message, send back L and acknowledge the disclaimer.
+&gt; 
+&gt; Alice's remailer retains the triple (K,L,Bob). Because it's small,
+&gt; it can be kept for a long time.
+
+I think you don't need to keep Bob .. just lookup K with L.  Less
+email addresses is a good thing.
+
+The counter argument I suppose is that the Feds, or anyone else who
+reads Bobs email can then ask for the key.  But if they can read his
+email, they can already read it once he requests the key.  It would
+allow an eavesdropper to do a DoS attack against Bob, request all his
+emails before he can.
+
+&gt; If Bob sends back L, the remailer sends Bob K so he can read his message.
+&gt; 
+&gt; I see a few problems with this. I'm sure it can be improved.
+&gt; 
+&gt; 1. What if Bob is another remailer, unknown to Alice?
+
+Why is this a problem?  You have accept lists for remailers between
+themselves.  A private remailer (one not advertising itself on these
+lists) just mimics Alice in retreiving the email ... waits a while
+then requests the key.
+
+&gt; 2. What if Bob doesn't have the program to decode his message? (It's
+&gt; fair to assume that everyone can fine PGP. It's not fair to assume that
+&gt; everyone can find e.g. triple DES.)
+
+You can provide a web interface to do it for him.
+
+Or, you can offer the option that if he includes the encrypted message
+in his request you will decrypt it for him, by return of email.
+
+&gt; 3. What if the LEA's decide that the collection of triples on Alice's
+&gt; computer is worth looking at, for instance, for the list of addresses.
+&gt; (OK, they could be encrypted probably.)
+
+Don't keep the addresses as above -- treat the nonce L as the
+identitiy.
+
+&gt; 4. What if the LEA's decide to find out how K, L are generated?
+
+Random pool like PGP, it's one way and the pool has more bits than the
+key material the Feds have anyway.  /dev/urandom is nice.  
+
+&gt; When Alice's remailer gets an e-mail for Bob, it should do
+&gt; something like:
+&gt; 
+&gt; 
+&gt;           try to fetch Bob's public key
+&gt;           from a well-run key server
+&gt;             /                    \
+&gt;          success               failure
+&gt;            |                      |
+&gt;       encrypt the e-mail      discard the
+&gt;       with bob's key and      e-mail!
+&gt;       pass it to Bob              |
+&gt;                               was the form
+&gt;                               letter sent to
+&gt;                               Bob in the last
+&gt;                               7 days?    \
+&gt;                              /            no
+&gt;                            yes              \
+&gt;                           /                exit
+&gt;                     send bob the
+&gt;                     form letter
+&gt; 
+&gt; 
+&gt; Wow, isn't that a perry flow chart. :-)
+
+Yes.  A good solution also.  Perhaps we can write a nice remailer
+which has a web forms interface for configuration, lots of radio
+buttons etc to allow the proud new remailer in a box owner to
+configure his remailer, and pretty stats graphs.
+
+[o] discard / keep
+if keep how long for [...]
+
+etc.
+
+Then let the remailer operator play with settings and see which works
+out best for him.
+
+&gt; It may be hard to prove a negative to a LEO who doesn't know what
+&gt; the hell you're talking about. You have a file in your spool that
+&gt; was encrypted with a key that your program generated, but now you
+&gt; no longer have the key? Well, tell us how the key was generated.
+
+I think you're arguing for your discard all policy :-)
+
+btw if you're interested to fix the keyserver so that it requires an
+ack to a ping with a nonce, someone at MIT has a fast PGP key database
+/ web key server which isn't using PGPs linear lookup.  You can find a
+link to it from Brian LaMachia's keyserver page.
+
+Another snazzy thing to do to the keyserver would be to have it obtain
+a timestamp signature on your key (from a third party time stamping
+service, of which there are several) and include that too.
+
+Adam
+
+-- 
+Have *you* exported RSA today? --&gt; <A  HREF="http://www.dcs.ex.ac.uk/~aba/rsa/">http://www.dcs.ex.ac.uk/~aba/rsa/</A>
+
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00800" HREF="msg00800.html">Re: remailer spam throttle</A></STRONG>
+<UL><LI><EM>From:</EM> dlv@bwalk.dm.com (Dr.Dimitri Vulis KOTM)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00811.html">Heaven's Cypherpunks</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00814.html">Re: PSYOPS/infowar</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00800.html">Re: remailer spam throttle</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00851.html">Re: remailer spam throttle</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00819"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00819"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

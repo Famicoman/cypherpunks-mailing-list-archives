@@ -1,0 +1,211 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Design proposal: crypto&#45;capable generic interface -->
+<!--X-From-R13: Dncu Zrivra <encuNp2.bet> -->
+<!--X-Date: Thu, 23 Nov 1995 02:50:14 +0800 -->
+<!--X-Message-Id: Pine.SUN.3.91.951122094209.29001A&#45;100000@infinity.c2.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9511221641.AA14712@tis.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Design proposal: crypto-capable generic interface</TITLE>
+<LINK REV="made" HREF="mailto:raph@c2.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01104.html">Date Prev</A>][<A HREF="msg01099.html">Date Next</A>][<A HREF="msg01661.html">Thread Prev</A>][<A HREF="msg01129.html">Thread Next</A>][<A HREF="index.html#01100">Date Index</A>][<A HREF="threads.html#01100">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Design proposal: crypto-capable generic interface</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Carl Ellison &lt;<A HREF="mailto:cme@TIS.COM">cme@TIS.COM</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Design proposal: crypto-capable generic interface</LI>
+<LI><em>From</em>: Raph Levien &lt;<A HREF="mailto:raph@c2.org">raph@c2.org</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 22 Nov 1995 10:11:00 -0800 (PST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:cme@TIS.COM">cme@TIS.COM</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01661.html">9511221641.AA14712@tis.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+On Wed, 22 Nov 1995, Carl Ellison wrote:
+
+&gt; &gt;Date: Sat, 18 Nov 1995 00:42:21 -0800 (PST)
+&gt; &gt;From: Raph Levien &lt;raph@c2.org&gt;
+&gt;
+&gt; &gt;   I propose that the new interface lives as a sort of daemon, rather
+&gt; &gt;than a static collection of command line script pieces. 
+&gt; 
+&gt; Danger, Will Robinson!  (see below)
+
+   In restrospect, "daemon" was a poor choice of words to describe my
+proposal. "Slave process" gets the idea across much better, but may be a
+bit less PC. A daemon sits on a publicly accessible port, such as a TCP/IP
+socket. The slave process is only accessible to the user who invoked it
+(enforced by the OS's file permissions). Further, it only gives secrets to
+individual processes that authenticated themselves first (by sending a
+passphrase down the connection to the slave process). 
+
+&gt; &gt;   Once the negotation has been established, the application can send
+&gt; &gt;the daemon MIME objects that the app does not understand but the
+&gt; &gt;daemon does (for example, an image/fractal). The daemon can return a
+&gt; &gt;MIME object that the app does understand (for example, an image/ppm).
+&gt; 
+&gt; This part sounds good...a sort of master translation service.
+
+   I'm glad you like it!
+
+&gt; &gt;   Alternatively, the daemon may request an authentication. This is
+&gt; &gt;useful when resolving external bodies that require authentication,
+&gt; &gt;including non-anonymous FTP, and standard authenticated HTTP. In this
+&gt; &gt;case, the daemon sends a message to the app requesting the
+&gt; &gt;authentication. It specifies whether it needs both username and
+&gt; &gt;password, or just password. In the latter case, it hands a username to
+&gt; &gt;the application.
+&gt; &gt;   The application can then query the user for the authentication
+&gt; &gt;data. It hands this back to the daemon. In reply, the daemon indicates
+&gt; &gt;success or failure. In case of success, it hands the object back to
+&gt; &gt;the app.
+&gt; 
+&gt; Now I get worried.  This communication with the demon is via some IPC --
+&gt; maybe even via a LAN.  Some things can't be distributed safely and
+&gt; authentication is #2 on my list.
+
+   No, the communication is not via a LAN. On a Unix system, the 
+communication is through Domain Sockets. Both processes live on the same 
+machine, and the socket "lives" on the local file system.
+
+   I submit that my proposal is every bit as secure as, say, PGP is now. 
+If you can't trust the operating system not to hand domain sockets from 
+one process to another, then you certainly can't trust it to, for 
+example, substitute different binaries for the crypto program (an attack 
+which Ian et al cleverly mounted a few weeks ago).
+   If it were not the case that my proposal was as secure as PGP, then I 
+would want to withdraw it. However, the proposal has so many advantages 
+that I would want to see a serious description of the attack, rather than 
+just feelings of endangerment to Will Robinson.
+
+&gt; &gt;   Encryption is a bit more tricky, but in essence you just hang a
+&gt; &gt;premail-alike off this kind of protocol. The hard part is specifying
+&gt; &gt;the key, but you just call it a "parameter" and put in hooks for the
+&gt; &gt;daemon to ask for whatever parameters it needs. 
+&gt; 
+&gt; Crypto keys are #1 on my list of things you can't distribute (unless they
+&gt; are wrapped, of course).
+
+   I should have made it cleaer that I am referring to public keys. If 
+public keys are on the list of things that can't be distributed, then I 
+believe we are in trouble.
+
+&gt; &gt;						 This requires that
+&gt; &gt;keys have some nonforgeable names, which is unfortunately not a
+&gt; &gt;feature of PGP 2.6.2. S/MIME will do it just fine, if you buy into the
+&gt; &gt;Certifcation Authority (&lt;wink&gt; at Nick Szabo).
+&gt; 
+&gt; Public keys, if that's what you're talking about, have perfectly good
+&gt; nonforgeable names -- themselves.  They are unique.  They are the proper
+&gt; name which can collect all the attributes of that key which are of interest
+&gt; (e.g., permission to spend $, name of a human who knows the private key,
+&gt; attributes about that human, etc.).
+
+   Ok. But public keys have one serious disadvantage: their size. I can't 
+put a public key on my business card or read it over the phone. I want a 
+unforgeable key name. I want this to be the standard key name in the 
+interface between the application and the crypto engine. I want users to 
+be able to specify them directly, at the very least to bootstrap the 
+public key infrastructure.
+   I propose using the MD5 hash of the whitespace-free MOSS 
+representation of the public key, in hex. It's simple enough to be 
+described in one sentence, but does everything I want.
+
+   Note that PGP 2.6.2 does _not_ allow the use of a public key as the 
+name of a public key, unless you do a horrible hack such as replace the 
+pubring.pgp file with the one public key of interest. This is a 
+significant problem when trying to identify which key signed a signed 
+message. I haven't bashed around with TISMOSS enough, but I'm not sure it 
+will allow this either. I got the impression that it preferred the use of 
+an alias.
+
+&gt; &gt;   One final aside: I've been fairly frustrated with this mailing list
+&gt; &gt;as a forum for talking about real design proposals and implementation
+&gt; &gt;issues. Ignorant posts by the likes of Dr. Fred and Alice d'Clueless
+&gt; &gt;tend to attract far more attention than real crypto work. I want a
+&gt; &gt;forum for, and just for, cypherpunks who write code. If I had just a
+&gt; &gt;smidgen more free time (as if), I'd be trying to start one
+&gt; &gt;myself. Anyone else?
+&gt; 
+&gt; I've seen this happen several times.  As a list gets popular, it
+&gt; diversifies.  You might try sci.crypt.research -- since it's moderated.
+
+   Thanks for the suggestion. However, my concerns are with 
+implementation and deployment, not research.  I am perfectly willing to 
+consider cryptographic algorithms to be black boxes that do what they say 
+they will. I think the charter exists to start a new list. John Gilmore 
+has already offered to start a "coderpunks" list on toad.com. Shall we 
+take him up on it?
+
+Raph
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01129" HREF="msg01129.html">Re: Design proposal: crypto-capable generic interface</A></STRONG>
+<UL><LI><EM>From:</EM> attila &lt;attila@primenet.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="01675" HREF="msg01675.html">Re: Design proposal: crypto-capable generic interface</A></STRONG>
+<UL><LI><EM>From:</EM> Tatu Ylonen &lt;ylo@cs.hut.fi&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01661" HREF="msg01661.html">Re: Design proposal: crypto-capable generic interface</A></STRONG>
+<UL><LI><EM>From:</EM> Carl Ellison &lt;cme@TIS.COM&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01104.html">Re: Spam the Sign!</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01099.html">No Subject</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01661.html">Re: Design proposal: crypto-capable generic interface</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01129.html">Re: Design proposal: crypto-capable generic interface</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01100"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01100"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

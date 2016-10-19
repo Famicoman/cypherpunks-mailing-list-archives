@@ -1,0 +1,188 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: DES Optimization (Brute Force DES) -->
+<!--X-From-R13: "Brgre Ferv" <gervNcebprff.pbz> -->
+<!--X-Date: Wed, 24 Jul 1996 19:54:34 +0800 -->
+<!--X-Message-Id: 199607231617.JAA19247@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: DES Optimization (Brute Force DES)</TITLE>
+<LINK REV="made" HREF="mailto:trei@process.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01940.html">Date Prev</A>][<A HREF="msg02021.html">Date Next</A>][<A HREF="msg02162.html">Thread Prev</A>][<A HREF="msg02021.html">Thread Next</A>][<A HREF="index.html#01915">Date Index</A>][<A HREF="threads.html#01915">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: DES Optimization (Brute Force DES)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:perry@piermont.com">perry@piermont.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:trei@process.com">trei@process.com</A></LI>
+<LI><em>Subject</em>: Re: DES Optimization (Brute Force DES)</LI>
+<LI><em>From</em>: "Peter Trei" &lt;<A HREF="mailto:trei@process.com">trei@process.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 23 Jul 1996 12:29:20 -6</LI>
+<LI><em>CC</em>: <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A></LI>
+<LI><em>Comments</em>: Authenticated sender is &lt;trei@popserver&gt;</LI>
+<LI><em>Organization</em>: Process Software</LI>
+<LI><em>Priority</em>: normal</LI>
+<LI><em>Reply-to</em>: <A HREF="mailto:trei@process.com">trei@process.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+&gt; "Peter Trei" writes:
+&gt; &gt; The fastest general purpose, freely available des implementation I'm
+&gt; &gt; aware of is libdes. by Eric Young. With this, I can do a set_key in 
+&gt; &gt; 15.8 us, and an ecb_encrypt in 95 us/block. That adds up to 
+&gt; &gt; about 9,000 keytests/sec (this is on a 90 MHz P5, running NT).
+&gt; 
+&gt; I'll point out that like most DES implementations, Eric's tries to
+&gt; spend a lot of time in key setup to save time later on in
+&gt; encryption/decryption. This tradeoff would probably be very different
+&gt; if you didn't plan on trying more than one or two blocks of decryption
+&gt; after getting a key.
+&gt; 
+&gt; Perry
+
+Yep - with good optimization, the keygen and the des rounds get very close
+to each other in processing cost. Let's look at the steps involved (I'm refering
+to the DES description in Schneier, 2nd ed, p 270-278). I've not yet coded these
+optimizations, so this may be subject to revision.
+
+I'm assuming a known plaintext attack on a single 64 bit block, ECB mode.
+What we want to obtain is the key (which was presumably also used to encode
+interesting data which we can't read)
+
+First of all, we can move the initial and final permutes (tables 12.1 and 12.8)
+completely out of the testing loop. These have to done only once per run, and
+thus are effectively zero cost.
+
+Similarly, we can eliminate the key permutation (table 12.2), and iterate the 
+permuted 56 bit key. If we get at hit, we invert the key permutation and add 
+back the parity bits to get the original key.
+
+In the DES round The S-box and P-box steps can be combined into a single 
+48-&gt;32 bit permutation.
+
+So, per round (there are 16), we now have:
+
+1. copy 32 bit sub-block to use as 'other' half in next round.
+2. expansion permutation  (32 -&gt; 48)
+3. xor with appropriate subkey.
+4. perform the s-p permutation. (48-&gt;32)
+5. xor with 'other' half from previous round.
+
+The key scheduling can be done in parallel with the rounds, since we're only planning on
+using each key once. However, on the Pentium it may be more efficient to do it before the des 
+rounds,  due to register starvation. 
+
+Generating the subkeys is actually quite painful. You have to rotate the 56 bit key as 
+two 28 bit halves, by one or two bits depending on the round, and then do a 56-&gt; 48 bit
+permutation to generate the subkey. This step needs to be done 16 times.
+
+In a regular DES implementation,  you generate the key schedules once at the start, and 
+reuse them for each block, so there is little to be gained by optimzing this step. In a 
+keysearch situation it's a different matter.
+
+Optimizing the permutations:
+
+DES was originally designed for hardware implementation, where permutation is a simple 
+matter of braiding the wires between the input and output. It's a lot harder in software. 
+I'm aware of two basic approaches:
+
+1. Algorithmic: Analyse the permutation table to find bits which get shifted in the same direction, 
+by the same number of bits, and arrange a series of SHIFTs, ANDs, and ORs to generate
+the desired permutation. This is essentially a geometry problem.
+
+2. Lookup: Create tables for the permutation. While a permutation with n bits of input 
+requires 2^n entries (each the size of the output data) if done as a single table, it's
+possible to break the permutation into several smaller tables, at increased processing 
+time. 
+
+This is a classic speed vs space tradeoff, with a big step if your tables are too
+large to fit into cache (and even bigger if they go to virtual memory)
+
+Example: A straight 32 -&gt; 32 bit permutation:
+
+If done as one table, it would have 2^32 entries, and take about 16 Gbytes.
+
+If broken up into 4 tables, each of which dealt with 8 bits of the input, it would
+take 4096 bytes total. However, the calculation would require extracting the four
+eight bit subkeys from the input, doing four lookups, and ORing the four results
+together to get the final output.
+
+A 32 bit perm could also be done with two tables, but they would occupy half a Mb.
+
+The S-P step and the compression step of the key schedule are probably  faster
+by lookup than by algorithm. I'm not sure about the expansion permutation, which 
+is very regular. 
+
+The size and number of tables used is going to depend a lot on cache size and 
+available memory - for example, the rotates in the key scheduling can be eliminated
+if I'm willing to maintain 16 key compression tables (one for each round).
+
+I strongly expect that the whole key testing loop can fit into the 8k L1 code cache.
+The lookup tables *may* fit into the L2 cache.
+
+If anyone has any other optimizations, I'd like to hear about them.
+
+Peter Trei
+trei@process.ocm 
+
+Peter Trei
+Senior Software Engineer
+Purveyor Development Team                                
+Process Software Corporation
+<A  HREF="http://www.process.com">http://www.process.com</A>
+trei@process.com
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01940.html">Re: Digital Watermarks (long, getting off-topic)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02021.html">Kids and Computer Privacy Was  Re: No more stupid gun thread ...</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02162.html">Re: Digital Watermarks (long, getting off-topic)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02021.html">Kids and Computer Privacy Was  Re: No more stupid gun thread ...</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01915"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01915"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

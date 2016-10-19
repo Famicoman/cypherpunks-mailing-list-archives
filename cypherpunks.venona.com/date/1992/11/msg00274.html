@@ -1,0 +1,168 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Secure PK swapping.. what are the methods? -->
+<!--X-From-R13: znexNpbbzof.nah.rqh.nh ([nex) -->
+<!--X-Date: Wed, 25 Nov 92 05:24:15 PST -->
+<!--X-Message-Id: 9211251323.AA27604@coombs.anu.edu.au -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Secure PK swapping.. what are the methods?</TITLE>
+<LINK REV="made" HREF="mailto:mark@coombs.anu.edu.au">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00208.html">Date Prev</A>][<A HREF="msg00231.html">Date Next</A>][<A HREF="msg00239.html">Thread Prev</A>][<A HREF="msg00379.html">Thread Next</A>][<A HREF="index.html#00274">Date Index</A>][<A HREF="threads.html#00274">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Secure PK swapping.. what are the methods?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Secure PK swapping.. what are the methods?</LI>
+<LI><em>From</em>: <A HREF="mailto:mark@coombs.anu.edu.au">mark@coombs.anu.edu.au</A> (Mark)</LI>
+<LI><em>Date</em>: Thu, 26 Nov 92 0:23:32 EST</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Below is a letter Ive sent to a person designing a communications system
+similar to IRC but designed with the ability to be anonymous and as secure
+as possible. Further details will be announced soon when it's stable.
+
+
+--------------------Begin letter----------Begin letter-------------------
+
+Before you get too involved with the client in the comm system I was thinking
+of a way of having secure privmsgs, two forms depending on how open one chose
+to be:
+
+Messages are exchanged via UDP to hide from the netstat junkies...
+
+When someone does a msg the first time and the client doesnt know about
+that user it queries the server to either get a hostname/port pair for
+that user and/or a public key. The data is then stored in an internal
+attribute bank.
+
+   Format of a private message:
+
+   ._________________________________________________________.
+   | Nickname Plaintext     |  dest IP    |  dest udp port   |
+   | =PGP MESSAGE= =PGP MESSAGE= =PGP MESSAGE= =PGP MESSAGE= |
+   | =PGP MESSAGE= =PGP MESSAGE= =PGP MESSAGE= =PGP MESSAGE= |
+   | =PGP MESSAGE= =PGP MESSAGE= =PGP MESSAGE= =PGP MESSAGE= |
+   `---------------------------------------------------------'
+   [Return host/port/public key are encrypted into the PGP? message]
+   The above message is then sent to the delivery module of the client.
+
+   The above host and port are either the recipeints or the server's depending
+   on what type of message is being sent. Thus the same message can go to the
+   server or the recipient direct per se:
+
+1) Using the hostname/port + public key for that user the sender's client
+   encrypts the message and udp transmits a message to that port on the other
+   users host. That remote client has set up a socket to listen on that udp
+   port for messages. The remote client unpacks the message with it's private 
+   key and extracts the message, a reply host and port and the senders public
+   key. He can then reply to the sender and they both can talk without
+   loading down the server. Plus, unless someone is logging the ethernet,
+   no one can ascetain wether they are talking. There is only the initial
+   request of the users public key from the server which each client sends
+   in automatically when it connects. You might also have an option in the
+   client to auto download a block/all of the users nicks and their keys so 
+   no-one can detect the initial query of a user.
+
+2) The other, differently secure :), form is because the server has been told
+   to hide the users username + hostname from the /who information. All there
+   exists for that person is a nickname and a public key. The senders client
+   gets individually/block downloads the key he wants and proceeds to udp
+   a message to the server which has the udp port and hostname of the
+   recipient as normal from the client connect. It acts as IRC does now, as
+   a middle man for messages. Less secure because the server admin can 
+   ascetain that there is a message being sent between the two people and
+   also he can slip in his *OWN* keys to basically grab and decipher messages
+   between the two parties. i.e he sends his own key to the sender and
+   decrypts the incoming message and then sends the message out to the
+   recipient using their encryption key. neither user could tell there was a
+   switch in between. (There are schemes to get past this however).
+
+Both ways have their flaws because you are relying on the non-hackedness of
+the server to give you the right keys and hostnames and ports. A bad admin
+could easily, knowing enough about coding, disrupt the entire process if we
+didnt from the start ensure the right protocols were used. It has to be done
+right the first time or not at all.
+
+I'll echo this letter to a cryptography mailing list to ask for details of
+schemes that will allow each user to know they have a valid, secure public
+key of the other.
+
+One possible solution would be to do a mass query of all the online servers
+at once and if they didnt report the same keys sound a Real Big Alarm (tm).
+Maybe an automatom could sit there randomly checking keys :) (Can hear the
+cries of "No Bots.. No Bots" now :). (Note this allows *someone* to know your
+doing a query for a user... that may or may not bother the sender/recipient.
+Doing a block transfer from all the servers at once isnt net.nice)
+
+Comments?
+
+------------------End of Letter----------------End of Letter----------------
+
+Now what Im curious about is any other methods of secure key exchange where
+the exchange mid point may be lying about the keys, the hosts and the ports.
+Assume each person knows the others 'style' etc. How does one get the real 
+keys to each other with an unreliable "medium"? (It might slip in it's PK).
+Assume that they havent previously organised a key exchange.
+
+Replies to me or the list.. (but not both please.. my mbox is busy enuff :)
+
+Mark
+mark@coombs.anu.edu.au
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00208.html">SF Bay Area Parties</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00231.html">Re: Private E-mail (re: Ban on cash transactions)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00239.html">Re: SF Bay Area Parties</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00379.html">Secure PK swapping.. what are the methods?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00274"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00274"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

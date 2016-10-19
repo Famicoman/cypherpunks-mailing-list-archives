@@ -1,0 +1,165 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: REMAIL: Message expansion -->
+<!--X-From-R13: usvaarlNfuryy.cbegny.pbz -->
+<!--X-Date: Wed, 29 Sep 93 23:21:50 PDT -->
+<!--X-Message-Id: 9309300550.AA26673@jobe.shell.portal.com.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>REMAIL: Message expansion</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00812.html">Date Prev</A>][<A HREF="msg00816.html">Date Next</A>][<A HREF="msg00852.html">Thread Prev</A>][<A HREF="msg00816.html">Thread Next</A>][<A HREF="index.html#00803">Date Index</A>][<A HREF="threads.html#00803">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>REMAIL: Message expansion</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: REMAIL: Message expansion</LI>
+<LI><em>From</em>: <A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A></LI>
+<LI><em>Date</em>: Wed, 29 Sep 93 22:50:52 PDT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+One of the problems with chaining remailers as we do it now is that
+the message becomes quite a bit larger as you wrap encryption layers
+around it, one for each remailer in the chain.
+
+Currently, the remailers are all text-based, which requires that the
+message be re-ascii'd at each stage of the encryption nesting.  But
+ascii'ing a binary file using PGP's method increases its size by 1/3.
+
+If this asciification could be avoided at each step, the message would
+still grow as we add the PGP header and the remailing instructions at
+each step, but this would be more moderate.  The PGP header is about
+170 bytes, and the remailing instructions should not be more than
+70 or 80 bytes, bringing the total to something less than 250 bytes
+per step.
+
+I did some calculations.  Suppose you wanted to start with a message
+of, say, 4000 bytes which you will send through ten remailers.  First
+off, we get an advantage because PGP will compress the message before
+encrypting it the first time.  Let's suppose it manages to compress
+it by a factor of two.  This means that we have a 2000-byte binary
+message as our actual starting point.
+
+In one model, we assume that we add 250 bytes per step.  This is what
+it would be if we did not have to do the ASCII'ing process at each
+nesting.  In the other model, we assume that we add 170 bytes, multiply
+by 4/3, then add 65 bytes for the "-----BEGIN PGP MESSAGE-----" stuff,
+and then another 80 bytes for the remailing instruction.  This is how
+most of the chaining software actually works now.
+
+Setting up for a ten step chain, the first method produces an output
+file of 4500 bytes, while the second produces a file of 54046 bytes.
+This is quite a difference.
+
+If we wanted to add three more steps because we feel paranoid, the
+first method increases to 5250 bytes, while the second balloons to over
+120K bytes!
+
+As a more extreme example, if the initial message was 10K bytes as we
+have sometimes seen here, a ten-step chain would produce an output of
+7500 bytes without expansion, and over 100K bytes with expansion.
+(The smaller-than-input size in the non-expansion case is due to the
+assumed 2-to-1 PGP compression of the original message.)
+
+I think we should consider enhancing the remailers so this asciifying
+step is not necessary.  It could be done something like this.
+
+As each remailer receives the message, it must be in ASCII since that
+is the only thing that makes it across the mail connections.  It decrypts
+and de-ascii's it by running it through PGP just like it does now.
+Suppose this produces something like the following:
+
+::
+Request-Remailing-To: &lt;next remailer in chain&gt;
+
+&lt;binary data&gt;
+
+The first part is in ASCII and is terminated by two new-line characters
+in a row.  The rest of the message can be easily determined to be binary;
+in fact, it is a binary PGP file, one readable for the NEXT remailer
+in the chain.  This could be detected because PGP puts special bytes at
+the front of the file.
+
+All the remailer has to do specially is to asciify the binary portion of
+the message, add the "Encrypted: PGP" header if we still use that,
+and send it off as it normally would.  The next remailer receives a proper
+ASCII PGP message which it can handle by the same rules.
+
+Making this enhancment to the remailers would reduce the problems of
+message bloat caused by the redundant asciifying of the message for each
+stage of the remailer chain.  As we move towards remailers which do batching
+and which do message padding so that all outgoing messages are the same
+size, it will be more important to avoid this bloat since one big message
+will force all others in the batch to be padded to that size by the
+remailer.
+
+Hal Finney
+hfinney@shell.portal.com
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.2
+
+iQCVAgUBLKpGOqgTA69YIUw3AQGLCQQAgGTXKgPOtgbqs3Dab/PZZNR1XPmLqJIH
+nuf5Znj3bpOGGPFGPG5pBfSBmDn3U5uEnG7lMwKovSpXI6zxLv3IEd93X6oGaL5L
+5SlZtqzWNgGGXIIVCwNkaio/W5DCvwYq3ZXPtOTWgDH4ZtKOPaifEFF885qv/VCw
+heGzkqREjWM=
+=qwkV
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00812.html">key-server down?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00816.html">fido encryption.</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00852.html">Re: key-server down?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00816.html">fido encryption.</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00803"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00803"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

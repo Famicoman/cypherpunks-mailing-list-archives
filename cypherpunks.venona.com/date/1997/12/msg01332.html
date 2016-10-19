@@ -1,0 +1,283 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Some ideas (fwd) -->
+<!--X-From-R13: Xvz Qubngr <enintrNffm.pbz> -->
+<!--X-Date: Mon, 29 Dec 1997 06:57:27 +0800 -->
+<!--X-Message-Id: 199712282315.RAA01843@einstein.ssz.com -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Some ideas (fwd)</TITLE>
+<LINK REV="made" HREF="mailto:ravage@ssz.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01328.html">Date Prev</A>][<A HREF="msg01329.html">Date Next</A>][<A HREF="msg01328.html">Thread Prev</A>][<A HREF="msg01333.html">Thread Next</A>][<A HREF="index.html#01332">Date Index</A>][<A HREF="threads.html#01332">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Some ideas (fwd)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@ssz.com">cypherpunks@ssz.com</A> (Cypherpunks Distributed Remailer)</LI>
+<LI><em>Subject</em>: Some ideas (fwd)</LI>
+<LI><em>From</em>: Jim Choate &lt;<A HREF="mailto:ravage@ssz.com">ravage@ssz.com</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 28 Dec 1997 17:15:47 -0600 (CST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Hi Doug,
+
+
+Forwarded message:
+
+&gt; From: "Douglas R. Floyd" &lt;dfloyd@ssz.com&gt;
+&gt; Subject: Some ideas
+&gt; Date: Sun, 28 Dec 1997 16:18:14 -0600 (CST)
+
+&gt; I have been pondering this:  To save on bandwidth, I wonder about having
+&gt; two types of OSS sites
+
+OSS?
+
+&gt; -- a "control" site which switchboards incoming/outgoing
+&gt; stuff to "data" sites.
+
+Which needs to have access to at least *all* incoming requests for data as
+well as a channel to other switchboard sites so they can catalog those
+requests and won't have to look them up more than once, after that they
+simply use the request as a key to a index of sources.
+
+&gt;  This would help with distributing bandwidth load,
+&gt; and since "data" sites just store encrypted items, the "control" site can
+&gt; be made more secure.
+
+I suspect all the traffic would need to be encrypted to get this to work
+well. The channels between the switchboards and the databanks also need to
+be encrypted in such a manner that it is transparent even to the operators
+what the keys are at any given time. Also, assuming the user provides a
+request to a switchboard, who then determines the correct server through
+some mechanism, contacts that databank server and requests a transmission,
+and finaly the databank server sends the data to the user. How do we track
+the various keys and verify that the user making the request is the user
+getting the data? Is the switchboard and databank servers simply tracking
+the key provided by the original request sufficient?
+
+&gt; Another random thing is a way to build a CD-ROM jukebox that would
+&gt; automatically burn a CD when data meets the requirements of "valuable", and
+&gt; "offline".  Then, when the data is needed again, its fished out and loaded.
+
+What you need is a pick-and-place system. It would consist of a handling
+mechanism, a burning mechanism, a jukebox mechanism, and a CD storage
+mechanism. Personaly I wouldn't want them all in one in case any one broke
+down the rest of the system could still keep working.
+
+Valuable to who? For how long? Who pays for the stack of CD's up front? What
+kind of amortization schedule are we looking at for paybacks? Since we are
+looking at a automated system, what does 'offline' mean when the
+pick-and-place goes over to the rack and pulls the CD to place in the
+jukebox and it is now online? How do we charge the user?
+
+&gt; Some type of IP encapsulation using public key encryption, so machine A
+&gt; that is talking to machine D would encapsulate the whole packet with machine
+&gt; D's key, C's key, and B's key.  Then the packet is sent to box B, which
+&gt; decodes it, looks where to send it, then kicks it to C.  C then looks at
+&gt; it, sends it to machine D.  Basically a "remailer", where each packet is
+&gt; a message.
+&gt; 
+&gt; Is this feasable at all?
+
+Yeah, mixmaster does something similar to this. The problem I have with
+mixmaster is that the sender has to set up the chaining and keys and such.
+There simply isn't a clear mechanism (as I understand mixmaster) to do this
+transparently. One look at the chaining file that is required is enough to
+explain why granny doesn't use chained mixmaster remailers.
+
+Now if we want to do it in the protocol stack then we have a problem because
+it isn't supported in the standard.
+
+What I would do is a little different. An example...
+
+Let's assume we have 4 remailers, A to D. The sender sends a packet to A
+that's header is in the clear. Once A gets it, addressed to an appropriate
+user to invoke the decryption process, it decrypts the body of the packet.
+What it assumes is there is another valid packet with unencrypted header
+which it passes on to B. B gets it and de-crypts it and passes it on. This
+happens in C and D as well. At no point does any of the processes need to do
+anything other than use its own key to decrypt. If that fails the packet is
+trashed. Since no information about its previous source was passed to D from
+C this failure won't propogate back up the chain, providing a measure of
+source security. D takes the packet, whose body is still encrypted and
+remails it to the next address in the header, in this example the actual
+destination.
+
+The issue for me is how do the remailers handle the pass-off. Here are a
+few of the choices:
+
+ -  the existing mechanism which is completely dependant on the user and
+    their technical skill. I don't like this one, too people intensive.
+
+ -  the sender does it by reference to a key-server and automated chaining
+    software. The software would ask for a sequence of available remailers
+    from the user, go off to the key-server and get the appropriate keys,
+    and create the nested encrypted packets. Then it only has to send them
+    on their way. Still a tad too technical for granny I suspect.
+
+ -  the sender provides a source destination and a number of remailers. The
+    software goes to the key-server, looks up the available remailers
+    (hopefuly there are more than the number requested by the sender) and
+    selects the appropriate number through some mechanism (PRNG is my
+    choice). It then creates the chained packet and sends it on its way.
+    I suspect granny could deal with this one, she knows how to count and
+    has sonnie's email address in her mailer software.
+
+What I like about this is the key server represents a mechanism for income.
+It would cost say $1/month to store your key on the server and then anyone
+who made the request would get it. The key would automaticaly age and expire
+if the user didn't keep paying the fee. Further, there would be no
+distinction between remailers, users, or other processes as to the actual
+key. It would consist of a list similar to:
+
+ &lt;user_id&gt;:&lt;expiration_date&gt;:&lt;encryption_protocol&gt;:&lt;encryption_key&gt;
+
+for example:
+
+ravage@ssz.com:12/30/98:PGP:3$@48@DDcq*
+
+(note that some sort of escape mechanism needs to be included so that :'s
+ can be used in keys as well. I put the actual key last. That way I know
+ that any : after the encryption_protocol is a part of the key.)
+
+I would have to make requests of the sort:
+
+&lt;user_id&gt;:&lt;encryption_protocol&gt;
+
+ie:
+
+ravage@ssz.com:*
+
+Where '*' would return a complete listing for that ID of all registered
+keys.
+
+So to use it I would send an email with the key request(s) in the body
+one to a line and sent it to 'key-server@ssz.com'. The key-server would
+return something like:
+
+Request:
+
+ravage@ssz.com:*
+
+Key(s):
+
+ravage@ssz.com:12/30/98:PGP:#sD81xD@)d
+
+Now there is a problem if the key is multi-part. To handle those I would put
+each key part on a seperate line:
+
+Key(s):
+
+ravage@ssz.com:12/30/98:Multi-Key:23$@%dSk*
+ravage@ssz.com:12/30/98:Multi-Key:4dseP2*!
+
+So what you would end up with is:
+
+Request:
+
+&lt;data&gt;
+
+Key(s):
+
+&lt;data&gt;
+
+Request:
+
+&lt;data&gt;
+
+Key(s):
+
+&lt;data&gt;
+&lt;data&gt;
+
+Request:
+
+&lt;data&gt;
+
+Key(s):
+
+&lt;data&gt;
+
+
+Hope that helps. If you use the key server idea as I am explaining it please
+make shure I get credit for it. As far as I am aware nobody else is using a
+system similar, nor has one been proposed by other parties. If you find this
+is an error on my part please let me know.
+
+
+
+    ____________________________________________________________________
+   |                                                                    |
+   |      Those who make peaceful revolution impossible will make       |
+   |      violent revolution inevitable.                                |
+   |                                                                    |
+   |                                          John F. Kennedy           |
+   |                                                                    |
+   |                                                                    | 
+   |            _____                             The Armadillo Group   |
+   |         ,::////;::-.                           Austin, Tx. USA     |
+   |        /:'///// ``::&gt;/|/                     <A  HREF="http://www.ssz.com/">http://www.ssz.com/</A>   |
+   |      .',  ||||    `/( e\                                           |
+   |  -====~~mm-'`-```-mm --'-                         Jim Choate       |
+   |                                                 ravage@ssz.com     |
+   |                                                  512-451-7087      |
+   |____________________________________________________________________|
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01328.html">Netcraft Web server survey</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01329.html">Re: Why I Support Microsoft</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01328.html">Netcraft Web server survey</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01333.html">Some interesting WWI Info</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01332"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01332"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

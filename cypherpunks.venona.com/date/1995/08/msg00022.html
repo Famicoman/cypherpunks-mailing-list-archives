@@ -1,0 +1,229 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: some discussion of rannos in PGP (was: of a hole in PGP) -->
+<!--X-From-R13: nonNqpf.rkrgre.np.hx -->
+<!--X-Date: Wed, 2 Aug 95 03:05:21 PDT -->
+<!--X-Message-Id: 28643.9508011023@exe.dcs.exeter.ac.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>some discussion of rannos in PGP (was: of a hole in PGP)</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.exeter.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00086.html">Date Prev</A>][<A HREF="msg00100.html">Date Next</A>][<A HREF="msg00256.html">Thread Prev</A>][<A HREF="msg00100.html">Thread Next</A>][<A HREF="index.html#00022">Date Index</A>][<A HREF="threads.html#00022">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>some discussion of rannos in PGP (was: of a hole in PGP)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:fc@all.net">fc@all.net</A> (Fred Cohen)</LI>
+<LI><em>Subject</em>: some discussion of rannos in PGP (was: of a hole in PGP)</LI>
+<LI><em>From</em>: <A HREF="mailto:aba@dcs.exeter.ac.uk">aba@dcs.exeter.ac.uk</A></LI>
+<LI><em>Date</em>: Tue, 1 Aug 95 11:23:37 +0100</LI>
+<LI><em>Cc</em>: <A HREF="mailto:aba@dcs.exeter.ac.uk">aba@dcs.exeter.ac.uk</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: fc@all.net's message of 31 Jul 1995 22:58:58 -0400</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Fred Cohen &lt;fc@all.net&gt; writes on cpunks:
+: PGP is a product that is specifically disliked by the powers that be
+: because it provides free access to strong cryptography which is against
+: the public policy of the US government.  That means that people in that
+: same said government likely feel it is their duty to make certain that
+: they can still read PGP mail.
+
+Certainly granted!  Hence persecution of Phil Z.
+
+A bit difficult to achieve in the presence of available source code, I
+(and many others) are using PGP compiled by themselves.  That doesn't
+prove there are no subtle back-doors but it rules out unsophisticated
+backdoors in distributed executables.  (Even such things could be
+checked if someone got suspicious, things can be reverse engineered).
+
+Now to the question of what can be done practically to help further
+validate PGPs authenticity, and freeness from back-doors.
+
+The way I see it the only attack which you could reasonably expect to
+pull off in terms of being subtle enough to hope to get away with
+given full access to source is the random number generator.
+
+The code which actually generates the random primes, and converts them
+to PGP output format is reasonably short and well defined.  Wouldn't
+take long to single step that and watch that nothing happened on the
+way out to file.
+
+Encryption is a similarly simple operation, M ^ e % n you could easily
+check that manually (with a certain small piece of perl even).  Same
+for generation of IDEA keys.
+
+I don't really feel qualified to comment properly on the random number
+generation, but to me (I looked at the source in fair detail) it looks
+good.
+
+I mean there is real entropy being generated (timing key strokes
+against a high speed clock on PCs lower on UNIX systems typically)
+and the stirring operation looks good, MD5 + XOR on key.
+
+Presuming that the MD5 implementation is correct?  Seems a pretty good
+likelihood to be, it's been given enough real world tests that you
+could do a very nice probablistic statistical confidence test on it.
+Which would easily say that it was correct to some huge degree of
+certainty.
+
+The legitimacy of using a high frequency clock to time intervals
+between key strokes, seems a very good way of generating random
+numbers.  I mean there is most definately *some* entropy being
+generated, PGP makes reasonably conservative estimates of the amount
+of entropy generated, and stirs the whole number in (not just the
+expected entropy).
+
+I'm not saying your comments aren't useful; they are, and analysis and
+critique of the random number generation in particular is very
+important.  Indeed given the sheer cost of factoring a 2048 bit RSA
+modulus, or of brute forcing a 128bit IDEA key, it is indeed a
+pertinent question as to whether any kind of brute force attack could
+be generated on the random number generation, which could be slighly
+cheaper than either of these.  128bits is a lot to play with.
+
+To me it looks good, but then I'm not a cryptographer, and also there
+is the kind of "NP problem aspect" to it all in that for reasonably
+complex code it will not be apparent whether a proof is possible with
+out looking at the specifics.
+
+Still I think some analysis of the random number generation code would
+be useful work.  I'm not expecting to see a flaw, but doesn't mean it
+shouldn't be entered into with an open mind.
+
+I think it does not fall in the same league as the apparent difficulty
+of having a secure sendmail (you said a compromising couple of bugs
+seem to get found a couple of times a year), for the reason that what
+PGP is doing with it's random no generation is well defined, contained
+in a few lines of code, and only really relying on a couple of
+assertions:
+
+	1) MD5 is itself not inherently flawed
+	2) the MD5 implementation is correct
+	3) key stroke timings are a source of a safely conservatively
+	   estimatable amount of entropy
+	4) the key generation method does not narrow the search space
+	5) there are no other compromising bugs between key generation
+	   of the key and it being written to the keyring
+
+1) Heh, not a lot you can do about that.  Is it or isn't it?  Time
+will tell.
+
+2) Seems pretty likely to me there are test strings which come with
+the RFC implemenation, and it would be unbelievably unlikely that it
+should produce the complete set of tests and yet somehow still be
+flawed.  Given that there are _no_ branches in the algorithm (ie just
+various permutations and bit twidlings based on the key info, which
+get mangled into the digest.
+
+3) Pretty good I think, especially on a PC, which has a higher speed
+timer.  Some entropy is surely generated, and with safe entropy
+estimation, and cryptographically secure stirring, it sounds pretty
+good to me.
+
+4) For RSA keys, I don't think so, unless you believe that strong
+primes will agains become important.  For current factoring algorithms
+strong primes are just as hard to factor as a completely randomly
+generated prime, except for certain primes which are in any have an
+infinitesimal chance of occurring.  For IDEA keys there is little
+value added over a striaght ran no, as there are no special properties
+which an IDEA key must have.
+
+5) I would assert is relatively trivial to demonstrate, a couple of
+hours with a debugger should demonstrate that.  You could do testing
+more rigourously, test every branch, so that you have checked that the
+outcome is that the key gets written to the keyfile, with various
+options, not utterly fool proof of course, but pretty darn good given
+the simplicity.
+
+On the more philosophical side, with the idea that you can never be
+sure that folks aren't NSA agents with hidden agendas etc, well you
+can't be sure.
+
+But the open source and sheer number of folks reading is the best
+argument against this.  That means that at least some true blue
+cpunks, "live free or die" types will read it in earnest, and examine
+very carefully.
+
+Another philosophical argument against PGP having any cleverly hidden
+"back-doors" in the form of purposefully weakened ran-no generators or
+what have you is that the NSA et all hate PGP with such vehemence.
+Heh if they don't like it, it must be good :-)
+
+And remember, say NO to key escrow :-)
+
+(It's no good having an ultra carefully validated PGP if you go to
+jail for being caught with a copy on your HD, welcome to the Land of
+the Freeh, and all you know.  May happens sooner than expected, then
+the only folks using crypto will be the "live free or die" folks, plus
+of course the criminals who figure they have more to hide and would
+get in more trouble for what they are really up to than for a
+"possesion of crypto" charge.)
+
+Adam
+--
+HAVE *YOU* EXPORTED RSA TODAY? --&gt; <A  HREF="http://dcs.ex.ac.uk/~aba/rsa/">http://dcs.ex.ac.uk/~aba/rsa/</A>
+--rsa--------------------------8&lt;-------------------------------
+#!/bin/perl -s-- -export-a-crypto-system-sig -RSA-3-lines-PERL
+$m=unpack(H.$w,$m."\0"x$w),$_=`echo "16do$w 2+4Oi0$d*-^1[d2%Sa
+2/d0&lt;X+d*La1=z\U$n%0]SX$k"[$m*]\EszlXx++p|dc`,s/^.|\W//g,print
+pack('H*',$_)while read(STDIN,$m,($w=2*$d-1+length($n)&amp;~1)/2)
+-------------------------------8&lt;-------------------------------
+TRY: rsa -k=3 -n=7537d365 &lt; msg | rsa -d -k=4e243e33 -n=7537d365
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00086.html">Re: Provably Correct Crypto?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00100.html">some discussion of rannos in PGP (was: of a hole in PGP)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00256.html">Re: pkzip cracking</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00100.html">some discussion of rannos in PGP (was: of a hole in PGP)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00022"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00022"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

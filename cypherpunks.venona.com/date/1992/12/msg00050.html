@@ -1,0 +1,135 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: PGP questions -->
+<!--X-From-R13: tufink!unyNhharg.GG.@SF (Vny Tvaarl) -->
+<!--X-Date: Fri, 4 Dec 92 09:55:49 PST -->
+<!--X-Message-Id: 9212041752.AA17033@nano.noname -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>PGP questions</TITLE>
+<LINK REV="made" HREF="mailto:ghsvax!hal@uunet.UU.NET">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00055.html">Date Prev</A>][<A HREF="msg00054.html">Date Next</A>][<A HREF="msg00051.html">Thread Prev</A>][<A HREF="msg00085.html">Thread Next</A>][<A HREF="index.html#00050">Date Index</A>][<A HREF="threads.html#00050">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>PGP questions</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: PGP questions</LI>
+<LI><em>From</em>: <A HREF="mailto:ghsvax%21hal@uunet.UU.NET">ghsvax!hal@uunet.UU.NET</A> (Hal Finney)</LI>
+<LI><em>Date</em>: Fri, 4 Dec 92 09:52:49 PST</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+It's probably good to discuss how PGP works here, for educational
+purposes, but I would expect people to get the source code if they
+really are interested.  I can give some pointers here to answers to
+some of the questions people have asked.
+
+Steve Witham asks several questions.  I think the crypto glossary
+which Tim posted a couple of weeks ago tells how RSA works, so I won't
+reiterate that here.  Steve, if you didn't get it, maybe Tim could
+send it to you.
+
+PGP's signature algorithm creates an MD5 message digest of the
+message, then signs that digest by raising it to the secret exponent
+"d", mod "n".  MD5 is a public-domain message digest algorithm created
+by RSA Data Security, Inc, which breaks messages into blocks of 64
+bytes as input and produces a 16-byte (128-bit) digest.  PGP then pads
+this 16-byte number to be about the size of n, and does the
+exponentiation.
+
+PGP does not do its decryption/signature exponentiation by actually
+raising the number to the power of d mod n, but by doing a
+mathematically equivalent operation involving two exponentiations, one
+mod p and one mod q.  Since p and q are half the length of n, and
+exponentiation takes roughly the third power of the number of bits in
+the modulus, this reduces the amount of time by a factor of 4.
+
+The random number generator has several different modes, and I can
+only suggest looking at random.c.
+
+The data-compression algorithm is not really relevant but is based on
+zip.  The binary-ascii translator is also not important but is a
+variant on the PEM standard.
+
+Steve asks a lot of questions about the speed of different versions.
+Maybe asking on alt.security.pgp would produce some representative
+values.  I'm not sure whether anyone has a database with all these
+numbers.
+
+I understand that PGP 2.1 may have a faster version of the Upton
+modmult.  Preliminary timings suggest that it's still slightly slower
+than the Merritt modmult on the Sparc, but if Merritt really is
+unreliable (I haven't heard about this) then switching to Upton will
+not involve much of a penalty.  PGP is very fast on Sparcs anyway and
+I don't think making it 10% slower would matter.
+
+Profiling indicates that yes, during the RSA encryption phase, most of
+the time is spent in modmult.  An interpreter could be built to do a
+modular exponentiation using a C implementation of modmult and it
+would be about as fast.  However, that still leaves the generation of
+the random session key, padding it with random numbers so that it is
+suitable for RSA operations, converting the RSA-encrypted session key
+into a format suitable for writing to a file, doing the IDEA
+encryption, wrapping this all up with control information so that it
+can be decrypted, looking up key information from a key ring file or
+some other data file (possibly decrypting it on the fly), converting
+to ASCII, etc.  All these are part of an encryption/decryption cycle
+and can't really be skipped.
+
+Hal
+74076.1041@compuserve.com
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00055.html">Weakness of the PGP scheme ?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00054.html">No Subject</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00051.html">Re: Weakness of the PGP scheme ?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00085.html">Re: PGP questions</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00050"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00050"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

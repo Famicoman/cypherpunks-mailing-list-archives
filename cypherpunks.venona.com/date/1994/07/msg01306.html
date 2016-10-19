@@ -1,0 +1,188 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Forward secrecy -->
+<!--X-From-R13: uhturfNnu.pbz (Sevp Vhturf) -->
+<!--X-Date: Mon, 25 Jul 94 19:45:03 PDT -->
+<!--X-Message-Id: 9407251923.AA04133@ah.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199407241550.LAA10919@zork.tiac.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Forward secrecy</TITLE>
+<LINK REV="made" HREF="mailto:hughes@ah.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01308.html">Date Prev</A>][<A HREF="msg01305.html">Date Next</A>][<A HREF="msg01276.html">Thread Prev</A>][<A HREF="msg01337.html">Thread Next</A>][<A HREF="index.html#01306">Date Index</A>][<A HREF="threads.html#01306">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Forward secrecy</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Forward secrecy</LI>
+<LI><em>From</em>: <A HREF="mailto:hughes@ah.com">hughes@ah.com</A> (Eric Hughes)</LI>
+<LI><em>Date</em>: Mon, 25 Jul 94 12:23:19 -0700</LI>
+<LI><em>In-Reply-To</em>: Robert Hettinga's message of Sun, 24 Jul 1994 11:57:33 -0500 &lt;<A HREF="msg01276.html">199407241550.LAA10919@zork.tiac.net</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+   Hate to pick nits here, but isn't the acquisition and use of a public key
+   "teaching" your machine to read Tim's "language"?
+
+I agree.  Each public key creates a different encoding, or a different
+language, as it were.  These encodings/languages are all related, but
+mutually incomprehensible.  Encryption software has the capability to
+read any of these languages because it is multi-purpose software.
+
+Because the software is multipurpose, however, there is a greater need
+for forward secrecy.  Forward secrecy is the property that an
+intercepted communication cannot be read because the secret keying
+material, however generated, has been destroyed by the time such
+keying material is sought after.  For example, in a secure telephone,
+forward secrecy begins when you hang up the phone, because the key
+inside it, generated, say, by a D-H key exchange, is destroyed when
+you put down the receiver.
+
+For PGP and PEM, forward secrecy begins when you destroy all copies of
+your private key.  This will leave you without a private key, of
+course, and so should be done only after a key change.  The forward
+secrecy also applies to the (previous) holder of the private key.  If
+your only copy of encrypted email, for example, that you have after
+you destroy your private key is just the encrypted email, then you
+won't be able to read your own mail.  Therefore, all old traffic
+addressed to a public key needs to be re-encrypted or kept in
+plaintext.
+
+This is one of the main reasons for periodic key changes, to achieve
+forward secrecy for email.  After I change keys and destroy my old
+private key, now the _only_ way to decrypt the messages is to derive
+the private key from the public key--in RSA, to factor the modulus.
+This is computational forward secrecy.  
+
+Diffie-Hellman key exchange also yields computational forward secrecy,
+because the session key generated can be derived assuming a device to,
+say, take discrete logs on the order of the size of the modulus.
+
+If messages have been intercepted and logged, no seizure of equipment
+will yield the private key.  Forward secrecy protects you, therefore,
+from violence, be that the procedurally mitigated violence of the
+courts or the arbitrary violence of another party.
+
+Here, then, is the connection back to the original issue.  The courts
+distinguish between acts of speech (fifth amendment protection) and
+supplying objects, such as a subpoena provide the key to a safety
+deposit box.  As Marc Rotenberg once put it to me, the court cannot
+require you to incriminate yourself, but they can require you to
+participate in your own downfall.  Forward secrecy protects you
+against court order, because you cannot be held in contempt of court
+for not providing something that doesn't exist.  If you destroy your
+keys in a timely fashion, your exposure is limited to the time since
+the last key change.
+
+Needless to say, there's no real standard software support for forward
+secrecy for email.  A good cryptographic system should store the
+plaintext of an encrypted communication in a separately encrypted
+place.  On Unix, one can use Matt Blaze's CFS to keep all of one's
+mail on, but even then there's no support for keeping encrypted mail
+around in such a way that allows you to prove, _without using the
+private key_, which will be destroyed at some time, that a particular
+ciphertext matches any particular plaintext.
+
+Consider PGP, where the outer wrapper can only be decrypted with a
+private key.  Once that public key is gone, that message is now
+useless even as verification for anything, unless the session key is
+also stored separately.  If you have the session key, the encrypted
+session key can be generated by an application of the public key, and
+verified to match.
+
+Assuming you have the public key, that is.  If the public key has been
+published, then you can safely assume that it can be retrieved.  To
+achieve unconditional forward secrecy, however, requires that the
+public key _never_ be published, but only given to correspondents.  In
+this situation, one achieves unconditional forward secrecy when you
+destroy both private and public keys and all your correspondents
+destroy the public keys.
+
+An aside: in a two cipher system, you only get the unconditional
+security with respect to the public key cipher.  The secret key cipher
+(like IDEA) is still only computationally protected, since the entropy
+of the plaintext is not maximal.  This, however, is still an
+advantage, since there's more uncertainty about the long term security
+of the algebraically based public key ciphers than there is about the
+secret key ciphers.
+
+Now, as far as I know, there's _NO_ support anywhere for preventing
+the correspondent to publishing the private key.  Even software which
+was not informationally secure, which simply flagged a public key as
+"not for further distribution", would be a help, since it would then
+require custom software in order to distribute.  At the very least it
+would allow mutually trusted parties to prevent accidents.
+
+Another technique would be to develop a keying system in which
+distribution of public keys were tied to the public keys of the
+correspondent.  This might not prevent (informationally) the key from
+being distributed, but one would want to it identify the distributor.
+
+Eric
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01337" HREF="msg01337.html">Re: Forward secrecy</A></STRONG>
+<UL><LI><EM>From:</EM> Jim choate &lt;ravage@bga.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01276" HREF="msg01276.html">Re:</A></STRONG>
+<UL><LI><EM>From:</EM> rah@shipwright.com (Robert Hettinga)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01308.html">Voice/Fax Checks</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01305.html">No mail?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01276.html">Re:</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01337.html">Re: Forward secrecy</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01306"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01306"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

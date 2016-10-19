@@ -1,0 +1,289 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: How to Share a Secret -->
+<!--X-From-R13: na5877Nnaba.crarg.sv (qrnqorng) -->
+<!--X-Date: Wed, 6 Oct 93 11:55:16 PDT -->
+<!--X-Message-Id: 9310061850.AA05936@anon.penet.fi -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>How to Share a Secret</TITLE>
+<LINK REV="made" HREF="mailto:an5877@anon.penet.fi">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00262.html">Date Prev</A>][<A HREF="msg00263.html">Date Next</A>][<A HREF="msg00303.html">Thread Prev</A>][<A HREF="msg00264.html">Thread Next</A>][<A HREF="index.html#00277">Date Index</A>][<A HREF="threads.html#00277">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>How to Share a Secret</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: How to Share a Secret</LI>
+<LI><em>From</em>: <A HREF="mailto:an5877@anon.penet.fi">an5877@anon.penet.fi</A> (deadbeat)</LI>
+<LI><em>Date</em>: Wed,  6 Oct 1993 18:50:00 UTC</LI>
+<LI><em>Organization</em>: Anonymous contact service</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:an5877@anon.penet.fi">an5877@anon.penet.fi</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+
+How to Share a Secret
+
+Adi Shamir
+Massachusetts Institute of Technology
+
+In this paper we show how to divide data D into n pieces in such a way that D
+is easily reconstructable from any k pieces, but even complete knowledge of
+k - 1 pieces reveals absolutely no information about D.  This technique enables
+the construction of robust key management schemes or cryptographic schemes that
+can function securely and reliably even when misfortunes destroy half the
+pieces and security breaches expose all but one of the remaining pieces.
+
+Key Words and phrases: cryptography, key management, interpolation.
+CR Categories: 5:39, 5.6
+
+1.  Introduction
+
+In [4], Liu considers the following problem:
+
+    Eleven scientists are working on a secret project.  They wish to lock up
+    the documents in a cabinet so that the cabinet can be opened if and only if
+    six or more of the scientists are present.  What is the smallest number of
+    locks needed?  What is the smallest number of keys to the locks each
+    scientist must carry?
+
+It is not hard to show that the minimal solution uses 462 locks and 252 keys
+per scientist.  These numbers are clearly impractical, and they become
+exponentially worse when the number of scientists increases.
+
+In this paper we generalize the problem to one in which the secret is some data
+D (e.g., the safe combination) and in which nonmechanical solutions (which
+manipulate this data) are also allowed.  Our goal is to divide D into n pieces
+D1, ..., Dn in such a way that:
+
+(1) knowledge of any k or more Di pieces makes D easily computable;
+
+(2) knowledge of any k - 1 or fewer Di pieces leaves D completely undetermined
+    (in the sense that all its possible values are equally likely).
+
+Such a scheme is called a (k, n) threshold scheme.
+
+Efficient threshold schemes can be very helpful in the management of
+cryptographic keys.  In order to protect data we can encrypt it, but in order
+to protect the encryption key we need a different method (further encryptions
+change the problem rather than solve it).  The most secure key management
+scheme keeps the key in a single, well-guarded location (a computer, a human
+brain, or a safe).  This scheme is highly unreliable since a single misfortune
+(a computer breakdown, sudden death, or sabotage) can make the information
+inaccessible.  An obvious solution is to store multiple copies of the key at
+different locations, but this increases the danger of security breaches
+(computer penetration, betrayal, or human errors).  By using a (k, n) threshold
+scheme with n = 2k - 1 we get a very robust key management scheme: We can
+recover the original key even when floor(n/2) = k - 1 of the n pieces are
+destroyed, but our opponents cannot reconstruct the key even when security
+breaches expose floor(n/2) = k - 1 of the remaining k pieces.
+
+In other applications the tradeoff is not between secrecy and reliability, but
+between safety and convenience of use.  Consider, for example, a company that
+digitally signs all its checks (see RSA [5]).  If each executive is given a
+copy of the company's secret signature key, the system is convenient but easy
+to misuse.  If the cooperation of all the company's executives is necessary in
+order to sign each check, the system is safe but inconvenient.  The standard
+solution requires at least three signatures per check, and it is easy to
+implement with a (3, n) threshold scheme.  Each executive is given a small
+magnetic card with one Di piece, and the company's signature generating device
+accepts any three of them in order to generate (and later destroy) a temporary
+copy of the actual signature key D.  The device does not contain any secret
+information and thus it need not be protected against inspection.  An
+unfaithful executive must have at least two accomplices in order to forge the
+company's signature in this scheme.
+
+Threshold schemes are ideally suited to applications in which a group of
+mutually suspicious individuals with conflicting interests must cooperate.
+Ideally we would like the cooperation to be based on mutual consent, but the
+veto power this mechanism gives to each member can paralyze the activities of
+the group.  By properly choosing the k and n parameters we can give any
+sufficiently large majority the authority to take some action while giving any
+sufficiently large minority the power to block it.
+
+2.  A Simple (k, n) Threshold Scheme
+
+Our scheme is based on polynomial (*) interpolation: given k points in the
+2-dimensional plane (x1, y1), ... (xk, yk) with distinct xi's, there is one and
+only one polynomial q(x) of degree k - i such that q(xi) = yi for all i.
+ --------
+(*) The polynomials can be replaced by any other collection of functions which
+are easy to evaluate and to interpolate.
+ --------
+Without loss of generality, we can assume that the data D is (or can be made) a
+number.  To divide it into pieces Di, we pick a random k - 1 degree polynomial
+q(x) = a[0] + a[1] * x + ... a[k-1] * x^(k-1) in which a[0] = D, and
+evaluate:
+
+D1 = q(1), ..., Di = q(i), ..., Dn = q(n).
+
+Given any subset of k of these Di values (together with their identifying
+indices), we can find the coefficients of q(x) by interpolation, and then
+evaluate D = q(O).  Knowledge of just k - 1 of these values, on the other hand,
+does not suffice in order to calculate D.
+
+To make this claim more precise, we use modular arithmetic instead of real
+arithmetic.  The set of integers modulo a prime number p forms a field in which
+interpolation is possible.  Given an integer valued data D, we pick a prime p
+which is bigger than both D and n.  The coefficients a[1], ..., a[k-1], in q(x)
+are randomly chosen from a uniform distribution over the integers in [0, p),
+and the values D1, ..., Dn are computed modulo p.
+
+Let us now assume that k - 1 of these n pieces are revealed to an opponent.
+For each candidate value D' in [O, p) he can construct one and only one
+polynomial q'(x) of degree k - 1 such that q'(0) = D' and q'(i) = Di for the
+k - 1 given arguments.  By construction, these p possible polynomials are
+equally likely, and thus there is absolutely nothing the opponent can deduce
+about the real value of D.
+
+Efficient O(n log^2 n) algorithms for polynomial evaluation and interpolation
+are discussed in [11 and [3], but even the straightforward quadratic algorithms
+are fast enough for practical key management schemes.  If the number D is long,
+it is advisable to break it into shorter blocks of bits (which are handled
+separately) in order to avoid multiprecision arithmetic operations.  The blocks
+cannot be arbitrarily short, since the smallest usable value of p is n + 1
+(there must be at least n + 1 distinct arguments in [0, p) to evaluate q(x)
+at).  However, this is not a severe limitation since sixteen bit modulus (which
+can be handled by a cheap sixteen bit arithmetic unit) suffices for
+applications with up to 64,000 Di pieces.
+
+Some of the useful properties of this (k, n) threshold scheme (when compared to
+the mechanical locks and keys solutions) are:
+
+(1) The size of each piece does not exceed the size of the original data.
+
+(2) When k is kept fixed, Di pieces can be dynamically added or deleted (e.g.,
+    when executives join or leave the company) without affecting the other D,
+    pieces.  (A piece is deleted only when a leaving executive makes it
+    completely inaccessible, even to himself.)
+
+(3) It is easy to change the Di pieces without changing the original data D --
+    all we need is a new polynomial q(x) with the same free term.  A frequent
+    change of this type can greatly enhance security since the pieces exposed
+    by security breaches cannot be accumulated unless all of them are values of
+    the same edition of the q(x) polynomial.
+
+(4) By using tuples of polynomial values as Di pieces, we can get a
+    hierarchical scheme in which the number of pieces needed to determine D
+    depends on their importance.  For example, if we give the company's
+    president three values of q(x), each vice-president two values of q(x), and
+    each executive one value of q(x), then a (3, n) threshold scheme enables
+    checks to be signed either by any three executives, or by any two
+    executives one of whom is a vice-president, or by the president alone.
+
+A different (and somewhat less efficient) threshold scheme was recently
+developed by G.R.  Blakley [2].
+
+References
+
+1. Aho, A., Hopcroft, J., and Ullman, J.  The Design and Analysis of Computer
+   Algorithms.  Addison-Wesley, Reading, Mass., 1974.
+
+2. Blakley, G.R.  Safeguarding cryptographic keys.  Proc.  AFIPS 1979 NCC,
+   Vol. 48, Arlington, Va., June 1979, pp. 313-317.
+
+3. Knuth, D.  The Art of Computer Programming, Vol.  2:  Seminumerical
+   Algorithms.  Addison-Wesley, Reading, Mass., 1969.
+
+4. Liu, C.L.  Introduction to Combinatorial Mathematics.  McGraw-Hill, New
+   York, 1968.
+
+5. Rivest, R., Shamir.  A., and Adleman, L.  A method for obtaining digital
+   signatures and public key cryptosystems.  Comm.  ACM 21, 2 (Feb.  1978),
+   120-126.
+
+Communications of the ACM
+November 1979
+Volume 22
+Number 11
+
+Permission to copy without fee all or part of this material is granted provided
+that the copies are not made or distributed for direct commercial advantage,
+the ACM copyright notice and the title of the publication and its date appear,
+and notice is given that copying is by permission of the Association for
+Computing Machinery.  To copy otherwise, or to republish, requires a fee and/or
+specific permission.
+
+Author's present address: A. Shamir, Laboratory for Computer Science,
+Massachusetts Institute of Technology, Cambridge, MA 02139.
+
+This research was supported by the Office of Naval Research under contract no
+N00014-76-C-0366.
+
+Received April 1979; revised September 1979.
+
+(c) 1979 ACM 0001-0782/79/1100-0612 $00.75.
+
+Brought to you by the Information Liberation Front, and
+
+DEADBEAT &lt;na5877@anon.penet.fi&gt;
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3
+
+iQBFAgUBLLMNTPFZTpBW/B35AQF87AGAqZA0rZKDNuBLbFUcA+bEy5T93aOEIZi3
+oaV5nje6JIS+QIW+lfuFWs0hobrgQz6V
+=u17f
+-----END PGP SIGNATURE-----
+-------------------------------------------------------------------------
+To find out more about the anon service, send mail to help@anon.penet.fi.
+Due to the double-blind, any mail replies to this message will be anonymized,
+and an anonymous id will be allocated automatically. You have been warned.
+Please report any problems, inappropriate use etc. to admin@anon.penet.fi.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00262.html">Re: PGP in Fidonet</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00263.html">Re: Start up costs and paying for speech...</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00303.html">Re: Start up costs and paying for speech...</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00264.html">From the LA Times story</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00277"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00277"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,198 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Transfer encoding indpendant signatures. Was (considered harmful.) -->
+<!--X-From-R13: Bnhy Syyvbgg <cnhy.ryyvbggNVeabjy.ZbarEgne.ADU> -->
+<!--X-Date: Fri, 24 May 1996 16:33:42 +0800 -->
+<!--X-Message-Id: 31a50db6.flight@flight.hrnowl.lonestar.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199605230403.VAA14508@zzyzx.aero.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Transfer encoding indpendant signatures. Was (considered harmful.)</TITLE>
+<LINK REV="made" HREF="mailto:paul.elliott@Hrnowl.LoneStar.ORG">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01591.html">Date Prev</A>][<A HREF="msg01596.html">Date Next</A>][<A HREF="msg01504.html">Thread Prev</A>][<A HREF="msg01508.html">Thread Next</A>][<A HREF="index.html#01611">Date Index</A>][<A HREF="threads.html#01611">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Transfer encoding indpendant signatures. Was (considered harmful.)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:elkins@antares.aero.org">elkins@antares.aero.org</A> (Michael Elkins)</LI>
+<LI><em>Subject</em>: Transfer encoding indpendant signatures. Was (considered harmful.)</LI>
+<LI><em>From</em>: Paul Elliott &lt;<A HREF="mailto:paul.elliott@Hrnowl.LoneStar.ORG">paul.elliott@Hrnowl.LoneStar.ORG</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 24 May 1996 02:15:28 +0000</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:pgp%2Dmime@purpletape.cs.uchicago.edu">pgp-mime@purpletape.cs.uchicago.edu</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg01504.html">199605230403.VAA14508@zzyzx.aero.org</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+ 
+&gt; Your last two comments really illustrate the divison that we've previously
+&gt; seen on the pgp-mime list.  On the one side you have those who want to
+&gt; include the MIME headers in the digital signature, and on the other are those
+&gt; who want the signature to be over the data in it's "binary" (unencoded)
+&gt; form.  I _do_ see merit in the latter.  However, that was not the goal of
+&gt; my draft.  What I've been trying to get across is that my draft does not
+&gt; preclude you from writing your own draft on how to transmit detached
+&gt; signatures along with your message (perhaps something like
+&gt; multipart/pgp-signed).
+
+OK, it's not PGP MIME's department. Still, I hope that someone will
+develop a spec for doing the other, because as my examples show,
+some users may need that ability. If specs &amp; software for easy of
+use with PGP &amp; mail and widely available, it will tend to entrench
+the use of PGP and encryption.
+
+
+&gt; 
+&gt; &gt; Pressure will build for PGP MIME to support binary datapaths.
+&gt; 
+&gt; When this occurs, I will glady remove that restriction.
+
+The problem is that the transision will occur gradually.
+At what point do you tell one class of users that they
+are out of luck, in order to better serve another kind of
+user? Ten percent? Five percent? One percent? A tenth of a percent?
+They will scream bloody murder.
+
+What if you want to send signed mail to a mailing list that includes
+users of both kinds of users. Your message will go to a
+large number of people, so there is reason for efficiency. Do
+you want to send two kinds of messages to users depending
+on what kind of transfer they have available?
+
+It is time to invent  transfer-encoding-independant signatures!
+
+We are assuming that the user trusts the pgp-mime software
+to specify what will be signed, so that my previous objection
+to signing arbitary objects has been ruled out of order.
+
+We want to invent a method of "signing" a complex mime object
+that will detect any modification of the information the user is trying
+to convey, but will allows us to change the transfer encoding
+of a body part without invalidating the "signature".
+
+What we need is a computable map M from the class of mime
+objects to a class of "binary signature objects". (Which are basicly
+streams of bytes which can be fed into PGP to generate or check a 
+signature). ( Don't tell me there is this wierd machine that can not
+represent a stream of bytes. PGP assumes that many of its files
+are streams of bytes, so that such a machine can not run PGP
+to generate or check a signatures and everything with respect
+to signatures becomes mute.)
+
+
+      CLASS OF
+      MIME OBJECTS    ======= M ========&gt; BINARY SIGNATURE
+                                                    OBJECTS.
+
+M should have the following properties:
+
+ 1) Any change in the "message" that the user wants to convey
+       will change the object that it maps to under M.
+ 2) We can change the way a body part is transfer-encoded without
+       changing the signature object it maps to under M.
+
+Note: These binary signature objects are not going to be used to
+transfer data. They are not going to be used to display information.
+They are only going to be used to generate and check signatures.
+
+Given such an M, is is possible to define a method of signing
+a MIME object, that will detect any change to the "message",
+but not invalidate the signature when changing how a body
+part is transfer encoded.
+
+To generate a signature, apply M and generate a PGP binary signature
+on the result. To check a signature, apply M and PGP signature
+check the result. It should work.
+
+Is it possible to define such a map M? I think so, but I am not
+100% certain on the details. Something approximately similar to
+the following should work:
+
+Go thru the object copying header lines as a stream of ascii bytes,
+seperated UNIX style with linefeeds. Except, do not copy the transfer-encoding
+lines or the delimiter fields. Or any other field that only serves to tell how
+the object is transfer encoded. Convert the body parts themselves to
+a stream of bytes as specified by the transfer-encoding field and
+included in the outgoing stream. For text encoding, trailing white
+space could be handled as per the draft. Other text canonicalization
+as PGP does it. I believe that this method has the two properties 
+mentioned above. Perhaps it needs to be somewhat modified.
+
+I am sure that such a map M can be defined if smart people think about it.
+- -- 
+Paul Elliott                                  Telephone: 1-713-781-4543
+Paul.Elliott@hrnowl.lonestar.org              Address:   3987 South Gessner #224
+                                              Houston Texas 77063
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.3
+Charset: cp850
+
+iQCVAgUBMaUbTPBUQYbUhJh5AQEsLQQAnugKr8rQdJi1F6EKxG9slMjVaQcVl9i4
+N0azwKH46sIStm7/t8aWu2QnvosFLszt0/jD+NvQqgRU2XwlB/ynDChiMz9yANvy
+1rd44r8rVIFZF3zyP9zxgJR+L8liQ/YdwLfEJTHk6Z1pFRMCoYz6Hs7nqvMDSvoc
+jmhZQ7Z26AU=
+=iKTw
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01504" HREF="msg01504.html">Re: PGP MIME INTERNET DRAFT considered harmful.</A></STRONG>
+<UL><LI><EM>From:</EM> elkins@antares.aero.org (Michael Elkins)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01591.html">Re: Floating Point and Financial Software</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01596.html">Re: National Journal article sez net-activism is just political hicks</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01504.html">Re: PGP MIME INTERNET DRAFT considered harmful.</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01508.html">Re: PGP MIME INTERNET DRAFT considered harmful.</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01611"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01611"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,301 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: PGPcompose, a mail wrapper -->
+<!--X-From-R13: angrNHWE.QbybEgngr.SRG (QHZ fgnss zrzore @ngr Enzzbaf) -->
+<!--X-Date: Sun, 11 Jul 93 14:28:24 PDT -->
+<!--X-Message-Id: 9307112128.AA15649@vangogh.VIS.ColoState.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>PGPcompose, a mail wrapper</TITLE>
+<LINK REV="made" HREF="mailto:nate@VIS.ColoState.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00196.html">Date Prev</A>][<A HREF="msg00197.html">Date Next</A>][<A HREF="msg00195.html">Thread Prev</A>][<A HREF="msg00198.html">Thread Next</A>][<A HREF="index.html#00194">Date Index</A>][<A HREF="threads.html#00194">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>PGPcompose, a mail wrapper</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: PGPcompose, a mail wrapper</LI>
+<LI><em>From</em>: <A HREF="mailto:nate@VIS.ColoState.EDU">nate@VIS.ColoState.EDU</A> (CVL staff member Nate Sammons)</LI>
+<LI><em>Date</em>: Sun, 11 Jul 93 15:28:17 MDT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+CypherPunks,
+
+I have been looking for a good mailer lately, or at least
+a mail wrapper to sign and encrypt my mail easily.  I was
+not completely satisfied with the wrappers that I could 
+find, and especially since they mostly need perl.  So,
+in a fit of frustration, I did what any good CypherPunk
+would do: I wrote one.  It is called "PGPcompose" and 
+if you invoke it with a username, it will prompt for 
+the subject, open vi for editing, then ask you if you want
+to sign the message, and encrypt it (either, or both),
+then it asks for the key to use for encryption (if you choose
+to encrypt the message).  It will then ask if you want to 
+send, edit, or abort the message.  it uses /usr/ucb/mail
+instead of sendmail, since I could not figure out how to
+parse the ~/.mailrc file, and since it took less than 
+a few hours to hack out.  Anyway, here it is, it's free,
+so do whatever you want with it.
+
+- ---------------------BEGIN PGPcompose-------------------
+/* "PGPcompose" (comp) -- a replacement for the mail composition  */
+/* program.  It allows for PGP signatures and encryption          */
+/* for mail.  It asks for the ID of who the file is to be         */
+/* encrypted for...  I did this because I have lots of            */
+/* public keys, and some of the other mailers became              */
+/* confused on occation and did not find the right key to         */
+/* use for the encryption.  It also asks if you want to continue, */
+/* abort or edit the message...                                   */
+/*                                                                */
+/* This software is free for the taking... if you modify it, send */
+/* me the modification, since I'll be curious.                    */
+/*        -nate sammons, July 11, 1993, nate@vis.colostate.edu    */
+
+
+#include &lt;stdio.h&gt;
+
+main(int argc, char *argv[])
+{
+	int intPID;
+	int signMess, cryptMess;
+	char subject[130];
+	char cryptWho[100];
+	char charPID[10];
+	char theChoice[5];
+	char messageName[100];
+	char messageHeaderName[100];
+	char messageCypherName[100];
+	char commandLine[300];
+	char scriptName[100];
+
+	FILE *tmp;
+	FILE *script;
+	FILE *message;
+
+	intPID = getpid();
+        tmp = fopen("/tmp/PID.tmp", "w");
+	fclose(tmp);
+	tmp = fopen("/tmp/PID.tmp", "a");
+        fprintf(tmp, "%d", intPID);
+	fclose(tmp);
+	tmp = fopen("/tmp/PID.tmp", "r");
+	fscanf(tmp, "%s", charPID);
+        fclose(tmp);
+
+	strcpy(messageName, "/tmp/message.tmp.");
+	strcat(messageName, charPID);
+	strcpy(messageCypherName, "/tmp/message.cypher.");
+	strcat(messageCypherName, charPID);
+	strcpy(scriptName, "/tmp/message.script.");
+	strcat(scriptName, charPID);
+
+	message = fopen(messageName, "w");
+
+	switch(argc)
+	{
+	case 2: printf("PGPcompose, (c)1993 Nate Sammons\n");
+		printf("Subject: ");
+		gets(subject);
+
+		editIt:
+                strcpy(commandLine, "vi ");
+                strcat(commandLine, messageName);
+                system(commandLine);
+
+                signIt:
+                printf("Sign this message? [y,n] : ");
+                gets(theChoice);
+                switch(theChoice[0])
+                {
+                case 'y':
+                case 'Y': signMess = 1;
+                        break;
+                case 'n':
+                case 'N': signMess = 0;
+                        break;
+                default: goto signIt;
+                        break;
+                }
+
+                cryptIt:
+                printf("Encrypt this message? [y,n] : ");
+                gets(theChoice);
+                cypherWithWho:
+                switch(theChoice[0])
+                {
+                case 'y':
+                case 'Y': printf("  With whose key? : ");
+                        gets(cryptWho);
+                        if (cryptWho[1] == NULL)
+			{
+                                goto cypherWithWho;
+			}
+                        cryptMess = 1;
+                        break;
+                case 'n':
+                case 'N': cryptMess = 0;
+                        break;
+                default: goto cryptIt;
+                }
+
+		Continue:
+		printf("send, abort, edit? : ");
+		gets(theChoice);
+		switch(theChoice[0])
+		{
+		case 's':
+		case 'S': goto sendIt;
+		case 'a':
+		case 'A': system("/bin/rm -rf /tmp/message*");
+			system("/bin/rm -rf /tmp/PID.tmp");
+			exit(0);
+		case 'e':
+		case 'E': goto editIt;
+		default: goto Continue;
+		}
+
+		sendIt:
+                if((signMess == 1) &amp;&amp; (cryptMess == 1))
+                {
+		script = fopen(scriptName, "w");
+                fprintf(script, "cat %s | pgp -feast +clearsig=on \"%s\" &gt; %s\n", messageName, cryptWho, messageCypherName);
+		fclose(script);
+		strcpy(commandLine, "chmod +x ");
+		strcat(commandLine, scriptName);
+		system(commandLine);
+		system(scriptName);
+		script = fopen(scriptName, "w");
+		fprintf(script, "cat %s | /usr/ucb/mail -s \"%s\" %s", messageCypherName, subject, argv[1]); 
+		fclose(script);
+		system(commandLine);
+		system(scriptName);
+                }
+
+                if((signMess == 1) &amp;&amp; (cryptMess == 0))
+                {
+		script = fopen(scriptName, "w");
+		fprintf(script, "cat %s | pgp -fast +clearsig=on &gt; %s\n", messageName, messageCypherName);
+		fclose(script);
+		strcpy(commandLine, "chmod +x ");
+		strcat(commandLine, scriptName);
+		system(commandLine);
+		system(scriptName);
+		script = fopen(scriptName, "w");
+		fprintf(script, "cat %s | /usr/ucb/mail -s \"%s\" %s", messageCypherName, subject, argv[1]);
+		fclose(script);
+		system(commandLine);
+		system(scriptName);
+                }
+
+                if((signMess == 0) &amp;&amp; (cryptMess == 1))
+                {
+		script = fopen(scriptName, "w");
+		fprintf(script, "cat %s | pgp -fea \"%s\" &gt; %s\n", messageName, cryptWho, messageCypherName);
+		fclose(script);
+		strcpy(commandLine, "chmod +x ");
+		strcat(commandLine, scriptName);
+		system(commandLine);
+		system(scriptName);
+		script = fopen(scriptName, "w");
+		fprintf(script, "cat %s | /usr/ucb/mail -s \"%s\" %s", messageCypherName, subject, argv[1]);
+		fclose(script);
+		system(commandLine);
+		system(scriptName);
+                }
+
+                if((signMess == 0) &amp;&amp; (cryptMess == 0))
+                {
+		script = fopen(scriptName, "w");
+		fprintf(script, "cat %s | /usr/ucb/mail -s \"%s\" %s", messageName, subject, argv[1]);
+		fclose(script);
+		strcpy(commandLine, "chmod +x ");
+		strcat(commandLine, scriptName);
+		system(commandLine);
+		system(scriptName);
+                }
+		system("/bin/rm -rf /tmp/message*");
+		system("/bin/rm -rf /tmp/PID.tmp");
+		break;
+	default: printf("Useage: comp username\n");
+		exit(0);
+	}
+}
+
+- ---------------------END PGPcompose---------------------
+
+- -nate sammons
++--------------------------------------------------------------------
+| Nate Sammons   email: nate@VIS.ColoState.Edu
+|      Colorado State University Computer Visualization Laboratory
+|      Finger me at nate@monet.VIS.ColoState.Edu for my PGP key
+|  #include &lt;std.disclaimer&gt;
+|  "I have but one single desire - to tear down the sky" -A. Toomba
++----------------------+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3
+
+iQCVAgUBLECF4NTgi1fmrpxlAQGhbgP6AiZCyU2+qf5O06r3mE1JB4XWDocuK175
+CO/HJU/8+QekgBG7+6PewERnqLt0pVPuTVmdWkHJyQ+VJyrPRiDlWzI7G2yJqwvG
+sTCI9CT6cHbp0jBRzQhj48SFcN+Gr+nZ06Nc8/93X7/+QGZVtz+0MMTFXz8oVcEe
+TWYeBNkXhDg=
+=P0IW
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00196.html">PINE</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00197.html">Re: encrypted email software</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00195.html">security vs. PINE</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00198.html">Radical Paranoia?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00194"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00194"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,154 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Ssh "security hole": proposed fix -->
+<!--X-From-R13: Rnivq [nmvrerf <znmvrerfNcn.qrp.pbz> -->
+<!--X-Date: Sat, 15 Jul 95 23:20:57 PDT -->
+<!--X-Message-Id: 9507160615.AA06186@venus.pa.dec.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199507151502.SAA01269@shadows.cs.hut.fi -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Ssh "security hole": proposed fix</TITLE>
+<LINK REV="made" HREF="mailto:mazieres@pa.dec.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00382.html">Date Prev</A>][<A HREF="msg00383.html">Date Next</A>][<A HREF="msg00370.html">Thread Prev</A>][<A HREF="msg00768.html">Thread Next</A>][<A HREF="index.html#00378">Date Index</A>][<A HREF="threads.html#00378">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Ssh "security hole": proposed fix</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:ylo@cs.hut.fi">ylo@cs.hut.fi</A></LI>
+<LI><em>Subject</em>: Re: Ssh "security hole": proposed fix</LI>
+<LI><em>From</em>: David Mazieres &lt;<A HREF="mailto:mazieres@pa.dec.com">mazieres@pa.dec.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 15 Jul 1995 23:15:51 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:rsalz@osf.org">rsalz@osf.org</A>, <A HREF="mailto:ssh@clinet.fi">ssh@clinet.fi</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00370.html">199507151502.SAA01269@shadows.cs.hut.fi</A>&gt; (message from TatuYlonen on Sat, 15 Jul 1995 18:02:11 +0300)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Well, here is the proposed new ssh protocol as I understand it.
+
+  A -&gt; B: A
+  
+  B -&gt; A: PKb, PKsb, Cb
+
+    session_id := {PKb, PKsb, Cb}_MD5
+  
+  A -&gt; B: Cb, {{session_id XOR Kab}_PKsb}_PKb        (*)
+  A -&gt; B: {A}_Kab
+  A -&gt; B: {PKa}_Kab
+  
+  B -&gt; A: {{Nb}_PKa}_Kab
+  
+  A -&gt; B: {{Nb, session_id}_MD5}_Kab
+
+It does seem to solve the two problems I pointed out.  However, I am
+troubled by how complicated the protocol is, and how much encryption
+is going on.  One of the principles I have heard stated says that more
+encryption does not mean more security.  A good example of that seems
+be the session key PKsb above.
+
+In line (*) of the protocol, you say the session key (or now I guess
+really session_id XOR Kab) is encrypted first with whichever of Kb,
+Ksb has the larger modulus.  Under normal circumstances (the ones
+depicted above), the first encryption will be with PKsb.  However, if
+ever PKb were to come first, then PKsb would be completely vulnerable
+to a "man in the middle" attack, and thus would be completely useless.
+
+Wouldn't it make sense to simplify the protocol significantly, so as
+to make it easier to understand and easier for us to convince
+ourselves of its robustness?  What about something like what follows
+this message?
+
+To come up with the protocol I appended, I took your protocol and
+stuck the the full context of each message into the message itself, so
+that none of the previous problems could occur.  Then I eliminated all
+complications like double encryption and challenges that did not add
+to the security of the protocol.  Now granted I'm no authentication
+expert and could easily have made a mistake here, but at least it will
+be easier to catch because the protocol is simpler.  Who know what the
+implications of that XOR really are?
+
+David
+
+
+PREAMBLE:
+
+(1)  A -&gt; B: A
+
+(2)  B -&gt; A: Cb, PKsb, PKb
+
+(3)  A -&gt; B: {Kab}_PKsb, {A, B, Cb}_Kab
+
+(4)  B -&gt; A: {{A, B, Cb, Kab, PKsb}_SKb}_Kab
+
+
+SSH_AUTH_RHOSTS:
+
+(5)  A -&gt; B:  0
+
+SSH_AUTH_RHOSTS_RSA:
+SSH_AUTH_RSA:
+
+(5)  A -&gt; B: {{A, B, Cb, Kab}_SKa, PKa}_Kab
+
+SSH_AUTH_PASSWORD:
+
+(5)  A -&gt; B: {Ka}_Kab
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00370" HREF="msg00370.html">Ssh "security hole": proposed fix</A></STRONG>
+<UL><LI><EM>From:</EM> Tatu Ylonen &lt;ylo@cs.hut.fi&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00382.html">Re: unix, vanguard</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00383.html">Re: Unix not the Only Place for "Vanguard" Applications</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00370.html">Ssh "security hole": proposed fix</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00768.html">Re: Ssh "security hole": proposed fix</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00378"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00378"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

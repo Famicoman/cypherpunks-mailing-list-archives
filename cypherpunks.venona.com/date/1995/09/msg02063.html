@@ -1,0 +1,181 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: X.509, S/MIME, and evolution of PGP -->
+<!--X-From-R13: Pvyy Egrjneg <fgrjnegfNvk.argpbz.pbz> -->
+<!--X-Date: Wed, 27 Sep 95 15:23:59 PDT -->
+<!--X-Message-Id: 199509272223.PAA13812@ix7.ix.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>X.509, S/MIME, and evolution of PGP</TITLE>
+<LINK REV="made" HREF="mailto:stewarts@ix.netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02060.html">Date Prev</A>][<A HREF="msg02061.html">Date Next</A>][<A HREF="msg02060.html">Thread Prev</A>][<A HREF="msg02133.html">Thread Next</A>][<A HREF="index.html#02063">Date Index</A>][<A HREF="threads.html#02063">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>X.509, S/MIME, and evolution of PGP</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: X.509, S/MIME, and evolution of PGP</LI>
+<LI><em>From</em>: Bill Stewart &lt;<A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 27 Sep 1995 15:22:08 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I'd always heard X.509 public key certificates were a hierarchical, evil,
+anti-WebOfTrust ISOism.  But Netscape is now doing them, and talking S/MIME,
+so I sat down to read the specs, and they're really not all that bad.  
+(Technically, I've only read PKCS#6 and RFC 1422, and not the real ISOisms...)
+Yeah, they've got lots of clunky ASN.1 Ambiguous Encoding Rules and X.500 
+Silly Name Format, but those can be lived with, and the X.500 may be possible
+to simply ignore in most cases.  Steve Kent, author of RFC1422, envisions that
+a hierarchical world with government certification authorities would be the
+most convenient implementation, and with the X.500 directory service serving
+certificates, but that's primarily editorial and not required by the technology.
+
+Since a zillion and a half people are about to acquire Netscape 2.0,
+which supports non-Verisign-signed X.509 certificates and DES, we can 
+definitely extend the Web of Trust concept to that world; can we also 
+extend secure user-to-user messaging?  It's time for PGP to mutate and
+take over the world...
+
+An X.509 certificate has the following components  
+       1.  version
+
+       2.  serial number
+
+       3.  signature (algorithm ID and parameters)
+
+       4.  issuer name
+
+       5.  validity period
+
+       6.  subject name
+
+       7.  subject public key (and associated algorithm ID)
+expressed as ASN.1 and signed with the issuer's public key.  The issuer and
+subject names are expressed as X.500 addresses (big deal).  The CA's public key
+is expected to be obtained out of band, or as a chain of signatures from
+some other CA that you got a signature for out of band; there's no policy
+implementation that says who can be one.  The primary requirements on CAs are
+to never issue the same serial number twice, maintain uniqueness on 
+signatures for subjects, and maintain a Certificate Revocation List which
+is accessible somehow.  Unfortunately, the data format doesn't support
+multiple signatures, but the documentation _does_ explicitly indicate that
+you can _have_ multiple certifications; you just have to drag around
+a bunch of separate certificates, leading to some obvious implementation
+opportunities.  CRLs are less well-specified, though the PEM RFCs suggest
+a PEM format; the main requirement is that they be keyed off the serial number,
+which is why that has to be unique.
+
+RFC 1422 proposes a rooted hierarchy of CAs - a root called the Internet Policy
+Registration Authority, which would certify a bunch of Policy Certification
+Authorities,
+which would each have different requirements on what their CAs require from
+people who want to be certified, ranging from anonymous personas to heavily
+identified Official People, and would do a certain amount of coordination to
+preserve uniqueness.  Becoming a PCA would require paying money to the IPRA.
+However, there's no requirement that a _specific_ organization become the
+_one_ _official_ IPRA; if somebody were to volunteer and announce themselves
+as the IPRA, there's no particular conflict-resolution mechanism.
+[ maybe it's time for a Cypherpunks Press Release?  No - I didn't say it.
+Not me! ]
+
+But rootedness only really matters to software that cares... and as long
+as your software accommodates N levels of certification, you can
+have a Web of Trust getting back to a key you signed yourself, and either
+get an official personna certificate or plug your public key into your
+software as the IPRA (and sign the real IPRA's certificate yourself :-)
+
+Problems:
+1) ITAR - shouldn't be a big deal, because all of this is building a
+signature/authentication mechanism, it's not doing any encryption.
+The encryption, if any, is a user agent issue, and that's Netscape's problem;
+the Web of Trust tool is an add-on.
+
+2) RSA patent - can this be built with RSAREF?  Or RSAREF with permission
+for a couple extra activities?  Or built out of RIPEM or RIPEM-SIG?
+The latter has the benefit of already being exportable.
+
+3) Netscape compliance - the Netscape folks have been real friendly,
+and I hope they'll leave their format for getting certificates open.
+
+4) Other software and CA policy-makers - getting out first is worth something;
+then you're the standard that they have to follow instead of the other way
+around.
+For some issues, like X.500 name vs. DNS name, there are probably people 
+in the IETF or community in general working on it, or alternatively 
+you can do an ugly hack abusing the organization and address fields.
+
+5) S/MIME - real S/MIME compliance requires support for RC2 as well as
+publicly available algorithms, though this is really just an X.509 handler.
+
+6) It's a lot of work - well, yeah, it is.  And I'm lazy.  Is there enough
+related code in SSLeay to steal to help implement it?
+
+
+
+
+#---
+# Bill Stewart, Freelance Information Architect, stewarts@ix.netcom.com
+# Phone +1-510-247-0664 Pager/Voicemail 1-408-787-1281
+#---
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="02133" HREF="msg02133.html">Re: X.509, S/MIME, and evolution of PGP</A></STRONG>
+<UL><LI><EM>From:</EM> Eric Young &lt;eay@mincom.oz.au&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02060.html">Re: alpha.c2.org nymserver</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02061.html">Re: Time Keys, Some Secure Ideas (by Alias: Jay Hyden)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02060.html">Re: alpha.c2.org nymserver</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02133.html">Re: X.509, S/MIME, and evolution of PGP</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02063"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02063"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

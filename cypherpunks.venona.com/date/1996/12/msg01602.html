@@ -1,0 +1,896 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Lack of security of police Mobile Data Terminals (MDTs) -->
+<!--X-From-R13: "Rnir Szrel" <qvrNcvt.qvr.pbz> -->
+<!--X-Date: Mon, 23 Dec 1996 20:50:44 &#45;0800 (PST) -->
+<!--X-Message-Id: 9612240450.AA24404@pig.die.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Lack of security of police Mobile Data Terminals (MDTs)</TITLE>
+<LINK REV="made" HREF="mailto:die@pig.die.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01600.html">Date Prev</A>][<A HREF="msg01687.html">Date Next</A>][<A HREF="msg01666.html">Thread Prev</A>][<A HREF="msg01620.html">Thread Next</A>][<A HREF="index.html#01602">Date Index</A>][<A HREF="threads.html#01602">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Lack of security of police Mobile Data Terminals (MDTs)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Lack of security of police Mobile Data Terminals (MDTs)</LI>
+<LI><em>From</em>: "Dave Emery" &lt;<A HREF="mailto:die@pig.die.com">die@pig.die.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 23 Dec 1996 23:50:40 -0500 (EST)</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:die@die.com">die@die.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+	Some months ago I posted an article to cypherpunks commenting
+on how easy it is to intercept the supposedly secret traffic on 
+the Motorola mobile data terminals used by many police forces to access
+criminal history and other sensitive information.  This data is
+not seriously encrypted (or encrypted at all in most systems) and
+illustrates the kind of security by obscurity that some people would
+like to see continue as the only protection for such information as
+it is broadcast to the world on open radio channels.
+
+	Apparently someone saw my comments or had similar thoughts and
+today I found the following article posted to alt.radio.scanner. I do
+not know who the author is, and I did not write the article myself - but
+I think the article may interest some members of the list as it
+illustrates what civilian cryptography would be like if the NSA had its
+way...
+
+
+						Dave Emery N1PRE
+						die@die.com
+						DIE Consulting
+						Weston Mass.
+
+
+
+-----------------------  Begin quoted article ----------------------
+
+
+&gt;From lord@heaven.com Mon Dec 23 23:11:43 EST 1996
+Article: 44420 of alt.radio.scanner
+Xref: world alt.radio.scanner:44420
+Path: world!blanket.mitre.org!news.tufts.edu!www.nntp.primenet.com!nntp.primenet.com!howland.erols.net!newsfeed.internetmci.com!news.ro.com!news
+From: lord &lt;lord@heaven.com&gt;
+Newsgroups: alt.radio.scanner
+Subject: MDT stuff
+Date: Mon, 23 Dec 1996 16:04:39 -0600
+Organization: screw
+Lines: 765
+Message-ID: &lt;32BF01F6.2742@heaven.com&gt;
+Reply-To: lord@heaven.com
+NNTP-Posting-Host: ts2p5.ro.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; name="Mdt.txt"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Mozilla 3.0 (Win95; I)
+Content-Disposition: inline; filename="Mdt.txt"
+
+
+Greetings one and all,
+
+     Have you ever lusted to decode Mobile Data Terminal (MDT)
+tranmissions? Have you ever wanted to see the same NCIC and motor
+vehicle information that law enforcement officers see? Have you ever
+wanted to see what officers send to each other over "private" channels?
+And all this with an interface you can build with only a few dollars
+worth of parts from your local radio shack?
+
+     If so this posting might be your rendevous with destiny. The tail
+end of this posting includes the source code of a program that decodes
+and displays MDT messages. It stores roughly 30k of messages in a buffer
+and then writes the whole buffer to a file called "data.dat" before
+terminating. The program may be interrupted at any time by pressing any
+key (don't use control-c) at which point it writes the partially filled
+buffer to "data.dat". This program only works for systems built by
+Motorola using the MDC4800 tranmission protocol. This accounts for a
+large fraction of public service MDT systems as well other private
+systems.
+
+     The existence of this program is ample evidence that Motorola has
+misrepresented its MDT systems when it marketed them as a secure means
+of communcications. The interested reader will soon discover that these
+systems do not use any form of encryption. Security concerns instead
+have been dealt with by using a code. "And what might this code be
+called?" asks the reader. The code turns out to be plain ASCII. What
+follows is a brief description of how the program and the MDC4800
+protocol work. If you don't understand something go to your local
+library and check out a telecommunications theory book.
+
+     1. The raw transmission rate is 4800 baud. The program's interrupt
+service routine simply keeps track of the time between transitions. If
+you're receiving a perfect signal this will be some multiple of 1/4800
+seconds which would then give you how many bits were high or low. Since
+this is not the best of all possible worlds the program instead does the
+following: transitions are used to synchronize a bit clock. One only
+samples whenever this clock is in the middle of the bit to produce the
+raw data stream. This greatly reduces jitter effects.
+
+     2. Whenever a tranmitter keys up the MDC4800 protocol calls for bit
+ synchronization (a sequence of 1010101010101010....). In the program
+ this will result in receive bit clock synchronization. There is no need
+ to specifically look for the bit sync.
+
+    3. Look for frame synchronization in raw bit stream so that data
+frames can be broken apart. Frame synchronization consists of a 40 bit
+sequence : 0000011100001001001010100100010001101111. If this sequence is
+detected (or 35 out of 40 bits match up in the program) the system is
+idling and the next 112 bit data block is ignored by the program. If the
+inverted frame sync is detected one immediately knows that 112 bit data
+blocks will follow.
+
+    4. Receive the 112 bit data block and undo the bit interleave. This
+means that one must reorder the bits in the following sequence : {0,16,
+32,48,64,80,96,1,17,33,49,65,81,97,2,18,34,...} if the orignal sequence
+were received as {0,1,2,3,4,5,6,7,8,...}.
+
+     5. Check the convolutional error correcting code and count the
+number of errors. The error correcting code is rate 1/2 which means we
+will be left with 56 data bytes. The encoder is constructed so that the
+output consists of the original data bits interspersed with error
+correcting code. The generating polynomial used is :
+                 1 + X^-1 + X^-5 + X^-6
+Whenever an error is detected a counter is incremented. An attempt is
+made to correct some errors by finding the syndrome and looking for the
+bogus bit.
+
+     6. Keep receiving 112 bit data blocks until either a new frame sync
+is found or two consecutive data blocks have an unacceptably large
+number of errors.
+
+     7. Each data block consists of six data bytes; the last 8 bits are
+status bits that are simply ignored. The program shows the data in two
+columns - hexadecimal and ASCII. This data is kept in a buffer and is
+written to the file "data.dat" when the program terminates.
+
+     8. What the program doesn't do: As a further check on the data
+there can be CRC checks. This varies from protocol to protocol so this
+program does not implement the CRC checks. Nonetheless, it is a
+relatively trivial matter to find the generating polynomial. The
+addresses, block counts, and message ID numbers are also quite easy to
+deduce.
+
+As you can see, there is no encryption. The bit interleave and the error
+correcting coding are there solely to insure the integrity of the ASCII
+data. Since any moron could have figured this stuff out from scratch one
+could argue that MDTs do not use "...modulation parameters intentionally
+witheld from the public". Therefore the Electronic Communications
+Privacy Act may not prohibit receiving MDT tranmissions. However,
+consult your attorney to make sure.
+
+     The total disregard for security will no doubt annoy countless
+Motorola customers who were assured that their MDT systems were secure.
+Since Federal law states that NCIC information must be encrypted your
+local law enforcement agency might be forced to spend millions of
+dollars to upgrade to a secure MDT system - much to the delight of
+Motorola and its stockholders. Cynics might conclude that the release of
+a program like this is timed to coincide with the market saturation of
+existing MDT systems.
+
+     Also, this program is completely free and it had better stay that
+way. What's to prevent you from adapting this into a kit and selling it
+&gt;from  classified ads in the back of Nuts and Volts? Nothing. But take a
+look at Motorola's patents sometime. You'll notice that this program
+does things that are covered by a shitload of patents. So any attempt to
+take financial advantage of this situtation will result in utter misery.
+
+
+Please keep the following in mind: this program only works with the
+first serial port (COM1). If your mouse or modem is there too bad. If
+you don't like this rewrite the program.
+
+
+------------------------------------------------------------------------
+What equipment do I need?
+
+RADIO SCANNER:
+
+     A scanner that can receive 850-869 MHz. For those of you who don't
+know, this is the band where most business and public service trunked
+radio systems can be found along with the mobile data terminal
+transmissions. Chances are excellent that if your local authorities have
+a motorola trunked radio system and mobile data terminals that this is
+the frequency band in use. Very rarely will one find mobile data
+terminals in other frequency bands.
+
+     Now for the fun part - your scanner should probably be modified to
+allow you to tap off directly from the discriminator output. If you wait
+until the signal has gone through the radio's internal audio filtering
+the waveform will likely be too heavily distorted to be decoded. This is
+exactly the same problem that our friends who like to decode pager
+transmissions run into - some of them have claimed they can only decode
+512 baud pager messages using the earphone output of their scanner.
+These mobile data terminal messages are 4800 baud so I don't think you
+have a snowball's chance in hell without using the discriminator output.
+If you don't know where to begin modifying your scanner you might want
+to ask those who monitor pagers how to get the discriminator output for
+your particular radio.
+
+
+COMPUTER/SCANNER INTERFACE
+
+      Those of you who have already built your interface for decoding
+pager messages should be able to use that interface without any further
+ado. For those starting from scratch - you might want to check out
+packages intended for pager decoding such as PD203 and the interfaces
+they describe. The following excerpt gives an example of a decoder that
+should work just fine (lifted out of the PD203 POCSAG pager decoder
+shareware documentation):
+
+&gt;
+&gt;   0.1 uF                    |\ +12v
+&gt; ---||-----------------------|- \|
+&gt; AF IN    |                  |741 \
+&gt; ----     |                  |    /--------------------- Data Out
+&gt;     |    \            ------|+ /|  |                    CTS (pin 5/8)
+&gt;     |    / 100K       |     |/-12v |                 or DSR (pin 6/6)
+&gt;     |    \            |            |
+&gt;    GND   /            ----/\/\/\----         GND ------ GND (pin 7/5)
+&gt;          |            |    100K
+&gt;          |            \                  N.B. Pin Numbers for com port are
+&gt;         GND           /                  given as x/y, where x is for a 25
+&gt;                       \  10K             way, y for a 9 way.
+&gt;                       /
+&gt;                       |
+&gt;                      GND
+&gt;
+&gt; The  above circuit is a Schmitt Trigger, having thresholds of about +/- 1v.
+&gt; If such a large threshold is not required, eg for a  discriminator  output,
+&gt; then  the  level of positive feedback may be reduced by either reducing the
+&gt; value of the 10K resistor or by increasing the value of the  100K  feedback
+&gt; resistor.
+&gt;
+&gt; The +/- 12v for the op-amp can be derived from unused signals  on  the  COM
+&gt; port (gives more like +/- 10v but works fine !):-
+&gt;
+&gt;
+&gt;    TxD (2/3) --------------|&lt;-------------------------------------- -12v
+&gt;                                     |                  |
+&gt;    RTS (4/7) --------------|&lt;--------       GND        - -
+&gt;                   |                          |         _ +  10uF
+&gt;                    ---------&gt;|-------        - -       |
+&gt;                    Diodes 1N4148    |        - + 10uF  GND
+&gt;                                     |        |
+&gt;    DTR (20/4) -------------&gt;|-------------------------------------- +12v
+&gt;
+
+If I were building this circuit I would strongly suggest tying the
+non-inverting (+) input of the op-amp to ground since you are working
+directly with the discriminator output and don't need a Schmitt trigger.
+All these parts or equivalents are easily available (even at your local
+Radio Shack which stocks the finest collection of components that have
+failed the manufacturer's quality control checks and supported by a
+sales staff that's always got the wrong answers to your questions).
+
+Also: DO NOT use the RI (ring indicator) as an input to the computer.
+
+-------------------------------------------------------------------------
+
+How do I check things?
+
+     As a first step, I would get a package such as PD203 and use it to
+decode a few pages. If you can get that working you know that that your
+interface circuit is functioning correctly.
+
+     If you are in a reasonably sized town you might be part of the
+ardis network. The ardis network is a nationwide commercial mobile data
+terminal network where one can send/receive E-mail messages from one's
+portable computer. It has been exclusively assigned the frequency of
+855.8375 MHz. Therefore, if you can hear digital bursts on this
+frequency you are basically guarranteed that these are MDC4800 type
+messages. You should be able to get stuff popping up on your screen
+although a lot of the messages will not be plain english.
+
+     If your interface works but you can't seem to get any messages on
+the screen for a channel you know is a Motorola MDT system then it might
+be possible that your scanner/interface is putting out data with the
+polarity reversed. To check for this run the program with a command line
+arguement. When it runs you should an initial "Polarity reversed"
+message and hopefully then things will work out for you.
+
+     Other than that: if this program doesn't work pester someone else
+who has got it working. Don't bother pestering the author(s) of this
+posting; the shit(s) aka "she/he/it (s)" are afraid of a thousand
+lawyers from Motorola descending like fleas to infest their pubic hair
+and accordingly have decided to remain forever anonymous. No doubt
+someone on the usenet who sees this post will know what to do with this
+program and also hopefully rewrite into a more user friendly form. When
+you do please don't forget to release the source code.
+
+-------------------------------------------------------------------------
+
+Future projects/nightmares you might want to think about:
+
+     Certain MDT systems embed formatting information in the text in the
+form of ESC plus [ plus a few more bytes. Someone might want to decode
+these on the fly and format the output so it looks exactly the same way
+as the user sees it.
+
+     Make it so that this program works with com ports other than COM1.
+
+     Make it user friendly?
+
+     Enlarge the data buffer from the current 30k.
+
+     Give the output data file an unique name each time the program is
+run instead of "data.dat".
+
+     How about sorting through the past traffic so that you only see
+traffic to a specified user?
+
+     The program does not cut data blocks off in the display but it
+might add an extra one or two (which will display as all zeroes).
+Someone might want to make all those zeroes be shown as blanks instead.
+
+     Write some real instructions.
+
+
+Now the more ambitous stuff:
+
+     Are you half-way competent with RF engineering? Then listen in to
+the tranmissions from the mobile units back to the base station. That
+way you get everyone's password and user IDs as they log on to the MDT
+system. By this point you will no doubt have been able to figure out all
+of the appropriate communications protocols so you should think about
+getting your own transmitter up and running along with the necessary
+program modifications so that you can transmit MDT messages. The
+required transmitter can be very simple - for example, those masocists
+who want to start from scratch might want to special order an
+appropriate crystal (pulling the frequency with the computer's tranmit
+signal), building a frequency multiplier chain, and adding a one watt RF
+amplifier to top it all off (see the appropriate ARRL publications for
+more information on radio techniques). Now you can log in and look at
+the criminal records and motor vehicle information on anybody you can
+think of. Find out what your neigbors are hiding. Find out who that
+asshole was that cut you off downtown. Find out where your former
+girl/boy friend is trying to hide from you. And on and on...
+     Those with simpler tastes might want to simply transmit at the base
+station's frequency to any nearby MDT terminal - now you too can
+dispatch your local law enforcement agencies at the touch of your
+fingers!!! See your tax dollars at work tearing apart every seam of your
+neighbor's house. Or create strife and dissension in your local law
+enforcement agency as more and more officers come out of the closet
+using their MDTs trying to pick up fellow officers.
+
+     There are municipalities that have put GPS receivers on all of
+their vehicles. Should it happen that the information is sent back over
+one of these networks you could have your computer give you a real-time
+map showing the position of every vehicle and how far away they are from
+you.
+
+     Extend your knowledge to other data networks. Here you will want to
+look at the RAM mobile data network. It uses the MOBITEX protocol which
+is really easy to find information on. Since it is an 8 kilobaud GMSK
+signal there is a decent chance that you can use the interface described
+here. This transmission mode demmands much more from your equipment than
+MDT tranmissions. At the very least you must be much more careful to
+make sure you have adequate low frequency response. Despite this it is
+possible to receive and decode MOBITEX transmissions with a simple
+op-amp circuit! This just goes to show you what drivelling bullshit
+RAM's homepage is filled with - they explain in great detail how hackers
+will never be able to intercept user's radio tranmissions (incidentally
+explaining how to decode their tranmissions). The necessary program will
+be the proverbial exercise left for the reader. For better performance
+buy a dedicated MOBITEX modem chip and hook it up to your computer.
+
+-----------------------------------------------------------------------
+
+A few words about the program:
+
+     Remember - you must have your decoder hooked up to COM1. The RTS
+line will be positive and the DTR line negative but if you built the
+decoder with a bridge rectifier you really don't have to worry about
+their polarity. Stop the program by punching any key; don't use
+control-c or control-break!
+
+     If you must reverse polarity run the program with any command line
+arguement (example: type in "mdt x" at the command line if your program
+is mdt.exe). You should then see the "Polarity Reversed." message pop up
+and hopefully things will then work.
+
+     As far as compiling this - save the latter portion of this posting
+(the program listing) and feed it to a C compiler. Pretty much any C
+compiler from Borland should work. If you (Heaven Forbid) use a
+Microsoft C compiler you might need to rename some calls such as
+outport. Follow any special instructions for programs using their own
+interrupt service routines. This program is not object oriented. It also
+does not want anything whatsoever to do with Windows. Please don't even
+think about running this program under Windows. Finally, here it is:
+
+
+                Good Luck and may God be with you!
+
+---------------------- C u t   H e r e ! ! ! --------------------------
+
+/*  start of program listing */
+
+#include &lt;stdio.h&gt;
+#include &lt;conio.h&gt;
+#include &lt;dos.h&gt;
+#include &lt;math.h&gt;
+
+/* Purpose of program: receive messages using the Motorola MDC4800    */
+/* protocol and show them on the screen                               */
+/*                                                                    */
+/* WARNING TO ALL : This program is free. Please distribute and modify*/
+/* this program. I only request that you always include the source    */
+/* code so that others may also learn and add improvements. The       */
+/* status of this program at the time of the original release is :    */
+/* it doesn't have much in the way of a user interface or options but */
+/* it should work if you follow the procedure in the text file. Don't */
+/* expect any sort of support (you get what you pay for - nothing in  */
+/* this case). Finally, here's a special message to all of you who    */
+/* might have the urge to try to make money with this information:    */
+/* I know where you live. I will shave your pets and pour rubbing     */
+/* alcohol all over them (unless said pet happens to be a Rottweiler).*/
+/* I will have sex with your wife while you off at work; on the rare  */
+/* occasions when you have sex with your wife she will in the throes  */
+/* of passion cry not your name but mine. I will sell drugs to the    */
+/* demented spawn you refer to as your children. And if that's not    */
+/* enough for you let a thousand lawyers from motorola descend on you */
+/* and pound your fat rear end so far into the ground that it finally */
+/* sees daylight again somewhere in Australia.                        */
+/*                                                                    */
+/*                                                                    */
+/* General tidbits (a few of those "Why were things done this way     */
+/* questions).                                                        */
+/* 1. Why is captured data kept in an array and only written to a     */
+/* disk file at the very end? Because disk access seems unreliable    */
+/* when so much time is taken up by the background interrupt service  */
+/* routine.                                                           */
+/* 2. Why is the array storing this so small? Because yours truly was */
+/* too damn lazy to use a pointer and allocate a huge chunk of memory.*/
+/* (Hint for those of you who would like to improve this.             */
+/*--------------------------------------------------------------------*/
+
+/* global variables */
+int lc=0;
+char fob[30000];/* output buffer for captured data to be sent to disk */
+int foblen=29900;
+int fobp=0;	/* pointer to current position in array fob	      */
+char ob[1000];  /* output buffer for packet before being sent to screen */
+int obp=0;	/* pointer to current position in array ob		*/
+
+static unsigned int buflen= 15000;      /* length of data buffer      */
+static volatile unsigned int cpstn = 0; /* current position in buffer */
+static unsigned int fdata[15001] ;      /* frequency data array       */
+
+void interrupt (*oldfuncc) (); /* vector to old com port interrupt    */
+
+/**********************************************************************/
+/*                                this is serial com port interrupt   */
+/* we assume here that it only gets called when one of the status     */
+/* lines on the serial port changes (that's all you have hooked up).  */
+/* All this handler does is read the system timer (which increments   */
+/* every 840 nanoseconds) and stores it in the fdata array. The MSB   */
+/* is set to indicate whether the status line is zero. In this way    */
+/* the fdata array is continuously updated with the appropriate the   */
+/* length and polarity of each data pulse for further processing by   */
+/* the main program.						      */
+void interrupt com1int()
+{
+  static unsigned int d1,d2,ltick,tick,dtick;
+
+  /* the system timer is a 16 bit counter whose value counts down     */
+  /* from 65535 to zero and repeats ad nauseum. For those who really  */
+  /* care, every time the count reaches zero the system timer 	      */
+  /* interrupt is called (remember that thing that gets called every  */
+  /* 55 milliseconds and does housekeeping such as checking the       */
+  /* keyboard.                                                        */
+  outportb (0x43, 0x00);       /* latch counter until we read it      */
+  d1 = inportb (0x40);         /* get low count                       */
+  d2 = inportb (0x40);         /* get high count                      */
+
+  /* get difference between current, last counter reading             */
+  tick  = (d2 &lt;&lt; 8) + d1;
+  dtick = ltick - tick;
+  ltick = tick;
+
+  if ((inportb(0x3fe) &amp; 0xF0) &gt; 0) dtick = dtick ^ 0x8000;
+			      else dtick = dtick &amp; 0x3fff;
+
+  fdata[cpstn] = dtick;        /* put freq in fdata array             */
+  cpstn  ++;                   /* increment data buffer pointer       */
+  if (cpstn&gt;buflen) cpstn=0;   /* make sure cpstn doesnt leave array  */
+
+  d1 = inportb (0x03fa);       /* clear IIR                           */
+  d1 = inportb (0x03fd);       /* clear LSR                           */
+  d1 = inportb (0x03fe);       /* clear MSR                           */
+  d1 = inportb (0x03f8);       /* clear RX                            */
+  outportb (0x20, 0x20);       /* this is the END OF INTERRUPT SIGNAL */
+                               /* "... that's all folks!!!!"          */
+}
+
+void set8250 ()                /* sets up the 8250 UART               */
+{
+  static unsigned int t;
+  outportb (0x03fb, 0x00);     /*  set IER on 0x03f9                  */
+  outportb (0x03f9, 0x08);     /*  enable MODEM STATUS INTERRUPT      */
+  outportb (0x03fc, 0x0a);     /*  push up RTS, DOWN DTR              */
+  t = inportb(0x03fd);         /*  clear LSR                          */
+  t = inportb(0x03f8);         /*  clear RX                           */
+  t = inportb(0x03fe);         /*  clear MSR                          */
+  t = inportb(0x03fa);         /*  clear IID                          */
+  t = inportb(0x03fa);         /*  clear IID - again to make sure     */
+}
+
+void set8253()                 /*  set up the 8253 timer chip         */
+{                              /* NOTE: ctr zero, the one we are using*/
+                               /*  is incremented every 840nSec, is   */
+                               /*  main system time keeper for dos    */
+  outportb (0x43, 0x34);       /* set ctr 0 to mode 2, binary         */
+  outportb (0x40, 0x00);       /* this gives us the max count         */
+  outportb (0x40, 0x00);
+}
+
+/****************************************************************/
+
+int pork(int l)
+{
+  static int s=0,sl=0x0000,t1,asp=0,ll,k,v,b,tap,synd=0,nsy;
+  static char line[200]; /* array used to format 112 bit data chunks */
+  static int lc=0;	 /* pointer to position in array line	     */
+  if (l == -1)
+  {
+/*    printf ("  %2i\n",asp); */
+    sl = 0x0000;
+    s = 0;
+    synd = 0;
+    if ((asp &lt;12) &amp;&amp; (lc &gt; 50))
+    {
+      ll = 12 - asp;
+      for (ll=0; ll&lt;6; ll++)
+      {
+	v = 0;
+	for (k=7; k&gt;=0; k--)
+	{
+	  b = line[ (ll&lt;&lt;3) +k ];
+	  v = v &lt;&lt; 1;
+	  if ( b == 49) v++;
+	}
+	ob[obp] = (char) v;
+	if (obp &lt; 999) obp++;
+      }
+    }
+    lc = 0;
+    tap = asp;
+    asp = 0;
+    return(tap);
+  }
+  else
+  {
+    s++;
+    if (s==1)
+    {
+      line[lc] = (char) l;
+      lc++;
+    }
+
+    /* update sliding buffer */
+    sl = sl &lt;&lt; 1;
+    sl = sl &amp; 0x7fff;
+    if (l == 49) sl++;
+
+    if (s &gt;1)
+    {
+      s = 0;
+
+      if ((sl &amp; 0x2000) &gt; 0) t1 = 1; else t1 = 0;
+      if ((sl &amp; 0x0800) &gt; 0) t1^=1;
+      if ((sl &amp; 0x0020) &gt; 0) t1^=1;
+      if ((sl &amp; 0x0002) &gt; 0) t1^=1;
+      if ((sl &amp; 0x0001) &gt; 0) t1^=1;
+
+      /* attempt to identify, correct certain erroneous bits */
+
+      synd = synd &lt;&lt; 1;
+      if (t1 == 0)
+      {
+	asp++;
+	synd++;
+      }
+      nsy = 0;
+      if ( (synd &amp; 0x0001) &gt; 0) nsy++;
+      if ( (synd &amp; 0x0004) &gt; 0) nsy++;
+      if ( (synd &amp; 0x0020) &gt; 0) nsy++;
+      if ( (synd &amp; 0x0040) &gt; 0) nsy++;
+      if ( nsy &gt;= 3)  /* assume bit is correctable */
+      {
+	printf ("*");
+	synd = synd ^ 0x65;
+	line[lc - 7] ^= 0x01;   /**********************************************/
+      }
+
+
+    }
+
+  }
+  return(0);
+}
+
+void shob()
+{
+  int i1,i2,j1,j2,k1;
+
+  /* update file output buffer */
+  i1 = obp / 18;
+  if ( (obp-(i1*18)) &gt; 0) i1++;
+  fob[fobp] = (char) (i1 &amp; 0xff);
+  if (fobp &lt; 29999) fobp++;
+  for (i2 = obp; i2&lt;=(obp+20); i2++) ob[i2] = 0;
+  for (j1 = 0; j1 &lt; i1; j1++)
+  {
+    for (j2 = 0; j2 &lt; 18; j2++)
+    {
+      k1 = j2 + (j1*18);
+      printf("%02X ", ob[k1] &amp; 0xff);
+      fob[fobp] = (char) (ob[k1] &amp; 0xff);
+      if (fobp &lt; 29999) fobp++;
+    }
+    printf ("    ");
+    for (j2 = 0; j2 &lt; 18; j2++)
+    {
+      k1 = j2 + (j1*18);
+      if (ob[k1] &gt;=32) printf("%c",ob[k1]); else printf(".");
+    }
+    printf("\n");
+  }
+
+  obp=0;
+  printf("BUFFER: %3i percent full\n",(int)(fobp/299.0));
+}
+
+/**********************************************************************/
+/*                      frame_sync                                    */
+/**********************************************************************/
+/* this routine recieves the raw bit stream and tries to decode it    */
+/* the first step is frame synchronization - a particular 40 bit      */
+/* long sequence indicates the start of each data frame. Data frames  */
+/* are always 112 bits long. After each 112 bit chunk this routine    */
+/* tries to see if the message is finished (assumption - it's finished*/
+/* if the 40 bit frame sync sequence is detected right after the end  */
+/* of the 112 bit data chunk). This routine also goes back to hunting */
+/* for the frame sync when the routine processing the 112 bit data    */
+/* chunk decides there are too many errors (transmitter stopped or    */
+/* bit detection routine skipped or gained an extra bit).	      */
+/*                                                                    */
+/* inputs are fed to this routine one bit at a time                   */
+/* input : 48 - bit is a zero                                         */
+/*         49 - bit is a 1                                            */
+
+void frame_sync(char gin)
+{
+  static unsigned int s1=0,s2=0,s3=0,nm,j,t1,t2,t3,ns=0,st=0,n,m,l,chu=0,eef=0;
+  static char ta[200];
+
+  if (st == 1)
+  {
+    ta[ns] = gin;
+    ns++;
+    if (ns &gt;= 112)   /* process 112 bit chunk */
+    {
+      chu++;
+      ns = 0;
+      for (n= 0; n&lt;16; n++)
+      {
+	for (m=0; m&lt;7; m++)
+	{
+	  l = n + (m&lt;&lt;4);
+	  pork(ta[l]);
+	}
+      }
+      if (pork(-1) &gt; 20) eef++; else eef=0;
+      if (eef &gt; 1)  /* if two consecutive excess error chunks - bye  */
+      {
+	st = 0;
+	shob();
+	eef = 0;
+      }
+/*      else eef = 0; */
+    }
+  }
+
+    /* s1,s2,s3 represent a 40 bit long buffer */
+    s1 = (s1 &lt;&lt; 1) &amp; 0xff;
+    if ((s2 &amp; 0x8000) &gt; 0) s1++;
+    s2 = (s2 &lt;&lt; 1);
+    if ((s3 &amp; 0x8000) &gt; 0) s2++;
+    s3 = (s3 &lt;&lt; 1);
+    if (gin == 49) s3++;
+
+    /* xor with 40 bit long sync word */
+    t1 = s1 ^ 0x0007;
+    t2 = s2 ^ 0x092A;
+    t3 = s3 ^ 0x446F;
+
+    /* find how many bits match up */
+    /* currently : the frame sync indicates system id / idling / whatever */
+    /*        inverted frame sync indicates message follows             */
+    nm = 0;
+    for (j=0; j&lt;16; j++)
+    {
+      if (t1 &amp; 1) nm++;
+      if (t2 &amp; 1) nm++;
+      if (t3 &amp; 1) nm++;
+      t1 = t1 &gt;&gt; 1;
+      t2 = t2 &gt;&gt; 1;
+      t3 = t3 &gt;&gt; 1;
+    }
+
+    if (nm &lt;  5)
+    {
+      st = 1;
+      ns = 0;
+    }
+    else if (nm &gt; 35)
+    {
+      if (st==1)
+      {
+	shob();
+      }
+      st = 0;
+      ns = 0;
+    }
+}
+
+void main (int argc)
+{
+  unsigned int n,i=0,j,k,l,cw1=49,cw0=48;
+  FILE *out;
+  char s=48;
+  double pl,dt,exc=0.0,clk=0.0,xct;
+
+  if (argc &gt; 1)
+  {
+    printf ("Reverse Polarity.\n");
+    cw1 = 48;
+    cw0 = 49;
+  }
+
+  /* dt is the number of expected clock ticks per bit */
+  dt =  1.0/(4800.0*838.8e-9);
+
+  oldfuncc = getvect(0x0c);    /* save COM1 Vector                    */
+  setvect (0x0c, com1int);     /* Capture COM1 vector                 */
+
+
+  n = inportb (0x21);          /* enable IRQ4 interrupt               */
+  outportb(0x21, n &amp; 0xef);
+
+  set8253();                   /* set up 8253 timer chip              */
+
+  set8250();                   /* set up 8250 UART                    */
+
+  while ((kbhit() == 0) &amp;&amp; (fobp&lt;29900))
+  {
+   if (i != cpstn)
+   {
+    if  ( ( fdata[i] &amp; 0x8000) != 0) s = cw1; else s = cw0;
+
+    /* add in new number of cycles to clock  */
+    clk += (fdata[i] &amp; 0x7fff);
+    xct = exc + 0.5 * dt;  /* exc is current boundary */
+    while ( clk &gt;= xct )
+    {
+      frame_sync(s);
+      clk = clk - dt;
+    }
+    /* clk now holds new boundary position. update exc slowly... */
+    /* 0.005 sucks; 0.02 better; 0.06 mayber even better; 0.05 seems pretty good */
+    exc = exc + 0.020*(clk - exc);
+
+    i++;
+    if( i &gt;buflen) i = 0;
+   }
+
+  }
+
+  outportb (0x21, n);          /* disable IRQ4 interrupt              */
+  setvect (0x0c, oldfuncc);    /* restore old COM1 Vector             */
+
+
+  /* save captured data to disk file	*/
+  i = 0;
+  out = fopen("data.dat","wt");
+  if (out == NULL)
+  {
+    printf ("couldn't open output file.\n");
+    exit(1);
+  }
+
+  i = 0;
+  while ( (i &lt; fobp) &amp;&amp; (i &lt; 29800))
+  {
+    j = ((int)fob[i] &amp; 0xff);
+    i++;
+    for (k=0; k&lt;j; k++)
+    {
+      for (l=0; l&lt;18; l++)
+      {
+	fprintf(out,"%02X ",((int) fob[i + l]&amp;0xff));
+      }
+      fprintf(out,"    ");
+      for (l=0; l&lt;18; l++)
+      {
+	n = ((int)fob[i]&amp;0xff);
+	i++;
+	if (n &gt;=32) fprintf(out,"%c",n); else fprintf(out,".");
+      }
+      fprintf(out,"\n");
+    }
+    fprintf(out,"\n");
+  }
+  fclose(out);
+}
+
+
+
+
+/*  end of program listing  */
+
+
+
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01620" HREF="msg01620.html">Re: Lack of security of police Mobile Data Terminals (MDTs)</A></STRONG>
+<UL><LI><EM>From:</EM> Dale Thorn &lt;dthorn@gte.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01600.html">RE: [NOT NOISE] Microsoft Crypto Service Provider API</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01687.html">RE: Certified primes</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01666.html">Re: domestic laws/policies</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01620.html">Re: Lack of security of police Mobile Data Terminals (MDTs)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01602"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01602"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

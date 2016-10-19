@@ -1,0 +1,209 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: ecash protocol: Part 1 -->
+<!--X-From-R13: vntbyqorNpnyhz.pfpyho.hjngreybb.pn (Wna Ubyqoret) -->
+<!--X-Date: Thu, 23 Nov 1995 10:23:39 +0800 -->
+<!--X-Message-Id: 490jct$11k@calum.csclub.uwaterloo.ca -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199511212146.NAA11456@cory.EECS.Berkeley.EDU -->
+<!--X-Reference: 199511230103.RAA15911@jobe.shell.portal.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: ecash protocol: Part 1</TITLE>
+<LINK REV="made" HREF="mailto:iagoldbe@calum.csclub.uwaterloo.ca">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01128.html">Date Prev</A>][<A HREF="msg01665.html">Date Next</A>][<A HREF="msg01119.html">Thread Prev</A>][<A HREF="msg01221.html">Thread Next</A>][<A HREF="index.html#01126">Date Index</A>][<A HREF="threads.html#01126">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: ecash protocol: Part 1</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: ecash protocol: Part 1</LI>
+<LI><em>From</em>: <A HREF="mailto:iagoldbe@calum.csclub.uwaterloo.ca">iagoldbe@calum.csclub.uwaterloo.ca</A> (Ian Goldberg)</LI>
+<LI><em>Date</em>: 22 Nov 1995 20:39:41 -0500</LI>
+<LI><em>Distribution</em>: csc</LI>
+<LI><em>Newsgroups</em>: csc.lists.cypherpunks</LI>
+<LI><em>Organization</em>: University of Waterloo Computer Science Club</LI>
+<LI><em>References</em>: &lt;<A HREF="msg01654.html">199511212146.NAA11456@cory.EECS.Berkeley.EDU</A>&gt; &lt;<A HREF="msg01119.html">199511230103.RAA15911@jobe.shell.portal.com</A>&gt;</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:iang@cs.berkeley.edu">iang@cs.berkeley.edu</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+In article &lt;<A HREF="msg01119.html">199511230103.RAA15911@jobe.shell.portal.com</A>&gt;,
+Hal  &lt;hfinney@shell.portal.com&gt; wrote:
+&gt;Ian Goldberg &lt;iang@cory.EECS.Berkeley.EDU&gt; writes:
+&gt;
+&gt;&gt;Last week, I was taking a look at the ecash protocol (no, I don't have a copy;
+&gt;&gt;I have a binary, which I can't even run...).  
+&gt;
+&gt;&gt;I've managed to decipher a useful bit of the first message sent from
+&gt;&gt;the shop to the payer.  It's the Payment Request, and contains the following
+&gt;&gt;information:
+&gt;
+&gt;&gt;o Header identifying packet as Payment Request
+&gt;&gt;o The integer 4
+&gt;&gt;o The payment amount, in cents
+&gt;&gt;o The time (seconds since 1970)
+&gt;&gt;o The integer 79
+&gt;&gt;o The name of the shop (payee)
+&gt;&gt;o A description of the item being paid for
+&gt;&gt;o An empty string
+&gt;&gt;o The integer 0
+&gt;&gt;o End of Record marker
+&gt;
+&gt;That's very interesting work!  What are the string formats, are they null
+&gt;terminated or Pascal-style with a preceding count byte?  How did you
+&gt;identify "an empty string", wouldn't that just be a byte of 0?  How did
+&gt;you know it was an empty string rather than just a 0.
+
+See below.
+
+&gt;Did you get this by inducing a shop to send a payment request message to
+&gt;some program you wrote which was listening on the ecash port?
+
+Yup.  I just had a program sitting on the ecash port that hexdumped
+anything fed to it.  That, and a copy of the binary to read...
+
+&gt;I wonder if it would be legal to write shop software which sent such a
+&gt;payment request, took the resulting coins, and deposited them in the bank
+&gt;(if we could figure out all the protocols necessary).  This particular
+&gt;sequence of operations would not appear to infringe anybody's patents -
+&gt;there are no blinding operations involved.  It's not clear how useful
+&gt;such a program would be but at least it would be one step away from the
+&gt;DigiCash monopoly.
+
+ From what I gathered from Doug's posts a little while back, the _client_
+stuff is perfectly fine; only the _bank_ stuff is Chaum-patented.
+
+Here are the messy byte-details:
+
+The data encoding:
+---
+Header:  2 bytes
+
+0xa0 0x80+type
+
+where type is:
+
+0x12: Payment Request
+0x0a: Payment
+0x29: Length of Message
+0x13: Dummy Message
+(there are others)
+---
+EOR: 1 byte
+
+0xa1
+
+End of Record indicator
+---
+n-byte Integer:
+
+0x90 0x80+n followed by n bytes of data, MSB first
+
+n should probably be 1 &lt;= n &lt;= 4.
+---
+Date: 4 bytes
+
+0x91 0x84 followed by 4 bytes of time since 1970
+---
+String:
+
+0x92 0x80+(length) followed by (length) bytes
+---
+Data:
+
+0x94 0x80+(length) followed by (length) bytes
+---
+There are other types, like 0x93 (Multi-precision integer) that I
+haven't decoded yet.
+
+=====
+
+The first message from the shop:
+
+a0b9 9083 0000 37a1                         # ......7.
+
+a092 9081 0490 810a 9184 30ad 1930 9081     # ..........0..0..
+4f92 8c65 7368 6f70 4063 322e 6f72 6792     # O..eshop@c2.org.
+9063 6769 2d62 696e 2f64 6f72 656d 6169     # .cgi-bin/doremai
+6c92 8090 8100 a1                           # l......
+
+What it means:
+
+a0b9: Header (Message length)
+9083 000037: integer = 0x37 (length of following message)
+a1: EOR
+
+a092: Header (Payment Request)
+9081 04: integer = 4
+9081 0a: integer = 10 (cost in cents)
+9184 30ad1930: time
+9081 4f: integer = 79
+928c "eshop@c2.org" : string (payee)
+9290 "cgi-bin/doremail" : string (description)
+9280 : empty string
+9081 00: integer = 0
+a1: EOR
+
+   - Ian
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01654" HREF="msg01654.html">ecash protocol: Part 1</A></STRONG>
+<UL><LI><EM>From:</EM> Ian Goldberg &lt;iang@cory.EECS.Berkeley.EDU&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="01119" HREF="msg01119.html">Re: ecash protocol: Part 1</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01128.html">Re: PGP in Canada</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01665.html">Re: ecash protocol: Part 1</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01119.html">Re: ecash protocol: Part 1</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01221.html">Re: ecash protocol: Part 1</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01126"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01126"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,146 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: RSA key generation in 13 lines of Perl -->
+<!--X-From-R13: Egrir Drvq <fgrirNrqzjro.pbz> -->
+<!--X-Date: Sun, 1 Dec 1996 14:19:26 &#45;0800 (PST) -->
+<!--X-Message-Id: Pine.BSF.3.91.961201134027.259A&#45;100000@bitbucket.edmweb.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>RSA key generation in 13 lines of Perl</TITLE>
+<LINK REV="made" HREF="mailto:steve@edmweb.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00015.html">Date Prev</A>][<A HREF="msg00026.html">Date Next</A>][<A HREF="msg00118.html">Thread Prev</A>][<A HREF="msg00029.html">Thread Next</A>][<A HREF="index.html#00018">Date Index</A>][<A HREF="threads.html#00018">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>RSA key generation in 13 lines of Perl</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: RSA key generation in 13 lines of Perl</LI>
+<LI><em>From</em>: Steve Reid &lt;<A HREF="mailto:steve@edmweb.com">steve@edmweb.com</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 1 Dec 1996 14:19:01 -0800 (PST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+I've completed my Perl/dc RSA key generation program. The compacted
+13-line version is below. A commented version can be found at
+<A  HREF="http://www.edmweb.com/steve/rsagen.txt">http://www.edmweb.com/steve/rsagen.txt</A>
+
+#!/usr/local/bin/perl
+$k=768;$e=sprintf'%X',65537;print"Please enter a LOT of random junk.\n"
+;$a=&lt;STDIN&gt;;print"Working. This may take a while.\n";for(1..(length($a)-
+1)){$b[$_&amp;31]^=unpack('C',substr($a,$_,1));$b[$_&amp;31]=(($b[$_&amp;31]&lt;&lt;5)|($b
+[$_&amp;31]&gt;&gt;3))&amp;255;}for(0..255){$c[$_]=$_;}$a=$d=$f=0;for(0..255){$a=($a+
+$c[$_]+$b[$a&amp;31])&amp;255;($c[$_],$c[$a])=($c[$a],$c[$_]);}open(F,'|dc');
+select F;print"16dio[$e+]sa";for(1..50){for(1..$k/32){printf'%02X',&amp;g;}
+print"Sr";}for(1,2){printf'%02X',&amp;g|128;for(2..$k/16){printf'%02X',&amp;g;}
+print"d$e%-2+d2%0=aSP";}print"[d2%SA2/d0&lt;X+d*LA1=ZlP%0]sX[lR*]sZ[1+Q]sQ[
+la1+sa0sc]sA[lAxlb1+sb]sB[ld1+sdLrddSssR1lP1-2/lXx+1+lP%99scd0=A2=Bclcla
++32&gt;C]sC[LsSrld1-dsd0&lt;D]sD[le1+se0ddsasbsdlCxlDxlP2 $e*+sPlc99=Elb32=ElP
+2 $e*-led1&gt;QQ]sE_1selExsq_1seLPlExsp[p=]Plpp[q=]Plqp[n=]P*p[e=]P$e p1-lp
+1-lq1-**1+$e/[d=]Pp\n";close(F);sub g{$d=($d+1)&amp;255;$f=($f+$c[$d])&amp;255;(
+$c[$d],$c[$f])=($c[$f],$c[$d]);return($c[($c[$d]+$c[$f])&amp;255]);}
+
+I'm sure this can be compacted further. I haven't put a lot of work into
+compacting it; I really just want to get it out. 
+
+Run the program, type in a LOT of random gibberish (several lines at
+least) and press enter. Then wait. Eventually it will output your p, q, n,
+e and d in hexadecimal. 
+
+p and q: Prime numbers, congruent to 2 mod e. They can usually be
+discarded, but they should never be revealed. 
+
+n: Your public modulus
+
+e: Your public encryption exponent (usually 10001 hex)
+
+d: Your private decryption exponent
+
+By default the program generates a 768-bit public modulus and a public
+exponent of 10001 hex (65537 decimal). These can be changed by adjusting
+the numbers in the first line. A 1024-bit modulus would be better, but for
+some reason generation takes a LOT longer than a 768-bit modulus.
+Fortunately key generation doesn't need to be done very often. 
+
+Timings on a 100 MHz Pentium running FreeBSD:
+
+Size of n  Time
+512-bit:   4-5 minutes
+768-bit:   8-9 minutes
+1024-bit:  35-80 minutes (ack!)
+
+I've had some difficulty generating 1024-bit keys, but it seems to be
+working now. Let me know if you see any problems generating large keys
+other than the obvious problem with the time spent. 
+
+Disclaimer: This program seems to work, but your milage may vary. 
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.3ia
+Charset: noconv
+
+iQEVAwUBMqID5dtVWdufMXJpAQE14AgApqOI2MMPe0V74cKI0vc3bDw8hfDW723c
+QKqVleH0MTIv4F792bf7ItekM81RbQiaB+AhSigFFFb679ZgdCV7XpPOwhkE3SD4
+vJy1xU4HdZ6TbSrfzzZn8Peqd5K5zZdY7CpXbxW30TZWFNX5lqdDAAbvM77h36QC
+h/jwK1nWMzrTDupbhBwemkpZKaFmk5uAms5Y94Ckezh66+sOcWmvf7smyn8RJg4q
+zad6OVrclso22NBp/Pa0nf2+IdgFnhEfHgHxsI0t+awSokfr6WlZ8WAScxv40kJO
+KfcdBX1DXg4spl8kXgoQOrrA3VIUJKWXFfpnTt2nAKr/P4XfbpyFQw==
+=CY5F
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00015.html">Phrack, where can i find it?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00026.html">Re: Phrack, where can i find it?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00118.html">Re: Phrack, where can i find it?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00029.html">Secure Memory Deletion</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00018"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00018"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

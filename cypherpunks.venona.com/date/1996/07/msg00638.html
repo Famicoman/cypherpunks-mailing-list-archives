@@ -1,0 +1,622 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: electronic voting -->
+<!--X-From-R13: qyiNojnyx.qz.pbz (Re.Rvzvgev Hhyvf YAF[) -->
+<!--X-Date: Thu, 11 Jul 1996 15:16:58 +0800 -->
+<!--X-Message-Id: 5ioVqD71w165w@bwalk.dm.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199607101957.MAA09843@netcom7.netcom.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: electronic voting</TITLE>
+<LINK REV="made" HREF="mailto:dlv@bwalk.dm.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00634.html">Date Prev</A>][<A HREF="msg00649.html">Date Next</A>][<A HREF="msg00624.html">Thread Prev</A>][<A HREF="msg00649.html">Thread Next</A>][<A HREF="index.html#00638">Date Index</A>][<A HREF="threads.html#00638">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: electronic voting</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: electronic voting </LI>
+<LI><em>From</em>: <A HREF="mailto:dlv@bwalk.dm.com">dlv@bwalk.dm.com</A> (Dr.Dimitri Vulis KOTM)</LI>
+<LI><em>Date</em>: Wed, 10 Jul 96 21:26:39 EDT</LI>
+<LI><em>Comments</em>: Obscenities forbidden (18 U.S.Code 1462)</LI>
+<LI><em>In-Reply-To</em>: &lt;199607101957.MAA09843@netcom7.netcom.com&gt;</LI>
+<LI><em>Organization</em>: Committee to force-feed Ritalin to Tim May</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+"Vladimir Z. Nuri" &lt;vznuri@netcom.com&gt; writes:
+&gt; [voting techniques]
+...
+
+A few days ago I posted the following article to Usenet. It may be of interest.
+
+Subject: Implementing Dr. Grubor's proposals for overhauling Usenet votes
+Message-ID: &lt;PmZiqD58w165w@bwalk.dm.com&gt;
+Date: Thu, 04 Jul 96 00:57:36 EDT
+
+Recently, Dr. John M. Grubor proposed several improvements to the Usenet vote
+procedure. I've implemented Dr. Gurbor's proposals in C, with the objective to
+make this code easy to add to L.Ron Dippold's (spit) vote-counting software.
+
+I remind evertone the outline of Dr. Grubor's proposal:
+
+1. The CFV will no longer contain the ballot. Instead it will instruct the
+voter to send an e-mail to a GruborBot and request an individualized ballot.
+Therefore, there can be no objection to resposting such CFV's.
+
+[To request a ballot for 'ngv', a prospective voter@uhost might
+e-mail ngv-ballot@uvv.org (content ignored) or e-mail votebot@uvv.bot
+and say 'send ngv-ballot' - either way is easy with procmail]
+
+2. When asked for a ballot, the GruborBot will generate an individualized
+one by running a modified version of uvballot. The individualized ballot
+e-mailed to voter@uhost will differ in the following ways from the
+existing ballot:
+
+ a) it will contain a ballot number.
+ b) it will contain a copy of the CFV.
+ c) it will contain a random challenge.
+
+The triple (voter@uhost,ballot number,correct response) will be recorded.
+
+[note that the ballot number and the challenge are not redundant ]
+
+[the patches for uvballot are posted below. The patches assume that the CFV is
+in the file ./cfvtext, the precomputed challenges are in ./chaldata, and
+the outgoing ballots are recorded in ./balrost, but it's easy to change.]
+
+3. The voter is likely to have look at the CFV in order to answer the
+random challenge. Also s/he must have a reachable e-mail address.
+
+4. Upon receipt of the ballot from voter@uhost, the modified version of uvvote
+will verify the following, in addition to the checks already there:
+
+ a) was a ballot with this number number e-mailed to voter@uhost?
+ b) is this the correct response to the challenge given in the
+  ballot with this ballot number?
+
+It's possible for a user to request several ballots; all of them should be
+acceptable, but only the latest one should be counted, just like now.
+
+Thank you again, Dr. Grubor, for providing guidance for Usenet's growth.
+
+[While at it, someone should change UseVote 3.0 to use ANSI prototypes]
+
+-------------------------------------------------------------------------
+
+/*
+
+prepchal.c
+
+This program reads the file named ./cfvtext and writes ./chaldata.
+It generates "challenges" for voters, which mkballot uses.
+
+*/
+
+
+#include &lt;stdio.h&gt;
+#include &lt;ctype.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+
+#define MSG(x) fprintf( stderr, x )
+
+/* it's safe to assume that no line in CFV is longer than 80 chars - see USEVOTE*/
+#define MAX_CHAL_LINE_BUFFER 80
+
+/* we don't want to use lines with more than this many words */
+#define MAX_CHAL_WORDS_PER_LINE 20
+
+/* using fewer words makes lines hard to find */
+
+#define MIN_CHAL_WORDS_PER_LINE 5
+
+/* maximum and minimum length of words for challenge - not too much
+typing, nor too easy to guess */
+#define MAX_CHAL_WORD_LEN 14
+#define MIN_CHAL_WORD_LEN 4
+
+/* maximum challenges, really should have been dynamic */
+#define MAX_CHALS 6000
+
+typedef struct {
+char * word;
+char * line;
+char flag;
+} chal;
+
+chal this;
+chal chals[MAX_CHALS];
+int num_chals;
+
+char line_buffer[MAX_CHAL_LINE_BUFFER];
+int line_buffer_length;
+char word_begin[MAX_CHAL_WORDS_PER_LINE];
+char word_length[MAX_CHAL_WORDS_PER_LINE];
+
+/* these words are often too easy to guess - may be sorted if expanded */
+char *easy_words[]={
+"about","aren","because","could","couldn","didn","does","doesn","else",
+"hadn","hasn","have","just","like","must","mustn","only","shouldn","since",
+"some","such","than","that","their","them","then","there","these","they",
+"this","those","wasn","what","when","where","which","whose","will","with",
+"would","wouldn","your"
+};
+
+#define NUM_EASY_WORDS (sizeof(easy_words)/sizeof(easy_words[0]))
+
+int find_words(void);
+int add_chal(int word_begin,int word_length);
+int save_chals(void);
+int generate_chals(void);
+
+FILE *infile,*outfile;
+
+int main(void)
+{
+
+if (NULL==(infile=fopen("cfvtext","r")))
+ {
+ perror("fopen cfvtext");
+ return(1);
+ }
+
+if (NULL==(outfile=fopen("chaldata","w")))
+ {
+ perror("fopen chaldata");
+ return(1);
+ }
+
+generate_chals();
+
+if (num_chals==0)
+ {
+ MSG("No challenged generated\n");
+ return(1);
+ }
+
+save_chals();
+
+fclose(infile);
+fclose(outfile);
+
+return(0);
+}
+
+/* return the number of words in buffer, and save their beginnings and lengths */
+int find_words(void)
+{
+int in_word,i,num_words;
+
+num_words=0;
+i=0;
+in_word=0;
+for(;;)
+ {
+ if (isalpha(line_buffer[i]))
+  {
+  if (!in_word)
+   {
+   if (num_words&gt;=MAX_CHAL_WORDS_PER_LINE)
+    return(0); /* this line is too complex for the challenge */
+   word_begin[num_words]=i;
+   word_length[num_words]=1;
+   in_word=1;
+   }
+  else /* in_word */
+   if ((word_length[num_words]++)&gt;=MAX_CHAL_WORD_LEN)
+    in_word=0;
+  }
+ else /* !isalpha */
+  {
+  if (in_word)
+   {
+   in_word=0;
+   if (word_length[num_words]&gt;=MIN_CHAL_WORD_LEN)
+    num_words++;
+   }
+  if (line_buffer[i]=='\0')
+   break;
+  }
+ i++;
+ }
+return (num_words&gt;MIN_CHAL_WORDS_PER_LINE ? num_words : 0);
+}
+
+/* add the challenge to the data structure, verifying that it's not redundant */
+
+int add_chal(int word_begin,int word_length)
+{
+int i;
+int hi,lo,m,md;
+
+this.word=this.line=NULL;
+
+if (NULL==(this.word=(char*)malloc(word_length+1)))
+ {
+ MSG("malloc word failed - partial results\n");
+ return(1);
+ }
+
+if (NULL==(this.line=(char*)malloc(line_buffer_length+1)))
+ {
+ free(this.word);
+ MSG("malloc line failed - partial results\n");
+ return(1);
+ }
+
+/* copy the word, translating to lowercase */
+for (i=0; i&lt;word_length; i++)
+ this.word[i]=(line_buffer[word_begin+i]&gt;='A'&amp;&amp;line_buffer[word_begin+i]&lt;='Z')?
+  line_buffer[word_begin+i]+('z'-'Z'):line_buffer[word_begin+i];
+this.word[word_length]=0;
+
+/* copy the line, replacing the word by underscores */
+memcpy(this.line,line_buffer,line_buffer_length+1);
+memset(this.line+word_begin,'_',word_length);
+
+/* binary search: see if the word is too easy */
+
+this.flag=2;
+lo=0;
+hi=NUM_EASY_WORDS-1;
+
+while (this.flag==2)
+{
+if (hi&lt;lo) /* not found */
+ this.flag=0;
+/* continue searching */
+md=(hi+lo)/2;
+m=strcmp(this.word,easy_words[md]);
+if (m==0)
+ this.flag=1; /* don't use, but continue checking for ambiguities */
+else if (m&lt;0)
+ hi=md-1;
+else
+ lo=md+1;
+}
+
+/* binary search: see if this challenge is ambiguous */
+
+lo=0;
+hi=num_chals-1;
+
+for(;;)
+{
+if (hi&lt;lo) /* not found */
+ {
+ if (num_chals&gt;=MAX_CHALS)
+  {
+  MSG("MAX_CHALS exceeded - partial results\n");
+  free(this.word);
+  free(this.line);
+  return(1);
+  }
+ /* insert */
+ for (i=num_chals; i&gt;lo; i--)
+  chals[i]=chals[i-1];
+ chals[lo]=this;
+ num_chals++;
+ return(0);
+ }
+/* continue searching */
+md=(hi+lo)/2;
+m=strcmp(this.line,chals[md].line);
+if (m==0)
+ { /* found - don't insert */
+ if (0!=strcmp(this.word,chals[md].word))
+  chals[md].flag=1; /* ambiguous */
+ free(this.word);
+ free(this.line);
+ return(0);
+ }
+else if (m&lt;0)
+ hi=md-1;
+else
+ lo=md+1;
+}
+
+}
+
+int save_chals(void)
+{
+int i,j;
+
+/* write the adjusted number of challenges */
+j=num_chals;
+for (i=0; i&lt;num_chals; i++)
+ if (chals[i].flag)
+  j--;
+
+fprintf(outfile,"%d\n",j);
+
+for (i=0; i&lt;num_chals; i++)
+ {
+ if (!chals[i].flag)
+  fprintf(outfile,"%s,%s\n",chals[i].word,chals[i].line);
+ free(chals[i].word);
+ free(chals[i].line);
+ }
+
+return(0);
+}
+
+/* process the CFV line by line */
+
+int generate_chals(void)
+{
+int i,j;
+
+num_chals=0;
+while (NULL!=fgets(line_buffer,MAX_CHAL_LINE_BUFFER,infile))
+ {
+ line_buffer_length=strlen(line_buffer);
+ if (line_buffer[line_buffer_length-1]=='\n') /* drop trailing lf */
+  line_buffer[--line_buffer_length]=0;
+ i=find_words();
+ for (j=0; j&lt;i; j++)
+  if (0!=add_chal(word_begin[j],word_length[j]))
+   return(0); /* graceful exit if malloc fails */
+ }
+return(0);
+}
+
+
+-------------------------------------------------------------------------
+
+patches for uvballot (which needs to be run anew every time a ballot is
+requested):
+
+
+/* we pretend that when user@host e-mails ng-ballot-request@uvv.org,
+this program is invokes with user@host in argv[1]. This code should
+be added to uvballot.c, but each voter should get an individualized
+ballot */
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;time.h&gt;
+#include &lt;string.h&gt;
+
+#define MSG(x) fprintf( stderr, x )
+
+FILE *cfvfile,*chalfile,*balfile;
+
+int main(int argc,char *argv[])
+{
+char ballot_number[20];
+int num_chals,num_skip,c;
+char word[11],line[81];
+char *addr=argv[1];
+
+if (argc!=2)
+ {
+ MSG("argv[1] should be user@host\n");
+ return(1);
+ }
+
+/* randomize seed */
+ srand((unsigned)time(NULL));
+
+/* open files */
+if (NULL==(cfvfile=fopen("cfvtext","r")))
+ {
+ perror("fopen cfvtext");
+ return(1);
+ }
+
+if (NULL==(chalfile=fopen("chaldata","r")))
+ {
+ perror("fopen chaldata");
+ return(1);
+ }
+
+if (NULL==(balfile=fopen("balrost","a")))
+ {
+ perror("fopen balrost");
+ return(1);
+ }
+
+/* generate ballot number */
+sprintf(ballot_number,"%d%d%d",rand(),rand(),rand());
+
+/* pick a random challenge number */
+fscanf(chalfile,"%d\n",&amp;num_chals);
+num_skip=rand()%(num_chals-1);
+
+/* skip lines */
+while(num_skip)
+ if ('\n'==fgetc(chalfile))
+  num_skip--;
+
+fscanf(chalfile,"%[^,],%[^\n]\n",word,line);
+
+fclose(chalfile);
+
+/* remember the combination of user@host,ballot_number,word */
+
+fprintf(balfile,"%s,%s,%s\n",
+addr,ballot_number,word);
+
+fclose(balfile);
+
+/* generate the individualized ballot - this needs to be there in
+addition to the code already in uvballot */
+
+printf("\n\
+This ballot is being e-mailed to: %s\n\
+\n\
+Ballot number: %s\n\
+Missing word:\n\
+\n\
+The Call for Votes is attached after the ballot. Please read it carefully\n\
+before voting. Then, find the line in the CFV that looks like this:\n\
+%s\n\
+and fill in the missing word in the ballot\n\
+\n\n",addr,ballot_number,line);
+
+/* copy the CFV */
+
+while (EOF!=(c=fgetc(cfvfile)))
+ fputc(c,stdout);
+
+fclose(cfvfile);
+
+return(0);
+}
+
+-------------------------------------------------------------------------
+
+patches for uvvote:
+
+/*
+
+functionality to be added to uvvote.c
+
+*/
+
+#include &lt;stdio.h&gt;
+#include &lt;ctype.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+
+#define MSG(x) fprintf( stderr, x )
+
+char addr[80];
+char ballot_number[80], word[80];
+
+FILE *balfile;
+
+/* return values:
+
+0 - acceptable ballot
+1 - no ballot ever e-mailed to this addr
+2 - ballot(s) e-mailed to this addr, but no ballot_number matches
+3 - wrong word in response to the challenge
+
+*/
+
+int ballot_check(void)
+{
+int rc;
+char this_addr[80],this_ballot_number[80],this_word[80];
+
+/* anything other than sequential search isn't worth it here */
+
+rewind(balfile);
+rc=1;
+while (rc&amp;&amp;(3==fscanf(balfile,"%[^,],%[^,],%[^\n]\n",this_addr,this_ballot_number,this_word)))
+ if (0==strcmp(addr,this_addr))
+  {
+  if (rc==1)
+   rc=2;
+  if (0==strcmp(ballot_number,this_ballot_number))
+   {
+   if (rc==2)
+    rc=3;
+   if (0==strcmp(word,this_word))
+    rc=0;
+   }
+  }
+
+return(rc);
+}
+
+/* test main */
+
+int main(void)
+{
+int i;
+
+
+if (NULL==(balfile=fopen("balrost","r")))
+ {
+ perror("fopen balrost");
+ return(1);
+ }
+
+for(;;)
+ {
+ printf("(uvvote would get these from the ballot it's processing)\n\
+Type . to end demo\n\
+addr: ");
+ gets(addr);
+ if (0==strcmp(addr,".")) break;
+ printf("ballot_number: ");
+ gets(ballot_number);
+ printf("missing word: ");
+ gets(word);
+
+ /* remember to map the word to lowercase. It may be worthwhile to
+ lowercase addr too (both here and in new uvballot)  */
+ for (i=0; word[i]; i++)
+  if (word[i]&gt;='A'&amp;&amp;word[i]&lt;='Z')
+   word[i]+='a'-'A';
+
+ printf("ballot_check=%d\n",ballot_check());
+ }
+
+close(balfile);
+
+return(0);
+}
+
+---
+
+&lt;a href="<A  HREF="mailto:dlv@bwalk.dm.com">mailto:dlv@bwalk.dm.com</A>"&gt;Dr.Dimitri Vulis KOTM&lt;/a&gt;
+Brighton Beach Boardwalk BBS, Forest Hills, N.Y.: +1-718-261-2013, 14.4Kbps
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00634.html">Re: [RANT] Giving Mind Control Drugs to Children</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00649.html">Can the inevitability of Software privacy be used to defeat the ITAR?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00624.html">Re: Word lists for passphrases &gt; Apologies</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00649.html">Can the inevitability of Software privacy be used to defeat the ITAR?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00638"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00638"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

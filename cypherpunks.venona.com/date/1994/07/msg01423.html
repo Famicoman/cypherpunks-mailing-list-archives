@@ -1,0 +1,490 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Cryptosplit -->
+<!--X-From-R13: ewpNcbjreznvy.pbz (Dnl) -->
+<!--X-Date: Wed, 27 Jul 94 06:22:24 PDT -->
+<!--X-Message-Id: 199407271318.JAA01471@powermail.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Cryptosplit</TITLE>
+<LINK REV="made" HREF="mailto:rjc@powermail.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01421.html">Date Prev</A>][<A HREF="msg01430.html">Date Next</A>][<A HREF="msg01439.html">Thread Prev</A>][<A HREF="msg01430.html">Thread Next</A>][<A HREF="index.html#01423">Date Index</A>][<A HREF="threads.html#01423">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Cryptosplit</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Cryptosplit</LI>
+<LI><em>From</em>: <A HREF="mailto:rjc@powermail.com">rjc@powermail.com</A> (Ray)</LI>
+<LI><em>Date</em>: Wed, 27 Jul 1994 09:18:09 -0400 (EDT)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+  The recent postings about crypto sharing/spliting programs
+renewed my interest, so I dusted off cryptosplit (a Shamir
+secret sharing program I wrote around November of last year)
+and fixed up the bugs which made it unusable. Here it is,
+less bugged, about 10 times faster than before, but still ugly.
+
+
+# This is a shell archive.  Save it in a file, remove anything before
+# this line, and then unpack it by entering "sh file".  Note, it may
+# create directories; files and directories will be owned by you and
+# have default permissions.
+#
+# This archive contains:
+#
+#	README
+#	Makefile
+#	cryptosplit.c
+#	gf.h
+#
+echo x - README
+sed 's/^X//' &gt;README &lt;&lt; 'END-of-README'
+X
+XHow to use
+X----------
+XTo encode:
+X
+Xcsplit -g &lt;number of pieces&gt; -q &lt;minimum number required for decode&gt; [filename]
+X
+Xtake filename and split it into the number of pieces given by -g. Each
+Xpiece is "filename.0", "filename.1", ..., "filename.(n-1)" if
+Xfilename isn't supplied, it operates like kinda like a filter taking the
+Xincoming data and spliting it into files "piece.0", "piece.1", ...
+X
+Xto decode:
+X
+Xprovide atleast the number of pieces specified by -q when you encoded.
+XIf you specify less than the minimum number, it will not decode.
+X
+Xexample:
+X
+Xcsplit -g 5 -q 3 file
+X[split file into 5 pieces, any 3 of which will reconstruct it]
+X
+Xcsplit file.0 file.1 file.2
+X[put them together in the decoded file and output to stdout]
+X
+Xif you want to put it into a file, redirect it using the shell, or
+Xuse "-o filename"
+X
+X-Ray
+X
+X
+END-of-README
+echo x - Makefile
+sed 's/^X//' &gt;Makefile &lt;&lt; 'END-of-Makefile'
+X
+XCFLAGS=-O
+X
+X
+Xcsplit: cryptosplit.c gf.h
+X	cc $(CFLAGS) cryptosplit.c -o csplit
+X
+END-of-Makefile
+echo x - cryptosplit.c
+sed 's/^X//' &gt;cryptosplit.c &lt;&lt; 'END-of-cryptosplit.c'
+X/*
+X * Cryptosplit 2.03 An implementation of Shamir secret sharing over GF(2^8)
+X * 
+X * written by Ray Cromwell &lt;rjc@gnu.ai.mit.edu&gt; Version 2.01 - fixed bug and
+X * make it generate a different polynomial for each byte
+X */
+X
+X/* Pay no attention to the sloppy code, this is only a first draft */
+X
+X#include "gf.h"
+X#include &lt;sys/types.h&gt;
+X#include &lt;sys/stat.h&gt;
+X#include &lt;ctype.h&gt;
+X#include &lt;stdio.h&gt;
+X
+Xwrite_pieces(char **, char **, int);
+Xwrite_key(char *, char *, int);
+Xint             read_key(char *, int);
+Xint             read_pieces(char **, int);
+Xgenerate_key(char *);
+X
+Xint             quorum = 2;
+Xint             pieces = 3;
+X
+Xint             generate = 0;
+Xchar           *key = 0;
+Xchar           *tmpkey = 0;
+Xchar          **keypieces;
+Xchar           *keyfiles[256];
+Xchar           *outputfile = (char *) 0;
+X
+X#define CHUNKSIZE 8192
+X#define RANDINIT(x) srand(time(0))
+X#define RAND rand
+X
+Xmain(int argc, char *argv[])
+X{
+X	int             c = 1, k = 0;
+X
+X	RANDINIT(0);
+X
+X	if (argc == 1)
+X		print_help();
+X	keyfiles[0] = (char *) 0;
+X
+X	while (c &lt; argc) {
+X		if (argv[c][0] == '-') {
+X			if (argv[c][1] == 'g') {
+X				generate = 1;
+X				c++;
+X				if (c &gt;= argc)
+X					print_help();
+X				pieces = atoi(argv[c++]);
+X			} else if (argv[c][1] == 'q') {
+X				c++;
+X				if (c &gt;= argc)
+X					print_help();
+X				quorum = atoi(argv[c++]);
+X			} else if (argv[c][1] == 'o') {
+X				c++;
+X				if (c &gt;= argc)
+X					print_help();
+X				outputfile = argv[c++];
+X			}
+X		} else {
+X			keyfiles[k++] = argv[c++];
+X		}
+X	}
+X	if (generate) {
+X		if (k &gt; 0) {
+X			init_buffers();
+X			if(quorum &gt; pieces) pieces=quorum;
+X			generate_keys(keyfiles[0]);
+X		}
+X	} else {
+X		if (k &lt; 2) {
+X			fprintf(stderr, "You didn't supply enough pieces.\n");
+X			exit(1);
+X		}
+X		quorum = pieces = k;
+X		init_buffers();
+X		rebuild_key(k);
+X	}
+X}
+X
+Xinit_buffers()
+X{
+X	int             i;
+X	keypieces = (char **) malloc(sizeof(char *) * pieces);
+X	for (i = 0; i &lt; pieces; i++)
+X		keypieces[i] = (char *) malloc(CHUNKSIZE);
+X	key = (char *) malloc(CHUNKSIZE);
+X	tmpkey = (char *) malloc(CHUNKSIZE);
+X}
+X
+Xint 
+Xread_pieces(char **files, int offset)
+X{
+X	int             i, s;
+X	FILE           *f;
+X	for (i = 0; i &lt; quorum; i++) {
+X		if (!(f = fopen(files[i], "r"))) {
+X			perror("Cryptosplit");
+X			exit(1);
+X		}
+X		fseek(f, offset, SEEK_SET);
+X		if (feof(f)) {
+X			fclose(f);
+X			return 0;
+X		}
+X		s = fread(keypieces[i], 1, CHUNKSIZE, f);
+X		fclose(f);
+X	}
+X	return s;
+X}
+X
+Xrebuild_key(int ksize)
+X{
+X	unsigned char **coeffs;
+X	unsigned char  *consts;
+X	int             i, j, k, p, t, sr, ip, klen, off = 0;
+X	unsigned char   x, y, z, r;
+X	coeffs = (unsigned char **) malloc(sizeof(char *) * quorum);
+X	t = 1;
+X	x = 0;
+X	for (i = 0; i &lt; quorum; i++) {
+X		coeffs[i] = (char *) malloc(quorum);
+X	}
+X	consts = (char *) malloc(quorum);
+X	while (klen = read_pieces(keyfiles, off)) {
+X		off += klen;
+X		t = 1;
+X		while (t &lt; klen) {
+X			for (i = 0; i &lt; quorum; i++) {
+X				x = keypieces[i][0];
+X				y = keypieces[i][t];
+X				consts[i] = y;
+X				coeffs[i][quorum - 1] = 1;
+X				z = x;
+X				for (j = quorum - 2; j &gt;= 0; j--) {
+X					coeffs[i][j] = z;
+X					z = GFMUL(z, x);
+X				}
+X			}
+X			sr = 0;
+X			ip = 0;
+X/* Invert quorum x quorum matrix to obtain the constant factor */
+X/* We can use lagrange interpolation or something better later.
+X   Shamir says there is an O(n^2 log n) method, I'll code it when
+X   I see it.                                                      */
+X
+X			for (i = sr; i &lt; quorum; i++) {
+X/*				print_matrix(coeffs, consts); */
+X				r = GFINV(coeffs[i][i]);
+X				consts[i] = GFMUL(consts[i], r);
+X				coeffs[i][i] = 1;
+X				for (j = sr + 1; j &lt; quorum; j++) {
+X					coeffs[i][j] = GFMUL(coeffs[i][j], r);
+X				}
+X				for (ip = i + 1; ip &lt; quorum; ip++) {
+X					r = coeffs[ip][sr];
+X					for (j = sr; j &lt; quorum; j++) {
+X						z = GFMUL(coeffs[i][j], r);
+X						coeffs[ip][j] = GFADD(coeffs[ip][j], GFMUL(coeffs[i][j], r));
+X					}
+X					consts[ip] = GFADD(consts[ip], GFMUL(consts[i], r));
+X				}
+X				sr = sr + 1;
+X			}
+X/*			print_matrix(coeffs, consts); */
+X			key[t - 1] = consts[quorum - 1];
+X			t++;
+X		}
+X		write_key(outputfile, key, klen - 1);
+X	}
+X}
+X
+Xint 
+Xread_key(char *file, int offset)
+X{
+X	int             size;
+X	FILE           *f;
+X	if (file)
+X		f = fopen(file, "r");
+X	else
+X		f = stdin;
+X	fseek(f, offset, SEEK_SET);
+X	if (feof(f)) {
+X		fclose(f);
+X		return 0;
+X	}
+X	size = fread(key, 1, CHUNKSIZE - 1, f);
+X	fclose(f);
+X	return size;
+X}
+X
+Xint 
+Xfilesize(char *file)
+X{
+X	struct stat     s;
+X	if (stat(file, &amp;s)) {
+X		perror("Cryptosplit");
+X		exit(0);
+X	}
+X	return s.st_size;
+X}
+X
+Xgenerate_keys(char *keyfilename)
+X{
+X	int             i, j, k, o, keylength, off;
+X	unsigned char  *coeffs;
+X	unsigned char   x, y, z;
+X	char            tmpname[256];
+X	coeffs = (char *) malloc(sizeof(char *) * quorum);
+X	off = 0;
+X	if (!keyfilename)
+X		keyfilename = "piece";
+X
+X	for (i = 0; i &lt; pieces; i++) {
+X		keyfiles[i] = (char *) malloc(256);
+X		sprintf(keyfiles[i], "%s.%d", keyfilename, i);
+X		unlink(keyfiles[i]);
+X	}
+X	while (keylength = read_key(keyfilename, off)) {
+X		off += keylength;
+X		for (j = 0; j &lt; keylength; j++) {
+X		  /* Generate a random quorum-1'th degree polynomial */
+X			for (o = 1; o &lt; quorum; o++) {
+X				coeffs[o] = GF(RAND() % 256);
+X			}
+X			for (i = 0; i &lt; pieces; i++) {
+X				y = key[j];
+X				x = GF(i + 1);
+X				keypieces[i][0] = x;
+X				z = x;
+X				for (k = 1; k &lt; quorum; k++) {
+X					y = GFADD(y, GFMUL(coeffs[k], x));
+X					x = GFMUL(x, z);
+X				}
+X				keypieces[i][j + 1] = y;
+X			}
+X		}
+X		write_pieces(keyfiles, keypieces, keylength + 1);
+X	}
+X}
+X
+Xwrite_pieces(char **files, char **data, int ks)
+X{
+X	FILE           *f;
+X	int             i;
+X	for (i = 0; i &lt; pieces; i++) {
+X		f = fopen(files[i], "a");
+X		fwrite(data[i], ks, 1, f);
+X		fclose(f);
+X	}
+X}
+X
+Xwrite_key(char *file, char *t, int k)
+X{
+X	FILE           *f;
+X	if (file)
+X		f = fopen(file, "a");
+X	else
+X		f = stdout;
+X	fwrite(t, k, 1, f);
+X	fclose(f);
+X}
+X
+Xprint_help()
+X{
+X	fprintf(stderr, "To generate 'pieces' of a 'key'\n");
+X	fprintf(stderr, "Usage: cryptosplit -g &lt;# of pieces&gt; -q &lt;quorum required to rebuild&gt; keyfile\n\n");
+X	fprintf(stderr, "To reconstruct the original file from n 'pieces'\n");
+X	fprintf(stderr, "Usage: cryptosplit piece_1 piece_2 ... piece_n [-o output filename]\n");
+X	exit(0);
+X}
+X
+Xprint_matrix(char **co, char *c)
+X{
+X	int             i, j;
+X	for (i = 0; i &lt; quorum; i++) {
+X		for (j = 0; j &lt; quorum; j++) {
+X			printf("%3u ", ((unsigned long) co[i][j] &amp; 0xFF));
+X		}
+X		printf("= %3u\n", ((unsigned long) c[i] &amp; 0xFF));
+X	}
+X	printf("\n");
+X}
+END-of-cryptosplit.c
+echo x - gf.h
+sed 's/^X//' &gt;gf.h &lt;&lt; 'END-of-gf.h'
+X/* Cryptosplit
+X * An implementation of Shamir secret sharing over GF(2^8)
+X *
+X * written by Ray Cromwell &lt;rjc@gnu.ai.mit.edu&gt;
+X */
+X
+X/* Pay no attention to the sloppy code, this is only a first draft */
+X
+X/* g is a primitive element, this table represents g^k for 0 &lt;= k &lt;= 255 */
+Xint G[]={
+X1, 103, 129, 227, 78, 81, 222, 46, 50, 20, 176, 94, 170, 253, 166, 32, 
+X33, 70, 199, 36, 106, 59, 229, 203, 249, 237, 93, 3, 169, 84, 242, 210, 
+X243, 181, 114, 86, 60, 7, 226, 41, 208, 61, 96, 99, 202, 158, 108, 190, 
+X77, 248, 138, 220, 224, 231, 5, 44, 252, 193, 161, 194, 8, 150, 250, 68, 
+X9, 241, 123, 167, 71, 160, 165, 137, 117, 180, 21, 215, 223, 73, 179, 247, 
+X254, 15, 116, 211, 148, 52, 145, 24, 109, 217, 204, 27, 196, 141, 62, 201, 
+X55, 56, 76, 159, 11, 63, 174, 182, 219, 2, 206, 213, 17, 156, 162, 107, 
+X92, 100, 40, 183, 188, 131, 45, 155, 64, 66, 140, 89, 72, 212, 118, 29, 
+X65, 37, 13, 186, 6, 133, 168, 51, 115, 49, 189, 228, 172, 120, 14, 19, 
+X82, 119, 122, 192, 198, 67, 235, 216, 171, 154, 39, 195, 111, 23, 25, 10, 
+X88, 47, 85, 149, 83, 16, 251, 35, 136, 18, 53, 246, 153, 142, 151, 157, 
+X197, 234, 191, 42, 121, 105, 146, 177, 57, 43, 30, 232, 113, 255, 104, 245, 
+X48, 218, 101, 79, 54, 95, 205, 124, 69, 110, 112, 152, 233, 22, 126, 139, 
+X187, 97, 4, 75, 125, 34, 239, 147, 214, 184, 200, 80, 185, 175, 209, 90, 
+X225, 128, 132, 207, 178, 144, 127, 236, 58, 130, 74, 26, 163, 12, 221, 135, 
+X102, 230, 98, 173, 31, 143, 240, 28, 38, 164, 238, 244, 87, 91, 134, 1, 
+X};
+X
+X/* if n=g^k, this table returns k=lg n */
+Xint I[]={
+X0, 255, 105, 27, 210, 54, 132, 37, 60, 64, 159, 100, 237, 130, 142, 81, 
+X165, 108, 169, 143, 9, 74, 205, 157, 87, 158, 235, 91, 247, 127, 186, 244, 
+X15, 16, 213, 167, 19, 129, 248, 154, 114, 39, 179, 185, 55, 118, 7, 161, 
+X192, 137, 8, 135, 85, 170, 196, 96, 97, 184, 232, 21, 36, 41, 94, 101, 
+X120, 128, 121, 149, 63, 200, 17, 68, 124, 77, 234, 211, 98, 48, 4, 195, 
+X219, 5, 144, 164, 29, 162, 35, 252, 160, 123, 223, 253, 112, 26, 11, 197, 
+X42, 209, 242, 43, 113, 194, 240, 1, 190, 181, 20, 111, 46, 88, 201, 156, 
+X202, 188, 34, 136, 82, 72, 126, 145, 141, 180, 146, 66, 199, 212, 206, 230, 
+X225, 2, 233, 117, 226, 133, 254, 239, 168, 71, 50, 207, 122, 93, 173, 245, 
+X229, 86, 182, 215, 84, 163, 61, 174, 203, 172, 153, 119, 109, 175, 45, 99, 
+X69, 58, 110, 236, 249, 70, 14, 67, 134, 28, 12, 152, 140, 243, 102, 221, 
+X10, 183, 228, 78, 73, 33, 103, 115, 217, 220, 131, 208, 116, 138, 47, 178, 
+X147, 57, 59, 155, 92, 176, 148, 18, 218, 95, 44, 23, 90, 198, 106, 227, 
+X40, 222, 31, 83, 125, 107, 216, 75, 151, 89, 193, 104, 51, 238, 6, 76, 
+X52, 224, 38, 3, 139, 22, 241, 53, 187, 204, 177, 150, 231, 25, 250, 214, 
+X246, 65, 30, 32, 251, 191, 171, 79, 49, 24, 62, 166, 56, 13, 80, 189, 
+X};
+X
+X#define GFADD(a,b) ((a) ^ (b))
+X#define GFMUL(a,b) (((a)==0 || (b)==0) ? 0 : G[(I[(a)] + I[(b)]) % 255])
+X#define GFINV(a)   ((a)==0 ? 0 : G[255-I[(a)]])
+X#define GF(a) (G[(a) % 255])
+X#define LOGGF(a) (I[(a)%255])
+X
+END-of-gf.h
+exit
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01421.html">Re: XSplit &amp; N/M alternatives</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01430.html">Cryptosplit note</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01439.html">Attention: the us.* hierarchy and its effect on the gun groups</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01430.html">Cryptosplit note</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01423"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01423"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

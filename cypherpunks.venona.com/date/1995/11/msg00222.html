@@ -1,0 +1,137 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: /dev/random &#45; using up entropy? -->
+<!--X-From-R13: Pvyy Egrjneg <fgrjnegfNvk.argpbz.pbz> -->
+<!--X-Date: Sun, 5 Nov 1995 08:08:41 +0800 -->
+<!--X-Message-Id: 199511042352.PAA07554@ix4.ix.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>/dev/random - using up entropy?</TITLE>
+<LINK REV="made" HREF="mailto:stewarts@ix.netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00221.html">Date Prev</A>][<A HREF="msg00223.html">Date Next</A>][<A HREF="msg00230.html">Thread Prev</A>][<A HREF="msg00226.html">Thread Next</A>][<A HREF="index.html#00222">Date Index</A>][<A HREF="threads.html#00222">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>/dev/random - using up entropy?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: /dev/random - using up entropy?</LI>
+<LI><em>From</em>: Bill Stewart &lt;<A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 04 Nov 1995 15:52:03 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+The discussions of what to do when /dev/random has handed out all of its
+available entropy have assumed that entropy gets used up; I'd like to 
+propose that maybe it doesn't, at least in the computational-complexity
+sense that says that you don't have the computational power around to
+calculate the information inside /dev/random from the output,
+giving a sort of "computational entropy" that reflects not only the 
+uncertainty you have because of randomness but also the uncertainty
+you have because of your computational limitations.
+
+Most of the designs I've seen look like this:
+        A Reservoir of entropy R = R1....Rn, where n is large, 1024 or 4096
+        An input stream I = I1....Ik, which is mixed into R
+        A mixing function F which is used to mix R &lt;= F(R,I) 
+                for some chunk of I, possibly empty.
+        A hash function H, typically MD5.
+        An output O = O1...Om = H(R), and E gets mixed after every output.
+                (These are capital-o, not zero...)
+
+The entropy E of the reservoir E before an output is
+        -SUM(all X) p(X) log p(X)
+where X is an event R1=x1, R2=x2 ... Rn=Xn
+which is equal to n, assuming the Ri are iid equiprobable 0 or 1.
+
+After an output, the entropy is
+        - SUM p(X | H(R)=O) log p(X|H(R)=O)
+which works out to n-m, since p(X) is zero if H(R)!=O, and 2**m/2**n if it does.
+So that says you use up m bits of entropy if you get m bits of good output.
+
+However, what I'd like to suggest is that you don't, from the perspective
+of a user who doesn't have direct access to the reservoir R of random bits.
+For that user, p(X|H(R)=O) is the same as p(X) or P(X|H(R)=O'), because
+the user is neither able to invert H, nor to enumerate all possible R,
+nor to calculate anything useful based on multiple outputs, since the
+reservoir R is shuffled between outputs; even a simple circular shift
+may be enough.   This doesn't apply to the case where n is 32 or 48
+and the hash function produces n-bit outputs, or even m&lt;&lt;n bit outputs,
+because that maybe be inverted or brute-forced, but it seems to apply
+for the case where n is sufficiently large and the hash is good.
+If the hash is simpler than MD5, it may apply anyway, since the hash
+produces far fewer bits than its input, as long as the hash and the
+mixing function don't give away any information about the reservoir
+between successive outputs.
+
+This would suggest that /dev/random ought to have a mode that says
+"give me output of whatever quality you have available",
+and that it ought to be OK to use it, as long as the reservoir has 
+been seeded with sufficient high-entropy input to have decent randomness.
+#---
+#                                       Thanks;  Bill
+# Bill Stewart, Freelance Information Architect, stewarts@ix.netcom.com
+# Phone +1-510-247-0664 Pager/Voicemail 1-408-787-1281
+#---
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00226" HREF="msg00226.html">Re: /dev/random - using up entropy?</A></STRONG>
+<UL><LI><EM>From:</EM> Wei Dai &lt;weidai@eskimo.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00342" HREF="msg00342.html">Re: /dev/random - using up entropy?</A></STRONG>
+<UL><LI><EM>From:</EM> "Theodore Ts'o" &lt;tytso@MIT.EDU&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00221.html">Re: Video as a source of randomness</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00223.html">Re: using PGP only for digital signatures</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00230.html">Version 2 Elliptic Curve Crypto</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00226.html">Re: /dev/random - using up entropy?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00222"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00222"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

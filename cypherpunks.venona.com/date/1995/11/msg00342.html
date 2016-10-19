@@ -1,0 +1,312 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: /dev/random &#45; using up entropy? -->
+<!--X-From-R13: "Furbqber Ff'b" <glgfbN[WF.SRG> -->
+<!--X-Date: Tue, 7 Nov 1995 12:18:42 +0800 -->
+<!--X-Message-Id: 9511070110.AA07972@dcl.MIT.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199511042352.PAA07554@ix4.ix.netcom.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: /dev/random - using up entropy?</TITLE>
+<LINK REV="made" HREF="mailto:tytso@MIT.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00341.html">Date Prev</A>][<A HREF="msg00349.html">Date Next</A>][<A HREF="msg00226.html">Thread Prev</A>][<A HREF="msg00225.html">Thread Next</A>][<A HREF="index.html#00342">Date Index</A>][<A HREF="threads.html#00342">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: /dev/random - using up entropy?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Bill Stewart &lt;<A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: /dev/random - using up entropy?</LI>
+<LI><em>From</em>: "Theodore Ts'o" &lt;<A HREF="mailto:tytso@MIT.EDU">tytso@MIT.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 6 Nov 1995 20:10:50 -0500</LI>
+<LI><em>Address</em>: 1 Amherst St., Cambridge, MA 02139</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: Bill Stewart's message of Sat, 04 Nov 1995 15:52:03 -0800,&lt;<A HREF="msg00222.html">199511042352.PAA07554@ix4.ix.netcom.com</A>&gt;</LI>
+<LI><em>Phone</em>: (617) 253-8091</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+   Date: Sat, 04 Nov 1995 15:52:03 -0800
+   From: Bill Stewart &lt;stewarts@ix.netcom.com&gt;
+
+   So that says you use up m bits of entropy if you get m bits of good output.
+
+   However, what I'd like to suggest is that you don't, from the perspective
+   of a user who doesn't have direct access to the reservoir R of random bits.
+   For that user, p(X|H(R)=O) is the same as p(X) or P(X|H(R)=O'), because
+   the user is neither able to invert H, nor to enumerate all possible R,
+   nor to calculate anything useful based on multiple outputs, since the
+   reservoir R is shuffled between outputs; even a simple circular shift
+   may be enough.   This doesn't apply to the case where n is 32 or 48
+   and the hash function produces n-bit outputs, or even m&lt;&lt;n bit outputs,
+   because that maybe be inverted or brute-forced, but it seems to apply
+   for the case where n is sufficiently large and the hash is good.
+   If the hash is simpler than MD5, it may apply anyway, since the hash
+   produces far fewer bits than its input, as long as the hash and the
+   mixing function don't give away any information about the reservoir
+   between successive outputs.
+
+All of this assumes that MD5 or SHA, or whatever, is a "good hash
+function".  Unfortunately, this strikes at the heart of "what we don't
+know" about writing good hash functions, which is still today much more
+of an art rather than a science.
+
+So the conservative among us will probably not want to count on this
+fact when generating long-term, valuable secrets, like public/private
+keypairs
+
+   This would suggest that /dev/random ought to have a mode that says
+   "give me output of whatever quality you have available",
+   and that it ought to be OK to use it, as long as the reservoir has 
+   been seeded with sufficient high-entropy input to have decent randomness.
+
+Yup; in the Linux implementation which I've done, that's what the
+/dev/urandom device is all about.  For most purposes, it's *probably*
+good enough.  However, I would character it as numbers which are
+"cryptogrphically random", as opposed to "truely random", in that they
+depend on the intractibility of MD5 towards analysis.  One can imagine
+descending scale of "quality of random numbers" where physically
+generated random numbers would best, followed by /dev/random numbers,
+followed by /dev/urandom numbers.  It may be that /dev/urandom is just
+as hard as /dev/random --- but given the our current knowledge, it's
+impossible to prove one way or the other.  
+
+						- Ted
+
+P.S.  Here's the header from my current /dev/random driver, if people
+are interested:
+
+/*
+ * random.c -- A strong random number generator
+ *
+ * Version 0.95, last modified 4-Nov-95
+ * 
+ * Copyright Theodore Ts'o, 1994, 1995.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, and the entire permission notice in its entirety,
+ *    including the disclaimer of warranties.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. The name of the author may not be used to endorse or promote
+ *    products derived from this software without specific prior
+ *    written permission.
+ * 
+ * ALTERNATIVELY, this product may be distributed under the terms of
+ * the GNU Public License, in which case the provisions of the GPL are
+ * required INSTEAD OF the above restrictions.  (This clause is
+ * necessary due to a potential bad interaction between the GPL and
+ * the restrictions contained in a BSD-style copyright.)
+ * 
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * (now, with legal B.S. out of the way.....) 
+ * 
+ * This routine gathers environmental noise from device drivers, etc.,
+ * and returns good random numbers, suitable for cryptographic use.
+ * Besides the obvious cryptographic uses, these numbers are also good
+ * for seeding TCP sequence numbers, and other places where it is
+ * desireable to have numbers which are not only random, but hard to
+ * predict by an attacker.
+ *
+ * Theory of operation
+ * ===================
+ * 
+ * Computers are very predictable devices.  Hence it is extremely hard
+ * to produce truely random numbers on a computer --- as opposed to
+ * pseudo-random numbers, which can easily generated by using a
+ * algorithm.  Unfortunately, it is very easy for attackers to guess
+ * the sequence of pseudo-random number generators, and for some
+ * applications this is not acceptable.  So instead, we must try to
+ * gather "environmental noise" from the computer's environment, which
+ * must be hard for outside attackers to observe, and use that to
+ * generate random numbers.  In a Unix environment, this is best done
+ * from inside the kernel.
+ * 
+ * Sources of randomness from the environment include inter-keyboard
+ * timings, inter-interrupt timings from some interrupts, and other
+ * events which are both (a) non-deterministic and (b) hard for an
+ * outside observer to measure.  Randomness from these sources are
+ * added to an "entropy pool", which is mixed using a CRC-like function.
+ * This is not cryptographically strong, but it is adequate assuming
+ * the randomness is not chosen maliciously, and it is fast enough that
+ * the overhead of doing it on every interrupt is very reasonable.
+ * As random bytes are mixed into the entropy pool, the routines keep
+ * an *estimate* of how many bits of randomness have been stored into
+ * the random number generator's internal state.
+ * 
+ * When random bytes are desired, they are obtained by taking the MD5
+ * hash of the contents of the "entropy pool".  The MD5 hash avoids
+ * exposing the internal state of the entropy pool.  It is believed to
+ * be computationally infeasible to derive any useful information
+ * about the input of MD5 from its output.  Even if it is possible to
+ * analyze MD5 in some clever way, as long as the amount of data
+ * returned from the generator is less than the inherent entropy in
+ * the pool, the output data is totally unpredictable.  For this
+ * reason, the routine decreases its internal estimate of how many
+ * bits of "true randomness" are contained in the entropy pool as it
+ * outputs random numbers.
+ * 
+ * If this estimate goes to zero, the routine can still generate
+ * random numbers; however, an attacker may (at least in theory) be
+ * able to infer the future output of the generator from prior
+ * outputs.  This requires successful cryptanalysis of MD5, which is
+ * not believed to be feasible, but there is a remote possiblility.
+ * Nonetheless, these numbers should be useful for the vast majority
+ * of purposes.
+ * 
+ * Exported interfaces ---- output
+ * ===============================
+ * 
+ * There are three exported interfaces; the first is one designed to
+ * be used from within the kernel:
+ *
+ * 	void get_random_bytes(void *buf, int nbytes);
+ *
+ * This interface will return the requested number of random bytes,
+ * and place it in the requested buffer.
+ * 
+ * The two other interfaces are two character devices /dev/random and
+ * /dev/urandom.  /dev/random is suitable for use when very high
+ * quality randomness is desired (for example, for key generation or
+ * one-time pads), as it will only return a maximum of the number of
+ * bits of randomness (as estimated by the random number generator)
+ * contained in the entropy pool.
+ * 
+ * The /dev/urandom device does not have this limit, and will return
+ * as many bytes as are requested.  As more and more random bytes are
+ * requested without giving time for the entropy pool to recharge,
+ * this will result in random numbers that are merely cryptographically
+ * strong.  For many applications, however, this is acceptable.
+ *
+ * Exported interfaces ---- input
+ * ==============================
+ * 
+ * The current exported interfaces for gathering environmental noise
+ * from the devices are:
+ * 
+ * 	void add_keyboard_randomness(unsigned char scancode);
+ * 	void add_mouse_randomness(__u32 mouse_data);
+ * 	void add_interrupt_randomness(int irq);
+ * 	void add_blkdev_randomness(int irq);
+ * 
+ * add_keyboard_randomness() uses the inter-keypress timing, as well as the
+ * scancode as random inputs into the "entropy pool".
+ * 
+ * add_mouse_randomness() uses the mouse interrupt timing, as well as
+ * the reported position of the mouse from the hardware.
+ *
+ * add_interrupt_randomness() uses the inter-interrupt timing as random
+ * inputs to the entropy pool.  Note that not all interrupts are good
+ * sources of randomness!  For example, the timer interrupts is not a
+ * good choice, because the periodicity of the interrupts is to
+ * regular, and hence predictable to an attacker.  Disk interrupts are
+ * a better measure, since the timing of the disk interrupts are more
+ * unpredictable.
+ * 
+ * add_blkdev_randomness() times the finishing time of block requests.
+ * 
+ * All of these routines try to estimate how many bits of randomness a
+ * particular randomness source.  They do this by keeping track of the
+ * first and second order deltas of the event timings.
+ *
+ * Acknowledgements:
+ * =================
+ *
+ * Ideas for constructing this random number generator were derived
+ * from the Pretty Good Privacy's random number generator, and from
+ * private discussions with Phil Karn.  Colin Plumb provided a faster
+ * random number generator, which speed up the mixing function of the
+ * entropy pool, taken from PGP 3.0 (under development).  It has since
+ * been modified by myself to provide better mixing in the case where
+ * the input values to add_entropy_word() are mostly small numbers.
+ * 
+ * Any flaws in the design are solely my responsibility, and should
+ * not be attributed to the Phil, Colin, or any of authors of PGP.
+ * 
+ * The code for MD5 transform was taken from Colin Plumb's
+ * implementation, which has been placed in the public domain.  The
+ * MD5 cryptographic checksum was devised by Ronald Rivest, and is
+ * documented in RFC 1321, "The MD5 Message Digest Algorithm".
+ * 
+ * Further background information on this topic may be obtained from
+ * RFC 1750, "Randomness Recommendations for Security", by Donald
+ * Eastlake, Steve Crocker, and Jeff Schiller.
+ */
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00222" HREF="msg00222.html">/dev/random - using up entropy?</A></STRONG>
+<UL><LI><EM>From:</EM> Bill Stewart &lt;stewarts@ix.netcom.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00341.html">Exporting software doesn't mean exporting (was: Re: lp ?)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00349.html">Re: censored? corrected [Steve Pizzo cited in The Spotlight]</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00226.html">Re: /dev/random - using up entropy?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00225.html">Re: on topic!!</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00342"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00342"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,228 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: SSL trouble -->
+<!--X-From-R13: cngevpxNHrevgl.QA[ (Bngevpx Vbetna) -->
+<!--X-Date: Mon, 28 Aug 95 11:58:08 PDT -->
+<!--X-Message-Id: 9508281854.AA20060@cantina.verity.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: SSL trouble</TITLE>
+<LINK REV="made" HREF="mailto:patrick@Verity.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01401.html">Date Prev</A>][<A HREF="msg00935.html">Date Next</A>][<A HREF="msg01441.html">Thread Prev</A>][<A HREF="msg01421.html">Thread Next</A>][<A HREF="index.html#01394">Date Index</A>][<A HREF="threads.html#01394">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: SSL trouble</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:patrick@Verity.COM">patrick@Verity.COM</A>, <A HREF="mailto:Piete.Brooks@cl.cam.ac.uk">Piete.Brooks@cl.cam.ac.uk</A></LI>
+<LI><em>Subject</em>: Re: SSL trouble</LI>
+<LI><em>From</em>: <A HREF="mailto:patrick@Verity.COM">patrick@Verity.COM</A> (Patrick Horgan)</LI>
+<LI><em>Date</em>: Mon, 28 Aug 1995 11:54:26 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:hallam@w3.org">hallam@w3.org</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; From: Piete Brooks &lt;Piete.Brooks@cl.cam.ac.uk&gt;
+&gt; 
+&gt; One of the things that the latest brloop does is make a call to the master
+&gt; server asking for a list of servers to contact :-))
+&gt; 
+&gt; Note that it is a list, and it tries them in order (all A RRs).
+
+Wouldn't this result in the slaves higher in the list being hammered?
+Perhaps you want to do something simular to what the later releases of 
+bind do with machines with multiple names, and round robin the list.
+If you had a list with hosts A, B, and C, the first request would get
+ABC, the next BCA, the next CAB, and the next back to ABC.  That would
+distrubute the work between the slaves a bit better.
+
+&gt; 
+&gt; &gt; Then all of the transactions from that point would take place between the
+&gt; &gt; brute and the slave:)
+&gt; 
+&gt; Currently just all the "allocate" transactions -- I haven't written my
+&gt; ACK reflector yet, so all ACKs go direct th the ACK master.
+&gt; 
+&gt; &gt; The slaves would each be delegated large chunks of the keyspace,
+&gt; 
+&gt; No -- the slaves will not "be delegated" (as in pre-assigned address space),
+&gt; they will just ask the master for it as they need it.
+&gt; Sure, the'll do it in reasonable sized chunks, but not (2**16)/16 ....
+
+Actually this is what I meant, that they would ask for it.  My idea would
+be that when a slave is asked for keyspace, if they don't have enough
+they'd ask for the next large chunk.  That way the central server doesn't
+ever have to deal with small requests.
+&gt; 
+&gt; &gt; but not keyspace/numslaves.  Maybe 1/16th or something like that, and could
+&gt; &gt; ask for more when their space was depleted.  Periodically, perhaps when
+&gt; &gt; requesting more key space, and/or when a timer pops, the slaves could report
+&gt; &gt; results.
+&gt; 
+&gt; Nah - results still go direct pro tem.
+
+You might consider it:)
+
+&gt; 
+&gt; &gt; What I mean is that every so often they'd report even if they didn't need
+&gt; &gt; more keyspace yet, iff they had any new stats to report.
+&gt; 
+&gt; Sure.
+&gt; 
+&gt; &gt; The nice thing here is that the work of the master and of the slaves is
+&gt; &gt; almost the same.i
+&gt; 
+&gt; You got it !
+&gt; 
+&gt; &gt; The slaves don't have to do the initial assignment of slave,
+&gt; (slave -&gt; slaves I assume)
+&gt; 
+&gt; &gt; and the master doesn't have to report results, but everything else
+&gt; &gt; is the same.
+&gt; 
+&gt; Yup -- code sharing !
+&gt; 
+&gt; &gt; With careful design you could use the same daemon for both
+&gt; &gt; with a command line argument to tell it if it was the master (-m) or the
+&gt; &gt; slave (-s).
+&gt; 
+&gt; Well, not even that !
+&gt; 
+&gt; The slaves don't have the config file with the key info in it ...
+&gt; 
+&gt; &gt; Of course I'm sure you see that this allows you to add as
+&gt; &gt; many levels as you want to the hierarchy.
+&gt; 
+&gt; Indeed.
+&gt; 
+&gt; BUT ....
+&gt; 
+&gt; These cache servers are asking for non trivial amounts of keyspace.
+&gt; As such there should not be *too* many, and then need to be "managed" ...
+&gt; If one crashes, the logs need to be scanned to see how to restart it (so that
+&gt; it starts by doling out the segments that it had no sub-doled to its clients).
+
+Quite right.  I'd assume that the first level list of slaves would be controlled
+by you.  If you're careful enough a slave should be able to go down and come
+back up without losing any state at all.  All brutes/slaves talking to it
+should be able to continue on with no loss of information.  I would put 
+an exponential backoff on the time between retries for the brutes talking
+to the slaves as well as the slaves talking to the master.  (With a limit
+for the amount of backoff of course.)  If you can't talk to someone you
+might sleep for 8 seconds and retry, if you still couldn't back off to 16,
+the 32, then 64, then 128, etc...the maximum might be somewhere around ten
+or fifteen minutes, so that within ten or fifteen minutes of crashing and
+being restarted everything would be humming along with no manual intervention
+required on any of the lower levels.
+
+&gt; 
+&gt; &gt; A slave doesn't care whether a slave or a brute talks to it.
+&gt; 
+&gt; Indeed -- that's how it was designed ...
+&gt; 
+&gt; However, note that with big cache servers (as opposed to Local CPU Farm servers
+&gt; where all clients are the same "ID") reports of sub-allocation have to be
+&gt; passed back to the root :-(
+
+That's a good point.  If you want to keep track of who has what, it all has
+to get back to the root eventually.  If you use my idea of having the
+slaves cache the information until the next time they'd be contacting the
+root anyway, (or whenever the timer elapses,) then you greatly cut down
+on the number of small packets seen by the root, (and each level of slaves
+when their's a hierarchy).
+
+&gt; 
+&gt; &gt; You could make the slave software available as well, and a site with many
+&gt; &gt; machines could have only the slave contact the master to get assigned a
+&gt; &gt; slave to talk to, and could configure all of their brutes to talk to
+&gt; &gt; their own slave.
+&gt; 
+&gt; Indeed -- the Local CPU Farm cache server is just about ready for ALPHA testers
+&gt; 
+&gt; &gt; Software like this is easy to write, (and fun), and we should go for it:)
+&gt; 
+&gt; Done ...
+&gt; 
+&gt; &gt; Of course I do everything like this in C++, but I suppose perl would be the
+&gt; &gt; most portable.  It's a shame it's so aethestically displeasing to the eye.
+&gt; 
+&gt; Yeah -- but being based on C, C++ didn't stand much chance ...
+&gt; 
+&gt; &gt; perl's never a pleasant read.
+&gt; 
+&gt; ... but better than C++ -- sure.
+
+&lt;snicker;&gt;  Sound like we could have a religious war if we wanted, but this
+isn't the right list for it:)  (sigh;) Maybe we should move this portion of
+the discussion to alt.my.favorite.language.rules.and.yours.of.course.sucks.
+I'm not really a snob about it...I still think cobol's great for some 
+purposes, I just prefer coding in C++.
+
+Patrick
+   _______________________________________________________________________
+  /  These opinions are mine, and not Verity's (except by coincidence;).  \
+ |                                                       (\                |
+ |  Patrick J. Horgan         Verity Inc.                 \\    Have       |
+ |  patrick@verity.com        1550 Plymouth Street         \\  _ Sword     | 
+ |  Phone : (415)960-7600     Mountain View                 \\/    Will    | 
+ |  FAX   : (415)960-7750     California 94303             _/\\     Travel | 
+  \___________________________________________________________\)__________/
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01421" HREF="msg01421.html">Re: SSL trouble</A></STRONG>
+<UL><LI><EM>From:</EM> Piete Brooks &lt;Piete.Brooks@cl.cam.ac.uk&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01401.html">Re: Pre-allocating key segments</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00935.html">GOST ??</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01441.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01421.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01394"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01394"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

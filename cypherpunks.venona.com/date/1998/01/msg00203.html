@@ -1,0 +1,233 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Fiat's Batch RSA -->
+<!--X-From-R13: Oabalzbhf <abobqlNDSBZOK.QA[> -->
+<!--X-Date: Thu, 8 Jan 1998 03:11:02 +0800 -->
+<!--X-Message-Id: 199801071855.TAA07264@basement.replay.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Fiat's Batch RSA</TITLE>
+<LINK REV="made" HREF="mailto:nobody@REPLAY.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00183.html">Date Prev</A>][<A HREF="msg00192.html">Date Next</A>][<A HREF="msg01470.html">Thread Prev</A>][<A HREF="msg00192.html">Thread Next</A>][<A HREF="index.html#00203">Date Index</A>][<A HREF="threads.html#00203">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Fiat's Batch RSA</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>Subject</em>: Fiat's Batch RSA</LI>
+<LI><em>From</em>: Anonymous &lt;<A HREF="mailto:nobody@REPLAY.COM">nobody@REPLAY.COM</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 7 Jan 1998 19:55:11 +0100 (MET)</LI>
+<LI><em>Comments</em>: This message did not originate from the Sender address above.It was remailed automatically by anonymizing remailer software.Please report problems or inappropriate use to theremailer administrator at &lt;abuse@REPLAY.COM&gt;.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Batch RSA
+invented by Amos Fiat
+
+Described in Crypto 89 and J Cryptology 1997.
+
+
+RSA works as follows.  The key owner chooses two secret primes p and q,
+and forms their product n = p*q.  He then chooses a public exponent e
+relatively prime to p-1 and q-1.  His public key is (n, e).
+
+To encrypt a message m into cyphertext c, m is raised to the power e, mod
+n: c = m^e mod n.  To decrypt the message, the key holder calculates d
+as the multiplicative inverse of e mod (p-1)(q-1): d = 1/e mod (p-1)(q-1).
+He recovers m from m = c^d mod n.
+
+For simplicity, below we will write this as m = c^(1/e) mod n, where it
+is understood that the 1/e is done mod (p-1)(q-1).
+
+An RSA signature s on a message m is calculated as for a decryption:
+s = m^(1/e) mod n.  The signature is verified by m ?=? s^e mod n.
+
+The time consuming part of an RSA decryption or signature is this
+exponentiation step.  e can be chosen to be small, so encryption and
+verification is fast, but 1/e will generally be about the same size as n,
+so many multiplications must be done to raise a number to that power.
+
+Amos Fiat describes a method whereby multiple messages can be decrypted
+or signed using only one full-sized exponentiation.  The "catch" is that
+the messages must all use different exponents with the same n.
+
+Here is a concrete example.  You want to decrypt or sign two messages,
+M1 and M2, raising M1 to the 1/3 power and M2 to the 1/5 power.  Perform
+the following steps:
+
+	M12 = M1^5  *  M2^3
+	I12 = M12 ^ (1/15)
+
+This is the only full-sized exponentiation needed.  This gives:
+
+	I12 = M1^(1/3) * M2^(1/5).
+
+This is the product of the two values that we want.  Fiat uses a trick
+to disentangle the two values.  He raises I12 to the 6th power.  The
+number 6 is chosen so that it is a multiple of one of the two
+exponents, 3, and is 1 more than a multiple of the other exponent, 5:
+
+	I12^6 = M1^2 * M2 * M2^(1/5)
+
+Therefore:
+
+	M2^(1/5) = I12^6 / (M1^2 * M2)
+
+which is one of the values we need.  Since I12 is the product of the two
+values we want, we can recover the other value just by dividing this into
+I12:
+
+	M1^(1/3) = I12 / M2^(1/5)
+
+
+Here is another example.  Suppose we want M3^(1/7) and M4^(1/11).  (Note
+that we are using prime numbers for the exponents; the reason will be
+explained below.)  We calculate:
+
+	M34 = M3^11  *  M4^7
+	I34 = M34 ^ (1/77)
+
+This gives us:
+
+	I34 = M3^(1/7) * M4^(1/11)
+
+Again this is the product of the two values we want.  As before we will
+raise this to a power which is 1 more than a multiple of one of the two
+exponents (7 and 11) and is a multiple of the other one.  The smallest
+such power is 22.
+
+	I34^22 = M3^3 * M3^(1/7) * M4^2
+
+So we can divide to get M3^(1/7):
+
+	M3^(1/7) = I34^22 / (M3^3 * M4^2)
+
+And we can divide to get the other value needed:
+
+	M4^(1/11) = I34 / M3^(1/7)
+
+
+This illustrates how to derive two RSA roots using only one full sized
+exponentiation.  A few small exponentiations are also needed, as well
+as two divisions, but these are much faster than doing the full
+exponentiation (raising to the 1/15 or 1/77 powers above).
+
+Fiat's idea can then be applied recursively.  Note that in the examples
+above we had to take two full-sized exponentiation, M12 to the 1/15 power
+and M34 to the 1/77 power.  We can combine both of these exponentiations
+into one just as was done above:
+
+	M14 = M12^77 * M34^15
+	I14 = M14 ^ (1/1155)
+
+Now:
+
+	I14 = M12^(1/15) * M34^(1/77)
+
+the product of the two values we want.  We need an exponent which is
+1 more than a multiple of 15 while being a multiple of 77, giving
+615, or vice versa, giving 540.  Choosing the latter since it is smaller
+we have:
+
+	I14^540 = M12^36 * M34^7 * M34^(1/77)
+
+so:
+
+	M34^(1/77) = I14^540 / (M12^36 * M34^7)
+
+and dividing gives the other factor:
+
+	M12^(1/15) = I14 / M34^(1/77)
+
+These values can then be fed into the expressions above to recover
+M1^(1/3) and the other three values, all with only one full-sized
+exponentiation for the four messages.
+
+In general, finding the exponent for Ixx can be handled by the Chinese
+Remainder Theorem.  However it requires that the two values be
+relatively prime.  That is why the exponents used in Batch RSA must
+all be relatively prime, so that there is a solution to the value of
+the exponent for Ixx.
+
+As the number of values in the batch increases, the "small" exponents
+needed to recover the values increase as well.  We saw above that the
+exponents went from 6 and 22 for the size-two batches to 540 for the
+size-four batch.  This means that you reach a point of diminishing
+returns where increasing the batch size no longer provides much
+benefit.  Fiat suggests a batch size of n/(log^2 n) messages, where n
+is the length of the full-sized exponentiation (e.g. 1000 for a 1000
+bit modulus).  This would correspond to about a 10 message batch for
+a 1024 bit key.
+
+Fiat describes a few situations where it may be appropriate to use
+different exponents for multiple RSA operations.  In the case of a
+server issuing multiple RSA signatures it could define its public key
+to be (n, e1, e2, e3,...) and specify that the signature was valid for
+any exponent in the list.  Then it could batch up signatures and use a
+different exponent for each one.
+
+Another case is "pure RSA" encryption, where the message itself is broken
+into blocks and each one is RSA encrypted.  In that case the blocks could
+use successive exponents from the list, and the receiver could decrypt
+a batch of blocks using one large exponentiation.
+
+There is another case of interest to us, related to the task of
+searching through messages from a message pool, possibly
+steganographically hidden.  That will be described in another message.
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00183.html">Re: cypherpunks and guns</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00192.html">More on Association for Interactive Media conference</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01470.html">Seeking Environmentally Friendly People ?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00192.html">More on Association for Interactive Media conference</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00203"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00203"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

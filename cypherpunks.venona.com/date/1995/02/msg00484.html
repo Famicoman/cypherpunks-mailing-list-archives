@@ -1,0 +1,205 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: MIME based remailing commands -->
+<!--X-From-R13: ypbggeryyNcbcznvy.hpfq.rqh (Znapr Qbggeryy) -->
+<!--X-Date: Thu, 9 Feb 95 22:57:19 PST -->
+<!--X-Message-Id: ab60b81304021004b962@[137.110.24.250] -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: MIME based remailing commands</TITLE>
+<LINK REV="made" HREF="mailto:lcottrell@popmail.ucsd.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00488.html">Date Prev</A>][<A HREF="msg00487.html">Date Next</A>][<A HREF="msg00433.html">Thread Prev</A>][<A HREF="msg00493.html">Thread Next</A>][<A HREF="index.html#00484">Date Index</A>][<A HREF="threads.html#00484">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: MIME based remailing commands</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: MIME based remailing commands</LI>
+<LI><em>From</em>: <A HREF="mailto:lcottrell@popmail.ucsd.edu">lcottrell@popmail.ucsd.edu</A> (Lance Cottrell)</LI>
+<LI><em>Date</em>: Thu, 9 Feb 1995 22:57:45 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+&lt;SNIP my comments&gt;
+&gt;Ah, I see how you are doing it.  Having re-read your docs, I gather
+&gt;that when un-armored the file is in an encrypted binary format, and
+&gt;when decrypted at least the non-header portion of the file is still
+&gt;binary?  I think this is a good way to do it; it addresses the point
+&gt;Eric made recently about size expansion when an armored file is
+&gt;encrypted at each step.
+&gt;
+That is about right. Inside the armor is a bunch of binary data. 20 header
+blocks, and the message block. The first message block is a PGP encrypted
+to the remailer, and contains the next destination. The other 19 headers,
+and the message block are IDEA encrypted with a key and IV in the first
+header. When decrypted, the second header is seen to be PGP encrypted to
+the next remailer, and the rest is encrypted with the key in that header.
+The remailer Shifts up all the headers, sticks junk in the 20th header, and
+rearmors the whole thing.
+
+This is rather more active manipulation than the current remailers.
+
+
+&gt;The one thing I would mention is that "::" was not originally intended
+&gt;as an indication that the message was to be remailed.  Rather, this was
+&gt;simply a "header pasting token" which could be used to move a few lines
+&gt;from the body up into the header for those people who can't set header
+&gt;fields on outgoing mail.  Then the presence of "Anon-To:" or whatever
+&gt;in the header is what actually causes the action.  So you don't need to
+&gt;use "::", you can just set your headers directly and get the same
+&gt;effect.  (This is not to say you need to do it like this, just that
+&gt;that is how the original design that Eric created worked.)
+&gt;
+
+I realize that. It was easy to implement, since I already had to check for
+:: to be compatible with type 1 messages.
+
+&gt;If you did want to follow this model, you could think about using a
+&gt;MIME header to indicate the type of the message contents rather than
+&gt;the "::".  Another alternative would be to use a different special
+&gt;field in the mail header, like perhaps your "Remailer-Type: 2.0", but
+&gt;I'm not sure that a new top-level header field is the right place for
+&gt;this.  It looks to me like most of the standard headers deal more with
+&gt;moving the message around rather than with telling what would be done
+&gt;with it on receipt.  It's kind of a fine line but it looks to me like
+&gt;more of a job for a MIME content type since that is really what it is
+&gt;for.  You could use something like:
+&gt;
+&gt;MIME-Version: 1.0
+&gt;Content-Type: application/remail; version="2.0"
+&gt;
+&gt;or
+&gt;
+&gt;MIME-Version: 1.0
+&gt;Content-Type: application/remail-mark-2
+&gt;
+&gt;Then the rest of the message could look just as you have it.  Or, to use
+&gt;a little more of the existing standard, you could add:
+&gt;
+&gt;Content-Transfer-Encoding: base64
+&gt;
+&gt;and take out your BEGIN and END lines since it looks like you are using
+&gt;base64, although the augmented kind that PGP uses with the CRC at the
+&gt;end; you'd have to lose the CRC in that case.  (I wonder if PGP will do
+&gt;that in the MIME-PGP integration draft that is supposedly being worked
+&gt;on.)
+&gt;
+&gt;One question is, how do you actually send your messages in the
+&gt;mixmaster client and servers?  Do you go directly to sendmail, or do
+&gt;you use a user agent like /bin/mail?  If the former then it doesn't
+&gt;seem like it would be too hard to add these header fields.  On the
+&gt;receiving end then hopefully also it would not be much harder to match
+&gt;the Content-Type: string than the one you are using.
+&gt;
+&gt;The advantage, again, is that to a considerable extent this kind of
+&gt;application is exactly what MIME was planning for with the "application"
+&gt;content-type.  This lets you mark the contents of the message in a
+&gt;standard way.  And you are already using something very close to the
+&gt;base64 encoding that MIME specifies.  So this does seem like a good
+&gt;opportunity to go with the internet mainstream by following this
+&gt;standard.  If this seems like something you want to do I'm sure our MIME
+&gt;experts here can tell how to define a new content type.
+&gt;
+&gt;Hal
+&gt;
+
+I agree that changing mixmaster to search for a MIME line, rather than the
+:: would be no effort at all.
+
+I use sendmail for the client and the remailer (actually they are the same
+code), so adding new headers is easy. Unfortunately I am having some
+problems with sendmail. Sendmail is marking the messages as "Apperently
+To:" rather than "To:". Any idea what might cause that?
+
+I am not sure I want to give up the CRC on the armor (esp. since I am using
+the PGP tools routines and not my own), but I would be interested in
+defining a new MIME content type. So, experts, what all is involved in
+that, and is there any problem with starting to use a MIME type before it
+is official?
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6
+
+iQCVAwUBLzsIElVkk3dax7hlAQFlmgP9FNxSrabWU7CyiRu1Kv28Lz2htuukq1Ul
+ANG4y/arJ9gseBvOxDKVDLVKWN1c2XyOKrEbUTVXxHDhk/WwhfpvJE/UrVWQuFEP
+eaFZB4G1xBvyjkx+DoQxsLVTEVcF1V54Mo5tfARBGCqf7aHqQGoLiRu8kR6i04fj
+nPgOrMeE5Bk=
+=vg7R
+-----END PGP SIGNATURE-----
+
+--------------------------------------------------
+Lance Cottrell  who does not speak for CASS/UCSD
+loki@nately.ucsd.edu
+PGP 2.6 key available by finger or server. Encrypted mail welcome.
+Home page <A  HREF="http://nately.ucsd.edu/~loki/">http://nately.ucsd.edu/~loki/</A>
+Check out my essay on the next generation remailer Mixmaster on the WWW page.
+For anon remailer info, mail remailer@nately.ucsd.edu Subject: remailer-help
+
+"Love is a snowmobile racing across the tundra.  Suddenly
+it flips over, pinning you underneath.  At night the ice
+weasels come."
+                        --Nietzsche
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00493" HREF="msg00493.html">Re: MIME based remailing commands</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00488.html">The question is moot: (Was: Not crypto, but scary.)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00487.html">(fwd) OREGON HOUSE BILL 2319 - Outlaw Anoniminty??</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00433.html">Re: MIME based remailing commands</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00493.html">Re: MIME based remailing commands</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00484"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00484"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

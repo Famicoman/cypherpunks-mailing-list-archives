@@ -1,0 +1,147 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Hardware&#45;random&#45;bits interface -->
+<!--X-From-R13: Brgre [bagn <czbagnNdhnypbzz.pbz> -->
+<!--X-Date: Wed, 15 Nov 1995 06:53:07 +0800 -->
+<!--X-Message-Id: 199511142231.OAA25441@mage.qualcomm.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Hardware-random-bits interface</TITLE>
+<LINK REV="made" HREF="mailto:pmonta@qualcomm.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00719.html">Date Prev</A>][<A HREF="msg00721.html">Date Next</A>][<A HREF="msg00701.html">Thread Prev</A>][<A HREF="msg00752.html">Thread Next</A>][<A HREF="index.html#00706">Date Index</A>][<A HREF="threads.html#00706">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Hardware-random-bits interface</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Hardware-random-bits interface</LI>
+<LI><em>From</em>: Peter Monta &lt;<A HREF="mailto:pmonta@qualcomm.com">pmonta@qualcomm.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 14 Nov 1995 14:31:46 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I've been thinking about physically random bits recently, so
+I'd like to offer a simple, easily implementable interface to a
+source of such bits, along with a design sketch using a common
+radio receiver chip as the noise source.  The interface consists
+of two bits in the standard PC parallel port, one serving as
+the data line and the other the sampling clock.
+
+The parallel port, while a bit less universal than RS-232, eliminates
+the complexity of UARTs and clock generation and offers higher speed
+and friendlier local power.  For an ISA bus running at 8 MHz, bits can
+be sampled at about 2.5 Mb/s, i.e., about 300 kB/s.  (The bandwidth of
+the noise source should of course be consistent with this.)  Another
+advantage of a simple device is that it can be thoroughly inspected:
+there is no PLD or microcontroller code to vet/trust.
+
+Not all parallel ports have bidirectional data registers, so the
+most general path is to assign a status bit to the input and
+use a control bit for the clock output.  I'm using bit 4 of
+the status register (pin 13 on the PC's DB-25) as the input
+and bit 0 of the control register (pin 1) as the clock.
+Specifically, the rising edge of pin 1 should sample the noise
+waveform and present the result on pin 13.  (Pin 1 is inverted,
+so bit 0 should transition from 1 to 0.)
+
+I'd also like to suggest a device name for the Unix environment,
+/dev/prandom, for "physically random".  The intention is that the
+bits returned be as raw as possible, as close to the physics as
+possible, leaving any debiasing/hashing to other software (for
+example, the /dev/random implementation in recent Linux kernels).
+(I have a Linux device driver that implements this interface;
+it is very simple, needing only to sample the bits, pack them
+into bytes, and manage mutual exclusion, filesystem housekeeping,
+and probing.)
+
+Here are the particulars of the "dongle" board I'm in the
+process of making.
+
+  Noise source:  an FM/IF radio receiver chip, with no input
+    supplied, so that the IF amplifier chain produces wideband
+    noise at its output.  I'm looking at the Motorola MC13158
+    and the Philips SA626.  Each provides about 20 MHz of
+    IF bandwidth, and the Motorola part has an on-chip
+    comparator, reducing the entire device to two chips:
+    the receiver chip and an HCMOS flip-flop.
+
+  Power:  from the port data lines; &gt;=3.5V at about 20 mA is
+    available.
+
+  Device probing:  the device should somehow identify itself
+    as a random bit generator.  One way to do this is to wire
+    one of the parallel port data bits to a status line; for
+    example, data bit 0 (pin 2) could be wired to status bit 5
+    (pin 12).  Software can then twiddle the data bit and
+    watch for the response.
+
+  Cost:  around $10 in parts, I guess.
+
+A rate of 300 kB/s will make a 600 MB one-time pad in an hour
+(assuming software is similarly fast).  I'm wondering if any
+of the mail systems have convenient hooks to use pads (though
+it would not be difficult to write up).
+
+Suggestions welcome.  I'll put the design on the Web
+once it's finished; replicating it should be pretty easy.
+People can also grab the device driver if they wish.
+
+Cheers,
+Peter Monta   pmonta@qualcomm.com
+Qualcomm, Inc./Globalstar
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00719.html">CSE gets flak on TV</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00721.html">world smartcards..</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00701.html">setting up an ecash shop</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00752.html">Re: Hardware-random-bits interface</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00706"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00706"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

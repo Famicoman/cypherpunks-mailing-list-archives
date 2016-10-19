@@ -1,0 +1,214 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: crypto technique -->
+<!--X-From-R13: [nggurj X Uuvb <zt5a+Nnaqerj.pzh.rqh> -->
+<!--X-Date: Sun, 17 Oct 93 13:56:55 PDT -->
+<!--X-Message-Id: kgkO9UG00awF4Pr0lK@andrew.cmu.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9310170152.AA00409@netcom5.netcom.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: crypto technique</TITLE>
+<LINK REV="made" HREF="mailto:mg5n+@andrew.cmu.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00733.html">Date Prev</A>][<A HREF="msg00736.html">Date Next</A>][<A HREF="msg00722.html">Thread Prev</A>][<A HREF="msg00757.html">Thread Next</A>][<A HREF="index.html#00740">Date Index</A>][<A HREF="threads.html#00740">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: crypto technique</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: crypto technique</LI>
+<LI><em>From</em>: Matthew J Ghio &lt;<A HREF="mailto:mg5n%2B@andrew.cmu.edu">mg5n+@andrew.cmu.edu</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 17 Oct 1993 15:52:00 -0400 (EDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00722.html">9310170152.AA00409@netcom5.netcom.com</A>&gt;</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00722.html">9310170152.AA00409@netcom5.netcom.com</A>&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Timothy C. May &lt;tcmay@netcom.com&gt; wrote: 
+
+&gt; But what you need for crypto is a _trapdoor_ one-way function, one for
+&gt; which a very fast (but secret, of course) inverse does exist. In RSA,
+&gt; the knowledge of the originally chosen primes p and q allows the
+&gt; "owner" of the public and private keys to quickly decrypt a message.
+
+Ah...  but I do have exactly such a "trapdoor".  Consider the output
+produced by y = 0.5x^2 + 0.5x:  (p=2^3)
+
+      y mod 8
+x y  in binary
+- -- ---------
+0  0    000
+1  1    001
+2  3    011
+3  6    110
+4 10    010
+5 15    111
+6 21    101
+7 28    100
+
+Note that the last digit of the binary number repeats every four
+numbers. From only the last number, I know that x mod 4 must be only one
+of two values.  By looking at the second to last binary digit of y, I
+can narrow my list further, by deducing that x mod 8 could only be one
+of two values. I can then test those two values and determine x.
+For example: Suppose I am given the value 1101 and p=16.  I first try
+x=0.  That gives me zero, so that must be wrong.  I try x=1, and I get a
+1 for the last digit.  That macthes what I have.  So next I try x=1 and
+x=2.  x=1 goves me 01, so that's right. Next I try x=1 and x=6. (6
+because 2^3-1=7, 7-x=6)  x=1 gives me 001, that's not it.  6 gives me
+101, which is what I'm looking for.  Finally I try 6 and 9.  (because
+2^4-1=15 and 15-6=9)  6 gives me 0101, which isn't it, so I try 9, which
+gives me 1101.  So the answer is x=9.  (and in fact, .5(9)^2 + .5(9) =
+.5(81) + .5(9) = 45, which in binary is 101101; mod 16 = 1101 , which is
+what we started with.)  So the inverse does exist and can be solved with
+relativly few calculations.  I suppose this is what L. Detweiler was
+referring to, am I correct? 
+
+
+Now, the public key part of the system:
+
+
+Previously, I posted the following sample polynomial:
+
+         4      3         2
+y = .125x + .25x + 63.875x + 63.75x + 8159
+
+
+Karl Lui Barrus quickly pointed out how easily he could solve it.  (I
+really only intended it as an example, so I didn't try to make it too
+difficult.)  But since we now have the values, I'll go ahead and use
+this example again to show how to actually solve it, and point out ways
+it could not be solved.
+
+Since we have C=127, D=31, we can solve for any x, given y and p.  I
+didn't give a value for p earlier, so let's use p=256 (one byte
+encryption.  Of course this could be brute-force attacked, but let's
+keep the math simple for this demonstration.)
+
+Suppose we have y=61.  To solve for x, we first subtract D, conevert to
+binary and solve with the above method.  To save space, I won't go into
+the calculation here, but go ahead and try it yourself if you want.  You
+should come up with 172.  This can be checked easily: (172^2)/2 + 172/2
++ 31 = 29584/2 + 172/2 + 31 = 14792 + 86 + 31 = 14909   Taking 14909 mod
+256, we get 61, so it checks out.
+
+Next we do the same step again, starting with y=172.  I fairly quickly
+solved this to get x=9.  Nine is, in fact, what was put in originally. 
+This can be shown by:
+
+          4      3         2
+y = (.125x + .25x + 63.875x + 63.75x + 8159) mod 256
+
+            4        3           2
+y = (.125(9) + .25(9) + 63.875(9) + 63.75(9) + 8159) mod 256
+
+y = (.125(6561) + .25(729) + 63.875(81) + 63.75(9) + 8159) mod 256
+
+y = (820.125 + 182.25 + 5173.875 + 573.75 + 8159) mod 256
+
+y = 14909 mod 256
+
+y = 61
+
+
+Note that none of the preceeding could have been done without knowing
+the values of C and D.  So if Karl Barrus can find C and D using his
+clever factoring technique, does that defeat the system?  Actually,
+Karl's trick is easy to avoid.  Since the entire polynomial is mod 256,
+we can mod each term by 256.  Which gives:
+
+          4      3         2
+y = (.125x + .25x + 63.875x + 63.75x + 223) mod 256
+
+which still produces the same values for y, but the factoring technique fails.
+
+One other question which could be asked is, does the technique for
+calculating roots of moduli work for the entire polynomial?  A view of a
+sample of numbers reveals that it does not:
+
+x  y  binary y
+- --- --------
+0 223 11011111
+1  95 01011111
+2  98 01100010
+3 238 11101110
+4  12 00001100
+5 200 11001000
+6  49 00110001
+7  89 01011001
+
+which reveals no repeating patterns in the last digits (or any digits).
+
+
+In summary, I see no method which would yeild the original input without
+knowing the values added to the nested polynomials (the private key),
+and there is no way to determine the private key if the modulus is
+applied to the resulting function.
+
+P.S. I could beat the RSA system too, if the modulus was left out. :)
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00757" HREF="msg00757.html">Re: crypto technique</A></STRONG>
+<UL><LI><EM>From:</EM> Karl Lui Barrus &lt;klbarrus@owlnet.rice.edu&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00774" HREF="msg00774.html">Re: crypto technique</A></STRONG>
+<UL><LI><EM>From:</EM> Karl Lui Barrus &lt;klbarrus@owlnet.rice.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00722" HREF="msg00722.html">Re: crypto technique</A></STRONG>
+<UL><LI><EM>From:</EM> tcmay@netcom.com (Timothy C. May)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00733.html">RISKS of using email for dcash</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00736.html">Re: Crypto Technique</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00722.html">Re: crypto technique</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00757.html">Re: crypto technique</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00740"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00740"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

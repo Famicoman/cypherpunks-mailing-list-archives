@@ -1,0 +1,191 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Shamir Sharing -->
+<!--X-From-R13: abezNargpbz.pbz (@bezna Vneql) -->
+<!--X-Date: Mon, 25 Oct 93 14:53:23 PDT -->
+<!--X-Message-Id: 9310252150.AA26406@netcom2.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Shamir Sharing</TITLE>
+<LINK REV="made" HREF="mailto:norm@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01220.html">Date Prev</A>][<A HREF="msg01213.html">Date Next</A>][<A HREF="msg01224.html">Thread Prev</A>][<A HREF="msg01222.html">Thread Next</A>][<A HREF="index.html#01212">Date Index</A>][<A HREF="threads.html#01212">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Shamir Sharing</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Shamir Sharing</LI>
+<LI><em>From</em>: <A HREF="mailto:norm@netcom.com">norm@netcom.com</A> (Norman Hardy)</LI>
+<LI><em>Date</em>: Mon, 25 Oct 93 14:50:49 -0700</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+The following code may be useful in applications to share secrets a la
+Shamir. Beware the warning about pseudo random numbers!
+
+#if 0
+Shamir Sharing
+Warning!! We use the stock random number generator.
+You must replace it if you really want to keep a secret!!
+
+67 is prime and 67^4&gt;2^24. We use the field of integers modulo 67.
+We want to produce k&lt;67 versions of a secret so that we may
+reconstruct the message when q (0&lt;q&lt;k) versions of the secret are
+available. ("q" for quorum)
+
+We use polynomials of degree q-1 over the field.
+If one knows values of p(x) for q distinct arguments
+x_0 ... x_k then the polynomial may be determined.
+
+To code the secret we let each byte of the message have its own
+polynomial of degree q-1, but we speak here as if the secret were
+just one character long. The secret character is s. We choose the
+polynomial p such that p(0) = s. We choose the polymomial otherwise
+to have random (mod 67) coefficients. Version j of the secret is
+p(j) for 0&lt;j&lt;67.
+
+Suppose for some set S of q integers we know p(i) for each i in S.
+To compute s = p(0) we apply Lagrange's interpolation formula: '
+
+p(x) = sum (i in S) (p(i) *
+    (product (j in S but not i) (x - j))/
+    (product (j in S but not i) (i - j)))
+
+We use the special case where x=0.
+
+The routines below deal in secrets &lt; 67^4 which conveniently codes
+three arbitrary bytes. Each resulting version is four bytes but
+each of those bytes is &lt; 67. Adding '0' to each version byte
+results in portable ascii characters.
+
+Program logic: "u25" is a type that gives 25 bit (or more)
+unsigned integers.
+Routine "void it(void)" initializes multiplication and division tables
+modulo 67. mt[i][i] is i*j mod 67 if 0&lt;=i&lt;67 and 0&lt;=j&lt;67.
+j*dt[i][j] is i mod 67 if 0&lt;=i&lt;67 and 0&lt;j&lt;67.
+
+Routine "void split(u25 sec, int quor, int dis, char w[N][4])"
+splits the secret (sec) into dis parts. A quorum of size quor
+is necessary to recover the secret. The parts are placed in
+the array w. w[0] will hold part 1, and w[quor-1] will hold
+part quor. As the parts are distributed to the custodiens,
+each part number must be included!
+
+Routine "u25 join(int quor, char w[N][4], int c[N])"
+takes quor parts and recomputes the secret which it returns
+as a function value. w[0] thru w[quor-1] are the parts
+and c[0] thru c[quor-1] are the respective part numbers.
+
+Routine main provides a fairly general test invocation of
+this code.
+
+The following stuff is missing from &lt;stdlib.h&gt; and libraries
+in some systems claiming to be ANSI C!
+
+typedef struct{long quot, rem;} ldiv_t;
+static ldiv_t ldiv(long a, long b)
+{ldiv_t A; A.quot = a/b; A.rem = a % b; return A;}
+#endif
+
+#define N 67
+#include &lt;math.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+typedef unsigned long u25 /* 32 bits */;
+static char mt[N][N], dt[N][N];
+static void it(void){int i, j;
+  for(i=0; i&lt;N; ++i) for(j=0; j&lt;N; ++j) mt[i][j] = (long)i*j % N;
+  for(i=0; i&lt;N; ++i) for(j=0; j&lt;N; ++j) dt[mt[i][j]][j] = i;}
+
+static char M(char a){if(a&lt;0) return a+N; return a;}
+
+static u25 join(int quor, char w[N][4], int c[N])
+{char sx[4]; int k; for(k=0; k&lt;4; ++k) {char q = 0;
+  {int n;   for(n=0; n&lt;quor; ++n) {char p = w[n][k];
+       {int m; for(m=0; m&lt;quor; ++m)
+       if(c[n]-c[m]) p = mt[p][dt[N-c[m]][M(c[n]-c[m])]];}
+      q = M(q + p - N);}}
+    sx[k]=q;}
+return sx[3] + N*(sx[2] + N*(sx[1] + (u25)N*sx[0]));}
+
+static void split(u25 sec, int quor, int dis, char w[N][4])
+{if(sec &gt;= (u25)N*N*N*N) printf("Foul value\n");
+ if(quor &gt; dis || dis &gt;= N)
+   printf("Committee size must not exceed distribution and "
+      "distribution must be less than N\n");
+ {ldiv_t A = ldiv(sec, N), B = ldiv(A.quot, N), C = ldiv(B.quot, N);
+  char a[4]; a[3] = A.rem; a[2] = B.rem; a[1] = C.rem; a[0] = C.quot;
+  {int k; for(k = 0; k&lt;4; ++k)
+   {char coef[N-1]; coef[0] = a[k]; 
+   {int m; for(m = 1; m&lt;quor; ++m) coef[m] = 22/*...*/ % N;}
+    {int n; for(n = 1; n&lt;=dis; ++n) {char q = 0, m;
+       for(m=quor-1; m&gt;=0; --m)
+       q = M(coef[m] + mt[q][n] - N);
+       w[n-1][k] = q;}}}}}}
+
+#define C 4
+int main(){it();
+if (0) {int i, j; for(i=0; i&lt;N; ++i) for(j=0; j&lt;N; ++j)
+   if(mt[i][dt[j][i]] != j)
+     printf("Ouch, %d, %d\n", i, j);}
+{char dx[12][4]; split((u25)12345678, C, 8, dx);
+ {int i, j; for(i=0; i&lt;8; ++i)
+   {printf("%2d ", i+1);
+   for (j=0; j&lt;4; ++j) printf("%c", '0' + dx[i][j]); printf("\n");}}
+{int q[C] = {8, 3, 7, 1}; char dz[C][4]; {int i, j;
+   for(i=0; i&lt;C; ++i) for(j=0; j&lt;4; ++j) dz[i][j] = dx[q[i]-1][j];}
+ printf("%ld\n", join(C, dz, q));}}}
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01220.html">signed mail + steganography = ?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01213.html">Re: Net Regulation</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01224.html">Re: signed mail + steganography = ?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01222.html">Digital Signatures</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01212"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01212"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

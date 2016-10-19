@@ -1,0 +1,458 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: PGPcompose 1.1 source -->
+<!--X-From-R13: angrNHWE.QbybEgngr.SRG (QHZ fgnss zrzore @ngr Enzzbaf) -->
+<!--X-Date: Sun, 18 Jul 93 17:49:53 PDT -->
+<!--X-Message-Id: 9307190046.AA11214@vangogh.VIS.ColoState.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>PGPcompose 1.1 source</TITLE>
+<LINK REV="made" HREF="mailto:nate@VIS.ColoState.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00341.html">Date Prev</A>][<A HREF="msg00339.html">Date Next</A>][<A HREF="msg00340.html">Thread Prev</A>][<A HREF="msg00345.html">Thread Next</A>][<A HREF="index.html#00338">Date Index</A>][<A HREF="threads.html#00338">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>PGPcompose 1.1 source</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: PGPcompose 1.1 source</LI>
+<LI><em>From</em>: <A HREF="mailto:nate@VIS.ColoState.EDU">nate@VIS.ColoState.EDU</A> (CVL staff member Nate Sammons)</LI>
+<LI><em>Date</em>: Sun, 18 Jul 93 18:46:56 MDT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+
+===============  BEGIN README =============
+PGPcompose 1.0
+(c) 1993 Nate Sammons
+
+PGPcompose is a C program (that needs to be compiled, oddly enough)
+that is designed to allow for easy incorporation of digital 
+signatures and encryption with PGP (from Phil Zimmerman).
+
+It may be necessary to change some of the calls within PGPcompose,
+so that it will access the right mailer (it is set to /usr/lib/sendmail)
+etc...  It should be placed somewhere in your path, or that you
+modify your path (in ~/.cshrc) so that it is.
+
+I plan to expand PGPcompose's abilities so that it will be a complete
+mailer package ready for use...  hopefully!  I want to add support for
+replys and for mail management.
+
+BTW, this software carries no warranty, and if in the use of it you 
+break something, it's not my fault (this for all you legaleese-speakers
+out there...)
+
+- -Nate Sammons, July 18, 1993
++--------------------------------------------------------------------
+| Nate Sammons   email: nate@VIS.ColoState.Edu
+|      Colorado State University Computer Visualization Laboratory
+|      Finger nate@monet.VIS.ColoState.Edu for my PGP key
+|      #include &lt;std.disclaimer&gt;
+|  "I have but one single desire - to tear down the sky" -A. Toomba
+|                 Quis Custodiet Ipsos Custodes?
++----------------------+
+
+FIGHT THE CLIPPER!
+
+=============== END README ================
+
+=============== BEGIN COMP.C =================
+
+#include &lt;stdio.h&gt;
+
+char version[] = "1.1";
+int includeFile;
+char fileToInclude[100];
+int PID;
+int signMess, cryptMess;
+char CCwho[130];
+char BCCwho[130];
+char subject[130];
+char toWho[130];
+char cryptWho[100];
+char test[50];
+char whoami[30];
+char spoolName[100];
+char tmpName[150];
+char commandLine[300];
+char scriptName[150];
+
+main(int argc, char *argv[])
+
+{
+
+
+FILE *tmp;
+FILE *message;
+FILE *messageHeader;
+char messageName[150];
+char messageHeaderName[150];
+char messageCypherName[150];
+
+char theChoice[5];
+int n, q;
+int getSub, getCC, getBCC;
+getSub = 1;
+getCC = 1;
+getBCC = 1;
+
+if((argc ==2) &amp;&amp; (strcmp(argv[1], "-h") ==0))
+	{
+	printf("Useage: comp -s &lt;subject&gt; -c &lt;Cc list&gt; -b &lt;Bcc list&gt; &lt;recipients&gt;\n");
+	help();
+	}
+
+if(argc == 1)
+{
+	system("/usr/ucb/mail");
+	exit(0);
+}
+
+PID = getpid();
+sprintf(messageName, "/tmp/comp.mess.tmp.%d", PID);
+sprintf(messageHeaderName, "/tmp/comp.head.tmp.%d", PID);
+sprintf(tmpName, "tmp/comp.tmp.%d", PID);
+sprintf(messageCypherName, "/tmp/comp.cypher.message.tmp.%d", PID);
+
+if(argc &gt; 2)
+{
+for(n=1;n&lt;argc;n++)
+{
+if(strcmp(argv[n], "-s") == 0)
+	{
+	getSub = 0;
+	strcpy(subject, argv[n+1]);
+	}
+if(strcmp(argv[n], "-c") == 0)
+	{
+	getCC = 0;
+	strcpy(CCwho, argv[n+1]);
+	}
+if(strcmp(argv[n], "-b") ==0)
+	{
+	getBCC = 0;
+	strcpy(BCCwho, argv[n+1]);
+	}
+}
+
+strcpy(toWho, argv[argc-1]);
+}
+
+message = fopen(messageName, "w");
+
+if((getBCC == 1) &amp;&amp; (getCC == 1) &amp;&amp; (getSub == 1))
+strcpy(toWho, argv[1]);
+
+printf("PGPcompose %s (c)1993 Nate Sammons\n", version);
+if(getSub == 1)
+{
+	printf("Subject: ");
+	gets(subject);
+}
+if(getCC == 1)
+{
+printf("Cc: ");
+gets(CCwho);
+}
+if(getBCC == 1)
+{
+printf("Bcc: ");
+gets(BCCwho);
+}
+ 
+fprintf(message, "To: %s\nSubject: %s\nCc: %s\nBcc: %s\n---EOH---\n\n", toWho, subject, CCwho, BCCwho);
+fclose(message);
+
+editIt:
+sprintf(commandLine, "/usr/ucb/vi %s", messageName);
+system(commandLine);
+ 
+extractHeader();
+
+signIt:
+printf("Sign this message? [y,n] : ");
+gets(theChoice);
+switch(theChoice[0])
+{
+case 'y':
+case 'Y': signMess = 1;
+	break;
+case 'n':
+case 'N': signMess = 0;
+	break;
+default: goto signIt;
+	break;
+}
+ 
+cryptIt:
+printf("Encrypt this message? [y,n] : ");
+gets(theChoice);
+cypherWithWho:
+switch(theChoice[0])
+{
+case 'y':
+case 'Y': strcpy( cryptWho, toWho);
+	cryptMess = 1;
+	break;
+case 'n':
+case 'N': cryptMess = 0;
+	break;
+default: goto cryptIt;
+}
+ 
+Continue:
+printf("send, abort, edit? : ");
+gets(theChoice);
+switch(theChoice[0])
+{
+case 's':
+case 'S': sendmail();
+case 'a':
+case 'A': system("/bin/rm -rf /tmp/message*");
+	system("/bin/rm -rf /tmp/tmp.*");
+	exit(0);
+case 'e':
+case 'E': messageHeader = fopen(messageHeaderName, "a");
+	fprintf(messageHeader, "---EOH---\n");
+	fclose(messageHeader);
+	sprintf(commandLine, "cat %s &gt;&gt; %s ; /bin/rm -rf %s ; mv %s %s", messageName, messageHeaderName, messageName, messageHeaderName, messageName);
+	system(commandLine);
+	goto editIt;
+default: goto Continue;
+}
+
+}
+#include &lt;stdio.h&gt;
+
+extractHeader()
+{
+
+char tmpName[150];
+char messageName[150];
+char messageHeaderName[150];
+int pid;
+
+FILE *tmp;
+FILE *message;
+FILE *messageHeader;
+
+char commandLine[200];
+char theLine[90];
+char initTheLine[90];
+int rc;
+int n=1;
+int q=0;
+
+pid = getpid();
+sprintf(tmpName, "/tmp/comp.tmp.%d", pid);
+sprintf(messageName, "/tmp/comp.mess.tmp.%d", pid);
+sprintf(messageHeaderName, "/tmp/comp.head.tmp.%d", pid);
+
+tmp = fopen(tmpName, "w");
+fclose(tmp);
+tmp = fopen(tmpName, "a");
+
+message = fopen(messageName, "r");
+
+messageHeader = fopen(messageHeaderName, "w");
+fclose(messageHeader);
+messageHeader = fopen(messageHeaderName, "a");
+
+while(n!=q)
+{
+	fgets(theLine, 81, message);
+	if((theLine[0] == '-') &amp;&amp; (theLine[1] == '-') &amp;&amp; (theLine[2] == '-') &amp;&amp; (theLine[3] == 'E') &amp;&amp; (theLine[4] == 'O') &amp;&amp; (theLine[5] == 'H') &amp;&amp; (theLine[6] == '-') &amp;&amp; (theLine[7] == '-') &amp;&amp; (theLine[8] == '-'))
+		goto Continue;
+	fprintf(messageHeader, "%s", theLine);
+}
+
+Continue:
+while(n!=q)
+{
+	fgets(theLine, 81, message);
+	if(feof(message))
+                goto keepGoing;
+	fprintf(tmp, "%s", theLine);
+}
+
+keepGoing:
+fclose(message);
+fclose(messageHeader);
+fclose(tmp);
+
+sprintf(commandLine, "/bin/rm -rf %s", messageName);
+system(commandLine);
+sprintf(commandLine, "mv %s %s", tmpName, messageName);
+system(commandLine);
+
+}
+#include &lt;stdio.h&gt;
+
+sendmail()
+ 
+{
+FILE *script;
+ 
+int PID;
+extern int signMess, cryptMess;
+extern char CCwho[130];
+extern char BCCwho[130];
+extern char subject[130];
+extern char toWho[130];
+extern char cryptWho[100];
+extern char test[50];
+extern char whoami[30];
+extern char tmpName[150];
+char messageName[150];
+char messageHeaderName[150];
+char messageCypherName[150];
+extern char commandLine[300];
+char scriptName[150];
+ 
+PID = getpid();
+sprintf(messageName, "/tmp/comp.mess.tmp.%d", PID);
+sprintf(messageHeaderName, "/tmp/comp.head.tmp.%d", PID);
+sprintf(tmpName, "tmp/comp.tmp.%d", PID);
+sprintf(messageCypherName, "/tmp/comp.cypher.message.tmp.%d", PID);
+sprintf(scriptName, "/tmp/comp.script.%d", PID);
+
+if((signMess == 1) &amp;&amp; (cryptMess == 1))
+{
+script = fopen(scriptName, "w");
+fprintf(script, "cat %s | pgp -feast \"%s\" &gt; %s\n", messageName, cryptWho, messageCypherName);
+fclose(script);
+sprintf(commandLine, "chmod +x %s", scriptName);
+system(commandLine);
+system(scriptName);
+sprintf(commandLine, "cat %s &gt;&gt; %s ; cat %s | /usr/lib/sendmail -t", messageCypherName, messageHeaderName, messageHeaderName);
+system(commandLine);
+}
+ 
+if((signMess == 1) &amp;&amp; (cryptMess == 0))
+{
+sprintf(commandLine, "cat %s | pgp -fast +clearsig=on &gt; %s\n", messageName, messageCypherName);
+system(commandLine);
+sprintf(commandLine, "cat %s &gt;&gt; %s ; cat %s | /usr/lib/sendmail -t", messageCypherName, messageHeaderName, messageHeaderName);
+system(commandLine);
+}
+ 
+if((signMess == 0) &amp;&amp; (cryptMess == 1))
+{
+script = fopen(scriptName, "w");
+fprintf(script, "cat %s | pgp -fea \"%s\" &gt; %s\n", messageName, cryptWho, messageCypherName);
+fclose(script);
+sprintf(commandLine, "chmod +x %s", scriptName);
+system(commandLine);
+system(scriptName);
+sprintf(script, "cat %s &gt;&gt; %s ; cat %s | /usr/lib/sendmail -t", messageCypherName, messageHeaderName, messageHeaderName);
+system(commandLine);
+}
+ 
+if((signMess == 0) &amp;&amp; (cryptMess == 0))
+{
+sprintf(commandLine, "cat %s &gt;&gt; %s ; cat %s | /usr/lib/sendmail -t", messageName, messageHeaderName, messageHeaderName);
+system(commandLine);
+}
+ 
+sprintf(commandLine, "/bin/rm -rf /tmp/comp.*.%d", PID);
+system(commandLine);
+ 
+}
+
+#include&lt;stdio.h&gt;
+
+help()
+
+{
+printf("\n\n");
+printf("PGPcompose 1.1, (c) 1993 Nate Sammons\n\n");
+printf("This is a utility to let people who do not have perl to\n");
+printf("use PGP from within standard bsd mail with ease.  This\n");
+printf("application relies on general UNIX system calls for several\n");
+printf("of it's functions.  It is meant to be fairly easy to use, and \n");
+printf("as unintrusive as possible.  For reading mail, I recomend setting\n");
+printf("the PAGER variable in your ~/.mailrc file to \"pgp -mf\".\n\n");
+printf("If you like this program, send me mail.  If you don't like something,\n");
+printf("tell me what you don't like.\n\n         -Nate Sammons, nate@vis.colostate.edu\n\n");
+exit(0);
+}
+============================ END COMP.C ===================
+
+I hope you like it.
+
+- -nate sammons
+
++--------------------------------------------------------------------
+| Nate Sammons   email: nate@VIS.ColoState.Edu
+|      Colorado State University Computer Visualization Laboratory
+|      Finger nate@monet.VIS.ColoState.Edu for my PGP key
+|      #include &lt;std.disclaimer&gt;
+|  "I have but one single desire - to tear down the sky" -A. Toomba
+|                 Quis Custodiet Ipsos Custodes?
++----------------------+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3
+
+iQCUAgUBLEnu7dTgi1fmrpxlAQE/JwP3XmktT5YFe5sQ/28YunJigm0CPGVKRgxS
+3MqfbCGDEqmGz3tpXfaPsHvgNCl0H71Wb3sxbqLgQi30FYKrqA8f+VEF0XlyMNJC
+hWCBL0PwZQbQGFKThz7/Tj/dtxUWOksbaV/2mRo66avlULpDAY2PsAyAIe1HksE3
+TUmCUQOyWg==
+=qR9G
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00341.html">Re:  Diffie Hellman</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00339.html">Re: steganography</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00340.html">Re: recomendations for intro books</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00345.html">AIS BBS</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00338"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00338"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

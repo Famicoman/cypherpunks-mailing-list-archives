@@ -1,0 +1,160 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: GUCAPI (Grand Unified Crypto API) -->
+<!--X-From-R13: [.UernzNhgf.SRG.OG ([nggurj Uernz) -->
+<!--X-Date: Tue, 6 Dec 94 16:04:34 PST -->
+<!--X-Message-Id: 199412070002.AB13209@sequoia.itd.uts.EDU.AU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9412062142.AA08621@homer.spry.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: GUCAPI (Grand Unified Crypto API)</TITLE>
+<LINK REV="made" HREF="mailto:M.Gream@uts.EDU.AU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00366.html">Date Prev</A>][<A HREF="msg00416.html">Date Next</A>][<A HREF="msg00357.html">Thread Prev</A>][<A HREF="msg00390.html">Thread Next</A>][<A HREF="index.html#00414">Date Index</A>][<A HREF="threads.html#00414">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: GUCAPI (Grand Unified Crypto API)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:bshantz@spry.com">bshantz@spry.com</A></LI>
+<LI><em>Subject</em>: Re: GUCAPI (Grand Unified Crypto API) </LI>
+<LI><em>From</em>: <A HREF="mailto:M.Gream@uts.EDU.AU">M.Gream@uts.EDU.AU</A> (Matthew Gream)</LI>
+<LI><em>Date</em>: Wed, 07 Dec 1994 11:01:50 +1100</LI>
+<LI><em>Cc</em>: "L. Todd Masco" &lt;<A HREF="mailto:cactus@hks.net">cactus@hks.net</A>&gt;, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: Your message of "Tue, 06 Dec 1994 13:42:32 PST."            &lt;<A HREF="msg00357.html">9412062142.AA08621@homer.spry.com</A>&gt; </LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+`bshantz@spry.com' wrote:
+&gt; 
+&gt; Anyone else have any comments?
+&gt;
+
+QoS considerations. If the purpose of the API is to allow polymorphic
+access to cryptographic operations, then you need to provide a method
+to select `methods' based on particular needs (you're the client, you
+want the assocation to meet specific contractual requirements).  For
+example, you may specify key bounds or block sizes.
+
+At the same time, you need to reduce the interfaces complexity and
+overhead, which could mean for example that `limited' implementation
+could do without the QoS aspects; ie. elements need to be clearly
+seperable and orthogonal.
+
+For example, I could envisage:
+
+    resp_t
+    skcs_open (skcs_ctx * ctx, 
+               void * name, uint name_sz, uint name_type,
+               bucket * qos, bucket * param)
+    resp_t
+    skcs_process (skcs_ctx * ctx,
+                  void * iblock, uint iblock_sz, unit * iblock_pos,
+                  void * oblock, uint oblock_sz, uint * oblock_pos,
+                  bitstring options)
+    resp_t
+    skcs_close (skcs_ctx * ctx, bitstring options)
+
+where: 
+
+    typedef struct bucket_str { 
+        struct bucket_str * next;
+        void * data; uint type; uint length 
+    } bucket;
+
+and qos types could include: 
+
+    QOS_KEYSZ_MIN, QOS_KEYSZ_MAX, QOS_KEYSZ_RANGE,
+    QOS_INBLOCKSZ_MIN, ....
+
+param types could include: 
+
+    PARAM_KEY, PARAM_IV, PARAM_FEEDBACK_BITS
+
+or something like that. But by the same token, you'd want to ensure
+that there is something like the following so the additional overhead
+of chained buckets could be avoided.
+
+    resp_t
+    skcs_set_param (skcs_ctx * ctx, void * data, uint type, uint length)
+
+The point is that the provision of such a `generic' method of
+specifying attributes lends itself to support a diverse set of
+algorithms and cryptographic modules. The `skcs_open' could well be a
+subset of a more generic `crypto_open'. By the same token, there
+could exist a `skcs_DES_open' and `skcs_IDEA_open' for use when you
+know the specific algorithm you want and want to avoid additional
+overheads.
+
+I'm only considering a cryptographic operations interface, not one that
+deals with more generic `security' operations, such as in GSSAPI. But
+there are plenty of issues to be examined and resolved.
+
+discuss away!
+
+mg.
+
+--
+Matthew Gream
+(sw/hw engineer)
+&lt;M.Gream@uts.edu.au&gt;
+(02) 821-2043
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00357" HREF="msg00357.html">Re: GUCAPI (Grand Unified Crypto API)</A></STRONG>
+<UL><LI><EM>From:</EM> bshantz@spry.com</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00366.html">Re: GUCAPI (Grand Unified Crypto API)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00416.html">Re: GUCAPI (Grand Unified Crypto API)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00357.html">Re: GUCAPI (Grand Unified Crypto API)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00390.html">GUCAPI (Grand Unified Crypto API)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00414"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00414"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

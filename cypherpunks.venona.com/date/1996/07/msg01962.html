@@ -1,0 +1,203 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: RE: Brute Force DES -->
+<!--X-From-R13: [ngg Fubzyvafba <zngggNzvpebfbsg.pbz> -->
+<!--X-Date: Wed, 24 Jul 1996 21:01:29 +0800 -->
+<!--X-Message-Id: c=US%a=_%p=msft%l=RED&#45;77&#45;MSG&#45;960723231822Z&#45;3820@tide21.microsoft.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>RE: Brute Force DES</TITLE>
+<LINK REV="made" HREF="mailto:mattt@microsoft.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01877.html">Date Prev</A>][<A HREF="msg01885.html">Date Next</A>][<A HREF="msg01895.html">Thread Prev</A>][<A HREF="msg02078.html">Thread Next</A>][<A HREF="index.html#01962">Date Index</A>][<A HREF="threads.html#01962">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>RE: Brute Force DES</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "'Ray Arachelian'" &lt;<A HREF="mailto:sunder@dorsai.dorsai.org">sunder@dorsai.dorsai.org</A>&gt;</LI>
+<LI><em>Subject</em>: RE: Brute Force DES</LI>
+<LI><em>From</em>: Matt Thomlinson &lt;<A HREF="mailto:mattt@microsoft.com">mattt@microsoft.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 23 Jul 1996 16:18:22 -0700</LI>
+<LI><em>Cc</em>: "'<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>'" &lt;<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>&gt;,       "'<A HREF="mailto:mab@research.att.com">mab@research.att.com</A>'" &lt;<A HREF="mailto:mab@research.att.com">mab@research.att.com</A>&gt;</LI>
+<LI><em>Encoding</em>: 124 TEXT</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+well, first of all, I wasn't computing 2^40, I was computing something
+like 2^(56*0.667) * 8bytes/each or somesuch, I don't recall exactly as I
+don't have the paper in front of me. In any case, it was the tradeoff
+between time and space -- 2^40 in time was something like 2^38th in
+space. But don't trust my numbers, get the paper and rattle them off
+yourself. 
+
+It just seems like if we're going to browse all of the way through the
+DES keyspace, we _ought_ to take notes along the way -- that means
+building a table. I don't care how big the table is; if it is only 2^30
+entries (about 1G entries, each 8 bytes = 8Gig) we reduce our next DES
+crack by a factor of 8. If we keep 2^31 entries (16Gig) we can cut it
+down to 2^50, or a factor of 16. If we have 4 - 9 Gig drives (or perhaps
+three drives and some wiggling, described below) we can save about 2^32
+entries and the search becomes a measly 2^48. :)
+
+To whittle this down to a 40-bit workload, we'd have to save 2^36
+entries* 2^8 bytes/entry = 2^39 Bytes = 512 Gig. Yes, admittedly large.
+What's the cheapest form of storage, magtape? How much can you store on
+magtape? The entries can be sorted so that lookup doesn't take long even
+when you have to mount tapes. 
+
+Wiggling: 
+We may be able to save less than 2^8 bytes/entry because we know the
+quality that made the point interesting enough to save (say we only keep
+points where the top 32 bits were zeros -- no need to save these zero
+prefixes) but I suppose we'd only be able to cut this storage factor
+down by a factor of two at most.
+
+
+If you don't have Hellman's paper handy, the apropos formulas are:
+Total time=T, memory=M, search space=N
+
+Time/space tradeoff:
+M=mt , T=t^2, m*t^2=N
+
+In our case, N=2^56; M, T variable. 
+
+mattt
+&gt;----------
+&gt;From: 	Ray Arachelian[SMTP:sunder@dorsai.dorsai.org]
+&gt;Sent: 	Tuesday, July 23, 1996 3:16 PM
+&gt;To: 	Matt Thomlinson
+&gt;Cc: 	'trei@process.com'; 'cypherpunks@toad.com'
+&gt;Subject: 	RE: Brute Force DES
+&gt;
+&gt;On Tue, 23 Jul 1996, Matt Thomlinson wrote:
+&gt;
+&gt;&gt; why not put together (a LOT of) disk space and we can build a table
+&gt;&gt; (read: "a cryptanalytic time-memory tradeoff") for cracking DES? Using
+&gt;&gt; the table, we could brute-search the DES keyspace in less time than it
+&gt;&gt; would take to do an exhaustive search of a 38 bit keyspace, according to
+&gt;&gt; the paper. 4 gigs is what, a couple of hundred nowadays?
+&gt;&gt; 
+&gt;&gt; Making DES equivalent to a 40-bit crack would take approx. 500Gig, but
+&gt;&gt; publishing the table would push DES out usefulness. Certainly we could
+&gt;&gt; scale back (make DES equivalent to a 45-bit crack?) if we don't have
+&gt;&gt; enough disk...
+&gt;
+&gt;IMHO it's more expensive to go this route than to build a machine with
+&gt;dedicate DES cracking chips. 2^40 = 1,099,511,627,776 or about 1 terabyte
+&gt;worth of space, not 500G. 2^39 would be 500Gb. A 4Gb drive these days is 
+&gt;$800, hardly a couple of hundred dollars. :)
+&gt;
+&gt;Even so, that's a ton of hard drives. Further you need machines to hook 
+&gt;these drives up to. Infact, you need a farm of machines.  Why?  You can 
+&gt;only put 7 on a chain, and maybe if you're lucky four chains in a machine 
+&gt;using four controllers.
+&gt;
+&gt;A better idea might be to make small cheap computers, say based on 8086's 
+&gt;or 68000's that replace the drive's controller card, or if that drive 
+&gt;controller card is intelligent enough to be a CPU or contain one, burn 
+&gt;EEPROMs.  Have the EEPROMs be able to generate DES (or any other 
+&gt;cypher's) keyspace given a range, and then have them able to search the 
+&gt;whole drive for a match.
+&gt;
+&gt;Even so, if you build these drive boxes, all you've accomplished is to 
+&gt;create a nice huge big searchable array.  You still will need some sort 
+&gt;of logic to figgure out when it finds the right key, and you still can't 
+&gt;do 3DES or recusively encrypted files, nor know when you've found the key 
+&gt;for data you can't recognize - or rather have these drives recognize.
+&gt;
+&gt;However: Reading a 4Gb drive end to end takes less than 2 hours.  I know 
+&gt;this because I have a RAID array of them, and it takes 2 hours to 
+&gt;rebuild, so since rebuilding an array requires reading from two drives 
+&gt;and writing to one drive, reading a whole 4Gb drive at full speed would 
+&gt;be something like maybe 1 to 1.5 hours(???)
+&gt;
+&gt;You might be better off with 9.0Gb drives if you can afford them because 
+&gt;you then have less controller logic cards to build.
+&gt;
+&gt;The drives alone will cost $204,800.  $800*(2^40/(4*1024*1024*1024)).  
+&gt;You could get a nice big discount if you buy that many, but this will 
+&gt;also mean however much it will cost you to build the cpu cards for 
+&gt;multiplied by 256 drives, plust the R&amp;D cost, plus the network connection 
+&gt;between all the CPU boards.
+&gt;
+&gt;At that point you also run into the MTBF of the drives which means that 
+&gt;your drives will fail quite often.
+&gt;
+&gt;If you want to go dirt cheap on the CPU's while using this huge space
+&gt;method, you could just buy something like 37 Mac IIsi's, hook each up to 7
+&gt;of the drives (you'll have to partition the drives as they won't support
+&gt;volumes that huge.) and network the machines using localtalk.  You won't
+&gt;need a faster connection because all you need for networking is keyspace 
+&gt;distribution and success reporting.  But then IIsi's are sloooow machines 
+&gt;and your searches will suffer a hit from the lack of the machine's speed, 
+&gt;plus all the overhead of having an operating system and using the SCSI 
+&gt;chain to talk to the drives.
+&gt;
+&gt;IIsi's go for $350-$500 nicely loaded... $14800 for 37 at $400 a pop, 
+&gt;add the drives to that, plus the cost of writing the program and hooking 
+&gt;all of this crap together and that'll be  $219,600.  Ya got that kinda 
+&gt;dough to spare?
+&gt;
+&gt;==========================================================================
+&gt; + ^ + |  Ray Arachelian |FL|       KAOS KERAUNOS KYBERNETOS      |==/|\==
+&gt;  \|/  |sunder@dorsai.org|UL|__Nothing_is_true,_all_is_permitted!_|=/\|/\=
+&gt;&lt;--+--&gt;| --------------- |CG|What part of 'Congress shall make no |=\/|\/=
+&gt;  /|\  | Just Say "No" to|KA|law abridging the freedom of speech' |==\|/==
+&gt; + v + | Janet Reno &amp; GAK|AK|        do you not understand?       |=======   
+&gt;===================<A  HREF="http://www.dorsai.org/~sunder/=========================">http://www.dorsai.org/~sunder/=========================</A>
+&gt; Key Escrow Laws are the mating calls of those who'd abuse your privacy!
+&gt;
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01877.html">Re: NOISE: Re: Responding to Pre-dawn Unannounced Ninja Raids</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01885.html">Re: [Noise] Re: &lt;rant&gt; Re: Devil's Bargain</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01895.html">Re: Brute Force DES</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02078.html">RE: Brute Force DES</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01962"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01962"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

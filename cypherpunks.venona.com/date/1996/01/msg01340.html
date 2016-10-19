@@ -1,0 +1,170 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Lotus Notes -->
+<!--X-From-R13: X[YSZESKNqrycuv.pbz -->
+<!--X-Date: Thu, 25 Jan 1996 11:31:19 +0800 -->
+<!--X-Message-Id: 01I0D1I8O4VI98E2HT@delphi.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Lotus Notes</TITLE>
+<LINK REV="made" HREF="mailto:JMKELSEY@delphi.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01405.html">Date Prev</A>][<A HREF="msg01416.html">Date Next</A>][<A HREF="msg01455.html">Thread Prev</A>][<A HREF="msg01343.html">Thread Next</A>][<A HREF="index.html#01340">Date Index</A>][<A HREF="threads.html#01340">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Lotus Notes</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Lotus Notes</LI>
+<LI><em>From</em>: <A HREF="mailto:JMKELSEY@delphi.com">JMKELSEY@delphi.com</A></LI>
+<LI><em>Date</em>: Tue, 23 Jan 1996 20:02:04 -0500 (EST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+&gt;Date: Thu, 18 Jan 1996 20:54:33 -0500
+&gt;From: daw@beijing.CS.Berkeley.EDU (David A Wagner)
+&gt;Subject: Re: Hack Lotus?
+
+&gt;Hack Lotus?  Please do.
+
+Perhaps in this case, c2.org could have a "patch Lotus" contest,
+instead.  Help us patch this dumb security hole, by which we're
+leaking 24 bits of each session key.
+
+&gt;I would love to see the internals of how Lotus Notes does the escrow.
+&gt;Every conceivable way I can see to do it seems very vulnerable to attack.
+&gt;
+&gt;If the receiving Lotus Notes program doesn't check whether the high 24
+&gt;bits have been escrowed correctly in the LEEF-like field, then a simple
+&gt;hack to the sending Lotus Notes program to not send the LEEF field
+&gt;should give foreigners true 64 bit encryption.
+
+I think this is the case.  The guy who spoke at the RSA conference
+made reference to the fact that this new version would interoperate
+with full-strength domestic versions.  Getting domestic versions to
+check for LEAFs only from foreign users is possible, but it would
+seem to require that Lotus was working on this idea several versions
+back.  Otherwise, when an old domestic version gets a message from a
+new foreign version, it's going to accept the message without a
+LEAF.  Depending on how Lotus Notes does their key exchange
+protocol, it may be possible to graft this kind of checking on, so
+that the older programs will work with it, too, but this doesn't
+seem likely at all.
+
+&gt;If the receiving Lotus Notes program does verify that the high 24 bits
+&gt;are escrowed correctly, then anyone can verify that, so in 2^24 trials,
+&gt;I can recover the high 24 bits, and with 2^40 more trials, I can recover
+&gt;the high 40 bits.  Therefore 2^40 + 2^24 trials should suffice to hack
+&gt;Lotus if this is how it works.
+
+This problem is solvable, though I doubt they've bothered.  Two
+ways come to mind--both using information that third parties won't
+have to fix the problem.
+
+1.   Put another 64 bits of random salt into the RSA key exchange
+blob.  Use this to pad the LEAF, so that it's not feasible to
+dictionary search the LEAF.
+
+2.   Define the LEAF as part of the RSA key exchange blob.  Pad the
+LEAF with random bits, unknown to the receiver.  Sign the whole key
+exchange blob.
+
+Note that #2 can be countered by hacking the software's copy of the
+public key.  I don't see a way of countering #1 on the sender side
+only.  (Once you get the sender and receiver working together,
+key escrow seems to become really hard to do.)
+
+Now, I'm very interested in whether they thought about this as a
+potential problem, and thus padded their LEAF intelligently, or left
+themselves vulnerable to a dictionary-style attack on the LEAF.
+This translates, roughly, to "was someone with a basic understanding
+of cryptography involved in this design?"  Clearly, IBM has some
+really good people, and I suspect Lotus did/does, as well.  But were
+they involved enough in the implementation to ensure that this was
+done intelligently?
+
+- From what I heard at the conference, though, I don't think they're
+even checking to ensure compliance.  This implies that the security
+patch can be pretty simple--clobber the LEAF field with a bunch of
+random-looking bits.  Of course, this tells us nothing about the
+other possible weaknesses.  How well does Notes generate key
+material?  How big are the RSA keys?  How well do things like the
+key exchange protocols work?  It looks to me like there are a lot of
+programs with encryption out there that are lucky to manage even 40
+bits of actual security, even if they're allowed 64- or 128-bit
+keys.
+
+&gt;Waiting to hear the technical details of how it works,
+&gt;- -- Dave Wagner
+
+Note:  Please respond via e-mail as well as or instead of posting,
+as I get CP-LITE instead of the whole list.
+
+   --John Kelsey, jmkelsey@delphi.com / kelsey@counterpane.com
+ PGP 2.6 fingerprint = 4FE2 F421 100F BB0A 03D1 FE06 A435 7E36
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBMQUVGkHx57Ag8goBAQHaRwP/er3/94io/Aa5MQyyluVqohHGyLcP5JBr
+ZGZMoMydeGnWp5HJ5oGO4WuWDmmqk1NNiHNFd3z8Yxt9S73LR7PvGtoyoucMkX69
+f9p4DMED+bJoMWtfukxhtWufeTKDE136eUi/V8155869nAZSHngIF3WLaQCBWFqe
+01WEP/GbZtg=
+=IDZU
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01405.html">Re: Crippled Notes export encryption</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01416.html">Re: Crippled Notes export encryption</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01455.html">Re: Netscape &amp; open NNTP servers</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01343.html">Re: Lotus Notes</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01340"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01340"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

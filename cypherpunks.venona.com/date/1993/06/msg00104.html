@@ -1,0 +1,182 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: CryptoStacker, long term vision -->
+<!--X-From-R13: Sevp Vhturf <uhturfNfbqn.orexryrl.rqh> -->
+<!--X-Date: Thu, 3 Jun 93 08:57:38 PDT -->
+<!--X-Message-Id: 9306031512.AA25490@soda.berkeley.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.3.03.9306030013.A18959&#45;e100000@rtfm -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>CryptoStacker, long term vision</TITLE>
+<LINK REV="made" HREF="mailto:hughes@soda.berkeley.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00105.html">Date Prev</A>][<A HREF="msg00114.html">Date Next</A>][<A HREF="msg00140.html">Thread Prev</A>][<A HREF="msg00116.html">Thread Next</A>][<A HREF="index.html#00104">Date Index</A>][<A HREF="threads.html#00104">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>CryptoStacker, long term vision</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: CryptoStacker, long term vision</LI>
+<LI><em>From</em>: Eric Hughes &lt;<A HREF="mailto:hughes@soda.berkeley.edu">hughes@soda.berkeley.edu</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 3 Jun 93 08:12:46 -0700</LI>
+<LI><em>In-Reply-To</em>: RYAN Alan Porter's message of Thu, 3 Jun 1993 01:24:35 -0400 (EDT) &lt;<A HREF="msg00098.html">Pine.3.03.9306030013.A18959-e100000@rtfm</A>&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;This is tiring drivel concerning the CryptoStacker project.  
+
+If you want help, it is wise not to recklessly insult those who are
+offering it.  By your own admission, you do not have a lot of
+experience here; you seem to be saying "I know exactly what I don't
+know," which, may I add, is a common delusion of the inexperienced.
+
+You seem to have fixed a model of how the encrypted disk would work
+and don't want to debate it.  The model is exactly that which requires
+the most scrutiny, because it has the most far reaching effects.  If
+the model is flawed somehow, that's what you want to know before you
+begin, not six months later.
+
+I take it that you want people to use this software after it is
+written.  if so, then pay close attention to user acceptance issues
+such as performance and key handling.  You neglect them at your own
+risk.
+
+Your model seems to be that of intercepting interrupts to the disk.
+This could be made to work, but is the wrong way to do it.  If you
+insist on that, though, any good PC reference book will tell you what
+the disk interrupt vector in the BIOS is.  Ralf Brown's interrupt list
+also contains the relevant data in schematic form.
+
+The proper way to do this is as a device driver, however.  Grabbing
+interrupts is messy and prone to interference.  Many anti-virus
+programs monitor the disk interrupt to make sure that nobody uses it
+unauthorized.  A device driver is the intended way to create new
+devices, like an encrypted disk.  There are complete books about
+writing device drivers; you will need one of these or some other good
+DOS programming book which explains how to write one.  There are
+lots of subtleties about them.
+
+I would suggest that you first version just be a device driver that
+has no encryption, but only the hook for it.  The device driver
+skeleton for a disk will be difficult enough, as you have to support a
+whole lot of operations just so you can have a place to put the
+encryption.  This is exactly the software infrastructure problem in
+another context.
+
+After you have a device driver skeleton working, you can add both
+hardware and software encryption modules.  There is no need to be
+exclusive about this.  It is clear to me from your comments that you
+haven't timed any DES routines and done a calculation of increased
+latency times, and although I hate to see code development go to
+waste, it's your time, not mine.
+
+As far as picking an encryption algorithm, use DES.  DES is the
+fastest symmetric keyed block cipher that is thought to be reasonably
+secure.  DES is not particularly fast in software; it was designed as
+a hardware standard and does lots of bit manipulations.  DES is fast
+enough for serial communications, but that 1000 times less the
+bandwidth than a hard disk.
+
+Of course, you don't want to run DES in codebook (aka naive) mode.
+(Codebook mode is where you just simply map block to block; the
+problem is that identical blocks map to identical blocks.)  You'll
+want some sort of other mode, like a counter mode, to make sure you
+don't get identical ciphertexts.  It is also a bad idea to encrypt the
+whole disk with one key; it makes brute force searches much easier.
+
+Your keying material should be long.  I earlier suggested one key per
+track.  These keys are going to have to be stored somewhere, and the
+disk is the wrong place for it, clearly.  This implies that the user
+is going to have to have some key-holding device (likely a diskette)
+which will be necessary in order to unlock the partition.  the keying
+material should be password protected.  This device will be have to
+used at boot time if anything necessary to boot is stored on the
+encrypted partition.
+
+Keying material will need to be backed up.  This should be made as
+painless as possible, otherwise there will be plenty of people losing
+whole drives.
+
+Keys in the driver should time out after some specifiable period.
+Files that are open when the time-out occurs and the programs that
+have them open are going to have to be dealt with gracefully.
+
+This model of using a device driver means that there is going to have
+to be at least two partitions on the disk: one to boot from, and one
+to be encrypted.  The device driver itself and the operating system
+can't be on the encrypted disk, because those components must be
+loaded before the encrypted disk is accessible.  Most people are not
+going to go out and buy a new disk to be the encrypted partition.
+Thus, this is going to mean a full backup of the existing disk, an
+operation with FDISK to do the partitioning, then, assuming the driver
+works right the first time, restoring everything else on the encrypted
+partition.  What is the effect of _this_ on user acceptance?
+
+Eric
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00116" HREF="msg00116.html">RE: CryptoStacker - Suggestions</A></STRONG>
+<UL><LI><EM>From:</EM> pat@tstc.edu (Patrick E. Hykkonen)</LI></UL></LI>
+<LI><STRONG><A NAME="00143" HREF="msg00143.html">Re: CryptoStacker, long term vision</A></STRONG>
+<UL><LI><EM>From:</EM> RYAN Alan Porter &lt;ryan@rtfm.mlb.fl.us&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00193" HREF="msg00193.html">Re: CryptoStacker, long term vision</A></STRONG>
+<UL><LI><EM>From:</EM> Nickey MacDonald &lt;i6t4@jupiter.sun.csd.unb.ca&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00098" HREF="msg00098.html">Re: CryptoStacker, long term vision</A></STRONG>
+<UL><LI><EM>From:</EM> RYAN Alan Porter &lt;ryan@rtfm.mlb.fl.us&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00105.html">CryptoStacker, long term vision</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00114.html">Solidarity (kudos)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00140.html">Re: CryptoStacker, long term vision</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00116.html">RE: CryptoStacker - Suggestions</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00104"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00104"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

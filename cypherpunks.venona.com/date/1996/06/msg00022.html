@@ -1,0 +1,272 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Backdoor in RSA Discovered -->
+<!--X-From-R13: Unel Vbjynaq <tnelNflfgrzvpf.pbz> -->
+<!--X-Date: Sat, 1 Jun 1996 23:29:33 +0800 -->
+<!--X-Message-Id: 199606011216.OAA15537@internal&#45;mail.systemics.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Backdoor in RSA Discovered</TITLE>
+<LINK REV="made" HREF="mailto:gary@systemics.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00014.html">Date Prev</A>][<A HREF="msg00017.html">Date Next</A>][<A HREF="msg00014.html">Thread Prev</A>][<A HREF="msg00017.html">Thread Next</A>][<A HREF="index.html#00022">Date Index</A>][<A HREF="threads.html#00022">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Backdoor in RSA Discovered</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Backdoor in RSA Discovered</LI>
+<LI><em>From</em>: Gary Howland &lt;<A HREF="mailto:gary@systemics.com">gary@systemics.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 1 Jun 1996 14:16:12 +0200</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Hi,
+
+Here is an example of a PGP key that has been generated, but with
+a secret backdoor.  It is not possible by looking at the generated
+key to see that it has a backdoor.
+
+The key generation code contains Mallets public key.  When generating
+a key, the upper bytes of N are set to an encrypted factor of N.
+The encryption is done using Mallets public key, so only Mallet
+can retrieve the factor from N.
+
+I think this example demonstrates the need not only for having key
+generation source code (which is required anyway in order to verify
+the quality of the random number generator), but also for being able
+to compile and link this source, since without this ability it is too
+easy to have such a backdoor in the system  (yes, the code could be
+reversed engineered, but this can be made very difficult by having
+self modifying code etc.)
+
+There does however appear to be one way to assure the user that
+this trickery is not going on.  This can be done by generating
+"vanity keys", that allow the user to specify a phrase that
+will appear in the PGP ascii key.  If this were done, then there
+would be little room left in N to store details about its factors.
+
+
+Here is a working example of this backdoor:
+
+
+
+This is Mallets secret key (passphrase "xyzzy"):
+
+	Type bits/keyID    Date        User ID
+	sec   496/5D925633 1996/06/01  Bill Klinton &lt;bill@whitehouse.gov&gt;
+	-----BEGIN PGP SECRET KEY BLOCK-----
+	Version: 2.6.2
+	
+	lQD5AjGwJnsAAAEB8M6FnxIdQZrORfKlb6/l74S6YUT0GQHvzrioiXJoRd2gnAAs
+	e99C/XPKZShiylm+nu5UD8zDBBtcoiBdklYzAAURAQxi1EDMl1u+Aew7e7bKTY6c
+	l/RAUacgZ9zbL1tl96kxQucLrt8l6Sz11EOmnV9eDZdf1LYG9jg5WbLvNGqpmzyY
+	PlNKBJn/7gD4hu3YUt9caDyY5/X2ASMaL40gb1y1YZxjbTbB4Xjd8wD4+Iv9qhEQ
+	fLjeYi+iUhnNkMtPyeg/+TR6rdP/c42UXAD2mqW0VuM8wiib0nbwfXwC0SlJveLG
+	UwNOgRIujTwS7k35tCJCaWxsIEtsaW50b24gPGJpbGxAd2hpdGVob3VzZS5nb3Y+
+	=oOrI
+	-----END PGP SECRET KEY BLOCK-----
+
+The key consists of the following:
+
+	n:	ce859f121d419ace45f2a56fafe5ef84ba6144f41901efceb8a889726845dd
+		a09c002c7bdf42fd73ca652862ca59be9eee540fccc3041b5ca2205d925633
+	e:	11
+	d:	0c25fa4c5c12eafd132c6415a0ef68713823d6e12ea5c2cfecbe9eac607c94
+		75d1b60c2a3aef89438692326d70d88080317b0cd04432d5a0230de572e819
+	p:	d2640ede17e8c05545aa9ecfd5154f934021e4ef8ef22a248abe0ab3f1aaed
+	q:	fb4ada7f960c9a8ab23010ff4936a9a2db834346694979c72f90296cff419f
+
+
+
+This is Joe's PGP key (passphrase is "xyzzy"):
+
+	Type bits/keyID    Date        User ID
+	sec  1024/D0351D23 1996/06/01  Joe Sixpack &lt;joe@aol.com&gt;
+	-----BEGIN PGP SECRET KEY BLOCK-----
+	Version: 2.6.2
+
+	lQHgAjGwKUIAAAEEAIBG2pH3rabYMSWhVjcnG8v9HVU4vwtBuBysnvuJI4PvjV3o
+	+YnuFD+x3aF8O52jgpBTllAxhndDSPUXQaj+sXEGDkV0Nq8RCZ02usaj24ogn0+S
+	KW9ej8GgWL8EmlP1H1Qrv39/qz1VSqvxczCLYoRetHETR0JirwcMj9fQNR0jAAUR
+	AYwvF+QHqifbA/4oAli05pLm0QlkbOqimdm4QS3OC1r9kdqvO88GF5nj9EgLm1a+
+	svRThXiO586Udi1UkSXvM60o4nz6tGASavgc7X8JaL/B2yOcMH9gF6CN6zabiyAb
+	anrJe06IuKH3980GoQ2Sp1sssFHqxgper1ga3STmUVj/dQBjaFUI1qwDkwIAnRPO
+	F7qIopIcEhnxW1OXcv0/9Afhugy3ERbGZwTaaw2fAiiyD41FpkbOUbao8D5Vkndr
+	y6h2LEC7P5iwfdAF3AIAPz/2nRuZAnyNrA4ESvryyHMejwsz9BAkok+MT2z2E85W
+	h8laL76yok5DZz56bRqH2gyQkPR5Rx3hnLx+fqL45gIAzy3CkdR77yw8bXUH8/Av
+	azYh0m4KzEsw8P1a10YkVxP8xiTbqYbN0lmzOrdWlEW6dZjkx5q67vt1op7hDtqW
+	LJwYtBlKb2UgU2l4cGFjayA8am9lQGFvbC5jb20+
+	=evl9
+	-----END PGP SECRET KEY BLOCK-----
+
+The key consists of the following:
+
+	n:	8046da91f7ada6d83125a15637271bcbfd1d5538bf0b41b81cac9efb89
+		2383ef8d5de8f989ee143fb1dda17c3b9da382905396503186774348f5
+		1741a8feb171060e457436af11099d36bac6a3db8a209f4f92296f5e8f
+		c1a058bf049a53f51f542bbf7f7fab3d554aabf173308b62845eb47113
+		474262af070c8fd7d0351d23
+	e:	11
+	d:	2d462f06576a771f2067a25aaa0dcd934a46968c7fa99eb97388381c8a
+		c13d9fd78a8e7630ae617fe46c571cc9bf2aa68d4aad85b7206653fba1
+		cbf90e78026398a33f3a99dd4ced780f9bd854b2560f5cd9c6113ab837
+		7443d9e946a3c2c74989f26f775635cd6ebd8a665e0885e28c60d714b3
+		c9981c0ff09fa561a7d7d8f1
+	p:	804e00dc8ea1c0a55c2f5a5b14fdb05f84ecb1c5d1463562925637624e
+		6f1d945adbc4ed2cb4dd266f8f9c59f6c07d7b3d3ee20328bfdf12f54f
+		654256a63e01
+	q:	fff1bc1c496fa118c2307c31498f3b403df9d9dd77b91295a3191d5a26
+		924d8ff276696adeb344ca6cbeddb976fa387b64697f12b8a8dec43d4e
+		2b561e00a323
+
+If we look at bytes 1-63 of n:
+
+	46da91f7ada6d83125a15637271bcbfd1d5538bf0b41b81cac9efb892383ef
+	8d5de8f989ee143fb1dda17c3b9da382905396503186774348f51741a8feb1
+
+and decrypt this using Mallets private 'd', we get
+
+	4e00dc8ea1c0a55c2f5a5b14fdb05f84ecb1c5d1463562925637624e6f1d94
+	5adbc4ed2cb4dd266f8f9c59f6c07d7b3d3ee20328bfdf12f54f654256a63e
+
+which you can see is Joe's P without the leading 0x80 and trailing 0x01
+
+
+
+Here is the code (in Perl) that generated Joe's key.
+This code contains only Mallets public key.
+
+	my $bits = 512;	# Bits in p and q, not in n
+
+	#
+	#	Set up Mallets public key
+	#
+	my $me = new MPI 17;
+	my $mn = restore MPI pack("H*", "ce859f121d419ace45f2a56fafe5ef84ba6144f41901efceb8a889726845dda09c002c7bdf42fd73ca652862ca59be9eee540fccc3041b5ca2205d925633");
+
+	#
+	# Note - first byte is 0x80,
+	# first bit of second byte is zero
+	# to ensure that P is less than Mallets n
+	#
+	my $p;
+	do {
+		$p = randomSpecial($bits, "100000000", "00000001");
+	} while (!isPrime($p));
+
+	#
+	#	Now encrypt P for Mallet
+	#
+	my $ss = $p-&gt;save();	
+	substr($ss, 0, 1) = '';	# Remove high and low bytes
+	substr($ss, -1, 1) = ''; # since we know what they are
+	my $tmp = restore MPI $ss;
+	my $s = new MPI;
+	MPI::mod_exp($s, $tmp, $me, $mn);
+	$s = restore MPI pack("C", 128) . $s-&gt;save() . pack("C", 1);
+
+	my $tmp = new MPI;
+	my $q = new MPI;
+
+	MPI::lshift($tmp, $s, $bits);
+	MPI::add($tmp, $tmp, new MPI 256);	# To prevent Q being too large
+	MPI::div($q, new MPI, $tmp, $p);
+
+	do {
+		$q-&gt;inc();
+	} while (!isPrime($q));
+
+
+	my $e = new MPI 17;
+	my $sk = RSAKeyGen::deriveKeys($p, $q, $e);
+
+	#
+	#	Save our key
+	#
+	my $passphrase = "xyzzy";
+	my $skc = new SecretKeyCertificate($sk, $passphrase);
+
+	my $fos = new FileOutputStream("secring.pgp");
+	my $dos = new DataOutputStream($fos);
+
+	$skc-&gt;saveToDataStream($dos);
+
+	my $id = new UserIdPacket 'Joe Sixpack &lt;joe@aol.com&gt;';
+	$id-&gt;saveToDataStream($dos);
+
+
+
+This is the code to recover P from Joes public key
+(Mallet's private key is required)
+
+	#
+	# Mallets secret key
+	#
+	my $mn = restore MPI pack("H*", "ce859f121d419ace45f2a56fafe5ef84ba6144f41901efceb8a889726845dda09c002c7bdf42fd73ca652862ca59be9eee540fccc3041b5ca2205d925633");
+	my $md = restore MPI pack("H*", "0c25fa4c5c12eafd132c6415a0ef68713823d6e12ea5c2cfecbe9eac607c9475d1b60c2a3aef89438692326d70d88080317b0cd04432d5a0230de572e819");
+
+	my $rp = new MPI;
+	my $pe = restore MPI substr($sk-&gt;n()-&gt;save(), 1, 62);
+	MPI::mod_exp($rp, $pe, $md, $mn);	# Decrypt
+
+
+
+Gary
+--
+pub  1024/C001D00D 1996/01/22  Gary Howland &lt;gary@systemics.com&gt;
+Key fingerprint =  0C FB 60 61 4D 3B 24 7D  1C 89 1D BE 1F EE 09 06 
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00014.html">NYT on NRC Report</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00017.html">Re: opinions on book "The Truth Machine"</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00014.html">NYT on NRC Report</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00017.html">Re: opinions on book "The Truth Machine"</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00022"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00022"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,156 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: IPG &#45; newest release of the ABC Encryption Algorithms (fwd) -->
+<!--X-From-R13: [haeb Enhaqref <zhaebNpv.pbz.nh> -->
+<!--X-Date: Wed, 20 Mar 1996 11:34:26 +0800 -->
+<!--X-Message-Id: 199603192306.KAA02258@mippet.ci.com.au -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 2.2.32.19960319175044.00c7bab8@mail.software.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: IPG - newest release of the ABC Encryption Algorithms (fwd)</TITLE>
+<LINK REV="made" HREF="mailto:munro@ci.com.au">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01131.html">Date Prev</A>][<A HREF="msg01080.html">Date Next</A>][<A HREF="msg01337.html">Thread Prev</A>][<A HREF="msg01150.html">Thread Next</A>][<A HREF="index.html#01144">Date Index</A>][<A HREF="threads.html#01144">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: IPG - newest release of the ABC Encryption Algorithms (fwd)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:jpp@software.net">jpp@software.net</A> (John Pettitt)</LI>
+<LI><em>Subject</em>: Re: IPG - newest release of the ABC Encryption Algorithms (fwd)</LI>
+<LI><em>From</em>: Munro Saunders &lt;<A HREF="mailto:munro@ci.com.au">munro@ci.com.au</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 20 Mar 1996 10:06:37 +1100 (EST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:m5@tivoli.com">m5@tivoli.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01121.html">2.2.32.19960319175044.00c7bab8@mail.software.net</A>&gt; from "John Pettitt" at Mar 19, 96 09:50:44 am</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; &gt;IPG Sales wrote:
+&gt; &gt;&gt; Obviously, you meet our requirements for the release of the IPG ABC ...
+
+&gt; At 08:01 AM 3/19/96 -0600, Mike McNally wrote in reply:
+&gt; &gt;On the other hand, the "algorithm" as presented is so hopelessly 
+&gt; &gt;obfuscated by the strange terminology and loose descriptions used ...
+
+John Pettitt presents us with C code possibily matching the algorithm
+(see the end of this email).
+
+I imagine that John Pettitt may have written:
+
+&gt; I do not endorse the above code or algorithm and make no comment on it's
+&gt; strength or otherwise.
+
+Well I spent 30 seconds on it. Do we get to start with known plain text?
+This is the usual assumption these days. It so hopeless I imagine more
+experienced cryptographers won't even bother replying.
+
+DON'T USE THIS CODE.
+
+It has a long cycle: (the product of all the c[i]) * 64
+
+It can be broken into 64 parts and each part attacked separately.
+Each part is the outputs with offset i modulo 64. Part i has a cycle
+of c[i]. (Its irrelevant that the b[i] are prime, helps if they are
+coprime to c[i].) There is no feedback between parts.
+
+Each part looks like a LCM PRNG to me. The cryptanalysis of these was
+done decades ago by Knuth. From memory the key can be deduced in a
+known plain text attack with knownledge of about the same amount of
+plain text as there is unknown key (initial state). (under 1K bytes).
+
+Even without known plain text I suspect it would not survive past the
+maximum c[i] (given some redundancy in the input).
+
+I imagine that John Pettitt may have written:
+
+&gt; Here is my take on a C version of their code - note that a[] b[] c[] and the
+&gt; initial d are filled in from the 'one time pad'.  The size of a,b,c is not
+&gt; specified it could be 8 16 or 32 bits from the text ...  However the initial
+&gt; values of a,b &amp; c are set using 8 bits of the 'random' key.
+&gt; 
+&gt; int a[64]  /* Random &amp; 0x3500 */
+&gt; int b[64]  /* Randomly selected primes */
+&gt; int c[64]  /* randomly selected primes*/
+&gt; char d;     /* random start value */
+&gt; int i;
+&gt; 
+&gt; /* the arrays b,c are filled in from tables of smallish primes supplied
+&gt; by IPG using 'random' numbers supplied by IPG to select the primes (and the
+&gt; order of same).  since all the values are &gt; 8 bits I've assumed a,b,c = int. 
+&gt; a[] is filled with 13568 + an 8 bit 'random' number.  (13568 = 0x3500 which
+&gt; gets ANDed with the seed value)
+&gt; */
+&gt; 
+&gt; while(1)
+&gt; {
+&gt;         for(i=0; i&lt;64;i++)
+&gt;         {
+&gt;                 a[i] = (a[i] + b[i]) % c[i];
+&gt;                 d = (d+a[i]) &amp; 0xFF;
+&gt;                 /* output d as next byte in stream */
+&gt;                 /* XOR with plaintext */
+&gt;         }
+&gt; }
+
+-- 
+Munro Saunders    Often seen at Gracelands, but ...     P.O. Box 192,
+munro@ci.com.au   I am not an official spokesperson     ERSKINEVILLE 2043
+61 2 564 6368     for Elvis, IBM, M$ or Corinthian.     AUSTRALIA
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01121" HREF="msg01121.html">Re: IPG - newest release of the ABC Encryption Algorithms (fwd)</A></STRONG>
+<UL><LI><EM>From:</EM> John Pettitt &lt;jpp@software.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01131.html">Re: Request for reference info + Possible job offer</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01080.html">List of reliable remailers</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01337.html">Re: IPG - newest release of the ABC Encryption Algorithms (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01150.html">Re: IPG - newest release of the ABC Encryption Algorithms (fwd)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01144"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01144"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

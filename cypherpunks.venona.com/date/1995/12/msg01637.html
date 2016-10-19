@@ -1,0 +1,158 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Diffie&#45;Hellman with Blowfish -->
+<!--X-From-R13: Yrag Pevttf <72124.3234Npbzchfreir.pbz> -->
+<!--X-Date: Sat, 9 Dec 95 12:48:00 PST -->
+<!--X-Message-Id: 951209204827_72124.3234_EHJ183&#45;1@CompuServe.COM -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Diffie-Hellman with Blowfish</TITLE>
+<LINK REV="made" HREF="mailto:72124.3234@compuserve.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01634.html">Date Prev</A>][<A HREF="msg01630.html">Date Next</A>][<A HREF="msg01634.html">Thread Prev</A>][<A HREF="msg01630.html">Thread Next</A>][<A HREF="index.html#01637">Date Index</A>][<A HREF="threads.html#01637">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Diffie-Hellman with Blowfish</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: cypherpunks &lt;<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>&gt;</LI>
+<LI><em>Subject</em>: Diffie-Hellman with Blowfish</LI>
+<LI><em>From</em>: Kent Briggs &lt;<A HREF="mailto:72124.3234@compuserve.com">72124.3234@compuserve.com</A>&gt;</LI>
+<LI><em>Date</em>: 09 Dec 95 15:48:28 EST</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I am working on a program that will use Diffie-Hellman with Blowfish to create a
+public-key encryption system similar to the way PGP uses RSA and IDEA.  This
+system would not have the digital signature feature that
+PGP has, however.  I invite comments on any security problems that I might have
+overlooked.  Bruce Schneier briefly mentions this idea on p. 515 of Applied
+Cryptography (2nd ed): Key Exchange Without Exchanging Keys.
+
+Key Generation
+--------------
+First, users select a private key passphrase.  The passphrase is case sensitive
+and from 8 to 50 characters in length.  A random 32-bit salt is generated from
+timed keystrokes.  The salt is appended to the passphrase and run through an
+SHA-1 hash.  The output is a 160-bit value, x.
+
+The 1024-bit public key "y" is calculated:
+y = g^x mod p     (^ denotes exponentiation)
+
+p is a 1024-bit strong prime constant that does not change. g is the generator
+for that prime and is always 2.
+
+The KeyID for the public key is the 32-bit salt.  The user publishes the public
+key and KeyID values.  The key should be certified to prevent a man in the
+middle attack.  The user imports public keys from others and places them on
+their public key ring.
+
+Note that there is no private key ring.  I could have used the PGP method and
+made the private key a random number and then encrypted that number with a
+passphrase.  This would be more secure but I was worried about users deleting
+their private key file.  The 32-bit salt will discourage a pre-computed
+dictionary attack.  An attacker would have to run over 4 billion SHA's and D-H's
+and store the result for every passphrase in their dictionary.  To discourage a
+dictionary attack on a specific public key, I will include a tutorial on how to
+choose a secure passphrase.
+
+Encryption
+----------
+The program will generate a 160-bit random private session key "r" based on
+timed keystrokes by the user.  A 1024-bit public session key "z" is calculated:
+z=g^r mod p
+
+z is stored in the file header.
+
+For each recipient, a "k" value is calculated using the recipient's public key:
+k=y^r mod p
+
+The session key r is now encrypted for each recipient by running each k through
+an SHA-1 hash and xoring the output with r: k'=SHA(k) xor r
+
+For each recipient the 160-bit k' value is stored with the recipient's 32-bit
+KeyID value in the file header.  Each additional recipient adds 24 bytes to the
+file header.
+
+The plaintext is then encrypted with Blowfish in CBC mode using the 160-bit r
+value as the key.  r is then discarded.
+
+Note that I use the same r key for the Blowfish session key and
+the Diffie-Hellman private key.  I could have generated a
+separate r1 for Blowfish and an r2 for D-H but I don't think
+this is necessary.
+
+Decryption
+----------
+The public session key z is retrieved from the file header.  Each recipient
+matches their KeyID with one of the KeyIDs stored in the file header.  From this
+match they get their particular k' value.  They enter their private key
+passphrase, append the KeyID salt and run it through an SHA-1 hash to get x.  k
+is then calculated: k=z^x mod p
+
+The original private session key r is decrypted: r=SHA(k) xor k'
+
+The ciphertext is decrypted using Blowfish with key r.
+
+=======================================================
+
+Does anyone see any obvious security problems that I might have overlooked?
+
+Kent Briggs
+kbriggs@execpc.com
+CIS: 72124,3234
+    
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01634.html">DC Cypherpunks Meeting, Dec 16. 3:00 PM</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01630.html">Warning about Pegasus Mail and PGP (fwd)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01634.html">DC Cypherpunks Meeting, Dec 16. 3:00 PM</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01630.html">Warning about Pegasus Mail and PGP (fwd)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01637"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01637"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

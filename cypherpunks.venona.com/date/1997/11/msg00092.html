@@ -1,0 +1,304 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Privacy Software -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Sun, 2 Nov 1997 21:03:15 +0800 -->
+<!--X-Message-Id: 199711021247.MAA07989@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199711020817.CAA31716@multi26.netcomi.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Privacy Software</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00074.html">Date Prev</A>][<A HREF="msg00078.html">Date Next</A>][<A HREF="msg00000.html">Thread Prev</A>][<A HREF="msg00119.html">Thread Next</A>][<A HREF="index.html#00092">Date Index</A>][<A HREF="threads.html#00092">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Privacy Software</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>Subject</em>: Re: Privacy Software</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 2 Nov 1997 12:47:37 GMT</LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg00000.html">199711020817.CAA31716@multi26.netcomi.com</A>&gt; (nobody@neva.org)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+Monty Cantsin writes:
+&gt; nobody@replay.com (Anonymous) wrote:
+&gt; &gt;But now what? Please someone answer my questions about PGP - it
+&gt; &gt;appears that the 5.x versions are not compatible with the 2.x
+&gt; &gt;versions which came previous.  Is this so? Also, the direction they
+&gt; &gt;seem to be heading is in providing more and more non-free GAKked
+&gt; &gt;product. But aren't the 2.x and 5.x versions freeware? If so, can't
+&gt; &gt;others - a group of individuals - take that source code and build off
+&gt; &gt;of that?
+&gt; 
+&gt; The PGP source code is not the worst I've ever seen, but it's kind of
+&gt; odd.  
+
+I had a go at doing something with it (I'll let you know when I get it
+to work) -- I had the damnest job figuring out what was going on.  The
+problem I found with understanding it were all of the nested functions
+called through vectors of functions and handler functions.  Makes it
+hard to inspect what will happen without running the code under a
+debugger -- lots control flow is decided at run time.
+
+&gt; We should consider a rewrite, which gives us the added benefit that
+&gt; it will be completely unencumbered.
+
+Sounds maybe worth doing.
+
+&gt; It also gives us the opportunity to write it in a language other than
+&gt; C, one which truly supports encapsulation.  C code is hard to verify
+&gt; with great confidence because it is possible to obfuscate it and
+&gt; introduce security holes.  This means that C requires one to trust the
+&gt; authors to a greater extent than is desirable.
+
+Some C programmers do have fun writing obfuscated chicken scratchings,
+but you _can_ write C code optimised for readability.
+
+What language did you have in mind?  modula-3?  iso-pascal/borland
+pascal?
+
+&gt; The whole issue of compatibility is an interesting one.  Would it be a
+&gt; good idea to have a cryptographic system which was completely
+&gt; incompatible with PGP, given the Big Brother risk?
+
+Theoretically perhaps, however I'm not sure a system will get very far
+unless it can automatically interoperate with pgp2.x and 5.x.  You
+could build something which did the right thing automatically based on
+public key types:
+
+hypothetical cpunks mail system (HCMS)
+
+HCMS -&gt; pgp2.x   use RSA/MD5/IDEA and pgp2.x message formats
+HCMS -&gt; pgp5.x   use DSA/EG/3DES/SHA1 and pgp5.x message formats
+HCMS -&gt; HCMS     use whatever goodies you want, stego, mixmaster, etc.
+
+decision of compatibility mode to use would be based on public key
+type you're sending to.
+
+&gt; Something I've never liked about PGP is their approach to encrypting
+&gt; to multiple keys.  For one thing, the PGP crowd seems overly
+&gt; conservative with bit expenditure, which is silly because bits are
+&gt; cheap.  This means that creating entirely separate messages is
+&gt; completely economical.
+
+This is more secure I agree.  The real kicker with this problem is
+people who turn on encrypt to self -- I don't want messages with
+encrypt to self (an extra door into the message) on them in my
+mailbox, nor coming over the wire headed to me.
+
+You can see the reason for multiple recipient though -- it's too ease
+integration into mailers -- you can process the message and give it
+back to the mailer, and then it can still send the message To: x, y;
+Cc: z.
+
+Doing away with multiple crypto recipient risk is more an issue of MUA
+integration than rabid conservation of bits.
+
+(Btw., if you've looked at pgp formats you will observe a tendency to
+hand huffman encode everything -- yuck, makes decoding and encoding
+fiddly, makes code bloat, is extra complexity which makes
+implementation mistakes more likely).
+
+&gt; It also introduces security risk.  Let's say one of the three public
+&gt; keys used to encrypt a message has been compromised.  Let's say the
+&gt; other two parties live in places where they aren't supposed to be
+&gt; exposed to bad ideas.  Once one key is compromised, the other
+&gt; recipients are compromised in receiving a forbidden message.
+&gt; 
+&gt; On the other hand, if they were separately encrypted, the link between
+&gt; the three messages is not obvious.  And, even if the messages *are*
+&gt; linked, it's still not obvious that the other recipients didn't get
+&gt; something else.  It provides a lot of deniability.
+
+Yes.  I was thinking this also.  Really paranoid cypherpunk mail
+delivery should be via mixmaster, and should be forward secret.
+
+&gt; So, perhaps a protocol which does not support anything more than one
+&gt; encryption key per message would be a good idea.
+
+You don't have to use it.  I tend not to.  I never use encrypt to
+self, and I get annoyed with people who send me messages encrypt to
+themselves, and very rarely do I use Cc on encrypted messages.
+
+&gt; Something else that bothers me about PGP is compression.  It strikes
+&gt; me as bad design to build this into an encryption program.  Zimmermann
+&gt; has suggested that this increases security.  I doubt this.  Modern
+&gt; algorithms like IDEA (please correct me if I am wrong) have the
+&gt; property that if you get one bit, you've got them all.
+
+Well unless there's something wrong with IDEA it's fairly moot anyway.
+Brute force of 128 bit key space is out of the question.
+
+If IDEA did turn out to be weaker than thought -- say effective key
+space turned out to be 64 bits -- then there would be some small value
+to obscuring known plaintext.  But this doesn't argue for or against
+compression -- firstly compression has I think a fixed known header
+anyway, and secondly -- the weird IDEA CFB method includes a 16 bit
+checksum anyway, which will mean that you have an instantly verifiable
+way of reducing the need for more complicated checks to be only once
+every 65536 keys tested.  Then you have the CTB on the contained data
+-- a prefix ascii(1)||ascii(1) -- that's another 16 bits of known
+plaintext.  And so it goes on :-)
+
+&gt; And, I wonder if compression doesn't actually weaken security?  Let's
+&gt; say I forward a known message with some commentary.  Since the
+&gt; compression tables will be known, it seems like the increased size of
+&gt; the message could provide some interesting information about the
+&gt; preceding commentary.  All by itself, this probably doesn't matter,
+&gt; but combined with other information it might result in a breach.  In
+&gt; any event, that which is ambiguous should be eliminated.
+
+I don't understand this comment.
+
+One thing that some people don't realise is that the plaintext gets
+mixed into the random pool as an additional source of entropy.  In
+automated environments (lots of MUAs which set +batchmode), this is
+all the entropy you'll get -- except for the original key presses to
+generate the key, and a small bit of entropy from the system clock.
+
+It's fairly good normally because the way entropy is mixed in is a one
+way function of the randseed.bin based on IDEA.  To make use of this
+an attacker would need a copy of your randseed.bin before you sent the
+target message, and to have suspicions of what the message is.  Even
+after a few known messages it would still likely be possible to
+attack, because the entropy added by the clock is partly predictable
+from the message headers Date: field, and because it isn't that much
+entropy each time.
+
+&gt; It would also be nice if the messages were padded to predetermined
+&gt; sizes, say 10K, 20K, 40K, etc.  (Once compression is eliminated this
+&gt; is less of an issue.)
+
+It would be nice to have a system where you send 100k and receive 100k
+per day regardless.  Say in 10 10k packets which get poured into a
+mixmaster node.
+
+&gt; How about a one time pad mode?  One time pads are more practical than
+&gt; widely believed.  Many things we talk about we *do* want to keep quiet
+&gt; for the rest of our natural lives.  
+
+Right.
+
+The problem with this is that you need random numbers.  How do you
+generate them?  If you use PGP's random pool, one suspects that if
+IDEA becomes attackable at some point in the future the random pool
+will start to look more like a predictable PRNG to the attacker.
+
+I wonder how good linux's /dev/urandom would be if MD5 becomes even
+more suspect.
+
+&gt; It's clear that going the corporate route has to be handled with some
+&gt; care.  Given the political implications, investors have certain risks.
+&gt; 
+&gt; Also, many people seem to switch into a different mode as soon as they
+&gt; have a company.  Anything which they perceive as increasing their
+&gt; profits becomes good.  PGP, Inc. has gone this way, we've seen First
+&gt; Virtual do some unsavory things, 
+
+What did FV do?  I know they don't use encryption, and Nathaniel
+Borenstein wrote a few hype-hype articles about the _gasp_ newly
+discovered security danger of "key board sniffers".
+
+&gt; and even good old C2 has made a few people uncomfortable.
+
+Only thing slightly negative C2 did was to make a dubious decision in
+handling of Mr Nemesis's fabricated claims about stronghold flaws.
+C2 still rocks, though right?
+
+&gt; It doesn't have to be this way, of course.  Look at Comsec Partners.
+&gt; We don't see any "conversation recovery", lying press releases, or any
+&gt; other nonsense from them, just a beautiful product.
+
+Quite so.  C2 hasn't got "web traffic recovery" either :-)
+
+&gt; What I like about selling software is that you could actually make
+&gt; good living by doing the right thing.  And, after all, if you've spent
+&gt; six months writing something, why shouldn't the users kick in a little
+&gt; money instead of freeloading?  I would like to see more crypto users
+&gt; in the habit of paying for tools and in the habit starting security
+&gt; companies.
+
+New payment models will need to come in.  How can you extract money
+from a cryptoanarchist?  Copyright?  Patent?  Hah, hah.
+
+If we get a real eternity service going (not the poor imitation perl
+script up now where all traffic goes through a server unless you
+install it locally) software copyright could become a thing of the
+past :-)
+
+Trust might be one way to go, rely on good will.  Or paying for
+technical support.  Or mixmaster, or DC net packet delivery postage
+charges.
+
+Adam
+-- 
+Now officially an EAR violation...
+Have *you* exported RSA today? --&gt; <A  HREF="http://www.dcs.ex.ac.uk/~aba/rsa/">http://www.dcs.ex.ac.uk/~aba/rsa/</A>
+
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00000" HREF="msg00000.html">Privacy Software</A></STRONG>
+<UL><LI><EM>From:</EM> nobody@neva.org (Neva Remailer)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00074.html">RSA Blows Smoke</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00078.html">Re: What Will Revolution Look Like?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00000.html">Privacy Software</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00119.html">Re: Privacy Software</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00092"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00092"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

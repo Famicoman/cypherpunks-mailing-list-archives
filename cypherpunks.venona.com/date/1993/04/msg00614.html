@@ -1,0 +1,151 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Mykotronx and VLSI data sheets -->
+<!--X-From-R13: jpfNnapube.ub.ngg.pbz -->
+<!--X-Date: Mon, 26 Apr 93 21:35:30 PDT -->
+<!--X-Message-Id: 9304270435.AA09033@anchor.ho.att.com -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Mykotronx and VLSI data sheets</TITLE>
+<LINK REV="made" HREF="mailto:wcs@anchor.ho.att.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00607.html">Date Prev</A>][<A HREF="msg00611.html">Date Next</A>][<A HREF="msg00607.html">Thread Prev</A>][<A HREF="msg00611.html">Thread Next</A>][<A HREF="index.html#00614">Date Index</A>][<A HREF="threads.html#00614">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Mykotronx and VLSI data sheets</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:mab@research.att.com">mab@research.att.com</A>, <A HREF="mailto:smb@ulysses.att.com">smb@ulysses.att.com</A></LI>
+<LI><em>Subject</em>: Mykotronx and VLSI data sheets</LI>
+<LI><em>From</em>: <A HREF="mailto:wcs@anchor.ho.att.com">wcs@anchor.ho.att.com</A></LI>
+<LI><em>Date</em>: Tue, 27 Apr 93 00:35:27 EDT</LI>
+<LI><em>Original-From</em>: anchor.ho.att.com!wcs (Bill_Stewart(HOY002)1305) </LI>
+<LI><em>Original-To</em>: toad.com!cypherpunks, research!mab, ulysses!smb </LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+The data sheets arrived today!   
+(Steve - I gave Matt a copy; I can fax it to you if yours hasn't shown) 
+(Cypherpunks - Mykotronx 310-533-8100 fax-0527, VLSI 408-434-3100 fax-263-2511)
+The VLSI material didn't have anything Clipper-specific -
+lots of stuff on their ASIC libraries and chips, and some information on 
+their tamper-proof technology.  Their DES chip does 192 Mb/s, and they've
+got a vocoder chip for 13 kb/s GSM as well as 32 kb/s ADPCM G.721,
+ARM RISC, Z80 cores, high-speed comms stuff, PC support ASICs, etc.
+
+The Mykotronx material was interesting.  It was about 18 pages long,
+and there are functional diagrams, pinouts, timing diags, command sets.
+It looks like there may be two versions, one commercial, one industrial-hard.
+The chip is 28-pin PLCC, with 4 bits control input, 8 leads for input/
+output/config/status/test/alarm depending on command, the usual power,
+clock, strobe, busy, reset, and alarm leads, and two leads for
+higher-voltage write-once PROM.  The internal clock is 15 MHz, and I'm
+not sure how fast it goes if you clock it externally (it uses the internal
+clock when it's doing the fun stuff, but can use externals for I/O, etc.)
+It looks like the encryption phase takes 64 clock cycles, but I'm not an 
+electrician so I can't guarantee that that's what the timing diags mean;
+if that's the case it would seem to be slower than 16 mb/s throughput
+given I/O time?
+
+There are 5 functional blocks: controller, algorithm, Data Bus Buffer,
+self-test, and clock.  There's an internal data bus (how wide? 8 bits?)
+with the controller, data buffer, and external clock accessible from outside,
+the self-test generating two output leads only, and the algorithm block
+isolated (only connected to the bus and self-test.)
+
+The basic sequence of operations, once the chip has booted and tested,
+is that you feed commands to initialize cryptographic variables (key, IV),
+tell it to encrypt or decrypt, strobe in data, let it crunch, and strobe
+out results.  It's picky about getting commands in the right order, 
+and rejects anything it isn't willing to do for security reasons.  
+
+It can operate in 7 different modes: ECB-64, CBC-64, OFB-64, CFB-64/32/16/8.
+The number of bytes read or written depends on the mode, but I was interested
+to find that I couldn't tell from the data sheets how many bytes that is,
+which either means they deliberately aren't telling us where the wiretap 
+block is or else they assume that the Output Buffer Full and Input Buf Empty
+leads are all you care about; I'll try to find a tasteful way to ask them.
+
+Commands:
+- Reset
+- Write Random Seed - must be done at startup; there's a pseudo-random 
+	generator for IVs.  If you give it a zero, it asks for a better seed.
+- Write Config Register - done second, picks operating mode.
+	If you're in IDLE mode, you need to do this before 
+	writing the CV or IV.
+- Write Crypto-Variable (CV) (loads 10 bytes key, 3 bytes checksum,
+	automagically checks key when loaded.)
+- Write Initialization Vector (IV) - you can load it or generate.
+- Generate IV - using the pseudo-random.  Outputs to data bus when done.
+- Start Encrypt Block - read data off bus, crunch, wait for Read Output, IDLE
+- Read Output - strobes out output
+- Start Decrypt Block - read data, crunch, wait for Read Output, repeat
+	until you get a Terminate or other command
+- Terminate Encrypt/Decrypt - stop doing encryption (IDLE?)
+- Save Current State - output 8 bytes of state to data bus
+- Restore Current State - input 8 bytes of state from data bus
+- Read Status Register - outputs to bus
+- Read Test/Alarm Register - outputs to bus
+- Write Test/Alarm Register - read from bus, do tests
+
+If you want to order a copy, they were pretty quick about delivering it.
+The person I talked to was John Droge, VP, Program Development.
+Approximate prices are $30 (qty. 10,000), no mention of engineering samples,
+quotations on a case-by-case basis for now.
+
+
+			Bill Stewart
+			
+# Bill Stewart    wcs@anchor.ho.att.com  +1-908-949-0705 Fax-4876
+# AT&amp;T Bell Labs, Room 4M-312, Crawfords Corner Rd, Holmdel, NJ  07733-3030
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00607.html">He's all yours...</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00611.html">Markey hearings on Thursday will be on the Internet MBone</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00607.html">He's all yours...</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00611.html">Markey hearings on Thursday will be on the Internet MBone</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00614"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00614"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

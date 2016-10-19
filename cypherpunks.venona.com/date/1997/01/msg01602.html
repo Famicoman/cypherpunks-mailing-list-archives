@@ -1,0 +1,152 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Hi again, and an invitation to kibitz -->
+<!--X-From-R13: "[nex [." <znexzNibvprarg.pbz> -->
+<!--X-Date: Tue, 14 Jan 1997 14:15:59 &#45;0800 (PST) -->
+<!--X-Message-Id: Pine.LNX.3.95.970114165358.495D&#45;100000@eclipse.voicenet.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199701140755.CAA04514@mail.intercon.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Hi again, and an invitation to kibitz</TITLE>
+<LINK REV="made" HREF="mailto:markm@voicenet.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01600.html">Date Prev</A>][<A HREF="msg01646.html">Date Next</A>][<A HREF="msg01564.html">Thread Prev</A>][<A HREF="msg01809.html">Thread Next</A>][<A HREF="index.html#01602">Date Index</A>][<A HREF="threads.html#01602">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Hi again, and an invitation to kibitz</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Amanda Walker &lt;<A HREF="mailto:amanda@intercon.com">amanda@intercon.com</A>&gt;, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Hi again, and an invitation to kibitz</LI>
+<LI><em>From</em>: "Mark M." &lt;<A HREF="mailto:markm@voicenet.com">markm@voicenet.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 14 Jan 1997 17:20:08 -0500 (EST)</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01564.html">199701140755.CAA04514@mail.intercon.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+On Tue, 14 Jan 1997, Amanda Walker wrote:
+
+&gt; Here's a sketch of the protocol:
+&gt; 
+&gt; (a) Server sends 8-byte challenge to client
+&gt; 
+&gt; (b) Client sends Microsoft NT authentication response to the server
+&gt;     (take the password in Unicode form, do an MD4 hash, pad with 0s to 21
+&gt;     bytes, split into 3 7-byte groups, use these as DES keys to encrypt
+&gt;     the challenge three times, send the 24-byte result as the response).
+
+I think this can be strengthened in a few ways.  The third DES key generated
+using this technique has an effective keylength of 16 bits.  If the password
+is concatenated with the MD4 hash of the password and hashed a second time,
+the first five bytes of the second hash value can be concatenated with the
+first hash value to form the 21 byte string.  If the method you describe is
+used, the third key can be brute-forced trivially, and the last two bytes of
+the MD4 hash of the password will be known to the attacker.  I don't know how
+detrimental this is to the system, but I think it would be better if this was
+fixed.
+
+If something like a time-stamp, or even the 8 byte challenge string, is run
+through MD4 along with the password, the session key would be different each
+time.  This would protect against known-plaintext attacks.
+
+&gt; 
+&gt; (c) If authentication fails, close the connection.
+&gt; 
+&gt; (d) If authentication succeeds, all subsequent traffic is enccrypted with
+&gt;     DES in CFB mode.  Until April :), the DES key used is taken from the
+&gt;     first 7 bytes of the MD4 hash of the password (after April, we expect
+&gt;     to switch to Diffie-Hellman key exchange first, followed by a revised
+&gt;     authentication handshake).
+
+I believe the D-H patent expires sometime in September or October this year.
+Since GATT was passed, patents now have a lifetime of 20 years past filing
+date.
+
+&gt; - Using SHA (160 bit hash) instead of MD4
+&gt; - Using DES-EDE (112 bit key) instead of DES
+&gt; - Using Blowfish in CFB mode instead of DES
+&gt; - Using RC5 in CFB mode instead of DES (not likely unless RC5 is cheap)
+&gt; - Using RC4 (40 bit key) instead of DES (not likely)
+
+Any unbroken cipher with a keyspace larger than that of DES would be better.
+Blowfish seems to be pretty strong, and it has the added bonus of having a
+computation intensive key setup.  I don't see any problems with using MD4, but
+since speed doesn't seem to be an issue, SHA1 would be a reasonable choice.
+It is not known whether H(H(pass),pass) is secure, so a hash with a 20 byte
+output would eliminate the potential problem I described above.
+
+
+Mark
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.3
+Charset: noconv
+
+iQEVAwUBMtwGfyzIPc7jvyFpAQEBzgf/clSp9vQVSpC55TgEJ0NudtbQMQHNx9fD
+wlpVMg5X27/Dyb++PmYVdidPj71zmGTdhwSn2o9+TpqBhgZ6pwn7OpQ3dqRP7Atd
+N8yxhEma5zNK9Jz7ieM9tayaxFQuj8r5y9NhjdnoQMjX3by86QMAX8r6mEZzKr3m
+D1nUF/TPyann5HxDcbFAaOrXbvxbpr4Ukx+BUpSX2kCRFPB6YEw+Uw2304KilNVg
+2L/YZRWBvwyxOWfm2JP62YxswzFMNmmufHcM9blBTu3UexWnIScmdU4+LfQtNSU8
+0ph2R2fjyq22PjIqmhlxODtn6AiVZt9C2xd6GW5uTmHvCaOhC8OCxg==
+=ZTNy
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01564" HREF="msg01564.html">Hi again, and an invitation to kibitz</A></STRONG>
+<UL><LI><EM>From:</EM> amanda@intercon.com (Amanda Walker)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01600.html">No Subject</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01646.html">No Subject</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01564.html">Hi again, and an invitation to kibitz</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01809.html">Re: Hi again, and an invitation to kibitz</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01602"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01602"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,156 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: IPG cracked with known plaintext -->
+<!--X-From-R13: pchaxNerznvy.rpnsr.bet (SQnsr Oabalzbhf Drznvyre) -->
+<!--X-Date: Thu, 21 Mar 1996 03:34:30 +0800 -->
+<!--X-Message-Id: 199603191732.RAA17262@pangaea.hypereality.co.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>IPG cracked with known plaintext</TITLE>
+<LINK REV="made" HREF="mailto:cpunk@remail.ecafe.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01156.html">Date Prev</A>][<A HREF="msg01171.html">Date Next</A>][<A HREF="msg01156.html">Thread Prev</A>][<A HREF="msg01148.html">Thread Next</A>][<A HREF="index.html#01152">Date Index</A>][<A HREF="threads.html#01152">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>IPG cracked with known plaintext</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: IPG cracked with known plaintext</LI>
+<LI><em>From</em>: <A HREF="mailto:cpunk@remail.ecafe.org">cpunk@remail.ecafe.org</A> (ECafe Anonymous Remailer)</LI>
+<LI><em>Date</em>: Tue, 19 Mar 1996 17:32:47 GMT</LI>
+<LI><em>Complaints-To</em>: complaints@remail.ecafe.org</LI>
+<LI><em>Remailed-By</em>: ECafe Anonymous Remailer</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+This information is preliminary and is based on an attempt to
+understand the IPG algorithm information.  That description is not
+clear in some areas, however, hence this analysis is tentative at this
+time.
+
+First let us describe the IPG system in more conventional C:
+
+a[0] to a[63] are initialized to random 8-bit values.  (The
+description is unclear and almost makes it sound like they are
+initialized to a random 8-bit value anded with 0x3500, which would of
+course be zero.  The attack below will assume that this bizarre step
+is not done, but will still apply even if it is.)
+
+b[0] to b[63] are initialized to random primes selected from some
+pool.  c[0] to c[63] are also initialized to random primes selected
+from a different pool.
+
+d is initialized to a random 8 bit value.
+
+The algorithm is:
+
+    for ( ; ; ) {
+	for (i=0; i&lt;63; i++) {
+	    a[i] = (a[i] + b[i]) % c[i];
+	    d = (d + a[i]) &amp; 255;
+	    *data++ ^= d;		/* xor with data */
+	}
+    }
+
+
+Note first that with a known plaintext attack, the value of d can be
+calculated for each iteration, simply by xor'ing the plaintext and
+ciphertext.  So we can easily recover a series of d values under this
+assumption.  Known plaintext is a plausible cryptographic assumption
+in many contexts.
+
+Note second that we can assume that b[i] is less than c[i].  It
+appears from the description that this will be true, although it is a
+little unclear.  If b[i] is greater than c[i] then simply do
+b[i] = b[i] % c[i] before beginning the loop.  This will produce the
+same results since (a + (b mod c)) mod c is equal to (a + b) mod c.
+
+Note third that when a[i] and b[i], both less than c[i], are added mod
+c[i], the result will be equal to one of two things: a[i]+b[i], or
+a[i]+b[i]-c[i].  The reason is that the sum a[i]+b[i] must be less
+than 2*c[i] so the "mod" operation will be at most a single
+subtraction of c[i].  In general, half the time it will be necessary
+to subtract c[i], and half the time it will not.
+
+Now, as mentioned above, with known plaintext we can deduce the series
+of d values.  Since each d differs from its predecessor by adding
+a[i], this allows us to calculate the low 8 bits of a[i] simply by
+taking the difference between successive d's.
+
+Every 64 bytes, i repeats.  We know the low byte of a[i] from the
+previous iteration, and we know it for this iteration.  Half of the
+time (on average) a[i] will change simply by adding b[i], in which
+case the low 8 bits will change by exactly the low 8 bits of b[i].  So
+if we take the difference between a[i] values spaced 64 bytes apart,
+half of the time these values will be a constant which is equal to the
+low byte of b[i].
+
+The other half the time, the low 8 bits will change by adding b[i] and
+subtracting c[i].  So the low 8 bits of (b[i]-c[i]) is the other
+possible constant value which will be seen when you take the
+difference of a[i] every 64 bytes.
+
+So with a few multiples of 64 bytes of known plaintext, you will
+quickly find all the possible b[i] and b[i]-c[i] low bytes. By itself
+this should significantly narrow down the possibilities for b[i] and
+c[i], in many cases to a single prime.  Even without this the
+algorithm can now be run forward or backward with only two possible
+known changes to a[i] at each step, and the entire message can be
+easily deduced.
+
+So this algorithm is easily broken with known plaintext.
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01156.html">FTC's privacy list (was "Welcome to privacy")</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01171.html">Re: Keep the pressure! Cryptographers Against Cryptography EXPOSED!</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01156.html">FTC's privacy list (was "Welcome to privacy")</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01148.html">Re: IPG cracked with known plaintext</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01152"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01152"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

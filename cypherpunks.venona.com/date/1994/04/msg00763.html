@@ -1,0 +1,620 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Fenced DES -->
+<!--X-From-R13: evggreNWA.QA[ (evggre) -->
+<!--X-Date: Sun, 17 Apr 94 20:49:04 PDT -->
+<!--X-Message-Id: 199404180344.WAA17369@indial1.IO.COM -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Fenced DES</TITLE>
+<LINK REV="made" HREF="mailto:ritter@IO.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00758.html">Date Prev</A>][<A HREF="msg00764.html">Date Next</A>][<A HREF="msg00758.html">Thread Prev</A>][<A HREF="msg00772.html">Thread Next</A>][<A HREF="index.html#00763">Date Index</A>][<A HREF="threads.html#00763">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Fenced DES</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Fenced DES</LI>
+<LI><em>From</em>: <A HREF="mailto:ritter@IO.COM">ritter@IO.COM</A> (ritter)</LI>
+<LI><em>Date</em>: Sun, 17 Apr 1994 22:44:14 -0500 (CDT)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+
+                    Ritter Software Engineering
+                        2609 Choctaw Trail
+                        Austin, Texas 78745
+                   (512) 892-0494, ritter@io.com
+
+
+
+                            Fenced DES
+
+                           Terry Ritter
+                          April 17, 1994
+
+
+
+
+
+ Introduction
+
+ This article is one in a series which document my attempts to find
+ a fast, strong, acceptable extension to the U.S. Data Encryption
+ Standard (DES), which I believe is now dangerously insecure.
+
+ The intent is to find a relatively-simple and believable construct
+ which uses DES as a building block, thus avoiding the need to
+ certify a complete new cipher.  I note that currently there is no
+ institution which could and also would provide such certification.
+
+ In this article I propose a new "fenced" ciphering construct which
+ may be a solution.  The experimental 256-bit-block implementation
+ takes about 1.2 times the computation (per byte) of DES alone, and
+ may have the strength of four DES keys.
+
+ In this design, some important block-cipher properties seem to
+ follow logically from the widely-accepted existence of those
+ properties in DES itself.
+
+
+ Wide Blocks
+
+ All practical block ciphers attempt to emulate a large substitution
+ table algorithmically; DES employs substantial computation simply
+ to behave like a substitution table of 2**64 elements.  Accepting
+ DES as a reasonable design means that we have implicitly accepted
+ the argument that a fast 8-bit-wide substitution is not secure (by
+ itself).  Certainly, if a small-block substitution were secure,
+ we would all use that simple and fast alternative instead of DES.
+ Since we do not, we must have accepted the fact that block size is
+ a significant factor in block cipher strength.
+
+ DES is often used to encipher language text, which contains a
+ surprisingly small amount of information.  Since data-compression
+ programs routinely compress language text by 60%, we can expect
+ that a 64-bit block of language text may contain perhaps 26 bits
+ of information.  While it is not currently known how this could
+ be exploited, a 256-bit-wide block should contain four times that
+ much information, which should solve any related problem.
+
+ A large block size also addresses some aspects of cryptoanalytic
+ weakness:  Some attacks on block ciphers make use of the "birthday
+ paradox" to find a matching pair from a large number of ciphertexts.
+ With a 64-bit block about 2**32 ciphertext blocks would be expected
+ to be needed; a large number, admittedly, but still possible.  But
+ the same attack on a 256-bit block would require about 2**128
+ ciphertext blocks, which is completely out of the question.  Thus,
+ a large block size eliminates one type of attack on the cipher.
+
+ A large-block 4x-wide cipher need not expand ciphertext beyond the
+ normal expansion for DES (CBC initialization vector and key-length
+ aside), provided that one trailing 2x and one trailing 1x block can
+ be used if needed.  All the preceding blocks would be 4x blocks.
+
+
+ The Two Problems
+
+ This project has had to address two major problems:
+
+      1. Weaknesses of Multi-Layer Constructs:  Many simple multi-
+      level ciphering structures based on DES can be attacked by
+      working simultaneously on both the input and output layers,
+      given "known plaintext" or "defined plaintext."  In general,
+      this means that two-level constructs are much weaker than one
+      might expect.  This leads to three-level construct like
+      "triple-DES" which tend to be very slow.
+
+      2) Weakness in Multi-Block Constructs:  Similarly, simple
+      large-block structures based on DES can be attacked by
+      defining or "fixing" the input values of all but one DES
+      block, using "defined plaintext."  Apparently, any composite
+      structure which does not have each bit affect the every DES
+      ciphering will have this weakness.
+
+ To expand the effective block size while using DES itself, Fenced-
+ DES uses the "block mixing transform" construct which I described
+ in the previous article.  In this article I want to clarify how
+ those transforms can be used to create a cipher with a large block
+ size out of smaller blocks, despite the mixing having no strength
+ of its own.
+
+
+ The Block Mixing Transform
+
+ In a previous article I introduced the concept of a "block mixing
+ transform" (extended from work by Eli Biham) as a tool to mix the
+ information in two data blocks, and then recover that information.
+ This concept could be expressed as two pairs of expressions:
+
+      X := f1( A, B );   Y := f2( A, B );
+
+      A := f3( X, Y );   B := f4( X, B );
+
+      The term "transform" is taken from the ability to change the
+      data into a different data-space, and then recover the original
+      values, and also the similarity to the "fast Fourier transform"
+      "butterfly" operation.  This "block mixing transform" should
+      be distinguished from the "mixing transformation" described by
+      Shannon [10: 711].
+
+
+ The particular form I suggested was:
+
+      X := 2A + 3B;   Y := 3A + 2B;
+
+      A := 2X + 3Y;   B := 3X + 2Y;
+
+ with operations mod-2 and mod-p, where p is some primitive mod-2
+ polynomial of appropriate degree for the data blocks X, Y, A and B.
+ (Later work shows that p need not be primitive, but p must be
+ irreducible in cryptographic service.)  This transform is a self-
+ inverse, has good mixing correlation properties, is statistically
+ balanced, and has a processing cost which is linear with block size.
+
+ Efficient implementation suggests a re-labeling as follows:
+
+      X := 3A + 2B;   Y := 2A + 3B;
+
+      A := 3X + 2Y;   B := 2X + 3Y;
+
+      Comments on the original "block mixing transform" article
+      have uncovered a few other references to fixed-size math
+      transforms, including Agarwal and Burrus [1], Pollard [6],
+      and Rader [7], but none related to cryptography.  I would
+      be glad to hear of any other references of any sort.
+
+
+ The mixing transform need not be a cipher by itself.  Indeed,
+ it need have no "strength" at all, but must provide at least a
+ minimal level of mixing and be cryptographically-balanced; it
+ should also be expandable and fast.  Although speed is not an
+ issue in most individual ciphering, speed is a major issue for
+ industrial applications, including centralized network servers.
+ The application in this article mixes blocks of substantial size,
+ making many other forms of mixing completely impractical.
+
+
+ 4x Fenced-DES
+
+ Consider the following construct:
+
+
+    S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+    --------------mix-------------- --------------mix--------------
+    ------------------------------mix------------------------------
+    ------DES------ ------DES------ ------DES------ ------DES------
+    ------------------------------mix------------------------------
+    --------------mix-------------- --------------mix--------------
+    S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+
+
+ Here each "S" represents an 8-bit substitution table.  Thus, we
+ have 32 input substitutions and 32 output substitutions, each a
+ separately-shuffled and independent table, and an overall block
+ size of 256 bits.  We also have four DES operations, plus two
+ levels of input mixing and two levels of output mixing.  Note
+ that the innermost mixing levels combine two 128-bit blocks, a
+ substantial operation which is nevertheless practical using the
+ selected block mixing transform.
+
+ The idea is to spread the effect of each input bit to each of the
+ four DES operations, and to produce a particular output bit from
+ a combination of all four DES results.  If this works, The Opponent
+ would be forced to search all four DES keyspaces simultaneously to
+ match a particular known-plaintext pair.
+
+ An experimental implementation of the above construct performs all
+ 64 substitutions and all 6 mixings in less time than a single DES
+ computation.  Currently, it ciphers 4 times the data with about
+ 4.8 times the computation, and has, perhaps, a keyspace of 224 bits
+ or so.  (A much faster hybrid implementation might do the DES
+ computations in hardware.)
+
+      In the experimental implementation, table and key
+      initialization take about 200 times the computation of a
+      single 256-bit-block ciphering.  (This is mainly a
+      consequence of shuffling 64 small substitution tables.)
+      Even so, it is probably faster to compute the 16K initial
+      state than to decipher 16K of saved state with software
+      DES or Fenced-DES:  Construction is faster than ciphering.
+
+      The keyed construction of the substitution tables implies the
+      presence of a specific cryptographic RNG.  This means that any
+      overall Fenced-DES specification will pin-down the key
+      processing which varies so widely in current DES applications.
+      The current implementation uses a fast 992-bit Additive RNG
+      and the nonlinear "jitterizer" [8] which I have discussed many
+      times with respect to my Penknife cipher and my other Dynamic
+      Substitution [9] ciphers.
+
+      In the experimental implementation, a User Key of arbitrary
+      length and content is hashed (CRC'd) by 32 separate degree-31
+      primitive mod-2 polynomials (11- through 19-nomials), producing
+      the 992-bit RNG state, which also eventually generates the DES
+      keys.  Note that this approach eliminates the need for keys to
+      have a specific format unique to this particular cipher.  This
+      enables the selection of an arbitrary cipher from among many
+      different ciphers, all of which can use the exact same key.
+
+
+ Deciphering simply uses inverse substitutions (the inverse of each
+ encipher output substitution is used for decipher input) and DES
+ in decipher mode.  The selected block mixing transform is a self-
+ inverse and needs no changes.
+
+
+ Mixing Levels
+
+ The arrangement of the mixing levels deserves some comment.
+ First, note that a change in any one input data bit produces a
+ distribution of changes out of the associated input substitution,
+ depending on the particular substitution, original input value,
+ and change.  Any possible byte input has a 50 percent probability
+ of affecting each of the eight output bits from that substitution.
+
+      A substitution table S is an indexable n-element vector of
+      output codes.  An invertible substitution table S with
+      inverse table inv(S) has the property that for any input code
+      i in n, inv(S)[ S[i] ] = i.  This implies that S contains
+      n different output codes.
+
+      An invertible substitution table S contains each output code
+      value exactly once.  Since each possible index selects a
+      different element, any index change will select a different
+      output code.  Since different code values must differ in at
+      least one bit, any input change must produce a change in at
+      least one output bit.
+
+      Given invertible substitution table S with shuffled contents,
+      define the output distribution for any input code change to be
+      an arbitrary selection from the output codes which differ from
+      the current output code.  If the output codes are a complete
+      set of 2**m values (0..(2**m-1)) for some m, counting arguments
+      show that it is likely that about half of the output bits will
+      change for any input code change of any nature whatsoever.
+
+      Conversely, since each output bit is produced by an output
+      code, and the selected output code is completely dependent
+      upon every bit in the input code, each output bit is dependent
+      on every bit of the input.  A network with this property is
+      normally called "complete" [5], and localized completeness is
+      also the basis for "avalanche" [3: 22] in an iterated block
+      cipher.
+
+
+ Next, note that we first mix two 64-bit blocks (twice), then two
+ 128-bit blocks.  Suppose we have a change in any one input data
+ bit: this produces an 8-bit substituted result which would normally
+ affect just a single DES block.  But the 64-bit mixing extends
+ those changes to two DES blocks, and the 128-bit mixing extends the
+ changes to all four DES blocks.  Thus, any change of even a single
+ input bit will affect all four DES operations.
+
+      Using the transformation X := 3A + 2B; Y := 2A + 3B; any
+      value change to A or B must be reflected in both X and Y:
+
+      Suppose some change C is added to A:
+
+           X  := 3A + 2B  (mod 2, mod p)
+           X' := 3(A+C) + 2B
+           X' := 3A + 3C + 2B
+           dX := X' - X = 3C
+
+      but 3C is non-zero (thus affecting the output) for any C which
+      is not zero, and if C is zero, there has been no change to A.
+
+      Suppose some change C added to B:
+
+           X  := 3A + 2B  (mod 2, mod p)
+           X' := 3A + 2(B+C)
+           X' := 3A + 2B + 2C
+           dX := X' - X = 2C
+
+      Similarly, 2C is also non-zero for any C which is not zero.
+
+      Suppose we try to make C half the value of p plus the highest
+      bit (2**(deg(p)-1)) so that p will be activated and 2C will
+      cancel the lower bits of p:  Alas, p is irreducible so there
+      is no q S.T. 2q = p.
+
+      Similar arguments apply for Y := 2A + 3B.
+
+ The experimental implementation uses the degree-128 irreducible
+ 0100004000000400200002000004000001 (hex), and the degree-64
+ irreducible 010002000000800201 as block mixing polynomials.
+
+
+ The output from each DES operation is, of course, random-like, so
+ one might think it could be used directly.  However, a three-
+ level structure is still necessary to prevent, for example, "fix-
+ in-the-middle" attacks, so the output substitutions are important.
+ We also need the output mixing so that the result from a single
+ DES block cannot be isolated and worked on independently.
+
+ The guaranteed performance of the input substitution and the block
+ mixing transform imply that each DES input block collectively
+ depends upon each and every input bit.  The expected performance
+ of the DES algorithm extends this, making every DES output bit
+ depend upon each and every input bit in the entire large input
+ block, thus making all DES outputs "complete" over the large input
+ block.
+
+
+ Cryptographic Strength
+
+ First let's review where modern cryptographic science stands with
+ respect to "strength":
+
+      1.  There is no algorithmic test to "certify" or evaluate the
+      "strength" of a cipher.
+
+      2.  Despite a half-century of intensive mathematical work, we
+      still have exactly one cipher which is commonly accepted as
+      having been proven "unbreakable," and that cipher is normally
+      impractical.  Despite this immense effort, and the fact that
+      a "proof" of cipher strength is unfulfilled for any practical
+      cipher whatsoever, there are still calls for "proofs" of new
+      cipher designs.
+
+      3.  While various cryptanalytic attack strategies are known,
+      each such attack is necessarily specific to the particular
+      cipher being attacked.  Attack names represent strategies,
+      rather than generally-applicable algorithms.  Simply knowing
+      the history of previous attacks does not necessarily provide
+      insight into applying those attacks to a new cipher.
+
+      4.  Ordinarily we speak of the "strength" of a cipher as the
+      minimum effort needed to "break" the cipher.  Unfortunately,
+      we are necessarily limited to discussing what we know now, and
+      not what can be known in the future.  Any current minimum may
+      not last, and we may not be able to know whether it will last
+      or not.
+
+ With those points in mind, the current "strength" for 4x Fenced-DES
+ is ((2**56)**4)(256!**64) keys, a very big number.  I would be
+ delighted to learn of a simpler attack.
+
+ It would of course be ridiculous to accept this sort of number as
+ a true indication of strength.  Personally, I would be happy with
+ anything over 112 bits, since this should be sufficient for the
+ next couple of decades and then we may have a stronger basis for
+ cryptographic design.
+
+
+ Design Strength
+
+ Note that we need assume no "strength" for the mixing layers, but
+ simply mixing:  Each mixed output block must be a function of each
+ and every bit in both input blocks.  In this particular design we
+ need only two levels of mixing to make sure that every input bit has
+ propagated to all four DES blocks.  And then we need two more to
+ make sure that all four DES blocks participate in every output bit.
+
+ The purpose of the small substitutions is to prevent the (weak and
+ known) mixing functions from being exploited to divide-and-conquer
+ the DES operations.  Small substitutions appear to be sufficient
+ to isolate the mixing functions, because "known plaintext" is only
+ available across the entire cipher, and not across the internal
+ layers of the cipher.  When known-plaintext is not available, and
+ substitutions cannot be separated for divide-and-conquer, little
+ substitutions can be surprisingly strong.
+
+ In the 4x construct, we might lay all the strength on the four DES
+ keys, which would imply a 224-bit value.  On the other hand, an
+ attack which is able to isolate one of the DES keys (perhaps as a
+ consequence of 1x operation using the same state), would reduce
+ this to 168 bits.  Note that the substitutions must be keyed even
+ if we discount their "strength."
+
+
+ Strength Arguments by Attack
+
+ Exhaustive Search:  Try each key until the correct one is found.
+ Preventing this now requires a keyspace substantially larger than
+ 56 bits (or, with a computationally-expensive setup phase, perhaps
+ a few bits less).  It seems reasonable to claim that Fenced-DES has
+ at least a 224-bit keyspace.  Note that this is not four times the
+ DES keyspace, but four times the key size, which is 2**168 times
+ the conventional DES keyspace.
+
+ Known-Plaintext/Defined Plaintext:  Somehow "obtain" both the
+ plaintext and the corresponding ciphertext for some large number
+ of encipherings (under one key).  This has many flavors:
+
+ Codebook:  Try to obtain all possible ciphertexts and associated
+ plaintext; then, when a ciphertext occurs, look it up.  This is
+ normally prevented by having a large number of transformations,
+ which implies both a large block size and a large keyspace.
+ Fenced-DES has both.
+
+ Codebook approaches can be combined with "divide-and-conquer" to
+ isolate and define parts of some ciphers.  Fenced-DES tries to
+ avoid these attacks by not allowing the parts to be isolated and
+ worked on separately.
+
+ Meet-in-the-Middle:  With a multi-layered structure, given known-
+ or defined-plaintext, search the top keyspace to find every
+ possible result, and search the bottom keyspace to find every
+ possible value.  With a two-level construct, matches can be
+ verified with some subsequent known-plaintext/ciphertext pairs.
+ Fenced-DES avoids this by using a three-level construction, and
+ by using outer layers which have a huge "keyspace."
+
+ Differential Cryptanalysis:  Given a S-P iteration cipher with
+ known tables, use any statistical unbalance in the tables to peer
+ back into previous steps.  Fenced-DES avoids this by having no
+ fixed tables, by using only balanced full-substitution tables,
+ and by using a fully-balanced block mixing transform to avoid
+ "divide-and-conquer."
+
+
+ Important Aspects of the Design
+
+ First, the Fenced-DES construct is more like a Kam-Davida
+ substitution-permutation (S-P) design [5] than the common iterated
+ Feistel design [3] represented by DES itself.  The block mixing
+ transform is specifically intended to avoid the sort of weakness
+ exploited by the recent Heys-Tavares attack [4] on S-P designs.
+
+ Next, it seems that there is a fundamental weakness in any two-
+ layer construct for some form of "meet in the middle" attack when
+ we assume "defined-plaintext" capabilities.  Fenced-DES has three
+ independent layers to avoid such attacks.
+
+ Conventional block-cipher designs generally use unkeyed static
+ substitution tables which are selected for "optimum" performance.
+ In contrast, Fenced-DES uses only key-generated tables, in which
+ any table permutation is as good as any other, making selection
+ unnecessary.  (A shuffled substitution is very unlikely to be
+ linear [2], but linearity is itself unimportant when it cannot
+ be detected externally.  The mid-level substitution--here
+ DES--acts to hide any S-box linearity.)
+
+ Conventional block-cipher designs are also very economical with
+ state, using either small tables (e.g., the 256 bytes in eight
+ 6-bit to 4-bit tables in DES), or no tables at all (e.g., IDEA).
+ But 4x Fenced-DES uses 16K (bytes) of tables, all keyed.
+
+ More conventional S-P designs tend to use the same block size at
+ each substitution level, thus becoming vulnerable to Heys-Tavares
+ attacks [4].  Fenced-DES differs from this approach by having a
+ middle layer with a block size which is much larger than the outer
+ layers (this is similar to a Kam-Davida "partition" [5: 749] but
+ differs in that it is a single block).  This should prevent those
+ small substitutions associated with a single internal block from
+ being separated and attacked individually.
+
+ Other contemporary block-cipher designs generally use a 64-bit
+ block size.  This is much weaker than it was 20 years ago, when
+ that size was selected for DES.  To avoid birthday attacks on
+ ciphertext, as well as unknown information-based attacks, 4x
+ Fenced-DES has a nominal block size of 256 bits, although 8x or
+ even 16x versions are both possible and practical.  2x and 1x
+ versions can be used to cipher the last part of a message, thus
+ reducing data expansion to that expected with DES alone.
+
+ A fundamental difference is that conventional S-P designs perform
+ only a bit-permutation (or "transposition") between substitution
+ layers; this is a weakness in that an input bit to one layer is
+ exactly the same as some output bit in the previous layer.
+ Fenced-DES differs from other block-cipher designs in the use of a
+ block mixing transform to make the input code to a middle-layer
+ substitution (in this case, DES) a function of every substitution
+ in the previous layer.  This allows the external block size to be
+ expanded while preventing substitutions in the middle layer from
+ being separated and attacked individually.
+
+ An interesting aspect of the Fenced-DES design is the possibility
+ that assumed properties of DES--a cipher which has been studied
+ and evaluated for almost 20 years--can be provably expanded into
+ properties of the larger cipher.
+
+
+ Summary
+
+ A new type of cryptographic ciphering construct has been introduced
+ which uses DES as a building block.  The result seems to provide
+ a larger block size and more strength than triple-DES (the leading
+ alternative), while operating almost three times as fast.
+
+
+ References
+
+ [1]  Agarwal, R. and C. Burrus.  1974.  Fast Convolution Using
+      Fermat Number Transforms with Applications to Digital
+      Filtering.  IEEE Transactions on Acoustics, Speech, and
+      Signal Processing.  ASSP-22(2): 87-97.
+
+ [2]  Ayob, F.  1982.  Probabilistic completeness of substitution-
+      permutation encryption.  IEE Proceedings, Pt. E.  129(5):
+      195-199.
+
+ [3]  Feistel, H.  1973.  Cryptography and Computer Privacy.
+      Scientific American.  228(5): 15-23.
+
+ [4]  Heys, H. and S. Tavares.  1993.  Cryptanalysis of Tree-
+      Structured Substitution-Permutation Networks.  Electronics
+      Letters.  29(1): 40-41.
+
+ [5]  Kam, J. and G. Davida.  1979.  Structured Design of
+      Substitution-Permutation Encryption Networks.  IEEE
+      Transactions on Computers.  C-28(10): 747-753.
+
+ [6]  Pollard, J.  1971.  The Fast Fourier Transform in a Finite
+      Field.  Mathematics of Computation.  25(114): 365-374.
+
+ [7]  Rader, C.  1972.  Discrete Convolutions via Mersenne
+      Transforms.  IEEE Transactions on Computers.  C-21(12):
+      1269-1273.
+
+ [8]  Ritter, T.  1991.  The Efficient Generation of Cryptographic
+      Confusion Sequences.  Cryptologia.  15(2): 81-139.
+
+ [9]  Ritter, T.  1990.  Substitution Cipher with Pseudo-Random
+      Shuffling:  The Dynamic Substitution Combiner.  Cryptologia.
+      14(4): 289-303.
+
+ [10] Shannon, C.  1949.  Communication Theory of Secrecy Systems.
+      Bell System Technical Journal.  28: 656-715.
+
+ ---
+ Terry Ritter   ritter@io.com
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00758.html">Warrantless Search</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00764.html">Re:  'Nother MIT talk on crypto...</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00758.html">Warrantless Search</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00772.html">Re:  Does the List Have a Political Ideology?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00763"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00763"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

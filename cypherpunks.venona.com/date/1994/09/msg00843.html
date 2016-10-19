@@ -1,0 +1,184 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: MATH: Brands' cash, Hal's post #2 -->
+<!--X-From-R13: Yney Zhv Pneehf <xyoneehfNbjyarg.evpr.rqh> -->
+<!--X-Date: Thu, 22 Sep 94 17:54:28 PDT -->
+<!--X-Message-Id: 9409230054.AA24515@snowy.owlnet.rice.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>MATH: Brands' cash, Hal's post #2</TITLE>
+<LINK REV="made" HREF="mailto:klbarrus@owlnet.rice.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00839.html">Date Prev</A>][<A HREF="msg00840.html">Date Next</A>][<A HREF="msg00834.html">Thread Prev</A>][<A HREF="msg00821.html">Thread Next</A>][<A HREF="index.html#00843">Date Index</A>][<A HREF="threads.html#00843">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>MATH: Brands' cash, Hal's post #2</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: MATH: Brands' cash, Hal's post #2</LI>
+<LI><em>From</em>: Karl Lui Barrus &lt;<A HREF="mailto:klbarrus@owlnet.rice.edu">klbarrus@owlnet.rice.edu</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 22 Sep 94 19:54:12 CDT</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+This post gives numerical examples to go along with Hal Finney's excellent
+description of Brands' digital cash, posted earlier.  If the math is too
+much, just remember the whole point:
+
+&gt; Blind signatures are, IMO, the key to anonymous digital cash, and in fact
+&gt; to many forms of anonymity.  The ability to engage in mutual information
+&gt; manipulation with another person, while guaranteeing that no linkage will
+&gt; later be possible between the data exchanged and the results of that
+&gt; calculation, is the foundation for interacting in a complex way without
+&gt; losing any privacy...
+&gt; Vicki wants to end up with a non-interactive signature on m', which is a 
+&gt; special transformation of m.  To do this, she engages in an interactive 
+&gt; signature protocol with Paul, getting him to sign m... the result is
+&gt; that she ends up with a non-interactive signature on m' because Paul was
+&gt; willing to participate in an interactive signature session on m
+
+Continuing along:
+
+&gt; Now for the mathematics.  Recall the g is the "generator" of the group,
+&gt; the base of all of the powers.  x is Paul's secret key, and GX=g^x is his
+&gt; public key.  
+
+I will use g = 10, n = 17389 as in the previous example.  Paul will choose 
+x = 351 to be his secret key, so GX = 10^351 mod 17389 = 16987 is his public 
+key.  In addition, the message is m = 1994.
+
+&gt; As the first step of the interactive protocol, Paul chooses a random w
+&gt; and sends Vicki MX = m^x, GW = g^w, and MW = m^w.
+
+Paul chooses a random w = 666
+
+MX = 1994^351 mod 17389 = 11740
+GW = 10^666 mod 17389 = 7115
+MW = 1994^666 mod 17389 = 13262
+
+&gt; The relationship between m', which is what Vicki will end up
+&gt; with a signature on, and m, which is the number that Paul sees, is
+&gt;       m' = (m^s)*(g^t).
+
+Vicki chooses s = 3694, t = 1243
+
+m' = (1994^3694)*(10^1243) mod 17389 = 10313
+
+&gt; the challenge c is calculated as the hash of (m,MX,GW,MW).  Vicki
+&gt; must transform these numbers so that Paul will not recognize them, but in
+&gt; such a way that the mathematical relationships are maintained.
+&gt; To do this, Vicki chooses two (more) random numbers, u and v (along with
+&gt; s and t above).
+
+Vicki chooses u = 5192, v = 100
+
+&gt;   MX' = m'^x = ((m^s)*(g^t))^x = (m^(s*x))*(g^(t*x)) = (MX^s)*(GX^t)
+&gt;   GW' = g^w' = g^(u*w+v) = (g^(u*w))*(g^v) = (GW^u)*(g^v)
+&gt;   MW' = m'^w' = ((m^s)*(g^t))^(u*w+v) = [...] =
+&gt;                                       (GW^(u*t))*(MW^(u*s))*(m'^v)
+
+MX' = (MX^s)*(GX^t) = (11740^3694)*(16987^1243) mod 17389 = 10710
+GW' = (GW^u)*(g^v) = (7115^5192)*(10^100) mod 17389 = 12113
+MW' = (7115^(5192 1243))*(11740^(5192 3694))*(10313^100) mod 17389 = 9314
+
+&gt; Using these, Vicki calculates her hash c'= Hash(m',MX',GW',MW').
+
+c' = hash(10313,10710,12113,9314) = 7672 (some hash function I made up)
+
+&gt; Now, the c she sends to Paul...
+&gt; c = c'/u 
+
+c = (7672/5192) mod 17389 = 323
+
+[     5192 c = 7672 mod 17389  
+  --&gt; 5192 c" = 1 mod 17389 
+  --&gt; c" = 3520
+		 ==&gt; c = c" 7672 mod 17389 = 323
+
+  check: (323 5192) mod 17389 = 7672
+]
+
+&gt; Paul will ... calculate r = c*x+w.
+
+r = (323 351 + 666) mod 17388 = 9711
+
+&gt; [Vicki calculates] r' = u*r + v
+
+r' = (5192 9711 + 100) mod 17388 = 11800
+
+&gt; The resulting signature on m' is (MX',GW',MW',r')
+
+So the resulting signature is (10710,12113,9314,11800)
+
+Okay, that should be an actual example of the protocol, unless I messed 
+up somewhere ;)  I hope to finish going through Hal's third post soon.
+
+Karl Barrus
+klbarrus@owlnet.rice.edu
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.1
+
+iQCVAwUBLoImUMSF/V8IjI8hAQGRmAP/RojMlpm8rnnx4K6c3GEHsBoQL7hIhdBB
+bTiwBhkXbi8ZhHsZJtX9mFceIhTK7yIxVsq9y17d2m5NghGME1qtIN+MjbbvwHfp
+j9S9fWwF6/mIiRvV9IM1a23IGhyZi0ZQASLKRiPlStjbcwv6QoGxZQuTyGOD8pSn
+hpoKosUFbqY=
+=EIjf
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00839.html">Re: Chomsky Arguments / Redefinitions</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00840.html">Re: HIT MEN</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00834.html">RE: THE LAST WORD... (maybe)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00821.html">National Research Council</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00843"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00843"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

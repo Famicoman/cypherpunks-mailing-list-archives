@@ -1,0 +1,163 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Mail logging -->
+<!--X-From-R13: [nex <znexNpbbzof.nah.rqh.nh> -->
+<!--X-Date: Fri, 11 Jun 93 20:56:41 PDT -->
+<!--X-Message-Id: 9306120356.AA11546@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Mail logging</TITLE>
+<LINK REV="made" HREF="mailto:mark@coombs.anu.edu.au">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00373.html">Date Prev</A>][<A HREF="msg00374.html">Date Next</A>][<A HREF="msg00363.html">Thread Prev</A>][<A HREF="msg00394.html">Thread Next</A>][<A HREF="index.html#00386">Date Index</A>][<A HREF="threads.html#00386">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Mail logging</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Mail logging</LI>
+<LI><em>From</em>: Mark &lt;<A HREF="mailto:mark@coombs.anu.edu.au">mark@coombs.anu.edu.au</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 12 Jun 1993 13:55:43 +1000 (EST)</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:mark@cheops.anu.edu.au">mark@cheops.anu.edu.au</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;The single most basic problem with mail development that we have is
+&gt;that we don't have enough mail volume through the remailers we have in
+&gt;order to be able to experiment with better systems.  In particular, we
+&gt;need to examine other reordering algorithms for the case where volume
+&gt;is low and delivery latencies would be too high with the simple
+&gt;gather-and-permute algorithm.
+
+Well, I hate to point out the obvious but can we organise with the
+list maintainer to have our mail routed through random machines until
+it gets to us? I'd only recommend this for the more email aware members
+as it might prove confusing. Also, to save my own sanity and others
+certain header munglings might be desirable to ensure that the mail is
+still filterable. I'd suggest either an addition to the remailer scripts
+to allow a predefined header line through, or the Subject: line of each
+message is prefixed with CRYPTO: so the end users can still filter the
+messages as they now do.
+
+Currently I use 'procmail' to filter out various things and it works on
+the contents of the mail header as so:
+
+--------.procmailrc--------------------------
+IFS=""
+PATH=/home/coombs/mark/bin:/usr/local/bin:/usr/bin:/bin
+MAILDIR=$HOME/mail
+DEFAULT=/usr/mail/$USER
+
+# Filtering for cypherpunks
+
+:2                                          # Two 'if' clauses
+(^To:.*cypherpunks@toad.com.*|^Cc: .*cypherpunks@toad.com.*)
+(^Subject: .*(UNSUBSCRIBE|nsubscribe).*)
+/dev/null                                   # If a match send mail here.
+--------.procmailrc--------------------------
+
+If we were to route all the mail through remailers I would lose the
+functionality of filtering as I wouldnt know where the email was
+coming from, nor would I be able to know it was cypherpunks mail until
+I read the message body. thats why a Subject: line change or a modification
+to the remailer scripts (if needed) should be made.
+
+Assuming the above was made, all the maintainer would have to do is change
+my mark@coombs.anu.edu.au line in the alias file to a:
+
+|/bin/random-remail -dest mark@coombs.anu.edu.au
+
+or
+
+|/bin/random-pgp-remail -dest mark@coombs.anu.edu.au -key mark@coombs.anu.edu.au
+
+where 'random-remail' is a short program that scans a list of remailers
+and randomly selects some, puts the addresses and remail triggers into a
+file, appends the message and changes the "Subject: blah" line to
+"Subject: CRYPTO: blah". 'random-pgp-remail' does the same and encrypts the
+whole message before sending, possibly encrypting again a few times with
+remailer keys.
+
+This approach would (dramatically :) increase the remailer traffic to levels
+where mail re-ordering is possible. Padding would be the next step, add the
+lines on the end to bring the message to 512 bytes, 1024 bytes, 2048 bytes or
+greater. Maybe pad all messages to the nearest 1024 bytes? (see below for a
+method :)
+
+The only problem I can see after the programs are debugged etc is the extra
+overhead on toad.com, wther it's a non encrypted mail out or not. But if that
+is acceptable to the maintainer in the intrests of giving remailer operators
+some fodder then we can implement it
+
+I dont see any of the random-[pgp-]remailer programs being longer than 30 or
+40 (perl script) lines. I'd write them myself if I could get some mail
+aliases installed on this host. Admittedly they aren't essential but I'd
+like them for testing purposes.
+
+Mark
+mark@coombs.anu.edu.au
+
+PADDING PADDING PADDING PADDING PADDING PADDING PADDING PADDING PADDING
+PADDING PADDING PADDING PADDING PADDING PADDING PADDING PADDING PADDING
+PADDING PADDING PADDING PADDING PADDING PADDING PADDING PADDING PADDING
+PADDING PADDING PADDING PADDING PADDING PADDING PADDING PADDING PADDING
+PADDING PADDING PADDING PADDING PADDING PADDING PADDING PADDING PADDING
+PADDING PADDING PADDING PADDING PADDING PADDING PADDING PADDING PADDING
+PADDING PA       &lt;---- end of padding to make this 2048 bytes long
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00394" HREF="msg00394.html">Mail logging</A></STRONG>
+<UL><LI><EM>From:</EM> Eric Hughes &lt;hughes@soda.berkeley.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00373.html">more Clipper proponents on sci.crypt</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00374.html">Remailer mail logging:</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00363.html">Mail logging</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00394.html">Mail logging</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00386"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00386"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

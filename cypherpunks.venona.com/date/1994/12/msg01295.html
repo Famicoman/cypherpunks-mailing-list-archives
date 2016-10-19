@@ -1,0 +1,208 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Norton encryption and privacy -->
+<!--X-From-R13: Uert Pebvyrf <tertNvqrngu.tbyqraorne.pbz> -->
+<!--X-Date: Fri, 23 Dec 94 15:10:26 PST -->
+<!--X-Message-Id: 199412232307.AA05754@ideath.goldenbear.com -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Norton encryption and privacy</TITLE>
+<LINK REV="made" HREF="mailto:greg@ideath.goldenbear.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01294.html">Date Prev</A>][<A HREF="msg01296.html">Date Next</A>][<A HREF="msg01326.html">Thread Prev</A>][<A HREF="msg01296.html">Thread Next</A>][<A HREF="index.html#01295">Date Index</A>][<A HREF="threads.html#01295">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Norton encryption and privacy</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Norton encryption and privacy</LI>
+<LI><em>From</em>: Greg Broiles &lt;<A HREF="mailto:greg@ideath.goldenbear.com">greg@ideath.goldenbear.com</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 23 Dec 1994 15:07:54 -0800 (PST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+
+This was posted to USENET several months ago. Diskreet is a PC-based
+device driver which creates a virtual encrypted partition on 
+a normal hard disk partition. I don't know if they use the same 
+algorithms in Norton Encrypt or not.
+
+Snooping in other people's files still sucks.
+
+ -----
+
+
+From: pgut1@cs.aukuni.ac.nz (Peter Gutmann)
+Newsgroups: sci.crypt,comp.security.misc
+Subject: Norton's [In]Diskreet: An update
+Followup-To: sci.crypt
+Date: 13 Jul 1994 17:21:57 GMT
+Organization: University of Auckland
+Lines: 96
+Sender: pgut1@cs.aukuni.ac.nz (Peter Gutmann)
+Message-ID: &lt;3017rl$8j4@ccu2.auckland.ac.nz&gt;
+NNTP-Posting-Host: cs13.cs.aukuni.ac.nz
+X-Newsreader: NN version 6.5.0 #7 (NOV)
+
+
+Last November I picked apart part of the Diskreet encryption program and posted
+what I found to this group.  By some miracle I had a bit of spare time this
+afternoon, so I've had another quick look at it.  The result is some more
+information on the proprietary encryption algorithm and the file format it
+uses.  First, a recap of what I presented last time:
+ 
+The key setup process is very badly done.  The front-end gets a password in the
+range of 6..40 characters, and converts it to all-uppercase.  Then it packs it
+into a struct along with a collection of other information and passes it to the
+DES library used by Diskreet.  The first thing this does is take the password
+and reduce it to 64 bits by cyclically xor-ing the full-length password into an
+8-byte buffer initially set to all zeroes, ie:
+ 
+    for( index = 0; password[ index ]; index++ )
+        buffer[ index % 8 ] = password[ index ];
+ 
+It then performs what looks like a standard DES key schedule with the 64-bit
+output from this operation.  This creates 128 bytes of subkeys for encryption
+and 128 bytes of subkeys for decryption.  These are either used for the
+proprietary encryption method or for DES encryption.  Here's a rundown of the
+proprietary method:
+ 
+All operations are performed on 16-bit words.  byteSwap() performs an
+endianness-reversal on a word.  Chaining is performed by xor-ing in the
+previous ciphertext word.  The keyTable is the 256-byte array of DES subkeys,
+treated as an array of words.
+ 
+    data[ -1 ] = 0x1234;
+    index = sectorNo % 128;
+    index = keyTable[ index ] % 128;
+ 
+    for( i = 0; i &lt; SECTOR_SIZE / 2; i++ )
+        {
+        value = keyTable[ index++ ] + data[ i ];
+        byteSwap( value );
+        value ^= data[ i - 1 ];
+        data[ i ] = value;
+        index %= 128;
+        }
+ 
+As can be seen, a known-plaintext attack will recover the (expanded) encryption
+key without too much trouble - it's just a repeated addition of a 128-word
+array to the data, with the previous word xor'd in for chaining purposes.  The
+xor and byteSwap are basically nop's and can be stripped off without any
+problems, revealing the key stream used to encrypt the data.  Since encryption
+is done by sectors, the same key data is used twice for each sectors.
+ 
+How do we perform a known-plaintext attack?  It's quite simple actually, since
+Diskreet itself provides us with about as much known plaintext as we need.  The
+file format is:
+ 
+    General header
+ 
+    BYTE[ 16 ]          "ABCDEFGHENRIXYZ\0"
+    char[ 13 ]          fileName
+    LONG                fileDate
+    BYTE                fileAttributes
+    LONG                fileSize
+    LONG                file data start
+    BYTE[ 16 ]          0
+ 
+    File data
+ 
+    BYTE[ 32 ]          0
+ 
+    Padding to make it a multiple of 512 bytes
+ 
+Everything from the 16-byte magic value to the end of the file is encrypted in
+blocks of 512 bytes.  The proprietary scheme will directly reveal its key
+stream on the 16-byte check value, the 16 bytes of zeroes at the start, and the
+32 bytes (minimum) of zeroes at the end of the data.  Interestingly enough, the
+presence of the 16-byte known plaintext right at the start would tend to
+confirm the rumours that that's one of the criteria for having an encryption
+program approved by the NSA.  The plaintext also gives us the name of one of
+the programmers involved.
+ 
+In my previous posting I said:
+ 
+  The encryption itself uses DES in CBC mode with a fixed IV.  This means that,
+  in combination with the tiny key space, it's possible to create a precomputed
+  collection of plaintext/ciphertext pairs and "break" most encrypted files by
+  reading the results out of a table.
+ 
+The 16-byte known plaintext makes this attack a certainty.  In addition, if two
+pieces of data are encrypted with the same key, one with the proprietary method
+and one with DES, the DES key can be recovered from the proprietary-encrypted
+data and used to decrypt the DES-encrypted data.  Again quoting from my
+previous posting:
+ 
+  In summary, there may be a correct DES implementation in there somewhere, but
+  it doesn't help much.  [In]Diskreet will stop a casual browser, but won't
+  give you any protection at all against any serious attack.
+ 
+Peter.
+
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBLvtYIH3YhjZY3fMNAQHeYAQAmNUJA9TfNQAJ+5jwbGDFbFtgjFVg1Gyn
+/RgAou3GuQvVRpmTqurVUWN8wzUCluj6ouU39ct2DEoyMHLFgkCdTcxDcSIS8Tpz
+yb9yPkI2Sr2uJ8dE5kuN29v0D3Nq4vW3a8jhRi2oJC3WbAaWYuoCQees8/wxfOfy
+4bDPouwTBYc=
+=Rx5b
+-----END PGP SIGNATURE-----
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01294.html">Re: GUI: PGP vs novices</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01296.html">B-PGP: news/requests</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01326.html">Re: reading someone's files</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01296.html">B-PGP: news/requests</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01295"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01295"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,241 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: D&#45;H Forward Secrecy for E&#45;Mail? -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Mon, 13 Oct 1997 17:11:52 +0800 -->
+<!--X-Message-Id: 199710130438.FAA02474@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199710130223.WAA15345@users.invweb.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: D-H Forward Secrecy for E-Mail?</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00678.html">Date Prev</A>][<A HREF="msg00681.html">Date Next</A>][<A HREF="msg00670.html">Thread Prev</A>][<A HREF="msg00684.html">Thread Next</A>][<A HREF="index.html#00687">Date Index</A>][<A HREF="threads.html#00687">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: D-H Forward Secrecy for E-Mail?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:whgiii@invweb.net">whgiii@invweb.net</A></LI>
+<LI><em>Subject</em>: Re: D-H Forward Secrecy for E-Mail?</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 13 Oct 1997 05:38:56 +0100</LI>
+<LI><em>CC</em>: <A HREF="mailto:cypherpunks@Algebra.COM">cypherpunks@Algebra.COM</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg00670.html">199710130223.WAA15345@users.invweb.net</A>&gt; (whgiii@invweb.net)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+William Geiger &lt;whgiii@invweb.net&gt; writes:
+&gt;    at 02, Adam Back &lt;aba@dcs.ex.ac.uk&gt; said:
+&gt; &gt;As pgp 5.0 uses key servers directly from the mail client (and some other
+&gt; &gt;clients do also), this all works out because you just publish your new
+&gt; &gt;weekly communications key on the keyserver, and this eliminates the need
+&gt; &gt;for interactive communications with your recipient which true DH PFS
+&gt; &gt;requires.  
+&gt; 
+&gt; Have you considered the logistical nightmare that this would cause?? I can
+&gt; see that you are unaware of the precarious state the current PGP Public
+&gt; Key Server Network is in. 
+
+The keyservers using pgp2.x as the key lookup engine are struggling
+because the database code isn't very good.  But the experimental MIT
+keyserver, and Tage Stabell-Kulo's key server code on the key server
+in Norway fairly whistle through key lookups.  PGP Inc also is using
+the better keysever code -- I think based on the one at MIT
+implemented by Marc (surname escapes me right now).
+
+&gt; Right now it is getting by but this increase in load would bring it
+&gt; all to a screeching halt. 
+
+It all depends on how up to date you are on keyserver performance
+problems; perhaps you are more up to date than myself, perhaps not.
+
+The answer I think which must come in any case is a distributed key
+server system because the current 100% replication method seems
+unlikely to scale to likely future demands, with or without forward
+secrecy.  If your company holds keys for it's employees on it's openly
+accessible key server, this distribution will be very similar to DNS,
+and similarly scalable.
+
+&gt; There have been suggestions of moving key distributution to the DNS
+&gt; but I seriously doubt even it would handle the traffic.
+
+I think this is taking it too far.  Have you considered how much
+traffic DNS handles right now?  I would have thought it would be many
+orders of magnitude more than forward secret email is going to cause.
+Web traffic is the bulk of network communications, just imagine the
+DNS lookups caused by 50 million netters clicking away. 
+
+Bear in mind also hear that most users will probably be entirely
+satisfied with a communications key update time of 1 week.  It is
+probably mostly cypherpunks, or people with high value communications
+to secure who would opt for more frequent key updates.
+
+Bear in mind also that once the new key has been issued, you could
+also release a deletion request for the previous one on the keyserver
+in the form of a revocation certificate.
+
+&gt; Also what happens to the "web of trust" in such a system of high key
+&gt; turnover?
+
+Nothing.  It is unaffected.  The WoT is only based on signature keys.
+You personally certify your communication with your signature key.
+
+&gt; Exactly how much added security is provided by all of this?? 
+
+Lots.  Consider: you are the average PGP user, you have one key
+generated per year if you are lucky (probably more like once per life
+time).  You are in a company, and the company has a heck of a time
+persuading people not to use dumb passwords, or leave their passwords
+on yellow sticky notes conveniently stuck to the corner of the
+screen.
+
+Scenario: the cleaner is bribed to switch on a machine with a supplied
+boot floppy to put in the drive, and writes down the password on the
+sticky note.
+
+So, without forward secrecy the attacker now has all the traffic said
+PGP user wrote in the life time of his encryption key.  What's that 1
+years traffic?  (He'll have collected the ciphertext by eavesdropping
+on SMTP traffic travelling over the internet).
+
+With say once-a-day forward secrecy, the attacker gets nothing, no
+previous communications, and no future communications.
+
+Granted the attacker can install a replacement version of PGP to try
+to get future traffic, but the company can run automated audit checks
+of varying sophistications each morning to check if machines have been
+switched on, and if files have been altered.  If tampering is
+detected, or perhaps every morning you re-install the machine from
+scratch remotely, as the MIT project did.  (Reckoned to be a human
+resource efficient method of running networks -- got a problem with
+your machine -- reload it, the lot no arguments).
+
+&gt; While Forward security via DH "may" be more secure is the added
+&gt; expense of implementing such a system justified??
+
+Forward secrecy in a way is not something you need to argue about
+adding or not as such, because in a sense you've already got it, built
+in to pgp5.0.
+
+To see what I mean you'd need to read Hal Finney's recent post on the
+OpenPGP list, where he described how you could already achieve forward
+secrecy using the fact that you've got a separate encryption key and
+signature key.
+
+You just set the encryption key to have a short expiry, and generate a
+new one when it does expire.  You sign the encryption keys with your
+signature key to transfer the WoT based trust to them.
+
+
+The only extra functionality I am arguing for over what PGP5.0 already
+has is some built in support for this type of usage, so that pgp will
+manage the generation of new keys at the key expiry point
+transparently.  That much as such doesn't need any modifications to
+the current PGP standard.  It's an implementation issue.  Another
+vendor could easily already implement this type of functionality.
+
+Also I'm arguing for separate communications and storage keys, I think
+this is almost essential once PGP starts to work with escrow schemes,
+because there are similar arguments for separating storage and
+communications keys as there were for creating separate signature and
+encryption keys from the original single key.
+
+&gt; We all could switch to using OTP's for maximum security but I doubt
+&gt; that few if any would justify the cost of such a system.
+
+Actually I hear Fred Piper was semi-seriously arguing for this ... his
+argument went like this: mass storage is cheap and getting cheaper
+fast; often the communications needed could be covered for years worth
+of comms between to organisations by exchanged of a small read only
+storage device.  Simple, and fool proof, etc.  But I digress.
+
+&gt; PS: current PGP key format does have a field for key expiration. Until 5.0
+&gt; it was only used in the Viacrypt version.
+
+I know, convenient for implementing this type of feature.
+
+
+I was also arguing for support for once per message forward secrecy.
+You should like that one because I was arguing that this should be
+done with out keyservers.  Just send the key to the person your
+communicating in the email you would like a forward secret reply to.
+
+I also personally prefer people to send me keys in email, because the
+pay per second phone lines here at home mean that I tend want to avoid
+doing too many online key lookups, so I think this would be an
+individually useful feature.
+
+Adam
+-- 
+Now officially an EAR violation...
+Have *you* exported RSA today? --&gt; <A  HREF="http://www.dcs.ex.ac.uk/~aba/rsa/">http://www.dcs.ex.ac.uk/~aba/rsa/</A>
+
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00684" HREF="msg00684.html">Re: D-H Forward Secrecy for E-Mail?</A></STRONG>
+<UL><LI><EM>From:</EM> "William H. Geiger III" &lt;whgiii@invweb.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00670" HREF="msg00670.html">Re: D-H Forward Secrecy for E-Mail?</A></STRONG>
+<UL><LI><EM>From:</EM> "William H. Geiger III" &lt;whgiii@invweb.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00678.html">Re: Encryption Program</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00681.html">Re: What's really in PGP 5.5?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00670.html">Re: D-H Forward Secrecy for E-Mail?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00684.html">Re: D-H Forward Secrecy for E-Mail?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00687"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00687"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

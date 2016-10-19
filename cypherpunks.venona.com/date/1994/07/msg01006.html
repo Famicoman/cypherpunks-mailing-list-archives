@@ -1,0 +1,196 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Why triple encryption instead of split+encrypt? -->
+<!--X-From-R13: fbyznaN[WF.SRG -->
+<!--X-Date: Tue, 19 Jul 94 11:32:40 PDT -->
+<!--X-Message-Id: 9407191831.AA24540@ua.MIT.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9407191650.AA02589@netmail2.microsoft.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Why triple encryption instead of split+encrypt?</TITLE>
+<LINK REV="made" HREF="mailto:solman@MIT.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00982.html">Date Prev</A>][<A HREF="msg01007.html">Date Next</A>][<A HREF="msg00969.html">Thread Prev</A>][<A HREF="msg01012.html">Thread Next</A>][<A HREF="index.html#01006">Date Index</A>][<A HREF="threads.html#01006">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Why triple encryption instead of split+encrypt?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: John Douceur &lt;<A HREF="mailto:johndo@microsoft.com">johndo@microsoft.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Why triple encryption instead of split+encrypt? </LI>
+<LI><em>From</em>: <A HREF="mailto:solman@MIT.EDU">solman@MIT.EDU</A></LI>
+<LI><em>Date</em>: Tue, 19 Jul 94 14:31:48 EDT</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: Your message of Tue, 19 Jul 94 09:47:17 -0700.            &lt;<A HREF="msg00969.html">9407191650.AA02589@netmail2.microsoft.com</A>&gt; </LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; I am claiming that your technique:
+&gt; 
+&gt; 	P0, P1, P2, ... Pn = S_KS(P)
+&gt; 
+&gt; 	C0 = E_K0(P0)
+&gt; 	C1 = E_K1(P1)
+&gt; 	C2 = E_K2(P2)
+&gt; 	.   .   .
+&gt; 	Cn = E_Kn(Pn)
+&gt; 
+&gt; Can be decomposed into parallel double encryptions, and is therefore just
+&gt; as vulnerable to a meet-in-the-middle attack as double DES (or more so,
+&gt; if your splitting algorithm is less secure than DES).
+
+We thus far agree. Vulnerability is dependent on splitting it into
+parallel problems.
+
+&gt; NB:  When I use
+&gt; the term "double encryption" here, I am not referring to your use of DES
+&gt; multiple times after the split; I am referring to the splitting itself as
+&gt; the first encryption, and the DES as the second encryption.
+
+AH! I hadn't been looking at it that way. I wish I had thought of it like
+that. You are then quite correct that meet-in-the-middle attacks can be
+done, but the key to the first encryption (the hashing multiplex) is 112
+bits (for the split into two parts version) which would require 2^112
+stored messages, substantially more than could possibly be stored by
+anybody ever (well, I guess ever is a bad word to use in this context). 
+
+&gt; Let us define the function Sx_KS(P) as the portion of the splitting
+&gt; algorithm which produces Px:
+&gt; 
+&gt; 	P0 = S0_KS(P)
+&gt; 	P1 = S1_KS(P)
+&gt; 	.   .   .
+&gt; 
+&gt; We now have a parallel set of double encryptions as follows:
+&gt; 
+&gt; 	P0 = S0_KS(P)
+&gt; 	C0 = E_K0(P0)
+&gt; 
+&gt; 	P1 = S1_KS(P)
+&gt; 	C1 = E_K1(P1)
+&gt; 
+&gt; 	.   .   .
+&gt; 
+&gt; Each of these double encryptions is vulnerable to a known-plaintext
+&gt; meet-in-the-middle attack from P to Cx.
+
+When I am multiplexing based just on the hash of the keys and not
+hash followed by negated hash, the cryptanalyst does not know how
+to derive Ci (i=1...n) from C. This is even more true if I interleave
+the cipher texts instead of sending them one after the other (which makes
+more sense if I am doing them in parallel anyway). Of course this only
+increases security by a few powers of two (about n-2 where the length of
+the hash is 2^n and we constrain the keys slightly to avoid lopsided
+splits) if the opponent has the memory available to do a meet in the middle 
+attack for n=2. For n=4 this increased security becomes substantial
+however. (Combinations of numbers that add up to the size of the hash as
+constrained by the binomial distribution and splits that the program
+determines to be acceptable.) It is still far less security than is
+provided by the rest of the algorithm, however. So I suppose I should
+consider this to negligible (even if it is around 2^10) and concede the
+point.
+
+&gt; &gt;I think that multiplexing based on the hash of the concatenated keys
+&gt; &gt;is as secure as the one way hash function is, no?
+
+&gt; In my above argument, I assumed a splitting key which is completely
+&gt; independent of the DES keys.  This will be more secure than a splitting
+&gt; key which is *any* function of the DES keys, since it increases the size
+&gt; of the keyspace.
+
+Certainly, but I figure that if using the hash of the keys stands up, then
+the stronger totally seperate version certainly will.
+
+&gt; &gt;&gt; the security of this scheme is significantly less
+&gt; &gt;&gt; than that of triple DES.
+&gt; 
+&gt; &gt;Well I don't believe that this is the case,
+&gt; 
+&gt; Perhaps you do now?
+
+Your point is unquestionably valid, but I still believe that the security
+of the scheme, even when just splitting into two parts and using the hash
+of the keys to multiplex the split, is much worse (by more than a couple
+of factors of two) than DES.
+
+I suppose I have merely created a new hash based symetric cipher. I will
+have to look up the other hash based symetric ciphers and see how they
+compare.
+ 
+&gt; &gt;but there is one way to find out
+&gt; &gt;:). I believe that for messages longer than a couple of K, my algorithm
+&gt; &gt;provides substantially more security than its DES analog and is quicker.
+&gt; &gt;I'll write up a version of this that splits into 4 parts and post it here
+&gt; &gt;some time over the next week. I think that splitting into four parts should
+&gt; &gt;be about as quick as double DES while providing substantially more security
+&gt; &gt;than triple DES (which I will time it against).
+&gt; 
+&gt; If you still maintain this position, then either you have not understood my
+&gt; argument above, or I seriously misunderstand your algorithm.  If you have
+&gt; not yet been convinced that you have not eliminated the meet-in-the-middle
+&gt; attack as triple encryption does, then I welcome your algorithm in code, so
+&gt; that I may see if I am missing something fundamental in your approach.
+
+I don't think that meet in the middle attacks are relevant because nobody
+has 2^112 memory. Its just alot. Schneier claims that at 128 bits there
+probably isn't enough matter in the universe to meet an algorithm using
+IDEA in the middle. I would say that 112 bits is nearly as solid a line of
+defense.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00969" HREF="msg00969.html">Re: Why triple encryption instead of split+encrypt?</A></STRONG>
+<UL><LI><EM>From:</EM> John Douceur &lt;johndo@microsoft.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00982.html">Re: Come On</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01007.html">Re: GUT and P=NP</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00969.html">Re: Why triple encryption instead of split+encrypt?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01012.html">Re: Why triple encryption instead of split+encrypt?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01006"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01006"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

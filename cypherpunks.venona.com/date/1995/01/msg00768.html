@@ -1,0 +1,154 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: How do I know if its encrypted? -->
+<!--X-From-R13: jpfNnapube.ub.ngg.pbz (ovyy.fgrjnegNcyrnfnagbapn.ape.pbz +1&#45;510&#45;484&#45;6204) -->
+<!--X-Date: Mon, 16 Jan 95 00:59:40 PST -->
+<!--X-Message-Id: 9501160856.AA23138@anchor.ho.att.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: How do I know if its encrypted?</TITLE>
+<LINK REV="made" HREF="mailto:wcs@anchor.ho.att.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00762.html">Date Prev</A>][<A HREF="msg00769.html">Date Next</A>][<A HREF="msg00746.html">Thread Prev</A>][<A HREF="msg00781.html">Thread Next</A>][<A HREF="index.html#00768">Date Index</A>][<A HREF="threads.html#00768">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: How do I know if its encrypted?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: How do I know if its encrypted?</LI>
+<LI><em>From</em>: <A HREF="mailto:wcs@anchor.ho.att.com">wcs@anchor.ho.att.com</A> (<A HREF="mailto:bill.stewart@pleasantonca.ncr.com">bill.stewart@pleasantonca.ncr.com</A> +1-510-484-6204)</LI>
+<LI><em>Date</em>: Mon, 16 Jan 95 03:56:22 EST</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Ben writes:
+&gt; Paul, I think we're after two different objectives here.
+&gt; You want Alice to  be sure that Dave can't read her file;
+&gt; I want Dave to be sure that he can't read Alice's files.
+
+Yeah.  Picking threat models is important.
+Alice's job is easy; she can just encrypt stuff.
+The problems are a bit different if the file can only be retrieved
+by Alice, or if she can give retrieval tokens to Bob, Carol,
+and alt.sex.spam.
+
+If Dave is running a free or cheap service, he also may
+need to prevent his site from becoming load-spammed by the
+permanent floating warez+porno crowd.  (As Eric pointed out,
+it's a policy-vs-mechanism issue; it's easier to run a service
+if you've got mechanisms to support any policy you want.)
+
+If Dave's charging for service, charging separately for
+storage and retrieval can help - that lets the one-storage,
+many-retrieval model work without having to use mechanisms like
+automatic deletion-after-reading, which may not be useful for
+some applications.  
+
+For Dave to be sure he can't read Alice's files, he can't 
+depend on Alice encrypting them - aside from entropy models
+which are generally not very useful, Alice could always
+encrypt the data and then publish the key.  So he has to do it.
+Here're 1.5 approaches that can work for some threats:
+
+Alice wants to store message M, using a key K known to Alice.
+(K could be hash H(M) if desired, or sent to Dave along with M.)
+Dave calculates H(K), encrypts M with K, stores E(M;K) under name H(K),
+and then discards K.  To retrieve files, Alice sends either K or H(K).
+There's some risk at storage - Dave is receiving the file,
+so he's vulnerable to cops between the time he PGP-decrypts the 
+message and the time he re-encrypts and destroys the key,
+but it's brief, and can be automated so he doesn't see it in person;
+he could still be coerced into eavesdropping future storage
+unless there's a good blinded variant on the method.
+
+Alice needs to keep or K or give it to her friends.
+If retrievals use K, Dave can decrypt on transmission (some risk,
+some potential revenue).  This has the advantage that Dave doesn't
+know the access token to retrieve a given file across the net,
+so he can't tell the cops what to scan for.
+
+If retrievals only use H(K), he can't decrypt on retrieval, 
+so even if the cops coerce Alice or bribe Bob into retrieving it,
+Dave doesn't see the content again; it's probably a lot safer for Dave.
+The risk is that cops who break Dave's system or coerce him into
+giving them the files will know to look for H(K) on other systems;
+scanning the net for anything that might hash to H(K) is much harder.
+Also, Alice might want to give Bob and Carol H(K) to retrieve the files,
+but not give them K to decrypt until later, or might send K
+through other channels that only the In Crowd get.
+
+Another extension is for Dave to store the file as H(H(K)), 
+to make it more work to match access tokens against files -
+Dave has the advantage of not even knowing the access token
+(which the retrieve-with-K method has) as well as not letting Dave decrypt.
+
+Using user-selected keys instead of message hashes is obviously a 
+lot faster, since Dave doesn't have to calculate them,
+and makes it a bit easier for Alice to memorize the keys 
+instead of storing them, but it requires more Syntax in the requests,
+and increases the chances of wimpy keys and especially collisions
+(which essentially never happen in hash-based systems, but are more
+common if people want to use keys like "Secret Plans".)
+And Alice can always store the hashes encrypted and stegoed,
+or store an index file on the datahaven and give her friends
+the access tokens for that instead of her whole collection.
+Hashes are also safer for Dave if Alice is compromised or spam is a problem,
+since he doesn't have to respond to requests for "spam1.gif" or
+"Nuclear Narcoterrorist KiddyPorn Monthly" or "Windows_for_95.c",
+which is riskier than requests for 0x402930be89a9c901.
+
+			Bill
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00762.html">RE: CP meeting lost&amp;found</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00769.html">Re: Jude Milhon in WIRED</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00746.html">Re: How do I know if its encrypted?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00781.html">Re: How do I know if its encrypted?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00768"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00768"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

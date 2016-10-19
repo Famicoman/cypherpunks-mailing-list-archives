@@ -1,0 +1,178 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Selection key crypto protocol trial balloon -->
+<!--X-From-R13: evfunoNqkz.rearg.va -->
+<!--X-Date: Mon, 6 Feb 95 14:01:26 PST -->
+<!--X-Message-Id: gate.wJ85Zc1w165w@dxm.ernet.in -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Selection key crypto protocol trial balloon</TITLE>
+<LINK REV="made" HREF="mailto:rishab@dxm.ernet.in">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00232.html">Date Prev</A>][<A HREF="msg00233.html">Date Next</A>][<A HREF="msg00216.html">Thread Prev</A>][<A HREF="msg00406.html">Thread Next</A>][<A HREF="index.html#00258">Date Index</A>][<A HREF="threads.html#00258">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Selection key crypto protocol trial balloon</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:mikeingle@delphi.com">mikeingle@delphi.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Selection key crypto protocol trial balloon</LI>
+<LI><em>From</em>: <A HREF="mailto:rishab@dxm.ernet.in">rishab@dxm.ernet.in</A></LI>
+<LI><em>Date</em>: Tue, 07 Feb 95 02:48:43 IST</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Before replying to Tim's comments on Mike Ingle's new directions for anonymity
+which, I think, are based on a misunderstanding of what Mike was essentially
+positing, here's my (slightly lengthy) take on the Selection Key Crypto 
+protocol. Please read it before criticising, as I've already done that...
+
+Mp is the plaintext message. Alice encrypts it with Bob's public key:
+Mc = E.kpub (M)                                 [1]
+
+She sends Mc to Hermes, the Hoarder of Messages. Hermes also receives 
+Alice's identity string (Ia) which will probably be anonymous, but let's 
+assume it's not. Now's the tricky bit. Hermes adds Mc to its message store, S:
+S' = G (S, Mc)                                  [2]
+
+The key here is G, the Digest function, which has to spread M over S (with a 
+variation of the Fourier function, perhaps), and not just append it, so that
+the _only_ way it can be extracted is with Bob's selection key, which Bob
+transmits to Hermes along with an involuntary identity string (Ib) to get:
+Mx = H.ksel (S')                                [3]
+
+where H.ksel is the Regurgitate function applied with Bob's selection key,
+and Mx is _not_ the original encrypted message, Mc, nor the plaintext Mp.
+
+Finally Bob decrypts Ms with his _private_ key (or possibly a variation, which
+we'll call v(kpri)), to get the plaintext:
+Mp = D.v(kpri) (Ms)                                [4]
+
+So the possible crypto operations are:
+Mp = D.kpri (E.kpub(Mp))
+Mp = D.v(kpri) (Mx)  where v(x) may be = x
+Mx = H.ksel (S')
+And the Digest function, S' = G (S, E.kpub(Mp))
+Note that only the private key kpri, and its variation v(kpri) are private. 
+The other two are public.
+
+Now for the obvious criticisms:
+1. after [1] Hermes can store Alice's identity (Ia) in a dark grey dossier,
+   and match it to Bob's identity (Ib) and the extracted message (Mx). Nope.
+   The premise of this scheme is that Mx doesn't look like Mc at all, and that
+   G (in [2]) dissolves the original message into a sludge, from which Mx
+   somehow emerges, NOT that it chops Mc into bits with Ia on a little nametag
+2. after [1] Hermes can store Ia along with the message and feed [Mc, Ia]
+   to [2] in the hope that it will reappear in [3] as [Mx, Ia']. Well, the
+   digest function has prevent this, possibly by making the regurgitated
+   thing so different from the input that matching Ia to Ia' will be 
+   impossible. Of course, Bob probably won't grok [Mx, Ia'] in [4]
+3. Hermes gets Bob's identity string (Ib) in [3]. Et alors? As that is 
+   incidental, not required to extract the message (unlike in a remailer, where
+   that identity string - e-mail address, return block, whatever is _precisely_
+   what is required for a message to reach), it's irrelevant. The _real_
+   identity is the selection key, which does not correlate to any cyberspatial
+   location. See further on traffic analysis.
+4. ksel, Bob's selection key, is obviously not private, at least not to Hermes,
+   and may as well be public. So anyone can extract the message intended for
+   Bob (which reinforces my previous point that Ib is irrelevant). But what
+   they extract is Mx, which is not the plaintext. To get the plaintext you
+   need not the selection key but Bob's private key, which only Bob has.
+5. The Digest function [2-3] has to be robust, i.e. it shouldn't puke if
+   it's got lots of messages, and should be able to extract the right one
+   in any state. Well, yes, that's tough.
+
+Traffic analysis
+The difference between the SKC model and remailers
+  Alice --&gt; (Raven, the remailer net) --&gt; Bob   .... multiplied ad infinitum
+  Alice --&gt; (Hermes) --&gt; Bob
+                     --&gt; Carol, David, the whole world as the 
+                         selection key is public
+The remailer net is essentially one-to-one, making traffic analysis easier
+and limiting Bob's deniability - if the last remailer says it's gone to Bob,
+it was _for_ Bob.
+
+The broadcast model essentially increases deniability - they all got it,
+any of them could have seen it if they had the key, and you'll only know that
+I had the private key with thumb-screws. But they all _get_ it, so bandwidth
+is huge.
+
+The SKC model is a compromise. It increases deniability - anyone could have
+got it, they all have the selection key, they could only have seen it with the
+private key etc. It cuts bandwidth. But it's not a data haven, at least not
+as earlier discussed.
+
+The data haven in its latest guise has the same deniability as SKC, and the
+same prerequisites that aid recipient protection (anon anon ftp etc). But it
+doesn't protect the sender. If the haven is in collusion with remailers that
+Alice used to post, it can link her to the message and possibly to Bob. With
+SKC, even with the collusion of remailers the link gets lost in digestion.
+Also, Bob (or anyone) can frequently extract stuff with the selection key,
+perhaps garbage if Hermes is misbehaving or without messages for Bob.
+
+Of course when (and how) Hermes is to expire messages is part of the problem
+of the various functions involved.
+
+Comments?
+
+
+-----------------------------------------------------------------------------
+For Electric Dreams subscriptions and back issues, send a mail to
+rishab@arbornet.org with 'get help' as the message Subject.
+
+Rishab Aiyer Ghosh          rishab@dxm.ernet.in           rishab@arbornet.org
+Vox +91 11 6853410 Voxmail 3760335       H 34C Saket, New Delhi 110017, INDIA  
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00232.html">Re: dna ink</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00233.html">Re: Cooperation</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00216.html">RE: Firewall chips</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00406.html">Re:  Selection key crypto protocol trial balloon</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00258"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00258"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,143 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: fast modular reduction -->
+<!--X-From-R13: Dnl Qebzjryy <ewpNpynex.arg> -->
+<!--X-Date: Thu, 7 Sep 95 17:49:09 PDT -->
+<!--X-Message-Id: 199509080048.UAA19561@clark.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.SUN.3.91.950907131638.6760C&#45;100000@eskimo.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: fast modular reduction</TITLE>
+<LINK REV="made" HREF="mailto:rjc@clark.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00465.html">Date Prev</A>][<A HREF="msg00457.html">Date Next</A>][<A HREF="msg00448.html">Thread Prev</A>][<A HREF="msg00354.html">Thread Next</A>][<A HREF="index.html#00473">Date Index</A>][<A HREF="threads.html#00473">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: fast modular reduction</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:weidai@eskimo.com">weidai@eskimo.com</A> (Wei Dai)</LI>
+<LI><em>Subject</em>: Re: fast modular reduction</LI>
+<LI><em>From</em>: Ray Cromwell &lt;<A HREF="mailto:rjc@clark.net">rjc@clark.net</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 7 Sep 1995 20:48:27 -0400 (EDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:rjc@clark.net">rjc@clark.net</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00448.html">Pine.SUN.3.91.950907131638.6760C-100000@eskimo.com</A>&gt; from "Wei Dai" at Sep 7, 95 04:47:21 pm</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+&gt; 
+&gt; The numbers you give are a bit off.  Assuming a 32-bit machine,
+&gt; n=64 implies a 2048-bit modulus, and a 4096-bit number to be reduced. 
+&gt; Also, Karatsuba should use 1/3 (2*64^1.58 / 64^2) the multiplications
+&gt; rather than 1/5. 
+
+The n=64 implies two 2048-bit numbers are being multiplied. The 2048-bit
+number comes from the fact that in a typical crypto app, modexp
+will be reducing numbers as large as the modulus squared which runs
+2048-bits for a 1024-bit modulus. The reciprocal is 1 block
+bigger than the number to be reduced. Hence, you are dealing with
+multiplying about two 2048-bit numbers. But since we only care
+about the "fractional" part of the result, we can safely throw
+away half the computation and only compute half the Karatsuba
+recursion tree. (the number before the decimal point is the
+quotient) Then, to determine the final remainder, we simply
+multiply by the modulus again, throwing away non-significant
+computation again. There is a normal n^2 method for reducing
+via reciprocal that only uses 1/4 the number of ops as the obvious
+technique.
+
+Your right about the 1/3 vs 1/5, I dunno where the 5 came from, must
+have been a typo in my calcs. The problem with Karatsuba is that it's
+hard to implement efficiently. Temporary ints should be kept to
+a minimum and be preallocated. The combine step requires 1 store,
+and 5 additions, of multiprecision integers. The split step requires
+no copying if you use pointer manipulation, and instead of shifting,
+don't add in place, but add "with shift" to the destination. Most
+of the implementations I've seen do too much copying and shifting.
+
+Given that some modern processors have efficient hardware multiply,
+it might not be worth all the trouble to trade mults for adds. If
+a processor has an efficient hardware FFT, it might even be worthwhile
+to use the FFT multiply method.
+
+Do you have a ref for the Montgomery method? I'm unfamilar with
+the name, I wonder if it's something I've seen before under
+a different label.
+
+Check out Schonhage's book "Fast Algorithms" They've implemented
+all the asymtotic algorithms efficiently and gathered
+performance data. I corresponded with Schonhage's grad student
+and he told me that Karatsuba wins for n&gt;=8, which I find difficult
+to see, when it takes about n=32 for my own implementation (not
+optimized) to break even.
+
+-Ray
+
+
+
+
+
+ 
+
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00448" HREF="msg00448.html">Re: fast modular reduction</A></STRONG>
+<UL><LI><EM>From:</EM> Wei Dai &lt;weidai@eskimo.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00465.html">Re: Collection of personal info</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00457.html">Re: Notes from NIS&amp;T Key Escrow Export conference.</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00448.html">Re: fast modular reduction</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00354.html">Re: fast modular reduction</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00473"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00473"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,178 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: MIME based remailing commands -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Thu, 9 Feb 95 09:10:03 PST -->
+<!--X-Message-Id: 199502091709.JAA15742@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: ab5f62d802021004dd65@[137.110.24.250] -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: MIME based remailing commands</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00451.html">Date Prev</A>][<A HREF="msg00435.html">Date Next</A>][<A HREF="msg00404.html">Thread Prev</A>][<A HREF="msg00484.html">Thread Next</A>][<A HREF="index.html#00433">Date Index</A>][<A HREF="threads.html#00433">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: MIME based remailing commands</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: MIME based remailing commands</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 9 Feb 1995 09:09:27 -0800</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00404.html">ab5f62d802021004dd65@[137.110.24.250]</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+lcottrell@popmail.ucsd.edu (Lance Cottrell) writes:
+&gt;With Mixmaster, everything is hidden inside the encrypted and ascii armored
+&gt;message structure.
+ 
+&gt;I use the :: token to let the remailer know that this is a remailer message
+&gt;of some sort. The Remailer-Type will eventually be used to indicate the
+&gt;version that created the message. It would be easy to add support for MIME.
+&gt;It would just replace the token and version number.
+ 
+&gt;All remailing instructions are inside the ascii armor.
+&gt;Note that the block of ascii armor is allways exactly the same length.
+ 
+&gt;::
+&gt;Remailer-Type: 2.0
+ 
+&gt;-----BEGIN REMAILER MESSAGE-----
+&gt;hQCMAgbmF1BLzawNAQP/RFw2/UagugMFPlnJ94KLmhaxDoplzAhNBCxuFRL2fosL
+&gt;V1YnFd2XVckJJ6vTe6DB+POO+V7HEdXkp3sWtjb56Am+/B+tM1TdeC6NPNV4g5PC
+&gt;[...]
+
+Ah, I see how you are doing it.  Having re-read your docs, I gather
+that when un-armored the file is in an encrypted binary format, and
+when decrypted at least the non-header portion of the file is still
+binary?  I think this is a good way to do it; it addresses the point
+Eric made recently about size expansion when an armored file is
+encrypted at each step.
+
+The one thing I would mention is that "::" was not originally intended
+as an indication that the message was to be remailed.  Rather, this was
+simply a "header pasting token" which could be used to move a few lines
+from the body up into the header for those people who can't set header
+fields on outgoing mail.  Then the presence of "Anon-To:" or whatever
+in the header is what actually causes the action.  So you don't need to
+use "::", you can just set your headers directly and get the same
+effect.  (This is not to say you need to do it like this, just that
+that is how the original design that Eric created worked.)
+ 
+If you did want to follow this model, you could think about using a
+MIME header to indicate the type of the message contents rather than
+the "::".  Another alternative would be to use a different special
+field in the mail header, like perhaps your "Remailer-Type: 2.0", but
+I'm not sure that a new top-level header field is the right place for
+this.  It looks to me like most of the standard headers deal more with
+moving the message around rather than with telling what would be done
+with it on receipt.  It's kind of a fine line but it looks to me like
+more of a job for a MIME content type since that is really what it is
+for.  You could use something like:
+ 
+MIME-Version: 1.0
+Content-Type: application/remail; version="2.0"
+
+or
+
+MIME-Version: 1.0
+Content-Type: application/remail-mark-2
+ 
+Then the rest of the message could look just as you have it.  Or, to use
+a little more of the existing standard, you could add:
+ 
+Content-Transfer-Encoding: base64
+ 
+and take out your BEGIN and END lines since it looks like you are using
+base64, although the augmented kind that PGP uses with the CRC at the
+end; you'd have to lose the CRC in that case.  (I wonder if PGP will do
+that in the MIME-PGP integration draft that is supposedly being worked
+on.)
+
+One question is, how do you actually send your messages in the
+mixmaster client and servers?  Do you go directly to sendmail, or do
+you use a user agent like /bin/mail?  If the former then it doesn't
+seem like it would be too hard to add these header fields.  On the
+receiving end then hopefully also it would not be much harder to match
+the Content-Type: string than the one you are using.
+
+The advantage, again, is that to a considerable extent this kind of
+application is exactly what MIME was planning for with the "application"
+content-type.  This lets you mark the contents of the message in a
+standard way.  And you are already using something very close to the
+base64 encoding that MIME specifies.  So this does seem like a good
+opportunity to go with the internet mainstream by following this
+standard.  If this seems like something you want to do I'm sure our MIME
+experts here can tell how to define a new content type.
+
+Hal
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6
+
+iQBVAwUBLzpMORnMLJtOy9MBAQHWTwIA5k+6zO6/mMagKrNZELu7gHO2USlPnVGI
++SnIaj1jGtkzaodyIaEiUptAB4v5xfX8Lg7f+lcGzJYcEGrIi3+UPQ==
+=NK01
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00404" HREF="msg00404.html">Re: MIME based remailing commands</A></STRONG>
+<UL><LI><EM>From:</EM> lcottrell@popmail.ucsd.edu (Lance Cottrell)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00451.html">Senate Version of HR666 (fwd)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00435.html">My pgp emacs code in ftp://ftp.markv.com/pub/jpp/pgpelisp/*</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00404.html">Re: MIME based remailing commands</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00484.html">Re: MIME based remailing commands</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00433"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00433"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

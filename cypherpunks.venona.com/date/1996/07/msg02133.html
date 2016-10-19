@@ -1,0 +1,175 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Digital Watermarks for copy protection in recent Billbo (fwd) -->
+<!--X-From-R13: Xvz Qubngr <enintrNrvafgrva.ffm.pbz> -->
+<!--X-Date: Thu, 25 Jul 1996 18:17:15 +0800 -->
+<!--X-Message-Id: 199607250621.BAA07021@einstein.ssz.com -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Digital Watermarks for copy protection in recent Billbo (fwd)</TITLE>
+<LINK REV="made" HREF="mailto:ravage@einstein.ssz.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02127.html">Date Prev</A>][<A HREF="msg02131.html">Date Next</A>][<A HREF="msg02354.html">Thread Prev</A>][<A HREF="msg02151.html">Thread Next</A>][<A HREF="index.html#02133">Date Index</A>][<A HREF="threads.html#02133">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Digital Watermarks for copy protection in recent Billbo (fwd)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Digital Watermarks for copy protection in recent Billbo (fwd)</LI>
+<LI><em>From</em>: Jim Choate &lt;<A HREF="mailto:ravage@einstein.ssz.com">ravage@einstein.ssz.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 25 Jul 1996 01:21:29 -0500 (CDT)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Hi all,
+
+The Sampling Theorem in operation is a little more complicated than the
+model that is being discussed.
+
+Forwarded message:
+
+&gt; From: mpd@netcom.com (Mike Duvos)
+&gt; Subject: Re: Digital Watermarks for copy protection in recent Billbo
+&gt; Date: Wed, 24 Jul 1996 21:38:36 -0700 (PDT)
+&gt; "Perry E. Metzger" &lt;perry@piermont.com&gt; writes:
+&gt; 
+&gt;  &gt; The Nyquist Theorem states you need exactly twice the
+&gt;  &gt; samples, not over twice. The magic number isn't something
+&gt;  &gt; like 2.2, its exactly 2.
+&gt; 
+&gt; The Sampling Theorem states that equally spaced instantaneous
+&gt; samples must be taken at a rate GREATER THAN twice the highest
+&gt; frequency present in the analog signal being sampled.  If this is
+&gt; done, the samples contain all the information in the signal, and
+&gt; faithful reconstruction is possible.
+
+Actualy the sampling theorem states that if you want to reproduce a signal
+reliably it must be sampled at a frequency AT LEAST TWICE that of the
+highest frequency of interest in the FFT of the signal. This means the
+signal must be deformable into sine waves, not all signals qualify for this
+particular limitation and in general are not good signals for sampling.
+An example is a step change from v1 to v2. since there is no change in
+voltage except for a brief moment the output of the FFT is pretty much flat.
+What comes out the other end looks like a spike (similar to what happens when
+you feed a square wave to a transformer and look at the output). If you
+reconstruct this via the sampling theorem you get a sign wave of extremely
+low amplitude and frequency.
+
+If you think of a FFT as taking a signal and breaking it down into componant
+frequencies. Then think of a hair comb where the lowest frequencies are the
+bigger teeth (put them to the L. when looking at it). Because sign waves
+have zero crossings a single sample per cycle is not enough. By taking at
+least two samples a cycle you are guaranteed not to miss the presence or
+absence of a componant frequency. So this guarantees that we get a accurate
+count of componants and their phase relations to each other (where the
+arbitrary time reference comes in - really a fixed frequency clock). Back to
+the comb. Where a given signal has a componant leave the teeth. Where there
+is no componant break them off. You are left with a ratty looking comb. Now
+to each of the remaining teeth assign an amplitude for that specific
+frequency that is consistent with the FFT you calculated. The way this FFT
+is implimented in practice is called a 'Comb Filter' where it samples the
+signal (wide bandwidth) over a set of very small bandwidth filters in
+parallel. Scanning the output of the filters at a fixed rate you get a phase
+relation as well. Digitize the signals in a particular pattern and you are
+ready to cut your CD or whatever.
+
+It does NOT guarantee faithful representation of the original signal but
+rather a signal with the same energy spectrum and phase characteristics.
+One of the basic ideas of Algebra is that any given curve can be explained
+by a arbitrary set of equations. The Sampling Theorem just gives you a
+rationale for picking from that set.
+
+&gt; Exactly twice the highest frequency won't do, and it should be
+&gt; obvious that sampling a sine wave at twice its frequency yields
+&gt; samples of constant magnitude and alternating sign which convey
+&gt; nothing about its phase and little useful about its amplitude
+&gt; either.  (Drawing a little picture might be helpful here.)
+
+Exactly what the theorem is supposed to produce. You take your original
+signal and run it through a FFT. You look at the bandwidth you desire. The
+highest frequency of interest is 1/2 or less your sampling frequency. With
+this information you can build a set of sine waves whose amplitude is given
+by the FFT along with phase relations. Since you are breaking the signal
+into sine waves (which happen to be well defined) all you realy need is to
+know the maximum and minimum amplitudes as well as their phase to some
+arbitrary but constant time reference. Sum them back together on the other
+side and what you got? A reasonable useable copy of your original signal.
+
+This is why DSP's are optimized for multiplication (multiply the amplitude
+of that componant by its presence in the FFT) and summing (add them together
+to get the target signal). Generaly because of noise and similar phenomena
+it is commen to multiply and add windows of samples (ie averaging).
+
+&gt; Although anything over twice the highest frequency will work in a
+&gt; theoretical sense, a small fudge factor does wonders for digital
+&gt; signal processing, if only to reduce to a reasonable value the
+&gt; width of the window into the sample stream needed for various
+&gt; signal manipulations.
+
+Actualy I believe the decision was made by Philips (the inventor of the CD)
+to settle on the 44kHz sample rate because of some design option it
+simplified. I unfortunately don't remember anything more specific than that.
+Anyone got the CD Rom bible?
+
+                                              Jim Choate
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="02151" HREF="msg02151.html">Re: Digital Watermarks for copy protection in recent Billbo (fwd)</A></STRONG>
+<UL><LI><EM>From:</EM> mpd@netcom.com (Mike Duvos)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02127.html">Re: DES-Busting Screen Savers?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02131.html">Re: Netscape (foreign downloads)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02354.html">Re: [Noise] [Smut] [Off-topic] Re: A Global Village, or thefuture   of porn on the net</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02151.html">Re: Digital Watermarks for copy protection in recent Billbo (fwd)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02133"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02133"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

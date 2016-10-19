@@ -1,0 +1,318 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: PGP key fingerprint spoofing -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Mon, 9 Jun 1997 05:02:04 +0800 -->
+<!--X-Message-Id: 199706082051.VAA05211@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>PGP key fingerprint spoofing</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00504.html">Date Prev</A>][<A HREF="msg00505.html">Date Next</A>][<A HREF="msg00519.html">Thread Prev</A>][<A HREF="msg00515.html">Thread Next</A>][<A HREF="index.html#00523">Date Index</A>][<A HREF="threads.html#00523">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>PGP key fingerprint spoofing</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>Subject</em>: PGP key fingerprint spoofing</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 8 Jun 1997 21:51:17 +0100</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@Algebra.COM">cypherpunks@Algebra.COM</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+Well we're all aware of the 0xDEADBEEF attack, right?  (PGP keyids,
+are the 8 hex digit number which PGP recognizes a key by.  The
+0xDEADBEEF attack (so christened by Greg Rose one of the people who
+independently rediscovered this attack) is where you generate a PGP
+key which has the same key id as someone else's key.  This could
+confuse a keyserver, or a user into using the wrong key.  This attack
+is fairly easy to do, just choose p ending in 0xDEADBEEF (or whatever
+the desired key id is), then start with q ending in 0x00000001, and
+add some value larger than 0xFFFFFFFF at each iteration doing your
+primality test, the p and q will then multiply to have the desired
+least significant bits of n).  You may also have noticed that Gary
+Howland has a keyid of 0xc001d00d ("cool dude", get it).
+
+Anyway it seems that you can spoof the finger print also indirectly,
+which is much less obvious, as the fingerprint is the MD5 hash of the
+RSA modulus concatenated with the RSA public exponent.
+
+This was described recently on coderpunks.  (I was forced to eat my
+words on coderpunks after declaring this was impossible without an
+exploitable flaw in MD5 or brute force of 2**128 bit search space,
+when someone explained the concatenation weakness).  I'm not sure who
+it was that discovered this attack, or which list/newsgroup this was
+announced on, but this was the first I had seen it discussed.
+
+The concatenation is the weakness, as if you have an RSA key of:
+
+n = 0x1234567
+e = 0x11
+
+Then you can try n = 0x12345, and e = 0x6711.  So you try factoring
+each n of this form, and if it has two factors p and q, then you can
+construct a key with the same fingerprint, but with different key.
+Anyone who bothers to would be able to factor 0x1234567 also, so it is
+not secure, but if you can fool someone into using this key in place
+of the real one, you can get their communications.  It will be much
+easier to fool someone to use this key as the fingerprint is the same!
+
+Here's an example...
+
+Say we have a 1024 bit key, say e is small ( &lt; 256).  That means
+n || e is 129 bytes long.
+
+The e value must be represented by a whole byte.  n can't be smaller
+than 384 bits (or PGP will reject it as too small to hold the required
+idea message key and padding), so that will give us 80 possible values
+for e and n.  Lets use my 1024 bit key for an example.
+
+n = 0x99d61071378ee2c0c8c9c4b7786b203dedf2d6e526f24f7e83f3e0f960fb66b9
+      cb81c04e89d70689a4866f21ad1bb5ba6aee51469e5b59b121ba6f3f8d776b62
+      7253ba5dc9fca8155a565b9893f695d83a0496eb977ee4659ee20e0f2eb49b25
+      93c11487b377cc5d767c79fb985b464d4ae94a5f45e42e3b29c8b89d556a4a67
+e = 0x13
+
+So we could try:
+
+e = 0x6713
+e = 0x4a6713
+e = 0x6a4a6713
+...
+n = 0x99d61071378ee2c0c8c9c4b7786b203dedf2d6e526f24f7e83f3e0f960fb66b9
+      cb81c04e89d70689a4866f21ad1bb5ba
+      
+e = 0x6aee51469e5b59b121ba6f3f8d776b627253ba5dc9fca8155a565b9893f695d8
+      3a0496eb977ee4659ee20e0f2eb49b2593c11487b377cc5d767c79fb985b464d
+      4ae94a5f45e42e3b29c8b89d556a4a6713
+
+Here's the first candidate I found with only two factors starting from
+the smallest n value (384 bit n) so that it would be quicker to
+factorize (anything that took a long time to factor I moved on to next
+value).
+
+n = 0x99D61071378EE2C0C8C9C4B7786B203DEDF2D6E526F24F7E83F3E0F960FB66B9
+      CB81C04E89D70689A4866F21AD1BB5BA6AEE51469E5B59B121BA6F3F8D776B62
+      7253BA5DC9FCA8155A565B9893F695D83A0496EB977EE465
+e = 0x9EE20E0F2EB49B2593C11487B377CC5D767C79FB985B464D4AE94A5F45E42E3B
+      29C8B89D556A4A6713
+
+p = 0x6D
+
+q = 0x1694DA7CA7DC9B69CD9ECAAC8BCDF6A41988A31132573CFD6EF72CC44FFF5330
+      69074D8CB3F0974586892A25D2F3A08C19173D406266A82CCA3C3F4D705CAF78
+      23922972C20D99D8DBF07E2DE20CB5B3B3F747797B3A8D9
+
+n = 0x99D61071378EE2C0C8C9C4B7786B203DEDF2D6E526F24F7E83F3E0F960FB66B9
+      CB81C04E89D70689A4866F21AD1BB5BA6AEE51469E5B59B121BA6F3F8D776B62
+      7253BA5DC9FCA8155A565B9893F695D83A0496EB977EE465
+
+d = 0x0455419C3B8CCE54710EC04F9FA61F83A5E2363BE0D2E361886080716E7B8886
+      EA62B748F20B9E9E7F93F768616D3AF5F8785D514A82EE41CB1FF251FFB053FA
+      173D0B239D7BD1995B4F7DE3B2B112F911BE1304453EAC53
+
+u = 0x0162AC862E1D88F2ACC3230A4AED13AEC3EA4A978387684ADA099644FF9FAA3D
+      D51F6BA831347C5D12AD1CDC72F5FE40F66228E54573373C4A0F255A091879BC
+      F2EA9509D46B673CB7C4EB8EDA0D6754DC373EA911653504
+
+(Factorization courtesy of pollard rho / trial division code in the
+factorization code which comes in ssh-1.2.20, which includes a
+modified gmp-2.0.2 which has the code in the demos directory.)
+
+I checked RSA operation (with my .sig rsa program which works with hex
+numbers rather than formatted pgp keys) -- it works!!
+
+% echo hello world | rsa -k=9EE20E0F2EB49B2593C11487B377CC5D767C79FB985B464D4AE94A5F45E42E3B29C8B89D556A4A6713 -n=99D61071378EE2C0C8C9C4B7786B203DEDF2D6E526F24F7E83F3E0F960FB66B9CB81C04E89D70689A4866F21AD1BB5BA6AEE51469E5B59B121BA6F3F8D776B627253BA5DC9FCA8155A565B9893F695D83A0496EB977EE465 &gt; out
+%
+% rsa -k=0455419C3B8CCE54710EC04F9FA61F83A5E2363BE0D2E361886080716E7B8886EA62B748F20B9E9E7F93F768616D3AF5F8785D514A82EE41CB1FF251FFB053FA173D0B239D7BD1995B4F7DE3B2B112F911BE1304453EAC53 -n=99D61071378EE2C0C8C9C4B7786B203DEDF2D6E526F24F7E83F3E0F960FB66B9CB81C04E89D70689A4866F21AD1BB5BA6AEE51469E5B59B121BA6F3F8D776B627253BA5DC9FCA8155A565B9893F695D83A0496EB977EE465 &lt; out
+hello world
+%
+
+I'm off to pack this up as a PGP key, to see if PGP likes it!
+
+Well here's that key as a pgp key.  Under no circumstances use it to
+encrypt a message you care about.  Here's the public key.
+
+Type Bits/KeyID    Date       User ID
+pub   704/977EE465 1997/06/08 Adam Back &lt;spoofed fingerprint DO NOT USE&gt;
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: 2.6.3i
+
+mQCNAzObE60AAAECwJnWEHE3juLAyMnEt3hrID3t8tblJvJPfoPz4Plg+2a5y4HA
+TonXBomkhm8hrRu1umruUUaeW1mxIbpvP413a2JyU7pdyfyoFVpWW5iT9pXYOgSW
+65d+5GUBSJ7iDg8utJslk8EUh7N3zF12fHn7mFtGTUrpSl9F5C47Kci4nVVqSmcT
+tCpBZGFtIEJhY2sgPHNwb29mZWQgZmluZ2VycHJpbnQgRE8gTk9UIFVTRT6JAG0D
+BRAzmxOtOgSW65d+5GUBAQ27ArwOTveQTs0kjzBEMa09yWFs5+jNjv5tzSCngzXO
+bRzvwhTwWz4voR3ov2o0bGTYZF1biKRKeKqZzHb4Oq4XhD4TADdlmsxA5gQgbYFN
+5K+tbgWEDQD53KFv
+=rlth
+-----END PGP PUBLIC KEY BLOCK-----
+
+Here's the secret half:
+
+-----BEGIN PGP SECRET KEY BLOCK-----
+Version: 2.6.3i
+
+lQGhAzObE60AAAECwJnWEHE3juLAyMnEt3hrID3t8tblJvJPfoPz4Plg+2a5y4HA
+TonXBomkhm8hrRu1umruUUaeW1mxIbpvP413a2JyU7pdyfyoFVpWW5iT9pXYOgSW
+65d+5GUBSJ7iDg8utJslk8EUh7N3zF12fHn7mFtGTUrpSl9F5C47Kci4nVVqSmcT
+AAK7BFVBnDuMzlRxDsBPn6Yfg6XiNjvg0uNhiGCAcW57iIbqYrdI8guenn+T92hh
+bTr1+HhdUUqC7kHLH/JR/7BT+hc9CyOde9GZW09947KxEvkRvhMERT6sUwAHbQK5
+AWlNp8p9ybac2eyqyLzfakGYijETJXPP1u9yzET/9TMGkHTYyz8JdFhokqJdLzoI
+wZFz1AYmaoLMo8P01wXK94I5IpcsINmdjb8H4t4gy1s7P3R3l7Oo2QK5AWKshi4d
+iPKswyMKSu0TrsPqSpeDh2hK2gmWRP+fqj3VH2uoMTR8XRKtHNxy9f5A9mIo5UVz
+NzxKDyVaCRh5vPLqlQnUa2c8t8TrjtoNZ1TcNz6pEWU1BIRbtCpBZGFtIEJhY2sg
+PHNwb29mZWQgZmluZ2VycHJpbnQgRE8gTk9UIFVTRT4=
+=lE9S
+-----END PGP SECRET KEY BLOCK-----
+
+Here are the fingerprints of spoofed key as compared to real key.
+
+Type Bits/KeyID    Date       User ID
+
+pub   704/977EE465 1997/06/08 Adam Back &lt;spoofed fingerprint DO NOT USE&gt;
+            Key fingerprint = 18 B8 A0 65 9D 38 14 83  61 5A E6 AC 91 8B 9E 57
+
+pub  1024/556A4A67 1993/06/08 Adam Back &lt;aba@dcs.ex.ac.uk&gt;
+            Key fingerprint = 18 B8 A0 65 9D 38 14 83  61 5A E6 AC 91 8B 9E 57
+
+Note the identical fingerprints!  (Awesome).
+
+Key id of course is different.
+
+Also note that you can't decrypt directly with PGP, as I suspected,
+because the chinese remainder theorem used in decrypt to speed up the
+works barfs on small p.  You can hack around that if you're bothered.
+It might be possible to find a spoofed fingerprint key with large p
+and q, so that this was not a problem.
+
+Below this post is my real key.
+
+This is a major security flaw, and I take my hat off to the guy who
+discovered it.
+
+As others noted (who were aware of this flaw) the solution is to
+consider the keyid as part of the fingerprint.  That reduces by a
+factor of 2^32 the likelihood of the attack succeeding.  I suspect
+that rules out the attack working for most keys.  Also be suspicous of
+odd sized keys.  Now if someones 2048 bit key has a 1024 bit spoof,
+you're in trouble.  I'd be interested in estimates of the likelihood
+of this being possible for a randomly selected key.
+
+You could construct a key where the keyid matched, and the fingerprint
+matched for two different keys, using a combination of dead beef
+attack, and brute force to find a key with the keyid appearing two
+places in the key, and then trying to factor the n value at that
+point.  Shouldn't take long.
+
+As far as PGP format goes, adding the length field into the digest
+would go along way towards fixing it.  (Length fields for pgp big int
+representation is big endian 16 bit word representing length of
+following big int in bits).
+
+There might still be a small chance of doing the fingerprint spoof
+where the length fields both happened to be right.  As you require a
+specific length field it would seem this attack would be 2^32 times
+less likely to succeed.  This would make most keys safe.  I wonder if
+there exists a key out there which would fall to this attack.
+
+(btw for people playing with this stuff, a useful program is
+pgpacket.pl by Mark Shoulsen, which displays pgp packets as hex
+numbers, see ftp.ox.ac.uk/pgp somewhere under utils).
+
+Adam
+
+My real key, so you can compare fingerprints.
+
+Type Bits/KeyID    Date       User ID
+pub  1024/556A4A67 1993/06/08 Adam Back &lt;aba@dcs.ex.ac.uk&gt;
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: 2.6.3i
+
+mQCNAiwUXUEAAAEEAJnWEHE3juLAyMnEt3hrID3t8tblJvJPfoPz4Plg+2a5y4HA
+TonXBomkhm8hrRu1umruUUaeW1mxIbpvP413a2JyU7pdyfyoFVpWW5iT9pXYOgSW
+65d+5GWe4g4PLrSbJZPBFIezd8xddnx5+5hbRk1K6UpfReQuOynIuJ1VakpnAAUT
+tBxBZGFtIEJhY2sgPGFiYUBkY3MuZXguYWMudWs+iQCVAwUQMiDfwUZRiTErSPb1
+AQF/yAP8D1X2eAhXSc0P/X7lCHyBhWCl3pxa6oyGxFBOmUeOGfYna8CpJeMiTmZm
+akRWDYmJUiXscQUfd9qRv8eAeOtbvM87olSjm56Dlh4gYJFZRxZ6IhHlFJx3mPmp
+q9PnL+pSC41IIheRBJFzpKGD3LW9+VQwRAx9bXFJYyOFpx7vGJqJAJUCBRAwLhaV
+fjuD7tLfgD0BAYnfA/0XByiiqDX/cxgWt9syiobJ0TrTKloJcEgzxnKmqHH7rhqn
+wWGQA2pbWPGW1AwLtkeE+JYyk21YQZZxYWerK3JUi8a/ye4EaaJSs8mcw9YCwdPC
+Xa0nlalh09/FBEt83l5auNbw+zl9AcrOIGsTQcAr0Vy5nnV9IEfi6WZ3/aQ734kB
+FQMFEC/gRoaxVzBJFqEkZQEBEXcIAI6z9nUinIomouzB/3v1Fu9+kLOLiva+7Mp1
+8UT40FXvHSabXe/cSV1//lnlYHJnfpJCPFSEjGox1pVBp9pLmiJBmubLfUrojIAn
+FDB081n6kB0B4BKb2rUiNghvT4CzpBZ149g/2NGscRIeQOCYkA2cBxT44v2luuqN
+3Ahg9bWu+kjnxUKIK9Da/8D0ur5HiinBDevPiVf3/uoOdZ8F7alxqitBcC5ctIYR
+tr8fgdQq8is6dbeNxDMraV5vEpEN27AU4xOetymdFUufbU1K6Riw5TVZni9qXAgU
+ZS3zyFw7wqJ/SWILMWp+99ss921b+GpL+/m6S4j7LTXvFvcfy9aJAJUDBRAv2A0p
+Kci4nVVqSmcBAcfoA/9Pt3BeJ3TdTtQzb9DNT7LoXiQesYG68lzIl7BZsRvXoi2Q
+yeCPNc/juTGBnKBHgxZezJCW8TaKdJjNEncv7p+1o+9fwmy9UKWXskh6N+Y0ZlhJ
+bD0T+8+L+Wxpr6k3dao/GfOnCvw8vpvzDV9lnjtqe2B1mU5eAY76FFtZXvM9xw==
+=xN9o
+-----END PGP PUBLIC KEY BLOCK-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00515" HREF="msg00515.html">PGP Key generation</A></STRONG>
+<UL><LI><EM>From:</EM> "Robert A. Costner" &lt;pooh@efga.org&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00504.html">Re: FC97 in July Wired</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00505.html">Fraud and free speech</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00519.html">Re: FC97 in July Wired</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00515.html">PGP Key generation</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00523"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00523"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

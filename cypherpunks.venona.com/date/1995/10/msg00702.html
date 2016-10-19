@@ -1,0 +1,107 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Two bugs in CERN3.0 HTTPD -->
+<!--X-From-R13: Dnl Qebzjryy <ewpNpynex.arg> -->
+<!--X-Date: Sat, 7 Oct 95 22:53:45 PDT -->
+<!--X-Message-Id: 199510080553.BAA29494@clark.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Two bugs in CERN3.0 HTTPD</TITLE>
+<LINK REV="made" HREF="mailto:rjc@clark.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00696.html">Date Prev</A>][<A HREF="msg00697.html">Date Next</A>][<A HREF="msg00703.html">Thread Prev</A>][<A HREF="msg00743.html">Thread Next</A>][<A HREF="index.html#00702">Date Index</A>][<A HREF="threads.html#00702">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Two bugs in CERN3.0 HTTPD</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Two bugs in CERN3.0 HTTPD</LI>
+<LI><em>From</em>: Ray Cromwell &lt;<A HREF="mailto:rjc@clark.net">rjc@clark.net</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 8 Oct 1995 01:53:35 -0400 (EDT)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+I have not verified whether or not both of these are security holes yet, 
+but the first one is very probably a security hole.
+
+
+1) overlong domain bug in Proxy mode
+Symptom: send a proxy request to the server, for instance
+GET <A  HREF="http://overlongdomain">http://overlongdomain</A> HTTP/1.0
+
+  This is the same bug that's in Netscape 1.1. The domain buffer
+is a 256 byte buffer declared on the stack. (char host[256])
+
+2) too many headers from CGI script
+Symptom: HTScript.c allocates an array of pointers to char on the stack. This
+array has size 100. The loop where they parse the output of a CGI script
+is not bounds checked.  To crash the server, create a CGI script that
+outputs a large number of headers before the document body.
+(I simply made a perl script that did for($i=0; $i&lt;1000; $i++) { 
+  print "Header$i: $i\n") Although this bug can coredump the process
+servicing the request, I doubt it is exploitable. All that happens is 
+an unchecked header_line[header_index++]=malloc(some space) gets executed.
+In the worst case, you overwrite the stack with excessive malloc pointers.
+You may be able to cause a foreign server to crash by having your own fake
+server return the exploit, and then getting the foreign server to
+read the headers by issuing a proxy request to your server.
+
+Suffice it to say, the CERN code is *littered* with temporary local
+stack arrays, and I'm guessing that many of them have faulty bounds
+checking (or none at all)
+
+-Ray
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00696.html">Re: cypherpunks digicash bank?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00697.html">Re: Graphic encryption</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00703.html">VCRplus code Algorithm</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00743.html">Re: Two bugs in CERN3.0 HTTPD</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00702"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00702"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

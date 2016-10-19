@@ -1,0 +1,218 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: For Pr0duct Cypher: faster mp_inv -->
+<!--X-From-R13: abobqlNfuryy.cbegny.pbz -->
+<!--X-Date: Fri, 4 Feb 94 15:55:19 PST -->
+<!--X-Message-Id: 199402042353.PAA17274@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>For Pr0duct Cypher: faster mp_inv</TITLE>
+<LINK REV="made" HREF="mailto:nobody@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00278.html">Date Prev</A>][<A HREF="msg00281.html">Date Next</A>][<A HREF="msg00347.html">Thread Prev</A>][<A HREF="msg00263.html">Thread Next</A>][<A HREF="index.html#00262">Date Index</A>][<A HREF="threads.html#00262">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>For Pr0duct Cypher: faster mp_inv</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: For Pr0duct Cypher: faster mp_inv</LI>
+<LI><em>From</em>: <A HREF="mailto:nobody@shell.portal.com">nobody@shell.portal.com</A></LI>
+<LI><em>Date</em>: Fri, 4 Feb 1994 15:53:25 -0800</LI>
+<LI><em>Comments</em>: This message is NOT from the person listed in the Fromline.  It is from an automated software remailing service operating atthat address.  Please report problem mail to &lt;hfinney@shell.portal.com&gt;.</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Pr0duct Cypher wrote:
+
+&gt; How big should the blinding factor be? I am not sure. Right now, it is set
+&gt; to the modulus minus one byte. This is certainly secure, but it takes a
+&gt; long time to unblind because mp_inv is a slow operation. If you know how
+&gt; long it needs to be, feel free to change it.
+
+PGP's mp_inv is needlessly slow.  It works OK for the little numbers
+they normally use ("e" exponents) but bogs down for big numbers.
+Fortunately I wrote a fast version of mp_inv some time ago just for
+this application (blinding).  You might say it is "blindingly" fast!
+
+Here it is, from my private copy of pgp source.  With this you can
+choose anything for your blinding.  You will probably want to change
+it to use your safemalloc.
+
+
+#ifdef OLD_MPINV
+/* Replaced by a faster routine, below */
+void mp_inv(unitptr x,unitptr a,unitptr n)
+	/* Euclid's algorithm extended to compute multiplicative inverse.
+	   Computes x such that a*x mod n = 1, where 0&lt;a&lt;n */
+{
+	/*	The variable u is unnecessary for the algorithm, but is 
+		included in comments for mathematical clarity. 
+	*/
+	short i;
+	unit y[MAX_UNIT_PRECISION], temp[MAX_UNIT_PRECISION];
+	unit gcopies[3][MAX_UNIT_PRECISION], vcopies[3][MAX_UNIT_PRECISION];
+#define g(i) (  &amp;(gcopies[i][0])  )
+#define v(i) (  &amp;(vcopies[i][0])  )
+/*	unit ucopies[3][MAX_UNIT_PRECISION]; */
+/* #define u(i) (  &amp;(ucopies[i][0])  ) */
+	mp_move(g(0),n); mp_move(g(1),a);
+/*	mp_init(u(0),1); mp_init(u(1),0); */
+	mp_init(v(0),0); mp_init(v(1),1);
+	i=1;
+	while (testne(g(i),0))
+	{	/* we know that at this point,  g(i) = u(i)*n + v(i)*a  */	
+		mp_udiv( g(iplus1), y, g(iminus1), g(i) );
+		mp_mult(temp,y,v(i)); mp_move(v(iplus1),v(iminus1)); mp_sub(v(iplus1),temp);
+	/*	mp_mult(temp,y,u(i)); mp_move(u(iplus1),u(iminus1)); mp_sub(u(iplus1),temp); */
+		i = iplus1;
+	}
+	mp_move(x,v(iminus1));
+	if (mp_tstminus(x))
+		mp_add(x,n);
+	mp_burn(g(iminus1));	/* burn the evidence on the stack...*/
+	mp_burn(g(iplus1));
+	mp_burn(v(0));
+	mp_burn(v(1));
+	mp_burn(v(2));
+	mp_burn(y);
+	mp_burn(temp);
+#undef g
+#undef v
+}	/* mp_inv */
+
+#else /* OLD_MPINV */
+
+/* Faster mp_inv, based on "Fast Multiplicative Inverse in Modular
+ * Arithmetic", J. Gordon, in Cryptography and Coding, edited by
+ * Henry J. Beker and F.C. Piper, 1989.
+ * The mapping from the variables in that paper to our variables is,
+ * roughly, M-&gt;n, X-&gt;a, HCF-&gt;u(iminus1), U-&gt;u(i), temp-&gt;u(iplus1),
+ * INV-&gt;v(iminus1), V-&gt;v(i), temp-&gt;v(iplus1).  We rotate the assignment to temp
+ * and INV in their 2nd block of code.
+ */
+void mp_inv(unitptr x,unitptr a,unitptr n)
+	/* Euclid's algorithm extended to compute multiplicative inverse.
+	   Computes x such that a*x mod n = 1, where 0&lt;a&lt;n */
+{
+	/*	The variable u is unnecessary for the algorithm, but is 
+		included in comments for mathematical clarity. 
+	*/
+	int shifts;
+	int i = 1;
+	int enterloop;
+	unit vcopies[3][MAX_UNIT_PRECISION], ucopies[3][MAX_UNIT_PRECISION];
+#define u(i) (  &amp;(ucopies[i][0])  )
+#define v(i) (  &amp;(vcopies[i][0])  )
+/* Modify this to do one division at the beginning.  That makes it faster.
+	mp_move(u(0),n); mp_move(u(1),a);
+	mp_init(v(0),0); mp_init(v(1),1); mp_init(v(2),1);
+ */
+	mp_move(u(0),a); mp_init(v(0),1);
+	/* Init U to n%a, V to -n/a. */
+	mp_udiv(u(1), v(1), n, a); mp_neg(v(1)); mp_move(v(2),v(1));
+	do {
+		enterloop = 0;
+		shifts = -1;
+		if (mp_compare(u(i),u(iminus1)) &gt; 0)	/* if U &gt; HCF then */
+			mp_init(u(iplus1),0);
+		else {
+			enterloop = 1;
+			mp_move(u(iplus1),u(i));			/* temp := U */
+			while (mp_compare(u(iplus1),u(iminus1)) &lt;= 0) {	/* temp&lt;=HCF */
+				++shifts;
+				mp_shift_left(u(iplus1));		/* leftshift(temp,1) */
+			}
+			mp_shift_right_bits(u(iplus1),1);	/* rightshift(temp,1) */
+		}
+		mp_sub(u(iminus1),u(iplus1));			/* temp := HCF - temp */
+		mp_move(u(iplus1),u(iminus1));
+
+		i = iplus1;		/* V := tempV, tempV := INV, INV := V, */
+						/* U := tempU, tempU := HCF, HCF := U; */
+						/* (All simultaneous) */
+
+		if (enterloop) {
+			while (shifts--)
+				mp_shift_left(v(i));			/* leftshift(V,shifts) */
+			mp_sub(v(iplus1),v(i));				/* temp = temp - V */
+		}
+		mp_move(v(i),v(iplus1));				/* V := temp */
+	} while (testne(u(i),0) &amp;&amp; mp_compare(u(i),u(iminus1))!=0);
+	mp_move(x,v(iminus1));
+	if (mp_tstminus(x))
+		mp_add(x,n);
+	mp_burn(u(0));	/* burn the evidence on the stack...*/
+	mp_burn(u(1));
+	mp_burn(u(2));
+	mp_burn(v(0));
+	mp_burn(v(1));
+	mp_burn(v(2));
+#undef u
+#undef v
+}	/* mp_inv */
+#endif /* OLD_MPINV */
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.1e
+
+iQCVAgUBLVLeoArkCJ6S8691AQH9/QP+LRZ4oXiwNTUkpK7/4uJWhvJCLHPsCNsR
+YXruZCgY1448DRpbNV4PCtFg/GhDqvJpsWtWOy3lFZIO9zxrDb/tsIfruIJJZr0w
+lpWhhY+xUJNQYuqgu69EOY2IhJPiyZ+AyMuE4uYscuxEKmAEdLm/BAypX1zNplue
+NdURpM+pPw4=
+=f7BH
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00278.html">Re: STEG: a real-life use for steganography</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00281.html">Re: Running regularly</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00347.html">Re: doj_escrow_intercept.procedures (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00263.html">clipper_q-and-a.txt</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00262"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00262"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

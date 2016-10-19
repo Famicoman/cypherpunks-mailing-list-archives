@@ -1,0 +1,318 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: procmail&#45;pgp -->
+<!--X-From-R13: X. [vpunry Rvruy <zqvruyNgevgba.haz.rqh> -->
+<!--X-Date: Mon, 15 Nov 93 23:14:05 PST -->
+<!--X-Message-Id: 9311160713.AA10159@triton.unm.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>procmail-pgp</TITLE>
+<LINK REV="made" HREF="mailto:mdiehl@triton.unm.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00610.html">Date Prev</A>][<A HREF="msg00619.html">Date Next</A>][<A HREF="msg00610.html">Thread Prev</A>][<A HREF="msg00613.html">Thread Next</A>][<A HREF="index.html#00614">Date Index</A>][<A HREF="threads.html#00614">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>procmail-pgp</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: procmail-pgp</LI>
+<LI><em>From</em>: J. Michael Diehl &lt;<A HREF="mailto:mdiehl@triton.unm.edu">mdiehl@triton.unm.edu</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 16 Nov 1993 00:13:08 -0700 (MST)</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+     Well, I had a few set-backs, but the alpha version of my procmail pgp
+preprocessor is ready to test.  I've been using it for about a week now, and 
+it seems to work well.  I hope you enjoy it.  Comments are welcome.
+
+     The procmail recipes in this file will make using many of
+pgp's Email-related features automatic.  What they will do for you
+is:
+
+1)   Automatically verify pgp signed messages.
+2)   Automatically determine who a pgp encrypted message is
+     intended for.
+3)   Automatically add mailed pgp keys to your pubring.pgp file.
+4)   Allow people who do not use pgp to request that their messages
+     to you get stored in an encrypted form.  This will prevent
+     nosy systems administrators from reading your mail.
+5)   Allow people to also request that the entire message,
+     including the header, be encrypted.  This will prevent anyone
+     from even determining where you get your mail from, mail logs
+     not withstanding.
+6)   Modify a message's subject to inform you that it contains a
+     key (key), a signed message (sig), and/or an encrypted message
+     (prv).
+
+     There are a few things I'd like to add to this file.  I'd like
+to search messages for references to "pgp", "finger" and have
+procmail finger the sender's account and send the output to pgp -
+kaf.
+
+     These recipes are writen in a modular form.  The recipes which
+make up this system can be extracted from the rest of your
+.procmailrc file with the command:
+
+awk '/#.pgp-start/,/#.pgp-end/ {print $0} {continue}' &gt; out.pro
+
+     To get the system working, you have to have procmail
+installed, and in your path.  You will need to edit the included
+.procmailrc file as described below.  Then you have to put a (the?)
+.procmailrc file in your home directory.  Next, you have to modify
+your .forward file to look like:  (change it as appropriate)
+
+mdiehl@triton.unm.edu
+"|IFS=' ';if test .`/bin/hostname` = .triton.unm.edu; then exec /nfs/dorado/u11/mdiehl/bin/procmail -p ; else exit 0; fi"
+
+     Finally, you will have to configure the .procmailrc file.  You
+will have to change these variables to something appropriate to your 
+environment.
+
+PATH= 
+ME=
+HOME=	
+MAILDIR =	/usr/spool/mail	
+SENDMAIL=	/usr/lib/sendmail
+TMP=		/usr/tmp
+
+The previous ones are self-explanitory.
+
+SECSTR=		=-=-=-=-=-=-PGP-INFO-=-=-=-=-=-=-=
+
+Set this one to something pleasing to the eye, but that only you know.  This 
+will prevent others from spoofing the procmail-pgp validation info.  Trust me.
+
+LOGFILE =	$HOME/PROCMAIL_LOG
+
+The logfile is invaluable for debugging.....
+
+AFROM=		"root@can.see.this (Big Brother isn't watching me!)"
+ASUB=		"How's the wife?"
+
+When a person requests that all of his message is to be encoded, procmail-pgp
+uses AFROM as the new From: header, and ASUB as the new Subject: header.  Be
+creative.
+
+
+BTW, if you want to request that either all of a message, or just the body is
+to be encrypted, you include either:
+
+X-request-pgp-encoded: all
+X-request-pgp-encoded: body
+
+at the beginning of a line in the body of the message, or in the header.  I 
+hope you have lots of fun with this. ;^)
+
+----------cut----here------ ;^)
+
+# pgp-start
+
+PATH=/usr/local/bin:/usr/ucb:/bin:/usr/bin:/nfs/dorado/e1/ultmips4.2/gnu/bin:/usr/new:$HOME/bin:/nfs/dorado/unsup/bin/:.
+ME=		mdiehl
+HOME=		/nfs/dorado/u11/mdiehl
+MAILDIR =	/usr/spool/mail	
+SECSTR=		=-=-=-=-=-=-PGP-INFO-=-=-=-=-=-=-=
+LOGFILE =	$HOME/PROCMAIL_LOG
+TMP=		/usr/tmp
+AFROM=		"root@can.see.this (Big Brother isn't watching me!)"
+ASUB=		"How's the wife?"
+SENDMAIL=	/usr/lib/sendmail
+
+DEFAULT =	$MAILDIR/$ME
+TMPFILE=	$TMP/procmail.$$
+VALIDATE=	"echo $SECSTR"
+PGPMSGS=	"(^Good)|(^Valid)|(^.WARNING)|(^.ERROR)|(^.Key)|(^.Error)|(^No)|(^File)|(^.You)|(^Bad)|(^pub)|(^sig)"
+PGPPATH=	$HOME
+DELIVER=	"procmail -p $HOME/.procmailrc"
+LOCKFILE=	$MAILDIR/$ME.lock	# This will remove the global lockfile
+					# $HOME/.lockmail and the new lockfile
+					# will be $MAILDIR/whatever
+
+#
+#	Lets take care of some business first.
+#
+VERBOSE=NO
+DO= `rm -f $HOME/pubring.bak`
+FROM= `formail -rx"To:"`
+SUBJECT= `formail -x"Subject:"`
+LOG=	"======$FROM
+"
+# pgp-end
+
+#
+#	This retains a list of everyone who sends me mail
+#
+:0whc
+| echo $FROM &gt;&gt; $HOME/HEADERS ; sort -u &lt; $HOME/HEADERS &gt; $TMPFILE ; mv -f $TMPFILE $HOME/HEADERS
+# 
+#
+#	Send and delete PROCMAIL_LOG
+#
+:0
+* ^Subject:.+PROCMAIL_LOG
+| cat &gt; /dev/null ; elm -sLog me &lt; $HOME/PROCMAIL_LOG ; rm -f $HOME/PROCMAIL_LOG
+
+#
+#	This one sends an automatic reply to special people.
+#	I think I broke this one.
+:0c
+* ^Subject:.+1234567890
+* !^FROM_DAEMON
+* !^From.+$ME
+* !^X-Loop:
+| (formail -r -A"X-Loop:$ME" ; cat $HOME/AUTO-REPLY) | $SENDMAIL -t 
+ 
+#
+#	Forward to my novell account
+#
+:0c
+* ^Subject:.+Urgent
+! miked@anderson.unm.edu 
+ 
+ 
+#
+# From peb@procase.com Tue Oct 26 18:03:16 1993
+#
+#:0B
+#* subscribe|unsubscribe|sign.on|sign.off|signon|signoff|remove|add|SUBSCRIBE|UNSUBSCRIBE
+#/$HOME/SUBSCRIBTIONS
+
+#
+#	DeDigest digests.
+#
+:0
+* ^From:.+linux-activists@
+| formail +1 -A"X-from:Linux-Activists" -ds $DELIVER
+:0
+* ^Subject:.+Homebrew.Digest
+| formail +1 -A"X-From:Homebrew-Digest" -ds $DELIVER
+
+# pgp-start
+
+VERBOSE=YES
+
+#
+#	Validate pgp signed messages.
+#
+:0chHBw
+* ^-+BEGIN.PGP.SIG
+* !^X-Loop-signed:
+| cat &gt; $TMPFILE ; $VALIDATE &gt;&gt; $TMPFILE  
+:0wbAc
+| pgp -f +batchmode |&amp; egrep $PGPMSGS &gt;&gt;&amp; $TMPFILE ; $VALIDATE &gt;&gt; $TMPFILE
+:0Ab
+| cat &gt;&gt; $TMPFILE ; formail &lt; $TMPFILE -i"X-Loop-signed:$ME" -i"Subject: (sig) $SUBJECT" | $DELIVER ; rm -f $TMPFILE ;
+
+#
+#	Adds included pgp public keys to keyring.
+#
+:0chHBw
+* ^-+BEGIN.PGP.PUBLIC
+* !^X-Loop-key:
+$TMPFILE 
+:0Awc
+| cat &gt; /dev/null ; $VALIDATE &gt;&gt; $TMPFILE 
+:0wbAc
+| pgp -kaf +batchmode |&amp; egrep $PGPMSGS &gt;&gt;&amp; $TMPFILE ; $VALIDATE &gt;&gt; $TMPFILE
+:0bA
+| cat &gt;&gt; $TMPFILE ; formail &lt; $TMPFILE -i"X-Loop-key:$ME" -i"Subject: (key) $SUBJECT" | $DELIVER ; rm -f $TMPFILE ;
+#
+#	Validate pgp messages.
+#
+:0chHBw
+* ^-+BEGIN.PGP.MESSAGE
+* !^X-Loop-message:
+$TMPFILE
+:0Awc
+| cat &gt; /dev/null ; $VALIDATE &gt;&gt; $TMPFILE
+:0wbAc
+| pgp -f +batchmode |&amp; egrep $PGPMSGS &gt;&gt;&amp; $TMPFILE ; $VALIDATE &gt;&gt; $TMPFILE
+:0bA
+| cat &gt;&gt; $TMPFILE ; formail &lt; $TMPFILE -i"X-Loop-message:$ME" -i"Subject: (prv) $SUBJECT" | $DELIVER ; rm -f $TMPFILE ;
+
+#
+# These two are used to encrypt email that has a specific header in it.
+#
+:0hcHBw
+* ^X-request-pgp-encoded:.+body
+* !X-Loop
+* !X-Loop:.+$ME
+| cat &gt; $TMPFILE
+:0Ab
+| pgp -fet $ME &gt;&gt; $TMPFILE ; formail &lt; $TMPFILE -A"X-Loop:$ME" | $DELIVER ; rm -f $TMPFILE ;
+ 
+:0bhHB
+* ^X-request-pgp-encoded:.+all
+| pgp -fet $ME | formail -A"From: $AFROM" -A"Subject: $ASUB" | $DELIVER ; rm -f $TMPFILE ;
+
+# pgp-end
+
+#:0Hbcw
+#* ^Subject:.+(hacker)|(Hacker)|(HACKER)$
+#* ? grep $FROM &lt; $HOME/members
+#* !X-Loop:.+$ME
+#| egrep "^((do)|(DO)|(Do)|(password))" &gt; $TMPFILE 
+#:0Ac
+#| set PASS1=`grep password &lt; $TMPFILE | awk '{ print $2}'` ;\
+#	set PASS2=`grep $FROM &lt; $HOME/members | awk '{ print $2}'`
+#LOG= "$PASS1 $PASS2"
+#:0A
+#? test "$PASS1 -eq $PASS2"
+#| elm -s$PASS1 me  
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00613" HREF="msg00613.html">Re: procmail-pgp</A></STRONG>
+<UL><LI><EM>From:</EM> steve willey &lt;willey@seattleu.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00610.html">Enclosing something in a clearsig'd message</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00619.html">Kiddie Porn Alert</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00610.html">Enclosing something in a clearsig'd message</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00613.html">Re: procmail-pgp</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00614"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00614"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

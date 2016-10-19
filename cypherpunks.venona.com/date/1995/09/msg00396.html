@@ -1,0 +1,164 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: fast modular reduction -->
+<!--X-From-R13: Dnl Qebzjryy <ewpNpynex.arg> -->
+<!--X-Date: Thu, 7 Sep 95 01:14:50 PDT -->
+<!--X-Message-Id: 199509070811.EAA07559@clark.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199509070157.VAA16973@clark.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: fast modular reduction</TITLE>
+<LINK REV="made" HREF="mailto:rjc@clark.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00395.html">Date Prev</A>][<A HREF="msg00418.html">Date Next</A>][<A HREF="msg00372.html">Thread Prev</A>][<A HREF="msg00448.html">Thread Next</A>][<A HREF="index.html#00396">Date Index</A>][<A HREF="threads.html#00396">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: fast modular reduction</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:rjc@clark.net">rjc@clark.net</A> (Ray Cromwell)</LI>
+<LI><em>Subject</em>: Re: fast modular reduction</LI>
+<LI><em>From</em>: Ray Cromwell &lt;<A HREF="mailto:rjc@clark.net">rjc@clark.net</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 7 Sep 1995 04:11:08 -0400 (EDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:weidai@eskimo.com">weidai@eskimo.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00372.html">199509070157.VAA16973@clark.net</A>&gt; from "Ray Cromwell" at Sep 6, 95 09:57:53 pm</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+I wrote:
+&gt; modifications. Is there an algorithmic analysis available? I also
+&gt; I think there is a bug in your description. Let k+1 = n+1
+&gt; (e.g. the dividend is 1 more "block" than the modulus). Then
+&gt; i=n starting out, and we have
+
+ Upon a closer look, I see there's no mistake. The algorithm will
+never reach k=n because the loop stops at n+1.
+
+ Anyway, I played around with the algorithm a little, and it's neat
+and easy to implement, but the speed increase is not worth
+the patent hassle (assuming there is a speed increase, I saw none)
+
+  The algorithm is still basically O(n^2) if used in a modexp
+routine. It requires n^2 multiplications and additions. Whereas,
+a typical Karatsuba multiplication using a high precision
+reciprocal will only use 2*n^1.5 multiplications and 5*n^1.5/8
+additions. (for n=64 which is a 2048-bit number being reduced, 
+it's about 1/5 the multiplications, but 5 times the additions)
+
+
+Two other possible algorthms are:
+
+Let P(x) = sum(i=0 to n-1) a_i x^i be a multiprecision integer
+radix x.
+
+If m is a modulus, of length n/2, rewrite P(x) as
+
+sum(i=0 to n/2-1) a_i x^i  + x^(n/2) (a_{n/2 + i} x^i)
+
+break the summation into two parts. Focus on the second term.
+(both terms are not equal, or one digit larger than the modulus)
+Perform modular reduction of the right hand polynomial using
+Horner's method
+
+x*(x*(x*...(x*a_i + a{i-i} mod m)mod m)mod m) 
+
+Those internal mod m's can be done quickly with a 2-digit
+trial quotient estimation.
+
+
+It's still O(n^2), but might be quicker.
+
+Still another technique..
+
+Rewrite P(x) 
+
+(a_0 + a_2 x^2 + a_4 x^4 + ...) + x (a_1 + a_3 x^2 + a_5 x^4 + ...)
+
+[broken into two Polys with odd and even terms)
+Factor out x^2 out of each piece and write
+
+a_0 + ((a_2 + a_4 x^2 + a_6 x^4 + ...)*x^2) + 
+x*(a_1 + x^2*(a_3 + a_5 x^2 + a_7 x^4 + ...)
+
+Now keep applying the recursive rule until the length of the
+poly pieces are the same or smaller than the modulus. Now,
+start evaluating from the inner layers. Multiply each piece by
+x^2 (two shifts), and take the mod. Sum the results, shifting one side by 
+1 (for the x factor). Shifts are free because an array representation
+yields a shift with a pointer movement.
+
+
+It looks kinda like the method for evaluating  FFTs a little bit,
+but it's not. Just something off the top of my head just now.
+(I hereby place it in the public domain assuming it's worth
+anything, no patents please)  I think with a clever implementation, you can 
+trade some mults for more adds, but still use less additions than russian 
+peasant.
+
+
+-Ray
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00448" HREF="msg00448.html">Re: fast modular reduction</A></STRONG>
+<UL><LI><EM>From:</EM> Wei Dai &lt;weidai@eskimo.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00372" HREF="msg00372.html">Re: fast modular reduction</A></STRONG>
+<UL><LI><EM>From:</EM> Ray Cromwell &lt;rjc@clark.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00395.html">Re: What is truth?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00418.html">subscripe</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00372.html">Re: fast modular reduction</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00448.html">Re: fast modular reduction</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00396"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00396"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

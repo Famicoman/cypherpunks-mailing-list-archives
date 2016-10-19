@@ -1,0 +1,188 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Brute Force DES -->
+<!--X-From-R13: "Brgre Ferv" <gervNcebprff.pbz> -->
+<!--X-Date: Tue, 23 Jul 1996 15:56:49 +0800 -->
+<!--X-Message-Id: 199607222043.NAA06313@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Brute Force DES</TITLE>
+<LINK REV="made" HREF="mailto:trei@process.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01828.html">Date Prev</A>][<A HREF="msg01755.html">Date Next</A>][<A HREF="msg01899.html">Thread Prev</A>][<A HREF="msg01879.html">Thread Next</A>][<A HREF="index.html#01778">Date Index</A>][<A HREF="threads.html#01778">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Brute Force DES</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:frissell@panix.com">frissell@panix.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:trei@process.com">trei@process.com</A></LI>
+<LI><em>Subject</em>: Re: Brute Force DES</LI>
+<LI><em>From</em>: "Peter Trei" &lt;<A HREF="mailto:trei@process.com">trei@process.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 22 Jul 1996 16:55:17 -6</LI>
+<LI><em>Comments</em>: Authenticated sender is &lt;trei@popserver&gt;</LI>
+<LI><em>Organization</em>: Process Software</LI>
+<LI><em>Priority</em>: normal</LI>
+<LI><em>Reply-to</em>: <A HREF="mailto:trei@process.com">trei@process.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; Peter wrote:
+&gt; &gt;Any one up for a distributed brute force attack on single DES? My 
+&gt; &gt;back-of-the-envelope calculations and guesstimates put this on the
+&gt; &gt;hairy edge of doability (the critical factor is how many machines can
+&gt; &gt;be recruited - a non-trivial cash prize would help). 
+
+Duncan wrote: 
+&gt; I volunteer my 120 MHZ Pentium.  A lot more Pentiums are out there now than
+&gt; a year ago.  That makes it more feasible.  A lot more people with full net
+&gt; connections.  Like most Americans, I have a flat rate net connection and a
+&gt; flat rate local phone connection so could run a cracking session permanently
+&gt; (as long as no one tells my ISP).  We need a full test of the Winsock
+&gt; cracking client in any case.  It wasn't working very well last time.
+&gt; 
+&gt; DCF
+
+&lt;back-of-envelope&gt;
+
+In my terminology, 'hairy edge of doability" means we have a shot
+at success, but I wouldn't bet the farm on it.
+
+I thought that I might bet a couple hundred bucks, though.
+
+Sadly, after further calculation, I'm not so sure if it's doable just yet.
+
+What I'm looking at is a known plaintext attack on single ECB DES, 
+using a brute-force test to cycle through the key space. People 
+would get chunks of keyspace to test from a central server or 
+servers, and would be motivated to take part by a cash prize for
+the lucky person who finds the key.
+
+Lets do  the numbers:
+
+Single DES has the security of 56 bits of key - there are 64 bits in the
+keys, but 8 of them are parity bits which add nothing to security.
+
+2^56  = 7.205e16 keys (which is a whopping big number)
+
+Let's guess that we can recruit the equivalent of full-time on 1000
+machines.
+
+7.205e13 keys/machine.
+
+Let's guess that we have about a month before people start to lose 
+interest - so we want to be more than 1/2 done by then. Lets say
+we want to sweep the whole space in 40 days.
+
+1.8e12 keys/machine/day 
+
+~21,000,000 keys/machine/second
+
+The fastest general purpose, freely available des implementation I'm
+aware of is libdes. by Eric Young. With this, I can do a set_key in 
+15.8 us, and an ecb_encrypt in 95 us/block. That adds up to 
+about 9,000 keytests/sec (this is on a 90 MHz P5, running NT).
+
+I'm looking at ideas to speed up DES - if I'm willing to use
+honking great lookup tables, the permutation steps  can be done 
+more quickly than libdes. I'm also looking at implementing the
+algolrithm in hand-optimized P5 assembler.  (It's been years since
+I've done a major assembler project - the P5 has some truely weird
+features to be considered, but also has (some) internal 64 bit
+registers to play with).
+
+Let's guess that I can speed up a key-test up by a factor of 10. (This is
+not a slur on Eric's code - it's extremely clever, but not optimized
+for any particular processor, or for key-testing.  Note that the keytest 
+described above takes about 10,000 cycles/test.)
+
+That gets my workstation up to about 90,000 keys a second, which is
+still almost a factor of 250 too slow. 
+
+I'm going ahead with my work on a faster DES keytester, but unless
+optimizing gives an astounding win, I now think a distributed bruting 
+effort is a bit pre-mature.
+
+What will make this brute doable, if not now, then in the near future?
+
+1. Faster Processors - Moore's Law is still holding. A year ago, my
+90 MHz Pentium was one of the faster machines taking part in the
+40-bit RC4 crack. Now, it's passe.
+
+2. More processors. The number of people on the internet continues
+to grow rapidly.
+
+3. More interest - Crypto awareness has greatly increased in the
+last year, and a real cash prize (say, over $500) will generate both
+publicity and interest.
+
+These factors all multiply together. The number of cycles that could
+probably be recruited is increasing at a fast rate. A major part of the
+work will be a keyspace distribution mechanism which can handle
+the load (this was a major stumbling block last year). 
+
+&lt;/back-of-envelope&gt;
+
+Peter Trei
+trei@process.com
+
+Disclaimer: This has nothing to do with my employer.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01879" HREF="msg01879.html">Re: Brute Force DES</A></STRONG>
+<UL><LI><EM>From:</EM> "Perry E. Metzger" &lt;perry@piermont.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="02130" HREF="msg02130.html">Re: Brute Force DES</A></STRONG>
+<UL><LI><EM>From:</EM> Olmur &lt;olmur@dwarf.bb.bawue.de&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01828.html">Slavery: An Idea Whose Time Has Come</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01755.html">Re: ABC news on Internet Telephony</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01899.html">Re: Brute Force DES</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01879.html">Re: Brute Force DES</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01778"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01778"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

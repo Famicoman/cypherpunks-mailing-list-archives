@@ -1,0 +1,140 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: a steganographic test -->
+<!--X-From-R13: Syv Penaqg <roenaqgNwneguhe.Qynerzbag.SRG> -->
+<!--X-Date: Thu, 18 Mar 93 14:24:39 PST -->
+<!--X-Message-Id: 9303182224.AA05626@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>a steganographic test</TITLE>
+<LINK REV="made" HREF="mailto:ebrandt@jarthur.Claremont.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00400.html">Date Prev</A>][<A HREF="msg00406.html">Date Next</A>][<A HREF="msg00403.html">Thread Prev</A>][<A HREF="msg00407.html">Thread Next</A>][<A HREF="index.html#00404">Date Index</A>][<A HREF="threads.html#00404">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>a steganographic test</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: a steganographic test</LI>
+<LI><em>From</em>: Eli Brandt &lt;<A HREF="mailto:ebrandt@jarthur.Claremont.EDU">ebrandt@jarthur.Claremont.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 18 Mar 93 14:23:11 PST</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Taking the easy way out, I tried a steganographic encoding in a GIF
+by mapping down to 128 colors, duplicating them, and frobbing the
+low bits of the image.  This worked surprisingly well.  The
+resulting image showed little degradation, and was smaller than the
+original -- the information thrown out when mapping down to 128 was
+not fully replaced, as the "hidden" file did not fill the GIF.
+
+Rather than screw with GIF and Heckbert code for this throwaway, I
+did the {en,de}giffing and palette manipulation by hand with the PC
+program PICLAB.  It supports scripts, which would automate the
+process, except for the palette duplication, which a sed script
+could do.  The bit bashing code is appended, though it's pretty
+trivial stuff.
+
+Anyway, I ended up with the canonical Earth-seen-from-space,
+320x200x8, with an embedded DOS-format text file chosen for
+verisimilitude.  I can ship it by e-mail to anyone who wants it,
+though there's not really a whole lot you can *do* with the thing.
+("Hey.  Wow.  There really is a file in the low bits.")
+
+	 PGP 2 key by finger or e-mail
+   Eli   ebrandt@jarthur.claremont.edu
+
+	the guts of ensteg.c:
+/*
+ * We smear the hidef stream MSB-first into the low bits of the picf stream.
+ * This code is not optimal, but hey, it's short.
+*/
+   int picbyte, hidebyte, mask=0;
+   long count=0;
+
+   while (EOF!=(picbyte=getc(picf)))  {
+      if (!mask)  {
+	 mask = 0x80;
+	 if (EOF==(hidebyte=getc(hidef)))
+	    hidebyte=0;			// pad with nulls
+      }
+      putc(picbyte&amp;0xfe | ((hidebyte&amp;mask)/mask), outf);
+
+      mask/=2;
+   }
+
+	and of desteg.c:
+/*
+ * Pull the picf bits out, and put them together, MSB-LSB order.
+*/
+   int picbyte, hidebyte=0, bit=7;
+
+   while (EOF!=(picbyte=getc(picf)))  {
+      if (bit&lt;0)  {
+	 putc(hidebyte, hidef);
+	 hidebyte=0;
+	 bit=7;
+      }
+      hidebyte |= (picbyte%2)&lt;&lt;bit--;
+   }
+   if (bit&lt;0)  putc(hidebyte, hidef);
+
+
+Caveats: no error checking.  The pic file had better be eight times
+as large as the file to put in it.  If the null-padding will cause
+problems, you should wrap the file with an archiver first.
+
+Sorry about that putc() line in ensteg.c; it was late.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00400.html">Re: Cypher: Subject naming proposal</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00406.html">Re: Cypher: Subject naming proposal</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00403.html">HASH: cryptanalysis of MD5? (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00407.html">Re: Cypher: Subject naming proposal</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00404"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00404"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

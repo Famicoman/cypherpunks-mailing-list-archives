@@ -1,0 +1,203 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: SecureDrive News 8/24/96 -->
+<!--X-From-R13: Sqtne Ejnax <rqtneNUnet.Qnzcoryy.QO.GE> -->
+<!--X-Date: Sat, 24 Aug 1996 11:30:11 &#45;0700 (PDT) -->
+<!--X-Message-Id: VqV6sD17w165w@Garg.Campbell.CA.US -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>SecureDrive News 8/24/96</TITLE>
+<LINK REV="made" HREF="mailto:edgar@Garg.Campbell.CA.US">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02444.html">Date Prev</A>][<A HREF="msg02439.html">Date Next</A>][<A HREF="msg02444.html">Thread Prev</A>][<A HREF="msg01946.html">Thread Next</A>][<A HREF="index.html#02438">Date Index</A>][<A HREF="threads.html#02438">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>SecureDrive News 8/24/96</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Cypherpunks          &lt;<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>&gt;</LI>
+<LI><em>Subject</em>: SecureDrive News 8/24/96</LI>
+<LI><em>From</em>: Edgar Swank &lt;<A HREF="mailto:edgar@Garg.Campbell.CA.US">edgar@Garg.Campbell.CA.US</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 24 Aug 96 03:45:42 PDT</LI>
+<LI><em>Comments</em>: Level 5</LI>
+<LI><em>Organization</em>: The Land of Garg</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+SecureDrive Users:
+
+It's been brought to my attention that users who attempt to compile
+SecureDrive 1.4b using Turbo C++ 3.00 are haveing a problem in that
+the MD5 routine does not produce a correct result, so that the key
+generated from a given passphrase will not be the same as the
+pre-compiled version.  This is a bug in Turbo C++, not SecureDrive!
+
+However, a bypass for the problem is possible by modifying SD source
+as follows
+
+- ------------------------------cut here-----------------------
+*** C:\SECDR14B\UNC\MD5.C       Sun May 09 19:38:36 1993
+- --- MD5.C       Wed Aug 14 00:58:46 1996
+***************
+*** 12,17 ****
+- --- 12,20 ----
+   * of the MD5 routines in RSAREF.  Due to this alteration, this
+   * code is "derived from the RSA Data Security, Inc. MD5 Message-
+   * Digest Algorithm".  (See below.)
++  *
++  * Simplified some expressions to avoid incorrect compiles with
++  * some compilers, e.g. Turbo C 3.0  EWS  8/96
+   */
+
+  /*
+***************
+*** 135,145 ****
+- --- 138,158 ----
+
+      /* transform if necessary */
+      if (mdi == 0x40) {
++ #if defined (__TURBOC__)
+        for (i = 0, ii = 0; i &lt; 16; i++, ii += 4)
++        {
++         in[i] =   (((UINT4)mdContext-&gt;in[ii+3]) &lt;&lt; 24);
++         in[i] |=  (((UINT4)mdContext-&gt;in[ii+2]) &lt;&lt; 16);
++         in[i] |=  (((UINT4)mdContext-&gt;in[ii+1]) &lt;&lt; 8);
++         in[i] |=   ((UINT4)mdContext-&gt;in[ii]);
++        }
++ #else
++       for (i = 0, ii = 0; i &lt; 16; i++, ii += 4)
+          in[i] = (((UINT4)mdContext-&gt;in[ii+3]) &lt;&lt; 24) |
+                  (((UINT4)mdContext-&gt;in[ii+2]) &lt;&lt; 16) |
+                  (((UINT4)mdContext-&gt;in[ii+1]) &lt;&lt; 8) |
+                  ((UINT4)mdContext-&gt;in[ii]);
++ #endif
+        Transform (mdContext-&gt;buf, in);
+        mdi = 0;
+      }
+***************
+*** 167,178 ****
+    padLen = (mdi &lt; 56) ? (56 - mdi) : (120 - mdi);
+    MD5Update (mdContext, PADDING, padLen);
+
+!   /* append length in bits and transform */
+    for (i = 0, ii = 0; i &lt; 14; i++, ii += 4)
+      in[i] = (((UINT4)mdContext-&gt;in[ii+3]) &lt;&lt; 24) |
+              (((UINT4)mdContext-&gt;in[ii+2]) &lt;&lt; 16) |
+              (((UINT4)mdContext-&gt;in[ii+1]) &lt;&lt; 8) |
+              ((UINT4)mdContext-&gt;in[ii]);
+    Transform (mdContext-&gt;buf, in);
+
+    /* store buffer in digest */
+- --- 180,201 ----
+    padLen = (mdi &lt; 56) ? (56 - mdi) : (120 - mdi);
+    MD5Update (mdContext, PADDING, padLen);
+
+!   /* append length in bits and transform 1.4c*/
+! #if defined (__TURBOC__)
+!   for (i = 0, ii = 0; i &lt; 14; i++, ii += 4)
+!    {
+!     in[i] =   (((UINT4)mdContext-&gt;in[ii+3]) &lt;&lt; 24);
+!     in[i] |=  (((UINT4)mdContext-&gt;in[ii+2]) &lt;&lt; 16);
+!     in[i] |=  (((UINT4)mdContext-&gt;in[ii+1]) &lt;&lt; 8);
+!     in[i] |=   ((UINT4)mdContext-&gt;in[ii]);
+!    }
+! #else
+    for (i = 0, ii = 0; i &lt; 14; i++, ii += 4)
+      in[i] = (((UINT4)mdContext-&gt;in[ii+3]) &lt;&lt; 24) |
+              (((UINT4)mdContext-&gt;in[ii+2]) &lt;&lt; 16) |
+              (((UINT4)mdContext-&gt;in[ii+1]) &lt;&lt; 8) |
+              ((UINT4)mdContext-&gt;in[ii]);
++ #endif
+    Transform (mdContext-&gt;buf, in);
+
+    /* store buffer in digest */
+- ------------------------------cut here-----------------------
+
+This code will be inserted into any future version of SecureDrive,
+but no new release is planned at this time.
+
+For those users of Win95 and SecureDrive who are concerned about loss
+of 32-bit disk access, I've recently learned that use of Secure Device
+
+  ftp.demon.co.uk:/pub/ibmpc/secdev/secdev14.arj
+
+instead avoids this requirement. Although the Secure Device virtual
+drive is listed as in compatibility mode, the real drives are not so
+affected.  And since the virtual drive is mapped to a dos file on one
+of the real drives, I believe you get 32-bit phyical drive access
+there as well, although access is still slowed by CPU time necessary
+to encrypt and decrypt.
+
+Edgar W. Swank   &lt;edgar@Garg.Campbell.CA.US&gt;
+Edgar W. Swank   &lt;EdgarSwank@Juno.com&gt;
+Edgar W. Swank   &lt;Edgar_W._Swank@ilanet.org&gt;
+Home Page: <A  HREF="http://members.tripod.com/~EdgarS/index.html">http://members.tripod.com/~EdgarS/index.html</A>
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCUAwUBMh7d4t4nNf3ah8DHAQHNdAP3RKd07B55fkW5CazT8mMaGUoTtjxSvUBv
+3ykPvBhHvu7egb4EB1/XcBTM3K/6QeE8Dt10XJVX15Fd9nHY+XI0c0VB8Trlb/NB
+0ymq+/SchedtUNmCgDeycbF104bfirpuXKy0OChDfpgMe0d/ifCXny6Co0BqIbRi
+fQyKtXzOxQ==
+=h1RT
+-----END PGP SIGNATURE-----
+
+-- 
+edgar@Garg.Campbell.CA.US (Edgar Swank)
+The Land of Garg BBS -- +1 408 378-5108
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02444.html">Re: CyberTerrorism</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02439.html">Re: Spamming (Good or Bad?)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02444.html">Re: CyberTerrorism</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01946.html">Abuse by llurch of ISP</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02438"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02438"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

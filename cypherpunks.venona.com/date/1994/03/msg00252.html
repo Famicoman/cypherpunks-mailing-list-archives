@@ -1,0 +1,191 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: more steganography talk -->
+<!--X-From-R13: wvzNovyob.fhvgr.pbz (Xvz [vyyre) -->
+<!--X-Date: Fri, 4 Mar 94 12:06:36 PST -->
+<!--X-Message-Id: 9403042001.AA02468@bilbo.suite.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>more steganography talk</TITLE>
+<LINK REV="made" HREF="mailto:jim@bilbo.suite.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00253.html">Date Prev</A>][<A HREF="msg00248.html">Date Next</A>][<A HREF="msg00253.html">Thread Prev</A>][<A HREF="msg00248.html">Thread Next</A>][<A HREF="index.html#00252">Date Index</A>][<A HREF="threads.html#00252">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>more steganography talk</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: more steganography talk</LI>
+<LI><em>From</em>: <A HREF="mailto:jim@bilbo.suite.com">jim@bilbo.suite.com</A> (Jim Miller)</LI>
+<LI><em>Date</em>: Fri, 4 Mar 94 14:00:57 -0600</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:Jim_Miller@bilbo.suite.com">Jim_Miller@bilbo.suite.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Stuff that Sergey Goldgaber, Hal, and others wrote induced the  
+following ideas in my head:
+
+Goal - create a steganography system that hides cyphertext in such a  
+way that only the true recipient of the message will be able to prove  
+an encrypted message is hidden within a public message.  Nobody else  
+will be able to determine if the public message also contains an  
+embedded encrypted message.  In Hal's words:
+
+&gt; A test, then, for the success of a steganographic
+&gt; technique is this: given some sampling of data items,
+&gt; half of which have embedded hidden messages, can the
+&gt; opponent guess which ones have such messages with better
+&gt; than 50% accuracy?  If not, the steganography is fully
+&gt; successful. If he can do slightly better than 50%, it may
+&gt; still be useful depending on the situation.  If he can
+&gt; guess with 100% accuracy, the steganography has failed
+&gt; and is totally worthless. 
+
+&gt; 
+
+
+If the LSBs of most picture files were truly random, then good  
+steganography would be trivial.  Anyone could just plop an  
+unremarkable encrypted message (Stealth-PGP) in the LSB's, starting  
+at the beginning of the file.  Since one sequence of truly random  
+bits statistically looks like any other sequence of truly random  
+bits, nobody would be able to prove the picture file contained a  
+hidden encrypted message.
+
+Unfortunately, I doubt that most, or even many, picture files have  
+truly random LSBs.  It would be possible to write frame grabber or  
+scanner software to purposely place random bits in the LSB of picture  
+files to generate a source of useful picture files.  When this  
+software became widely used, good steganography would become trivial.
+
+Unfortunately, I don't have much confidence that this could be pulled  
+off on a large enough scale.  If it could be done, great, but I'm not  
+holding my breath.
+
+Assuming the LSBs of most picture files are not truly random, and  
+wont be any time soon, the next approach to good steganography would  
+be to figure out how to transform a sequence of random bits (your  
+encrypted message) into a sequence of bits that resemble the kinds of  
+bit patterns you see in typical picture files.  If you could do this,  
+and do it without requiring more secret keys, then good steganography  
+becomes trivial again.
+
+[Actually, you don't have to transform your random bits into a  
+*sequence* of typical picture file LSB bits.  The steganography  
+algorithm could deposit the bits anywhere in the picture file, as  
+long the process was reversible and the result was undetectable.]
+
+
+"Reversible, undetectable, without requiring additional keys."
+
+Sounds like a good set of requirements for a steganography system.
+
+I have an idea to help with the "reversible" part and the "no  
+additional secret keys" part, and it suggests a direction for the  
+"undetectable" part.
+
+The idea:  Encrypt a widely known value with the recipient's  
+public-key and use the result as an initialization vector for a  
+clever transformation/steganography algorithm.  The message recipient  
+recovers the encrypted message by re-calculating the initialization  
+vector using the same widely known value and his public-key and  
+reversing the transformation/steganography step.
+
+The initialization vector will be different for each message  
+recipient.  The "widely known value" could be a large block of bytes.    
+A large file of random bits could be shipped with the steganography  
+executable.  The intent is to make it more difficult and time  
+consuming for the opponent to determine if a public message contains  
+a hidden encrypted message.
+
+It's not fool-proof.  The opponent could try to discover a hidden  
+message by reversing the process using every known public-key.   
+Worse, an opponent could narrow the search by only trying the  
+public-keys of suspected recipients.  However, I think it is an  
+improvement over the techniques being used today.
+
+
+One significant property this technique does *not* possess is  
+deniability.  A perfect steganography system will produce results  
+that will let a recipient claim that they did not know a message  
+contained a hidden encrypted message (e.g. most picture files had  
+truly random LSBs).  If somebody sent you a hidden message using your  
+public-key and the initialization vector technique, your claim of  
+ignorance might not hold up.  Anybody could use your public-key to  
+recover the random bit sequence.  They would not recover the contents  
+of the hidden message, but they would be able to show that your file  
+did contain what appears to be a hidden message.  It might be enough  
+to tip the scales of justice against you.
+
+In my mind, the perfect steganography system depends upon either an  
+environment containing ubiquitous random bit sequences or a  
+reversible algorithm that can transform non-random bit sequences into  
+random bit sequences without using encryption (unlikely).  However, I  
+believe a less-than-perfect, but still useful steganography system  
+could be created using the initialization vector technique described  
+above.
+
+
+Jim_Miller@suite.com
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00248" HREF="msg00248.html">more steganography talk</A></STRONG>
+<UL><LI><EM>From:</EM> hughes@ah.com (Eric Hughes)</LI></UL></LI>
+<LI><STRONG><A NAME="00271" HREF="msg00271.html">Re: more steganography talk</A></STRONG>
+<UL><LI><EM>From:</EM> Sergey Goldgaber &lt;sergey@delbruck.pharm.sunysb.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00253.html">FWD&gt;CPSR Alert 3.05</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00248.html">more steganography talk</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00253.html">FWD&gt;CPSR Alert 3.05</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00248.html">more steganography talk</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00252"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00252"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

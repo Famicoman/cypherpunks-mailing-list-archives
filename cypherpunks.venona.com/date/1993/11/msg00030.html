@@ -1,0 +1,155 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Chaum's credentials (technical question) -->
+<!--X-From-R13: uhturfNnu.pbz (Sevp Vhturf) -->
+<!--X-Date: Tue, 2 Nov 93 03:19:54 PST -->
+<!--X-Message-Id: 9311021112.AA01396@ah.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9310310111.AA04231@jobe.shell.portal.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Chaum's credentials (technical question)</TITLE>
+<LINK REV="made" HREF="mailto:hughes@ah.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00029.html">Date Prev</A>][<A HREF="msg00032.html">Date Next</A>][<A HREF="msg00027.html">Thread Prev</A>][<A HREF="msg00032.html">Thread Next</A>][<A HREF="index.html#00030">Date Index</A>][<A HREF="threads.html#00030">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Chaum's credentials (technical question)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Chaum's credentials (technical question)</LI>
+<LI><em>From</em>: <A HREF="mailto:hughes@ah.com">hughes@ah.com</A> (Eric Hughes)</LI>
+<LI><em>Date</em>: Tue, 2 Nov 93 03:12:42 -0800</LI>
+<LI><em>In-Reply-To</em>: hfinney@shell.portal.com's message of Sat, 30 Oct 93 18:11:51 PDT &lt;9310310111.AA04231@jobe.shell.portal.com&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Hal Finney writes about a paper of Chaum's, and near the end asks:
+
+&gt;In short, I haven't found any interpretation of Chaum's math that makes
+&gt;sense.  Can anyone shed any light on this?  
+
+I think you're correct, Hal.  From everything I can tell, Chaum's
+confused product and greatest common divisor.
+
+First, though, there's a basic fact about the arithmetic of integers
+which everyone who wants to learn more algebra should know.  Z is the
+set of integers.
+
+    For every m,n in Z, there is a,b in Z such that a*m + b*n = gcd(m,n).
+
+One calculates the gcd by means of the Euclidean algorithm, and the
+coefficients a and b by an extension of that algorithm.  Lots of basic
+algorithm books contain descriptions.
+
+From an abstract point of view, this is a simple consequence that Z is
+a principal ideal domain.  The ideal (m,n) is composed of the linear
+span of m and n.  Since this ideal is principal, by definition there
+is a c such that (m,n) = (c).  Clearly c is in the linear span of m
+and n, hence coefficients exist.
+
+Note that reducing mod n gives a*m = gcd(m,n) (mod n).  If m and n are
+relatively prime (means gcd = 1), the a is m inverse mod n.  Likewise
+b is n inverse mod m.  This is a standard algorithm for calculating
+modular inverses.
+
+Here's the relevant passage, again:
+
+&gt;   "Suppose an organization X were to require that you have each of two
+&gt;   credentials, say both that with public exponents e1 and e2.  You could
+&gt;   send X separatley Px^d1 and Px^d2.  It is also possible for you to use
+&gt;   the two credentials to form the single credential Px^(d1*d2), which
+&gt;   will be called their AND....  To create the AND, you: set g to the
+&gt;   multiplicative inverse of d1 modulo d2; set h to the remainder after
+&gt;   dividing g*d1-1 by d2; and computing
+&gt;   (Px^d1)^g * (Px^d2)^(-h) = Px^(d1*d2)."
+
+I believe that Hal is correct when he points out that h is not a
+remainder (which would be zero, as he points out) but the quotient.  I
+originally misread this as quotient because I recognized the context.
+
+First, the multiplicative inverse of d1 (mod d2) exists only if the
+two are relatively prime.  Hal did not quote the whole article, so I
+don't know if this criterion is stated elsewhere.  Let us assume the
+d's have this property, since the d's can be so chosen.
+
+The calculation of d1 (mod d2) is exactly the calculation of the
+coefficients in the extended Euclidean algorithm above.  Consider a*d1
++ b*d2 = 1.  Reducing mod d2, we have a*d1 = 1 (mod d2).  That means
+that a is d1^(-1) (mod d2).  Likewise (a*d1 - 1) / d2 = -b.  Chaum's
+description exactly fits the gcd context.
+
+&gt;The other possibility I thought of is that he meant that the signing
+&gt;agency would make g and h, as he defined them, public.  
+
+That's my interpretation as well.  After the calculation, as Hal
+observes, you just end up with Px, not Px^(d1*d2).  That's totally
+useless, since you already knew Px.
+
+It is certainly possible to create coefficients for combining
+credentials such that you end up with a product in the exponent.  For
+example, the pairs &lt;d2,0&gt; and &lt;0,d1&gt; both work nicely, with the bad
+side effect that you've given away a private key.  Let's try blinding
+them.
+
+Suppose you have coefficients a and b such that a*d1+b*d2=0; the pair
+&lt;d2,-d1&gt; works here.  Then every such pair of product-combining
+coefficients can be represented as &lt;d2,0&gt; + r*&lt;a,b&gt;.  Since the
+exponents are mod phi(N), we can suppose that the pair &lt;d2+r*a,r*b&gt;
+doesn't _directly_ reveal the private keys.  But it's unclear to me
+that this pair of coefficients doesn't reveal d1 and d2.  One doesn't
+know phi(N), but one may not need to.
+
+Eric
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00029.html">Re: Hole in MD5</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00032.html">700 Club Report on the Clipper Chip on Wednesday, October 20, 1993</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00027.html">on the road...</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00032.html">700 Club Report on the Clipper Chip on Wednesday, October 20, 1993</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00030"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00030"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

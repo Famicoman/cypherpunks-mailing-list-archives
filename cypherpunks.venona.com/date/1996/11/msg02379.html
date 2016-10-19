@@ -1,0 +1,241 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: IPG algorithim -->
+<!--X-From-R13: Sevp [heenl <revpzNyar.pbz> -->
+<!--X-Date: Sat, 30 Nov 1996 16:22:28 &#45;0800 (PST) -->
+<!--X-Message-Id: 199612010021.QAA14426@slack.lne.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199611302150.PAA15126@manifold.algebra.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: IPG algorithim</TITLE>
+<LINK REV="made" HREF="mailto:ericm@lne.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02374.html">Date Prev</A>][<A HREF="msg02380.html">Date Next</A>][<A HREF="msg02378.html">Thread Prev</A>][<A HREF="msg02380.html">Thread Next</A>][<A HREF="index.html#02379">Date Index</A>][<A HREF="threads.html#02379">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: IPG algorithim</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:ichudov@algebra.com">ichudov@algebra.com</A></LI>
+<LI><em>Subject</em>: Re: IPG algorithim</LI>
+<LI><em>From</em>: Eric Murray &lt;<A HREF="mailto:ericm@lne.com">ericm@lne.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 30 Nov 1996 16:21:12 -3200 (PST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg02378.html">199611302150.PAA15126@manifold.algebra.com</A>&gt; from "Igor Chudov @ home" at Nov 30, 96 03:50:12 pm</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Igor Chudov @ home writes:
+&gt; 
+&gt; [This is an addition to my previous reply to Eric]
+&gt; 
+&gt; It bugs me that you are using rand() (a fairly lame pseudo-random
+&gt; function that was never intended to be used in cryptographic
+&gt; applications) to seed A, B, C and JV and then test the A(JV) for
+&gt; randomness. Some may object to that.
+
+Yea, you're right, rand() is lame.
+
+I added /dev/random to my Linux box and changed my small test to use it.
+I also changed the way that I use JV- I had been setting it to a random
+value for each trip through the "engine", but since I beleive that
+its value can't really be random (if you want to be able to have someone
+decrypt your stuff :-) but must be exchanged in the key, I set it
+to a random value once and then let it float.  It's also a lot faster
+that way, /dev/random is pretty slow (because it's looking for real
+random material).
+
+My results from xnoisesph were wrong- xnoisesph wants random bytes
+instead of random integers in ascii format as I was producing.
+Changing it (as I have below) makes the xnoisesph output look
+much better, but it still isn't all that random.  The random seed generators
+I have written that get their randomness from repeated calls
+to high-resolution timers and hashes of system log files do better.
+I also fixed a minor bug in arg processing.
+
+
+
+
+
+
+#include &lt;stdio.h&gt;
+#include &lt;fcntl.h&gt;
+
+/* a C translation of the IPG "EUREKA" algorithim's "engine".
+** This is supposed to produce random numbers for the IPG
+** "encryptor stream".
+** See <A  HREF="http://www.netprivacy.com/">http://www.netprivacy.com/</A> for the original description.
+** Eric Murray  ericm@lne.com  This code placed under GNU copyleft. 
+** V0.2 */
+
+typedef unsigned char byte;
+typedef unsigned short uint16;
+
+
+/* tables: */
+uint16 A[53];
+uint16 B[53];
+uint16 C[53];
+
+
+#ifndef NO_DEV_RANDOM
+uint16 getrand()
+{
+	uint16 ret;
+	int fd = open("/dev/random",O_RDONLY);
+	if (fd &lt;= 0) {
+		perror("/dev/random"); exit(-1);
+	}
+	read(fd,(unsigned char *)(&amp;ret),sizeof(ret));
+	close(fd);
+	return(ret);
+}
+#else
+/* do something appropriate for your OS here, rand() is lame. */
+#define getrand rand
+#endif
+
+
+int init_table(uint16*table, uint16 min, uint16 max)
+{
+	/* IPG specifies no algorithim for producing the "random"
+	** initial values in the ABC tables, but it's obvious that
+	** it requires a PRNG that's somehow seeded from the "key".
+	** I've used /dev/random here, so there's no question that
+	** I'm starting out with pretty good random values. */
+	int i;
+	int count, r;
+
+	for(i = 0; i &lt; 53; i++) {
+		table[i] = min + (getrand() % (max - min));
+	}
+}
+
+main(int argc, char **argv)
+{
+	uint16 jv;
+	int argcnt, i, n, count, diehard, nelem;
+
+	diehard = 0;
+	argcnt = 1;
+	if (argc &gt;= 2) {
+		if (strncmp(argv[argcnt],"-d",2) == 0) {
+			diehard++;
+			argcnt++;
+		}
+	}
+	if (argc &gt; argcnt - 1 ) {
+		n = atoi(argv[argcnt]);
+		fprintf(stderr,"Generating %d values\n",n);
+	}
+	else {
+		n = 2000;
+	}
+
+	/* seed tables: */
+	fprintf(stderr,"Seeding:  A");  fflush(stderr);
+	init_table(A,0,65535);
+	fprintf(stderr," B");  fflush(stderr);
+	init_table(B,0,12227);
+	fprintf(stderr," C");  fflush(stderr);
+	init_table(C,16384,20361);
+	fprintf(stderr,"\n");  fflush(stderr);
+
+	/* generate n values: */
+	/* jv is "random" (where's it seeded from?) */
+	jv = (uint16)(getrand() % 53);
+	for(; n &gt; 0; n--) {
+
+		/* count limits the number of traverses to 53^2 so we don't get stuck */
+		/* 2809 is actually too low per Chudov:
+		** "For example, if ALL B == 1, A == 16385, and C == 20361, the
+		**  loop may need (20361-16385) passes to get to the &lt; 16384 value."
+		*/
+		for(count = 0; count &lt; 2809; count++) {
+			jv++;
+			if (jv == 53) jv = 0;
+			A[jv] = (A[jv] + B[jv]) % C[jv];
+			if (A[jv] &lt; 16384) break;
+		}
+		if (count == 2809) fprintf(stderr,"Oops.\n");
+		else {
+			if (!diehard) {
+				write(1,(unsigned char *)&amp;A[jv],sizeof(uint16));
+			}
+			else {
+				/* print output in DIEHARD required format:
+				** actually since we have 16-bit ints and DIEHARD
+				** wants 32-bit ints, we print 20 per line instead of 10 */
+				if (nelem++ &gt; 19) {printf("\n"); nelem = 0;}
+				printf("%4.4x",(unsigned int)A[jv]);
+			}
+		}
+	}
+}
+-- 
+Eric Murray  ericm@lne.com  ericm@motorcycle.com  <A  HREF="http://www.lne.com/ericm">http://www.lne.com/ericm</A>
+PGP keyid:E03F65E5 fingerprint:50 B0 A2 4C 7D 86 FC 03  92 E8 AC E6 7E 27 29 AF
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="02380" HREF="msg02380.html">Re: IPG algorithim</A></STRONG>
+<UL><LI><EM>From:</EM> ichudov@algebra.com (Igor Chudov @ home)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="02378" HREF="msg02378.html">Re: IPG algorithim</A></STRONG>
+<UL><LI><EM>From:</EM> ichudov@algebra.com (Igor Chudov @ home)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02374.html">Copyright violations</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02380.html">Re: IPG algorithim</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02378.html">Re: IPG algorithim</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02380.html">Re: IPG algorithim</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02379"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02379"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

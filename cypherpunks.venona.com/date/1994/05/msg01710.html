@@ -1,0 +1,266 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: procmail -->
+<!--X-From-R13: [negva Xnamra <wnamraNvqnpbz.uc.pbz> -->
+<!--X-Date: Tue, 31 May 94 10:22:36 PDT -->
+<!--X-Message-Id: 9405311722.AA01266@dunbar.idacom.hp.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: procmail</TITLE>
+<LINK REV="made" HREF="mailto:janzen@idacom.hp.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01705.html">Date Prev</A>][<A HREF="msg01718.html">Date Next</A>][<A HREF="msg01693.html">Thread Prev</A>][<A HREF="msg01721.html">Thread Next</A>][<A HREF="index.html#01710">Date Index</A>][<A HREF="threads.html#01710">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: procmail</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: procmail</LI>
+<LI><em>From</em>: Martin Janzen &lt;<A HREF="mailto:janzen@idacom.hp.com">janzen@idacom.hp.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 31 May 1994 11:22:17 -0600</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+tim werner &lt;werner@mc.ab.com&gt; writes:
+&gt;&gt; With procmail, you can associate arbitrary actions with a match, so no
+&gt;&gt; it would not have to be silent.
+&gt;
+&gt;Will anyone who has procmail working please send me an example of how you
+&gt;use it?  I am totally confused.
+
+
+OK.  First -- just checking -- I assume you're running some version of
+UNIX.  I'm using HP-UX 9.03 on an HP 9000 workstation, but everything
+should work pretty much the same on other systems.
+
+
+First, you have to tell the mail system that you want your mail to be
+filtered through the procmail program.  You do this by creating a
+one-line file called ".forward" in your home directory:
+
+"| IFS=' '; /usr/local/bin/procmail -p"
+
+The quotes are necessary.  Replace /usr/local/bin with the name of the
+directory in which you've installed the procmail program.  Do a "chmod
+644 .forward" to make sure that your mail software can read this file.
+
+
+Now you can create a ".procmailrc" file in your which tells procmail how to
+filter your mail.  Here are some excerpts from mine:
+
+-------------------------------------------------------------------------------
+# ~/.procmailrc
+#
+# Configuration file for procmail mail processing software
+#
+# General environment variables  (You may not need all of these; see the
+# procmail(1) man page to find out what each one means.  Of course, the
+# HOME variable should be set to your own home directory.)
+#
+HOME=		/Home/janzen
+PATH=/usr/local/bin:/usr/ucb:/bin:/usr/bin:$HOME/bin
+MAILDIR =	$HOME/Mail
+LOGFILE =	$HOME/.procmaillog
+LOCKFILE =      $HOME/Mail/procmail
+TMP=		$HOME/tmp
+SENDMAIL=	/usr/lib/sendmail
+TMPFILE=	$TMP/procmail.$$
+LOCKFILE=	$HOME/Mail/.procmail
+
+#
+# First, toss out junk mail
+#
+
+:2H
+^From:.*root@idacom.hp.com
+^Subject:.*cron
+/dev/null
+
+# The ":" introduces a new "recipe".  The "2" means that two expressions
+# follow.  The "H" indicates that procmail should search the header only,
+# ignoring case.  (The man page lists all kinds of other flags.)
+#
+# The first regular expression (regexp) matches a line containing "From:"
+# at the start of the line ("^"), then any arbitrary characters (".*"),
+# then "root@idacom.hp.com".
+#
+# Similarly, the second regexp matches a header line beginning with
+# "Subject:" and containing the word "cron" anywhere in the subject.
+#
+# The line following the last expression tells procmail where to save
+# the message.  In this case, I save it to /dev/null, throwing it away.
+# (When you're first setting up procmail, I suggest saving unwanted
+# messages to ~/junk or something, until you're satisfied that your
+# recipes work as expected!)  
+#
+# You can also forward matched messages to another user (eg. !joeuser@host)
+# or pipe them to a UNIX command (eg. |$HOME/bin/my_fancy_mail_processor).
+
+:2H
+^From:.*cypherpunks
+detweiler
+/dev/null
+
+:2H
+^From:.*cypherpunks
+subscribe
+/dev/null
+
+#
+# Now, sort mail from mailing lists into the proper folders
+#
+:1H
+^From:.+cypherpunks
+Cypherpunks
+
+# Put all mail with a "From:" line containing the word "cypherpunks" into
+# the file $HOME/Mail/Cypherpunks.
+
+:1H
+^TOcypherpunks
+Cypherpunks
+
+# "^TO" is shorthand for "^(To|Cc|Apparently-To):.*".  This is supposed to
+# catch all destination addresses.
+
+:1H
+^Return-Path:.+cypherpunks
+Cypherpunks
+
+:1H
+^From:.*pgpmip
+PGPMIP
+
+:1H
+^From:.*wnet.edex.edu.au
+PGPMIP
+
+:1H
+^From:.*Extropians
+Extropians
+
+:1H
+^TOExtropians
+Extropians
+-------------------------------------------------------------------------------
+
+
+One other thing: I like to get a summary each day, showing me what
+procmail has done.  I do this by creating a script called procmailsummary.sh:
+
+-------------------------------------------------------------------------------
+#!/bin/sh
+#
+# Summarize the ~/.procmaillog file
+#
+
+# Use the LOGFILE variable if it's set; otherwise, use a default
+LOGFILE=${LOGFILE:=$HOME/.procmaillog}
+
+# Add a header to the message
+# (This also avoids sending a message with a null body, which confuses Elm!)
+echo "Subject: Procmail Summary"
+echo " "
+
+sort ${LOGFILE} | awk '
+/^  Folder:/ {
+        folder = $2;
+        nbytes = $3;
+        msgcount[folder] += 1;
+        totalbytes[folder] += nbytes;
+}
+
+END {
+        for (folder in msgcount)
+                printf "Folder %s:\tsaved %d messages (%d bytes)\n", \
+                        folder, msgcount[folder], totalbytes[folder];
+}
+'
+
+if [ "$1" = "-clear" ]; then rm -f $LOGFILE; fi
+-------------------------------------------------------------------------------
+
+
+I then use crontab to schedule this script so that it's executed at 7AM
+every morning, and mails me the result.  When I come in, I can see at a
+glance which mailing lists have new messages.
+
+(WARNING: If you're not running HP-UX, the crontab(1) command may not
+exist on your system, or may work somewhat differently.  Also, on some
+systems you must be root to use cron.  If you have problems, try "man
+cron" or ask your sysadmin to give you a hand.)
+
+  echo '0 7 * * * /usr/local/bin/procmailsummary.sh -clear | elm -s
+    "Procmail Summary" janzen' | crontab
+
+This should all be on one line.  Replace /usr/local/bin with the name of
+the directory in which you've put the script. Make sure to do a "chmod
++x procmailsummary.sh", to make the script executable.  Finally, if you
+are using a mailer other than elm, replace the "elm ... janzen" command
+with something appropriate (eg. "mail janzen").
+
+Now verify that the crontab command worked:
+
+  crontab -l
+
+
+Hope that helps...
+
+--
+Martin Janzen           janzen@idacom.hp.com
+Pegasus Systems Group   c/o Hewlett-Packard, IDACOM Telecom Operation
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01705.html">Re: http://digicash.support.nl = NULL</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01718.html">Is DES exportability context-dependent?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01693.html">procmail</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01721.html">Re: procmail</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01710"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01710"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

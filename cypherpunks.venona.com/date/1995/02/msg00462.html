@@ -1,0 +1,159 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Key management in Hastur -->
+<!--X-From-R13: O Zbbfr Ossvyvngvba bs [vyyvbanverf naq Pvyyvbanverf naq Pnovrf <pnpghfNuxf.arg> -->
+<!--X-Date: Thu, 9 Feb 95 16:57:51 PST -->
+<!--X-Message-Id: 199502092115.QAA11291@bb.hks.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Key management in Hastur</TITLE>
+<LINK REV="made" HREF="mailto:cactus@hks.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00478.html">Date Prev</A>][<A HREF="msg00479.html">Date Next</A>][<A HREF="msg00478.html">Thread Prev</A>][<A HREF="msg00474.html">Thread Next</A>][<A HREF="index.html#00462">Date Index</A>][<A HREF="threads.html#00462">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Key management in Hastur</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Key management in Hastur</LI>
+<LI><em>From</em>: A Loose Affiliation of Millionaires and Billionaires and Babies &lt;<A HREF="mailto:cactus@hks.net">cactus@hks.net</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 9 Feb 1995 16:15:04 -0500</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+
+Eric, if I understand you correctly, you're saying that the manner in
+which trust is bestowed in keys should not be generalized.  Is this
+correct?  I don't have a problem with that, and wasn't terribly interested
+in defining trust parameters.  I do want to finish this in the next 4 to 6
+weeks, after all.
+
+However, that's not exactly the problem I'm trying to solve;  The phrase
+"key management" is likely too vague or perhaps has specific connotations
+that I'm unaware of, such that I'm using it wrongly.  I was never strong
+on jargon, and "key management" is the phrase that came closest to an
+expression of the problem I'm trying to solve.
+
+The problem is this: You have a bitstream and you want to perform
+a cryptographic function on it.  Therefore, you need a key.  For RSA
+functions, I know of two different ways that keys are distributed:
+PGP and X.509.  My intent is to support PGP keyrings and PEM-style
+keyrings (I am not yet familiar with the latter)... having a way to
+place keys into their proper keyrings would be nice, too, but there's
+no way I'm going to worry about that in the first rev.  Would I be
+understanding you correctly if I characterized your advice as being
+to not plan to implement that at all?
+
+There are two ways that I could approach handling keys in the code:
+
+	1- Have a general RSA key format.  The would include parameters
+	that are defined in either PGP and X.509 keys and would allow
+	the code to hand back warnings such as "this key is not trusted
+	by you" and "this key has expired."  This seems to be what you're
+	advising against... 
+
+	2- Have only a bare-bones key format that includes only the
+	information necessary for crypto functions.  This is the way
+	I'm leaning for several reasons, not the least of which is
+	what you cite.
+
+In either case, there must be an import function, extracting the key from
+the appropriate keyrings or otherwise supplying the key.  Including functions
+that extract keys from the appropriate PGP/PEM keyrings would be a Good
+Thing and is right now The Plan: one can hardly expect the code to get
+used if it needs Yet Another (undefined) Key Distribution method.
+
+My X.509 vs PGP key question boils down to this: is it reasonable to try to
+convert keys of one sort into keys of the other sort, providing the
+functionality of converting a key obtained through an X.509 certificate
+into a PGP-key?  Converting the other seems like a less desirable thing
+to do, so I'm not really thinking about that problem.
+
+I should note that in all cases in HCT where something is parameterized,
+the caller can supply a callback function that matches the defined
+interface and expect to win.  Thus, it's already supported (in the
+general interface and soon the key handling) that a user could say
+(in pseudo C code, missing parameters):
+
+	erics_key_stub_fn(char *id, struct keytype *key, ...);
+
+	...
+	struct keytype *thiskey;
+	thiskey = keyinit( KEYTYPE_RSA, (void *) erics_key_stub_fn, ...);
+	if (!(get_key( thiskey, "eric@remailer.net",...))) {
+          /* ... Do the right thing, etc. */
+        }
+
+Are we on a similar wavelength here, or am I totally missing the point?
+The input is appreciated.
+
+	-- Todd
+- ---
+[This message has been signed by an auto-signing service.  A valid signature
+means only that it has been received at the address corresponding to the
+signature and forwarded.]
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+Comment: Gratis auto-signing service
+
+iQBFAwUBLzqEYCoZzwIn1bdtAQHUcwF/QO2s178YMsxdSWQj6UDDErCDRv6+gaB5
+CJnEyrRPwpS8jqRLOSDQmyjHDvOJbJS2
+=xm8Q
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00478.html">S.314 on Web</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00479.html">Re: Effects of S.314 (Communications Decency Act)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00478.html">S.314 on Web</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00474.html">So, what's it all about?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00462"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00462"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

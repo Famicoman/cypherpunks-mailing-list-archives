@@ -1,0 +1,244 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: future proofing algorithms -->
+<!--X-From-R13: "Xbua Yryfrl" <xryfrlNcyarg.arg> -->
+<!--X-Date: Wed, 28 Jan 1998 06:57:59 +0800 -->
+<!--X-Message-Id: 199801272251.QAA01965@email.plnet.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>future proofing algorithms</TITLE>
+<LINK REV="made" HREF="mailto:kelsey@plnet.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01234.html">Date Prev</A>][<A HREF="msg01251.html">Date Next</A>][<A HREF="msg01234.html">Thread Prev</A>][<A HREF="msg01251.html">Thread Next</A>][<A HREF="index.html#01225">Date Index</A>][<A HREF="threads.html#01225">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>future proofing algorithms</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "Adam Back" &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Subject</em>: future proofing algorithms </LI>
+<LI><em>From</em>: "John Kelsey" &lt;<A HREF="mailto:kelsey@plnet.net">kelsey@plnet.net</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 27 Jan 1998 14:26:36 -0600</LI>
+<LI><em>Cc</em>: "cypherpunks" &lt;<A HREF="mailto:cypherpunks@Algebra.COM">cypherpunks@Algebra.COM</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+
+[ To: Cypherpunks, Adam Back ## Date: 01/26/98 ##
+  Subject: future proofing algorithms ]
+
+&gt;Date: Mon, 26 Jan 1998 01:18:31 GMT
+&gt;From: Adam Back &lt;aba@dcs.ex.ac.uk&gt;
+&gt;Subject: future proofing algorihtms (Re: (eternity) Eternity
+&gt;         as a secure filesystem/backup medium)
+
+&gt;It is interesting to note that Tim May's recent suggestion
+&gt;of LAM (Local Area Mixes) would help here because if 5 of
+&gt;those mixmaster nodes where part of a LAM, it is unlikely
+&gt;that the NSA would be able to archive inter remailer
+&gt;traffic, thus increasing effective pool size to 100^5.  So
+&gt;one advantage of the LAM approach is that it provides links
+&gt;which are protected by physical security.
+
+This is a good point.  The crypto looks like the strongest
+link in the chain right now, but if it turns out not to be,
+reliance on local physical security isn't a bad idea.
+(This works only if the huge numbers of the local machines
+must be subverted for an attack to work; if the attacker has
+to take over only a couple machines, he can probably manage
+this.)  Discovering a better way to bypass my physical
+security today doesn't let you know who sent what last year,
+and security guards don't become retroactively twice as
+cheap to bribe every eighteen months.
+
+&gt;&gt; Note that, in practice, this isn't likely to be useful
+&gt;&gt; unless you've done the same kind of thing for symmetric key
+&gt;&gt; distribution, random number generation, etc.  Otherwise,
+&gt;&gt; your attacker in 2050 will bypass the symmetric encryption
+&gt;&gt; entirely and factor your RSA modulus, or guess all the
+&gt;&gt; entropy sources used for your PRNG, or whatever else you can
+&gt;&gt; think of.
+
+&gt;Yes.  We need to build constructs for all areas.  A mega
+&gt;hash would be nice, with a large output size even in the
+&gt;face of birthday attack, preferably as secure as a
+&gt;collection of hash functions.
+
+Right.  I've seen some work done on this, mostly informally.
+The basic result I'm aware of with hash functions is like
+this:  Let f() and g() be two different hash functions,
+such as SHA1 and RIPE-MD160.  Let X,Y be the concatenation
+of X and Y.  Then:
+
+Hash1(X) = f(X),g(X)
+Hash2(X) = f(g(X)),g(f(X))
+
+You can quickly convince yourself that Hash1(X) is at least
+as resistant to collision as the stronger of f() and g(),
+but it's only as resistant as the weaker of the two to
+leaking information about X.  (That is, if f(X) just gives
+you the low 160 bits of X, then Hash1(X) gives you the same
+thing.)  Hash2() won't leak information unless both f()
+and g() leak information about their inputs, but you can't
+guarantee that it will be very good against collisions.
+(That is, if f(X) = 0 for all X, then all possible X values
+cause a collision in Hash2(X).)
+
+If f() and g() are independent, and one of them
+looks like a random function of X, then
+
+Hash3(X) = f(X) XOR g(X)
+
+looks pretty good.  But it's possible for either f() or g()
+to be non-reversible without Hash3() being nonreversible.
+(The obvious case occurs when you think of something like
+
+f(X) = X
+g(X) = encrypt_{knownKey}(X) XOR X.
+
+Note that g() looks rather like some existing hash
+functions, where encrypt() is a known function.
+
+&gt;That gives us something to wash our pseudo random number
+&gt;input entropy with, and then we can go on to combine public
+&gt;key systems.
+
+Right.  Choosing the PRNG well is important, but I suspect
+that the real issue is going to be getting enough input
+entropy.  If you can get 80 bits of real entropy today, you
+have a reasonably secure system now, but NSA may not find
+your system that secure in twenty years.
+
+For resistance to cryptanalysis, we can use the same set of
+stream ciphers as before.  If we run Blowfish, 3DES, and
+SAFER-SK128 in OFB-mode, and XOR the streams together, we
+get an output stream that's no easier to predict than the
+weakest of the three ciphers used.
+
+Entropy collection on a wide range of different machines,
+without specialized hardware, is just a hard thing to do
+well.  It's especially hard if you're postulating a
+massively powerful attacker years in the future.
+
+&gt;A problem with public key systems however is that there
+&gt;isn't a lot of choice -- basically all based on discrete log
+&gt;or factoring.  So perhaps RSA and DH combined in a construct
+&gt;with an optimistically proportioned key size would be near
+&gt;all that could be done.
+
+That sounds about right.  Note that LAMs and such can use
+shared symmetric keys along with the public keys, so that an
+attacker has to get both to defeat the system.  When the
+number of mixes is small, maybe some informal
+password-sharing at conferences might help this.  For LAMs,
+some level of hand-carried key exchange can be used.  Then,
+actual keys can be encrypted as
+
+RSA(R_0), ElGamal(R_1) are sent
+Previously shared secret key K_2 is known.
+Session Key = SK = E_{K_2}(R_0) XOR E_{K_2}(R_2).
+
+Also note that DH should probably be used with many
+different prime moduli, to resist any massive precomputation
+on one modulus.  Maybe each mix could have several
+expensively-prepared Sophie Germaine primes, and senders
+could randomly select one for DH or El Gamal encryption.
+This would spread out a future attacker's resources, though
+of course, the attacker's effort scales only linearly in the
+number of (expensive to find) primes.
+
+&gt;I suspect archiving world Network traffic would pose
+&gt;something of a operational and financial strain :-)
+
+On the other hand, perhaps this is how NSA will pay their
+employees' salaries once crypto becomes sufficiently
+widespread:  They will start a search engine service on all
+those archives of usenet/internet traffic for all these
+years:  ``Check up on your political opponents' newsreading
+habits.  Read the love letters of libertarian activists in
+the 90s.  Find out whether Chief Justice Clarence Thomas
+ever visits adult web sites these days.  *Only* at
+<A  HREF="http://www.archives.nsa.org">http://www.archives.nsa.org</A> ''
+
+It would actually be very funny if historians in a couple
+centuries got access to the NSA's archives of recorded phone
+calls, telegrams, and e-mails.  Imagine the odd assumptions
+that would result, with history students having this image
+of twentieth century america based on recorded phone calls
+of anarchists, antiwar activists, civil rights activists,
+communists, important politicians, mobsters, suspected
+spies, and wealthy businessmen.
+
+&gt;Adam
+
+Note:  I read CP-LITE instead of the whole list.  Please CC
+       me on replies.
+
+- --John Kelsey, kelsey@counterpane.com / kelsey@plnet.net
+NEW PGP print =  5D91 6F57 2646 83F9 6D7F 9C87 886D 88AF
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBNM5efSZv+/Ry/LrBAQGN8wP/aHKJbm024oDMNZIozcBGW+Vt4bKKLDoZ
+xhV6DQ3e4v9UadYJeKpCfRjrMDC06H6eP3D4E8vizEHVk2JCvHDTN3Fshf5pOtB2
+tgrooYOP1pC5FuQAPPyhkJ840V7ve0mlpy3VWz5/hSvkkP1BW7KHoFv47sniVHZe
+RFsiz/hW7jc=
+=2Oml
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01234.html">opinion of Crypt::DES &amp; Crypt::IDEA</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01251.html">Easy Money</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01234.html">opinion of Crypt::DES &amp; Crypt::IDEA</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01251.html">Easy Money</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01225"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01225"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

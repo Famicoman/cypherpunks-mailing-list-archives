@@ -1,0 +1,132 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Physical storage of key is the weakest link -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Fri, 1 Jul 94 18:30:23 PDT -->
+<!--X-Message-Id: 199407020131.SAA11491@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199407012226.PAA01800@netcom7.netcom.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Physical storage of key is the weakest link</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00075.html">Date Prev</A>][<A HREF="msg00086.html">Date Next</A>][<A HREF="msg00069.html">Thread Prev</A>][<A HREF="msg00111.html">Thread Next</A>][<A HREF="index.html#00080">Date Index</A>][<A HREF="threads.html#00080">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Physical storage of key is the weakest link</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Physical storage of key is the weakest link</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 1 Jul 1994 18:31:30 -0700</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00062.html">199407012226.PAA01800@netcom7.netcom.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Tim May writes:
+&gt;Speculatively, knowing the passphrase-encrypted secret key may make it
+&gt;easier to crack RSA; this is just a speculation. It is not yet even
+&gt;been proven that RSA is a strong as factoring. i.e., we don't know for
+&gt;sure that the RSA information provided as part of the protocol doesn't
+&gt;in some way make the problem simpler than straight factoring of the
+&gt;modulus.
+
+Here is a little-known fact.  In fact, I had forgotten it myself until
+what Tim said reminded me.  Your PGP secret key file is partially encrypted
+using IDEA keyed with the hash of your pass phrase.  But some fields are
+left in the clear.  In particular, the number of bits in p and q is left
+exposed, as is the number of bits in d, the decryption exponent.
+
+Now, this is not really a big deal.  Usually with a 1024-bit key p and
+q will both be 512 bits long, so knowing this for sure doesn't add that
+much information.  And I don't think that knowing the exact number of
+bits in the factors will help with the factoring when the two factors are
+about the same size.  Nevertheless it does represent an information leak
+that many people may not be aware exists.
+
+One way an attacker might exploit this is as follows.  Suppose he wants
+to do an exhaustive search of pass phrases.  As Tim said, a lot of people
+may have ones which are easy to guess.  How does he know when he's guessed
+correctly?  The secret key has a checksum (in the clear).  After decrypting
+all of d, p, q, and u, PGP accumulates a checksum as it does this and com-
+pares it with the checksum stored in the secret key.  If they match, PGP
+(or the cracker) knows that he has used the right pass phrase.
+
+This requires decrypting all four of these numbers, a total of about
+320 bytes.  But he can do a provisional check much faster by using the
+in-the-clear lengths.  Just decrypting the first byte of each MP number
+allows you to see immediately what the bit length of the resulting MP
+value will be since they are stored in MSB form.  For the most extreme
+case, suppose the length of p were one more than a multiple of 8, say
+505 bits.  Now we decrypt the first part of p and see if the first byte
+of the decryption is exactly 1.  If not, we can know immediately that we
+have the wrong pass phrase and move on without doing any more IDEA op-
+erations.  This will immediately reject 255 out of 256 wrong pass phrases.
+
+I don't know how much of a speedup you would actually see from this; IDEA
+has a setup phase and you still have to run MD5 on each pass phrase.
+But possibly it could be significant.
+
+
+Hal Finney
+hfinney@shell.portal.com
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00062" HREF="msg00062.html">Re: Physical storage of key is the weakest link</A></STRONG>
+<UL><LI><EM>From:</EM> tcmay@netcom.com (Timothy C. May)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00075.html">RE: Politics and crypto</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00086.html">Password Difficulties</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00069.html">Re: Physical storage of key is the weakest link</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00111.html">Re: Physical storage of key is the weakest link</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00080"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00080"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

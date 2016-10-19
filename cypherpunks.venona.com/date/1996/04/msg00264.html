@@ -1,0 +1,174 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Why sign pubkey? -->
+<!--X-From-R13: ebyybNneginex.pbz (Dbyyb Evyire) -->
+<!--X-Date: Mon, 8 Apr 1996 11:19:36 +0800 -->
+<!--X-Message-Id: v02130500ad8dc7aab49a@[198.59.115.161] -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Why sign pubkey?</TITLE>
+<LINK REV="made" HREF="mailto:rollo@artvark.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00261.html">Date Prev</A>][<A HREF="msg00269.html">Date Next</A>][<A HREF="msg00251.html">Thread Prev</A>][<A HREF="msg00278.html">Thread Next</A>][<A HREF="index.html#00264">Date Index</A>][<A HREF="threads.html#00264">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Why sign pubkey?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:whitfield.diffie@Eng.Sun.COM">whitfield.diffie@Eng.Sun.COM</A>, <A HREF="mailto:ray@cwi.nl">ray@cwi.nl</A> (Ray Hirschfeld),       <A HREF="mailto:ebear@laplaza.taos.nm.us">ebear@laplaza.taos.nm.us</A> (Bear Albrecht),       <A HREF="mailto:norm@netcom.com">norm@netcom.com</A> (Norman Hardy)</LI>
+<LI><em>Subject</em>: Why sign pubkey?</LI>
+<LI><em>From</em>: <A HREF="mailto:rollo@artvark.com">rollo@artvark.com</A> (Rollo Silver)</LI>
+<LI><em>Date</em>: Sun, 7 Apr 1996 15:20:45 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+                   Why You Should Sign Your PGP Public Key
+                    Francis Litterio (franl@world.std.com)
+
+If you generate a public/private key-pair and distribute the public key
+without any signatures on it, you are open to a denial of service attack.
+Here's how the attack works. I take your unsigned public key, and (using a
+suitably powerful editor, such as Emacs) I edit the userid string so that it
+still has your name but my email address on it. Then I distribute this fake
+key widely. Anyone who uses the fake key to encrypt email to you will send
+the email to me instead (if she uses the email address in the key). Of
+course, I won't be able to decrypt the email I receive, because it was
+encrypted with your public key, but I have denied you the option of
+decrypting it. You might never know the message was even sent.
+
+If you have at least one signature on your public key, PGP detects the
+tampering of the userid string and alerts the person who is sending you
+encrypted email. This is possible because of the nature of a digital
+signature. A digital signature is the output of a cryptographically secure
+hash function taking as input your RSA public key and your userid string
+(among other things). That hash output value is encrypted with the private
+key of the signer. If you have a valid public key from the signer and if you
+trust the signer to sign other people's keys, then PGP allows you to infer a
+certain degree of trust that the signed key belongs to the person named in
+the key's userid field.
+
+A cryptographically secure hash function is an irreversable hash function
+for which it is computationally infeasible to find an input message that
+hashes to a given output value. A task is computationally infeasible if the
+sun will have burned out before even the most powerful computer could finish
+the task. This prevents people from forging digital signatures.
+
+                       -------------------------------
+
+                       How to Sign Your PGP Public Key
+
+You should sign your PGP public key immediately after generating your
+public/private key-pair. To sign your own public key, type this:
+
+     pgp -ks &lt;userid&gt;
+
+where &lt;userid&gt; is the userid attached to your just-generated public key. If
+you have more than one userid on your public key, then you should sign each
+one individually.
+
+                       -------------------------------
+
+                      Misconceptions About Signed Keys
+
+A widespread misconception about self-signed public keys (i.e., keys that
+have been signed by their corresponding private keys) is that a self-signed
+key is somehow more valid than a key that is not self-signed. A self-signed
+key is no more valid than a key with no signatures at all. Why? Suppose you
+have a public key with this userid string:
+
+     John Q. Public &lt;jqp@somewhere.com&gt;
+
+Here's my denial of service attack. I use PGP to generate a new
+public/private key-pair with the same userid string as your public key but
+having different RSA public key bits. I self-sign that public key with its
+private half. I distribute that public key widely. Someone thinks it's yours
+based on the userid string. She makes the mistake of concluding that it is
+your key because it is self-signed. This is the mistake of inferring
+validity merely from the presence of a self-signature. She uses it to
+encrypt email to you, but you will not be able to decrypt that mail.
+
+This is a different kind of denial of service attack than the one described
+earlier (see Why You Should Sign Your PGP Public Key above). The only
+defense against this attack (that I can think of) is to be ever-vigilent for
+public keys that have your userid string but a different key-id and
+key-fingerprint.
+
+The key-id is the 32 least-significant bits of your RSA modulus, which is
+one of the two numbers that make up your RSA public key. The other number is
+the RSA public exponent (see the mathematical guts of RSA encryption for
+more details).
+
+The key fingerprint is a cryptographically secure hash of the RSA modulus
+and RSA public exponent, which together make up your public key. The
+cryptographically secure hash function is Ron Rivest's MD5, which outputs a
+128-bit (16-byte) number, which depends in no discernable way on every bit
+in its input. It is much easier for two people to compare a 16-byte
+hexadecimal value over the phone that it is for them to compare the many
+hundreds or thousands of bits that compose the modulus and public exponent.
+If an RSA public key were tampered with in transmission from one person to
+another, comparing the fingerprints (via a tamperproof communication
+channel) would certainly reveal the tampering.
+
+The moral of this story is that you should regularly verify that the
+fingerprints of distributed copies of your PGP public keys (such as those in
+the PGP keyserver databases) match the fingerprints of your copies of those
+keys.
+
+
+                                         Rollo
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00261.html">Re: the cost of untracability?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00269.html">Re: Spinners and compression functions</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00251.html">LSD|CFP</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00278.html">Re: Why sign pubkey?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00264"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00264"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

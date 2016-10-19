@@ -1,0 +1,168 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Java security weaknesses -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Thu, 25 Apr 1996 11:44:38 &#45;0700 (PDT) -->
+<!--X-Message-Id: 199604251842.LAA27897@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Java security weaknesses</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01966.html">Date Prev</A>][<A HREF="msg01971.html">Date Next</A>][<A HREF="msg01451.html">Thread Prev</A>][<A HREF="msg01700.html">Thread Next</A>][<A HREF="index.html#01970">Date Index</A>][<A HREF="threads.html#01970">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Java security weaknesses</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Java security weaknesses</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 25 Apr 1996 11:42:59 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+This is a quick summary of the attacks listed in "Java Security: From
+HotJava to Netscape and Beyond", by Drew Dean, Edward W. Felten,
+and Dan S. Wallach, Department of Computer Science, Princeton
+University. &lt;URL: <A  HREF="http://www.cs.princeton.edu/sip/pub/secure96.html">http://www.cs.princeton.edu/sip/pub/secure96.html</A> &gt;.
+
+Only attacks on Netscape will be listed here.  Several more were found
+in HotJava, but that product is moribund at present.  The version of
+Netscape used is 2.0.
+
+
+Denial of service attacks
+
+    Busy-wait to consume CPU cycles
+
+    Allocate memory until no more is available
+
+    Lock crucial system classes, e.g. java.net.INetAddress.  Blocks
+    all hostname lookups.  Several other classes are suitable for this
+    attack.
+
+    Denial of service attacks can be moderated to degradation of service,
+    possibly after a time delay, to make someone else's product look bad.
+
+
+Covert Channels
+
+    Can send mail via an SMTP port on server
+
+    Lookup fictitious DNS name to send out info
+
+    Tell browser to access fictitious URL (can be redirected back)
+
+
+Information available to applets
+
+    Can benchmark machine by reading system clock
+
+    Java hashcode() defaults to address of object, might leak some info
+
+
+Implementation errors
+
+    DNS hack allowing connections to any machine (has been patched)
+
+    Java disassembler (javap) has buffer overflows (not normally run by
+    users)
+
+
+Inter-Applet security
+
+    Applets running from previous pages can learn of new applets by
+    getting a handle to the top-level ThreadGroup and enumerating every
+    thread running in the system.
+
+    Can then call stop() and setPriority() on threads belonging to other
+    applets, making them appear slow and unreliable.
+
+
+Bytecode problem
+
+    The big one: Java bytecode safety checker doesn't detect illegality of
+
+    constructor()
+    {
+	try { super() } catch (Exception e) {}
+    }
+
+    This is not legal in the language - super() must not be called in a
+    try clause.  But the bytecode checker erroneously allows it.
+
+    This allows subclasses of privileged system classes to be created.
+    Normally those classes throw an exception in their constructor so they
+    can't be instantiated.  But this trick allows it.
+
+    This way users can create their own ClassLoaders, SecurityManagers,
+    etc.  By creating a hacked ClassLoader the Java class type system can
+    be defeated by resolving different classes against each other.  Any
+    non static variable can be set, any public method can be called,
+    including native methods.  The security is gone.
+
+
+Package name problem
+
+    If the first character of a package name is / the system will attempt to
+    load code from an absolute path, which would be trusted since it comes
+    from the local disk.  Any Java class which the attacker can get onto
+    the user's disk can then be loaded in trusted mode.  Classes can be
+    gotten onto disk simply by fetching URL's in Netscape, which puts them
+    into its cache.  If you can figure out Netscape's class naming scheme
+    you can then run any class, trusted.  (I think this one has been
+    patched.)
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01966.html">coderpunks not elite</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01971.html">Re: Mindshare and Java</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01451.html">Re: coderpunks not elite</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01700.html">Re:  Java security weaknesses</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01970"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01970"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

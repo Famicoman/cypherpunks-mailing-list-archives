@@ -1,0 +1,134 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: hardware RNG -->
+<!--X-From-R13: Rbhtynf Evapynve <qfvapynvNnpf.hpnytnel.pn> -->
+<!--X-Date: Mon, 21 Jun 93 19:54:11 PDT -->
+<!--X-Message-Id: 9306220012.AA37450@acs1.acs.ucalgary.ca -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>hardware RNG</TITLE>
+<LINK REV="made" HREF="mailto:dsinclai@acs.ucalgary.ca">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00590.html">Date Prev</A>][<A HREF="msg00587.html">Date Next</A>][<A HREF="msg00597.html">Thread Prev</A>][<A HREF="msg00595.html">Thread Next</A>][<A HREF="index.html#00588">Date Index</A>][<A HREF="threads.html#00588">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>hardware RNG</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: hardware RNG</LI>
+<LI><em>From</em>: Douglas Sinclair &lt;<A HREF="mailto:dsinclai@acs.ucalgary.ca">dsinclai@acs.ucalgary.ca</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 21 Jun 93 18:12:26 MDT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+ 
+Cypherpunks, 
+ 
+A while back there was lots of discussion in the list about hardware
+random number generation.  The consensus was that diode white noise
+was the easiest thing to use.  It probably is, but I havn't been able to
+persuade a single diode to be noisy yet.  Anyhow, I turned to the simplest
+white noise source that I have, which happens to be a radio tuned to a dead
+channel.  I hooked that up to a home made interface board that has previously
+served as a frame grabber, and wrote some software to grab random numbers.
+ 
+The hardware compares the signal to four known voltages, and sets the feedback
+pins on my printer port correspondingly.  Thus, I get a nibble of information
+every cycle.  However, it's fairly interrelated (if the high bit is set, the
+low ones must be set too, &amp;c).  So, this is the scheme I came up with to
+randomize it.
+ 
+Read two nibbles and concatenate them into a byte.  Take the parity of this
+byte to give you one bit.  Read eight bits this way, to make one byte.
+Read 128 bytes by this method, and take a MD5 hash of this data.  Use the 16
+byte message digest as the final random bitstream.  Do this as many times
+as needed to get the desired number of bytes.
+ 
+Using the ENTROPY1 software submitted to the list by Peter Meyer, I determined
+that a 1000000 byte file had a relative entropy of 0.999980.  This seems
+close enough to 1 for cryptographical use.  For each bit of output, 64 bits
+have been read from the device.  The MD5 transposition should eliminate all
+of the wave nature of the signal and make adjacent bytes unrelated.
+ 
+So, the question now is, is it safe?  An obvious method of attack is to simply
+connect an identical device to a radio and grab identical data.  However, I
+feel this is unfeasible.  Radio noise is omnidirectional and thus (I think)
+should give you very different signals at different geographic locations due
+to the different phases of the various sources.  There are too many variables
+in the hardware itself.  What frequency is it at?  What are the comparison
+values set to?  What other method could be used to attack this except for the
+obvious tempest attack on the host computer?
+ 
+                                        Doug
+ 
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3
+ 
+iQCVAgUBLCZM4SEF9mfcHsd/AQGpYgP+OaJl7v7GO4SITR7nalpdU0wx6mdXHYwD
+CYP/u1f5BVrPfE85Thsi7beiZMp8o8aI+H5MK1uCMQ1X6pj7SOODuRXhRaXmbjnv
+jghthWkt19SH4AbpDz7wpV2X7BXmIO0zGBv1rZB84cBgsXQH7cmlgyUCNJP86EUq
+cCmt7bFSG+U=
+=tmPC
+-----END PGP SIGNATURE-----
+
+-- 
+PGP 2.2 Key by finger
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00595" HREF="msg00595.html">Re: hardware RNG</A></STRONG>
+<UL><LI><EM>From:</EM> gnu (John Gilmore)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00590.html">Re:  one reaction: early FOIA results</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00587.html">Re: OTP dual decryption</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00597.html">Re:  one reaction: early FOIA results</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00595.html">Re: hardware RNG</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00588"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00588"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

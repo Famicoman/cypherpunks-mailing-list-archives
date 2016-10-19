@@ -1,0 +1,267 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Eternity Uncensorable? -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Wed, 6 Aug 1997 21:50:17 +0800 -->
+<!--X-Message-Id: 199708061308.OAA02171@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.LNX.3.91.970806120354.15807A&#45;100000@cowboy.dev.madge.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Eternity Uncensorable?</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00202.html">Date Prev</A>][<A HREF="msg01584.html">Date Next</A>][<A HREF="msg00201.html">Thread Prev</A>][<A HREF="msg00205.html">Thread Next</A>][<A HREF="index.html#00203">Date Index</A>][<A HREF="threads.html#00203">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Eternity Uncensorable?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:mark@unicorn.com">mark@unicorn.com</A></LI>
+<LI><em>Subject</em>: Re: Eternity Uncensorable?</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 6 Aug 1997 14:08:42 +0100</LI>
+<LI><em>CC</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg00201.html">Pine.LNX.3.91.970806120354.15807A-100000@cowboy.dev.madge.com</A>&gt;(message from Mark Grant on Wed, 6 Aug 1997 12:12:40 +0100 (BST))</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+These comments are useful, as eternity needs some documentation, and
+I'm supposed to be writing an article for Phrack on this for deadline
+of this sunday, and arguing with people is a good way to get
+motivation to write explanations etc.  This dual purpose is why this
+is a longish post.
+
+Mark Grant &lt;mark@unicorn.com&gt; writes:
+&gt; Seems to me there's a fundamental flaw with the current Eternity
+&gt; server; as I understand it the messages are identified by a subject
+&gt; which is the SHA of their URL, 
+
+yup.
+
+&gt; so all that a government need do to censor a particular site is to
+&gt; scan for those messages and issue cancels. Sure, your site and those
+&gt; upstream may not accept such messages, but potentially they can
+&gt; still wipe out a large fraction of the system or at least force
+&gt; users to change their eternity URLs on a regular basis.
+
+Two comments on this:
+
+- I understand cancels are ignored a lot of places, due to problems with
+  censorous people, and pranksters issuing tons of forged cancels.
+  These censorous people are actually doing us a big favour because it
+  is their actions which has led to the widespread policy of ignoring
+  cancels.
+
+  However this is going on other peoples information.  I don't have
+  any figures for how widespread the practice of configuring news to
+  ignore cancels is.  
+
+  Perhaps we could do a little experiment here, you (or someone who
+  has the tools/knowhow handy try cancelling the dozen or so eternity
+  articles in alt.anonymous.messages, and we'll have a little survey
+  amongst list readers as to how well the cancels work.
+
+- Comment #2.  The eternity servers have caches.  They cache
+  documents. (This is configurable).  There is currently no cache
+  replacement policy because I haven't got around to it yet.  So
+  currently once viewed the docs stay there forever.  (When I do get
+  around to cache a replacement policy it will be either least
+  accessed, and/or lowest ecash payment).
+
+I'm however not so keen to promote the idea that actually the docs you
+are looking at are coming off the servers cache because it's nicer to
+leave them presuming it was just read off the NNTP server right then
+(which it can be at the moment).
+   
+It's a two stage process at the moment:
+
+   - server reads news at some chosen internval and creates database
+     of article number, subject field, and message-id field for
+     subject fields which look like eternity documents.
+
+   - some user comes along and types a URL which matches the chosen
+     hash.  Server fetches document from NNTP or local news spool
+     using the article number as looked up in the database.  Depending
+     on the eternity.conf setting for cacheing (on/off/encrypted) and
+     the document setting (on/off/encrypted) the document will be
+     either not cached, cached in clear, or cached in encrypted form
+     (with sha1( 1&lt;url&gt; ) where &lt;url&gt; is the url of the document).
+
+I could change it to a single stage process so that eternity documents
+are immediately cached.  This is something easy to change, which could
+be done if people got trigger happy with cancels and it was affecting
+things.  Then you would be left with cancel wars :-) The eternity
+server would grab the article at first opportunity though.
+
+Later versions of the software will have to exchange documents
+somehow, so then as long as one server saw the document before someone
+cancelled it you'd be ok.
+
+Clearly you could have an email submission channel where you just
+email the article to a server, but that gets away from the idea of
+pointing the finger at USENET.  (Cacheing is somewhat protected in
+legislation even, because it's just a USENET document, and all you're
+doing is cacheing it according to some cache replacement policy).
+
+Some more technical explanations of what's going on encryption wise,
+is that articles in the news spool have an outer encryption layer
+which encrypts in one of these two ways:
+
+   1) with pgp -c and password "eternity"
+
+   2) with pgp -c and password of sha1( "1&lt;url&gt;" ) 
+      where url is the document url
+
+Inside this encryption layer is the document options (document url,
+per document cacheing policy, and a marker of whether the document is
+exdirectory or not (exdirectory docs not listed on document list).
+Plus an optional pgp key, and the ascii armored, optionally signed
+document.
+
+There is an optional inner layer of encryption, the ascii armored
+signed document can optionally be encrypted:
+
+   3) using a user selected passphrase
+
+Option 1) provides little more protection than rot-13.  But should be
+of some use in that it prevents the less clued from reading the
+documents out of USENET directly.
+
+Option 2) means that you need to know the URL before you can access
+the document.  Without the URL, you're hosed.
+
+Perhaps the URL is easy to guess, perhaps it's not:
+
+	<A  HREF="http://warez.eternity/safuwerqwkesadfiqwerdsf/">http://warez.eternity/safuwerqwkesadfiqwerdsf/</A>
+
+Option 3) means that you need the passphrase to read the document in
+addition to the URL.  This has similar effect to having a garbled URL,
+choose a hard to guess passphrase.
+
+You can turn on SSL at the eternity server, but that means you're
+still trusting the operator, and root on the system.
+
+To do it properly, you'll need a local eternity server if you want to
+good security of encrypted documents.  Easy enough to run a local
+eternity server if you're using linux on a ppp or permanently
+connected machine.  My development machine is a ppp connected linux
+machine.
+
+However I'm not sure having passphrases is that good of an idea,
+because it'll be furtively passed around amongst the community of the
+person who submitted the documents, but that can always leak out.
+
+And people using non-local eternity servers will be revealing the
+shared passphrase to the server admin, (and to the snooping world, if
+the server isn't running with SSL turned on).
+
+&gt; It also doesn't provide true security, since when someone sets up an 
+&gt; illegal site the gubment can find the messages on Usenet, decrypt them, 
+&gt; and then threaten the remailer operator who posted them.
+
+Turn of logs, and introduce forward secrecy into mixmaster.  Easy to
+do.  Why don't we have it yet?  (Ulf?  Lance?)
+
+Then you have as true security as you can get from a digital mix with
+the parameters mixmaster has.
+
+Don't do too many regular updates of your eternty web pages for very
+high risk situations.  Engineered network outages could show you up
+quickly even if you were using a DC-net covering 1 million users.
+
+&gt; I understand that this is just an alpha release, but I don't see any
+&gt; obvious way to fix these problems with a Usenet-based system. 
+
+Does the above answer your concerns about security?
+
+Medium term software development-wise the eternity servers are going
+to have to exchange documents between themselves.  At that point
+USENET will be functioning mostly as hard to tamper with distribution
+channel.  The rest will be a distributed USENET caching system, with
+cache policy determined by popularity of document (hit count), and by
+ecash payment.
+
+Longer term perhaps some of Ross Anderson's more advanced ideas can be
+added, as discussed by Ryan Lackey in the thread entitled "distributed
+data store, a la eternity".
+
+Adam
+-- 
+Have *you* exported RSA today? --&gt; <A  HREF="http://www.dcs.ex.ac.uk/~aba/rsa/">http://www.dcs.ex.ac.uk/~aba/rsa/</A>
+
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00205" HREF="msg00205.html">Re: Eternity Uncensorable?</A></STRONG>
+<UL><LI><EM>From:</EM> Mark Grant &lt;mark@unicorn.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00200" HREF="msg00200.html">Re: Eternity Uncensorable?</A></STRONG>
+<UL><LI><EM>From:</EM> dlv@bwalk.dm.com (Dr.Dimitri Vulis KOTM)</LI></UL></LI>
+<LI><STRONG><A NAME="00214" HREF="msg00214.html">Re: Eternity Uncensorable?</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Back &lt;aba@dcs.ex.ac.uk&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00232" HREF="msg00232.html">Re: Eternity Uncensorable?</A></STRONG>
+<UL><LI><EM>From:</EM> ? the Platypus {aka David Formosa} &lt;dformosa@st.nepean.uws.edu.au&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00516" HREF="msg00516.html">Re: Eternity Uncensorable?</A></STRONG>
+<UL><LI><EM>From:</EM> ulf@fitug.de (Ulf Möller)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00201" HREF="msg00201.html">Eternity Uncensorable?</A></STRONG>
+<UL><LI><EM>From:</EM> Mark Grant &lt;mark@unicorn.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00202.html">Re: distributed data store, a la eternity</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01584.html">Bulk Email For Profit</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00201.html">Eternity Uncensorable?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00205.html">Re: Eternity Uncensorable?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00203"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00203"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

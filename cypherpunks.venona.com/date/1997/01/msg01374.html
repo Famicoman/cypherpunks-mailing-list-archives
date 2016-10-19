@@ -1,0 +1,415 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: USENET: Critique of PGP Key Generation -->
+<!--X-From-R13: Rnzntrq Xhfgvpr <sebtsnezNlnxxb.pf.jzvpu.rqh> -->
+<!--X-Date: Fri, 10 Jan 1997 16:15:03 &#45;0800 (PST) -->
+<!--X-Message-Id: 199701110014.TAA11807@yakko.cs.wmich.edu -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>USENET: Critique of PGP Key Generation</TITLE>
+<LINK REV="made" HREF="mailto:frogfarm@yakko.cs.wmich.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01373.html">Date Prev</A>][<A HREF="msg01366.html">Date Next</A>][<A HREF="msg01371.html">Thread Prev</A>][<A HREF="msg01369.html">Thread Next</A>][<A HREF="index.html#01374">Date Index</A>][<A HREF="threads.html#01374">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>USENET: Critique of PGP Key Generation</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: USENET: Critique of PGP Key Generation</LI>
+<LI><em>From</em>: Damaged Justice &lt;<A HREF="mailto:frogfarm@yakko.cs.wmich.edu">frogfarm@yakko.cs.wmich.edu</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 10 Jan 1997 19:14:53 -0500 (EST)</LI>
+<LI><em>Organization</em>: Somewhere just far enough outside of your jurisdiction </LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:frogfarm@yakko.cs.wmich.edu">frogfarm@yakko.cs.wmich.edu</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+&gt;Newsgroups: comp.security.pgp.tech
+From: chl@clw.cs.man.ac.uk (Charles Lindsey)
+Subject: Critique of PGP Key Generation
+Message-ID: &lt;E3qsA1.49K@clw.cs.man.ac.uk&gt;
+Summary: The key generation process seems to be safe, but not so easily shown
+	to be so.
+Date: Thu, 9 Jan 1997 13:03:36 GMT
+Lines: 325
+
+
+		Critique of PGP Key Generation
+		------------------------------
+
+Key generation is probably the weakest link in PGP, or indeed within any RSA
+system. Specifically, it is the one place where a supplier of a binary
+version of the system could insert a Trojan Horse that could not be detected
+by any feasible tests run on it.
+
+For this reason, having just acquired a copy of PGP 2.6.3ia (that is 2.6.3
+with Stale's patch) and being of a paranoid disposition (just as Phil
+recommends we should be), I decided to inspect the source code for the Key
+Generation part to see if it contained anything that might compromise the
+security of the keys that are generated. For the record, I found nothing of
+the sort. The code makes strenuous (even paranoid) attempts to be utterly
+fair. However, I did uncover a few features which, under a false pretence of
+adding extra security, actually made my task of finding the true security much
+harder. So I thought it might be useful to document the whole process,
+pointing out the (mis-)features that caused me concern.
+
+Overview of key generation
+--------------------------
+
+First, you have to generate two random numbers. So, for a 512-bit key, say,
+you generate two 256-bit randoms. Actually, it insists that the top two bits
+of the numbers are '1', so you actually generate numbers in the range 
+(2**255 + 2**254) &lt;= p &lt;= (2**256 - 1), so there are 2**254 possible numbers
+obtained from 254 random bits.
+
+THE WHOLE SECURITY OF THE SYSTEM DEPENDS ON THE FACT THAT THE PROGRAM MUST BE
+CAPABLE OF GENERATING EACH AND EVERY ONE OF THESE 2**254 NUMBERS WITH
+MORE-OR-LESS EQUAL PROBABILITY.
+
+Next, from each random number, you generate a prime number. Starting from the
+given number, you look at each successive number to see if it might be prime.
+Well, obviously you only look at the odd ones, and in fact you only look at
+every 4th number because it tries to create "Blum" numbers for some reason or
+other. It uses a simple sieve to eliminate obvious cases, using a table of the
+first 1028 prime numbers. Anything that survives the sieve is subjected to
+Fermat's test (if ((x**(p-1)) mod p) != 1, then p is not prime) using
+x = 2,3,5,7 (not a very original selection!). See the comments in genprime.c
+for why this is considered more than a safe test. It insists that the two
+prime numbers generated differ by at least 1 part in 128.
+
+Next, you multiply your two (alleged) primes P and Q to give the modulus N,
+and from P, Q and N the RSA public and private keys can be derived in the
+standard manner. I estimate that for a 512-bit key there are 8*10**73 possible
+primes P and Q, giving 1.6*10**147 possibilities for N. For a 1024-bit key,
+these numbers are increased to 7*10*150 and 1.4*10**301. Which shows why a
+brute-force attack on an RSA encription is not feasible.
+
+
+Paranoia
+--------
+
+N is part of your public key. Anyone who knows P and/or Q knows your secret
+key. Therefore, just in case an eavesdropper gets access to your hard disc or
+to your RAM immediately after you have finished, all sensitive numbers (the
+random numbers, P, Q, all the other components of your secret key, and your
+pass phrase) are overwritten in memory at the earliest opportunity, and never
+deliberately written to hard disc at all (but they might be swapped to disc at
+some stage, so if you perform the operation on a discless workstation which
+pages across some network, and a wily eavesdropper who just happens to know
+you were generating your key at that time just happens to be monitoring your
+ethernet, and if ... ). And any copies of your keyrings written temporarily to
+your hard disc (even though they are encripted by IDEA by that stage) are
+overwritten before being relinquished.
+
+
+Random number generation
+------------------------
+
+But the whole system is only as good as its random number generator. It is no
+use using a pseudo-random number generator starting from some simple 32-bit
+seed (derived from the time of day, perhaps). That could generate, at most,
+2**32 different keys (since pseudo-random sequences are deterministic and
+hence reproducible). You need 512 genuinely random bits to meet the criterion
+of being able to generate all possible 512-bit keys.
+
+The system uses an array of (currently) 96 32-bit words (i.e. 384 bytes or
+3072 bits) known as randPool, initially set to zero. The '96' is required for
+technical reasons to be a multiple of 4; otherwise I should much have
+preferred a prime number (such as 97). It proceeds by XOR-ing supposedly
+random bytes into successive positions; in practice always a multiple of 4
+bytes at a time (this is a Bad Thing) derived from some 32-bit word. Some of
+these words are quite predictable, some are well correlated with other such
+words, and some are more-or-less independent. THE CRUCIAL QUESTION IS WHETHER
+A SUFFICIENT NUMBER OF THEM ARE TRULY INDEPENDENT, so as to ensure the required
+number of truly random bits.
+
+A certain pattern of such words (examined in detail below) is XOR-ed in
+repeatedly (typically for 73 cycles when generating a 512-bit key). When
+randPool has been filled in it wraps around. But this could mean that the same
+positions in the pattern are being XOR-ed on top of themselves, which is why I
+would have preferred a prime number for the size of randPool, and why I would
+have preferred the pattern itself not to have been a multiple of 4 bytes. Now
+actually this problem should not matter, because the randPool is "stirred"
+between each cycle, and if the stirring is as effective as claimed it makes
+all the bits totally "forget" where they were. But I believe that this is a
+case where "not only should security be achieved, but security should be SEEN
+to be achieved". Stirring is described below.  Typically, in a UNIX system,
+the randPool will be stirred and wrapped 11 times when generating a 512-bit
+key.
+
+Sources of randomness
+---------------------
+
+At this stage, the system tells you to type at random on your keyboard,
+informing you that it is going to "measure the time intervals between your
+keystrokes". This is not quite true. The actual behaviour is somewhat complex
+but you do get, for each keystroke, a cycle of words XOR-ed into randPool, as
+described above. It would be a good idea to vary your rate of typing in a
+random manner - following the rhythm of a tune such as the William Tell
+Overture should generate plenty of randomness (but now I have said that,
+please choose your own tune in case some wily eavesdropper now does a
+statistical analysis of William Tell).
+
+Different systems behave differently at this point, but they all assume that
+some form of "tick" is generated by the operating system for use for timing
+processes, giving the time-of-day, etc. In UNIX systems, there are two ticks:
+one fine tick (possibly every microsecond) derived from the real-time quartz
+clock for time-of-day purposes and one coarse tick (typically every 10
+milliseconds) for timing processes (each time this tick occurs there is an
+interrupt, and whatever process is running at that moment is credited with
+10msec of CPU time - or something like that). Since the random number
+generation works by counting ticks, it is important to know how coarse the
+ticks are.
+
+All systems start off the same way (see noise,c):
+
+A.  A call of clock(). Gives (supposedly) the number of microseconds of CPU
+    used in this process. But it usually relies on a coarse tick (in Solaris
+    it is always a multiple 0f 10000). Moreover it increases monotonically
+    with successive calls, and successive calls frequently return the same
+    value (this part of the process is not CPU-intensive). NOT a good source
+    of randomness.
+
+B.  A call of time(). Gives the number of seconds since Jan. 1st 1970. Even if
+    the wily eavesdropper is not online to know the exact time you generated
+    your key, the date on which you generated it is indeed public knowledge.
+    Again, it increases monotonically and slowly (this phase of the process
+    should take no more than half a minute all told). NOT a good source of
+    randomness.
+
+Now we need to distinguish between different systems.
+
+1) MSDOS
+
+C.  A call of pctimer0(). Seemingly this gives an unsigned (hopefully 32 bits)
+    taken from a clock ticking every .84 usec (but you will not get .84 usec
+    resolution).  But, apart from being monotonic, the values returned should
+    be as random as your typing.
+
+2) MAC
+
+C.  A call of TMTicks(). Again an unsigned long and presumably as random as
+    your typing.
+
+3) Win32 with the Microsoft compiler
+
+C.  A call of QueryPerformanceCounter(). An unsigned (hopefully 32 bits) and
+    presumably as random as your typing.
+
+4) VMS
+
+C. A call of SYS$GETTIM(). A unsigned long divided by 100000 (supposedly the
+    ticks per update). Presumably as random as your typing, but you will not
+    get much randomness unless you type rather slowly.
+
+5) AMIGA
+
+C.  A call of either ReadEClock() (the low-order 32 bits) or am_GetSysTime()
+    (32 bits of seconds - presumably since 1970 - and 32 bits of
+    microseconds). With am_GetSysTime() the seconds since 1970 is pretty
+    useless, since we already had those bits under 'A.'. I could believe the
+    microseconds or the output of ReadEClock().
+
+D.  16 bits of additional noise from the video beam position. Neat!
+
+E.  The ExecBase dispatch count, whatever that is.
+
+6) ATARI
+
+C.  A system call giving the 32-bit output from a 200Hz counter and 32 bits
+    from a 50/60/70Hz Vertical BLank counter. Under the Pure C compiler, only
+    the second of these is taken (the first is said to give the same as the
+    earlier call of clock()). Coarse as these ticks are, they can still give
+    true randomness if called often enough.
+
+7) UNIX
+This is the system I have studied most intensively. It calls every system call
+it can think of (and would have called the kitchen sink too, had it been
+available). As I will show, this just creates FUD rather than randomness.
+
+C.  A call of gettimeofday(). This returns two 32-bit words. The first is just
+    the seconds since 1970 which we have already had, so it adds nothing new.
+    The second is the number of microseconds since the last full second. This
+    should be based on a fine tick size, and is therefore as random as your
+    typing, but it is the only source of true randomness that I would trust
+    from the UNIX systems.
+
+D.  A call of times(). This gives 4 32-bit words:
+    D1. The number of coarse ticks in this process. Typically this is one byte
+        increasing monotonically but slowly. Useless as a source of
+        randomness.
+    D2. The number of coarse system ticks on behalf of this process. Increases
+        perhaps twice as fast as the previous, but still useless.
+    D3. The number of coarse ticks by children of this process. Always zero,
+        because PGP never forks.
+    D4. The number of coarse system ticks by children of this process. Also
+        zero.
+
+E.  Also from the same call of times(), the number of elapsed coarse ticks
+    since boot time. The bottom byte changes somewhat faster than in the
+    previous case (it is measuring elapsed rather than process time), but it
+    is totally correlated with the call of clock() already made, so it adds
+    nothing new.
+
+At the end of all this, in all the systems, it XOR-es in the actual key you
+typed. This is good, but you likely only typed all lower-case letters, and
+probably not many punctuation or control counters, but every little helps. The
+bad news is that it still adds 4 bytes to randPool, even though only one byte
+is provided (see trueRandEvent()). Surely it would have been better to add
+just one byte here, at least to overcome the deficiency arising from the size
+of the randPool not being a prime number. Alternatively, the procedure
+randPoolAddBytes could have been made to discount any zero bytes at its most
+significant end.
+
+It will be seen that the only source of true randomness in all the systems
+described above is the call labeled 'C.' in each case (also the actual key
+struck). Everything else is more-or-less predictable FUD. This call measures
+the instant at which each keystroke occurred (possibly modulo 1000000
+microseconds) using as fine a tick size as the system affords. Where the call
+gives a time in microseconds rather than a tick count (systems AMIGA and UNIX)
+it endeavours to determine the ticksize by experiment. It usually
+overestimates it (which is safe) because the length of the measuring loop is
+longer that the ticksize (for example, on a SPARC1+ running Solaris2 it
+computes a ticksize of 11 microseconds, whereas the true value is believed to
+be 1 microsecond).
+
+It now computes a time delta, modulo any computed ticksize, between this call
+and the previous one. Now this is a truly random estimate of the time between
+keystrokes but, oddly, this value is not incorporated into randPool (but it is
+represented by the absolute time of the keystroke which is so included). Since
+some systems (e.g. VMS and the ATARI) use an extremely coarse tick, this delta
+may contain only a few bits; so the bits in the delta are counted, and it
+carries on looking at keystrokes until the cumulative value of these bits is
+equal to the length of the key being generated (plus a few extra random bits
+needed for other purposes). But the maximum number of bits taken from any one
+keystroke is 8, so with fast systems it always demands more keystrokes than it
+truly needs.
+
+I believe that when counting the bits in delta it counts one more than it
+should (the most significant bit should not be included in the count in my
+opinion, since it is by definition always '1', and only serves to tell how many
+bits there are). Note also that the value of delta will have a minimum (it is
+impossible for the time between two keystrokes to be absolutely zero), which
+is a further reason to discount one bit when counting the bits of delta (see
+trueRandEvent()).
+
+
+Stirring
+--------
+
+Each time the randPool wraps around, and again at the end, it is "stirred"
+(see randPoolStir()). Note that stirring is a completely deterministic
+process, exactly repeatable on different systems (it even converts the entire
+randPool to big-endian format and back again afterwards in order to ensure
+this).
+
+Its modus operandi is to encrypt the whole randPool using the MD5 algorithm
+(that's the one used for generating signatures). That is why the length of the
+randPool had to be a multiple of 128 bits. It starts from a zero key (I told
+you it was going to be deterministic). By the time it has got to the end of
+the randPool, the last bit deposited is a function of every preceding bit. It
+then encrypts it all again, so that every bit in the new randPool now
+potentially depends on every bit in the original randPool. If you start with
+an empty randPool, it will now appear (to the naked eye) as a complete random
+mess. If you start with a randPool containing just one bit, it will appear as
+a different random mess.
+
+Finally, it takes the first 128 bits of the new randPool as the starting key
+for the next stirring.
+
+Note that the purpose of stirring is not to generate extra randomness. It is
+merely to redistribute the randomness that is already there (derived from your
+keystrokes). So it matters not whether the randPool is completely filled by
+your keystroking, nor that the two sets of 256 bits that you extract from it
+in order to make your 512-bit key are not the actual bits that you randomly
+generated. Every bit that you take out is affected by every random bit that
+you put in (as well as by the many non-random, predictable bits that the UNIX
+systems in particular insert). So it is still possible to generate each and
+every one of the possible keys, even when starting from a known time of day
+and a known number of ticks since boot time.
+
+
+Conclusion
+----------
+
+So is it safe? The answer seems to be Yes.
+
+But I would have been much happier to see a more straightforward system. It
+took me three days and much work examining the operation of the program with a
+debugger to convince myself that most of the information being put into
+randPool was mere FUD, and to identify exactly where the true required number
+of random bits was actually coming from. In view of the excellent performance
+of randPoolStir(), I cannot see that any of the FUD serves any useful purpose.
+Well, I can see a little merit in including the time and date just once, in
+case any extremely regular typist manages to get EXACTLY the same intervals
+between each keystroke during her interpretation of William Tell, or unless
+some other flaw is found in the system (which is also why I would like to see
+the wrap-around of the randPool a little less regular, as already mentioned).
+
+So I have at last felt it safe to generate my PGP key. And as a final check
+against any wily eavesdropper who may have been compiling a complete set of
+all the popular 1024-bit keys (will the universe last long enough for him to
+complete his task?) I have set my key length to 820 bits. How's that for
+paranoia?
+
+
+-- 
+Charles H. Lindsey -------------------------------------------------------------
+           At Home, doing my own thing.           Internet: chl@clw.cs.man.ac.uk
+Voice/Fax: +44 161 437 4506                       Janet:    chl@uk.ac.man.cs.clw
+Snail: 5 Clerewood Ave., CHEADLE, SK8 3JU, U.K.   UUCP:     mucs!clerew!chl
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01373.html">Re: A vote of confidence for Sandy</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01366.html">Re: Trade secrets / moderator liability</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01371.html">Bennet Haselton of Peacefire on ISP-TV "Real Time" Monday night</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01369.html">[STEGO] Goppa codes</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01374"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01374"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

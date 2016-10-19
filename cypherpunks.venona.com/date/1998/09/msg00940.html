@@ -1,0 +1,221 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: CHALLENGE? Toto/signature attack w. unpublished public key -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Sat, 19 Sep 1998 17:38:04 +0800 -->
+<!--X-Message-Id: 199809192228.XAA26533@server.eternity.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199809191948.VAA03878@replay.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: CHALLENGE? Toto/signature attack w. unpublished public key</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00942.html">Date Prev</A>][<A HREF="msg00935.html">Date Next</A>][<A HREF="msg00935.html">Thread Prev</A>][<A HREF="msg00947.html">Thread Next</A>][<A HREF="index.html#00940">Date Index</A>][<A HREF="threads.html#00940">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: CHALLENGE? Toto/signature attack w. unpublished public key</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>Subject</em>: Re: CHALLENGE? Toto/signature attack w. unpublished public key</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 19 Sep 1998 23:28:19 +0100</LI>
+<LI><em>In-reply-to</em>: &lt;199809191948.VAA03878@replay.com&gt; (message from Anonymous onSat, 19 Sep 1998 21:48:07 +0200)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+Anonymous writes:
+
+&gt; &gt; So next we would like to solve:
+&gt; &gt; 
+&gt; &gt;         s ^ e mod n = m
+&gt; &gt; 
+&gt; &gt; or in other words find e, k and n st:
+&gt; &gt; 
+&gt; &gt;         s ^ e - m = k * n
+&gt; 
+&gt; In addition it has to be that n is the right length based on the "s"
+&gt; padding.  This limits it to an 8 bit range, in this case 1024-1031
+&gt; bits.
+
+The constraint I gave was that log(n) = 1024.  Bear in mind that the
+msbyte of s = 0x08, so we know that n &gt; s, and I think we know that n
+&lt; 2^1024 also based on the s padding from the signature. So based on
+this n would be in the range 1020 - 1024 bits, right?
+
+&gt; If you make n be a product of a bunch of small primes, so that you
+&gt; can make signatures with it, then a third party can detect this and
+&gt; know it is bogus.
+
+He has to factor your n to determine that it is bogus though?  This
+would imply that he had more compute than you do.  (Not unreasonable
+threat model mind).
+
+&gt; Also, this approach won't match the keyid of the original signature.
+
+Agree.  Weak counterpoint is that the keyid is not authenticated,
+though if IRS have a key, they know it's keyid, and if that keyid is
+the one posted (unauthenticated inside the armor 0xCE56A4072541C535),
+this tips the probability of authorship towards the key they have.
+
+This though is perhaps not incontroverible proof, if one posits that
+Toto or unknown others were trying to create a complicated mess for
+people to confuse themselves analysing.  
+
+Evidence suggests that this was/is the case: there are other messages,
+for example one with a signature with what is perhaps a 0xdeadbeef
+attack against a key on the keyservers, with the same 32 bit keyid,
+but a 64 bit key id differing by 1 bit.  Another key which almost but
+not quite makes sense to PGP (a few bits twiddled).  Plus lots of
+still undecrypted encrypted messages posted to the list, plus possibly
+stegoed images posted (one image was posted together with a password
+which was also publically posted together with instructions for
+recovering using S-TOOLS4.ZIP (a stego package for windows), and lots
+of other anonymously and pseudonymously posted images.)
+
+(One of the encrypted keys which passphrases were forwarded to the
+list for just today had been posted to the list over a year ago --
+Carl Johnson couldn't have posted the passphrase because he is
+incarcerated).
+
+&gt; Another approach is to generate an n such that the discrete logarithm
+&gt; is solvable mod n.  Then you can solve for e in s^e = m mod n, with
+&gt; the base of the discrete log being s.  Doing this you can match the
+&gt; keyid and size of n without too much difficulty.
+
+Yes!  Excellent.  This construct (discrete logs over composite modulus
+to allow the same operation) is used by the identity based crypto
+people.  The trap door is not that good, because 512 bit discrete logs
+are as you suggest rather expensive to compute.
+
+&gt; Unfortunately e will not be small; it will be about the same size as n.
+&gt; There are one or two keys on the public keyring which have large e's,
+&gt; apparently generated by hacked versions of pgp.  Some people feel
+&gt; safer with random e than a small e.  So this could perhaps be accepted.
+
+It's not a hacked version of PGP, I've generated such keys myself
+also: it is just a lesser documented feature of pgp2.x, (pgp -kg 1024
+768) would give you a 1024 bit n and a 768 bit e).
+
+&gt; (OTOH given two keys that both sign the same message, one with a small
+&gt; e and one with a large one, it is obvious that the first is the legit
+&gt; one and the second is the cloned one.)
+
+Not so obvious with the other key tinkering which has been going on
+here.  It seems likely that Toto et al were purposefully trying to sow
+confusion, and seem to delight in leaving little clues to people
+trying to understand it looks like this strategy has been operational
+for over a year now (some of the encrypted messages which passphrases
+were forwarded to the list for just today had been posted to the list
+over a year ago -- Carl Johnson couldn't have posted the passphrase
+because he is incarcerated).
+
+&gt; Unfortunately with a 1024 bit RSA modulus it is not going to be
+&gt; feasible to solve 512 bit discrete logs using a reasonable amount
+&gt; of effort.  However by using more factors in the RSA modulus it should
+&gt; become practical.  The number of factors needed will depend on how much
+&gt; resources you have to work on the discrete log.
+
+Resources available: one low end pentium based linux PC? :-) Just that
+the attack is clearly feasible is interesting though a demonstration
+would be perhaps more convincing to less technically aware IRS people.
+The biggest resource overhead is implementing that lot though, unless
+there exist packages or libraries which already do most of it for you.
+
+&gt; Once you have your n and e you can sign other messages with the key.
+&gt; The n looks OK from outside because the fact that it has more than two
+&gt; factors is not detectable, as long as its factors are not too small.
+&gt; Actually there may be a way of distinguishing n's with two factors from
+&gt; n's with more, check into this.
+&gt; 
+&gt; Also check into whether n's of this form can be factored via a p-1
+&gt; factoring attack.  It may be that making the discrete log easy also makes
+&gt; the modulus factorable.
+
+I think the answer to that is yes.
+
+In connection with previous discussions of implementing forward
+secrecy using identity based crypto (search archives for cypherpunks /
+coderpunks /cryptography for posts with
+
+Subject: non-interactive forward secrecy / identity based crypto
+
+) another Anonymous describes some of the identity based crypto papers
+on this topic, which suggests another method of being able to compute
+discrete logs mod composite n.
+
+: Maurer describes an alternative set of parameters as well.  Rather than
+: choosing small primes for the discrete logs, larger primes with a
+: special form are used which make the problem easy.  This is based on the
+: Pohlig-Hellman discrete log algorithm, which applies when p-1 has all small
+: factors.  The problem is that there also exists a p-1 factoring algorithm
+: which works when p-1 has all small factors.  However the former algorithm
+: costs the square root of the size of the factors, while the later takes
+: work proportional to the size of the factors themselves.  This gives a
+: window where the discrete log can be done but the factoring will fail.
+: 
+: For this embodiment, Maurer suggests a modulus which is the product of
+: two primes, each 100 digits (333 bits) in length.  This will produce
+: a 666 bit modulus.  Have each of the primes be such that (p-1)/2 is a
+: product of several 13-15 digit (43-50 bit) primes.
+
+So it could be done, I think, and in such a way that you have lower
+cpu overhead than the attacker trying to prove one key more likely
+than the other.
+
+Adam
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00942.html">IDEA(tm) weakness?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00935.html">(fwd) Re: CHALLENGE? Toto/signature attack w. unpublished public key</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00935.html">(fwd) Re: CHALLENGE? Toto/signature attack w. unpublished public key</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00947.html">Re: CHALLENGE? Toto/signature attack w. unpublished public key</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00940"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00940"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

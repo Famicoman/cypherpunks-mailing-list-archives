@@ -1,0 +1,190 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Winsock &#38; PGP Integration -->
+<!--X-From-R13: Xbuanguna Qbetna <wpbetnaNargpbz.pbz> -->
+<!--X-Date: Mon, 12 Dec 94 21:54:27 PST -->
+<!--X-Message-Id: Chameleon.4.00.941212213122.jcorgan@.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Winsock &amp; PGP Integration</TITLE>
+<LINK REV="made" HREF="mailto:jcorgan@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00683.html">Date Prev</A>][<A HREF="msg00685.html">Date Next</A>][<A HREF="msg00699.html">Thread Prev</A>][<A HREF="msg00701.html">Thread Next</A>][<A HREF="index.html#00678">Date Index</A>][<A HREF="threads.html#00678">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Winsock &amp; PGP Integration</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Winsock &amp; PGP Integration</LI>
+<LI><em>From</em>: Johnathan Corgan &lt;<A HREF="mailto:jcorgan@netcom.com">jcorgan@netcom.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 12 Dec 94 20:47:24 PST</LI>
+<LI><em>Cc</em>: <A HREF="mailto:jcorgan@netcom.com">jcorgan@netcom.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+It has been a long discussed and desired feature for MS-Windows
+users to be able to integrate PGP functionality into the various
+Windows Sockets based mail and news readers.  After a discussion
+with Raph and Pierre at the cypherpunks meeting this weekend, I
+took a look at the paradigm that premail uses and gave some
+thought to how this same concept could be applied in the Windows
+environment.
+
+On a Un*x machine, premail works by impersonating the mail
+transfer agent and intercepting the flow of mail in each
+direction, adding encryption, signing, and anonymous remail
+services in a rather elegant fashion.  As the mail system under
+Un*x (indeed, the entire OS) is designed to be a "piped and glued
+together" batch of smaller utilities, premail's method works well
+and is very 'unix-like'.
+
+How to achieve the same under Windows with winsock based SLIP or
+PPP access?  The various mail agents such as Eudora and Chameleon
+are integrated packages that do everything from using SMTP and POP
+for mail transfer to providing the user agent that reads and
+writes mail. There really is no simple way to wedge into the
+package and replace or supplement functionality.
+
+Except one.  What all of these agents have in common is that they
+interface with the Windows Sockets API to establish TCP streams
+that are used in the POP and SMTP protocols.  Since these are well
+known and standardized protocols, this gives us our toehold.
+
+Picture this.  Using a replacement WINSOCK.DLL, we can intercept
+those specific API calls that an application would use to open the
+appropriate sockets and establish a TCP stream to a particular
+remote socket.  For all other API calls, we hand these off to the
+"real" WINSOCK.DLL (that we have renamed and loaded after our DLL
+has loaded).  Our replacement DLL now has the ability to make the
+mail application think it is talking to a remote SMTP or POP
+process, when in fact, it is talking to our agent on the local
+machine.  Our local agent spoofs the SMTP protocol, accepts the
+mail, does all the neat crypto stuff, and stores the mail in an
+outbound queue.  At whatever preprogrammed intervals, _our_ agent
+makes the _real_ SMTP call to the remote and delivers the mail.
+
+The reverse process would work as well.  Our local agent
+periodically makes a POP call to the remote end, retrieves mail,
+and stores it in an inbound queue. Again, we do all the neat
+crypto stuff, and finally the next time Eudora or whatever mail
+agent is in use makes its POP run, we spoof POP and deliver the
+mail to the mail program.
+
+A little thought on this and I realized that this could be a
+generalized process.  Want to implement an anonymous remailer
+under Windows?  Use this mechanism and replace "neat crypto stuff"
+with "even neater anonymous remailing stuff."  Majordomo for
+Windows?  No problem, same method. By intercepting the flow of
+mail in each direction, there is no limit to the stuff you could
+come up with.
+
+Why bother fiddling with Windows anyway, when one has all the
+beauty and power of Un*x at one's disposal (such as Linux)?  Well,
+think about where the personal computing sector is going to grow
+in about six months or so with the advent of Windows95.  Okay,
+it's a great OS for what it is designed for, but it doesn't have
+pipes or perl or twenty or thirty command line parameters for
+every executable.  So what.  I garauntee that there will be more
+laptops and desktop PC's with Windows95 than with any flavor of
+Un*x.
+
+If we are to promote and encourage, as well as make the tools for,
+the use of strong crypto by the average Joe, then Windows is where
+it is at.
+
+I've just enough Windows programming experience to know that the
+scheme I worked out above is feasible and would work well.  On the
+other hand, I have no experience with Windows Sockets at the api
+level, nor with any implementation of SMTP or POP (though I know
+the protocols themselves well.)
+
+Yep.  It would be cool to write a message in Chameleon (such as
+this one), press the send button, and have a dialog box pop up
+asking me if I wanted to sign, encrypt, or remail this message.
+Or to have it done automatically for me.  And this would work with
+existing mailers today.  Sheesh, somebody burst my bubble.
+
+Comments, criticisms, suggestions, and especially financial
+donations, are quite welcome :)
+
+=======================================================================
+Johnathan Corgan       "Violence is the last refuge of the incompetent"
+jcorgan@netcom.com                       -Isaac Asimov
+PGP Public Key:        <A  HREF="http://www-swiss.ai.mit.edu/~bal/pks-toplev.html">http://www-swiss.ai.mit.edu/~bal/pks-toplev.html</A>
+Or send email to:      pgp-public-keys@pgp.ai.mit.edu Subj: GET jcorgan
+=======================================================================
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBLu0w2k1Diok8GKihAQGdnQP8DiqQt3820dhKHY3dbXAZnl/11eEce4z+
+/oFZMKVBHlCJAxCSucnK31dcyRbvXiOkAt9x9EMinXC26VWh3sETd+YbaJNznkx6
+VmM1UNID2bQ+Xpcc4ANJQx6CgPrRxspr3reVeuFv7QLtKGMy5Mucl5mXGp829f6i
+Gj7NMlhcu+s=
+=rgyq
+-----END PGP SIGNATURE-----
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00701" HREF="msg00701.html">Re: Winsock &amp; PGP Integration</A></STRONG>
+<UL><LI><EM>From:</EM> eric@remailer.net (Eric Hughes)</LI></UL></LI>
+<LI><STRONG><A NAME="00804" HREF="msg00804.html">Re: Winsock &amp; PGP Integration</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Shostack &lt;adam@bwh.harvard.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00683.html">Re: Real-time surveillance of the police</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00685.html">re: IPSP and Netscape</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00699.html">RE: Crypto Declaration of Independence</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00701.html">Re: Winsock &amp; PGP Integration</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00678"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00678"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

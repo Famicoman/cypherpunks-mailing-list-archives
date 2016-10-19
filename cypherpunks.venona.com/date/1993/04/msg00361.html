@@ -1,0 +1,173 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Another Clipper weakness -->
+<!--X-From-R13: Vny <74076.1041NQbzchEreir.QA[> -->
+<!--X-Date: Tue, 20 Apr 93 13:13:48 PDT -->
+<!--X-Message-Id: 930420195747_74076.1041_FHD36&#45;1@CompuServe.COM -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Another Clipper weakness</TITLE>
+<LINK REV="made" HREF="mailto:74076.1041@CompuServe.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00355.html">Date Prev</A>][<A HREF="msg00362.html">Date Next</A>][<A HREF="msg00353.html">Thread Prev</A>][<A HREF="msg00362.html">Thread Next</A>][<A HREF="index.html#00361">Date Index</A>][<A HREF="threads.html#00361">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Another Clipper weakness</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: CYPHERPUNKS &lt;<A HREF="mailto:CYPHERPUNKS@toad.com">CYPHERPUNKS@toad.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Another Clipper weakness</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:74076.1041@CompuServe.COM">74076.1041@CompuServe.COM</A>&gt;</LI>
+<LI><em>Date</em>: 20 Apr 93 15:57:47 EDT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+From: "Perry E. Metzger" &lt;pmetzger@lehman.com&gt;
+
+&gt; I've just looked over the proposal again, and I've seen no mention of
+&gt; random inputs -- only that the 30 bit key would get a "fixed 34 bit
+&gt; padding" added to it.
+
+Here is what Denning's writeup says:
+
+  At the beginning of a session, a trusted agent from each of the two key
+  escrow agencies enters the vault.  Agent 1 enters an 80-bit value S1
+  into the laptop and agent 2 enters an 80-bit value S2. These values
+  serve as seeds to generate keys for a sequence of serial numbers.
+  
+  To generate the unit key for a serial number N, the 30-bit value N is
+  first padded with a fixed 34-bit block to produce a 64-bit block N1.
+  S1 and S2 are then used as keys to triple-encrypt N1, producing a
+  64-bit block R1:
+  
+          R1 = E[D[E[N1; S1]; S2]; S1] .
+  
+  Similarly, N is padded with two other 34-bit blocks to produce N2 and
+  N3, and two additional 64-bit blocks R2 and R3 are computed:  
+  
+          R2 = E[D[E[N2; S1]; S2]; S1] 
+          R3 = E[D[E[N3; S1]; S2]; S1] .
+  
+  R1, R2, and R3 are then concatenated together, giving 192 bits. The
+  first 80 bits are assigned to U1 and the second 80 bits to U2.  The
+  rest are discarded.  The unit key U is the XOR of U1 and U2.  U1 and U2
+  are the key parts that are separately escrowed with the two escrow
+  agencies.
+
+Here, the notiation E[X; Y] means to encrypt 64-bit number X using 80-bit
+key Y with the Skipjack algorithm.
+
+U1 and U2 come from concatenating R1, R2, and R3.
+Each of R1, R2, and R3 is a function not only of N, the serial number,
+along with the 3 fixed 34-bit blocks, but also S1 and S2, the two random
+numbers entered by agents from the escrow organizations.
+
+
+&gt; &gt; The one problem is that S1 and S2 are not changed for each chip, but are
+&gt; &gt; rather kept the same in programming a batch of about 300 chips.  Then
+&gt; &gt; they are supposed to be destroyed.
+&gt; 
+&gt; This was not clearly implied, either. Furthermore, no clear reason has
+&gt; been stated why all this complexity is needed and U1 and U2 can't just
+&gt; be randomly generated.
+
+  All Clipper Chips are programmed inside a SCIF (secure computer
+  information facility), which is essentially a vault.  The SCIF contains
+  a laptop computer and equipment to program the chips.  About 300 chips
+  are programmed during a single session.  The SCIF is located at
+  Mikotronx.
+
+I agree that the process seems complex.  Why should the keys
+U1 and U2 be correlated with the serial number in this way?  Here is
+one thought:
+
+The most straightforward approach would be to get two random seeds,
+S1 and S2, and use them to run a PRNG that produces U1 and U2, the
+two key-halves, and N, the serial number.
+
+But the problem with this is that you are depending on the security
+of your PRNG to ensure that there is no correlation between N and
+U1/U2.  Ordinary PRNG's might allow some correlation to exist.  This
+would be weak because then just knowing the N of your chip might allow
+a good organization like NSA to crunch out U1 and U2 without going
+through the escrow agencies, by exploiting weaknesses in the PRNG.
+
+Instead, they go through a roundabout process which appears to show that
+the relationship between N and U1/U2 is as strong as the Skipjack
+algorithm itself, in fact when run in a triple-encryption mode.
+If NSA had a way, given N, to produce U1/U2, then it would appear
+that they must be able to break Skipjack, in which case they wouldn't
+need U1/U2.  So this key generation process can be argued not to
+introduce any new vulnerability in the system.
+
+Hal
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.2
+
+iQCVAgUBK9QrV6gTA69YIUw3AQGGrAP/Rmx0H603b1EdBIsiGuc637wptW133IFU
+/irxw+aCPrL3yOzuBTQbUW+LeMIwpC+Y8DARkAohxnIjhuu/aQXVnIvJPPiUSPr0
+fz2PLxhA5tgjVAH0e5xvl9K+CgWnRXazd9Tp+Zbi/xAiWz0PI6kff4QtNG13p1xw
+/V0dGDb4tec=
+=XgfH
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00362" HREF="msg00362.html">Re: Another Clipper weakness</A></STRONG>
+<UL><LI><EM>From:</EM> "Perry E. Metzger" &lt;pmetzger@lehman.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00355.html">cypherpunks vs. cryptoprivacy</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00362.html">Re: Another Clipper weakness</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00353.html">Another Clipper weakness</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00362.html">Re: Another Clipper weakness</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00361"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00361"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

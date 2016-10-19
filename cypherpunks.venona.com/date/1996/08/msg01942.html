@@ -1,0 +1,270 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: strengthening remailer protocols -->
+<!--X-From-R13: crgre.nyynaNnrng.pb.hx (Brgre [ Oyyna) -->
+<!--X-Date: Sat, 24 Aug 1996 05:11:12 +0800 -->
+<!--X-Message-Id: 9608231805.AA01523@clare.risley.aeat.co.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>strengthening remailer protocols</TITLE>
+<LINK REV="made" HREF="mailto:peter.allan@aeat.co.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01949.html">Date Prev</A>][<A HREF="msg01937.html">Date Next</A>][<A HREF="msg01928.html">Thread Prev</A>][<A HREF="msg01930.html">Thread Next</A>][<A HREF="index.html#01942">Date Index</A>][<A HREF="threads.html#01942">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>strengthening remailer protocols</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: strengthening remailer protocols</LI>
+<LI><em>From</em>: <A HREF="mailto:peter.allan@aeat.co.uk">peter.allan@aeat.co.uk</A> (Peter M Allan)</LI>
+<LI><em>Date</em>: Fri, 23 Aug 96 19:05:22 BST</LI>
+<LI><em>Cc</em>: <A HREF="mailto:peter.allan@aeat.co.uk">peter.allan@aeat.co.uk</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+This is long enough.  I've been brutal and cut sections less
+likely to promote discussion.
+
+(I've also contacted OUP about Ganley's book, and may 
+ buy it if I can kid myself I don't need the money.)
+
+
+============================================================
+August 1996
+Peter M Allan
+peter.allan@aeat.co.uk
+
+
+                   Strengthening Remailer Protocols
+
+STATUS OF THIS MEMO
+
+This memo proposes improvements for the Mixmaster protocol and
+requests discussion and further suggestions.
+Distribution of this memo is unlimited.
+
+INTRODUCTION
+
+Lance Cottrell's documents [1] and [2] describe the current Mixmaster
+protocol and attacks against it.  This memo began as a response to
+those thoughts, but has developed in discussion with Cottrell.
+
+
+SPAMMING ATTACK
+
+[2] describes an active attack where many messages are sent to an
+honest remailer to separate a message of interest from other
+traffic.  The aim is to clear other messages out of the message pool,
+wait for the target and finally eject that from the pool.  The target
+message is identified because the attacker can recognise  his own
+messages.
+
+Attempts to defeat this attack could well be based on preventing the
+attacker from recognising his own messages.  That is the approach
+taken here.
+
+     RE-ENCRYPTION AS A SPAM DEFENCE
+     
+     In this diagram remailer 'A' has received a message addressed to
+     himself.  Inside that is one to 'B' - unreadable to A.  Further
+     layers are hidden of course.
+
+                AB?????  decrypts to B?????
+
+     This means that our remailer can only disguise the message by
+     re-encrypting it on the outside.  But the message has got to
+     make some net progress toward delivery.  The trick is that a
+     remailer can find the outer two headers addressed to him and
+     process both of them.  Two headers processed and one rewound is net
+     progress.  When the header rewound is addressed to the same
+     recipient as was next on the list anyway the diagram looks like
+     this.
+
+     Actions at 'A':            AB????? decrypts to  B?????
+                                 B????? encrypts to BB?????
+
+     Actions at 'B':            BB?????  decrypts to B?????
+                                         decrypts to  C????
+                                         encrypts to CC????
+
+     The beauty of this is that it is compatible with the existing
+     protocol.  If a remailer only knows about removing layers of
+     encryption it still fits into a network where some can do both
+     actions.  Whether it sends or receives the message it still
+     works.
+
+
+     RE-ENCRYPTION IN THE MIXMASTER ROTATING QUEUE MODEL
+     
+     Instead of layers like an onion, Mixmaster has a queue of
+     headers that get rotated.  A used header goes to the back of the
+     queue where it can never again be read.  At some point the
+     header at the front of the queue is found to be the last one,
+     and the message is sent on its final hop.
+
+     For a header queue the above actions look like this:
+
+     Actions at 'A':        AAAB???  -&gt; AAB???a
+                                     -&gt; AB???aa
+                                     -&gt; BB???aa
+
+     In general when the first H headers are addressed to the
+     remailer reading them, (H-1) rotations will be performed, and
+     the top header will be overwritten with another one with a
+     random key and IV to encrypt the rest of the message.  The
+     number of headers present remains 20, however many or few of
+     these are still to be read.  No valid header block is ever
+     overwritten, only used header blocks that are good for nothing.
+     This is always possible because after a remailer receives a
+     message at least the one header it has just read must be of no
+     further use.
+
+     This will hide the message content from eavesdroppers, but not
+     from the next remailer in line - 'B'.  Assume that remailer B
+     is operated by an attacker, and that he directs spam messages
+     there after host A (which is holding your message in the pool at
+     the time of the attack).  B can read all messages sent by the
+     attacker (who knows B's private key).  This is also why I think
+     link encryption offers incomplete protection.
+
+     RE-ENCRYPTION WITH CHEATERS
+
+     Mixmaster assumes that no particular remailer in the network can
+     be trusted and that the user does not know which remailers
+     cheat.  The message passes through a chain of remailers, who aim
+     to hide information from each other so that the compromise of
+     some of them will not disclose the original sender and final
+     destination.
+
+     Central to the spamming attack is the idea that the attacker can
+     recognise the messages he is trying to trace.  This is done by
+     eliminating  his own messages.   The whole set - not just
+     some of them.  It can be arranged that the attacker does not
+     obtain the whole set until it is too late to trace the target
+     message (i.e. after a few hops, when it is likely to have met other
+     legitimate traffic).  The partial information the attacker obtains
+     before all the spams are identified will be of some use, but
+     following each of several leads with a new spam attack is unappealing
+     as the number of suspect messages will just grow.
+
+     The remailer needs the freedom to divert packets to another
+     remailer.  This is shown below; where remailer C was chosen at
+     random.
+
+     Actions at 'A':        AAAB???  -&gt; AAB???a
+                                     -&gt; AB???aa
+                                     -&gt; CB???aa
+
+     Each remailer could have three options when sending a packet to
+     its next host.
+
+        1) rotate all possible headers, and send the result  (current protocol)
+        2) re-encrypt message with new 3DES key and IV.  Do not divert.
+        3) re-encrypt message with new 3DES key and IV.  Divert at random.
+     
+     Good probabilities for these options might be:
+
+        1) 20%   P(1) = P(3)  The number of headers the next host can read
+                 should not reveal whether a diversion has just been made.
+                 (We care about this because it discourages cheaters
+                  deliberately refusing to pass on your mail.)
+        2) 60%   Other outgoing packets are not distinguishable from spams.
+        3) 20%   Should not approach 100%.
+                 (To arrive is better than to travel in hope.)
+     
+     A spam attack as described in [2] would use many more packets
+     than those in the message pool (N) on the host under attack.  The
+     number of spam packets diverted to honest remailers (a
+     proportion R of the whole) would be about
+
+		 MANY  . N  . P(3) . R
+
+     and those diverted twice in succession to honest remailers would
+     be about
+
+		 MANY  . N  . P(3) . P(3) . R . R
+
+     and I'd expect a figure above 5 here to thwart the spammer, because
+     of the time taken to collect the 5 spams.
+
+     This diversion (adding steps to the middle of a chain) seems different
+     from a Middleman scheme [3] where extra hops are added at the end.
+
+     This scheme does NOT allow a remailer to choose the rest of the
+     chain to be followed.  A dishonest remailer cannot bypass any
+     remailer chosen by the original sender (in the hope of following
+     the message to its destination) using only cooperating dishonest
+     remailers) because the message has been encrypted in the public
+     key of each remailer the sender chose before it entered the
+     network.
+
+
+
+REFERENCES
+
+1      Frequently Asked Questions about Mixmaster Remailers
+       FAQ Version 1.8 July 4 1996
+       by Lance Cottrell &lt;loki@obscura.com.&gt;
+
+
+2      <A  HREF="http://www.obscura.com/~loki/remailer/remailer-essay.html">http://www.obscura.com/~loki/remailer/remailer-essay.html</A>
+       by Lance Cottrell &lt;loki@obscura.com.&gt;
+
+3      email  "Re: middleman - what is it ?"
+       "John A. Perry" &lt;perry@alpha.jpunix.com&gt;
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01949.html">Re: ctcp.0.9</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01937.html">Re: The Future Of Cyber Terrorism</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01928.html">secret message</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01930.html">Anonymous Remailers</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01942"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01942"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

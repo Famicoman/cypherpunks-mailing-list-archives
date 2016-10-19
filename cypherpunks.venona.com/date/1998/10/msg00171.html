@@ -1,0 +1,226 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Randomness testing -->
+<!--X-From-R13: Rnivq Vbavt <ubavtNfcelarg.pbz> -->
+<!--X-Date: Sun, 4 Oct 1998 16:09:42 +0800 -->
+<!--X-Message-Id: 3.0.5.32.19981004135551.00888630@m7.sprynet.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: m0zOxtY&#45;0001eoC@magpie.osa.com.au -->
+<!--X-Reference: 3614A761.380173E0@stud.uni&#45;muenchen.de -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Randomness testing</TITLE>
+<LINK REV="made" HREF="mailto:honig@sprynet.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00170.html">Date Prev</A>][<A HREF="msg00172.html">Date Next</A>][<A HREF="msg00096.html">Thread Prev</A>][<A HREF="msg00086.html">Thread Next</A>][<A HREF="index.html#00171">Date Index</A>][<A HREF="threads.html#00171">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Randomness testing</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Mok-Kong Shen &lt;<A HREF="mailto:mok%2Dkong.shen@stud.uni%2Dmuenchen.de">mok-kong.shen@stud.uni-muenchen.de</A>&gt;,       Clifford Heath &lt;<A HREF="mailto:cjh@osa.com.au">cjh@osa.com.au</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Randomness testing</LI>
+<LI><em>From</em>: David Honig &lt;<A HREF="mailto:honig@sprynet.com">honig@sprynet.com</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 04 Oct 1998 13:55:51 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00096.html">3614A761.380173E0@stud.uni-muenchen.de</A>&gt;</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00099.html">m0zOxtY-0001eoC@magpie.osa.com.au</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+At 11:13 AM 10/2/98 +0100, Mok-Kong Shen wrote:
+&gt;Clifford Heath wrote:
+&gt;&gt; 
+&gt;I suggest that you do at least Maurer's test which is described
+&gt;in A. J. Menezes et al. Handbook of Applied Cryptography. The
+&gt;test is not difficult to code. You could also look at my code in
+&gt;<A  HREF="http://www.stud.uni-muenchen.de/~mok-kong.shen/#paper1">http://www.stud.uni-muenchen.de/~mok-kong.shen/#paper1</A> in Fortran.
+&gt;
+&gt;M. K. Shen
+&gt;
+
+
+
+/*
+UELI.c
+
+1 Oct 98
+
+This implements Ueli M Maurer's
+"Universal Statistical Test for Random Bit Generators"
+using L=16
+
+Accepts a filename on the command line;
+writes its results, with other info, to stdout.
+
+Handles input file exhaustion gracefully.
+
+Ref: J. Cryptology v 5 no 2, 1992 pp 89-105
+also on the web somewhere, which is where I found it.
+
+-David Honig
+honig@sprynet.com
+
+
+Built with Wedit 2.3, lcc-win32
+<A  HREF="http://www.cs.virginia.edu/~lcc-win32">http://www.cs.virginia.edu/~lcc-win32</A>
+
+
+26 Sept CP Release
+Version Notes:
+
+	This version does L=16.  It evolved from an L=8 prototype
+	which I ported from the Pascal in the above reference.
+
+	I made the memory usage reasonable
+	by replacing Maurer's "block" array
+	with the 'streaming' fgetc() call.
+
+
+Usage:
+	UELI filename
+	outputs to stdout
+
+*/
+
+#define L 16		// bits per block
+#define V (1&lt;&lt;L)	// number of possible blocks
+#define Q (10*V)    // at LEAST 10 * V, to assure each block seen
+#define K (100*Q)   // at LEAST 100 * Q, as large as possible
+#define MAXSAMP (Q + K)
+
+#include &lt;stdio.h&gt;
+#include &lt;math.h&gt;
+
+
+int main( int argc, char **argv )
+{
+FILE *fptr;
+int i;
+int b, c;
+int table[V];
+float sum=0.0;
+int run;
+
+// Human Interface
+printf("UELI 26 Sep 98\nL=%d %d %d \n", L, V, MAXSAMP);
+if (argc &lt;2)
+	{printf("Usage: UELI filename\n"); exit(-1); }
+else
+	printf("Measuring file %s\n", argv[1]);
+
+// FILE IO
+fptr=fopen(argv[1],"rb");
+if (fptr == NULL) {printf("Can't find %s\n", argv[1]); exit(-1); }
+
+// INIT
+for (i=0; i&lt;V; i++) table[i]=0;
+for (i=0; i&lt;Q; i++)	{
+	b= fgetc(fptr)&lt;&lt;8 | fgetc(fptr);
+	table[ b ]=i;
+}
+
+printf("Init done\n");
+
+// COMPUTE
+run=1;
+for (i=Q;  run &amp;&amp; i&lt;Q+K; i++)
+	{
+	// COMPOSE A 16-bit quantity
+	b=fgetc(fptr); if (b&lt;0) run=0;
+	c=fgetc(fptr); if (c&lt;0) run=0;
+	if (run) { b = b&lt;&lt;8 | c;
+			sum += log( (double) ( i-table[b] ) ) ;
+			table[ b ]=i;
+		}
+	}
+
+	if (!run) printf("Premature end of file; read %d blocks.\n", i-Q);
+	sum = (sum/( (double) (i-Q) ) ) /  log(2.0);    // i should be K if enough
+samples
+	printf("%s fTU= %f\n\n", argv[1], sum);
+	printf("Expected value for L=16 is 15.167379 \n");
+
+	// Add further interpretation/thresholding of the number of sigmas from
+expected,
+	// and include the fudge factors explained in the paper.
+
+
+
+
+} // end
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00099" HREF="msg00099.html">Randomness testing</A></STRONG>
+<UL><LI><EM>From:</EM> Clifford Heath &lt;cjh@osa.com.au&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00096" HREF="msg00096.html">Re: Randomness testing</A></STRONG>
+<UL><LI><EM>From:</EM> Mok-Kong Shen &lt;mok-kong.shen@stud.uni-muenchen.de&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00170.html">Re: Randomness testing</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00172.html">Re: 2 books of potential interest...</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00096.html">Re: Randomness testing</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00086.html">Re: Randomness testing</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00171"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00171"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

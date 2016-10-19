@@ -1,0 +1,155 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: announce: weaken for netscape !! -->
+<!--X-From-R13: Oabalzbhf Eraqre <abobqlNcevinpl.ao.pn> -->
+<!--X-Date: Fri, 10 Apr 1998 11:40:10 &#45;0700 (PDT) -->
+<!--X-Message-Id: 7cf39210a30d81fc1426e50faadb3b98@privacy.nb.ca -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>announce: weaken for netscape !!</TITLE>
+<LINK REV="made" HREF="mailto:nobody@privacy.nb.ca">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00163.html">Date Prev</A>][<A HREF="msg00166.html">Date Next</A>][<A HREF="msg00163.html">Thread Prev</A>][<A HREF="msg00166.html">Thread Next</A>][<A HREF="index.html#00165">Date Index</A>][<A HREF="threads.html#00165">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>announce: weaken for netscape !!</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: announce: weaken for netscape !!</LI>
+<LI><em>From</em>: Anonymous Sender &lt;<A HREF="mailto:nobody@privacy.nb.ca">nobody@privacy.nb.ca</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 10 Apr 1998 15:40:04 -0300</LI>
+<LI><em>Comments</em>: This message did not originate from the Sender address above.It was remailed automatically by anonymizing remailer software.Please report problems or inappropriate use to theremailer administrator at &lt;remailer-admin@privacy.nb.ca&gt;.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Hello.
+since it is possible to fortify netscape navigator, it is also possible
+to weaken it. i'm releasing this patch to underline the fact that you should
+really think about the degree of trust you put in your crypto software or any
+modifications done to it by others.
+so what's this patch is ?
+this is WEAKEN for netscape (should i put a (TM) logo ? )! it makes crypto in ssl useless !!
+for people who dont believe me ... here's some tech details :
+during handshake, ssl client and server exchange two random 32 bytes
+sequences (Client.Random and Server.Random) in cleartext.
+when the client receives the server's public key (if the cipherspec uses rsa),
+it generates a 48 bytes random structure (this is the premaster secret) and
+sends it to the server encrypted with that public key.
+so if you can patch the software, how to make this schema useless ? just make
+the premaster secret predictible, since the master secret is a function of
+it, plus the two random structures which are available in clear to you (attacker)
+you may now ask why this is interesting ? after all, if an attacker gains access
+to your machine all the security is lost anyway. I released this to say that :
+1- it is easy to fortify netscape, but can't verify that it really works (i mean
+you cant verify that it offers real 128 security, what is saied in the properties
+window in netscape after fortifying it is not a proof of security)
+2- weakening netscape is easy ... but u can verify that it works !!
+3- this is a very short byte sequence !! imagine what happenes if :
+3-1 that sequence is propagated by a virus !
+3-2 your boss installs that sequence by night in your computer !!
+3-3 some vendors already ship their software with the weaken sequence !!!
+
+enough with args, here is the stuff :
+
+this patch works on communicator pro export for win32,
+i downloaded the copy i worked on a few hours ago ... so by downloading the
+latest communicator 4.04 export, english from netscape's ftp site you will
+be able to weaken your browser ;) ... anyway if you want to be sure about your
+version before weakening it, download fortify, and run it's md5 program with
+following parameter :
+md5 -r 0x400-0x32ca00,0x384a00:0x58400 ...\program\netscape.exe 
+there is a line matching the version i'm talking about in the "index" file you
+will find with fortify.exe (download the whole fortify from www.fortify.net),
+here's a copy from that line :
+
+4096512 0x400-0x32ca00,0x384a00:0x58400 aea2aba6f731468e34fd1141f603ea20 pro  4.04 0 2 morphs-1.2 x86win32 (97325)
+
+netscape's executable size : 4096512 bytes
+by running md5 as indicated, you should obtain  this hash 
+aea2aba6f731468e34fd1141f603ea20
+
+now this is the patch to apply :
+look for byte sequence :
+52 88 8d e0 fe ff ff 8a 40 01 6a 00 88 85 e1 fe ff ff e8 9e 27 00 00 83 c4 0c 8b f8
+and change with
+6a 72 52 88 8d e0 fe ff ff 8a 40 01 88 85 e1 fe ff ff e8 cd 98 94 77 83 c4 0c 33 ff
+that's all !!!!
+
+in short, i'm changing a call to GenerateRandom to memset &gt;;-)
+72 is the ascii code for 'r' (my favorite char).
+if you can play with ssleay, you can change the ssl/ssl_txt.c, ssl/s3_srvr.c
+and ssl/ssl.h in order to keep the premaster secret in memory so you can display it
+in the output given by s_server -accept &lt;port&gt; -www
+good luck
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.3i
+Charset: cp850
+
+iQCVAwUBNS59fpVRLpSyKBl9AQFQPQP/fxAuSA80MmLTZtkFI776HfTylXbhXbvM
+Eq6rWdEip7OhuaG8Nemjc+lVH95I+YRHqG5iHWdT9and1PhQ9QHGwxmWLVT8wa0x
+HlOVuoMK4BuyfwbcvYAXUwtdgbA6hcVXX/BD+jCPXhE+ZDYPbHGF+NRYaeBIhWRC
+x1QsId+jPQQ=
+=eOS5
+-----END PGP SIGNATURE-----
+        
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00163.html">RE: possible customer for a Forth box?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00166.html">weaken : contact the author</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00163.html">RE: possible customer for a Forth box?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00166.html">weaken : contact the author</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00165"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00165"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

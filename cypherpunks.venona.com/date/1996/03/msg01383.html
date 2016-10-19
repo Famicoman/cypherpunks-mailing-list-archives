@@ -1,0 +1,556 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: apology &#45; here is C source code -->
+<!--X-From-R13: Xnpx [bgg <gurpebjNvpbaa.arg> -->
+<!--X-Date: Mon, 25 Mar 1996 07:08:52 +0800 -->
+<!--X-Message-Id: 3155D414.6E38@iconn.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>apology - here is C source code</TITLE>
+<LINK REV="made" HREF="mailto:thecrow@iconn.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01380.html">Date Prev</A>][<A HREF="msg01384.html">Date Next</A>][<A HREF="msg01389.html">Thread Prev</A>][<A HREF="msg01386.html">Thread Next</A>][<A HREF="index.html#01383">Date Index</A>][<A HREF="threads.html#01383">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>apology - here is C source code</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: apology - here is C source code</LI>
+<LI><em>From</em>: Jack Mott &lt;<A HREF="mailto:thecrow@iconn.net">thecrow@iconn.net</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 24 Mar 1996 18:00:36 -0500</LI>
+<LI><em>Organization</em>: Kryptology</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I apologize to everyone for the binary posting, I figured it was small 
+enough to not cause problems.  Here is the source.  I do not claim to be 
+either a good programer, or any good at cryptography.  I am a junior in 
+high school and I am interested in it, and I think I have some good 
+ideas here.  The code may be kinda hellish, any CONSTRUCTIVE criticism 
+would be appreciated. I have been programming about a year.  I can 
+assure you though, this isn't some stupid XOR encryption...at least it 
+is better than WordPerfect ecryption (I hope to god :)  
+	I originally wrote this in Pascal, and ported it to Turbo C++, I 
+think the only C++ in it is the comments and inline declarations, might 
+want to double check though. I think the only non-portable code is the 
+gotoXY statements, and the random function works differently under GCC 
+if I remember correctly (I have had Linux for a little while) Oh yeah, I 
+kinda stretched the definition of HASH in my code a lot... here goes.
+
+---------------
+// encryption program - constructive flames appreciated
+
+// 
+***************************INCLUDES************************************	#include &lt;stdio.h&gt;
+        #include &lt;sys\stat.h&gt;  // &lt;-- dont need this in Unix
+	#include &lt;fcntl.h&gt;
+	#include &lt;io.h&gt;
+	#include &lt;math.h&gt;
+	#include &lt;conio.h&gt;
+	#include &lt;stdlib.h&gt;
+	#include &lt;string.h&gt;
+	#define BLOCK 16384
+	#define HASHSIZE 256
+// 
+***************************PROTOTYPES************************************
+	void input(void);    		// Input KEY, FILENAMES, etc.
+	void openfiles(void);		// Open files
+	void closefiles(void);		// Close em
+	void encrypt(void);		   // Encrypt file
+	void decrypt(void);
+	void superhash(void);	   // Time/System/File/Specifics
+	void initblocks(void);
+	void grabhash(void);	      // Grabs encrypted hash value from 
+file
+	void CopyBack(void);
+// 
+***************************VAR*****************************************	char 		key[80];
+	char 		ifn[12];
+	char 		ed[1];
+	int  		infile,outfile,backfile;
+	int  		x,y;
+	int  		i;
+	float 	Havg,Kavg,BKHavg;
+	char     SuperHash[HASHSIZE],ESuperHash[HASHSIZE];
+	char     BSH[BLOCK],KEY[BLOCK];
+
+
+//**************************************************************************//
+//                        Main Program                                  
+    //
+//**************************************************************************//
+main(int argc,char* argv[]) {
+randomize();
+
+if (argc &lt; 4)
+	{
+		input();
+	}
+else
+	{
+	  strcpy(ifn,argv[1]);
+	  strcpy(ed,argv[2]);
+	  strcpy(key,argv[3]);
+	}
+
+openfiles();
+
+if (ed[0] == (('e') | ('E')) )
+	{
+		superhash();
+		initblocks();
+		encrypt();
+	}
+else if (ed[0] == (('d') | ('D')) )
+  {
+		grabhash();
+		initblocks();
+		decrypt();
+		CopyBack();
+  }
+else
+	printf("%s was not an option",ed[0]);
+
+closefiles();
+}
+
+//**************************************************************************//
+// input()              Takes in all inputs                             
+    //
+//**************************************************************************//
+void input()
+{
+	char 	  vkey[80];
+	char    c;
+
+	for (i = 0; i &lt; 80; i++)
+		{
+			key[i] = '';
+			vkey[i] = '';
+		}
+
+	printf("\nEnter Filename:");
+	gets(ifn);
+	printf("(E)ncrypt or (D)ecrypt?:");
+	gets(ed);
+
+	printf("Enter Key:");
+	i = 0;
+	int startx = wherex();
+	do {
+		if (kbhit())  {
+			 c = getch();
+
+			 if (c == 8)
+			 {
+				if (wherex() != startx)
+					{
+						key[i] = '';
+						i -= 1;
+						key[i] = '';
+						
+gotoxy(wherex()-1,wherey());
+						printf(" ");
+						
+gotoxy(wherex()-1,wherey());
+
+					}
+			 }
+			 else
+				{
+					if (c != 13)
+						{
+							key[i] = c;
+							i++;
+							printf("þ");
+						}
+					else
+						break;
+				}
+
+			 }
+		} while (c != 13);
+
+	flushall();
+	printf("\nVerify key:");
+	startx = wherex();
+	i = 0;
+	c = 0;
+	do {
+		if (kbhit())  {
+			 c = getch();
+
+			 if (c == 8)
+			 {
+				if (wherex() != startx)
+					{
+                  vkey[i] = '';
+						i -= 1;
+                  vkey[i] = '';
+						
+gotoxy(wherex()-1,wherey());
+						printf(" ");
+						
+gotoxy(wherex()-1,wherey());
+
+					}
+			 }
+			 else
+				{
+					if (c != 13)
+						{
+							vkey[i] = c;
+							i++;
+							printf("þ");
+						}
+					else
+						break;
+				}
+
+			 }
+		} while (c != 13);
+
+	if (strcmp(key,vkey) != 0)
+		{
+			printf("\nKeys were not the same. They need to 
+be");
+			exit(EXIT_SUCCESS);
+		}
+	if (strlen(key) &lt;= 0)
+		{
+			printf("\nThe key was blank, it needs to have 
+some characters.");
+			exit(EXIT_SUCCESS);
+		}
+printf("\n");
+}
+
+//**************************************************************************//
+// openfiles(void) --       Opens all files                             
+    //
+//**************************************************************************//
+void openfiles(void)
+{
+infile  = open(ifn,O_BINARY | O_RDONLY);
+if (ed[0] == (('e') | ('E')) )
+	{
+	  outfile = open(ifn,O_BINARY | O_WRONLY);
+	}
+else
+	{
+		  chmod("KRYPT000.TMP",S_IWRITE);
+		  unlink("KRYPT000.TMP");
+		  outfile = open("KRYPT000.TMP", O_BINARY | O_RDWR | 
+O_CREAT | O_TRUNC | S_IWRITE);
+	}
+
+}
+
+//**************************************************************************//
+//                       Closes All Files                               
+    //
+//**************************************************************************//
+void closefiles(void)
+{
+if (ed[0] == (('e') | ('E')) )
+  {
+	close(outfile);
+	close(infile);
+  }
+else
+	{
+		close(backfile);
+		close(infile);
+	}
+
+}
+
+
+//**************************************************************************//
+//                      Main Encryption Routine                         
+    //
+//**************************************************************************//
+void encrypt(void)
+{
+char buf[BLOCK];
+float blocks = 0;
+long sizeoffile = filelength(infile);
+long numread;
+long maxblocks = sizeoffile / BLOCK;
+if (maxblocks == 0) maxblocks = 1;
+printf("\nEncrypting:");
+x = wherex();
+
+while ((numread = read(infile,buf,BLOCK)) &gt; 0 )
+	{
+		BKHavg = (blocks * Kavg) + Havg;
+		for(i = 0; i &lt; numread; i++)
+			{
+			  buf[i] = buf[i] + floor(9845845*cos((KEY[i]+
+				BSH[i]) * (i+BKHavg)));
+			}
+
+		gotoxy(x,wherey());
+
+		int pd = floor(blocks/maxblocks*100 + 1);
+		printf("%d%",pd);
+
+		write(outfile,buf,numread);
+		blocks++;
+	}
+gotoxy(x,wherey());
+printf("100%");
+write(outfile,ESuperHash,HASHSIZE);
+}
+//**************************************************************************//
+//                      Copy Back For Decryption                        
+    //
+//**************************************************************************//
+void CopyBack(void) {
+
+backfile = open(ifn,O_BINARY | O_WRONLY | O_TRUNC);
+char buf[BLOCK];
+
+long pos;
+long size = filelength(outfile) - HASHSIZE;
+long blocks = 0;
+int numread;
+long maxblocks = size / BLOCK;
+if (maxblocks == 0) maxblocks = 1;
+
+printf("\nRemoving encryption block:");
+x = wherex();
+lseek(outfile, 0L, SEEK_SET);
+  do {
+	 numread = read(outfile,buf,BLOCK);
+	 pos = tell(outfile);
+
+	 if (pos &gt; size)
+		{
+		  write(backfile, buf,numread - (pos - size));
+		  break;
+		}
+	 else
+		{
+		  write(backfile, buf, numread);
+		}
+
+	 blocks = blocks+1;
+	 gotoxy(x,y);
+	 int pd = floor(blocks/maxblocks*100 + 1);
+	 printf("%d%   ",pd);
+
+  } while (pos != size);
+  close(outfile);
+  chmod("KRYPT000.TMP",S_IWRITE);
+  unlink("KRYPT000.TMP");
+
+
+}
+//**************************************************************************//
+//                      Main Decryption Routine                         
+    //
+//**************************************************************************//
+void decrypt(void) {
+char buf[BLOCK];
+float blocks = 0;
+long sizeoffile = filelength(infile);
+long numread;
+long maxblocks = sizeoffile / BLOCK;
+if (maxblocks == 0) maxblocks = 1;
+printf("\nDecrypting:");
+x = wherex();
+
+while ((numread = read(infile,buf,BLOCK)) &gt; 0 )
+	{
+		BKHavg = (blocks * Kavg) + Havg;
+		for(i = 0; i &lt; numread; i++)
+			{
+				buf[i] = buf[i] - 
+floor(9845845*cos((KEY[i]+
+				  BSH[i])*(i+BKHavg)));
+
+			}
+
+		gotoxy(x,wherey());
+
+		int pd = floor(blocks/maxblocks*100 + 1);
+		printf("%d%",pd);
+
+		write(outfile,buf,numread);
+		blocks++;
+	}
+gotoxy(x,wherey());
+printf("100%");
+
+
+}
+//**************************************************************************//
+//                         SuperHash Procedure                          
+    //
+//									
+									
+							 //
+// the idea here is to get a block of totally unpredictable bytes,      
+    //
+// if anyone has any 'true random number generators' stick em here	
+       //
+//	this just pulls in HASHSIZE bytes from random positions from the 
+file,   //
+//	the idea being that they would have to know what the whole file 
+was      //
+//	in the first place to guess these values                        
+         //
+//									
+									
+							 //
+//**************************************************************************//
+void superhash(void)
+{
+printf("Generating System/Time/File specific SuperHash:");
+x = wherex();
+
+	long MaxPos = filelength(infile) - 1;
+	char hbuf;
+	int keylen = strlen(key);
+Havg = 0;
+for (i = 0; i &lt; HASHSIZE; i++)
+	{
+			long SeekValue = ((93617583 * random(32000)) * 
+key[i % keylen]) % MaxPos;
+			if (SeekValue &lt; 0) SeekValue *= -1;
+
+			lseek(infile,SeekValue, SEEK_SET);
+			read(infile,&amp;hbuf,1);
+
+			SuperHash[i] = floor(923723723 * cos(random(256) 
+* hbuf * key[i % keylen]));
+			ESuperHash[i] = SuperHash[i] + floor(989898989 * 
+sin(key[i % keylen])+i);
+			Havg = Havg + SuperHash[i];
+
+			printf("%d     ",random(256));
+			gotoxy(x, wherey());
+	}
+if ((key[SuperHash[5] % keylen] + (key[SuperHash[3] % keylen] / 10)) != 
+0)
+	{
+		Havg = Havg / (key[SuperHash[5] % keylen] +
+			(key[SuperHash[3] % keylen] / 1000));
+	}
+else
+	{
+		Havg = Havg / 7.2;
+	}
+
+
+lseek(infile, 0L, SEEK_SET);
+}
+
+//**************************************************************************//
+//grabhash()            Grab ESuperHash from file                       
+    //
+//**************************************************************************//
+void grabhash()  {
+printf("Grabbing SuperHash Values...");
+long sizeoffile = filelength(infile);
+int keylen = strlen(key);
+
+lseek(infile,sizeoffile - HASHSIZE,SEEK_SET);
+read(infile,ESuperHash,HASHSIZE);
+Havg = 0;
+for (i = 0; i &lt; HASHSIZE; i++)
+  {
+	 SuperHash[i] = ESuperHash[i] - floor(989898989 * sin(key[i % 
+keylen])+i);
+	 Havg = Havg + SuperHash[i];
+  }
+Havg = Havg / key[SuperHash[5] % keylen];
+lseek(infile, 0L, SEEK_SET);
+}
+
+//**************************************************************************//
+//initblocks()       Dumps small hash arrays into big BLOCK arrays      
+    //
+//**************************************************************************//
+void initblocks(void)  {
+long total = 0;
+int keylen = strlen(key);
+
+for (i = 0; i &lt; keylen; i++)
+	{
+		total += key[i];
+	}
+
+Kavg = total / keylen + total;
+
+for (i = 0; i &lt; BLOCK; i++)
+  {
+	 KEY[i] =  key[i % keylen];
+	 BSH[i]  = SuperHash[i % HASHSIZE];
+  }
+
+
+
+}
+----------
+
+seeya - thanks
+
+-- 
+thecrow@iconn.net
+"It can't rain all the time"
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01380.html">Re: protection on IoMega ZIP drives</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01384.html">The Crow meets the Troll...</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01389.html">Re: private key encryption program for you to hack at</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01386.html">Re: apology - here is C source code</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01383"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01383"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

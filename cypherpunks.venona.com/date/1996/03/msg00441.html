@@ -1,0 +1,157 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Request Comments: Transpose/XOR Hash -->
+<!--X-From-R13: yzppneguNpf.hznff.rqh -->
+<!--X-Date: Mon, 11 Mar 1996 03:01:39 +0800 -->
+<!--X-Message-Id: 199603080211.VAA05994@thor.cs.umass.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199603040416.XAA23922@bb.hks.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Request Comments: Transpose/XOR Hash</TITLE>
+<LINK REV="made" HREF="mailto:lmccarth@cs.umass.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00431.html">Date Prev</A>][<A HREF="msg00442.html">Date Next</A>][<A HREF="msg00164.html">Thread Prev</A>][<A HREF="msg00154.html">Thread Next</A>][<A HREF="index.html#00441">Date Index</A>][<A HREF="threads.html#00441">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Request Comments: Transpose/XOR Hash</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:olcay@libtech.com">olcay@libtech.com</A> (Olcay Cirit)</LI>
+<LI><em>Subject</em>: Re: Request Comments: Transpose/XOR Hash</LI>
+<LI><em>From</em>: <A HREF="mailto:lmccarth@cs.umass.edu">lmccarth@cs.umass.edu</A></LI>
+<LI><em>Date</em>: Thu, 7 Mar 1996 21:11:39 -0500 (EST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A> (Cypherpunks Mailing List)</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00164.html">199603040416.XAA23922@bb.hks.net</A>&gt; from "Olcay Cirit" at Mar 3, 96 11:16:29 pm</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Olcay Cirit writes:
+&gt; I'd like to know if anyone has comments regarding the hash
+&gt; method I came up with. 
+
+My primary suggestion is that you do some reading in a good crypto text like
+Applied Cryptography (2nd ed.). The introduction to PRZ's manual for PGP is
+also particularly germane, as is the sci.crypt FAQ.
+
+&gt; It is a combination of Transposition
+&gt; and XORing. Basically, it works like this:
+&gt; 
+&gt; Let's say K is the 8 character key that will be hashed. 
+&gt; There are two binary accumulators M and L, which store the
+&gt; Most and Least significant bits in each byte of K. After M and
+&gt; L are both 8 bits long, they are XORed together and the 
+&gt; resulting value replaces byte N in the Key. This is repeated
+&gt; 8 times, and each time, N is incremented by one.
+
+OK, since I'm procrastinating doing some non-crypto work right now, I looked
+at your algorithm for 10 minutes or so. Your description is rather vague, so
+I'm not sure I understand exactly what you're proposing. My best guess is:
+
+The hash has 8 rounds. The initial 64-bit digest value is H = K. For 
+notational convenience, let H[i] denote the i-th byte of H, and H[i,j] denote 
+the j-th bit of H[i]. Juxtaposition denotes concatenation. I'll assume bit 1 
+is the MSB. You hash K by doing:
+
+H = K
+for k = 1 to 8 do
+	M = H[1,1] H[2,1] ... H[8,1]
+	L = H[1,8] H[2,8] ... H[8,8]
+	H[k] = M xor L
+od
+return H
+
+First of all, this isn't even a good checksum, since the output depends on 
+only 16 of the 64 input bits (namely the MSBs and LSBs of each byte of K).
+
+Many pairs of output bits are highly correlated (in fact, equal).
+H[2,1] == H[3,1] == ... == H[8,1] because H[1] doesn't change after the first 
+round. Similarly H[1,8] == H[2,8] == ... == H[8,8] because H[8] doesn't
+change until the end of the algorithm. For each other choice of bit index j, 
+there's a "before" value H[1,j] == ... == H[j,j] and an "after" value
+H[j+1,j] == ... == H[8,j].
+
+This tells us that there are at most 2^(1 + 7*2) == 2^15 possible hash output 
+values. 
+
+But it would be faster to take advantage of the observation that for each j,
+H[1,j] == K[j,1] xor K[j,8]. We guess the 8 LSBs as g_1, g_2, ..., g_8, and
+compute the corresponding 8 MSBs as m_j = g_j xor H[1,j], which gives us all
+the information we need to compute a hash value.
+
+So we can compute a preimage of an arbitrary hash value with at most 2^8 = 
+256 guesses.
+
+In any case, this is an extremely weak cryptographic hash.
+
+Lewis			"...made my own pretty hate machine" (Tori Amos)
+lmccarth@cs.umass.edu	<A  HREF="http://www.cs.umass.edu/~lmccarth">http://www.cs.umass.edu/~lmccarth</A>
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBMT+XOWf7YYibNzjpAQHSSAQA3iBNxdO/xtWUVK66tw/JsgMnEG6U/KwD
+wurB+s8GpMEUHlHAuKpTDeiJJDe1qIPHg7lXoArs7kadgBTcnGVkaoMsLZ5zWStb
+yLJ5rMn2M4C1SnlxSkE6DfGXxnjbrAZtI60vwuIAkuPwJRknDyrmY/dTizy4R8GU
+Erf/KmTj0uU=
+=P1O+
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00164" HREF="msg00164.html">Request Comments: Transpose/XOR Hash</A></STRONG>
+<UL><LI><EM>From:</EM> Olcay Cirit &lt;olcay@libtech.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00431.html">ANTI-CRYPTO CYPHERPUNKS</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00442.html">Re: What's anyone know about Teledyne Electronic Technologies?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00164.html">Request Comments: Transpose/XOR Hash</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00154.html">Looking for code to run an encrypted mailing list</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00441"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00441"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

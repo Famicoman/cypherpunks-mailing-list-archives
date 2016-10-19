@@ -1,0 +1,166 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Chaum's credentials (technical question) -->
+<!--X-From-R13: usvaarlNfuryy.cbegny.pbz -->
+<!--X-Date: Sat, 30 Oct 93 18:14:21 PDT -->
+<!--X-Message-Id: 9310310111.AA04231@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Chaum's credentials (technical question)</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01470.html">Date Prev</A>][<A HREF="msg01472.html">Date Next</A>][<A HREF="msg01472.html">Thread Prev</A>][<A HREF="msg01475.html">Thread Next</A>][<A HREF="index.html#01471">Date Index</A>][<A HREF="threads.html#01471">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Chaum's credentials (technical question)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Chaum's credentials (technical question)</LI>
+<LI><em>From</em>: <A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A></LI>
+<LI><em>Date</em>: Sat, 30 Oct 93 18:11:51 PDT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+In response to the recent discussions about identity, pseudonyms,
+"is-a-person" credentials, etc., I've been studying Chaum's paper from
+Auscrypt 90, "Showing Credentials without Identification; Transferring
+Signatures between Unconditionally Unlinkable Pseudonyms."  This is quite
+a dense and rather cryptic paper which requires careful reading.  It
+doesn't help that the references got left off when the paper was printed.
+There are also quite a few obvious misprints in some of the printed
+formulas.
+
+I am trying to understand one particular passage, on page 258.  Chaum
+uses the idea of a credential as an RSA signature on a pseudonym, where
+the pseudonym is a number Px.  The RSA modulus has, in this case, two
+exponents e1 and e2 which mean different things.  (Say, e1 means "good
+credit risk" and e2 means "good driving record".)  The corresponding
+private exponents are d1 and d2.  If a person has these two credentials
+that means that he has the two numbers Px^d1 and Px^d2, from the
+credentialling organization.  These RSA signatures prove that he actually
+has the characteristics described in the credential.
+
+Now, I am having a problem with Chaum's math.  This is a little technical
+but I know we have some people on the list who know some number theory.
+Here is what Chaum says:
+
+   "Suppose an organization X were to require that you have each of two
+   credentials, say both that with public exponents e1 and e2.  You could
+   send X separatley Px^d1 and Px^d2.  It is also possible for you to use
+   the two credentials to form the single credential Px^(d1*d2), which
+   will be called their AND....  To create the AND, you: set g to the
+   multiplicative inverse of d1 modulo d2; set h to the remainder after
+   dividing g*d1-1 by d2; and computing
+   (Px^d1)^g * (Px^d2)^(-h) = Px^(d1*d2)."
+
+It would be really nice if this AND credential could be created like this,
+because it might be applicable to digital cash.  Instead of having to go
+through the complicated spending transaction for each piece of cash, you
+might be able to combine all the pieces of cash into one, and just spend
+that.  It would be more compact.
+
+But Chaum's math doesn't work.  First of all, he says "you" should set g
+to the inverse of d1 modulo d2.  But this seems to presume knowledge of
+d1 and d2.  Yet "you" don't know these things; these are the secret
+exponents of the signing agency.  So is Chaum actually talking here about
+something the signing agency does?  It didn't sound that way from the
+context.
+
+If the signing agency wants to compute Px^(d1*d2), given Px^d1 and Px^d2,
+it can do so easily enough; simply take Px^d1 to the d2 power.  You don't
+need to go through this rigamarole with g and h.  So that interpretation
+doesn't make much sense either.
+
+The other possibility I thought of is that he meant that the signing
+agency would make g and h, as he defined them, public.  With g and h
+then users could combine their credentials as he said.  But even that
+doesn't work; his whole formula doesn't make sense.  g is the inverse
+of d1 mod d2; this means that g*d1 = 1 mod d2, or in other words
+g*d1 - 1 = k*d2 for some k.  That's the definition of the multiplicative
+inverse.  Okay, but then he says h is the remainder when g*d1-1 is divided
+by d2.  But look: g*d1-1 is a MULTIPLE of g2!  The remainder will always
+be zero.  So that doesn't make any sense either.
+
+So I thought, perhaps he really meant that h should be the quotient
+rather than the remainder; it would be "k" in the equation I just wrote.
+Then we'd have g*d1 - 1 = h*d2, which is somewhat encouraging because
+it resembles his formula.  But his formula is (Px^d1)^g * (Px^d2)^(-h),
+which is Px^(g*d1 - h*d2).  Rearranging the equation two lines above,
+we see that g*d1 - h*d2 = 1.  So we end up with just Px, not Px^(d1*d2).
+So this isn't right, either.
+
+In fact, the notion that you can calculate Px^(d1*d2) from Px^d1 and
+Px^d2 is pretty questionable, since the impossibility of doing this is
+the basis of Diffie-Hellman key exchange!
+
+In short, I haven't found any interpretation of Chaum's math that makes
+sense.  Can anyone shed any light on this?  Was this just a mistake in
+a paper which was, after all, just intended for conference proceedings,
+not a refereed journal?  Thanks -
+
+Hal
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a
+
+iQCVAgUBLNLlRKgTA69YIUw3AQEmegP9HzQt1vMwuLvVVr2e3LNrL5lPh9jg/cb4
+rQkTvh+XVCKlqsI7TJ2pCeAwLygxPMlcw4/3sAeV9K1hWqk0B+bSFU8qWQSmka5+
+2OpJIXt2C+N/qVMKiFzAKMmQf680iVUxdj/TvfV6kZ6hPA5eqHdnHWy45QKEck3B
+VMNwKRPz2Mo=
+=TLs8
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01470.html">Signing keys for nyms</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01472.html">Signing keys for nyms</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01472.html">Signing keys for nyms</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01475.html">(fwd) Getting a Copy of APPLIED CRYPTOGRAPHY</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01471"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01471"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

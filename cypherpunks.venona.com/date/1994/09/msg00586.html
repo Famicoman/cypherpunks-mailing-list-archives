@@ -1,0 +1,211 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Data Havens -->
+<!--X-From-R13: uhturfNnu.pbz (Sevp Vhturf) -->
+<!--X-Date: Sat, 17 Sep 94 16:58:22 PDT -->
+<!--X-Message-Id: 9409172319.AA12820@ah.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9409172243.AA17059@runner.utsa.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Data Havens</TITLE>
+<LINK REV="made" HREF="mailto:hughes@ah.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00585.html">Date Prev</A>][<A HREF="msg00588.html">Date Next</A>][<A HREF="msg00597.html">Thread Prev</A>][<A HREF="msg00588.html">Thread Next</A>][<A HREF="index.html#00586">Date Index</A>][<A HREF="threads.html#00586">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Data Havens</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Data Havens</LI>
+<LI><em>From</em>: <A HREF="mailto:hughes@ah.com">hughes@ah.com</A> (Eric Hughes)</LI>
+<LI><em>Date</em>: Sat, 17 Sep 94 16:19:14 -0700</LI>
+<LI><em>In-Reply-To</em>: Douglas R. Floyd's message of Sat, 17 Sep 1994 17:43:17 +0600 &lt;<A HREF="msg00597.html">9409172243.AA17059@runner.utsa.edu</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+   I was exploring the concept of a "data haven" which, to my
+   knowledge, a place whose location is unknown to its users, but via
+   anonymous remailers, files can be stored and retrived from it.
+
+This is certainly on-topic.  As stated, however, the outline suffers
+badly froma confusion of purpose.  It is not necessary to solve every
+problem that can be thought of, merely to solve the most important
+problem in such a way that allows it to be combined with other known
+solutions.
+
+Specifically, the proposal worries far too much about communications
+security and routing issues, which best go elsewhere in the
+abstraction.  The main service proposed is data storage, not anonymous
+remailing.  Remailing can be done with other segments.
+
+Secondly, such storage need not be tied to identity.  There's no need
+for passwords or passphrases or even public keys.  The main idea here
+is storage.  You want the property that arbitrary people can't scan
+the storage facility for content, but identity, while it would work,
+is _more_ than is necessary.  (Can anybody anticipate the solution?
+See below.)
+
+   2:  One must have to "hide" behind a VERY TRUSTABLE remailer, [...]
+
+This is a concern about communications, and is not necessary to the
+main idea of remote archiving.
+
+   4:  A need for verifing that the mail got to the DH successfully since
+       data errors do occur, and sometimes networks truncate mail packets.
+
+Again, this communication issue should be dealt with in a separate
+layer that is concerned about the reliability of communications.
+
+   5:  A way of making verifing that the user is who (s)he claims to be.
+
+Identity-based retrieval is possible, but it's not necessary.  Since
+the service is single purpose (storage) and won't be dealt with
+directly by humans, i.e. no command prompt, but rather will act as a
+back end for some retrieval process, the persistence of identity isn't
+required at the back end.  Some persistence will certainly be useful,
+but it can occur at the user's end.
+
+   6:  Multiple security levels, so files cannot be retrived even if
+       one's PGP key is compromised (user settable)
+
+This is really overkill.  Every bit of complication makes the code
+harder to design, harder to write, harder to debug, and harder to
+deploy.  A simple solution with the basic function can later be
+elaborated upon.
+
+   8:  There will need to be a way to tell if the DH is up or not.
+
+If you make a request, and nothing comes back, it's not up.  I don't
+see the value in extra functionality.
+
+   9:  How will PGP keys be stored and indexed?
+
+Again, this issue can be finessed.  At least part of the issue is a
+communications one as well, which is best dealt with elsewhere.
+
+   10: How would people be able to trust a DH?
+
+If you store only encrypted data--and only the stupid would not--the
+only bit of trust is in continued uptime.  Replication and redundancy
+can be handled at the user's end.  At some point _every_ replication
+bottoms out to the unreplicated storage of some bit of data.  This is
+the primitive, and this deserves to get implemented first.
+
+   11: How would a DH turn away files because the disk is full?
+
+Silent failure should work just fine.  Disk space limitations are just
+as difficult to deal with as communication failures.
+
+   12: Would integrating DigiDollars with a DH be a good idea?
+
+At some point when they exist, yes.  Right now, without such
+mechanisms, requiring this will prevent any deployment.
+
+
+   I apologize for the length of this post, but there are a lot of questions
+   and problems in making a stable, usable data haven.
+
+Looking to implement the final goal as a first project is doomed to
+failure.  Implementing a simple primitive as an attainable project is
+a much better idea.
+
+
+Now for some specifics.  There is a package called Almanac which is a
+file-by-mail server.  Leveraging off this code is a good place to
+start.  Lots of the basic issues are already solved.
+
+Now, about authentication.  The basic service is storage.  It's not
+even providing name access to the storage.  The data itself is what is
+desired, and a cryptographic one-way hash function suffices as a name.
+
+Knowledge of the hashcode provides all the authentication that is
+needed.  If you don't know the hashcode, you can't get the file.  If
+you do know the hashcode, you can.  No one else can guess the
+hashcode, and since no one else knows these hashcodes, the hashcodes
+suffice as a replacement for the presistence of identity.
+Furthermore, the many files stored by a particular individual are not
+linked together in any way on the remote site.  The storage site need
+not have this data; in fact even having this data introduces another
+security risk.
+
+The software on the user end can keep track of any mapping desired.  Some
+sort of tracking software on the user end will be needed in any case
+to keep track of what is stored where; it may as well keep track of a
+remote name mapping.
+
+So the primitives to implement are very simple; there are two: "store
+text T" and "retrieve the text with hashcode N".  Perhaps a third is
+also desired: "is text with hashcode N present?".
+
+This kind of system is very simple.  For implementation of the back
+end, the files can be stored with filenames which are hexadecimal
+representations of their hashcodes.  This representation allows one to
+leverage the existing index structure of the file system, avoiding the
+need to code one inside the application.
+
+For the front end, a log file will suffice for a trial version of name
+mapping.  The retrieval method is "grep by hand".  Something more
+advanced can be implemented later, perhaps something that looks like a
+file system or an ftp site.
+
+Eric
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00597" HREF="msg00597.html">Data Havens</A></STRONG>
+<UL><LI><EM>From:</EM> dfloyd@runner.utsa.edu (Douglas R. Floyd)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00585.html">On the crime bill and remailers</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00588.html">Data Havens</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00597.html">Data Havens</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00588.html">Data Havens</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00586"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00586"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

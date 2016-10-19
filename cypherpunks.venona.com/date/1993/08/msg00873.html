@@ -1,0 +1,155 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Commercial PGP; trapdoor rumors -->
+<!--X-From-R13: na31185Nnaba.crarg.sv (Oaba bs Wovq) -->
+<!--X-Date: Sat, 28 Aug 93 15:48:13 PDT -->
+<!--X-Message-Id: 9308282243.AA26548@anon.penet.fi -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Commercial PGP; trapdoor rumors</TITLE>
+<LINK REV="made" HREF="mailto:an31185@anon.penet.fi">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00870.html">Date Prev</A>][<A HREF="msg00893.html">Date Next</A>][<A HREF="msg00804.html">Thread Prev</A>][<A HREF="msg00807.html">Thread Next</A>][<A HREF="index.html#00873">Date Index</A>][<A HREF="threads.html#00873">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Commercial PGP; trapdoor rumors</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Commercial PGP; trapdoor rumors</LI>
+<LI><em>From</em>: <A HREF="mailto:an31185@anon.penet.fi">an31185@anon.penet.fi</A> (Anon of Ibid)</LI>
+<LI><em>Date</em>: Sat, 28 Aug 1993 22:43:39 UTC</LI>
+<LI><em>Organization</em>: Anonymous contact service</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:an31185@anon.penet.fi">an31185@anon.penet.fi</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+In message &lt;<A HREF="msg00798.html">01H2813M8J6090MZGB@delphi.com</A>&gt; Mike Ingle said:
+&gt;If there is any flaw in PGP, there are only a few places where it
+&gt;could be. The basic mechanics of the program (RSA, IDEA, etc) obviously
+&gt;work. 
+
+I'll agree with you there, or at the least, if they don't work I'm not
+likely to be able to prove it. I also very much doubt that there's
+really a 'trapdoor' to deliberately make decryption easy, but there's
+plenty of scope for a bug or unwarranted assumption to do so by
+accident. (Look at WordPerfect 5.1 encryption, for a good example).
+
+&gt;The file format can easily be checked to make sure it is correct.
+&gt;A subtle flaw would have to be somewhere like: prime number generation,
+&gt;random RSA key generation, or random session key generation. If the primes
+&gt;weren't actually prime, that would make the RSA keys breakable. But
+&gt;you could take the primes (pgp -kg -l and you will see them in hex)
+&gt;and feed them into a primality tester to verify that.
+
+With regard to the file format, I've just been looking at that, I hacked
+a test copy of PGP 2.3a to dump out the plaintext that it would normally 
+idea-encrypt to a file, and encrypted a selection of files with a
+selection of keys to look for known plaintext, then went back into
+the source code to track down where it came from.
+
+The first twelve bytes of the data that gets idea-encrypted contain
+two bytes of known plaintext, and two repeated bytes. The actual
+contents are:
+
+	bytes 1-8:	Randomly generated prefix
+	bytes 9-10:	Repeat of bytes 7 and 8 (key check bytes)
+	bytes 11-12:	ALWAYS 0xA3 and 0x01 !!!!
+
+The repeated bytes come from idea_file() in crypto.c, and are used to
+verify that you got the correct key to decrypt the file. The known
+bytes come from squish_and_idea_file() in the same file, and verify that
+the input contains compressed data and that it's zipped.
+
+Now, I don't know enough about idea encryption to know how much this would
+help to break the code, but it still seems to me that much of this does
+not need to be here. Anyone got any suggestions ? (I'd guess you could 
+at least move the repeated bytes to the end of the file ?). It's definitely a
+weak point, as a brute-force attack would only need to decrypt 12 bytes
+to verify (or almost verify ?) a correct idea key, though whether that
+*greatly* reduces the security, I don't know.
+
+I realise that the random bytes are supposed in part to protect you from
+this, however, I don't see any point in reducing the security of the
+data if you don't have to. 
+
+&gt;The most likely place for a bug would be in the randomness. I suppose
+&gt;it is possible that a one-line bug somewhere could leave out most of
+&gt;the randomness, making the keys still look random but actually be
+&gt;predictable. Random number generation is hard to verify. How has
+&gt;that in PGP been checked? The PGP source is so big and spread out,
+&gt;it's hard to check. I don't think there is a bug, but it would
+&gt;be nice if PGP were carefully examined and attacked. Where are these
+&gt;rumors coming from? They are bad for the cause.
+
+Randomness is the next thing I'm going to look at. From the output I've
+produced, I can't say I'm greatly impressed by the randomness of the random 
+prefix bytes, though that's probably a result of looking at such a small 
+sample.
+
+Tomorrow, hopefully, I'll set a program running to generate a few hundred
+thousand PGP random numbers and look at what comes out. Obviously, I
+can look at the frequency of different byte values, both overall and in
+each of the bytes it produces, but does anyone know of any other simple
+'randomness' tests for 16-byte random numbers ?
+
+
+
+-------------------------------------------------------------------------
+To find out more about the anon service, send mail to help@anon.penet.fi.
+Due to the double-blind, any mail replies to this message will be anonymized,
+and an anonymous id will be allocated automatically. You have been warned.
+Please report any problems, inappropriate use etc. to admin@anon.penet.fi.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00870.html">USENET and US-legal PGP (signing only?)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00893.html">PGP-MIME</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00804.html">Re: Commercial PGP; trapdoor rumors</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00807.html">Cypherpunks FAQ status</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00873"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00873"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

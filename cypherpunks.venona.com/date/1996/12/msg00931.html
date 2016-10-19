@@ -1,0 +1,130 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Magic Numbers in MD5 -->
+<!--X-From-R13: @bezna Vneql <abezNargpbz.pbz> -->
+<!--X-Date: Sat, 14 Dec 1996 12:32:16 &#45;0800 (PST) -->
+<!--X-Message-Id: v03007800aed8afa18c27@DialupEudora -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: v02140b01aed7e51544ac@[192.0.2.1] -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Magic Numbers in MD5</TITLE>
+<LINK REV="made" HREF="mailto:norm@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00935.html">Date Prev</A>][<A HREF="msg01037.html">Date Next</A>][<A HREF="msg00936.html">Thread Prev</A>][<A HREF="msg01045.html">Thread Next</A>][<A HREF="index.html#00931">Date Index</A>][<A HREF="threads.html#00931">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Magic Numbers in MD5</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:ph@netcom.com">ph@netcom.com</A> (Peter Hendrickson), <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Magic Numbers in MD5</LI>
+<LI><em>From</em>: Norman Hardy &lt;<A HREF="mailto:norm@netcom.com">norm@netcom.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 14 Dec 1996 11:39:08 -0800</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00907.html">v02140b01aed7e51544ac@[192.0.2.1]</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+At 9:15 PM -0800 12/13/96, Peter Hendrickson wrote:
+&gt;I am curious where some of the magic numbers in MD5 originated.
+&gt;
+&gt;First, we have the four chaining variables, A, B, C, and D which
+&gt;are initialized with apparently random numbers.  Are they as
+&gt;random as they look, or are they carefully chosen?
+&gt;
+&gt;Second, we have the t_i values.  Schneier's first edition says this:
+&gt;
+&gt;"In step i, t_i is the integer part of 4294967296xabs(sin(i)), when
+&gt;i is in radians.  (Note that 4294967296 is 2^32.)"
+&gt;
+&gt;Does abs(sin()) have some properties that are especially conducive to
+&gt;strengthening MD5 or is it just a function to generate mildly random
+&gt;numbers?  If the latter, wouldn't the algorithm be stronger if it was
+&gt;used with completely random numbers?
+&gt;
+&gt;Peter Hendrickson
+&gt;ph@netcom.com
+
+Perhaps random numbers would be stronger but they would not be manifestly
+random.
+MD5's formula for t_i precludes the possibility that the definer of MD5
+chose the numbers
+accoriding to some undisclosed principles that would allow him a trap door.
+
+The following code computes the magic numbers without requiring trig functions:
+
+static word si[64];
+static int md5init()
+{double c1=0.5403023058681397, s1 = 0.8414709848078965;
+int j; double a=1, b=0;
+for(j=0; j&lt;64; ++j)
+ {double p = a*c1 - b*s1, q = a*s1 + b*c1;
+  a=p; b=q;
+  {union{double d; struct{int high; int low;} fx;} z;
+   z.d=(fabs(b)-1.1e-10)+1048576;
+   si[j] = z.fx.low;
+ }}}
+
+An alternative would have been to let t_i be MD4(i) or SHA(i).
+
+Using SHA to define MD5 would have required collusion between Rivest
+and NSA to allow for a trap door. Even then it would have been very difficult.
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00907" HREF="msg00907.html">Magic Numbers in MD5</A></STRONG>
+<UL><LI><EM>From:</EM> ph@netcom.com (Peter Hendrickson)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00935.html">Re: Personal Reputation, was Re: Java DES breaker?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01037.html">Re: Secure Erase for PCs?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00936.html">Re: Magic Numbers in MD5</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01045.html">Re: Magic Numbers in MD5</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00931"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00931"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

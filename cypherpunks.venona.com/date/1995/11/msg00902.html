@@ -1,0 +1,165 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Design proposal: crypto&#45;capable generic interface -->
+<!--X-From-R13: Dncu Zrivra <encuNp2.bet> -->
+<!--X-Date: Sat, 18 Nov 1995 16:57:26 +0800 -->
+<!--X-Message-Id: 199511180842.AAA06560@infinity.c2.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Design proposal: crypto-capable generic interface</TITLE>
+<LINK REV="made" HREF="mailto:raph@c2.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00854.html">Date Prev</A>][<A HREF="msg00869.html">Date Next</A>][<A HREF="msg01647.html">Thread Prev</A>][<A HREF="msg00907.html">Thread Next</A>][<A HREF="index.html#00902">Date Index</A>][<A HREF="threads.html#00902">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Design proposal: crypto-capable generic interface</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Design proposal: crypto-capable generic interface</LI>
+<LI><em>From</em>: Raph Levien &lt;<A HREF="mailto:raph@c2.org">raph@c2.org</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 18 Nov 1995 00:42:21 -0800 (PST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Hi to cypherpunks who write code,
+
+   The recent discussion of "plug-in" crypto is reminding me of some
+design work I did earlier this year. This post presents the motivation
+and some of the details of that design, slightly updated.
+
+   First, a few words about what I consider to be good interface that
+can support plug-in crypto. It has to support both email and the Web;
+I feel that everything else follows. It should support completely
+transparent integration, by which I mean no extra clicking or commands
+or anything like that. Finally, it should be generic in that it will
+support a number of other plug-in applications besides
+cryptography. Two specific applications which interest me are file
+format conversions and external-body resolving.
+
+   The design is based partly upon .mailcap, which is perhaps the best
+example of a generic interface we have today. However, while .mailcap
+is a nice interface for popping up windows to present semi-interesting
+multimedia types, it certainly cannot support transparent
+cryptography. I feel that its primary weakness is the inability to
+support MIME to MIME rewriting. However, .mailcap has some good ideas
+which are worth stealing.
+   For the purposes of this proposal, I will assume that all objects
+are MIME encapsulated. I think that's a reasonable assumption, as it
+handily covers all cryptographic protocols that have any hope of
+surviving.
+
+   I will propose my design at a very high level. Please forgive me
+for leaving out the juicy details.
+
+   I propose that the new interface lives as a sort of daemon, rather
+than a static collection of command line script pieces. A reasonable
+way for applications to talk to the daemon would be Unix domain
+sockets, or whatever the equivalent is on Mac and Windows
+platforms. There should be a simple protocol for automatically
+starting up a daemon if there isn't one already running.
+
+   The first part of the interface is the negotiation. The daemon
+tells the application what MIME types it can understand (this part is
+very similar to the .mailcap file, but doesn't include the
+corresponding command lines). In reply, the application tells the
+daemon what MIME types it can understand (this is like the
+Http-Accept: field in HTTP).
+
+   Once the negotation has been established, the application can send
+the daemon MIME objects that the app does not understand but the
+daemon does (for example, an image/fractal). The daemon can return a
+MIME object that the app does understand (for example, an image/ppm).
+
+   Alternatively, the daemon may request an authentication. This is
+useful when resolving external bodies that require authentication,
+including non-anonymous FTP, and standard authenticated HTTP. In this
+case, the daemon sends a message to the app requesting the
+authentication. It specifies whether it needs both username and
+password, or just password. In the latter case, it hands a username to
+the application.
+   The application can then query the user for the authentication
+data. It hands this back to the daemon. In reply, the daemon indicates
+success or failure. In case of success, it hands the object back to
+the app.
+
+   I'm quite pleased with this protocol as outlined. It's fairly
+simple, which means it might actually get implemented. It's also easy
+to see that it does exactly what you want for file format conversions,
+external body resolving, and decryption of encrypted messages.
+
+   Encryption is a bit more tricky, but in essence you just hang a
+premail-alike off this kind of protocol. The hard part is specifying
+the key, but you just call it a "parameter" and put in hooks for the
+daemon to ask for whatever parameters it needs. This requires that
+keys have some nonforgeable names, which is unfortunately not a
+feature of PGP 2.6.2. S/MIME will do it just fine, if you buy into the
+Certifcation Authority (&lt;wink&gt; at Nick Szabo).
+
+   One final aside: I've been fairly frustrated with this mailing list
+as a forum for talking about real design proposals and implementation
+issues. Ignorant posts by the likes of Dr. Fred and Alice d'Clueless
+tend to attract far more attention than real crypto work. I want a
+forum for, and just for, cypherpunks who write code. If I had just a
+smidgen more free time (as if), I'd be trying to start one
+myself. Anyone else?
+
+Raph
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00907" HREF="msg00907.html">Re: Design proposal: crypto-capable generic interface</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Shostack &lt;adam@lighthouse.homeport.org&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00854.html">SA: Confidential Communication on the Internet</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00869.html">Re: Ecash account</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01647.html">Re: SA: Confidential Communication on the Internet</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00907.html">Re: Design proposal: crypto-capable generic interface</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00902"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00902"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

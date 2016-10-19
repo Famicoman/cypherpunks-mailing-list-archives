@@ -1,0 +1,209 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: scheme -->
+<!--X-From-R13: Fvzbgul @rjfunz <arjfunzNjvyvxv.rat.unjnvv.rqh> -->
+<!--X-Date: Tue, 23 Feb 93 15:46:40 PST -->
+<!--X-Message-Id: 9302232346.AA19000@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>scheme</TITLE>
+<LINK REV="made" HREF="mailto:newsham@wiliki.eng.hawaii.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00387.html">Date Prev</A>][<A HREF="msg00390.html">Date Next</A>][<A HREF="msg00390.html">Thread Prev</A>][<A HREF="msg00453.html">Thread Next</A>][<A HREF="index.html#00375">Date Index</A>][<A HREF="threads.html#00375">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>scheme</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: scheme</LI>
+<LI><em>From</em>: Timothy Newsham &lt;<A HREF="mailto:newsham@wiliki.eng.hawaii.edu">newsham@wiliki.eng.hawaii.edu</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 23 Feb 93 13:31:11 hst</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+I posted this to sci.crypt,  I would also like the opinion
+of the people on this list:
+
+---------------------------------------
+I have posted about this before, but this time I decided
+to whip up some code so you can all see what I'm talking
+about and all the details.
+
+This encryption scheme uses XOR to encrypt data 1 character
+at a time.  Because of this it is suitable for protocols
+where you need to send single bytes (or less) at a time.
+Examples of this would be interactive ascii.  Also it
+is easily applicable to crippled lines like 7 bit lines.
+This is because if the plaintext is 7 bits you can send
+just the 7 bits after the XOR.  Even more general you can
+use it to encrypt any size at a time, down to single bits
+if you just have 1 bit to send immediately and dont want
+to wait for more data to become applicable.
+
+Ok.  So what are its disavantages?  Syncronization, as
+soon as synchronization is gone thats it, its all over.  Each
+block of 'pad' is generated from previous plaintext,  if you
+cant figure out the previous plaintext you are lost.
+
+Notice it uses a hash() function,  this could be anything, ie
+DES,  or perhaps a one way function (no unhash() is ever needed).
+The algorithm is fairly simple, the beginning is a bit wierd
+and could have been done several ways.  The first 8 bits in
+this implementation are used for synchronization.
+
+prog -e key &lt;file &gt;file2
+prog -d key &lt;file2 &gt;file3
+
+ok.. here it is..  poke holes in it.  What are the weaknesses,
+is it totally unsecure?  Is it as secure as the hash function
+(ie. if DES was used, is strength equivalent to the strength of
+DES?)
+
+
+-------------cut here---------------------------------------------
+
+#define SIZE 8
+#ifdef MEMCPY
+#define bcopy(s,d,l)   memcpy(d,s,l)
+#endif
+
+usage(s)
+char *s;
+{
+  printf("%s [-e|e|-d|d] key\n",s);
+  exit(1);
+}
+
+main(argc,argv)
+char **argv;
+int argc;
+{
+  char data[SIZE],pad[SIZE],c[1],c1[1],*p,key[SIZE];
+  int cnt,encrypt=0;
+  
+  if(argc!=3) 
+   usage(argv[0]);
+  for(cnt=0;cnt&lt;SIZE;cnt++)  /* fill in extra characters in key */
+    key[cnt]=0xaa;
+  strncpy(key,argv[2],SIZE);
+  p=argv[1];
+  if(*p=='-') p++;
+  if(*p=='e')
+    encrypt++;
+  else
+    if(*p!='d') usage(argv[0]);
+
+  if(encrypt) {
+  /* to start off encryption, we send a bunch of random bits */
+  /* then we hash those bits and use them as pad             */
+    blkrand(data,SIZE);
+    write(1,data,SIZE);
+    hash(data,key);
+  } else {
+  /* to start off decryption, we receive the random bits and */
+  /* hash them (just like the encryptor did) and we should   */
+  /* have the same starting pad as the encryptor             */
+    read(0,data,SIZE);
+    hash(data,key);
+  }
+  bcopy(data,pad,SIZE);
+  
+  cnt=0;
+  while(read(0,c,1)&gt;0) {
+  /* read characters, send them with our pad       */
+  /* every time we run out of pad, we make new pad */
+  /* by hashing old data                           */
+    *c1 = *c ^ pad[cnt]; 
+    if(encrypt)        /* data is the plain text always */
+      data[cnt]=*c;
+    else
+      data[cnt]=*c1;
+    write(1,c1,1);
+    if(++cnt==SIZE) {
+      cnt=0;
+      bcopy(data,pad,SIZE);
+      hash(pad,key);
+    }
+  } 
+}   
+  
+/* provide a block of random bits */
+blkrand(block,len)
+int len;
+char *block;
+{
+  srand(time(0));
+  while(len--) 
+    *block++ = (rand() &gt;&gt;7)&amp;0xff;
+}
+
+/* hash a block, could be DES, or even a one way function */
+hash(block,key)
+char *block,*key;
+{
+  char b2[SIZE];
+  int i=SIZE;  
+
+  while(i--) 
+    b2[i] = *block++ ^ *key++;
+  bcopy(b2,block,SIZE);
+}
+
+
+  
+  
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00387.html">Newbie comments.</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00390.html">Re: Newbie comments.</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00390.html">Re: Newbie comments.</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00453.html">scheme</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00375"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00375"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

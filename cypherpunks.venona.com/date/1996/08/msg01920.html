@@ -1,0 +1,223 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: ctcp.0.9 -->
+<!--X-From-R13: Rnzvra Zhpvsre <ebbgNVryyEcnja> -->
+<!--X-Date: Sat, 24 Aug 1996 01:27:42 +0800 -->
+<!--X-Message-Id: Pine.LNX.3.91.960823093958.882A&#45;100000@HellSpawn -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>ctcp.0.9</TITLE>
+<LINK REV="made" HREF="mailto:root@HellSpawn">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01922.html">Date Prev</A>][<A HREF="msg01929.html">Date Next</A>][<A HREF="msg01917.html">Thread Prev</A>][<A HREF="msg01949.html">Thread Next</A>][<A HREF="index.html#01920">Date Index</A>][<A HREF="threads.html#01920">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>ctcp.0.9</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: ctcp.0.9</LI>
+<LI><em>From</em>: Damien Lucifer &lt;<A HREF="mailto:root@HellSpawn">root@HellSpawn</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 23 Aug 1996 09:45:36 -0400 (EDT)</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:ncognito@gate.net">ncognito@gate.net</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+This is a program i found on unimi that offers secure socket connections, 
+utilitizing a simple server/client. It can be installed without root 
+priveledges and uses d/h for key transfers. Anyone looked this package 
+over, and if so what is your oppinion about it? 
+
+Included below is the THEORY file that describes the key exchange:
+
+
+
+The encryption negotiation is performed using a protocol similar to
+FTP/SMTP/NNTP.  The client sends commands to the server and the server
+returns a four-digit response code.  Unless stated otherwise, all numbers
+in this document are hexadecimal with the most significant byte first.
+
+When a connection is initiated, the server should send a 2000 response
+indicating that it is ready to accept commands.
+
+Commands:
+
+DH3DES - Diffie-Hellman Key exchange followed by Triple-DES encryption
+      If supported, 3001 is returned.
+      The following commands are then expected:
+
+MOD - If an argument is supplied, it is the number, in hexadecimal, to use
+      as the modulus.
+      Responses:
+       2210 - okay
+       4031 - invalid number
+       4032 - too small
+       4033 - too large
+      If no argument is given, the server should supply the modulus, sending
+      2211 followed by the modulus.  If the server is unable to supply a
+      modulus, 4034 should be returned.
+
+GEN - this should follow MOD.  The generator to use.  The format is the same
+      as that of the MOD command. The response codes are 2210, 2211, 4031
+      or 4034
+
+EXCH - Key exchange
+      Client sends exch followed by gen raised to hir secret exponent.
+      Server sends 4030 if a gen/mod has not been agreed upon.
+      otherwise 2212 followed by gen raised to its exponent
+
+ENCR - Begin encrypted Session
+       
+       4020 - No key selected for encryption
+       2300 - Encrypted session begin
+
+LPORT xxxx - this command takes a 16-bit hexadecimal port number argument,
+      and connects to the specified TCP port on the local host.
+      Responses:
+       2400 - connected
+       4010 - Unable to connect
+       4011 - Access denied
+
+RPORT xxxxxxxxxxxx - Connect to remote port
+      The argument to this command is a 48-bit hexadecimal number representing
+      the IP address and port number to connect to.  The response should be
+      first 2500, then when the connection has been attempted:
+       2400 - connected
+       4010 - Unable to connect
+       4011 - Access denied
+
+QUIT - quit
+      Response: 2100 - Goodbye
+
+
+Summary of error codes:
+
+1xxx - informational messages
+10xx - server is supplying additional information that the client may
+       ignore.
+11xx - server is responding to a client's request for information
+2xxx - okay
+20xx - Server is ready
+21xx - Disconnect, goodbye
+22xx - Command okay
+23xx - Encrypted session begins now
+24xx - Session with another service begins now
+25xx - Command ok, operation in progress, please wait
+3xxx - ok so far, send the rest
+4xxx - command was okay but could not be processed
+5xxx - command not understood or not implemented
+
+
+Triple-DES 
+
+The triple DES encryption uses output feedback exclusive-ored with a
+non-sequential counter.  There are three counters, each of which is
+exclusive-ored with the data block before encryption with the
+corresponding key.  The counters are incremented in each round by a
+shared, secret value which is part of the total key.  The result of
+each round of encryption is exclusive-ored with the data stream.
+
+I0 ------          -----
+         |        |     |
+I1 ----- | ---A1------- | ---&gt;
+     \   |        | \   |
+      --XOR       |  --XOR
+         |        |     |
+         E1       |     E1
+         |        |     |
+I2 ----- | ---A2------- | ---&gt;
+     \   |        | \   |
+      --XOR       |  --XOR
+         |        |     |
+         E2       |     E2
+         |        |     |
+I3 ----- | ---A3------- | ---&gt;
+     \   |        | \   |
+      --XOR       |  --XOR       
+         |        |     |        
+         E3-------^     E3-------^
+         |              |
+         v              v
+       XOR with data stream
+
+I0 - Initialization Vector
+I1 - Initialization of counter 1
+I2 - Initialization of counter 2
+I3 - Initialization of counter 3
+E1 - Encryption with Key 1
+E2 - Encryption with Key 2
+E3 - Encryption with Key 3
+A1 - Add increment value 1
+A2 - Add increment value 2
+A3 - Add increment value 3
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBMh219rGlo8DEMb2JAQEzWgP/VpcWiL8+UN+7l7wCtUr6N5Bk4iqG5fYq
+Jb9ImvVA3h2k8cGz/ETBQW/3H9GA9jCsqzLrgcUewAa8CgdmhPoVE04e2scAxp4l
+y2peJlQmakCl2RCKHJZPTTaOLnsBU4NCZxwW8Q4xeUb0KBYfiW9XeULleyhhfsO2
+n7XYpc4XhaY=
+=vGhK
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01949" HREF="msg01949.html">Re: ctcp.0.9</A></STRONG>
+<UL><LI><EM>From:</EM> Gary Howland &lt;gary@systemics.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01922.html">Re: USPS</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01929.html">IE Security Flaw</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01917.html">Middleman has a new name!</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01949.html">Re: ctcp.0.9</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01920"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01920"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

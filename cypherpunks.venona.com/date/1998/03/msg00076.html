@@ -1,0 +1,372 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Login Tripwire Protocols -->
+<!--X-From-R13: naqerj snooeb <nsnooebNhzvpu.rqh> -->
+<!--X-Date: Thu, 5 Mar 1998 17:39:15 &#45;0800 (PST) -->
+<!--X-Message-Id: Pine.LNX.3.95.980305203357.899A&#45;100000@brokenarrow.us.itd.umich.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.SOL.3.96.980305125302.21425A&#45;100000@c00069&#45;100lez.eos.ncsu.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Login Tripwire Protocols</TITLE>
+<LINK REV="made" HREF="mailto:afabbro@umich.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00072.html">Date Prev</A>][<A HREF="msg00077.html">Date Next</A>][<A HREF="msg00071.html">Thread Prev</A>][<A HREF="msg00081.html">Thread Next</A>][<A HREF="index.html#00076">Date Index</A>][<A HREF="threads.html#00076">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Login Tripwire Protocols</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Ken Williams &lt;<A HREF="mailto:jkwilli2@unity.ncsu.edu">jkwilli2@unity.ncsu.edu</A>&gt;</LI>
+<LI><em>Subject</em>: Login Tripwire Protocols</LI>
+<LI><em>From</em>: andrew fabbro &lt;<A HREF="mailto:afabbro@umich.edu">afabbro@umich.edu</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 5 Mar 1998 20:38:55 -0500 (EST)</LI>
+<LI><em>cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00071.html">Pine.SOL.3.96.980305125302.21425A-100000@c00069-100lez.eos.ncsu.edu</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; I have more of a general privacy rather than a crypto question.  I am&gt;
+&gt; trying to set up "tripwires" in the various computer accounts that i have&gt;
+&gt; so i will know if a superuser or sysadmin has accessed them.  (it should
+
+Can you build a reliable login tripwire on a machine where you don't
+have root access and root is likely a malicious character?  The answer
+is...maybe!  It requires a fairly sophisticated protocol and a lot of
+work...here are three of my ideas that didn't pan out, one that probably
+would, and a lot of caveats.  I'd appreciate comments, criticism,
+etc. from other 'punks.
+
+THE GOAL
+
+You have an account on a system on which you do not trust root, or on
+which you think someone else may be able to log in as you.  You want
+to build an automated system which alerts you when someone logs in as
+other than yourself.
+
+(n.b.: we're just talking about a login tripwire.  Root doesn't need to
+log in as you to read your mail or copy your files).
+
+THE PROBLEM 
+
+The basic problem here is that you can't trust anything on the
+insecure system.  Root can modify any file, any binary, your shell, your
+environment, the kernel, a program running in memory, logs, devices, etc.
+You want to get secure information out of an environment in which all
+incoming and outgoing communications can be tampered with at will.
+
+It's sort of like standing in front of a locked door to a speakeasy and
+wanting to know if your friend Ivan is inside.  You can slide a paper
+through the slat and if Ivan is in inside, require that he prove himself
+by signing the paper.  However, if the paper comes back blank and the
+bouncer says "he ain't here," how do you know that Ivan isn't tied up
+in the back room?
+
+I've thought of some protocols which root could defeat only if he had an
+above-average degree of technical sophistication...e.g., examing a running
+kernel and modifying it, disassembling binaries, etc.  These are not
+normal admin tasks.  However, trusting your adversary to be ill-educated
+is poor security practice.  There is one good protocol I thought of,
+which would work except for the the #1 problem common to any attempt of
+this sort...
+
+THE ACHILLES HEEL
+
+...and the #1 problem is: how do you determine if you (or someone posing
+as you) is logged on to the remote machine?  Suppose the bouncer is
+honest.  What if your adversaries can make Ivan invisible?  Anything your
+account initiates via a .login script or similar can easily be avoided
+by root, who can modify these scripts before logging in and restoring
+them when done.  This leaves you with some sort of automated checking
+to see if you're on, and a system to alert you if you are.
+
+The common ways of determining who's logged on to a system can fail or be
+circumvented:
+
+	(a) utmp - notoriously easy to circumvent (utmp provides the info
+	for who, finger, etc.)  Sometimes an errant shell will circumvent 
+	this accidentally, to say nothing of a concerted effort.  Root can
+	modify this trivially.
+
+	(b) ps to look for owned processes -- root can easily write a ps
+	program that works normally except for devious reporting when
+	he's masquerading as you.  Even if you use a custom program
+	(which you have to either import each time or hash-check),
+	root can modify the kernel, your environment, etc.
+
+	(c) you can see who owns /dev terminals, but again...
+
+	(d) I'm not sure if there is some method of consulting the kernel.
+	Modifying a running kernel is considerably more difficult than
+	the above, but if there is a means of consulting the kernel to
+	see who's on, root could certainly circumvent it.
+
+You could make SHA message digests of the relavent system binaries and
+include checks for them in your robot messanger, but root may already
+have changed them.  And remember that root can control your shell,
+your environment, etc.
+
+Maybe you assume that your adversary could not do these things.  I don't
+think there is no 100% reliable way to see authoritatively who's logged
+on to a system, even if your adversary is not a wizard.  However, for
+the sake of discussion, let's assume for the moment that you find some
+method of determining who's logged in that you feel confidant with,
+either because your adversary lacks the technical ability to circumvent
+normal methods, or because they are one person secretly being naughty
+in an otherwise professional team that would notice changes, or because
+your own wizardry outstrips there's.
+
+The next trick is to build a robot to either sit inside the speakeasy to
+shout out to you if Ivan is there, or one that goes into the speakeasy,
+looks around, and reports back to you.  The trick is making sure that
+the robot's voice is not impersonated by your enemies or that it is not
+rewired before being sent back to you.
+
+THINGS THAT WON'T WORK
+
+Any kind of notification system that is initiated by your login scripts.
+
+Anything that requires querying the insecure machine from a remote
+machine to ask if you're logged on.  Root controls all inbound and
+outbound communication.
+
+Any sort of cron job run on the insecure machine -- root can turn these
+off, insert a spoofer, do his deeds, and then restore things, with you
+being none the wiser.
+
+These protocols all assume you have an account on a trusted machine
+that you feel is secure (you fool!), at least from the admin on the
+insecure machine.
+
+PROTOCOL #1 - DAEMON
+
+You set up a daemon on the insecure machine which once a minute sees
+who's on, and if you're on, sends that information along with a SHA
+message digest (hash) of itself and its process number to the remote
+machine, who checks to see if the process number or hash has changed,
+and then builds a log.  You can then check this log to see if anyone
+was on when you don't remember being on.
+
+Problems:
+
+(*) root can monitor outbound mail.  When he sees a message going to
+your secure machine, he simply replaces it.
+
+(*) root can grab the daemon's code out of memory, rewrite it so that it
+first asks root if it should say you're on, and then proceeds normally,
+sending out the same process number and SHA MD as an unmodified daemon
+would.  He can even write a daemon that monitors for your daemon,
+correcting its output whenever you restart your daemon.
+
+PROTOCOL #2 - DAEMON IMPROVED
+
+Same as #1, but this time the daemon first asks for a public key
+from your secure host, and then encrypts its response using that key.
+This defeats the first attack above.
+
+Problems:
+
+(*) root can use a classic man-in-the-middle attack to harvest the key
+on inbound mail and then encrypt it for outbound mail.  No improvement.
+
+PROTOCOL #3 - PROCMAIL + BINARY ROBOT
+
+The trusted machine contains a set of object files in a linkable state
+(i.e., post-compile, pre-link) for a binary robot which (a) checks to
+see if you are logged on to whatever machine the robot is running on,
+(b) encrypts this information using a public key, and (c) returns the
+encrypted "yes/no" to the trusted machine, as well as a SHA message
+digest of itself.
+
+You set the following up as a cron job to run every X minutes on the
+trusted machine.  The longer the gap, the longer an intruder might be
+able to play around unnoticed.  However, the shorter the gap, the higher
+the load, and you have to make sure the insecure machine can finish it's
+processing within the gap.  Perhaps X should be semi-random.
+
+(a) the trusted machine generates a public/private key pair.  The public
+key is placed in a linkable format and linked with the object files for
+the binary robot.  The trusted machine notes the outbound binary's SHA
+message digest.
+
+(b) the trusted machine mails this binary robot to the insecure machine.
+At the insecure machine, you have a .procmailrc which looks for the
+robot and  runs it
+
+(c) the robot checks to see if you're online, and encrypts a reply
+using the public key that's stored within it.  It sends this back to
+the trusted machine.
+
+(d) the trusted machine decrypts the message.  Because each key is
+different, one-time, and used sequentially, there should be no replay
+attack possibility here.  The trusted machine checks the SHA MD, and
+if it's different, goes into alert mode -- sending you e-mail, paging
+you, whatever.  Otherwise it just continues to build its log that you
+can examine later.  You could do more processing -- perhaps you only
+turn on this system on the trusted machine when you're not logged into
+the insecure machine.  If it detects you are on while it's running,
+it goes into alert mode.
+
+(e) lather, rinse, repeat.  
+
+Problems:
+
+(*) impracticalities of system load, and possible processing time length,
+as noted above
+
+(*) Root could sabotage procmail so instead of spawning your robot, it
+spawns one of root's.  This mischevious binary then digs out the public
+key from your robot's binary code, and returns a message with a "no,
+he's not on" message and an SHA message digest of your binary.  (He could
+also delete your .procmailrc or otherwise stop your automated system, but
+this would be obvious and suspicious).  Since he'll have your binary and
+your public key, there is no way to prevent this man-in-the-middle attack.
+
+PROTOCOL #4 - PROCMAIL + BINARY, IMPROVED
+
+Same as #3, but when the trusted machine links your little binary robot,
+it randomly selects one of many random object files which contain
+some trivial operation for the robot to perform.  The results of this
+operation are then appended to the robot's reply.  Examples of these
+random operations:
+
+	-- print out the date in format X
+	-- print "CNN Anchorwoman Lynn Russell is a goddess"
+	-- lookup root's shell and `ls -l` it into the message
+	-- print out the first 15 prime numbers into the message
+	-- multiply pi by 9.856497 and print out the result
+	-- figure the SHA hash of /bin/sh and print it
+
+etc.  If this robot is intercepted, it will be difficult for root's robot
+to mimic its behavior.  Yes, root could manually disassemble it and figure 
+out what it's secret operation is and build his own binary to mimic it, but 
+not in the minute or two that the binary will run before the next robot
+each time would likely not work, because the compiler might link them all at
+the same place and root's malicious binary could examine the binary and
+ferret out the string automatically.
+
+The random operations do not have to be complex, but they must have these
+qualities:
+
+	(*) the result must be definitively known to the trusted system
+	(e.g., something like "finger root to see when he last logged
+	in" will not work.  But "figure 9 to the 7th power and print
+	the result" would)
+
+	(*) the operation must be reasonably fast -- you don't want the
+	robot doing a long calculation, which might let root analyze
+	the robot, kill it, perform the calculation himself (perhaps
+	on a faster machine), and spoof the reply.  Diversity is more
+	important than complexity
+
+	(*) there must be a large pool of these operations to choose from
+
+	(*) the choosing must be random.  Obviously, it will
+	be pseudorandom, but a strong pseudorandom system with
+	least-significant time seeds should be sufficient, unless the
+	insecure machine's root in this case is root@nsa.gov.
+
+Problems:
+
+(*) again, impracticalities of system load, and possible processing time
+length, as noted above
+
+(*) root will be able to save and analyze the robot binaries.  If the
+pool is not diverse enough, root might be able to determine the likely
+next message and spoof the reply.  This will not be detectable from
+the trusted machine's perspective.  However, the trusted machine might
+(a) have a large pool of random operations to choose from to make this
+impractical, or (b) simply have a subroutine which randomly generates
+random operations from a pool of pieces -- e.g., a set of rules from which
+it randomly picks, and then performs other random operations to generate
+the actual operation.  (i.e., rule #85 says pick three floating-point
+numbers and generate an operation wherein the robot has to figure out
+the cosine of each).  This would be much more difficult to predict/spoof.
+
+CONCLUSIONS
+
+First and foremost, the difficult of accurately determining who's on
+will likely undermine any attempt to set up a login tripwire.
+
+Also, we're talking about a login tripwire.  Suppose I'm root and I
+want to copy a file from your home directory called diary-of-my-sexlife.
+All I have to do is note the access/modify/change times, copy the file,
+and then restore these times with touch(1).  You can't detect or prevent
+read-only access.
+
+Going to all the work of implementing protocol #4, the most reliable of
+these, would likely result in a reasonably secure way of determing if
+you're logged in (again, with the difficulty of determining who's logged
+on caveats), but is it worth all this effort?  I was just thinking these
+things up because I was bored.  If I really had an account on a system
+I didn't trust, I would cancel it.
+
+
+
+-- 
+ Andrew Fabbro   [afabbro@umich.edu]   [andrewf@jesuswept.com]
+ <A  HREF="http://www-personal.umich.edu/~afabbro/">http://www-personal.umich.edu/~afabbro/</A>          313.647.2713 
+ "We make money the old fashion way. We print it." - DigiCrime
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00081" HREF="msg00081.html">Re: Login Tripwire Protocols</A></STRONG>
+<UL><LI><EM>From:</EM> David Honig &lt;honig@otc.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00071" HREF="msg00071.html">No Subject</A></STRONG>
+<UL><LI><EM>From:</EM> Ken Williams &lt;jkwilli2@unity.ncsu.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00072.html">y2k: 37% govt computers</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00077.html">Re: Gun Grabbers in WASHINGTON -- Friday</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00071.html">No Subject</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00081.html">Re: Login Tripwire Protocols</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00076"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00076"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

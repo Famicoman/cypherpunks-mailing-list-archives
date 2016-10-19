@@ -1,0 +1,259 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Making it more difficult to forge cancels (was: Re: FORGED CANCELS of posts on n.a.n&#45;a.m) -->
+<!--X-From-R13: qyiNojnyx.qz.pbz (Re. Rvzvgev Hhyvf) -->
+<!--X-Date: Mon, 9 Oct 95 22:44:47 PDT -->
+<!--X-Message-Id: cgJqcD7w165w@bwalk.dm.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199510051540.IAA23612@ix.ix.netcom.com -->
+<!--X-Reference: g7VJcD22w165w@bwalk.dm.com -->
+<!--X-Reference: 4571p9$kf5@kruuna.helsinki.fi -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Making it more difficult to forge cancels (was: Re: FORGED CANCELS o</TITLE>
+<LINK REV="made" HREF="mailto:dlv@bwalk.dm.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00859.html">Date Prev</A>][<A HREF="msg00875.html">Date Next</A>][<A HREF="msg00622.html">Thread Prev</A>][<A HREF="msg00929.html">Thread Next</A>][<A HREF="index.html#00862">Date Index</A>][<A HREF="threads.html#00862">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Making it more difficult to forge cancels (was: Re: FORGED CANCELS of posts on n.a.n-a.m)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Making it more difficult to forge cancels (was: Re: FORGED CANCELS of posts on n.a.n-a.m)</LI>
+<LI><em>From</em>: <A HREF="mailto:dlv@bwalk.dm.com">dlv@bwalk.dm.com</A> (Dr. Dimitri Vulis)</LI>
+<LI><em>Date</em>: Mon, 09 Oct 95 23:12:35 EDT</LI>
+<LI><em>Organization</em>: Brighton Beach Boardwalk BBS, Forest Hills, N.Y.</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00543.html">199510051540.IAA23612@ix.ix.netcom.com</A>&gt;, &lt;<A HREF="msg00622.html">g7VJcD22w165w@bwalk.dm.com</A>&gt;, &lt;4571p9$kf5@kruuna.helsinki.fi&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+In article &lt;4571p9$kf5@kruuna.helsinki.fi&gt;, wirzeniu@cc.Helsinki.FI (Lars Wirzenius) writes:
+&gt;dlv@bwalk.dm.com (Dr. Dimitri Vulis) suggests that cancels be authenticated
+&gt;so that only the actual poster could cancel them.  He notes that this
+&gt;would make it impossible for moderators to cancel forgeries, but says
+&gt;they could use NoCeM notices instead.
+&gt;
+&gt;Speaking as the moderator of comp.os.linux.announce: No way!
+&gt;
+&gt;NoCeM doesn't work, since most people have never even heard of it.
+[Valid criticisms of NoCeM skipped]
+&gt;(Approval forging can fairly easily be made very difficult: the moderator
+&gt;digitally signs the articles, and all major news servers are fixed to
+&gt;drop all other articles on the floor.  The problems with this approach
+&gt;are that on the one hand, upgrading a lot of news servers to the new
+&gt;software is a bit of work, and on the other hand, even digital signatures
+&gt;may be, or become illegal in parts of the world.  But that just might
+&gt;be a reason to implement it now.  There's work being done on it, as a
+&gt;matter of fact.)
+
+Sorry for the belated follow-up -- I was far away, and now have a backlog to
+sort out.
+
+I've discussed the Hujskonen-Franz proposal some time ago with the beautiful
+Simona Nass from Panix and the Society for Electronic Access, and she made the
+following suggestion: let each party that wants to be able to authorize cancels
+add their own separate Cancel-lock: headers. The cancel/supersede should be
+honored if its Cancel-key header matches any one of the Cancel-lock challenges.
+
+I think adding multiple Cancel-lock: headers, any single one of which needs to
+be matched, to the Hujskonen-Franz proposal will address _some of the concerns
+expressed by Bill Stewart last week, by Lars Wirzenius, and by CancelMoose
+him/herself in <A  HREF="http://www.cm.org/about-cancels.html">http://www.cm.org/about-cancels.html</A> about the ability of
+moderators to cancel postings in their own newsgroups.
+
+Scenario 1.
+
+Alice posts an article from a computer owned by Bob, an Internet provider.
+Bob wants to reserve the right to cancel Alice's account and Alice's Usenet
+postings without Alice's permission if Alice misbehaves (e.g., spams).
+
+Alice posts:
+]From: alice@bob's.box
+]Newsgroups: alt.sex
+]Subject: Call me at 1-800-xxx-xxxx for a good time
+]Message-id: X (123@bob's.box)
+]Cancel-Lock: M2_a
+
+where M2_a is the one-way H(X + M1_a), and M1_a is H of the article and of
+Alice's secret passphrase.
+
+Bob, being the sysadmin and the owner of his box, configures his news-posting
+software to add automatically a second challege, in addition to Alice's:
+
+]Cancel-Lock: M2_b
+
+where M2_b is the one-way H(X + M1_b), and M1_b is H of Alice's article and of
+_Bob's secret passphrase.
+
+Bob asks Alice nicely to cancel the article, since such ads are not appropriate
+on alt.sex. Alice may comply and issue a cancel with the header
+
+]Cancel-Key: M1_a
+
+which will be honored. But if Alice refuses, Bob can issue a cancel/supersede
+with the header:
+
+]Cancel-Key: M1_b
+
+which should likewise be honored because H(X + M1_b) matches one of the two
+challenges in the posted article.
+
+Note 1: If Alice doesn't add a Cancel-Lock, and Bob does, then Alice won't be
+able to cancel her own article.
+
+Note 2: It may be a good idea to put comments on the challenges:
+
+]From: alice@bob's.box
+]Newsgroups: alt.sex
+]Subject: Call me at 1-800-xxx-xxxx for a good time
+]Message-id: X
+]Cancel-Lock: M2_a ; alice@bob's.box
+]Cancel-Lock: M2_b ; root@bob's.box
+
+
+Scenario 2.
+
+Alice submits an article to Bob, a moderator of a moderated newsgroup:
+
+]Newsgroups: rec.food.cannibalism
+]Subject: How to cook elementary school children
+]Message-id: X
+]Cancel-Lock: M2_a
+
+where M2_a again is H(X + M1_a), and M1_a is H of the article and of Alice's
+secret passphrase.
+
+Bob, being either the sole moderator, or a team member, adds an approval and a
+second challege, in addition to Alice's:
+
+]Approved: Bob
+]Cancel-Lock: M2_b
+
+where M2_b is the one-way H(X + M1_b), and M1_b is H of Alice's article and of
+a secret passphrase used by Bob or by the entire moderating team.
+
+Later Bob can cancel this article by specifying
+]Cancel-Key: M1_b
+Alice too can cancel this article by specifying
+]Cancel-Key: M1_a
+(unless Bob has stripped Alice's challenge before posting her submission)
+and Alice's sysadmin can cancel it too if he added his own challenge (third).
+
+I personally don't think that Bob should be allowed to cancel Alice's article
+after he approved it, but that's between Alice and Bob; if she doesn't like it
+either, she can post her articles elsewhere.
+
+Now, if Alice injects an article with "Approved:" and entirely bypasses Bob,
+(Lars Wirzenius's main conern), then Bob should post a PGP-signed NoCeM notice
+and try to yank Alice's feed, or have the site that continues to permit Alice
+to do this to be widely aliased. IMVHO, when this happens, the problem is
+much deeper than just having the unauthorized article removed.
+
+If and when NoCeM becomes widely accepted, most sites can be expected to honor
+signed 'Action: hide' requests from newsgroup moderators in their groups.
+
+
+Scenario 3.
+
+Alice provides dial-up Usenet feed to/from several small sites run by Bob,
+Charles, and Dan. Their domains point to Alice via MX. Alice knows that if one
+of them spams Usenet, she'll be flamed and mailbombed. Alice adds her own
+"Cancel-Lock:" to each article she receives from these sites before feeding
+them to the rest of Usenet. Later she can cancel whatever articles have
+originated at B, C, D, and passed through her site.
+
+If Bob, Charles, and Dan don't want Alice to be able to cancel their articles,
+or if Alice adds other headers in the articles that pass through her site that
+they don't like, then they can look for another feed.
+
+
+Please note that I don't claim credit for these proposals: I'm just repeating
+others' ideas which I happen to like a lot. I hope some civic-minded person(s)
+will write patches for the common posting/server software, and compose an RFC
+for the Cancel-Lock:/Cancel-Key: headers. One nice feature about the Hujskonen-
+Franz proposal that it can be adopted gradually: some sites can continue to
+honor all cancels, while others can choose to start honoring only authenticated
+cancels, and to help track down forged cancels that fail authentication.
+
+P.S. I saw a NoCeM notice from Chris Lewis with Action:hide/Type: copyright,
+for someone's Usenet article that, I think, quoted his private e-mail (?).
+I wonder if CancelPoodle's NoCeM's for the Top $ekret $ientology $tuff will
+follow soon. :) (And the NoCeM documents should probably be updated to
+support new types: copyright, libel, flame, inappropriate, ... :) :)
+
+:-) ObMoosePoem: :-) :-) :-) :-) :-) :-) :-) :-) :-) :-) :-) :-) :-) :-) :-)
+Moose, Moose, wonderful Moose!
+Gets rid of nasty spam.
+So fond of the Moose I am.
+Hooray for the wonderful Moose!
+:-)
+
+---
+
+&lt;a href="<A  HREF="mailto:dlv@bwalk.dm.com">mailto:dlv@bwalk.dm.com</A>"&gt;Dr. Dimitri Vulis&lt;/a&gt;
+Brighton Beach Boardwalk BBS, Forest Hills, N.Y.: +1-718-261-2013, 14.4Kbps
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00929" HREF="msg00929.html">Re: Making it more difficult to forge cancels (was: Re: FORGED CANCELS of posts on n.a.n-a.m)</A></STRONG>
+<UL><LI><EM>From:</EM> John Lull &lt;lull@acm.org&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00543" HREF="msg00543.html">Re: FORGED CANCELS of posts on n.a.n-a.m</A></STRONG>
+<UL><LI><EM>From:</EM> Bill Stewart &lt;stewarts@ix.netcom.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00622" HREF="msg00622.html">Re: FORGED CANCELS of posts on n.a.n-a.m</A></STRONG>
+<UL><LI><EM>From:</EM> dlv@bwalk.dm.com (Dr. Dimitri Vulis)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00859.html">Re: Crypto's Role in Evil?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00875.html">Re: java security concerns</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00622.html">Re: FORGED CANCELS of posts on n.a.n-a.m</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00929.html">Re: Making it more difficult to forge cancels (was: Re: FORGED CANCELS of posts on n.a.n-a.m)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00862"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00862"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

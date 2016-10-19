@@ -1,0 +1,207 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: (fwd) Random Numbers &#45; Results of testing BSD random() -->
+<!--X-From-R13: Xvz pubngr <enintrNotn.pbz> -->
+<!--X-Date: Thu, 7 Jul 94 13:10:39 PDT -->
+<!--X-Message-Id: 199407072010.PAA29157@ivy.bga.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>(fwd) Random Numbers - Results of testing BSD random()</TITLE>
+<LINK REV="made" HREF="mailto:ravage@bga.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00378.html">Date Prev</A>][<A HREF="msg00379.html">Date Next</A>][<A HREF="msg00378.html">Thread Prev</A>][<A HREF="msg00379.html">Thread Next</A>][<A HREF="index.html#00377">Date Index</A>][<A HREF="threads.html#00377">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>(fwd) Random Numbers - Results of testing BSD random()</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: (fwd) Random Numbers - Results of testing BSD random()</LI>
+<LI><em>From</em>: Jim choate &lt;<A HREF="mailto:ravage@bga.com">ravage@bga.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 7 Jul 1994 15:10:18 -0500</LI>
+<LI><em>Newsgroups</em>: sci.stat.math,sci.math,sci.math.num-analysis</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Newsgroups: sci.stat.math,sci.math,sci.math.num-analysis
+Path: bga.com!news.sprintlink.net!news.onramp.net!convex!cs.utexas.edu!swrinde!ihnp4.ucsd.edu!library.ucla.edu!csulb.edu!csus.edu!netcom.com!deleyd
+From: deleyd@netcom.com
+Subject: Random Numbers - Results of testing BSD random()
+Message-ID: &lt;deleydCsIAyv.K6n@netcom.com&gt;
+Organization: NETCOM On-line Communication Services (408 261-4700 guest)
+Date: Wed, 6 Jul 1994 06:49:42 GMT
+Lines: 119
+Xref: bga.com sci.stat.math:1314 sci.math:15352 sci.math.num-analysis:3353
+
+BSD random()
+
+Here are the partial results.  Further tests were not performed due to
+lack of time.  So far the generator appears to be comparable to a
+shuffled linear congruential generator.
+
+          DEFINITION:
+            Generating polynomial: x^31 + x^3 + 1 (primitive polynomial)
+            Initialize circular queue of 31 elements using ANSI C linear
+             congruential generator.
+            Recursion formula: a[i] = a[i] + a[i-3]
+
+          RATING:
+             1-D FAILS above 800,000 bpd      (bins per dimension)
+             2-D FAILS above 3000 bpd
+             3-D FAILS above 210 bpd
+             4-D PASSES at 50 bpd (highest tested so far)
+             5-D not tested
+             6-D not tested
+             7-D not tested
+             8-D not tested
+
+This is an additive congruential type random number generator.  An array
+table[31] is initially filled with random numbers using the ANSI C
+linear congruential random number generator.  Random numbers are then
+generated using the recursion formula:
+
+     table[k] = (table[k-31] + table[k-3]) mod 32
+
+(Note that x**31 + x**3 + 1 is a primitive polynomial mod 2, which is
+being used here as a generator.)  Since we are using the array table[]
+as a circular queue with 31 elements then table[k-31] is just table[k]
+before it gets replaced with the new value.  The recursion formula
+becomes:
+
+     table[k] = table[k] + table[k-3]
+
+The generator works well in practice.  Knuth claims the sequence will
+have period 2**31 - 1.  Knuth also claims there is very little theory to
+prove that this generator does or does not have desirable random
+properties.  I would be interested if anyone knows of any recent
+developments in this area.
+
+-David Deley
+deleyd@netcom.com
+
+(So sorry, I lost the name of the original person who posted this code below
+ which was used in the tests. -D.D.)
+
+/***
+   Code to implement random() &amp; srandom() of BSD Unix. It was taken
+   (though coded somewhat differently) from the Gnu BSD implementation.
+ ***/
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#define LONG31
+
+#ifdef LONG31  /* x^31 + x^3 + 1 */
+#define SIZE  31
+#define SIZE1 30
+#define P1 3
+#define P2 0
+#else  /* LONG63: x^63 + x + 1 */
+#define SIZE  63
+#define SIZE1 62
+#define P1 1
+#define P2 0
+#endif
+
+#define LONG_MAX  0x7fffffff
+
+
+int p1=P1, p2=P2;  
+long table[SIZE];
+
+/*** return a "random" number in range [0, LONG_MAX] */
+
+long xrand ()
+{
+  int r;
+
+  table[p1] = table[p1] + table[p2]; /* add two table elements */
+  r = (table[p1] &gt;&gt; 1) &amp; LONG_MAX;   /* throw least significant bit away */
+
+  if (p1 == SIZE1) { /* increment the table indexes */
+    p1 = 0; 
+    p2 = p2 + 1; 
+  }
+  else if (p2 == SIZE1) {
+    p1 = p1 + 1;    
+    p2 = 0;
+  }
+  else {
+    p1 = p1 + 1;    
+    p2 = p2 + 1;
+  }
+
+  return (r);
+}
+
+
+/*** use a linear congruential type generator to seed the 
+     state table &amp; cycle the entire table 10 times */
+
+void sxrand (seed)
+long seed;
+{
+  int i;
+
+  table[0] = seed;
+  for (i=1; i&lt;SIZE; ++i)
+    table[i] = (table[i-1] * 1103515145) + 12345;  /* lousy */
+
+  for (i=0; i&lt;10*SIZE; ++i)
+    (void) xrand();
+}
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00378.html">(fwd) Random Numbers - Request for feedback</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00379.html">(fwd) Random Numbers - CHIKSN.FOR</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00378.html">(fwd) Random Numbers - Request for feedback</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00379.html">(fwd) Random Numbers - CHIKSN.FOR</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00377"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00377"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

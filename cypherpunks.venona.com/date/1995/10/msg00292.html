@@ -1,0 +1,174 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: NetScape's dependence upon RSA down for the count! -->
+<!--X-From-R13: Pvyy Egrjneg <fgrjnegfNvk.argpbz.pbz> -->
+<!--X-Date: Sun, 1 Oct 95 01:12:58 PDT -->
+<!--X-Message-Id: 199510010812.BAA11516@ix4.ix.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: NetScape's dependence upon RSA down for the count!</TITLE>
+<LINK REV="made" HREF="mailto:stewarts@ix.netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00297.html">Date Prev</A>][<A HREF="msg00298.html">Date Next</A>][<A HREF="msg01037.html">Thread Prev</A>][<A HREF="msg00324.html">Thread Next</A>][<A HREF="index.html#00292">Date Index</A>][<A HREF="threads.html#00292">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: NetScape's dependence upon RSA down for the count!</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: NetScape's dependence upon RSA down for the count!</LI>
+<LI><em>From</em>: Bill Stewart &lt;<A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 01 Oct 1995 01:12:47 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;What you have described is the classic 'man in the middle' attack.
+&gt;Netscape claims that SSL V.3 is immune to the MITM attack in
+&gt;appendix D.4 of the SSL V.3 spec. 
+&gt;
+&gt;You will need to get the 'filter' (MITM) key signed by Verisign.
+&gt;Or hack Verisign's server-key-signing key.
+
+Or hack the Web of Trust used to verify the server's identity.
+It _is_ still a Web of Trust even if it's a fascistly-hierarchical tree;
+as long as it's possible to get a certificate without heavy contractual
+obligations, you can hack it, since the software has no way to check,
+now that Netscape is being nice and open and allowing non-Verisign certs.
+Remember that anybody can be a CA, and keys can be signed by multiple CAs.
+
+        Verisign Business CA signs Carol's Certification Consultants' key.
+        Carol signs Bob's Better Browser Business's key.  
+        Bob runs a server, selling really cool web tools.
+        Verisign Business CA signs Moriarty's Mallet Makers' key.
+        Moriarty signs Mr. X's personna key (trust us.)
+        Mr. X makes a key called Bob's Better Browser Business,
+        looking suspiciously like the real thing, only it's
+        signed by M
+. X, and nobody bothered telling Bob about it.
+
+        Alice, using Netscape, encounter's <A  HREF="http://www.Bob">http://www.Bob</A>'sBetterBrowser.com/,
+        and decides to order a Better Browser.  She gets Bob's public key
+        and X.509 certificates by pressing a button, and receives a key
+        and a pile of certs.  Since it's not a secure session yet, is Mr. X
+        intercepting them and sending her _his_ key and cert for "Bob" and his
+        personna key with cert from Moriarty and his key and cert from Verisign?
+        
+        So Mr. X rips off Alice and/or Bob somewhere here, and Alice decides
+to sue
+        Bob, who says "Hey, that's not my key, see my real set of certs",
+        so they go off after Mr. X, who they can't find, and then go after
+        Moriarty, who says "Hey, it's just a personna certificate; all I
+        guaranteed was that I didn't sign more than one with the same name
+on it",
+        which in fact appears to be true, and while after one case you can't 
+        be sure that there really wasn't a Mr. X somewhere, if three or four
+        people start walking in saying Mr. X ripped them off using a key
+        that Moriarty signed, maybe somebody'll think it's a movement...
+
+And remember that if you can finesse a signature, you can fake a Diffie-Hellman
+session with authenticated keyparts into tolerating your MITM attack, because
+you can convince Alice's browser into accepting the fake key for Bob,
+and as far as Bob knows, Alice is just another web-client that he doesn't
+know from Adam.
+
+Now, X.509 certs don't limit themselves to hierarchical or Web use, and most
+advice on using them recommends limiting the depth of a tree/web that you're
+willing to trust.  Unfortunately, X.509 certs don't even have a comment field,
+much less a standardized "how much do you trust this person you're signing"
+field,
+though I suppose you can cram a bit into the X.400/500-style name formats.
+
+So if people want to really trust their digital signature system to prevent
+forgeries, then either there's got to be a law demanding lots of government-
+approved is-a-person nationalized ID card Internet Driver's License stuff, 
+or else there's a market need for companies providing heavy-duty contractual 
+backing for their key signatures (e.g. "In return for us signing your CA key 
+with our high-trust CA key, you agree to accept $XM of liability for any misuse
+of keys you sign with it and to force anybody whose key you sign to also sign
+a contract like this one").  Probably a need for some standards to go with it.
+
+There's also a need for browsers and any associated certificate checkers to
+provide good user interfaces (so the _user_ can read the signature chain)
+and good tools to help the user decide what to trust.  At minimum, the user
+interface probably should support things like different required amounts of
+trust for different categories of communication, e.g. business vs. personal
+letters vs. politics vs. smuggling.
+
+
+[This whole posting has been very annoying to write; I've just gone and
+argued that you can munge an X.509 hierarchy back into the Web of Trust
+and avoid the special-case treatment of Very Important CAs by just signing
+the top nodes of a hierarchy yourself and treating them like any other
+web-of-trust chain, and been thanking Netscape for allowing us to use
+open protocols instead of depending on Big Organizational Infrastructures
+that are run by the CON, and now I find myself posting a counter-example
+that says sometimes you have to be very careful and/or reinvent Bigness
+to avoid getting ripped off.  But, hey, while it's not a demonstated hack,
+it's at least the theory for pulling one off, so even if it doesn't get
+me a T-shirt, at least it wins me a GIF of one :-) ]
+        
+        
+#---
+#                                       Thanks;  Bill
+# Bill Stewart, Freelance Information Architect, stewarts@ix.netcom.com
+# Phone +1-510-247-0664 Pager/Voicemail 1-408-787-1281
+#---
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00324" HREF="msg00324.html">Re: NetScape's dependence upon RSA down for the count!</A></STRONG>
+<UL><LI><EM>From:</EM> jsw@neon.netscape.com (Jeff Weinstein)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00297.html">Re: RSA's comments on RC4 weak keys</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00298.html">Re: WHERE did this come from?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01037.html">Re: SAIC bought InterNic, but who is SAIC? A spook contractor!</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00324.html">Re: NetScape's dependence upon RSA down for the count!</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00292"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00292"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

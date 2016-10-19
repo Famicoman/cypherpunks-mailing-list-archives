@@ -1,0 +1,164 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: RE: Microsoft's "answer" to Java -->
+<!--X-From-R13: Pynxr Qbirergg <oynxrNopqri.pbz> -->
+<!--X-Date: Wed, 20 Mar 1996 18:48:41 +0800 -->
+<!--X-Message-Id: 01BB160E.8178A020@gate.bcdev.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>RE: Microsoft's "answer" to Java</TITLE>
+<LINK REV="made" HREF="mailto:blake@bcdev.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01136.html">Date Prev</A>][<A HREF="msg01108.html">Date Next</A>][<A HREF="msg01301.html">Thread Prev</A>][<A HREF="msg01149.html">Thread Next</A>][<A HREF="index.html#01142">Date Index</A>][<A HREF="threads.html#01142">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>RE: Microsoft's "answer" to Java</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "'Alan Olsen'" &lt;<A HREF="mailto:alano@teleport.com">alano@teleport.com</A>&gt;</LI>
+<LI><em>Subject</em>: RE: Microsoft's "answer" to Java</LI>
+<LI><em>From</em>: Blake Coverett &lt;<A HREF="mailto:blake@bcdev.com">blake@bcdev.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 20 Mar 1996 03:37:01 -0500</LI>
+<LI><em>Cc</em>: "<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>" &lt;<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Commenting on a quote from a magazine about MS's new 
+code-download/wintrust stuff Alan Olsen wrote:
+
+&gt;As a web developer, I have some problems with this scheme.  Giving Microsoft
+&gt;access to virtually every OLE control on the Web does not make me more
+&gt;secure.  Sounds like a way to rip off ideas from the rest of the development
+&gt;world.  If someone has a control that might compete with a Microsoft
+&gt;product, it could be shelved and/or delayed for "further security testing".
+
+I think you've been badly misled on this one.  I've just been through all of the 
+related specs from the MS INetSDK. While they are still incomplete in places, 
+they look pretty workable to me.  In particular the certainly don't suggest that
+MS would be involved in signing anything.  To quote from the beta docs:
+
+        The present tools therefore allow any user of this development release to
+        authorize themselves as a "Software Publisher" for test purposes and to
+        sign their code, allowing for extensive testing of the tools and code
+        used but not actually providing a secure infrastructure. In future releases,
+        the tools will require software publishers to obtain certificates from
+        companies whose function is to verify the identity of the publishers,
+        providing end-users with a high level of assurance about the authenticity
+        and origin of code that they receive.
+
+&gt;Java has a decentralized mechanism for security.  No one group controls what
+&gt;is a "certified" control and what is not.  You write the code and compile it
+&gt;and that is that. Furthermore, you are not stuck with Microsoft approved
+&gt;platforms.  (I wonder if there will ever be a version of Explorer for the Mac.)
+
+The current version (2.0) is already available on the Mac and the 3.0 alpha 
+versions appear to be about equally buggy on both the Win32 and Mac
+platforms.  (I haven't, on the other hand, heard any news of Unix versions.
+Perhaps Bristol and/or Mainsoft will cover that port.)
+
+================
+
+Here's my quick overview of the specifications in question for those interested.
+
+Microsoft is providing the following components:
+
+- - A generic trust management called (ever originally) WinTrust.
+  WinTrust provides an API to ask whether a given subject is trusted to perform
+  a specific action.  The API is extensible in that multiple 'Trust Providers'
+  can be installed and each can define the types of subjects and actions they
+  manage.  The docs define the role of a 'Trust Administrator' who can configure
+  the rules used by the trust provider services be neglect the give the details.
+  
+- - An implementation of a trust provider called the 'Windows Software Publishing
+  Trust Provider'
+  This provider supports subjects which are executable images and the action
+  of 'being published software'.  The decision to trust is based on a PKCS #7
+  embedded within the executable containing a signed digest from the author
+  and a chain of X.507 certs back to some configurable set of CAs.  If the
+  executable is not verified the user is prompted with the offer to approve it manually.
+
+- - A set of developer tools for creating your certificate and signing executables.
+  Note that the beta includes a hard-coded root CA key and all certs must
+  trace back to it.  The existing library for munging executable images has
+  also been enhanced to support adding, removing, enumerating and retrieving
+  certs from an image as well as reading the stream that should be included in
+  digest calculations.
+
+- - A single function solution for browsers and other applications to download,
+  verify, install, and create a class factory for an OLE object given an URL.
+  In the web case the HTML &lt;OBJECT&gt; tag is used to embed an OLE object 
+  in a page.  The browser tries to create it based on the CLSID attribute (which
+  contains a DCE-ish uuid.)  If it fails it calls CoGetClassObjectFromURL() passing
+  in the URL from the CODE attribute of the same tag.  This function does all the
+  magic including the WinTrust call from above.  (Apparently there will also be
+  support for an 'Internet Search Path' if the CODE attribute isn't specified.)
+
+Then of course there is the MS CryptoAPI but that's a discussion for another day.
+
+- -Blake (who hasn't worked for Microsoft for years now)
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.3i
+Charset: noconv
+
+iQCVAwUBMU/Dirmr67p11D8rAQGHnQP/YI+EjCIcpBF3HQznruVBUkGsZls1ZVTf
+SRvPJN7n+HrtvQ4WFSyAawsPnhRH183GTrtWAy+yhmmuzA6/Br/+rNJ/q0jSIlZw
+w+RUsni9H9a7NsO1Y9xPQq//SHODYC0K+1vB6tU8XE56lZf9F0IZ4iP4El4PUWxD
+7kXMboN1Nf0=
+=5eH2
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01136.html">Re: Dorothy Denning attacks Leahy's crypto bill</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01108.html">NSA denies our 3DES license application</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01301.html">Re: Dorothy Denning attacks Leahy's crypto bill</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01149.html">Microsoft's "answer" to Java</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01142"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01142"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,175 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: DES cracker. -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Thu, 17 Oct 1996 17:38:31 &#45;0700 (PDT) -->
+<!--X-Message-Id: 199610171533.QAA00477@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.SUN.3.95.961017093643.16725B&#45;100000@gedora -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: DES cracker.</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01287.html">Date Prev</A>][<A HREF="msg01292.html">Date Next</A>][<A HREF="msg01287.html">Thread Prev</A>][<A HREF="msg01317.html">Thread Next</A>][<A HREF="index.html#01288">Date Index</A>][<A HREF="threads.html#01288">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: DES cracker.</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:mikej2@Exabyte.COM">mikej2@Exabyte.COM</A></LI>
+<LI><em>Subject</em>: Re: DES cracker.</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 17 Oct 1996 16:33:48 +0100</LI>
+<LI><em>CC</em>: <A HREF="mailto:ted@coolfactor.com">ted@coolfactor.com</A>, <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-reply-to</em>: &lt;Pine.SUN.3.95.961017093643.16725B-100000@gedora&gt; (message fromMichael Paul Johnson on Thu, 17 Oct 1996 09:43:02 -0600 (MDT))</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+[cc'd to cypherpunks]
+
+Michael Johnson &lt;mikej2@Exabyte.COM&gt; writes:
+&gt; On Thu, 17 Oct 1996, Ted DiSilvestre wrote:
+&gt; &gt;... 
+&gt; &gt; As someone posted a few weeks ago, rather than find one message to crack we
+&gt; &gt; should work on ten or a hundred simultaneously if possible. This seems to
+&gt; &gt; be the easiest way (assuming we can find this many "good" messages) to
+&gt; &gt; increase cracking efficiency by orders of magnitude.
+&gt; 
+&gt; Hmmm... I don't see that this increases cracking efficiency. The suprising
+&gt; (to me) result is that it doesn't really hurt it any. The increase in
+&gt; average expected time to find a particular key is offset by the fact that
+&gt; more keys are tried at once. We could crack just as many keys per year, on
+&gt; average, but we become less sure of which keys will be cracked first.
+
+You do save something: you only need one key schedule per key that you
+try.  You can try the key against multiple ciphertexts.
+
+A negative effect is that you might loose cacheing opportunities as
+code and data are increased.
+
+For timings you're likely to get for DES, you suffer from the law of
+diminishing returns quickly, and the additional keys/sec from doing
+more keys tapers off asymptotically.
+
+The number of keys it would be most efficient to use (say where adding
+another key speeds things up by less than 1%, or whatever) hinges
+heavily on the actual balance between how fast the key schedule can be
+made to go as compared to a CBC block operation (or whatever mode
+you're attacking).  Also the protocol you are attacking, and the
+position of the known plaintext in this block affects things greatly,
+the further along the plaintext, the more blocks you have to cycle
+through, and more data you have to move around.
+
+To illustrate the effect, here's some quick cacluations based (loosly)
+on the timings being quoted.
+
+With Peter Trei's projected DES block timing from pentium 90 to
+pentium 133, and approximate equivalence of ecb and cbc demonstrated
+by Eric's code (this set of figures is hand-waving: I'm not at all
+sure like is being compared with like, and we are now extrapolating
+from extrapolations), combining with Eric's keyschedule timing:
+
+keyschedule 12.2us (Eric Young's) 
+DES cbc block = 0.47us (from Peter Trei's extrapolated pentium 133Mhz)
+
+n keys    |  key   |   DES  | elapsed for | elapsed per |
+at a time |  sched |   cbc  | n key tests | key test    | keys/sec
+-----------------------------------------------------------------------
+     1      12.2us     1.4us      13.6us         13.6us    73.5k keys/s
+     2      12.2us     2.8us      15.0us          7.5us   133.2k keys/s
+     4      12.2us     5.6us      17.8us          4.5us   224.2k keys/s
+     8      12.2us    11.3us      23.5us          2.9us   340.7k keys/s
+    16      12.2us    22.6us      34.8us          2.2us   460.3k keys/s
+    32      12.2us    45.1us      57.3us          1.8us   558.3k keys/s
+    64      12.2us    90.2us     102.4us          1.6us   624.8k keys/s
+   128      12.2us   180.5us     192.7us          1.5us   664.3k keys/s
+   256      12.2us   361.0us     373.2us          1.5us   686.0k keys/s
+
+So 256 keys gives ~9x improvement in keys/sec with these even less
+accurate guestimates, and using more keys won't increase that
+improvement all that much, asymptotically tailing off around 9.5x for
+reasonable numbers (&lt; 64k keys).
+
+Improving the key schedule in the second table doesn't add hardly
+anything, because it is basically irrelevant when you get to 256 keys.
+(However, a faster key schedule _is_ significant for 1 key at a time).
+
+I think that Peter Trei / Phil Karn are fairly close to the limit, and
+if anything the resulting figure will be a fair bit short of what I
+have extrapolated because I suspect their peak Mb/s figure will go
+down when you start doing practical things with the addition of extra
+data shifting, etc.
+
+So it all depends on what corners can be cut in the key schedule, and
+how much you gain by coding the keyschedule in hand optimised
+assembler, and all the other factors discussed above, in summary:
+
+- keyschedule / CBC block timings ratio
+- how far into the message is the known plaintext (how many blocks to cycle)
+- cache limits (additional restriction on optimal number of keys) 
+- extra code overhead over peak cache Mb/s (moving data, extra code)
+- extra code size and complexity (for multiple key code)
+
+Adam
+--
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01317" HREF="msg01317.html">[CORRECTION] Re: DES cracker.</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Back &lt;aba@dcs.ex.ac.uk&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01287.html">Re: DES cracker.</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01292.html">Re: EC patent</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01287.html">Re: DES cracker.</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01317.html">[CORRECTION] Re: DES cracker.</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01288"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01288"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

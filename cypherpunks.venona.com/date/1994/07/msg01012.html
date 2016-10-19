@@ -1,0 +1,189 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Why triple encryption instead of split+encrypt? -->
+<!--X-From-R13: Xbua Rbhprhe <wbuaqbNzvpebfbsg.pbz> -->
+<!--X-Date: Tue, 19 Jul 94 16:18:59 PDT -->
+<!--X-Message-Id: 9407192229.AA24565@netmail2.microsoft.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Why triple encryption instead of split+encrypt?</TITLE>
+<LINK REV="made" HREF="mailto:johndo@microsoft.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01013.html">Date Prev</A>][<A HREF="msg01016.html">Date Next</A>][<A HREF="msg01006.html">Thread Prev</A>][<A HREF="msg01031.html">Thread Next</A>][<A HREF="index.html#01012">Date Index</A>][<A HREF="threads.html#01012">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Why triple encryption instead of split+encrypt?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Why triple encryption instead of split+encrypt?</LI>
+<LI><em>From</em>: John Douceur &lt;<A HREF="mailto:johndo@microsoft.com">johndo@microsoft.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 19 Jul 94 15:20:53 PDT</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+&gt;From:  &lt;solman@MIT.EDU&gt;
+&gt;Date: Tuesday, July 19, 1994 2:31PM
+
+&gt;You are then quite correct that meet-in-the-middle attacks can be
+&gt;done, but the key to the first encryption (the hashing multiplex) is 112
+&gt;bits (for the split into two parts version) which would require 2^112
+&gt;stored messages, substantially more than could possibly be stored by
+&gt;anybody ever (well, I guess ever is a bad word to use in this context).
+
+There are two separate operations here.  One is splitting the plaintext:
+
+	P0, P1 = S_KS(P)
+
+The other is generation of the splitting key.  I assume independent
+generation of the splitting key both because it maximizes the total
+keyspace and because it avoids the confusion that I believe is evidenced
+by the above quoted paragraph.  To wit:  You have suggested generating
+the split key with a one-way hash of the DES keys:
+
+	KS = hash(concat(K0,K1))
+
+If the concatenation of the DES keys is 112 bits, then there are 2^112
+possible values of the concatenation.  However, the hashing of this
+value is not the first of the two encryptions; the splitting of the
+plaintext is the first encryption, and the hash is merely a mechanism
+for generating the splitting key.  The domain of KS is the determinant
+of the size of the intermediate memory in a brute-force
+meet-in-the-middle attack.
+
+Furthermore, even for an independently generated splitting key, if the
+size of the domain of KS is greater than the size of the domain of K0
+or K1, then the DES-decrypted values can be stored as the intertext,
+requiring no more memory than that required for decrypting double DES.
+
+&gt;I still believe that the security
+&gt;of the scheme, even when just splitting into two parts and using the hash
+&gt;of the keys to multiplex the split, is much worse (by more than a couple
+&gt;of factors of two) than DES.
+
+I suspect that you mean better, not worse [smiley deleted by censor].
+I do not contest this claim, but I consider a more pertinent metric to
+be the security of this scheme relative to that of double DES.  One
+decomposite of the split+encrypt algorithm can be viewed as:
+
+	C = E_K0(S0_KS(P))
+
+And an analogous double DES encryption is:
+
+	C = E_K0(E_K1(first_half(P)))
+
+For the sake of argument, I'll assume that the domains of KS and K1 are
+equal in size.  Thus, a brute-force meet-in-the-middle attack will
+require the same number of encryptions and the same amount of memory in
+both cases, although the amount of computational power required will be
+somewhat less in the case of split+encrypt because the splitting is less
+computationally intensive than DES.
+
+However, the splitting algorithm is relatively simple, far more so than
+DES.  It is unlikely that a brute-force approach is necessary to
+cryptanalyze the splitter.  For example, consider the following
+splitting algorithm:
+
+	p0[i] = (p[i+1] &amp; ~key) | (p[i] &amp; key);
+	p1[i] = (p[i+1] &amp; key) | (p[i] &amp; ~key);
+
+This is particularly simple, and I chose it to be so for simplicity of
+discussion.  Imagine that our cryptanalytic algorithm begins as follows:
+Decrypt first block of ciphertext with each possible DES key; check to
+see if the resulting intertext could possibly have come from first block
+of known plaintext; if so, store the key; continue.  Without looping
+through all possible split keys, we can determine whether the intertext
+could have come from the plaintext:
+
+precompute:
+
+	bits_in_common = ~(p[0] ^ p[1]);  // ^ = XOR
+	must_be_1 = bits_in_common &amp; p[0];
+	must_be_0  = bits_in_common &amp; ~p[0];
+
+inside loop:
+
+	if (test_block &amp; must_be_0 | ~test_block &amp; must_be_1)
+		test_block could not be from plaintext
+
+This greatly shortens the amount of memory required for the search,
+making the algorithm much less secure than double DES.  You may respond
+by suggesting improvements to the splitting algorithm, such as
+multiple-bit dependency; but there are doubtless other weaknesses that
+could be exploited.  I did not spend a lot of time on the above
+technique; persons more qualified than I am, devoting serious time to
+the problem, will certainly develop better cryptanylitic attacks.  I
+think you will be very hard pressed to develop an algorithm anywhere
+near as secure as DES.
+
+JD
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6
+
+iQCVAgUBLixRSUGHwsdH+oN9AQE4QgP8CMTmnk0It9Y4qWK08j9jLWCEYn2gLrEr
++b17avqtVE/ArvLh3g6wHLQ4bMU0UOuLyNI0abk19FM7agqYT3WLo+U36DvU4qDJ
+9lsyyUfqHgYrXOMGAPG/Kzg4ixqo+9IiCvnFxMbsniPnlCT5l5UuEOBLlAPqyrNQ
+ggvcxZ4a4rU=
+=gPdN
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01031" HREF="msg01031.html">Re: Why triple encryption instead of split+encrypt?</A></STRONG>
+<UL><LI><EM>From:</EM> solman@MIT.EDU</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01013.html">Non-determinism forever. (was -- Re: GUT and P=NP)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01016.html">Re: Ms. Nym's stigmata</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01006.html">Re: Why triple encryption instead of split+encrypt?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01031.html">Re: Why triple encryption instead of split+encrypt?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01012"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01012"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,192 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: [fwd] Implementing the anonymous.net domain -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Wed, 23 Oct 1996 12:08:16 &#45;0700 (PDT) -->
+<!--X-Message-Id: 199610230050.BAA00601@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199610230044.BAA00594@server.test.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: [fwd] Implementing the anonymous.net domain</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01607.html">Date Prev</A>][<A HREF="msg01632.html">Date Next</A>][<A HREF="msg01607.html">Thread Prev</A>][<A HREF="msg01632.html">Thread Next</A>][<A HREF="index.html#01608">Date Index</A>][<A HREF="threads.html#01608">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: [fwd] Implementing the anonymous.net domain</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A></LI>
+<LI><em>Subject</em>: Re: [fwd] Implementing the anonymous.net domain</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 23 Oct 1996 01:50:33 +0100</LI>
+<LI><em>CC</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg01607.html">199610230044.BAA00594@server.test.net</A>&gt; (message from Adam Backon Wed, 23 Oct 1996 01:44:51 +0100)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+John Gilmore &lt;gnu@toad.com&gt; writes:
+&gt; I'm looking for a project leader and a team who will take on the job
+&gt; of making a working cryptographic "anonymous.net" domain.
+&gt; 
+&gt; I'm looking for software that would permit mail to be anonymized with
+&gt; a return address like:
+&gt; 
+&gt;     lkjasdflkjaslkdjfhakjshdfokiuhasdouilkjasdflkjasdfkjl@anonymous.net
+
+I like the idea of a more secure and resilient replacement for penet.
+
+There are significant design problems to iron out if the result is to
+provide good anonymity.
+
+The implementation is tricky to do in a fashion which is secure, fault
+tolerant, and scalable.  This would seem to be one of those "pick any
+2" type problems where the design criteria conflict.  Perhaps we
+should also add low bandwidth requirements for the user, resilience to
+DoS (Denial of Service), and resilience to abuse by spammers.
+
+&gt;From the long email addres, were you thinking that the address itself
+would contain the encrypted reply?  Encrypted reply blocks get big
+even for a few hops, with PGP &amp; type I remailers.
+
+Chaining as a general method for creating reply blocks (such as the
+alpha nymserver), is not that secure because a) it's using type I
+remailers where messages with differing sizes show through, and b)
+it's open to the replay, or flood attack.
+
+Mixmaster has some nice improvements over type I remailers: fixed size
+blocks, forward secrecy (not implemented yet), anti replay code.
+
+However the anti-replay code means you can't use it directly for reply
+blocks, and if you disabled that feature, you'd be open to the
+flooding attack.
+
+Combining mixmaster with message pools seems the most secure current
+option.  This does have inconvenience in terms of the bandwidth
+requirements of the user -- lots of people have got to download the
+whole pool, or have unlogged local access to a newspool, or have a
+broadcast newsfeed.  Also it reduces scalability, everyone gets all
+messages.
+
+&gt; Additional subdomains can be allocated for other services, e.g.
+&gt; web.anonymous.net, julfmail.anonymous.net, news.anonymous.net,
+&gt; digicash.anonymous.net, etc.  These are particularly valuable when
+&gt; multiple machines around the world can provide identical, replicated
+&gt; service.
+
+All nice things, but lets talk about one thing at a time,
+anonymous.net email addresses first!
+
+&gt; Current email and packet delivery protocols (A records and MX records)
+&gt; permit us to offer a large set of potential machines to which
+&gt; anonymous email would be delivered, at random, all under the same
+&gt; domain name.  
+
+OK, so you could use multiple DNS entries to pick a machine at
+random...
+
+&gt; Each of these machines would have to be able to properly route mail
+&gt; for any email address in the anonymous.net domain.  This would avoid
+&gt; denial of service by shutting down any particular remailer machine,
+&gt; as long as at least one advertised remailer remained up.  
+
+This level of resilience seems to imply that there is only one
+remailer key, and that each remailer could decrypt all the remailer
+traffic.  This would be as trustworthy as the least trustworthy
+remailer.  (That will be the one owned by the NSA front).  Very
+resilient but not very secure.
+
+Perhaps you mean instead that the anonymous.net domain replicators do
+not do remailing as such, they just provide the anonymous.net address,
+and route the message to the appropriate remailer.  If you mean this,
+then you have lots of protection for the forwarders, and as long as
+one is left your mail gets forwarded to the correct remailer.  However
+you still have problems of resilience of the actual remailers, if any
+remailer on your chain breaks, so does youre reply block.
+
+You could trade off security for resilience by having multiple reply
+blocks.
+
+Another approach may be to secret share a single group remailer
+private key.  Have a threshold of remailers needed to decrypt.  Each
+remailer part decrypts, and passes on to another remailer, eventually
+the remail instruction is decrypted, and the message is sent to the
+recipient.  Unfortunately, if the NSA owned remailers ever get
+sufficient in proportion the system would be broken whenever an NSA
+remailer was chosen as an entry point.  (This assumes you also encrypt
+communications between remailers with a remailer specific key, or a DH
+negotiated key.)
+
+There are signature schemes which allow signatures to be made with a
+secret shared key without revealing the shares.  (Each share holder
+adds a partial signature, up to the threshold when a full signature is
+generated).  Are there algorithms which can do the same thing for
+decrypting, so that we could have remailers adding partial decrypts?
+Are there algorithms to generate a public/private key pair such that
+no one ever needs to be trusted to do the split without keeping the
+key?
+
+Adam
+--
+Have _you_ exported RSA today?
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01607" HREF="msg01607.html">[fwd] Implementing the anonymous.net domain</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Back &lt;aba@dcs.ex.ac.uk&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01607.html">[fwd] Implementing the anonymous.net domain</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01632.html">Sybase questions</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01607.html">[fwd] Implementing the anonymous.net domain</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01632.html">Sybase questions</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01608"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01608"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,167 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: PC: Using BIOS Wait function as a source of entropy? -->
+<!--X-From-R13: "Rrenatrq [hgnag" <IyxatAjyNhavk.nfo.pbz> -->
+<!--X-Date: Thu, 21 Mar 1996 18:50:17 +0800 -->
+<!--X-Message-Id: 199603210649.BAA27694@unix.asb.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>PC: Using BIOS Wait function as a source of entropy?</TITLE>
+<LINK REV="made" HREF="mailto:WlkngOwl@unix.asb.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01178.html">Date Prev</A>][<A HREF="msg01212.html">Date Next</A>][<A HREF="msg01174.html">Thread Prev</A>][<A HREF="msg01216.html">Thread Next</A>][<A HREF="index.html#01223">Date Index</A>][<A HREF="threads.html#01223">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>PC: Using BIOS Wait function as a source of entropy?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A></LI>
+<LI><em>Subject</em>: PC: Using BIOS Wait function as a source of entropy?</LI>
+<LI><em>From</em>: "Deranged Mutant" &lt;<A HREF="mailto:WlkngOwl@unix.asb.com">WlkngOwl@unix.asb.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 21 Mar 1996 01:37:45 +0000</LI>
+<LI><em>Comments</em>: Authenticated sender is &lt;wlkngowl@unix.asb.com&gt;</LI>
+<LI><em>Organization</em>: What organization?</LI>
+<LI><em>Priority</em>: normal</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+In some older versions of the NOISE.SYS random driver I experimented 
+with calling the BIOS Wait function which uses the CMOS timer to 
+pause, using the "drift" between timing differences.  There appears 
+to be some variation here, but I don't have enough documentation (and 
+have yet to hack with the BIOS myself) to figure out what goes on 
+exactly when one calls Int 15h/AH=86h, so I don't know if this is 
+"real" clock drift of if the variation is caused by somehting else 
+unsuitable for an RNG.
+
+Still, it seems interesting.
+
+Does anyone have decently detailed tech specs for this function?
+
+Source is enclosed below for reference.  No copyrights on it.
+
+  ---Rob &lt;WlkngOwl@unix.asb.com&gt;
+
+----- Attachment begins here -----
+
+{$F-}
+const
+  timer0 = $40;
+  timercntl = $43;
+
+  WaitInterval = 977;
+
+function SampleTimerWord: Word; assembler;
+asm
+  mov	al, 0c2h
+  out	timercntl, al {	Latch status and count for timer 0 }
+  in	al, timer0  { Get status word }
+  test	al, 2	    { Remember mode 2 v. mode 3 for later }
+  mov	ch, al
+  in	al, timer0  { Get count low byte }
+  mov	ah, al
+  in	al, timer0  { Get count high byte }
+  xchg	ah, al
+  jz	@GotSample  { If mode 2, skip this last bit...}
+  add	ch, ch	    { Top bit of status	byte into CF}
+  rcr	ax, 1	    { Shift data down and accumulate}
+  @GotSample:
+end;
+
+function Sample: Integer; assembler;
+asm
+{ From Ralph Brown's Interrupt List:
+--------B-1586-------------------------------
+INT 15 - BIOS - WAIT (AT,PS)
+ AH = 86h
+ CX:DX = interval in microseconds
+Return: CF clear if successful (wait interval elapsed)
+ CF set on error or AH=83h wait already in progress
+     AH = status (see #0390)
+Note:	the resolution of the wait period is 977 microseconds on most
+systems
+   because most BIOSes use the 1/1024 second fast interrupt from the
+   AT real-time clock chip which is available on INT 70
+SeeAlso: AH=41h,AH=83h,INT 1A/AX=FF01h,INT 70
+}
+        call SampleTimerWord
+        push ax
+        xor  cx, cx
+        mov  dx, WaitInterval
+        mov  ah, 86h
+        int  15h
+        jnc  @NoError        { does this affect timings much? }
+        xor  ax, ax
+        jmp  @Abort
+@NoError:
+         call SampleTimerWord
+         pop  bx
+         sub  ax, bx
+@Abort:
+end;
+
+begin
+{ Note: repeated/rapid calls to Sample() crashes the system or causes
+BOUND
+  interrupts (which triggers the Print Screen function on PCs). }
+  WriteLn(Sample:6);
+end.
+Rob. 
+
+---
+Send a blank message with the subject "send pgp-key" (not in
+quotes) to &lt;WlkngOwl@unix.asb.com&gt; for a copy of my PGP key.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01178.html">Re: IPG message</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01212.html">No Subject</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01174.html">Upside's TAMING THE INTERNET: Special Report</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01216.html">PGP and Human Rights, continued</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01223"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01223"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

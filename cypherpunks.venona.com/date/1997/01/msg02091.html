@@ -1,0 +1,155 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: One time pads and randomness? -->
+<!--X-From-R13: Pvyy Egrjneg <fgrjnegfNvk.argpbz.pbz> -->
+<!--X-Date: Mon, 20 Jan 1997 10:12:55 &#45;0800 (PST) -->
+<!--X-Message-Id: 199701201812.KAA14899@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: One time pads and randomness?</TITLE>
+<LINK REV="made" HREF="mailto:stewarts@ix.netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02126.html">Date Prev</A>][<A HREF="msg02097.html">Date Next</A>][<A HREF="msg02090.html">Thread Prev</A>][<A HREF="msg01870.html">Thread Next</A>][<A HREF="index.html#02091">Date Index</A>][<A HREF="threads.html#02091">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: One time pads and randomness?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:AaronH4321@aol.com">AaronH4321@aol.com</A></LI>
+<LI><em>Subject</em>: Re: One time pads and randomness?</LI>
+<LI><em>From</em>: Bill Stewart &lt;<A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 20 Jan 1997 09:44:44 -0800</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Welcome!  You've asked a Frequently Asked Question, so you're obviously 
+new here, but you're also thinking, so we'll cut you some slack :-)
+A good book on cryptography that you should read is Bruce Schneier's
+"Applied Cryptography", which talks about both math and practical issues.
+
+At 09:51 AM 1/18/97 -0500, AaronH4321@aol.com wrote:
+&gt;I want to use a one time pad pased crypto system. I understand that the
+&gt;randomness of the pad genorator is key to security (other than lossing 
+&gt;the keys).  What I want to know is if I use a psuedo-RNG that ....
+
+Pseudo-Randomness isn't Real Randomness, and OTPs need Real Randomness.
+[Von Neumann said that anyone using mathematical methods to generate
+random numbers "is, of course, in a state of sin."]
+If you've got a Pseudo-RNG, your random number generator has some state
+at step 1 that totally determines the output at steps 2...infinity.
+This means that anybody who can determine the state of the PRNG at
+step n can decode all messages for steps n+1, n+2, ...., and often
+for steps 1....n-1 as well (depending on the particular PRNG.)
+If you're got Real Randomness*, even if you know the value of the
+pad at step n, it tells you entirely nothing about any other step.
+	
+To make it worse, the popular PRNGs turn out to be annoyingly easy
+to crack, i.e. to determine the state from a small number of samples.
+
+&gt;Say I create a 1 million character one time pad that passes all of the
+&gt;randomness tests.  It is "truely random". 
+
+Unfortunately, passing randomness tests doesn't tell you a pad is
+"truly random" - it just eliminates the blatantly easy stuff.
+For instance, x[n+1] = Hash( x[n] ) or X[n+1] = Encrypt( x[n] )
+for a cryptographically strong hash function or encryption like 
+MD5 or SHA or 3-DES will pass randomness tests just fine,
+but it's still totally deterministic.  Still not a OTP.
+
+However, say you create the pad from really random sources like
+flipping lots of coins or counting gamma rays, and haul it to your
+computers by well-armed guys with briefcases handcuffed to their wrists.
+
+&gt;"A" grabs a chunk of the one time pad  starting at a random point and 
+&gt;encrypts it....There "B" moves to the random point and begins decryption.
+
+If the pad is _really_ random, and you're sure nobody's seen any of it,
+then there's no difference between starting at a random point and
+starting at the beginning, and the bookkeeping is much cleaner.
+
+&gt;During to process both computers mark that section of the OTP used so 
+&gt;that they don't retransmit with it.  I realize this has a limited amount 
+&gt;of messages before it is used up.  But would this be secure?
+
+Yeah, you've got it (once you remember to use a really random pad
+so there's entirely no relationship between bits n and n+1.)
+And you've also hit one of the basic difficulties with using OTPs,
+which is making sure you only use the once, and that this means
+that sometimes you run out AND YOU STILL CAN'T USE THE PAD AGAIN.
+
+	[*Some philosophers will argue that there isn't any
+	Real Randomness, that there's just a deterministic
+	State Of The Universe that's more complex than you happen to know,
+	and some will rant about Quantum Mechanics, and others who
+	actually have some clue about Quantum will tell you that it 
+	doesn't get you off the hook; in any case, as long as the universe
+	is messy enough it's be close enough for government work.]
+
+The NSA was able to crack a bunch of Russian OTP transmissions back
+in the 50s (the project name was Venona, and it was recently announced)
+because the Russians did two major things wrong: They used pads more
+than once when they were sloppy or out of new pads, and they didn't
+use very good randomness - clerks banging "randomly" on typewriters
+generate data with more correlation and less even distribution than
+they'd expect, and in nearly-pre-computer days they weren't able
+
+#			Thanks;  Bill
+# Bill Stewart, +1-415-442-2215 stewarts@ix.netcom.com
+# You can get PGP outside the US at ftp.ox.ac.uk/pub/crypto/pgp
+#     (If this is a mailing list, please Cc: me on replies.  Thanks.)
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02126.html">Using the political opportunity Was: Newt's phone calls</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02097.html">Re: UNS_top</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02090.html">Re: One time pads and randomness?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01870.html">Re: [STATS] Cypherpunks-unedited subscriptions</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02091"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02091"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

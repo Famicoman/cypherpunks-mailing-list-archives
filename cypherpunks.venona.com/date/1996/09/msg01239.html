@@ -1,0 +1,241 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: (Long) RFC: Public Key Finger: A preliminary proposal for a distributed key publishing system -->
+<!--X-From-R13: Urbss Rnyr <trbss1Nubzr.arg> -->
+<!--X-Date: Mon, 16 Sep 1996 06:52:18 +0800 -->
+<!--X-Message-Id: 199609151909.MAA10901@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>(Long) RFC: Public Key Finger: A preliminary proposal for a distributed </TITLE>
+<LINK REV="made" HREF="mailto:geoff1@home.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01244.html">Date Prev</A>][<A HREF="msg01240.html">Date Next</A>][<A HREF="msg01244.html">Thread Prev</A>][<A HREF="msg01307.html">Thread Next</A>][<A HREF="index.html#01239">Date Index</A>][<A HREF="threads.html#01239">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>(Long) RFC: Public Key Finger: A preliminary proposal for a distributed key publishing system</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: (Long) RFC: Public Key Finger: A preliminary proposal for a distributed key publishing system</LI>
+<LI><em>From</em>: Geoff Dale &lt;<A HREF="mailto:geoff1@home.net">geoff1@home.net</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 15 Sep 1996 12:09:04 -0700 (PDT)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+The original (html) document may be obtained at:
+
+<A  HREF="http://www.fqa.com/geoff/pkf.htm">http://www.fqa.com/geoff/pkf.htm</A>
+
+- ---------------------------------------------------------------------------
+                                                         Version 0.2, Draft
+
+                             Public Key Finger
+
+                        (aka the People's Key Front)
+
+       A preliminary proposal for a distributed key publishing system
+
+- ---------------------------------------------------------------------------
+
+Wouldn't it be nice if distributing your public key(s) was as easy as
+publishing your e-mail address? As a matter of fact, it would be nice if
+you didn't even have to do anything more than giving out your e-mail
+address.
+
+Keyfinger is a way to make this possible.
+
+Requirements:
+
+Simplicity
+
+Components must be easy to understand, use, integrate, set-up and maintain.
+
+Scalability
+
+The system must be designed to be distributed and scale to accommodate 
+large
+users like Netcom and AOL. To this end keyfinger uses the convention of
+connecting to keys.host.domain.com, allowing the administrator to use
+various methods to handle request traffic.
+
+Flexibility
+
+The system should be designed to allow interim solutions and phased
+deployment. Because of the fact that this system will not be deployed all
+at once, interim methods will be designed into the protocol.
+
+Security
+
+Ideally the fetching of keys should be across secure links, signed by the
+key-server, to avoid man-in-the-middle attacks. The individual keys should
+be self-certifying if signed by a known trusted entity (such as the ISP).
+
+Protocol:
+
+Client opens a socket connection to host (keys.host.domain.com or
+host.domain.com or domain.com) on designated port (a default port should be
+determined). Sends and inquiry string (user@host.domain.com) then the Host
+returns the contents of the .keyplan file. If the connection fails, the
+client may try to connect using http with a URL of form
+(<A  HREF="http://host.domain.com/~user/.keyplan">http://host.domain.com/~user/.keyplan</A>). Other supported methods may be
+finger and DNS lookup.
+
+Components:
+
+keyfinger
+
+Program for fetching the key. E-mail programs could incorporate this to
+allow automated key lookups within the mail authoring and authorization
+process. Various search engines could use this to allow key searches.
+
+Usage:
+
+     keyfinger user[@host][.domain.com][@keyserver.domain.com][:port]
+     ex: keyfinger geoff1@home.net
+
+Host and domain are resolved in the standard manner, a default port is tbd.
+The optional usage is to add an actual keyserver which could be used for a
+more traditional key-server system.
+
+keyfingerd
+
+Program (daemon) run on isp's key server. Would automatically serve up
+.keyplan files from user's home directories.
+
+Some versions may access a local key database instead. 'Nym servers and
+e-mail gateways would require this kind of service. The keyfinger server
+would be responsible for keeping the keyplan entries up to date.
+
+keyfinger-proxy
+
+Program (daemon) running on firewall to allow keyfinger to run through
+firewalls. Allows keyfinger-ing of foreign systems from within the 
+firewall,
+but not the reverse.
+
+key-setup
+
+Program that provides a gui interface to aid in the account setup. Should
+be able to work with .keyplan files and key databases. Authentication
+required to change key info required.
+
+.keyplan
+
+File in the user's home directory that contains the key information. User's
+on ISP's that don't provide keyfinger service could publish their .keyplan
+files in the top level of their web directory (/~/public_html or whatever).
+The contents would be a multipart mime document containing available keys
+with key-type (and size) information, perhaps in preference order.
+Allowable mime parts would also include key-revocation certificates.
+
+Note: It is a question as to how strictly these allowable types should be
+enforced. To allow extension of new key types enforce mime-type: key/...
+but not subtype (eg - key/pgp ).
+
+content-handler
+
+Java content-handler for dealing with .keyplan files. Actually a content
+handler could be written for each key mime-type. The java code could
+actually use http to do retrieval.
+
+protocol-handler
+
+Java protocol-handler for dealing with "keyfinger:" URLs. This would
+essentially be an implementation of the keyfinger component.
+
+Usage:
+
+     keyfinger:user[@host][.domain.com][:port]
+
+Action Items
+
+In no particular order:
+
+   * IETF Format Draft
+   * Write reference code
+   * Need port designation
+   * Need mime-types for keys and the .keyplan file.
+
+Important Dates
+
+   * 96-09-07 First Publication to the Coderpunks list.
+   * 96-09-14 Presented to SF Bay Cypherpunks Physical Meeting.
+
+- ---------------------------------------------------------------------------
+Page Maintained by Geoff Dale
+Last Modified: September 15, 1996
+
+_____________________________________________
+         Geoff Dale - geoff1@home.net
+          Paraphrasing Larry Niven:
+- -- Just think of it as economics in action --
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBMjxVrv1Xc5SjvRJ5AQEUoAQAnU193QKDiV5wW+Iv+ozfZfEH7cyi/cz3
+LqduEO3BGkmW4Xfz/bXCwIwwSph1LEcePt6v0Wv+QUGOTXR/CZqjtxTzr3uCTHvP
+0Zd76ZlfLD+JI3NSFniXsAXEeGeYLnQJqSHAa9cGUCYPh3/pgwfBuwNC+ZTgYkJo
+ghLkuxHXrLE=
+=4icU
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01307" HREF="msg01307.html">Re: (Long) RFC: Public Key Finger: A preliminary proposal for a               distributed key publishing system</A></STRONG>
+<UL><LI><EM>From:</EM> jonathan &lt;jonathan@dcs.gla.ac.uk&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01244.html">(fwd)Atlanta NRC Cryptography Briefing</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01240.html">Re: HipCrime as MetaSPAM</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01244.html">(fwd)Atlanta NRC Cryptography Briefing</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01307.html">Re: (Long) RFC: Public Key Finger: A preliminary proposal for a               distributed key publishing system</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01239"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01239"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

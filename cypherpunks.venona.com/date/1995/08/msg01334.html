@@ -1,0 +1,232 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Eudora/Trumpet encryption (stupid, solved here) -->
+<!--X-From-R13: Iuvgr Oqrcg <nqrcgNzvarein.pvf.lnyr.rqh> -->
+<!--X-Date: Sat, 26 Aug 95 21:14:07 PDT -->
+<!--X-Message-Id: Pine.SOL.3.91.950827001240.28053A&#45;200000@minerva -->
+<!--X-Content-Type: multipart/mixed -->
+<!--X-Reference: Pine.3.89.9508191650.A25524&#45;0100000@evitech.evitech.fi -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Eudora/Trumpet encryption (stupid, solved here)</TITLE>
+<LINK REV="made" HREF="mailto:adept@minerva.cis.yale.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01332.html">Date Prev</A>][<A HREF="msg01328.html">Date Next</A>][<A HREF="msg00925.html">Thread Prev</A>][<A HREF="msg00685.html">Thread Next</A>][<A HREF="index.html#01334">Date Index</A>][<A HREF="threads.html#01334">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Eudora/Trumpet encryption (stupid, solved here)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Markku-Juhani Saarinen &lt;<A HREF="mailto:marks@evitech.fi">marks@evitech.fi</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Eudora/Trumpet encryption (stupid, solved here)</LI>
+<LI><em>From</em>: White Adept &lt;<A HREF="mailto:adept@minerva.cis.yale.edu">adept@minerva.cis.yale.edu</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 27 Aug 1995 00:13:36 -0400 (EDT)</LI>
+<LI><em>Cc</em>: "Sean A. Walberg" &lt;<A HREF="mailto:sean@escape.ca">sean@escape.ca</A>&gt;, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00925.html">Pine.3.89.9508191650.A25524-0100000@evitech.evitech.fi</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+On Sat, 19 Aug 1995, Markku-Juhani Saarinen wrote:
+
+&gt; 
+&gt; On Wed, 16 Aug 1995, Sean A. Walberg wrote:
+&gt; 
+&gt; &gt; I'm a crypto newbie here, but does anybody know how Trumpet Winsock 
+&gt; &gt; and/or Eudora encrypt the passwords in their .ini files?  I am trying to 
+&gt; &gt; write a front end for a client and would rather it set up automatically 
+&gt; &gt; rather than the program ask.
+&gt; &gt; 
+&gt; 
+&gt; It's not xor. It's wrap-around addition. Not much better than rot-13 :) I 
+&gt; broke it for my friend just a couple of days back, but it seems like he 
+&gt; has deleted the source I wrote at his place (crytoanalysis and writing the 
+&gt; 4-line c-source took about 20 minutes, total). Besides the key (the one 
+&gt; used in encryption of the password) may be different in different 
+
+four line C source?  I'm impressed.  I've enclosed a bit longer C-source 
+that does the same.
+
+&gt; versions and licences of these programs.
+&gt; 
+&gt; Here's what you'll have to do to get the built-in key:
+&gt; 
+&gt; 1. set password to 00000000, for example, and see what it encrypts into.
+&gt; 2. now substract 0x30 (ascii 0) from every character of the encrypted 
+&gt;    password. congratulations, you have the key! :)
+&gt; 
+&gt; Now you can pretty much figure out how to decrypt any password.
+&gt; 
+&gt; Note:
+&gt; Encrypted characters are in the range 32..127. First perform a logical
+&gt; and with 0x7f. If the result is smaller than 32, add 32.
+
+Ben.
+____
+Ben Samman..............................................samman@cs.yale.edu
+I have learned silence from the talkative, toleration from the intolerant,
+and kindness from the unkind; yet, strange, I am ungrateful to those 
+teachers.-- K. Gibran. SUPPORT THE PHIL ZIMMERMANN LEGAL DEFENSE FUND!
+For information Email: zldf@clark.net       <A  HREF="http://www.netresponse.com/zldf">http://www.netresponse.com/zldf</A>  
+</PRE>
+<PRE>
+/*This was written to deal with trumpet winsock's 'encryption' by
+  spitting out the ppp-username and ppp-password values.
+
+  This was written by: Ben Samman &lt;samman@cs.yale.edu&gt;.
+
+  The algorithm is very simple and a simple inspection of this file should
+  be sufficient for most people to figure out whats going on.
+
+  Feel free to copy this as you please, as long as you include this
+  message with it.
+
+  If you use this, please send me mail and tell me what its used
+  for--I'd be somwhat curious.
+
+  If there are any questions, feel free to mail me and ask me.
+
+  USAGE:
+  trmpbrk &lt;base&gt; &lt;pass&gt;
+
+  Definitions:
+
+  BASE:
+  Base is a trumpwsk.ini file in which you have inputted "000000000000" into
+  the ppp-username box in the File/PPP Options/Username menu in Trumpet
+  Winsock.  Don't forget to rename this to something other than
+  trumpwsk.ini(something like "0")
+
+  I've included my copy of base, but every version/revision of
+  Trumpet Winsock changes it, so I would recommend you do this yourself.
+
+  PASS:
+  This is the file that you want to decrypt the value for.  Most of the time
+  it will be trumpwsk.ini.
+
+  Example:
+
+  trmpbrk 0 trumpwsk.ini
+
+  (c)Ben Samman  &lt;samman@cs.yale.edu&gt;
+  */
+  
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+void main(int argc, char **argv)
+{
+  int i;
+  
+  unsigned char line[256], username[256], username_2[256];
+  FILE *BASE, *PASS;
+  printf("TRMPBRK.EXE for finding PPP passwords from TRUMPWSK.INI\n");
+  printf("By: Ben Samman &lt;samman@cs.yale.edu&gt;\n");
+  printf("Copyright 1995\n");
+  printf("\n\n");
+  
+  /*First test for number of arguments*/
+  if (argc!=3)
+    {
+      fprintf(stderr, "Error: Too few arguments\n");
+      fprintf(stderr, "Usage:\t%s &lt;base&gt; &lt;password_file&gt;\n", argv[0]);
+      exit(1);
+    }
+
+  BASE=fopen(argv[1], "r");
+  PASS=fopen(argv[2], "r");
+
+  while((strncmp(fgets(line, 255, BASE), "ppp-username", 12))!=0);
+  for (i=14;i&lt;(strlen(line)-3);i++)
+    {
+      username[i-14]=line[i]-'0';
+    }
+  username[i]=0;
+
+  while((strncmp(fgets(line, 255, PASS), "ppp-username", 12))!=0);
+  for (i=14;i&lt;(strlen(line)-3);i++)
+    {
+      username_2[i-14]=line[i]-username[i-14];
+      username_2[i-14]=(((username_2[i-14])%128)+(96*(username_2[i-14]&lt;32)));
+    }
+  
+  username_2[i]=0;
+  
+  printf("PPP Username: %s\n", username_2);
+
+  while((strncmp(fgets(line, 255, BASE), "ppp-password", 12))!=0);
+  for (i=14;i&lt;(strlen(line)-3);i++)
+    {
+      username[i-14]=line[i]-'0';
+    }
+  username[i]=0;
+
+  while((strncmp(fgets(line, 255, PASS), "ppp-password", 12))!=0);
+  for (i=14;i&lt;(strlen(line)-3);i++)
+    {
+      username_2[i-14]=line[i]-username[i-14];
+      username_2[i-14]=(((username_2[i-14])%128)+(96*(username_2[i-14]&lt;32)));
+    }
+  
+  username_2[i]=0;
+  
+  printf("PPP Password: %s\n", username_2);
+}
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00925" HREF="msg00925.html">Re: Eudora/Trumpet encryption (stupid, solved here)</A></STRONG>
+<UL><LI><EM>From:</EM> Markku-Juhani Saarinen &lt;marks@evitech.fi&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01332.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01328.html">SSL trouble</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00925.html">Re: Eudora/Trumpet encryption (stupid, solved here)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00685.html">DSP's, Purple Boxes, Etc...</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01334"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01334"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

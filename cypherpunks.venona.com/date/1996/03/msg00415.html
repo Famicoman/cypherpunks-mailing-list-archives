@@ -1,0 +1,166 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: steganographic trick -->
+<!--X-From-R13: "Hynqvzve L. @hev" <imahevNargpbz.pbz> -->
+<!--X-Date: Sat, 9 Mar 1996 06:16:55 +0800 -->
+<!--X-Message-Id: 199603072228.OAA24671@netcom18.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>steganographic trick</TITLE>
+<LINK REV="made" HREF="mailto:vznuri@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00477.html">Date Prev</A>][<A HREF="msg00484.html">Date Next</A>][<A HREF="msg00490.html">Thread Prev</A>][<A HREF="msg00598.html">Thread Next</A>][<A HREF="index.html#00415">Date Index</A>][<A HREF="threads.html#00415">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>steganographic trick</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: steganographic trick</LI>
+<LI><em>From</em>: "Vladimir Z. Nuri" &lt;<A HREF="mailto:vznuri@netcom.com">vznuri@netcom.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 07 Mar 96 14:28:11 -0800</LI>
+<LI><em>Cc</em>: <A HREF="mailto:vznuri@netcom.com">vznuri@netcom.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+here is an interesting trick/algorithm that I've not seen before, although I
+admit I'm not intimately familiar with all the crypto formulas that
+others here may be aware of, so this may have been toyed with before.
+
+in pondering steganography, it seems to me there could be made a 
+distinction between two types. in the "classic" type, say hiding
+data in the low bits of a digitized image, the whole existence
+of an encrypted "covert" message is totally concealed. that is,
+not only is the message concealed but the existence of it is
+as well.
+
+now consider a different kind of steganography, in which it is
+clear there is an encrypted piece of data. the problem with
+all steganographic crypto is that to use your data, you have to
+have your stego tools handy, and the "feds" could see these tools
+and accuse you of hiding data.
+
+imagine an application where you freely admit that you have your
+cryptographic tools, and that you are even willing to tell the
+"feds" the key for your data. they run the crypto program, and
+indeed the file decrypts. however, unknown to them, you have given
+them a key that decrypts the file into something meaningful yet
+benign, such as a cookie recipe, not
+your plans for the overthrow of the state. in other words, 
+"interlaced" or "coincident" within the same file is your secret
+data. given one key, it decrypts into one set of data, and given
+another key, it decrypts into another set of data.
+
+there are probably many different ways to do this. of course the distinction
+of what I am proposing and two different files, each with different
+keys (which is already feasible), is not all that crisp. anyway, 
+I pursued this anyway to come up with an algorithm.
+
+pick a large prime, P. now pick two other large primes that are less
+than sqrt(P), P1, P2 (actually all that is required is that P1*P2 &lt; P). 
+ the data in the file is organized into blocks of information modulo P. 
+P1 is the "harmless" key for message 1 (M1), and P2 is the "real" key for
+message 2 (M2).
+
+now the trick is to put data into your file one "piece" at a time
+such that it decrypts into either the corresponding "piece" of M1
+given decryption by P1, or M2 given P2. I think some people can
+anticipate what comes next: the encoding of the data for M1 is
+contained in the "segment M" modulo P1, and M2 is contained modulo P2.
+
+the chinese remainder theorem lets us find the unique number N such
+that N mod P1 = M1, and N mod P2 = M2. "N" is the data that is stored
+in the file.
+
+I'm being a little sloppy in notation here: the overall message
+is broken into segments mod P-- the above algorithm is simply repeated
+over each "segment".
+
+given all the caveats about complexity of factoring etc., if P1, P2
+are large and not "close" to each other (i.e. one could find P1 by
+searching in the "vicinity" of P2), this would be a secure algorithm
+as far as I can tell.
+
+to decrypt, the file is broken up into pieces mod P, and then each
+of these pieces has a value mod P1 or mod P2 that is used as the
+value of that piece.
+
+hence, we have an algorithm in which data is stored "coincident" or "adjacent"
+in a file. the feds could potentially observe that the key you give
+them, P1 &lt; sqrt(P), and realize that there is "room" left over to store a 
+secret message.  but if you store all your files that way, they have
+nothing to go on. in fact you could assert, "yes, that was once a file
+with two messages in it, but I deleted the other one. it's key used to
+be Px". Px is a random number.
+
+of course, this method could be expanded so that any file has any number
+of secret pieces interspersed in it, each only available given knowledge
+of its secret key.
+
+again, the same thing can be accomplished by concatenating multiple
+files, each with a different key, or even alternating bytes or bits
+in a file, but I thought it would be interesting
+to find something that had this "coincident" or "adjacent" property 
+based on the modulo and large prime properties used everywhere in
+modern crypto.
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00598" HREF="msg00598.html">Re: steganographic trick</A></STRONG>
+<UL><LI><EM>From:</EM> Alan Horowitz &lt;alanh@larry.infi.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00477.html">Re: Looking for code to run an encrypted mailing list</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00484.html">Re: Leahy bill nightmare scenario?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00490.html">Can you say "market opportunity"?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00598.html">Re: steganographic trick</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00415"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00415"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

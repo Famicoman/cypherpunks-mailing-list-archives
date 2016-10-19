@@ -1,0 +1,143 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: RE: ECB, CBC, CFB, OFB -->
+<!--X-From-R13: "Xbuafba, [vpunry B ([vxr)" <Xbuaf[BNZAGWEHWZZS.EFADFSY.QA[> -->
+<!--X-Date: Sun, 21 Dec 1997 09:51:32 +0800 -->
+<!--X-Message-Id: c=US%a=_%p=Stortek%l=LSV&#45;MSG06&#45;971221014643Z&#45;85371@lsv&#45;bridge.stortek.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>RE: ECB, CBC, CFB, OFB</TITLE>
+<LINK REV="made" HREF="mailto:JohnsMP@LOUISVILLE.STORTEK.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00999.html">Date Prev</A>][<A HREF="msg00998.html">Date Next</A>][<A HREF="msg01059.html">Thread Prev</A>][<A HREF="msg01002.html">Thread Next</A>][<A HREF="index.html#00997">Date Index</A>][<A HREF="threads.html#00997">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>RE: ECB, CBC, CFB, OFB</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "'<A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A>'" &lt;<A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A>&gt;,       "'<A HREF="mailto:cypherpunks@algebra.com">cypherpunks@algebra.com</A>'" &lt;<A HREF="mailto:cypherpunks@Algebra.COM">cypherpunks@Algebra.COM</A>&gt;</LI>
+<LI><em>Subject</em>: RE: ECB, CBC, CFB, OFB</LI>
+<LI><em>From</em>: "Johnson, Michael P (Mike)" &lt;<A HREF="mailto:JohnsMP@LOUISVILLE.STORTEK.COM">JohnsMP@LOUISVILLE.STORTEK.COM</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 20 Dec 1997 18:46:43 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+&gt;Somebody asked:
+&gt;&gt;Can somebody more experienced than I am explain the strengths and weaknesses
+&gt;&gt;of these encryption modes as applied to CAST, IDEA, DES, and Blowfish?
+&gt;
+&gt;&gt;              ecb    Electronic codebook mode
+&gt;&gt;                     c[i] = f1(K, p[i])
+&gt;&gt;                     p[i] = f2(K, c[i])
+
+This is the weakest mode. Patterns in the plain text tend to cause
+repeated blocks in the output, causing some information leakage. This
+mode is really only suitable if you have exactly one block or less to
+encrypt or if random access at the block level is critical. An error in
+the ciphertext or plaintext only affects one block, as long as bit count
+integrity is maintained.
+
+&gt;&gt;              cbc    Ciphertext block chaining mode
+&gt;&gt;                     c[i] = f1(K, p[i]) ^ c[i-1]
+&gt;&gt;                     p[i] = f2(K, c[i]) ^ c[i-1]
+
+This is good at preventing information leakage. A one bit error in the
+ciphertext causes a one block error in the plain text =&gt; reasonable
+balance between tamper detection and error resistance. This mode is
+commonly used.
+
+&gt;&gt;              cfb    Ciphertext feeback mode
+&gt;&gt;                     c[i] = f1(K, c[i-1]) ^ p[i]
+&gt;&gt;                     p[i] = f1(K, c[i-1]) ^ c[i]
+
+This is good at preventing information leakage. A one bit error in the
+ciphertext causes a one bit error in the plain text =&gt; good for use in
+high noise environments where error detection and correction is
+(inexplicably) not used and tamper detection is not as critical. Doesn't
+require a decryption mode, so a hash function like SHA1 could be used in
+this mode instead of a general block cipher.
+
+&gt;&gt;              ofb    Output feeback mode
+&gt;&gt;                     h[i] = f1(K, h[i-1])
+&gt;&gt;                     c[i] = p[i] ^ h[i]
+&gt;&gt;                     p[i] = c[i] ^ h[i]
+
+This mode essentially turns a block cipher into a stream cipher without
+feedback. It must be used with the same caution as such a cipher. In
+other words, the same stream should not be reused, but a new starting
+point (initialization vector = h[-1]) and/or key should be chosen for
+each message. No padding or data size expansion is necessary.
+
+Several other modes are possible...
+
+For really slow performance, you can try some kind of key feedback. :-)
+   K[i] = K[i-1] ^ p[i-1]   or maybe   K[i] = e(K[i-1], K[i-2])
+   c[i] = e(K[i], p[i])
+   p[i] = d(K[i], c[i])
+Caution: bizarre modes may not be well analyzed... although I think some
+key feedback modes have merit when you are trying to slow an attacker
+down. They might really mess up specialized cracking hardware. :-)
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01002" HREF="msg01002.html">RE: ECB, CBC, CFB, OFB</A></STRONG>
+<UL><LI><EM>From:</EM> Bill Frantz &lt;frantz@netcom.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="01060" HREF="msg01060.html">Question on CFB variant with c[i-N]</A></STRONG>
+<UL><LI><EM>From:</EM> David Honig &lt;honig@otc.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00999.html">Re: Fwd: Dec. 16 column -- Bill of Rights</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00998.html">World SpyMonger System [WAS NEVER: The Last Lamer CypherPunk]</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01059.html">Re: ECB, CBC, CFB, OFB</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01002.html">RE: ECB, CBC, CFB, OFB</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00997"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00997"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

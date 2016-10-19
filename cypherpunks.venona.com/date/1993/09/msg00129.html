@@ -1,0 +1,176 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Spread Spectrum&#45; how it works -->
+<!--X-From-R13: "Kbh pnaabg pbadhre n serr zna, n zna jubfr zvaq vf serr. Fur zbfg lbh pna qb vf xvyy uvz.  08&#45;Erc&#45;1993 1013" <lrenmhavfNnvqri.rarg.qrp.pbz> -->
+<!--X-Date: Wed, 8 Sep 93 07:16:57 PDT -->
+<!--X-Message-Id: 9309081410.AA00883@enet&#45;gw.pa.dec.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Spread Spectrum- how it works</TITLE>
+<LINK REV="made" HREF="mailto:yerazunis@aidev.enet.dec.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00133.html">Date Prev</A>][<A HREF="msg00130.html">Date Next</A>][<A HREF="msg00133.html">Thread Prev</A>][<A HREF="msg00130.html">Thread Next</A>][<A HREF="index.html#00129">Date Index</A>][<A HREF="threads.html#00129">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Spread Spectrum- how it works</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Spread Spectrum- how it works</LI>
+<LI><em>From</em>: "You cannot conquer a free man, a man whose mind is free. The most you can do is kill him.  08-Sep-1993 1013" &lt;<A HREF="mailto:yerazunis@aidev.enet.dec.com">yerazunis@aidev.enet.dec.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 8 Sep 93 07:10:49 PDT</LI>
+<LI><em>Apparently-To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Cc</em>: <A HREF="mailto:yerazunis@aidev.enet.dec.com">yerazunis@aidev.enet.dec.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+From:	US3RMC::"clark@metal.psu.edu" "Clark Reynard"  8-SEP-1993 01:59:18.22
+
+&gt;Then the receptionist returned, and told me that the person from
+&gt;the engineering department who took care of the phones had indicated
+&gt;that not even the government had the technology to monitor these
+&gt;phones.
+&gt;
+&gt;Upon asking how and why the government might do this, I received
+&gt;a rather chilly notification that the engineering department,
+&gt;was, of course, unwilling to reveal these secrets.  Well, it was
+&gt;worth a try.
+
+Actually, they aren't telling you, but SS techniques are published widely
+in the technical literature.  For a relatively accessible and understandable
+introduction, try the ARRL's book "Spread Spectrum Sourcebook", which 
+describes not only the theory but also the results of the ARRL's 
+experimentation with spread-spectrum technology for radio communications.
+It's about $30 from any reputable ham radio supply house, and you 
+can mail-order it.
+
+[very succintly, SS works by adding a pseudorandom modulation to the
+transmitter carrier that modulates the signal far far MORE than the
+actual informational modulation.  For example, a 16-bit CRC register
+feeding back on itself can be used.  The output of the CRC register 
+(or any other pseudo-random-number-generator (PRNG) can be used as a 
+modulator in two ways:
+
+	1) Frequency hopping: the bits in the CRC or PRNG determine (via 
+	   a lookup table ("hop set") the new center frequency that the 
+	   transmitter will send on.  This freqency may hop a hundred 
+	   times or more per second.
+
+		a) ease of detection: easy- you hear a "click" whenever the
+		   transmitter hops onto the freqency you're monitoring
+		b) ease of interception: very hard- if there are a 
+		   few thousand such signals around, you have to splice
+		   together 10 millisecond slices from a thousand different
+		   sources- and that's a combinatorially prohibitive 
+		   problem.  You need to know the "hop set" and the 
+		   particular polynomial or psuedorandom sequence to 
+		   easily recover the signal.
+
+	2) Direct Sequence: the single low-order bit in the CRC or PRNG
+	   determines whether the output signal from the transmitter's
+	   primary oscillator (already modulated with the user's voice)
+	   is inverted or not.  This translates to massive phase modulation.  
+	   If the CRC is clocked at a reasonable rate (say, 1 MHz) then 
+	   the output signal ends up with a bandwidth of about twice 
+	   the clocking freqency.  
+	
+		a) ease of detection: difficult- the SS signal shows
+		   up in a conventional reciever as broadband noise- easy
+		   to not notice.
+           	b) ease of interception: very difficult- I haven't the 
+		   foggiest about how to go about it.
+
+In either case, to demodulate the signal, one recieves the entire bandwidth,
+then either hops their first-stage local oscillator (for frequency hopping) 
+or phase-inverts (for direct sequence) the incoming signal.  The result is
+a second-stage signal that can be demodulated by conventional means.  The 
+only big trick is to synchronize the PRNG on the reciever to the PRNG on
+the transmitter.
+
+Another advantage to SS is that it tends to "ignore" strong signals in the
+band- any signal that does not correllate against the PRNG modulation is
+"spread out" over the entire band by the demodulation operation, while the
+correct signal energy is concentrated into a small channel.  This gives
+what's called "process gain" and allows a weak spread-spectrum signal to
+work even in channels that may be dominated by strong conventionally-modulated
+signals.
+
+The ARRL did find that if they knew the bandwidth of the signal they were
+looking for they _could_ direction-find on it, using wideband recievers
+and notch filters to remove known conventionally-modulated signals from
+the signal; once they were close enough to be in the "near field" of the
+transmitter standard direction-finding techniques were adequate to DF,
+even if they couldn't understand what was being transmitted, they could
+find the source. (this was the basis for the FCC's OKing of the use of
+SS modulation by hams on the 440 and higher bands- that some form of
+accountability was being preserved).
+
+-----
+
+Note that if the PRNG in a direct-sequence SS is replaced by a true 
+random number source, we have the equivalent of a one-time pad and 
+(I believe) complete security.  However, since the typical demands 
+of a direct-sequence system for phase information are in the megabits 
+per second, the logistics of "key management" may be utterly impractical.
+
+-----
+
+So, if CM was using either modulation method, and used some reasonable
+PRNG (i.e. one with remappings and hopsets determined by user-genned random
+numbers) then it is quite possible that the government does not have the
+technology _deployed_ in the field to intercept them.  But if they 
+need it, I'm sure they will figure out how to do it.  
+
+	-Bill
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00133.html">Re: Super Phones?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00130.html">The origin of spread spectrum (a true story)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00133.html">Re: Super Phones?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00130.html">The origin of spread spectrum (a true story)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00129"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00129"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

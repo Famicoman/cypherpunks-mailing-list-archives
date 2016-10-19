@@ -1,0 +1,236 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Proposal: some more standard remailer features -->
+<!--X-From-R13: ewpNtah.nv.zvg.rqh (Dnl) -->
+<!--X-Date: Tue, 5 Apr 94 20:10:08 PDT -->
+<!--X-Message-Id: 9404060309.AA25086@geech.gnu.ai.mit.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Proposal: some more standard remailer features</TITLE>
+<LINK REV="made" HREF="mailto:rjc@gnu.ai.mit.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00219.html">Date Prev</A>][<A HREF="msg00225.html">Date Next</A>][<A HREF="msg00216.html">Thread Prev</A>][<A HREF="msg00227.html">Thread Next</A>][<A HREF="index.html#00223">Date Index</A>][<A HREF="threads.html#00223">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Proposal: some more standard remailer features</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Proposal: some more standard remailer features</LI>
+<LI><em>From</em>: <A HREF="mailto:rjc@gnu.ai.mit.edu">rjc@gnu.ai.mit.edu</A> (Ray)</LI>
+<LI><em>Date</em>: Tue, 5 Apr 94 23:09:48 WET DST</LI>
+<LI><em>Cc</em>: <A HREF="mailto:rjc@gnu.ai.mit.edu">rjc@gnu.ai.mit.edu</A> (Ray)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+ 
+   Here are some proposed remailer standards some of which I have
+already implemented.
+
+Command Formatting:
+
+ I propose that all remailer commands start on the first non-blank line of a 
+message body and start with the string '::' followed by a command-name
+with no spaces in it. A command block should end when two blank lines are
+encountered (which are stripped from the output) or a non-blank
+line that doesn't start with '::' is encountered.
+
+Message Encapsulation:
+
+ I propose a standard format for recursively storing messages in
+envelopes with standard formats.  Each envelope should begin with the
+command "::envelope" followed by the envelope method, followed by the
+body. The end of the "envelope" is specified with ::end METHODNAME
+   
+   The following is an envelope:
+
+::envelope PGP [optional keyID]
+----- BEGIN PGP ... -----
+.....
+----- END PGP ... -----
+::end PGP
+
+   I have defined several types of envelopes for the workings of
+my remailer, one of them is for internal packetizing/splitting of
+large messages.
+
+::envelope PACKET part#/partmax:idstring
+
+   For example
+::envelope PACKET 1/5:&lt;aa1024xaf#remailername&gt;
+[important data]
+::end PACKET
+
+   When creating envelopes, I escape any commands/escape chars inside them
+by preceding the command line with '\'. This is removed
+when removing the envelope.
+
+   The other envelope I have defined is "PAD startline:endline" When
+removing this envelope, the remailer simply deletes lines numbered
+startline to endline in the message. The first line is 0.
+
+Header formating:
+
+  I propose the header pasting token, "::@" which gets applied
+only after the message is delivered to someone (not chained).
+For example
+::@Subject this is the subject line
+::@From    this is the from line
+::@x-foo   this is the x-foo: header
+
+  Depending on how the remailer is set up, incoming subject headers
+may or may not be preserved.
+
+Anonymous Posting:
+   On any mailer which supports virtual addresses, the following special
+feature shall be implemented:
+
+   If the virtual address contains any '.' characters, the address
+is first assumed to be a newsgroup. If the newsgroup exists and/or it
+is not blocked by the operator, two possible actions can take place.
+1) if the variable NNTPSERVER is defined, the remailer will open
+a tcp connection and post the message directly to the newsgroup
+specified in the virtual address
+2) if not condition 1, then if the variable NEWSGATE is defined, the
+remailer will mail your message to newsgroup@NEWSGATE doing any
+translations on the address string as needed. e.g. NEWSGATE=cs.utexas.edu,
+it sends the message to alt-news-group@cs.utexas.edu
+3) else posting is disabled (visible flag in the remailer list)
+
+Example:
+::to remailer1#remailer2#talk.politics.crypto
+
+  If asked, I will supply the magic perl subroutine needed to do
+this.
+
+[note above, I have eliminated the redundant "request-remailing-to".
+When mailing through a remailer, you know the mail is going to be
+remailed. ::to is easier to type]
+
+
+EXAMPLE MESSAGE:
+
+::envelope PGP
+[PRETEND EVERYTHING FROM HERE DOWN IS ENCRYPTED FOR THE REMAILER]
+::to ann's_remailer#darkmodem
+::@Subject Hello World
+
+&lt;Message text&gt;
+::end PGP
+
+when sending this out, the remailer might encrypt the message
+for ann's remailer and split it into two pieces
+
+::envelope PGP
+[below is encrypted]
+::envelope PACKET 1/2:#xxyyblahblah
+::to darkmodem
+::@Subject Hello World
+&lt;part one of the message&gt;
+::end PACKET
+::end PGP
+
+::envelope PGP
+[below is encrypted]
+::envelope PACKET 2/2:#xxyyblahblah
+&lt;part two of the message&gt;
+::end PACKET
+::end PGP
+
+Now when ann's remailer receives a two parted message, it queues
+each piece until it gets the full message (timing out after a few
+days) After all pieces are received, it removes the envelopes,
+pieces the message together, and sends the message off to darkmodem
+(which may be a virtual address for lightmodem#bob's_remailer)
+
+Most of the envelope I/O is hidden from the user.
+
+
+Additional ideas:
+
+ A command ::error-to to specify where errors encountered during
+processing of the message should be sent. e.g.
+::error-to idstring an99999@anon.penet.fi 
+or
+::error-to idstring alt-waste@cs.utexas.edu
+
+[idstring will let you know which message the error was for]
+
+ I also propose ::route which would specify preferences preferred for
+remailers when searching for other remailers to chain your
+message to. e.g.
+::route Private
+[attempt to chain to remailers which are running on single-user non-public 
+machines first]
+
+::route Stealth
+[don't use sendmail if possible, use socket-to-socket delivery
+remailers first]
+
+
+Comments welcome,
+
+-Ray
+
+p.s. most of the above proposals are not complicated to code for
+
+-- Ray Cromwell        |    Engineering is the implementation of science;   --
+-- rjc@gnu.ai.mit.edu  |       politics is the implementation of faith.     --
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00227" HREF="msg00227.html">Re: Proposal: some more standard remailer features</A></STRONG>
+<UL><LI><EM>From:</EM> michael shiplett &lt;michael.shiplett@umich.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00219.html">Re: PGP mail disabled ???</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00225.html">Al Haig and Secure Communictions</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00216.html">CHESS: max # of games</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00227.html">Re: Proposal: some more standard remailer features</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00223"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00223"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

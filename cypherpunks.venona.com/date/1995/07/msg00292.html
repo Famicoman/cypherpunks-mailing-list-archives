@@ -1,0 +1,187 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Ssh security hole? -->
+<!--X-From-R13: "Dri. Pra" <fnzznaNQE.KOZS.SRG> -->
+<!--X-Date: Fri, 14 Jul 95 06:51:42 PDT -->
+<!--X-Message-Id: Pine.A32.3.91.950714094431.11806J&#45;100000@JAGUAR.ZOO.CS.YALE.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199507132303.CAA18383@shadows.cs.hut.fi -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Ssh security hole?</TITLE>
+<LINK REV="made" HREF="mailto:samman@CS.YALE.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00288.html">Date Prev</A>][<A HREF="msg00294.html">Date Next</A>][<A HREF="msg00244.html">Thread Prev</A>][<A HREF="msg00220.html">Thread Next</A>][<A HREF="index.html#00292">Date Index</A>][<A HREF="threads.html#00292">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Ssh security hole?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Tatu Ylonen &lt;<A HREF="mailto:ylo@cs.hut.fi">ylo@cs.hut.fi</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Ssh security hole?</LI>
+<LI><em>From</em>: "Rev. Ben" &lt;<A HREF="mailto:samman@CS.YALE.EDU">samman@CS.YALE.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 14 Jul 1995 09:46:03 -0400 (EDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:mazieres@pa.dec.com">mazieres@pa.dec.com</A>, <A HREF="mailto:rtm@eecs.harvard.edu">rtm@eecs.harvard.edu</A>, <A HREF="mailto:dm@eecs.harvard.edu">dm@eecs.harvard.edu</A>,       <A HREF="mailto:tbl@eecs.harvard.edu">tbl@eecs.harvard.edu</A>, <A HREF="mailto:ssh@clinet.fi">ssh@clinet.fi</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00275.html">199507132303.CAA18383@shadows.cs.hut.fi</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+On Fri, 14 Jul 1995, Tatu Ylonen wrote:
+
+&gt; I think you are right in your analysis.  There is indeed a problem
+&gt; with RSA authentication.  Basically what this means is that if you log
+&gt; into a corrupt host, that host can at the same time log into another
+&gt; host with your account (by fooling you to answer to the request)
+&gt; provided that you use the same RSA identity for both hosts.
+
+Bruce Schnier calls this the GrandMaster Problem in the Applied Crypto 
+section on Zero Knowledge Authentication.
+
+This can be skewed by requiring synchroneous transmissions within a very 
+small synchronized time window.
+
+
+Ben.
+____
+Ben Samman..............................................samman@cs.yale.edu
+I have learned silence from the talkative, toleration from the intolerant,
+and kindness from the unkind; yet, strange, I am ungrateful to those 
+teachers.-- K. Gibran. SUPPORT THE PHIL ZIMMERMANN LEGAL DEFENSE FUND!
+For information Email: zldf@clark.net       <A  HREF="http://www.netresponse.com/zldf">http://www.netresponse.com/zldf</A>  
+
+Original message follows:
+_______________________________________________________________
+&gt; A workaround is to use a different identity for each host you use.
+&gt; The default identity can be specified on a per-host basis in the
+&gt; configuration file, or by -i options.
+&gt; 
+&gt; And, yes, I think the same problem might occur with client host
+&gt; authentication.  Though, there you would still have to do IP-spoofing,
+&gt; DNS spoofing or similar to get through (breaking RSA based host client
+&gt; effectively reduces RhostsRSAAuthentication to conventional .rhosts
+&gt; authentication).
+&gt; 
+&gt; The protocol will need to be changed somewhat because of this.  I'll
+&gt; think about it tomorrow and let you say you opinion about it.
+&gt; 
+&gt; Thanks!
+&gt; 
+&gt;     Tatu Ylonen &lt;ylo@cs.hut.fi&gt;
+&gt; 
+&gt; Date: Thu, 13 Jul 1995 13:08:15 -0700
+&gt; From: David Mazieres &lt;mazieres@pa.dec.com&gt;
+&gt; To: ssh-bugs@cs.hut.fi
+&gt; Cc: rtm@eecs.harvard.edu, dm@eecs.harvard.edu, tbl@eecs.harvard.edu
+&gt; Subject: Ssh security hole?
+&gt; 
+&gt; I believe there is a serious problem with the RSA authentication
+&gt; scheeme used in ssh, but then again I could be misreading the proposed
+&gt; RFC.  Is the following really the case?
+&gt; 
+&gt; As I understand the protocol, here is what happens during SSH_AUTH_RSA
+&gt; authentication.
+&gt; 
+&gt; Suppose the holder of SKu, is allowed access to account U on machine B
+&gt; (which holds SKb).  Both PKu and PKb are widely known.  In addition,
+&gt; machine B has a session key, PKs, which changes every hour.  When U on
+&gt; machine A wants to log into machine B, here's what I think happens
+&gt; based on my reading of the RFC:
+&gt; 
+&gt; A -&gt; B: A
+&gt; 
+&gt; B -&gt; A: (PKb, PKs, COOKIE)
+&gt; 	[A flags an error if PKb is not the stored value.]
+&gt; 
+&gt; A -&gt; B: (COOKIE, {{Kab}_PKs}_PKb)
+&gt; A -&gt; B: {U}_Kab
+&gt; A -&gt; B: {PKu}_Kab
+&gt; 	[B aborts if SKu is not allowed access to account U.]
+&gt; 
+&gt; B -&gt; A: {{N}_PKu}_Kab
+&gt; 
+&gt; A -&gt; B: {{N}_MD5}_Kab (*)
+&gt; 	[B aborts if the MD5 hash is invalid.]
+&gt; 
+&gt; B -&gt; A: access to acount U with all data encrypted by Kab.
+&gt; 
+&gt; The problem is, suppose U actually wanted to log into machine C, which
+&gt; was maintained by an untrusted person.  The person maintaining C could
+&gt; initiate a connection to B the minute U tried to log into C.  When
+&gt; given a challenge {{N}_PKu}_Kbc, C could simply give this to A as the
+&gt; challenge to respond to, and then forward the response to B.
+&gt; 
+&gt; To fix the problem, A must at the very least include B in the
+&gt; response line marked (*).  I have reason to believe (after having just
+&gt; seen a lecture on authentication), that you might even need to include
+&gt; more.  A safe bet might be (but then again I am no expert):
+&gt; 
+&gt; A -&gt; B: {(N, A, B, Kab)}_MD5
+&gt; 
+&gt; I think similar problems arise for the other authentication methods.
+&gt; 
+&gt; Other than that, though, I am really impressed by by ssh.  It's easy
+&gt; to install and easy to use.  In fact, it is even more convenient to
+&gt; use than standard rsh, because the X forwarding happens
+&gt; automatically.
+&gt; 
+&gt; Thanks for such a great package!
+&gt; 
+&gt; David
+&gt; 
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00275" HREF="msg00275.html">Re: Ssh security hole?</A></STRONG>
+<UL><LI><EM>From:</EM> Tatu Ylonen &lt;ylo@cs.hut.fi&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00288.html">Re: OTP server..</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00294.html">Re: OTP server..</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00244.html">Re: Ssh security hole?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00220.html">On a lighter note...</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00292"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00292"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

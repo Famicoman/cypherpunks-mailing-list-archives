@@ -1,0 +1,282 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: [ISN] Academic Attacks on SAFER+  (fwd) -->
+<!--X-From-R13: [nk Wahk <znkvahkNbcractc.arg> -->
+<!--X-Date: Thu, 31 Dec 1998 04:02:43 +0800 -->
+<!--X-Message-Id: Pine.LNX.4.05.9812301132380.11261&#45;100000@khercs.chipware.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>[ISN] Academic Attacks on SAFER+  (fwd)</TITLE>
+<LINK REV="made" HREF="mailto:maxinux@openpgp.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00963.html">Date Prev</A>][<A HREF="msg00969.html">Date Next</A>][<A HREF="msg00963.html">Thread Prev</A>][<A HREF="msg00969.html">Thread Next</A>][<A HREF="index.html#00968">Date Index</A>][<A HREF="threads.html#00968">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>[ISN] Academic Attacks on SAFER+  (fwd)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Multiple recipients of list &lt;<A HREF="mailto:cypherpunks@openpgp.net">cypherpunks@openpgp.net</A>&gt;</LI>
+<LI><em>Subject</em>: [ISN] Academic Attacks on SAFER+  (fwd)</LI>
+<LI><em>From</em>: Max Inux &lt;<A HREF="mailto:maxinux@openpgp.net">maxinux@openpgp.net</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 30 Dec 1998 14:32:59 -0500</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:cypherpunks@openpgp.net">cypherpunks@openpgp.net</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+
+---------- Forwarded message ----------
+Subject: [ISN] Academic Attacks on SAFER+ 
+
+Forwarded From: "Jay D. Dyson" &lt;jdyson@techreports.jpl.nasa.gov&gt;
+Originally From: John Kelsey &lt;kelsey@plnet.net&gt;
+
+I believe I have found two attacks on the SAFER+ version with 256-bit
+keys.  While these attacks aren't practical, they demonstrate a weakness
+in the SAFER+ key schedule design, and may lead to more practical attacks
+in the future. 
+
+The first attack is a modified meet-in-the-middle attack, requiring 2
+known plaintexts and their corresponding ciphertexts, 2^{37} bytes of
+memory, and work equivalent to about 2^{241} SAFER+ encryptions.  I have
+discussed this attack with Massey, and am fairly confident it really
+works. 
+
+The second attack is a related-key attack, requiring 256 chosen plaintexts
+and their corresponding plaintexts encrypted under two related keys, and
+work equivalent to about 2^{216} SAFER+ encryptions.  This is a much newer
+attack (about two days old), and I am less certain of it, but I believe it
+works. 
+
+I will be writing these attacks up for publication fairly soon, but I
+wanted to announce them here to get the word out, and to see if anyone can
+either improve on them or find problems with them. 
+
+Both attacks exploit two useful properties of SAFER+.  First, I will
+describe the two useful properties, then I will describe the two attacks
+very briefly.  The rest of this note assumes familiarity with SAFER+. 
+
+1.0. The Two Useful Properties of SAFER+
+
+Consider SAFER+ with a 256-bit key.  The key schedule is quite simple: We
+extend the key by a parity byte, getting a 33 byte extended key.  We then
+use the 33 byte extended key to generate the entire sequence of subkeys. 
+Each subkey byte is determined by only one key byte.  If you know a given
+key byte, you know all the subkey bytes it determines;  if you know a
+subkey byte, you know the key byte from which it was derived. 
+
+SAFER+ rounds use 32 bytes of subkey each, in two blocks of 16 bytes.  If
+the key bytes are k[0..32], then we have
+
+First Round:
+k[0..15]
+k[1..16]
+
+Second Round:
+k[2..17]
+k[3..18]
+
+Third Round:
+k[4..19]
+k[5..20]
+
+etc.
+
+This means that it takes quite a while in the encryption process for the
+last couple key bytes to affect the encryption.  SAFER+ with a 256 bit key
+has 16 rounds and an output transformation.  The output transformation
+uses only sixteen key bytes. 
+
+Now, consider how many key bytes have affected the encryption at all after
+each round:  After the first round (round 0), 17 key bytes have been used. 
+After the second round, 19 key bytes have been used.  After the third, 21. 
+Continuing, we can see that it takes 9 (out of 16) rounds before SAFER+
+has used all 32 key bytes.  This allows both of my attacks. 
+
+0 	17
+1	19
+2	21
+3	23
+4	25
+5	27
+6	29
+7	31
+8	all
+
+The other useful property is that we don't have to know all the key bytes
+to be able to recognize an output from a round of SAFER+ as being correct. 
+
+Consider the situation where we know all but the last byte of the key of
+some round, and we know its input block. Each SAFER+ round consists of the
+keyed byte substitution layer, and the mixing layer.  If we know k[0..14],
+but not k[15..16], then we end up knowing all but two bytes of the input
+into the mixing layer.  The result is that we end up knowing *none* of the
+bytes of the output.  However, we still know relationships between the
+bytes of the output.  The matrix that describes the mixing layer makes it
+easy to see how to combine the output bytes into values that are not
+dependent on the unknown bytes of input. 
+
+Now, consider a situation where we know all but the last two key bytes for
+round 0, and all but the first two key bytes for round 1.  We can go
+backward through the mixing layer of round 1 (it's unkeyed), and then go
+back through the keyed byte substitution layer, learning all but two bytes
+of the output from round 0.  We then make use of the trick described
+above.  We will know relationships between the remaining known bytes of
+output from round 0, regardless of the unknown key bytes. 
+
+2.0.	The Meet-in-the-Middle Attack
+
+The real insight that makes the low-memory attack work is that we can do
+meet-in-the-middle with two rounds whose key material we don't know all
+of.  That is, we guess the keys for rounds 1-7 (numbering from one), which
+gives us all but two of the bytes for round 8. That's 29 key bytes
+guessed.  We then compute some expressions in the output bytes of round 8
+that don't rely on knowing the two unknown bytes of key, and that don't
+rely on knowing the two bytes of round 8's output that will depend on the
+two unknown key bytes when doing the guess on the other side. We guess the
+keys for the output transformation (16 bytes), plus the keys for rounds
+10-16.  That means 30 bytes of key guessed, and it also gives us enough
+information to get knowledge of all but two bytes of the output of round
+8.  We then compute those same expressions in those bytes. 
+
+The result is that we can do the meet-in-the-middle at the output from
+round 8, despite not knowing all the key bytes used in round 8 or 9. 
+
+Round | Key Bytes Guessed
+1		17
+2		19
+3		21
+4		23
+5		25
+6		27
+7		29
+
+8		29  (two unknown key bytes)
+- - --------------  (this is where the meet-in-the-middle happens)
+9		30  (two unknown key bytes)
+
+10		30
+11		28
+12		26
+13		24
+14		22
+15		20
+16		18
+OX		16
+
+That is, we can compute a set of bytes that are dependent only on the 29
+bytes of key guessed from the top, or the 30 guessed from the bottom. 
+
+Now, this would seem to take up a lot of memory to do this
+meet-in-the-middle attack.  Fortunately, however, most of the key bytes
+guessed from the top are also guessed from the bottom.  We thus mount the
+attack by first guessing all key values in common from the top and the
+bottom.  We then do the meet-in-the-middle by trying all possible 2^{24}
+values from one side, and all possible 2^{32} values from the other.  We
+compute this intermediate value that doesn't need any other key material
+from both sides, store our results in a sorted list, and look for
+duplicates from the top and bottom.  With two plaintexts, it's easy to get
+more than 32 bytes of intermediate values, meaning that we don't expect to
+see any matches from incorrect guesses. 
+
+3.0. The Related-Key Attack
+
+The related-key attack works on a similar principle. 
+
+
+My current attack is very simple:  We choose a pair of keys, K,K^*, such
+that the keys differ only in the first two bytes; in these two bytes, we
+have a difference of 0x80.  Under K we encrypt 256 plaintexts, P[i], each
+identical except with a different leftmost byte.  Under K^* we encrypt 256
+plaintexts, P[i]^*, with some fixed difference D&lt;&gt;0x80 from P[i] in the
+leftmost byte, and with fixed difference 0x80 in the next byte over. 
+
+With probability about 1/2, we get at least one pair of plaintexts
+P[i],P[i]^*, whose values after two rounds are identical under the
+different keys.  When this happens, their values are also identical after
+nine rounds.  Now, we do our trick from the meet-in-the-middle attack,
+again, and guess the last 26 bytes of relevant key material.  This lets us
+peel off the output transformation and the last five rounds, leaving us
+with access to the output from the eleventh round.  We can peel off the
+PHT layer, since we know it and its inverse. We can then learn all but two
+of the bytes input to the eleventh round. 
+
+We now know all but two bytes of the output from the tenth round, and we
+know a pair of texts for which only the last two bytes of the input to the
+tenth tound had changed.  We can check to see if the values we've computed
+as being the outputs from the tenth round are consistent with this
+situation, and thus are consistent with this being a right pair. 
+
+We expect to have to check 256 different pairs of texts in this way, each
+with work equivalent to 2^{208} SAFER+ encryptions.  This leaves us with
+work equivalent to about 2^{216} encryptions, total, to learn 208/256 of
+the SAFER+ key bits.  The remaining 48 bits can be brute-forced after
+these are known. 
+
+We thus break SAFER+ with a differential related-key attack, using 2
+related keys, 512 plaintexts encrypted under each key, and 2^{216} work. 
+
+Comments? 
+
+- - --John Kelsey, kelsey@counterpane.com / kelsey@plnet.net
+NEW PGP print =  5D91 6F57 2646 83F9 6D7F 9C87 886D 88AF
+
+
+-o-
+Subscribe: mail majordomo@repsec.com with "subscribe isn".
+Today's ISN Sponsor: Internet Security Institute [www.isi-sec.com]
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00963.html">limitations of fed power (was CLT&amp;G Update: 29 Dec 98 (fwd)) (fwd)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00969.html">LEA VPN's in the South [CNN]</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00963.html">limitations of fed power (was CLT&amp;G Update: 29 Dec 98 (fwd)) (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00969.html">LEA VPN's in the South [CNN]</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00968"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00968"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

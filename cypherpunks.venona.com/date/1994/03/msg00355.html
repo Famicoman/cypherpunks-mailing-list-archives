@@ -1,0 +1,181 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: random number generator for pnmstega &#45; comments? -->
+<!--X-From-R13: Xrs Bbfxnamre <wrsNrr.yoy.tbi> -->
+<!--X-Date: Mon, 7 Mar 94 19:38:20 PST -->
+<!--X-Message-Id: 9403080338.AA24987@hot.ee.lbl.gov -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>random number generator for pnmstega - comments?</TITLE>
+<LINK REV="made" HREF="mailto:jef@ee.lbl.gov">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00356.html">Date Prev</A>][<A HREF="msg00357.html">Date Next</A>][<A HREF="msg00356.html">Thread Prev</A>][<A HREF="msg00357.html">Thread Next</A>][<A HREF="index.html#00355">Date Index</A>][<A HREF="threads.html#00355">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>random number generator for pnmstega - comments?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: random number generator for pnmstega - comments?</LI>
+<LI><em>From</em>: Jef Poskanzer &lt;<A HREF="mailto:jef@ee.lbl.gov">jef@ee.lbl.gov</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 07 Mar 94 19:38:12 PST</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I combined the "minimal" generator from PGP with another one.  The key
+length is still 31 bits.  The way I figure it, that's enough to deter
+exhaustive search by most entities, but it's not so much that there
+will be export problems.  As long as I put strong cautions in the doc
+about relying on this RNG as your primary cipher, and as long as it
+seems likely to be secure against cryptanalysis, I think this is a good
+compromise.
+
+The minimal generator by itself is known to be insecure.  By using it
+as input to a shift register, I think enough complexity is added that
+it becomes an unknown again.
+
+Comments are welcome.
+---
+Jef
+
+/* libpbm6.c - pbm utility library part 6
+**
+** Simple, portable, reasonably robust random number generator.
+**
+** Copyright (C) 1994 by Jef Poskanzer.
+**
+** Permission to use, copy, modify, and distribute this software and its
+** documentation for any purpose and without fee is hereby granted, provided
+** that the above copyright notice appear in all copies and that both that
+** copyright notice and this permission notice appear in supporting
+** documentation.  This software is provided "as is" without express or
+** implied warranty.
+*/
+
+#include "pbm.h"
+
+
+/* This is a combination of a linear congruential generator and a feedback
+** shift register.  Values from the LCG are used to keep a circular buffer
+** filled; results are produced by xoring three values from the table.
+** The modulus of the LCG must be a power of two for this to produce
+** equidistributed results.  This LCG actually uses a modulus that's
+** a power of two minus one, but that's close enough.
+**
+** DO NOT MODIFY, IMPROVE, EXPAND, ENHANCE, OR IN ANY WAY CHANGE this
+** generator.  It is used for cryptographic storage of data - if the
+** sequence is changed, the data will become unrecoverable.
+**
+** The linear congruential generator is:
+**     Minimal Standard Pseudo-Random Number Generator
+**     Author: Fuat C. Baran, Columbia University, 1988
+**     Based on code in "Random Number Generators: Good Ones are Hard to Find",
+**     by Stephen K. Park and Keith W. Miller in Communications of the ACM,
+**     31, 10 (Oct. 1988) pp. 1192-1201.
+**
+** The feedback shift register is similar to the one described in "Algorithms",
+** Robert Sedgewick, 1983, page 38.
+*/
+
+#define A 16807L
+#define M 2147483647L		/* Mersenne prime 2^31 -1 */
+#define Q 127773L		/* M div A (M / A) */
+#define R 2836L			/* M mod A (M % A) */
+static long value = 1;
+
+#define TABLESIZE 55
+#define TAP1 0
+#define TAP2 23
+#define TAP3 (TABLESIZE-1)
+static long table[TABLESIZE];
+static int offset;
+
+static long
+lcg()
+    {
+    long hi, lo;
+
+    hi = value / Q;
+    lo = value % Q;
+    value = A * lo - R * hi;
+    if ( value &lt;= 0 )
+	value += M;
+    return value;
+    }
+
+void
+pm_srandom( seed )
+    long seed;
+    {
+    if ( seed == 0 )
+	/* Zero doesn't work in this RNG anyway, so we use it as a flag. */
+	value = time( 0 ) ^ getpid();
+    else
+	value = seed;
+
+    for ( offset = 0; offset &lt; TABLESIZE; ++offset )
+	table[offset] = lcg();
+    }
+
+long
+pm_random()
+    {
+    offset = ( offset + 1 ) % TABLESIZE;
+    table[offset] = lcg();
+    return table[offset] ^			/* TAP1 is zero, optimize */
+	   table[( offset + TAP2 ) % TABLESIZE] ^
+	   table[( offset + TAP3 ) % TABLESIZE];
+    }
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00356.html">Leahy to hold hearings on Clipper Chip!</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00357.html">Decoding the Electronic Future</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00356.html">Leahy to hold hearings on Clipper Chip!</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00357.html">Decoding the Electronic Future</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00355"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00355"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

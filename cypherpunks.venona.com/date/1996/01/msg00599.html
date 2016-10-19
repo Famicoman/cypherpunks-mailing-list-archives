@@ -1,0 +1,137 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Can you break my encryption protocol ? -->
+<!--X-From-R13: shgcyrkNcfrhqbalz.pbz (Thgcyrk) -->
+<!--X-Date: Wed, 10 Jan 1996 04:14:01 +0800 -->
+<!--X-Message-Id: 199601091954.OAA31373@opine.cs.umass.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.3.89.9601091514.A24844&#45;0100000@unicorn.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Can you break my encryption protocol ?</TITLE>
+<LINK REV="made" HREF="mailto:futplex@pseudonym.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00594.html">Date Prev</A>][<A HREF="msg00589.html">Date Next</A>][<A HREF="msg00600.html">Thread Prev</A>][<A HREF="msg00581.html">Thread Next</A>][<A HREF="index.html#00599">Date Index</A>][<A HREF="threads.html#00599">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Can you break my encryption protocol ?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A> (Cypherpunks Mailing List)</LI>
+<LI><em>Subject</em>: Re: Can you break my encryption protocol ?</LI>
+<LI><em>From</em>: <A HREF="mailto:futplex@pseudonym.com">futplex@pseudonym.com</A> (Futplex)</LI>
+<LI><em>Date</em>: Tue, 9 Jan 1996 14:54:38 -0500 (EST)</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00600.html">Pine.3.89.9601091514.A24844-0100000@unicorn.com</A>&gt; from "Mark Grant, M.A." at Jan 9, 96 03:48:14 pm</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A> (Cypherpunks Mailing List)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Mark writes:
+[description of threat model elided]
+&gt; Client and server both have copies of a passphrase, of any length.
+&gt; 
+&gt; When starting the connection, client sends 128 random bits to the server.
+&gt; 
+&gt; Both ends take this data, append the passphrase, and use MD5 to generate 
+&gt; a session key. If a key of less than 128 bits is required for legal 
+&gt; reasons, then the appropriate number of bits are retained, and the rest 
+&gt; replaced with bits from the random data that was sent in the clear.
+&gt; 
+&gt; That is, if you're only allowed 40 bit security, you take the first 88
+&gt; bits that you were sent, and append the last 40 bits of the generated key 
+&gt; to give you the session key to use.
+
+So this is:
+
+Salt = RNG(128,Seed);
+SessionKey = MD5(Salt | PassPhrase);
+
+Or for export:
+
+Salt = RNG(128,Seed);
+Temp = MD5(Salt | PassPhrase);
+SessionKey = 
+    (Salt[1..(128 - NumExportBits)] | Temp[(128 - NumExportBits + 1)..128]);
+
+Sounds good, assuming the passphrase is nice and long (i.e. 128 bits, or
+NumExportBits) and MD5 holds up.
+
+If you haven't already, you might want to look at some of the work Hugo
+Krawczyk and some others have been doing on keyed MD5. Their application is
+different (primarily, authentication) but I think many of the concerns are
+similar. Look for draft-krawczyk-keyed-md5-01.txt in the usual places. "It
+is not appropriate to use Internet Drafts as reference material, or to cite
+them other than as a ``working draft'' or ``work in progress''."
+
+Futplex &lt;futplex@pseudonym.com&gt;
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQEVAwUBMPLHrCnaAKQPVHDZAQEoNQf/UCk2GwCMDqjodyqqduEUrbcOZFyBXsuV
+RPSUqgo7GcJ7HpPqzgQyEREW71g9iSfpzqMDihjjJK1SJGfKS6dy60wYSbYtNrta
+sEeLWDfpABTW7CgbpYaeDrMug1ASmcRThjeTzRqXyhUiWDFloNw7yASnyzbH4o+M
+cVgwSTTBlvvxpvgOnXtLpr85a14FBBOXlsq5dWcaUW2V0+bt6qsbgeLqTUpCrtn5
+dkzjprekBIxxQOwFh9vSKjXaBdhZAgmzI0nRVOmOBAxj2KSoGHqKwpUmQfx7yZeP
+nJuGUPA0E+hgmPqTBv6e9CQSZmpY+x932YH7jWOrgscS/HQJYLq+4g==
+=nyGN
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00600" HREF="msg00600.html">Can you break my encryption protocol ?</A></STRONG>
+<UL><LI><EM>From:</EM> "Mark Grant, M.A. (Oxon)" &lt;mark@unicorn.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00594.html">Don't type: "g**d t*m*s v*r*s"</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00589.html">Re: Microsoft continues to mislead public about Windows security bugs (a bit long, with references)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00600.html">Can you break my encryption protocol ?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00581.html">Eavesdrop Law</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00599"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00599"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

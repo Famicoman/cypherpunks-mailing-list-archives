@@ -1,0 +1,106 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Faster bit count on 680x0 -->
+<!--X-From-R13: wvza8Nargpbz.pbz (Xvz @vgpunyf) -->
+<!--X-Date: Sun, 10 Jul 94 10:04:41 PDT -->
+<!--X-Message-Id: 199407101704.KAA13679@netcom14.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Faster bit count on 680x0</TITLE>
+<LINK REV="made" HREF="mailto:jimn8@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00508.html">Date Prev</A>][<A HREF="msg00512.html">Date Next</A>][<A HREF="msg00508.html">Thread Prev</A>][<A HREF="msg00515.html">Thread Next</A>][<A HREF="index.html#00509">Date Index</A>][<A HREF="threads.html#00509">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Faster bit count on 680x0</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:jimn8@netcom.com">jimn8@netcom.com</A></LI>
+<LI><em>Subject</em>: Faster bit count on 680x0</LI>
+<LI><em>From</em>: <A HREF="mailto:jimn8@netcom.com">jimn8@netcom.com</A> (Jim Nitchals)</LI>
+<LI><em>Date</em>: Sun, 10 Jul 1994 10:04:23 -0700 (PDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+A few ways of counting bits without a lookup table were proposed.
+
+Here's a method that should be faster:
+; (preamble)
+     move.w (source)+,d0
+     clr.w  d1
+     clr.w  d2   ; bit count
+
+; body of code that counts bits
+     repeat 16   ; repeat the following section of code 16 times:
+     add.w d0,d0 ; shift most significant bit into carry
+     addx.w d1,d2 ; add zero in d1 plus carry bit to bitcount in d2
+     rpe         ; end of repeated section
+
+The result in d2 is the number of 1 bits in (source).  The repeated
+section of code is 64 bytes long, well under the cache size of an '020,
+so it can be repeatedly executed to count multiple source words without
+having to reload the instruction cache.
+
+My duties at Apple have constrained how much I can do for speech
+compression at modem rates (a project I want to do for secure phone
+applications, Cypherpunk style) but if anyone has some 68K code they'd
+like optimized, drop me email.  Freeware type efforts preferred-- I
+already have a job :)
+
+- Jim Nitchals
+QuickTime engineering team
+Apple Computer, Inc.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00508.html">Remailer usage statistics</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00512.html">META: A proposal for handling "forwards"</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00508.html">Remailer usage statistics</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00515.html">Anon Mailing List</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00509"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00509"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

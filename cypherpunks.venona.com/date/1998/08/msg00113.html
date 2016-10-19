@@ -1,0 +1,143 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: text analysis -->
+<!--X-From-R13: Oabalzbhf <abobqlNercynl.pbz> -->
+<!--X-Date: Thu, 6 Aug 1998 08:01:10 &#45;0700 (PDT) -->
+<!--X-Message-Id: 199808061501.RAA26380@replay.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: text analysis</TITLE>
+<LINK REV="made" HREF="mailto:nobody@replay.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00101.html">Date Prev</A>][<A HREF="msg00121.html">Date Next</A>][<A HREF="msg00095.html">Thread Prev</A>][<A HREF="msg00093.html">Thread Next</A>][<A HREF="index.html#00113">Date Index</A>][<A HREF="threads.html#00113">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: text analysis</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: text analysis</LI>
+<LI><em>From</em>: Anonymous &lt;<A HREF="mailto:nobody@replay.com">nobody@replay.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 6 Aug 1998 17:01:04 +0200</LI>
+<LI><em>Comments</em>: This message did not originate from the Sender address above.It was remailed automatically by anonymizing remailer software.Please report problems or inappropriate use to theremailer administrator at &lt;abuse@replay.com&gt;.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+A good data structure is a tree:
+
+                   -----&gt;  2nd letter
+                  /                    ------&gt; 3rd letter
+                 /                    /
+      1st letter -------&gt;  2nd letter -------&gt; 3rd letter
+                 \                    \
+                  \                    ------&gt; 3rd letter
+                   -----&gt;  2nd letter
+                                      \
+                                       -----&gt; 3rd letter
+
+
+Start with an array indexed by the 26 letters.  Each array entry contains
+a count of that letter's frequence and a pointer to a subsidary array.
+The pointer starts out null.
+
+When you find a new digraph (like the first time you find a letter after
+'g') you allocate a new structure to represent the letters following 'g'.
+This will again consist of 26 entries like the first one.
+
+Likewise when you find a new trigraph, you allocate a new third-level
+array of 26 entries.
+
+This will be a compromise between space and speed.  Most digraphs don't
+exist so you will save considerable space over the brute force way of
+allocating an array of 26^n spaces to count n-graphs.  However it is
+a bit wasteful in that it allocates a full 26 entries each time even
+though only a small fraction will be used.
+
+The last layer does not need to have the pointers allocated per letter
+since you won't be looking beyond that (e.g. if you are only interested
+in counting trigraphs, the third layer above can consist of just an
+array of counts).
+
+struct entry {
+	int count;
+	struct entry *next;
+} top;
+
+Handle letter, given array of previous letters.  prev[0] is current
+letter, prev[1] is 1st previous letter, prev[2] is 2nd previous letter,
+etc.  Size of prev is n entries.  Letters are normalized to range 0-25.
+Untested code, hopefully it will give you the idea.
+
+handle (int prev[], int n)
+{
+	struct entry *cur;
+
+	cur = top;
+	for (i=0; i&lt;n; ++i) {
+		cur[prev[i]].count += 1;
+		if (i==n-1)
+			break;
+		if (cur[prev[i]].next == NULL)
+			cur[prev[i]].next = calloc (26, sizeof(struct entry));
+		cur = cur[prev[i]].next;
+	}
+}
+
+This actually counts the entries backwards, so that "the" is entered under
+top['e'-'a'+1]-&gt;next['h'-'a'+1]-&gt;next['t'-'a'+1].  You can correct for
+this when you print them out.  Or you can store the letters in the prev
+array in the opposite order, putting the current letter in prev[n-1],
+then they will be in the correct order.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00101.html">Re: Noise source processing</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00121.html">Re: Noise source processing</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00095.html">Re: text analysis</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00093.html">Follow-up Letter</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00113"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00113"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

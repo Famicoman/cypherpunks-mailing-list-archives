@@ -1,0 +1,160 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Thanks, cyphergurus -->
+<!--X-From-R13: "I. Yvaarl" <xvaarlNhpfh.Qbybenqb.SRG> -->
+<!--X-Date: Tue, 9 Nov 93 17:28:44 PST -->
+<!--X-Message-Id: 199311100126.AA29302@ucsu.Colorado.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: cgs09Ly00awQE_d0gh@andrew.cmu.edu -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Thanks, cyphergurus</TITLE>
+<LINK REV="made" HREF="mailto:kinney@ucsu.Colorado.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00276.html">Date Prev</A>][<A HREF="msg00277.html">Date Next</A>][<A HREF="msg00260.html">Thread Prev</A>][<A HREF="msg00268.html">Thread Next</A>][<A HREF="index.html#00271">Date Index</A>][<A HREF="threads.html#00271">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Thanks, cyphergurus</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:mg5n%2B@andrew.cmu.edu">mg5n+@andrew.cmu.edu</A> (Matthew J Ghio)</LI>
+<LI><em>Subject</em>: Thanks, cyphergurus</LI>
+<LI><em>From</em>: "W. Kinney" &lt;<A HREF="mailto:kinney@ucsu.Colorado.EDU">kinney@ucsu.Colorado.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 9 Nov 1993 18:26:37 -0700 (MST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00260.html">cgs09Ly00awQE_d0gh@andrew.cmu.edu</A>&gt; from "Matthew J Ghio" at Nov 9, 93 03:49:27 pm</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Thanks to all for the ideas.
+
+Matthew J Ghio writes in response to my question on Mac encryption:
+
+&gt; Solution: Perform a one-way hash of the data file and use the result of
+&gt; the hash to encrypt the header.  Then encrypt the file.  This means that
+&gt; the file would have to be decrypted before the header could be decoded. 
+&gt; Breaking the code would therefore be more difficult because the file
+&gt; format would not be known.
+
+Now THIS I like. There have been a couple of suggestions to use random
+numbers in one way or another, but one thing I've been trying to avoid
+is having to depend on a PRNG in any way (the same plaintext will always
+create the same ciphertext, then, but there seems to be nothing particularly
+weak about that -- correct me if I'm wrong). I don't trust the damn
+things, and REAL random numbers are just too hard to come by.
+
+As a matter of fact, I'm ALREADY MD5 hashing the plaintext to use as a key
+verification block (I posted about this a while ago). The first 4K of the
+plaintext is hashed and encrypted with the same key as the plaintext. That
+way, when the file is decrypted, it can be hashed again and the new hash
+compared to the old hash. If the hashes match, the key is good.
+
+So I guess I'm modifying my request to ask for critiques of this scheme:
+
+Encryption:
+(1) Prompt for a pass phrase (I allow 255 characters)
+(2) MD5 hash the pass phrase to get an IDEA encryption key
+(3) MD5 hash the plaintext to make a key verification block
+(4) Encrypt the header info (type, creator, fork lengths) with the
+    key verification block.
+(5) Encrypt the plaintext and the key verification block with the IDEA key
+
+Decryption:
+(1) Get pass phrase as above and hash to an IDEA key
+(2) Decrypt the ciphertext with the IDEA key
+(3) MD5 hash the new plaintext to make a key test block
+(4) Decrypt the key verification block produced in (3) above with the IDEA
+    key.
+(5) Compare the key test block with the key verification block -- if they
+    match, the key is good.
+(6) Decrypt the header with the key verification block.
+
+Note that in practice, I'm encrypting the file 4K at a time, and only 
+hashing the first 4K block to make the key verification block. The
+header info and the key verification block are stored in a RESOURCE.
+This is for local, symmetric encryption on a Mac, and there's no point
+in not using the tools available. You wanna talk to a DOS machine, use
+PGP -- that's what it's for.
+
+&gt; 
+&gt; By the way, what encryption algorythm are you using?
+
+IDEA CBC, natch. The application is fully Mac (dialogs, alerts, whatnot),
+drag-and-drop, AppleEvent aware. Should be pretty easy to make an Alpha
+TCL module to call it.  It does recursive encryption of directories or
+entire volumes, properly resolves aliases, and knows enough to keep you
+from encrypting your own system file.  I've also got most of the work 
+done on a compatible text editor which allows you to edit encrypted files 
+without ever decrypting them to disk. All System 7 only. The only glaring
+omission in the initial version will be no data compression, but I'd
+rather get the thing out and add that later.
+
+Expect aroud a month, maybe two before it's ready for beta. It will be
+freeware, and come with source. I plan to post later to discuss establishing
+a PGP key for my "software company" pseudonym, for source/executable 
+verification.
+
+Comments are solicited -- I'd be willing to modify or add things in response 
+to cool flames...
+
+
+                                 -- Will
+
+
+(Sorry -- no signature on this one...)
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00260" HREF="msg00260.html">Re: Cyphergurus: Advice needed</A></STRONG>
+<UL><LI><EM>From:</EM> Matthew J Ghio &lt;mg5n+@andrew.cmu.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00276.html">Re: Usenet: 'Resistance Is Futile'</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00277.html">Cost of Internet (was: Should we oppose ... Superhighway)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00260.html">Re: Cyphergurus: Advice needed</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00268.html">Re: Cyphergurus: Advice needed</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00271"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00271"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

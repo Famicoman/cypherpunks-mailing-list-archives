@@ -1,0 +1,166 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Memory Management (fwd) -->
+<!--X-From-R13: Xvz Qubngr <enintrNffm.pbz> -->
+<!--X-Date: Tue, 3 Feb 1998 13:37:29 +0800 -->
+<!--X-Message-Id: 199802030535.XAA32230@einstein.ssz.com -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Memory Management (fwd)</TITLE>
+<LINK REV="made" HREF="mailto:ravage@ssz.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00058.html">Date Prev</A>][<A HREF="msg00060.html">Date Next</A>][<A HREF="msg00064.html">Thread Prev</A>][<A HREF="msg00067.html">Thread Next</A>][<A HREF="index.html#00059">Date Index</A>][<A HREF="threads.html#00059">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Memory Management (fwd)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@ssz.com">cypherpunks@ssz.com</A> (Cypherpunks Distributed Remailer)</LI>
+<LI><em>Subject</em>: Re: Memory Management (fwd)</LI>
+<LI><em>From</em>: Jim Choate &lt;<A HREF="mailto:ravage@ssz.com">ravage@ssz.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 2 Feb 1998 23:35:27 -0600 (CST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Forwarded message:
+
+&gt; Date: Mon, 02 Feb 1998 23:01:16 -0600
+&gt; From: Stu Green &lt;stugreen@bga.com&gt;
+&gt; Subject: Re: Memory Management
+
+&gt; &gt;  &gt;       I would imagine that the OS would keep a disk map in memory and
+&gt; &gt;  &gt; mark it with a flag to indicate if it's been paged into memory.
+&gt; &gt; 
+&gt; &gt;  This is a function of the "Look Aside Buffer" and the actual operation is a
+&gt; &gt;  bit more complicated.
+
+&gt; Jim - I'm familiar with the 'translation look aside'buffers
+&gt; on
+&gt; RISC chips, especially on the MIPS where it provides a
+&gt; method
+&gt; of managing cache flushes and reloads on writes and does act
+&gt; like a page fault to intiate the writes.  I haved seen TLBs
+&gt; associated with disk operations, but that don't mean shit to
+&gt; a
+&gt; tree.
+
+It turns out, I've been doing more reading on vmm on NT, that the model
+that's implimented in NT is a hybrid of the MIPS 4000 model and the 386
+model. That rationale is that this allows the actual code in the HAL to be
+much smaller by taking advantage of the different hardware aspects of the
+cpu architetures (this means speed).
+
+Don't know if I am going to get this right since I still haven't figured out
+all the intricacies. But this is what I *think* is going on (in NT)...
+
+The TLB (Translation Lookaside Buffer) is used in NT to determine if the
+page frame is currently in memory or swapped out. It does this by marking a
+frame 'invalid' if it's swapped out and listing it's actual page frame
+number if it's a valid page. Invalid does *not* mean that it can't still be
+in memory. The reason is that each process has a 'Page Frame Directory' which
+lists all the valid Page Table Pages for that process. Each of these Page
+Table Pages lists where each Page Frame Page is within that processes memory
+map (and that's a whole nother issue with various parts being pageable and
+non-pageable as well as system or user level). Each Page Frame Page knowns
+where the individual pages are (ie in memory or swapped out). There is a
+rather tedious mechanism that translates the virtual addresses to PFD's,
+PTP's, and finaly to PFP's. That's what I'm trying to get a handle on now.
+Now these various page related structures get quite big and themselves need
+to be swapped out. So there is a level of recursion in here. There is also a
+Page Table Page structure called a 'Prototype PTE Address' (a PTE is a Page
+Table Entry - ie a valid page frame, these things seem to have several
+different names making it confusing to follow at times) which is used to
+allow processes to share a PTE across PFD's. Once we get to a PTE we actualy
+have a 4k chunk of code or data that a cpu can operate on/with.
+
+So, there is where I'm at right now...
+
+Hope that makes it clear as mud.
+
+Naslajdyatciya!
+
+ps. I am enjoying my Toshiba 445CDX, it's a pretty cool machine. Anyone
+    got any suggestions on a PCMCIA ethernet card?
+
+pss. Next Saturday is the 1st Saturday in Feb. so the Dallas 1st.
+     Saturday Sale will be going on. Anyone interested? It's basicaly
+     about 20 sq. blocks of computer equipment of every make, model,
+     and age imaginable as well as lots of other stuff (time before
+     last some guy had Cobra Helicopter IR cameras for $500 ea., would
+     make a great IR telescope.). We usualy leave Saturday morning around
+     2am and get there a bit before 7am. The sale usualy starts about
+     midnite Friday nite and goes until Saturday evening. The best deals
+     are early Saturday morning (my experience over about 5 years of
+     going anyway).
+
+
+    ____________________________________________________________________
+   |                                                                    |
+   |       The most powerful passion in life is not love or hate,       |
+   |       but the desire to edit somebody elses words.                 |
+   |                                                                    |
+   |                                  Sign in Ed Barsis' office         |
+   |                                                                    | 
+   |            _____                             The Armadillo Group   |
+   |         ,::////;::-.                           Austin, Tx. USA     |
+   |        /:'///// ``::&gt;/|/                     <A  HREF="http://www.ssz.com/">http://www.ssz.com/</A>   |
+   |      .',  ||||    `/( e\                                           |
+   |  -====~~mm-'`-```-mm --'-                         Jim Choate       |
+   |                                                 ravage@ssz.com     |
+   |                                                  512-451-7087      |
+   |____________________________________________________________________|
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00058.html">Re: Jim Bell Update</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00060.html">Re: Airline ticket information -- help</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00064.html">Bork</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00067.html">Exon oxen gored</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00059"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00059"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

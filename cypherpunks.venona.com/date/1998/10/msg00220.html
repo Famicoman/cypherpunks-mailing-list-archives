@@ -1,0 +1,533 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Review of TriStrata Public Information -->
+<!--X-From-R13: Pehpr Epuarvre <fpuarvreNpbhagrecnar.pbz> -->
+<!--X-Date: Mon, 5 Oct 1998 09:40:04 +0800 -->
+<!--X-Message-Id: 199810051426.JAA18393@mixer.visi.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Review of TriStrata Public Information</TITLE>
+<LINK REV="made" HREF="mailto:schneier@counterpane.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00255.html">Date Prev</A>][<A HREF="msg00222.html">Date Next</A>][<A HREF="msg00259.html">Thread Prev</A>][<A HREF="msg00243.html">Thread Next</A>][<A HREF="index.html#00220">Date Index</A>][<A HREF="threads.html#00220">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Review of TriStrata Public Information</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Review of TriStrata Public Information</LI>
+<LI><em>From</em>: Bruce Schneier &lt;<A HREF="mailto:schneier@counterpane.com">schneier@counterpane.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 05 Oct 1998 09:23:05 -0500</LI>
+<LI><em>Posted-Date</em>: Mon, 5 Oct 1998 09:26:51 -0500 (CDT)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Review of TriStrata Public Information
+
+
+1  Introduction
+
+Over the past several months, a new company called TriStrata has been
+getting substantial press for a new "one-time pad" cryptography system.
+Most of these press reports took at face value the company's claims about
+their technology and product, and did not try to analyze whether or not
+they were true.  Counterpane Systems believes  it is important to dig under
+the hype and figure out what the real story is behind their technology.
+
+We reviewed the publicly available documentation on TriStrata, and found a
+system whose architecture is that of an early-1970s pre-public-key
+cryptography security system.  Central servers, upon which the security of
+every message rests, must be kept absolutely secure; yet they run on
+Windows NT.  These servers are all powerful, in that they can forge
+messages, rewrite audit logs, fake authentication, and lie about anything
+else in the system.  Users cannot access their files unless they are
+connected to this server.  TriStrata does not use a one-time pad at all,
+and none of the security proofs about a one-time pad apply to their system.
+Their reliance on this encryption technology forces them to use security
+protocols long abandoned by the rest of the security industry.  Even their
+performance enhancements bely the fact that encryption is rarely the
+bottleneck in any communications system.
+
+Note: For a less-technical summary of this review, please see sections 4.0,
+4.1, and 5.0.
+
+
+2.0  The TriStrata System
+
+2.1  Structure
+
+The TriStrata system uses a centralized server, called the TESS (TriStrata
+Enterprise Security Server).  The documentation is not very clear, but
+document reference 3 suggests that each company would have its own TESS.
+Every encryption or decryption operation requires a "permit" from the TESS.
+
+To encrypt a file or message:
+
+1. The user contacts the TESS over the network.  This can be any type of
+network, such as the Internet or a local area network.
+
+2. The user and the TESS authenticate each other using a proprietary
+protocol called Private Access Line (PAL). 
+
+3. The TESS sends a permit to the user machine, which is used to encrypt
+the file or message. The TESS also sends a "seal" to the user.  This seal
+is only readable by the TESS. 
+
+4. The user simply stores the seal with the file (if it is encrypted
+locally), or sends the seal along with the encrypted message (if it is to
+be transmitted to another user).
+
+To decrypt a file or message:
+
+1. The user retrieves the seal and sends the seal to the TESS (along with
+the authentication data from the PAL protocol).
+
+2. The TESS opens the seal, and determines whether the user is allowed to
+decrypt the data.
+
+3. If the user is allowed to decrypt the data, the TESS sends a
+decryption permit to the user. 
+
+4. The user's local machine uses this permit to decrypt the file or message.
+
+The TESS keeps full audit logs of all operations, and includes procedures
+that allow designated recovery agents within the company to recover the
+keys to any file.
+
+The system is claimed to provide identification (who is using the system),
+authentication (who sent a message), access control (restriction of access
+to authorized users), integrity (assurance message is unaltered), and
+non-repudiation (sender cannot deny having sent it).  They have received an
+export license for their system.
+
+2.2 Authentication
+
+The authentication method used to authenticate the user to the TESS and
+vice versa is a crucial part of the security architecture.  The TriStrata
+documentation contains no further information than that this is handled by
+the Private Access Line protocol.
+
+2.3  Encryption Algorithm
+
+The Random KeyStream (RKS) encryption algorithm used by TriStrata is hailed
+as "a new fundamental technology."  It is claimed to be very fast, but the
+documentation only contains raw speeds, without documenting which platform
+these speeds were achieved on.  The encryption technology is also claimed
+to be unconditionally secure. To quote the web site: "No matter how much
+mathematical analysis or computing power is applied to the cryptanalysis of
+RKS, there is simply no algorithm and no underlying pattern to break.  As
+Herbert Yardley foresaw in 1931, cryptography as a profession is dead."
+
+
+3.0  Our Comments
+
+3.1  The Central Server Structure
+
+Cryptographic systems that use a central access control server are nothing
+new. The Kerberos protocol uses a central server for similar tasks.  Using
+such a central server as the TESS has several advantages and disadvantages.
+
+The main advantages are:
+
+- There is a central place that administrates all the access rights.  This
+makes various administrative tasks easier.
+
+- Revocation of access is automatically supported by the system.  No
+separate revocation mechanism is necessary.
+
+- The central server can keep comprehensive auditing logs of
+security-related operations.
+
+
+The main disadvantages are:
+
+
+- The central server contains confidential information, namely the master
+keys that can decrypt any file. It is thus a very tempting target for
+attack.  The central server must be very well protected.  At the same time,
+the server must be reachable from across the network, and must be reliable,
+as nothing can work without a functioning server.  The end result is a
+server that is expensive (due to all the requirements) and that still is an
+obvious point of attack.
+
+- The central server is a single point of failure. TriStrata uses a
+redundant server structure with fail-over, so that a second server takes
+over when the first fails.  A fail-over structure protects against
+technical errors, but does not necessarily protect against
+denial-of-service attacks.  The TESS is based on a "security hardened"
+version of Windows NT, an operating system that is not known for its
+resistance to malicious attacks.
+
+- The system is effectively a closed system.  Only users who are registered
+at the server can partake in the system.  It is not clear how two users
+that belong to different servers would communicate.  The TriStrata
+documentation mentions electronic commerce extensively, but it does not
+discuss how two users at two different companies can use the TriStrata
+system to communicate with each other.
+
+- Since the server contains crucial confidential information, every company
+must run its own server.  A failure of the server, such as a leak of the
+master keys from the server, can reveal all of the company's information.
+This is the kind of task that should not be outsourced.  In contrast, the
+key server of a public-key-based system is much easier to outsource as it
+can be designed so as not to be critical for security.
+
+- The TriStrata solution does not allow a user that is off-line to access
+any encrypted files.  A salesman that keeps his data encrypted on his
+portable computer cannot access the data without contacting the TESS.  If
+he cannot get network access for some reason (e.g., on an airplane,
+mismatched phone plug, etc.), he cannot access his own files.
+
+The TriStrata solution is a return to a very old style of centralized key
+management.  For some applications this is a good solution, but there are
+many situations in which a centralized server is not appropriate.  For
+example, one function that a central server cannot do well is
+non-repudiation between adversarial parties (one of the critical functions
+in electronic commerce).  The TESS system seems to provide non-repudiation
+through inspection of the logs of the TESS.  But if a message is sent
+between two companies, which TESS do they use? The company that owns the
+TESS that is used can manipulate the logs in their own favor.  The end
+result is that there is no watertight proof that the message was sent or
+received.
+
+In effect, this solution takes us back to the days before public-key
+cryptography.  Since its invention in the late 1970s, the ideas of
+certificates, public key infrastructure, decentralized key management,
+separation of encryption and digital signature functions, etc., have all
+been implemented in response to insecurities in centralized systems.  For
+example, public-key infrastructures use trusted third parties like the
+TESS, but in a public-key system, compromise of the trusted third party
+only allows an attacker to issue false certificates, not to decrypt and
+read messages.
+
+3.2  Authentication
+
+We have no further information on the PAL protocol.  The documentation does
+state that the communication with the TESS consists of a single message
+from the user to the TESS, and a single reply back.  Elsewhere it says that
+the TESS is stateless, which makes it easy to do a fail-over should one
+TESS fail.
+
+It is not clear to the reviewers how the PAL protocol works, if we assume
+it consists of two messages and is stateless for the TESS.  These two
+properties together would suggest that an attacker can replay requests to
+the TESS.  If nothing else, this introduces fake entries in the audit log.
+Some of these attacks can be hindered by the use of local clocks, but every
+solution along these lines we have ever seen is always troubled by clock
+synchronization problems.
+
+We note that the PAL protocol is critical for the security of the overall
+system.  If an attacker can impersonate another user, then he can request
+the proper permit from the TESS to decrypt a file, and will get access
+regardless of the security of the actual encryption algorithm.  The PAL
+protocol deserves careful scrutiny before the TriStrata system is put to use.
+
+The most straightforward attack against the TriStrata system is to
+introduce some hostile code into the client's PC (for example, a virus or
+Trojan horse). This hostile code can then steal the necessary
+authentication information and send it back to the attacker.  This type of
+attack is a generic attack against any security system, not just the
+TriStrata system, but it shows that the "provable security" is at best
+limited to a small part of the system and does not extend to the whole system.
+
+3.3  Encryption
+
+To put it bluntly: the TriStrata system does not use the one-time pad
+system (Vernam cipher) for encryption.  A true one-time pad uses a random
+key that is distributed through a separate secure channel.  While a
+one-time pad is, in fact, theoretically unbreakable when used properly, the
+details of using it properly make it entirely unusable in any modern
+commercial or military setting.
+
+A true one-time pad gains its unbreakable security from the fact that the
+key is as long as the message.  Since all keys are equally likely, and a
+particular ciphertext could represent any message, given a particular key,
+the ciphertext reveals nothing about the plaintext message without the
+correct key.  These random keys must be entirely random; this usually
+requires generating them from some external random source (such as thermal
+noise or radioactive decay).  And both the sender and the receiver must
+have this secret key, which must be exchanged in some fashion which the
+attacker cannot penetrate.
+
+The requirement that the keys be as long as the data to be exchanged and
+that the key needs to be transported via some secure mechanism makes the
+one-time pad system entirely impractical.  In order to send a 1 MB message,
+the sender and receiver must exchange a 1 MB-long key.  Then the sender
+could send the message and the receiver could use the key to decrypt it.
+The key would then have to be thrown away and never used again.  If the
+sender wanted to exchange messages with a hundred people, he would have to
+pre-agree on different keys between each recipient.  For a company with a
+thousand employees, this means that there are 499,500 different key sets,
+which need to be replenished any time they are exhausted by message exchange.
+
+Because the key has to be as long as the message, there is no way to use an
+established system to exchange more keys, since in order to securely send
+as 1 MB key a user needs 1 MB of additional pre-agreed key.  (And if users
+can exchange these keys, why can't they just exchange the messages?)  This
+means that all keys have to be exchanged via some other mechanism (such as
+a courier).  This kind of system was used for the U.S.-Soviet teletype "hot
+line" and it is occasionally used for paper ciphers and spies, but that's it.
+
+There is no way in which a true one-time pad can be implemented over a
+computer network.  From the information provided by TriStrata, we believe
+that the encryption method used is a keystream method where an algorithm
+generates a key stream which is then XORed with the plaintext to generate
+the ciphertext.  This is known as a pseudo one-time pad, and is also called
+an OFB stream cipher.  One of the modes of DES works in this manner, as
+does the RC4 encryption algorithm.  This is not new technology. 
+
+A pseudo one-time pad encryption algorithm can be secure, but claiming that
+it is secure because it is based on the one-time pad is ridiculous.  The
+strength of the cipher algorithm depends on the method used to generate the
+key stream. 
+
+The speed given for the encryption method is fairly fast, but without
+knowing what platform was used to achieve these speeds, no sensible
+comparison can be made.  To give some comparison material: the leading
+candidates for the AES block cipher encryption standard can encrypt data in
+about 18 clock-cycles per byte on a Pentium II.  A standard 350 MHz desktop
+machine thus achieves nearly 20 Mbytes per second.  This compares to the
+TriStrata claimed speed of 36 Mbytes per second for a standard desktop
+machine.  The TriStrata figures are faster, but only by a factor of two.
+This would be a nice speedup, but it does not present a fundamental
+breakthrough in speed.
+
+Reference 4 is a magazine article report that contains more information
+about the encryption algorithm.  As with any magazine article, the accuracy
+of the information is hard to judge.  Nevertheless, the information it
+provides fits well with the information we have from TriStrata.
+
+The TESS generates a single 1 Mbyte block of random data using a hardware
+random number generator.  This block is distributed to all clients.  (A
+second block is used for authentication, but we have no further information
+on the algorithm.)  The encryption algorithm keeps several pointers into
+this random block and derives the random key stream from the data the
+pointers point to. This is a known technique, first used by Maurer in his
+randomized cipher [Reference 5].  The TriStrata documentation talks about a
+virtual keystream of over 10^30 bytes, which would correspond to 5 pointers
+into a 1 Mbyte block.  This suggests an effective key size of at most 100
+bits.  On the other hand, the website also claims that it would take 3.5 x
+10^33 years to defeat one TriStrata-encrypted message, which would suggest
+either a larger key space or a fundamental misunderstanding of the
+mathematical properties of Maurer's system.
+
+The random block is the same for all the clients.  It has to be, as the
+client that does the decryption needs the same random block as the client
+that does the encryption (and sending 1 Mbyte blocks around in the permit
+is too slow).  Therefore, we cannot view this random block as a secret.
+After all, a secret shared amongst thousands of users is not a secret any
+more.  If we want a more conventional representation of the encryption
+algorithm, we can represent the random block as a randomly generated 20 by
+8-bit S-box. 
+
+We have no knowledge about the details of this encryption algorithm, but
+the most straightforward variants of this type are susceptible to a
+meet-in-the-middle attack on the pointer space.  This could reduce the
+effective key size to as little as 60 bits.
+
+The journalist did a speed test of TriStrata's file encryption utility.  On
+a 200 MHz Pentium Pro, 128 MB RAM and PCI Ultra-SCSI disk subsystem it
+encrypted a 58 MB file in 18 seconds.  This corresponds to a speed of 3.2
+Mbytes per second. Presumably this speed is limited by the speed of the
+disk I/O.  On this platform a traditional encryption algorithm such as
+Blowfish can encrypt at 10 Mbytes per second; the super-fast RKS encryption
+is presumably faster than this.  Although this test does not give us any
+real speed data, it does show that encryption speed is not the bottleneck
+in most situations.  In this situation, the disk I/O is much slower than
+the cryptography, making the encryption speed irrelevant.
+
+3.5  Proprietary Encryption Algorithms
+
+The nature of cryptography is such that there is no way to prove that a
+cipher is secure, since this amounts to proving a negative assertion: that
+there is no way to break it easily.  Anyone, from the most unsophisticated
+amateur to the best cryptographer, can create an algorithm that he himself
+can't break.  What is hard is creating an algorithm that no one else can
+break, even after years of analysis.  And the only way to prove that is to
+subject an algorithm to years of analysis by the best cryptographers around.
+
+Because of this situation, the only recognized criterion for secure
+cryptographic systems is peer review: having other cryptographers examine a
+cipher and attack it. Even cryptographic organizations which operate in
+secret, such as the NSA, have an extensive internal peer review system.
+
+&gt;From past experience we know that systems that are kept secret and 
+presented as "provably secure," "unbreakable," "a 
+new fundamental technology," or "one-time pad" are usually 
+not very good at all.  Those who say these things generally do not 
+understand the current state-of-the-art of mathematical cryptography, and 
+make fundamental mistakes in their system design.
+
+Encryption algorithms that are unpublished have a dismal record. The
+literature is littered with the corpses of encryption algorithms that were
+broken once they were published. Until TriStrata publishes its algorithm
+and it is open to peer review there is no professional reason to presume it
+is secure.
+
+
+4.0  The Real Problem in Security Systems
+
+It is interesting to note that TriStrata gives a lot of attention to the
+encryption algorithm.  From all the problems that security systems face at
+the moment, the encryption algorithm is probably the least important one.
+There are many good encryption algorithms available in the published
+literature that can be used for free.  TriStrata chose to develop their own
+algorithm.  Although this can be a lot of fun, it is a decision that is
+hard to justify, as new algorithms can only be considered secure after an
+ample time of peer review.
+
+Cryptographic systems are broken constantly, but the attacks are almost
+never against the algorithms.  The really difficult problems in security
+systems are key distribution, management, reliability, robustness, etc.
+TriStrata uses the solution of having a central server, as necessitated by
+its choice of encryption technology.  This solution is suitable in some
+situations, but there are many problems that cannot be handled by this
+approach.  In fact, the problems associated with central servers and
+centralized key distribution have been driving the development of
+public-key--based systems for the last two decades.
+
+TriStrata, by implementing a Maurer-style randomized stream cipher and the
+centralized key management it requires, has taken the one piece of the
+cryptographic puzzle that we can solve--symmetric encryption--and made what
+they perceive to be security improvements.  However, they did this at the
+expense of the really hard problems in cryptography...ones that their
+system does not seem to adequately solve.
+
+4.1  Trust and Security Systems
+
+Whenever someone buys a commercial product, he is trusting that the
+manufacturer did a good job designing and building the product.  This is
+especially important with security products.  If someone buys a word
+processor and it does not perform as advertised (e.g., the print function
+does not work), he will eventually notice (he won't be able to print his
+documents).  If someone buys an encryption product, it can function
+normally (encrypting and decrypting documents successfully), but that is no
+indication that it is secure.  Security is completely separate from
+functionality, and no amount of beta testing can ever uncover a security flaw.
+
+In the commercial world, we rely on the public review process to evalute
+the security of systems.  Internet security infrastructures, such as IPSec,
+PKIX, and SSL, have been discussed and debated for years.  Versions have
+been proposed, security flaws have been found, fixes have been implemented,
+and so on.  Cryptographic algorithms in these protocols are ones that have
+been around for years, and have had extensive cryptographic review by the
+best in the field.  Even this is no guarantee of security--implementation
+flaws are found (and fixed) in the code that implements these protocols,
+but it establishes a certain degree of confidence.
+
+TriStrata has chosen to ignore all public standards in favor of their own
+proprietary technology, while at the same time refusing to make technical
+details of their technology public.  In order to use their system, the
+purchaser must trust that their cryptographers are better than the
+collective wisdom of the world's academic cryptographers, that their
+protocol designers are better than everyone who has worked on the open
+Internet protocols over the last few years, that their implementers are
+better than everyone who has made and evaluated the public implementations
+of those protocols.  The purchaser must trust that TriStrata's misuse of
+the academic terminology does not reflect a misunderstanding of that
+technology, and that their technology is so much better than what everyone
+else has agreed upon that it makes sense to make that leap of faith.
+
+In the end, a star-studded board of directors and upper management does not
+obviate the need for good science, open systems, and peer review.  It's
+simply foolish to trust a system that has not been evaluated.
+
+
+5.0  Conclusions
+
+A system like TriStrata's can be made to work within its limitations.  It
+is certainly not the universal solution to the world's security problems.
+However, there is a huge amount of hype and very little substance to the
+documentation.  Many of the statements made are incomplete, vague, or
+suggest facts which cannot be true.  The cryptographic claims are wild and
+unsubstantiated.  Parts are clearly written by someone who does not
+understand modern cryptography, and who is not well versed in the
+cryptographic literature.  Certain areas of the documentation give the
+impression that they were written with the intent to deceive the reader,
+but ignorance is probably a better explanation.  Based on past experience
+with systems that made similar unsupported security claims, we are very
+skeptical about the security of the TriStrata system.   
+
+We reviewed the system as we have reconstructed it from various hints in
+the text, as well as conversations with people who have been involved with
+the system.  Until TriStrata releases technical information about its
+product, it is not possible to give a complete evaluation of their technology.
+
+
+References: 
+
+[1]  TriStrata web site, <A  HREF="http://www.tristrata.com">http://www.tristrata.com</A>, on Sept. 22nd, 1998.
+
+[2]  Walter Hamscher, Alastair MacWillson, and Paul Turner, "Electronic
+Business Without Fear: The TriStrata Security Architecture," Price Waterhouse.
+
+[3]  "Building a Secure Future with CTR Business Systems and TriStrata
+Security," leaflet.
+
+[4]  Dan Backman, "TriStrata: A Giant Step In Enterprise Security,"
+Network Computing Magazine, 15 September 1998.  Online,
+<A  HREF="http://www.nwc.com/915/915sp1.html">http://www.nwc.com/915/915sp1.html</A>
+
+[5]  Ueli M. Maurer, "A Provably-Secure Strongly-Randomized Cipher,"
+Advances in Cryptology -- Eurocrypt '90 Proceedings, Springer-Verlag, 1990,
+pp. 361--373. 
+
+**********************************************************************
+Bruce Schneier, President, Counterpane Systems     Phone: 612-823-1098
+101 E Minnehaha Parkway, Minneapolis, MN  55419      Fax: 612-823-1590
+           Free crypto newsletter.  See:  <A  HREF="http://www.counterpane.com">http://www.counterpane.com</A>
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00255.html">Re: Another question about free-markets...</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00222.html">RE: GPL &amp; commercial software, the critical distinction (fwd)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00259.html">RE: importance of  motivation</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00243.html">the camel</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00220"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00220"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

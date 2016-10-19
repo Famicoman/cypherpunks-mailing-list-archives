@@ -1,0 +1,197 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Digital Signatures -->
+<!--X-From-R13: Oabalzbhf <nabaNnaba.rstn.bet> -->
+<!--X-Date: Mon, 1 Dec 1997 12:20:07 +0800 -->
+<!--X-Message-Id: fbbcab88ba06fee2a7cfdfe70620c8e5@anon.efga.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Digital Signatures</TITLE>
+<LINK REV="made" HREF="mailto:anon@anon.efga.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01908.html">Date Prev</A>][<A HREF="msg01898.html">Date Next</A>][<A HREF="msg01874.html">Thread Prev</A>][<A HREF="msg02014.html">Thread Next</A>][<A HREF="index.html#01909">Date Index</A>][<A HREF="threads.html#01909">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Digital Signatures</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>Subject</em>: Re: Digital Signatures</LI>
+<LI><em>From</em>: Anonymous &lt;<A HREF="mailto:anon@anon.efga.org">anon@anon.efga.org</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 30 Nov 1997 23:12:52 -0500</LI>
+<LI><em>Comments</em>: This message did not originate from the Sender address above.It was remailed automatically by anonymizing remailer software.Please report problems or inappropriate use to theremailer administrator at &lt;admin@anon.efga.org&gt;.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Monty Cantsin writes:
+
+&gt; You can't see it up here, but this is a signed message using a
+&gt; protocol which is modestly titled "Cantsin Protocol No. 1".
+&gt; Suggestions for improvement are most welcome.
+
+A very interesting idea!  Please consider the following suggestions if
+you like, or feel free to ignore them.
+
+One problem with signatures which have no indication at the top is that
+two passes over the data are necessary: the first to scan and find the
+start-of-signature indicator, and another to go back and calculate the
+hash.  Signatures such as S/MIME and PGP have enough information at the
+top of the signed message to allow one pass processing.
+
+&gt; The first line is "16A5942B6EED349ECF4594C784DFD177 [Cantsin Protocol
+&gt; No. 1]".  The hexadecimal number was chosen randomly and is the
+&gt; indicator that this is a Cantsin Protocol No. 1 signature.  The number
+&gt; was chosen randomly and it is somewhat unlikely that anybody else will
+&gt; accidently choose it.
+
+You might want to think about what happens if the document itself contains
+(maliciously, or perhaps because it is talking about your signatures)
+the string in question (as yours does and this one does as well).  This
+could throw off an automated signature checker.
+
+&gt; The second line in the signature is an SHA1 hash of the public key.
+&gt; The hash is computed on the concatenation of the hexadecimal ASCII
+&gt; forms of p, g, and y respectively.  There should be no leading zeros.
+&gt; (Remember to leave off the newline!)
+
+Presumably you could use the key hash to look up the key to use for
+verifying the message.  This has a mild denial of service attack.  Someone
+else could create a key with different boundaries between p, g, and y but
+which would create the same string as this concatenation, and therefore the
+same hash.  If you left the "p: ", "g: ", and "y: " in place it would
+prevent this.  PGP's key fingerprints have had the same problem.
+
+&gt; The fourth line contains an offset and a length to specify the area of
+&gt; the text which is signed.  The offset is relative to the signature
+&gt; itself.  That is, the first character of the Cantsin Protocol No. 1
+&gt; code is at position 0.  As signatures are usually appended, the offset
+&gt; will usually be the additive inverse of the length.
+
+It is intriguing that this can be used to sign a subset of the text.
+Presumably there could be multiple signature blocks each of which signed
+different subsets, possibly with different keys.  One problem is that it is
+not obvious to the human reader what part of the text is signed.  A nice
+effect with PGP and S/MIME signatures is that even readers who don't have
+the tools can have some slight confidence in signatures, because other
+readers will often report it when signatures don't verify.  With a
+signature that only covers a portion of the text, people might assume that
+if there are no reports of failure, more of the text is signed than is the
+case.  This is not a technical problem but is a social phenomenon which may
+not interact well with this signature format.
+
+You need to specify a canonical line ending format.  Based on the count
+values in your document, it appears that you are counting line terminators
+as being one character long.  Your count value of 1CB9 corresponds to
+decimal 7353, there are exactly 7353 characters from the first character
+of your message body to the beginning of your signature magic number, if
+line ends are one character.
+
+The specific characters for line endings need to be specified as well
+for the hash to be calculated consistently.  Your hash appears to be
+calculated with LF as the line ending (although the hash program is
+broken, see below).  Probably CR/LF would be preferable for the line
+endings as that is a widely used internet standard as well as being
+common on windows.
+
+&gt; You also need to be able to compute SHA1 hashes.  I've been using
+&gt; something called "sha1file" which, I believe, originated at Adam
+&gt; Back's web site.
+
+That program has a bug.  The routine SHA1_update in the file sha1.c
+is missing a line:
+
+   while ( ctx-&gt;mlen == 64 )
+   {
+      convert_to_bigendian( (word32*)ctx-&gt;M, 64 );
+      SHA1_transform( ctx );
+      use = min( 64, data_len );
+      memcpy( ctx-&gt;M, data, use );
+      ctx-&gt;mlen = use;
+      data_len -= use;
+***   data += use;  ***  MISSING  ***
+   }
+
+Correcting this will make your hashes be correct.
+
+&gt; El Gamal is simple enough that the signature on this message can be
+&gt; checked using standard Unix tools such as dc version 1.1.  Let's say M
+&gt; is the SHA1 hash of the message.  It is checked by verifying the truth
+&gt; of this equation: (y^a * a^b) mod p = g^M mod p.
+
+El Gamal is a rather lengthy signature, although the verification equation
+is relatively simple.  DSS has a shorter signature.  If you report not
+r,s, but rather r,w where w is the inverse of s mod q, then the
+verification is: r = g^(M*w) * y^(r*w) mod p mod q.  It's not really
+much more complicated.
+
+There are some subtleties to choosing El Gamal keys, but with the 2048
+bit values you have chosen you are pretty safe.  You want to make sure
+that the generator g doesn't generate a small subgroup; to do this you
+need to look at the factors of p-1.  Your p-1 has several small prime
+factors: 0x2^3, 0x3, 0x6b, 0x16f, 0x1f79b, 0x3533a1eb3.  Beyond that
+is a 1978 bit composite which I can't factor.  Chances are very high
+that a random g will generate a group of size which is a multiple of a
+large prime factor of this large composite value, so it is strong,
+although not quite 2048 bits strong.
+
+Also, you can't really justify using 2048 bit keys when your hash is
+only 160 bits.  The hash becomes the weak link for keys beyond about
+1024 bits, and unless you use a stronger hash your key strength is
+misleading.  This is why DSS is only specified up to 1024 bits.
+
+-- A hasher to be named later --
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01908.html">Re: Pasting in From:</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01898.html">Re: launch memes</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01874.html">Digital Signatures</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02014.html">Pepper Sprays/ Personal Security Products</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01909"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01909"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

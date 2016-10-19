@@ -1,0 +1,166 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Portable crypto code -->
+<!--X-From-R13: usvaarlNfuryy.cbegny.pbz (Vny Tvaarl) -->
+<!--X-Date: Mon, 15 Nov 93 11:54:01 PST -->
+<!--X-Message-Id: 9311151952.AA03070@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Portable crypto code</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00594.html">Date Prev</A>][<A HREF="msg00589.html">Date Next</A>][<A HREF="msg00583.html">Thread Prev</A>][<A HREF="msg00606.html">Thread Next</A>][<A HREF="index.html#00588">Date Index</A>][<A HREF="threads.html#00588">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Portable crypto code</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Portable crypto code</LI>
+<LI><em>From</em>: <A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A> (Hal Finney)</LI>
+<LI><em>Date</em>: Mon, 15 Nov 93 11:52:27 PST</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+One thing that frustrates me is the difficulty of easily providing
+implementations of cryptographic algorithms that would be useful on a
+wide range of machines.  A lot of these algorithms are really simple,
+almost trivial.  Yet to write programs to implement them takes pages and
+pages of code, and making them portable so that people on PC's, Mac's, and
+Unix machines can use them is almost impossible.
+
+Take the simple Chaum cash we have discussed here a few times.  The
+user picks a random x and a random r, calculates r^3*f(x) where f is some
+one-way function, and sends it to the bank.  The bank takes the cube root
+and sends it back, then the user divides by r.  That's pretty simple.  Yet
+to actually implement software to perform these steps raises a host of
+complications.
+
+First, we want to choose a "random" x and r in the range 0..m-1, where
+m is the bank's public key modulus.  But we want these to be strong,
+unguessable random numbers.  We need an unpredictable RNG,
+and we need to seed it.  There are various URNG's that are provably as
+strong as breaking factoring, discrete logarithms, and such, so these
+would have to be implemented (as before, most are conceptually trivial).
+Or you could run DES or IDEA in a feedback mode and take bits from there,
+for a little less security but more speed.
+
+For seeding the RNG you could do like PGP does and retain random numbers
+from earlier runs, mixing in new randomness when feasible; you could do
+like RIPEM and scan disk partitions hoping for randomness (I think RIPEM
+has a lot of other ways of looking for entropy); you could use hardware
+features like /dev/audio or the free-running, high-speed timers some PC's
+have; you can get the user to click the mouse or type keys at random.
+
+OK, we've got our random numbers.  Now we want a one-way function.  Again,
+there are several choices: MD4 and MD5 from RSA; the Secure Hash Standard
+NIST is pushing; Ralph Merkle's (I forget the name); others based on
+conventional ciphers like DES or IDEA.  Implementations of these are
+probably available, but portability is a question mark.
+
+Now we need a multi-precision math package.  We may have needed one for
+the URNG, too.  There are a lot of libraries available in source code
+for these, but not many of them will work with 16-bit ints, and are
+tested on DOS and Mac's as well as Unix.
+
+Finally, to send the data around, we may want to convert to and from ASCII,
+and once again there are a lot of choices, but perhaps not too many
+portable libraries.  I suppose RFC1113 and MIME, which are similar but
+not quite identical, would be the encodings of choice.
+
+The point I'm getting to is that it would be nice if all this were done
+ONCE, and a library made and tested which would work on a wide range
+of machines.  Entry points for one-way functions, multi-precision
+arithmetic, unpredictable random numbers, conventional encryption, and
+ascii conversions could all be provided.  Multiple alternatives would be
+supported as much as possible and it should not be difficult to add more
+as time goes on.
+
+Once you had such a library, it would be possible to add a user interface
+to allow interactive use of the routines.  It could be as simple as the
+Unix "bc" program where you can say "x = y*z" to do arithmetic, or perhaps
+"x = md5(y)" to call a one-way function.  Or the library could perhaps be
+linked into perl or some other high-level program (does mathematica have
+hooks for compiled user code?).  The nice thing is that since most of the
+compute time is spent doing the MP arithmetic in these algorithms, an
+interpreted system which calls compiled libraries can be as efficient as
+a purely compiled program.
+
+I know that others here have made similar proposals in the past, but
+I have not heard of many results.  I'd like to hear more about whether
+these efforts have produced anything that could be incorporated.  It
+would also be good to hear suggestions for specific existing packages that
+would meet the portability requirements.  I've looked at a couple of MP
+packages from ripem.msu.edu but so far I haven't had much luck running them
+under DOS.
+
+Perhaps a project like this could allow progress to be made more easily
+toward cypherpunk goals.  By providing a toolkit to programers newly
+interested in cryptography people will be able to try out ideas more
+easily without having to re-invent the wheel each time.
+
+Let me know if you would be interested in participating in this effort.
+Hopefully a lot of the pieces already exist and it will just be a matter
+of pulling them together.
+
+Hal Finney
+hfinney@shell.portal.com
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00606" HREF="msg00606.html">Re: Portable crypto code</A></STRONG>
+<UL><LI><EM>From:</EM> Jim McCoy &lt;mccoy@ccwf.cc.utexas.edu&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00632" HREF="msg00632.html">Portable TCL-based crypto toolkit</A></STRONG>
+<UL><LI><EM>From:</EM> henry strickland &lt;strick@osc.versant.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00594.html">Re: LD Admits he is S.Boxx (oops!)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00589.html">Against limiting free speech on public networks</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00583.html">mailing software</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00606.html">Re: Portable crypto code</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00588"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00588"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

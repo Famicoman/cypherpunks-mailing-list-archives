@@ -1,0 +1,292 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: "random" number seeds vs. Netscape -->
+<!--X-From-R13: xneygbaNargfpncr.pbz (Buvy Yneygba) -->
+<!--X-Date: Wed, 20 Sep 95 13:15:25 PDT -->
+<!--X-Message-Id: 43psn2$6ug@tera.mcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>"random" number seeds vs. Netscape</TITLE>
+<LINK REV="made" HREF="mailto:karlton@netscape.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01435.html">Date Prev</A>][<A HREF="msg01462.html">Date Next</A>][<A HREF="msg01445.html">Thread Prev</A>][<A HREF="msg01466.html">Thread Next</A>][<A HREF="index.html#01482">Date Index</A>][<A HREF="threads.html#01482">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>"random" number seeds vs. Netscape</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: "random" number seeds vs. Netscape</LI>
+<LI><em>From</em>: <A HREF="mailto:karlton@netscape.com">karlton@netscape.com</A> (Phil Karlton)</LI>
+<LI><em>Date</em>: 20 Sep 1995 20:14:26 GMT</LI>
+<LI><em>Newsgroups</em>: mcom.list.cypherpunks</LI>
+<LI><em>Organization</em>: Silicon Graphics, Inc.  Mountain View, CA</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Let me start off by saying that I speak for me and not Netscape. I
+also tend to be UNIX centric since I know very little (nothing?) about
+the internals of PCs and Macs.
+
+I want to address the bug Netscape has with its currently released
+product with respect to seed generation. For the most part this is not
+a crypto issue, but rather a system issue.  Those bits of entropy can
+only be gathered in a system dependent manner.
+
+Assumption:
+
+    We are relying on the MD5 hash algorithm to gather the string of
+    potentially unpredictable sequences. I am assuming that feeding
+    known bits along with the unknown will not compromise the
+    "randomness" of the MD5 state.
+
+    The basic idea is to feed a sequence of information into the MD5
+    hash, expecting that some of the bits for each sub-sequence would
+    be only be guessable. If we get enough unguessable bits into the mix,
+    then the weak link in the chain would not be the seed generation.
+
+Here is what the client will soon be doing:
+
+    Netscape is available on Macs, Win-16 and Win-32 versions and
+    8 different UNIX platforms. The exact details for each platform are
+    quite system specific. The basic idea is to feed a sequence
+    of information into the MD5 hash, expecting that some of the
+    bits for each sub-sequence would be unguessable.
+
+  At program start
+
+    On all platforms:
+
+	Start with the contents of the highest resolution clock we can
+	find on the system. [For instance, an R4000 MIPS processor has
+	a free-running instruction counter. At 100 Mhz this gets
+	incremented every 10 nano-seconds. There are probably a good
+	20 bits of unguessable value there.] On Macs and Win* systems
+	there are "tick" counters that update 60 (or maybe only 16)
+	times a second. We then push through the time of day, beacause
+	on some sytems, the microsecond part of a time_val has some
+	bits that are only guessable.
+
+    For UNIX we feed the following into the MD5 hash:
+
+	ps (-el or aux depending upon system)
+
+	netstat -ni &amp; netstat -na
+
+	the user's environment. (We will certainly use this as well in
+	the 2.0 release. The truly paranoid will be able to run
+	whatever seed generator they want and stick the result into
+	their environment. How you protect your environment from
+	attack is up to you. ;-)
+
+	System specific info such as hardware serial number or
+	system id. If you have specific suggestions for any
+	particular OS/hardware pair, please let me know.
+
+    For PCs
+
+	Cursor position
+
+	Global memory status
+
+	FreeSpace
+
+	Drive configuration
+
+	Number of running tasks
+
+	Environment strings
+
+	UUIDCreate if there is an ethernet card
+
+	Clipboard owner and contents
+
+	Current process, processID and window
+
+	Free clusters on the disk
+
+    For MACs:
+
+	Machine location (longitude and latitude)
+
+	User name
+
+	Mouse location
+
+	keyboard time threshhold
+
+	last key pressed
+
+	audio volume
+
+	current directory
+
+	current process
+
+	process information for every task  on the system
+
+	stack limits
+
+	zones
+
+	scrap sizes and counts
+
+	event queue
+
+    And then on all platforms
+
+	The stat (file access, creation, modify times, size, inode
+	equivalent) and contents of a number of "interesting" files.
+	[Where is the PGP random number state file stored?]
+
+	A portion of the contents of the screen.
+
+	And finally, the contents of the highest resolution clock we
+	can find.
+
+  Each time the client goes idle
+
+    Reinitialize the seed with the most recent user event (probably
+    a button or key down) along with the mouse position, and and
+    relatively high resolution clocks.
+
+Known weaknesses:
+
+    If your X display is not the local machine then the X protocol can
+    be watched. Given that, the data for the reseeding of the MD5 hash
+    will be compromised. [Any scheme that relies on random user input
+    to generate a seed suffers from the same problem.]  This is not
+    quite as bad as it might be. The exact time of the client becoming
+    idle can only be guessed. We should be able to get a few
+    unguessable bits from the microsecond part of the time-of-day
+    clock each time. Enough cycles of user actions should help to make
+    the hash less subject to a brute force attack.
+
+    In fact, the entire X protocol issue is one that could take up
+    another 3 pages. An SSLized version of the server would help,
+    but how would anybody export it? You "xhost +" fans are doomed.
+
+    If the user launches the client to a secure home page then there
+    will be no user actions involved before the first need for a seed.
+
+Thoughts on guessing:
+
+    If Eve has root access to the user's workstation, all bets are off.
+    Replacement of one of the system libraries or patching the client
+    executable are among the attacks that would make it trivial to
+    breach any part of the security. Specific measures (like computing
+    a hash over the text of the program) could help against some of
+    these attacks, but it is not realisitic to believe that we can
+    prevent the attack from a sophisticated person with root access.
+
+    Multi-user Unix machines present a special problem. There are those
+    at Netscape that argue that anybody who has login access to your
+    machine may as well be considered to have root access. There are
+    enough known attacks that this is true to a large extent.  However,
+    I think we can do better than just giving up. Unfortunately most of
+    the sources of entropy available to the client are also available
+    to the attacker. For instance, the output of "ps" is not much help
+    against this form of attacker. As Jeff Weinstein said earlier and I
+    echo here: specific suggestions are more than welcome.
+
+    When Eve has access to the wire for all of the packets into and out
+    of the user's workstation, then some of the networking information
+    can be guessed. See above about known weaknesses if Eve has access
+    to the X protocol stream.
+
+    I am most comfortable about the "randomness" of the generated seed
+    if Eve is outside a fire wall sniffing packets. The difficulty in
+    guessing what processes/tasks are running on the target machine is
+    quite a bit of help here.
+
+What I would like:
+
+    Any OS has access to a number of real-world physical sources of
+    randomness. This information is not made available to a user level
+    process. How long did that last seek take? Was there any noise on
+    the microphone? It would be good if the OS could gather that
+    information and make some set of bits available to any process that
+    asks. Having this be part of all OSes would make my job easier.
+
+    More specifically: A "getnoise()" system call in UNIX could be
+    better than anything I can do and easier. Can we convince the UNIX
+    vendors to start providing that?
+
+    My life would have been simpler if this attack had been done after
+    the 2.0 version of the client had been released. :-) Believe it or
+    not, we were beginning to beef up the seed generation a couple of
+    weeks ago. The time spent on patching the current release will not
+    all go to waste, but it has cut down on my limited opportunities to
+    sleep.
+
+For those that curious: being responsible for helping to fix a bug that
+is getting front page coverage in major newspapers is not nearly as
+much fun as it sounds.
+
+PK
+--
+Philip L. Karlton			karlton@netscape.com
+Principal Curmudgeon			<A  HREF="http://www.netscape.com/people/karlton">http://www.netscape.com/people/karlton</A>
+Netscape Communications Corporation
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01466" HREF="msg01466.html">Re: "random" number seeds vs. Netscape</A></STRONG>
+<UL><LI><EM>From:</EM> "Perry E. Metzger" &lt;perry@piermont.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="01441" HREF="msg01441.html">Re: "random" number seeds vs. Netscape</A></STRONG>
+<UL><LI><EM>From:</EM> sameer &lt;sameer@c2.org&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="01586" HREF="msg01586.html">Re: "random" number seeds vs. Netscape</A></STRONG>
+<UL><LI><EM>From:</EM> Eric Blossom &lt;eb@comsec.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01435.html">Re: Linking = Showing = Transferring?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01462.html">Re: cypherpunks press releases/contact list: YES!! DO IT!!</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01445.html">A message from Joe Six-Pack</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01466.html">Re: "random" number seeds vs. Netscape</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01482"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01482"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

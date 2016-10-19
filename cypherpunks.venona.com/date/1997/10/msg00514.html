@@ -1,0 +1,220 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Applying ``Crowds'' idea to anonymous e&#45;cash. -->
+<!--X-From-R13: "Xbua Yryfrl" <xryfrlNcyarg.arg> -->
+<!--X-Date: Fri, 10 Oct 1997 01:14:59 +0800 -->
+<!--X-Message-Id: 199710091652.LAA14607@email.plnet.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Applying ``Crowds'' idea to anonymous e-cash.</TITLE>
+<LINK REV="made" HREF="mailto:kelsey@plnet.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00515.html">Date Prev</A>][<A HREF="msg00505.html">Date Next</A>][<A HREF="msg00672.html">Thread Prev</A>][<A HREF="msg00516.html">Thread Next</A>][<A HREF="index.html#00514">Date Index</A>][<A HREF="threads.html#00514">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Applying ``Crowds'' idea to anonymous e-cash.</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "Coderpunks List" &lt;<A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A>&gt;,       "Perry's Crypto List" &lt;<A HREF="mailto:cryptography@c2.net">cryptography@c2.net</A>&gt;,       "cypherpunks" &lt;<A HREF="mailto:cypherpunks@Algebra.COM">cypherpunks@Algebra.COM</A>&gt;</LI>
+<LI><em>Subject</em>: Applying ``Crowds'' idea to anonymous e-cash. </LI>
+<LI><em>From</em>: "John Kelsey" &lt;<A HREF="mailto:kelsey@plnet.net">kelsey@plnet.net</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 9 Oct 1997 11:54:02 -0500</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+
+[ To: cypherpunks, coderpunks, Perry's Crypto List ##
+  Date: 10/09/97 ##
+  Subject: Applying ``Crowds'' idea to anonymous e-cash. ]
+
+I was thinking about applying the ``Crowds'' idea to
+anonymous e-cash, and came up with what I think is a pretty
+good idea.  I am interested in seeing if anyone sees either
+holes in it, or ways to improve it.  I am also interested in
+hearing about whether or not it has been invented before.
+
+Crowds, for those who haven't seen it, is a way of
+giving web users partial anonymity by making it impossible
+to determine which member of some ``crowd'' of users did
+some action (such as requesting a document).  (This is a
+very rough summary--read the paper for the real analysis.)
+
+I can see a way to do something very similar with
+withdrawing electronic coins.  (This works best with
+online-cleared coins), without any blinding being used.
+I think this gets around the Chaum patents.  I also think it
+can probably be implemented more-or-less on top of the
+web-anonymizing Crowds stuff, though I may be wrong.
+
+Here's the basic idea:
+
+1.      A Crowd of users forms up, each wanting to withdraw
+some reasonably large amount of money, such as $100, in $1
+e-coins.
+
+2.      Each user provides a public key and pays some money
+(perhaps $101) into the bank.  The bank registers each
+public key as belonging to a member of the crowd.
+
+3.      Each member of the crowd is given all other members'
+public keys.
+
+4.      Each member prepares 100 one-use symmetric
+encryption keys, each with a 64-bit key ID.
+
+5.      The members organize themselves into a sort of
+one-time anonymous routing network, using those public keys.
+Each message to be sent is encrypted in layers (a la onion
+routing), so that each member appears at least once in the
+message's path.  Each message ends up at the bank,
+eventually.  I'll talk about likely network architectures
+later, if anyone's interested.
+
+6.      The bank publishes something noting that it has
+received N*100 keys, where N = the number of members in the
+crowd.  It also publishes the hashes of all N*100 symmetric
+keys.
+
+7.      Each member digitally signs something saying that he
+agrees with the keys published, he hasn't been railroaded,
+etc.  Nothing proceeds until this has been published from
+each member.
+
+8.      The bank encrypts one $1 online-cleared e-coin under
+each symmetric key.  It publishes a list of (key ID, encrypted
+coin) pairs for all the members to receive.
+
+9.      Each member walks away with $100 in $1 e-coins.
+Nobody can prove which member got which coin.  No linking of
+coins is possible.
+
+Now, the protocol isn't all *that* important here, but the
+idea is:  We interface with the traceable money world, but
+grant a sort of weak anonymity for all users in the crowd.
+
+Because the coins are online-cleared, they must be deposited
+immediately.  To protect recipient-confidentiality, these
+can be deposited under a pseudonym account--basically just a
+one-use public key.  The recipient accumulates a bunch of
+credit under that public key, and then goes through the
+withdrawal procedure again to get new, weakly anonymous
+coins, which he can openly deposit without direct
+traceability.  (That is, the bank can still learn that
+certain coins were spent at the same place, but can't
+identify the final recipient of the money.  I can think of
+ways to adapt this idea to unlinkability, though they
+involve some implementation hassles.)
+
+Note that multiple iterations of the withdrawal protocol
+make things much stronger.  That is, there is no reason why
+the participants in the withdrawal protocol have to spend
+their e-coins directly--they can also use them, along with a
+one-use public key, to go back into the withdrawal protocol
+again.  An attacker who manages to link a given coin to a
+given crowd (possible only with the help of the bank) with
+some anonymous participants (who paid in with coins from
+this scheme) must face the possibility that this coin could
+have come from the anonymous participants--which can then be
+traced to another pool, with other anonymous participants,
+etc.  The attacker can't even make statistical statements
+in many cases, since, if I were doing something really hot,
+I'd want to go through the withdrawal process lots of times.
+The bank can tell only what crowd your coins came from, not
+how many times you have swapped your coins out.  If you're
+willing to pay the transaction costs and time, you can
+withdraw and deposit as many times as you like.
+
+Comments?  Is this idea practical at all?  Has someone else
+already done it?
+
+   --John Kelsey, jmkelsey@plnet.net / kelsey@counterpane.com
+
+- -----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: 2.6.2
+
+mQCNAi5JqlEAAAEEAPCEHMBdDCAJ83/ibNM7ngCaaibv7YkTxcpKPjTO+WcjswFV
+SEzMeTqW4MX2wSKdfcMq1HembbgfYs7v2UCnUFkLPZF19s3yUSISGcS7JxlBc3q1
+7uj8W5XfBoGpgCYQqYFL2+AB/+3tLu7lU5iiEYCnevY5GQkq0kHx57Ag8goBAAUR
+tCdKb2huIE0uIEtlbHNleSBKciA8am1rZWxzZXlAZGVscGhpLmNvbT6JAJUDBRAv
+5uh7QfHnsCDyCgEBAQZ2A/9/OMeWK4YC+PnEzBTmgpF4WAOsVXfzRD3zAbzfNWY9
+MEGo4gRF8Mr1lPHdK+0JOHp327mj9ZvYqQb1bV5fwc5dJa8/Z34VLPYlVg2rV7vJ
+Hd0YnrgkoaIerbRmtP8dmZGeygeFtrk8aDCdcnMm27+tTJACl5hv2yjFO9rxBq+R
+MLQpRXhwaXJlcyBmb3IgbmV3IHNpZ3MvbXNncyBvbiBEZWMgMzEsIDE5OTc=
+=pOyw
+- -----END PGP PUBLIC KEY BLOCK-----
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBNDzFQkHx57Ag8goBAQHYkQQA0Oud9OvEX7qJdxJgGyirqzrAN4jI005p
+aOVl9UnSf4XGEPj1DFMONW61HaLoh46tEDmnfMrXjI706IfwNF3HfY14FIrGe5Nb
+U386CP5iztc6rpS6YsiX+prN9Q9RIXzari9uSHrmYSlGAcqa571vy7kkn7uejGBC
+jv+0hnYNE1M=
+=aHpr
+-----END PGP SIGNATURE-----
+
+
+   --John Kelsey, Counterpane Systems, kelsey@counterpane.com
+ PGP 2.6 fingerprint = 4FE2 F421 100F BB0A 03D1 FE06 A435 7E36
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00516" HREF="msg00516.html">Re: Applying ``Crowds'' idea to anonymous e-cash.</A></STRONG>
+<UL><LI><EM>From:</EM> Lucky Green &lt;shamrock@netcom.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00515.html">Defeating MITM with Eric's Secure Phone</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00505.html">Re: What's really in PGP 5.5?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00672.html">Re: Defeating MITM with Eric's Secure Phone</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00516.html">Re: Applying ``Crowds'' idea to anonymous e-cash.</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00514"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00514"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

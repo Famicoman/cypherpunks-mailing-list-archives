@@ -1,0 +1,277 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Clipper specifics -->
+<!--X-From-R13: xbbagmqNyepf.ybeny.pbz (Rnivq Ybbagm ) -->
+<!--X-Date: Wed, 29 Sep 93 14:41:49 PDT -->
+<!--X-Message-Id: 9309292138.AA04244@nebula.lrcs.loral.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Clipper specifics</TITLE>
+<LINK REV="made" HREF="mailto:koontzd@lrcs.loral.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00793.html">Date Prev</A>][<A HREF="msg00792.html">Date Next</A>][<A HREF="msg00780.html">Thread Prev</A>][<A HREF="msg00808.html">Thread Next</A>][<A HREF="index.html#00791">Date Index</A>][<A HREF="threads.html#00791">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Clipper specifics</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Clipper specifics</LI>
+<LI><em>From</em>: <A HREF="mailto:koontzd@lrcs.loral.com">koontzd@lrcs.loral.com</A> (David Koontz )</LI>
+<LI><em>Date</em>: Wed, 29 Sep 93 14:38:12 PDT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;From: "L. Detweiler" &lt;ld231782@longs.lance.colostate.edu&gt;
+
+&gt;Now, two Clipper chips will *not* work in conjuction with each other
+&gt;unless each is fed a valid LEEF from the other. However, since the chip
+&gt;does not accomplish this function (the communication, that is; it does
+&gt;*create* the field), and it is handled outside the chip, there is no
+&gt;guarantee that the system designer does not, for example, encrypt the
+&gt;LEEF in the communications transit, thereby completely sabotaging the
+&gt;`exploitative' tappability of the chip.
+
+&gt;Hence there is a *very* real possibility that this scheme, or something
+&gt;similar, could be used to gain Skipjack-level encryption without any
+&gt;key escrow complications. I suspect the NSA is *extremely* worried
+&gt;about this. They probably require that the chip purchaser promise to
+&gt;use Clipper in a way that guarantees the LEEF is accessable
+&gt;(plaintext). They may even create a contractual obligation wherein the
+&gt;surrounding device (telephone or whatever) cannot be approved for sale
+&gt;until it passes an NSA endorsed tapping test. (what fun!) I consider
+&gt;this all very plausible and probable. (This would be a neat trick --
+&gt;use the chip itself to encrypt LEEF fields -- hah! twist an insecure
+&gt;chip into a secure one, and spit in the face of the NSA!)
+
+Having read the chip spec for the MYK-78 carefully, being a chip/hardware
+weenie type, having military experience in cryptographic systems, and
+having exposure to Type I chips (which have a lot of similarity to
+clipper) there is a fundamental architecture feature of the MYK-78 that
+can be exploited.  The MYK-78 allows multiple cryptographic contexts 
+(encryption or decryption sessions) to be processed at the same time.
+This is intended to allow a chip with a single instantiation of the
+cryptographic algorithm to be used for full duplex communications.
+It requires all simultaneous encryption/decryption sessions to use the
+same session key although multiple cryptographic vectors (from different
+initial vectors) may be used.  The MYK-78 is fast enough (bandwidth wise)
+to allow 20-30 duplex vocoder conversations, and could be used in a
+secure phone bridge using a single clipper chip.
+
+The undocumented or classified protocol requires that LEEFs be used for
+each session, extracted for transmission and input for reception.  The
+chip requires that for every initial vector generated/requested that
+the included Law Enforcement Exploitation Field (LEEF or 'greened' LEAF)
+be subsequently input to enable decryption.  The LEEF is output when
+the IV is read, the IV is part of the LEEF.  (You can see that to use a 
+single MYK-78 for multiple duplex conversations requires care in assuring
+that the distant end supplies its IV.)
+
+Cryptographic context for multiple sessions (send and receive sides for
+a single duplex path) is save through the use of save and restore context
+commands. 
+
+To get around sending the LEEF we instead generate an IV,  followed 
+immediately by a save crypto context command (which produces the IV
+without the LEEF).  The feed the IV (actually the LEEF to our own 
+chip to enable decryption.  We transmit the IV(sans LEEF) through separate 
+protocol to the distant end.  We receive the distant ends LEEFless IV
+and use it with the restore crypto context command to initialize the
+decryption session.  This allows both ends to operate without actually
+transmitting a LEEF.  Once decryption is enabled cryptographic resyncronization
+can be limited to exchange of LEEFless IVs.
+
+Securely exchanging IVs is not without difficulty.  The clipper chip can't 
+be used without establishing secure communications.  Clipper chip modes
+can't be changed without requiring IV (and LEEF) introduction for other
+than ECB mode.  One possibility is to use the chip in ECB mode with external
+XOR and feedback management to support a feedback mode.  Likewise you could
+through the use of save/restore crypto context commands and by accepting
+the necessity for cryptographic restarts, switch the chip to ECB mode and 
+encrypt the IV, say in a special key, for transmission to the distant end.
+A lot of dancing, but no one is allowed to cut in.
+--
+
+&gt;About the only company ready for Clipper chips is AT&amp;T, and I think
+&gt;they are using Diffie Hellman key exchange currently with some
+&gt;proprietary algorithms (they have a license on Public Key directly from
+&gt;PKP already) in their secure phones. I suspect any companies that come
+&gt;out with new phone encryption equipment based on Clipper, if any are
+&gt;insane enough to exist, will try to be compatible with the AT&amp;T
+&gt;`standard' (ug). As far as I know AT&amp;T has not published their own key
+&gt;exchange standard used by the phones, however. That is, it is
+&gt;proprietary, and might even be protected by patents of their own! This
+&gt;is a rare occasion where incompatibility is something to beam about!
+
+&gt;From: rjc@gnu.ai.mit.edu (Ray)
+
+&gt;"Cypherpunks Hack Hardware"
+
+&gt;  It seems logical that when the ClipperPhones come out, they will have
+&gt;some kind of vocoder chip in them. (I doubt the (co)decoding will be
+&gt;implemented on the Clipper chip itself) If so, cypherpunks can
+&gt;take advantage of this situation.
+
+Not having seen a clipperphone (there are none currently available),
+one wonders if it is possible to play the above described trick with
+the clipper chip and implement your own communications protocol,
+capturing program control of whatever processor is used.  This gives
+you skipjack security without big brother being inside.  A mode switch
+could include compatiblility with the Escrowed Encryption Standard (EES).
+
+&gt;From: "George A. Gleason" &lt;gg@well.sf.ca.us&gt;
+
+&gt;Re your suggestion of a cypherpunk daughterboard to substitute for Clipper
+&gt;in "secure" phones etc.:
+
+&gt;I have a sneaky suspicion that AT&amp;T won't be quite so cooperative.  They
+&gt;constantly do things in such a way as to make it darn hard to do anything
+&gt;with their products except exactly what they intended to do.  It might be
+&gt;worth a try though... OTOH anything that creates more demand for AT&amp;T phones
+&gt;is a not-good thing in my view... we need an entirely competing product, and
+&gt;preferably cheaper than an AT&amp;T clipperphone + daughterboard, for obvious
+&gt;competitive reasons.
+
+AT&amp;T uses a proprietary vocoder known as ACELP, which will prevent
+knock off products without licensing.
+
+There are only a limited number of ways to prevent you from modifying their
+hardware.  
+
+1) Built In Test (BIT) features.  The processor operating the phone could
+   perform system level integrity checks and could refuse to work if the 
+   code space doesn't check out, say for valid memory contents being 
+   unmodified, or unused memory space not showing up blank.  This could be
+   defeated with access to instruction and data streams.
+
+2) With a high enough level of integration no modification may be possible.
+   (no visability or ability to modify instructions for operating the clipper
+   chip)
+
+3) Refuse to sell you the phones.  Seems silly, but they already have
+   rules on who they can sell to (U.S. citizens, corporations), under State
+   Department rules.  It seems probable they will do their own distributing
+   and large customer could always be denied sales upon request of virtually
+   any of the components of the U.S. government.
+
+4) Tamperproof packaging of the phone (I don't think they'd get UL approval
+   for self destruct devices), say erasing the vocoder algorithm.
+   
+   Sufficient numbers of false zeroizing should defeat this say, organizing
+   a couple hundred customers to swamp the system.  You would think a phone
+   would be vulnerable to false zeroizing from throwing it in your 
+   briefcase.
+
+5) Refuse to do maintenance and/or void the warranty.  With a sufficient
+   level of integration the phones become throw-aways upon failure.  This 
+   doesn't affect organized crime.
+
+6) legal barriers, largely ineffective (making it a federal crime to
+   tamper with a clipperphone is a joke).  Outlawing nonrecognizable
+   encryption schemes (this could be spoofed, through the use of canned
+   LEEFs with session keys you never intend to use, but allows some
+   useful intelligence (the serial number) to leak.  A single stolen
+   and subsequently destroyed phone could supply the LEEF, but still
+   serves as a red flag.  The ability to not transmit the LEEF suggests
+   the ability to recognize one.  Intercepting and storing several 
+   thousand (over time) for use randomly as spoofed headers would
+   hamper detection.
+   
+   This is all predicated on the assumption that at least NSA will
+   test suspected crypto streams for clipper, and routinely do 
+   traffic analysis.
+
+You could imagine modifying the phone totally nondestructively, through
+the use of chip clips or whatever.
+
+--
+
+&gt;From: karn@qualcomm.com (Phil Karn)
+
+&gt;Damn. Now I remember one of the points I meant to make in my NIST
+&gt;comments, but forgot: if the LEEF is added periodically to the
+&gt;ciphertext stream, that implies that the ciphertext data rate must be
+&gt;greater than the plaintext rate.
+
+There is no evidence of anything at the chip level requiring 
+periodic LEEF extraction.  This would almost undoubtedly be handled
+at the communications protocol level.  One would guess that the feds
+would be happy to have the LEEF occur every time you require crypto
+sync.  Byte counts could be used to verify all this.
+
+---
+
+All of this has to be apparent to at least the NSA, and I'm sure that
+no disreputable manufacturer will get to play with the clipper chips
+and build a product that doesn't adhere to EES.  Having seen the
+certification process for implementations of Type I chips, product
+certification seems likely.
+
+Blackmarket demand can be generated from two sources: persons seeking
+more absolute privacy and criminals seeking secure communications.
+I am not at all bothered by the privacy aspect, but would be bothered
+by supplying or modifying phones for criminals, depending on the crime.
+
+It seems unlikely that there is any enforceable method to prevent
+modification of clipperphones, although discovery of a safe modification
+process could consume a large number of phones if  countermeasures
+are included.  All this is very sensistive to economy of scale.  The more
+phone there are out there, the more blackmarket demand for modified phones
+and the easier it would be to avoid detection.
+
+The question is whether given the potential black market for modified
+clipperphones, whether skipjack is indeed secure against its creator.
+
+(sounds paranoid, I know)
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00793.html">Address/phone number for Micotronics?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00792.html">(fwd) More on CIA's Internet Debut</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00780.html">Re: Clipper specifics</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00808.html">Re:  Clipper specifics</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00791"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00791"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

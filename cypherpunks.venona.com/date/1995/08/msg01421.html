@@ -1,0 +1,203 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: SSL trouble -->
+<!--X-From-R13: Bvrgr Pebbxf <Bvrgr.PebbxfNpy.pnz.np.hx> -->
+<!--X-Date: Mon, 28 Aug 95 13:28:20 PDT -->
+<!--X-Message-Id: "swan.cl.cam.:264930:950828202725"@cl.cam.ac.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9508281854.AA20060@cantina.verity.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: SSL trouble</TITLE>
+<LINK REV="made" HREF="mailto:Piete.Brooks@cl.cam.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01403.html">Date Prev</A>][<A HREF="msg01405.html">Date Next</A>][<A HREF="msg01394.html">Thread Prev</A>][<A HREF="msg01397.html">Thread Next</A>][<A HREF="index.html#01421">Date Index</A>][<A HREF="threads.html#01421">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: SSL trouble</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:patrick@Verity.COM">patrick@Verity.COM</A> (Patrick Horgan)</LI>
+<LI><em>Subject</em>: Re: SSL trouble</LI>
+<LI><em>From</em>: Piete Brooks &lt;<A HREF="mailto:Piete.Brooks@cl.cam.ac.uk">Piete.Brooks@cl.cam.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 28 Aug 1995 21:27:12 +0100</LI>
+<LI><em>Cc</em>: <A HREF="mailto:Piete.Brooks@cl.cam.ac.uk">Piete.Brooks@cl.cam.ac.uk</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:hallam@w3.org">hallam@w3.org</A></LI>
+<LI><em>In-Reply-To</em>: Your message of Mon, 28 Aug 1995 11:54:26 -0700. &lt;<A HREF="msg01394.html">9508281854.AA20060@cantina.verity.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;&gt; Note that it is a list, and it tries them in order (all A RRs).
+&gt; Wouldn't this result in the slaves higher in the list being hammered?
+
+There is not "a" list ...
+The list returned will be "tailored" for the calling host.
+Thus an EU host will have EU sites near the front, AU hosts will have AU
+servers, etc ...
+(Well, maybe they'll just be returned in a random order !).
+
+By having multiple A RRs for a name, the DNS will do the pseudo load balancing.
+
+&gt; Perhaps you want to do something simular to what the later releases of 
+&gt; bind do with machines with multiple names, and round robin the list.
+
+Indeed -- as above:
+1) optimise the list so that "near" servers are used.
+2) cycle the servers
+3) leave it to the DNS to SHUFFLE.
+
+&gt; If you had a list with hosts A, B, and C, the first request would get
+&gt; ABC, the next BCA, the next CAB, and the next back to ABC.  That would
+&gt; distrubute the work between the slaves a bit better.
+
+Yup -- but if it's just "random", I'd probably use a single name ...
+
+&gt; Actually this is what I meant, that they would ask for it.  My idea would
+&gt; be that when a slave is asked for keyspace, if they don't have enough
+&gt; they'd ask for the next large chunk.  That way the central server doesn't
+&gt; ever have to deal with small requests.
+
+Well, the current implementation will give what it has left, then on restarting
+the main loop it notices that it has no keys left, so asks the main server for
+more, so if the clients aren't all bunched up, it'll pre-fetch more segments,
+so there's a fair chance the client won't have to wait :-))
+
+&gt;&gt; Nah - results still go direct pro tem.
+&gt; You might consider it:)
+
+I can always add some more A RRs to sksp-ack to load balance ...
+
+&gt;&gt; These cache servers are asking for non trivial amounts of keyspace.
+&gt;&gt; As such there should not be *too* many, and then need to be "managed" ...
+&gt;&gt; If one crashes, the logs need to be scanned to see how to restart it (so that
+&gt;&gt; it starts by doling out the segments that it had no sub-doled to its clients)
+&gt; Quite right.  I'd assume that the first level list of slaves would be
+&gt; controlled by you.
+
+Possible ....
+
+I've had various offers to host a server ...
+
+&gt; If you're careful enough a slave should be able to go down and come
+&gt; back up without losing any state at all.
+
+At a cost ....
+
+Either it has to save state in a form that's easy to reload later,
+or save state in a way that it can spend some time before it starts to
+	work out what it has to do [[Hmm -- I might write a script to do that]]
+
+&gt; All brutes/slaves talking to it should be able to continue on with no loss
+&gt; of information.
+
+Loss of what info ?
+
+Running brutessl's will call brclient to report the ACK.
+They will report back the data as normal -- nothing to do with the Allocate
+Slave -- even if it were, it would auto fallback to another server.
+
+brloop's will ask for another keyspace, and on finding that the first server
+on its list doesn't respond, it'll try the next server on its list, and if
+none respond, it'll wait a bit and start asking again ...
+
+&gt; I would put an exponential backoff on the time between retries for the
+&gt; brutes talking to the slaves as well as the slaves talking to the master.
+
+Well, I use a multiplicative backoff within limits ....
+
+&gt; (With a limit for the amount of backoff of course.)
+
+Indeed -- how long ?
+
+&gt; If you can't talk to someone you might sleep for 8 seconds and retry,
+&gt; if you still couldn't back off to 16, the 32, then 64, then 128, etc...
+
+Well, 60, 120, 180, 240, 300, 300, 300, ...
+
+&gt; the maximum might be somewhere around ten or fifteen minutes, so that within
+&gt; ten or fifteen minutes of crashing and being restarted everything would be
+&gt; humming along with no manual intervention required on any of the lower levels.
+
+Well, 5 mins ... &lt; 1/3 or a segment ...
+
+&gt;&gt; However, note that with big cache servers (as opposed to Local CPU Farm
+&gt;&gt; servers where all clients are the same "ID") reports of sub-allocation have
+&gt;&gt; to be passed back to the root :-(
+&gt; That's a good point.  If you want to keep track of who has what, it all has
+&gt; to get back to the root eventually.
+
+Yes -- I do -- so that it's possible to tie up requests and ACKs.
+
+&gt; If you use my idea of having the slaves cache the information until the next
+&gt; time they'd be contacting the root anyway, (or whenever the timer elapses,)
+&gt; then you greatly cut down on the number of small packets seen by the root,
+&gt; (and each level of slaves when their's a hierarchy).
+
+Yup -- that's what an ACK reflector will do.
+
+Note that Allocation and ACKs are separate ....
+
+&gt; &lt;snicker;&gt;  Sound like we could have a religious war if we wanted,
+
+I was agreeing with you ! You said:
+
+&gt;&gt;&gt; Of course I do everything like this in C++, but I suppose perl would be the
+&gt;&gt;&gt; most portable.  It's a shame it's so aethestically displeasing to the eye.
+
+or is the "it" in "shame it's so" not the preceding direct noun, i.e. C++? :-)))
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01394" HREF="msg01394.html">Re: SSL trouble</A></STRONG>
+<UL><LI><EM>From:</EM> patrick@Verity.COM (Patrick Horgan)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01403.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01405.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01394.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01397.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01421"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01421"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

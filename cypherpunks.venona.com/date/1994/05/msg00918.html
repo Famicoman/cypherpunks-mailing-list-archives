@@ -1,0 +1,440 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Magic Money Client/Server using IPC -->
+<!--X-From-R13: Enzrre <fnzrreNfbqn.orexryrl.rqh> -->
+<!--X-Date: Sat, 14 May 94 23:54:19 PDT -->
+<!--X-Message-Id: 199405150644.XAA00453@infinity.hip.berkeley.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Magic Money Client/Server using IPC</TITLE>
+<LINK REV="made" HREF="mailto:sameer@soda.berkeley.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00907.html">Date Prev</A>][<A HREF="msg00927.html">Date Next</A>][<A HREF="msg00907.html">Thread Prev</A>][<A HREF="msg00925.html">Thread Next</A>][<A HREF="index.html#00918">Date Index</A>][<A HREF="threads.html#00918">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Magic Money Client/Server using IPC</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Magic Money Client/Server using IPC</LI>
+<LI><em>From</em>: Sameer &lt;<A HREF="mailto:sameer@soda.berkeley.edu">sameer@soda.berkeley.edu</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 14 May 1994 23:44:37 -0700 (PDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:nexus%2Dgaia@netcom.com">nexus-gaia@netcom.com</A></LI>
+<LI><em>Pgp-Strong-Print</em>: 3C AE E4 00 C2 6A 81 FF  49 4E EE 0C CD CD 1D 80</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+	As I posted only a few hours ago, I have been working on
+improving the Magic Money interface. I've written a server application
+for the Magic Money server which allows the server to sit on a port
+and wait for connections. When a connection comes in it forks and
+processes the request, by just taking the input, passing it to the 's'
+server released by Pr0duct Cypher, and then returning the server's
+output.
+
+	The client is a front end to Pr0duct Cypher's 'c' program,
+which handles the communication between the 'c' client and the server
+running on a socket. I have written the client so that it can be run
+from any directory, but it looks in ~/.bank for the bank.asc,
+rand.dat, and other files that the program uses.
+
+	I just wrote this code today, so I'm sure it lacks many safety
+checks. If you'd like to point out where it goes wrong, I'd appreciate
+it greatly.
+	
+To invoke the server:
+
+Edit server.pl and give it the port number you want.
+
+Run 'server.pl' in the directory which has the 's' program and the files that
+the 's' program uses. server.pl will fork and wait on the port specified.
+
+To run the client:
+
+Create the ~/.bank directory, and put rand.dat and bank.asc in that
+directory.
+
+Edit the client.pl to reflect the port number and the hostname of the
+server, as well as the location of Pr0duct Cypher's 'c' binary.
+
+client.pl -initialize
+
+	Generates your account.
+
+client.pl -incoming [filename]
+
+	Takes in incoming coins (which someone has given you) either from
+filename or stdin (if the filename argument is missing) and adds their
+value to your wallet. (Doing the communication with the server that is
+necessary)
+
+client.pl -extract [filename]
+
+	Extract coins that you own into filename, or if filename
+doesn't exist pgp ascii-armor the coins and send them to stdout.
+
+client.pl -exchange
+
+	Exchange your old coins for new ones.
+
+
+server.pl:
+#!/usr/local/bin/perl
+# Perl script to attach a Magic Money Server to a port
+# Sameer &lt;sameer@soda.berkeley.edu&gt;
+
+
+($port) = @ARGV;
+$port = 1992 unless $port;
+$magicserver = "s";
+$waitlock = "waiter.pid";
+$processlock = "processor.pid";
+
+require 'sys/socket.ph';
+require './shlock.pl';
+
+# First check to see if the process is running
+unless(&amp;shlock($waitlock))
+{
+    print "Process already running\n";
+    exit;
+}
+
+$sockaddr = 'S n a4 x8';
+
+($name, $aliases, $proto) = getprotobyname('tcp');
+($name, $aliases, $port) = getservbyname($port, 'tcp')
+    unless $port =~ /^\d+$/;
+
+$this = pack($sockaddr, &amp;AF_INET, $port, "\0\0\0\0");
+
+select(NS); $| = 1; select(stdout);
+
+socket(S, &amp;PF_INET, &amp;SOCK_STREAM, $proto) || die "socket: $!";
+bind(S, $this) || die "bind: $!";
+listen(S, 5) || die "connect: $!";
+
+select(S); $| = 1; select(stdout);
+
+# Ok the socket has been setup. Fork, wait for the parent lock to die
+# and then lock again
+if(fork)
+{
+    exit;
+}
+
+# Wait for the old process to die
+sleep 10 unless(&amp;shlock($waitlock));
+
+for (;;) {
+#    print "Listening again\n";
+    ($addr = accept(NS,S)) || die $!;
+    unless(fork)
+    {
+#        print "accept ok\n";
+	($af,$port,$inetaddr) = unpack($sockaddr,$addr);
+	@inetaddr = unpack('C4',$inetaddr);
+#	print "$af $port @inetaddr\n";
+
+	$tmpin = "/tmp/mmin." . $$ ;
+	$tmpout = "/tmp/mmout." . $$ ;
+
+	open(TIN, "&gt;$tmpin") || die $!;
+
+	print NS "Magic Money Bank: " . $bank . "\n";
+	print NS "Feed server\n";
+	while (&lt;NS&gt;) {
+	    print TIN;
+	    last if /^-----END/ ;
+	}
+	close(TIN);
+
+	# Wait for the process lock to stop
+
+	unless(&amp;shlock($processlock))
+	{
+	    print NS "Please wait for other requests to finish.";
+	    do
+	    {
+		print NS "." ;
+		sleep 10;
+	    }
+	    until(&amp;shlock($processlock));
+	}
+	
+	print NS "order processing.";
+
+	# Run magic money
+	open(MM, "| $magicserver &gt; $tmpout");
+	open(TIN, $tmpin);
+	while(&lt;TIN&gt;)
+	{
+	    print NS "." ;
+	    print MM;
+	}
+	close(TIN);
+	close(MM);
+
+	print NS "done.\nServer response\n";
+	open(OUTPUT, $tmpout);
+	print NS &lt;OUTPUT&gt;;
+	close OUTPUT;
+	exit;
+    }
+}
+
+
+client.pl:
+#!/usr/local/bin/perl
+# Perl script to make dealing with the magic money oh so much easier
+# Sameer &lt;sameer@soda.berkeley.edu&gt;
+
+require 'sys/socket.ph';
+
+$mmclient = "/usr/local/bin/mmclient" ;
+$pgp = "/usr/local/bin/pgp" ;
+$port = 1992;
+$host = "localhost";
+
+sub connectgrab
+{
+    local($them, $port, $infile, $outfile) = @_;
+
+    $sockaddr = 'S n a4 x8';
+    chop($hostname = `hostname`);
+
+    ($name, $aliases, $proto) = getprotobyname('tcp');
+    ($name, $aliases, $port) = getservbyname($port, 'tcp')
+	unless $port =~ /^\d+$/;
+    ($name, $aliases, $type, $len, $thisaddr) =
+	gethostbyname($hostname);
+    ($name, $aliases, $type, $len, $thataddr) = gethostbyname($them);
+    
+    $this = pack($sockaddr, &amp;AF_INET, 0, $thisaddr);
+    $that = pack($sockaddr, &amp;AF_INET, $port, $thataddr);
+    
+    socket(S, &amp;PF_INET, &amp;SOCK_STREAM, $proto) || die "socket: $!";
+    bind(S, $this) || die "bind: $!";
+    connect(S, $that) || die "connect: $!";
+    
+    select(S); $| = 1; select(stdout);
+    
+    # Wait until we get the prompt to start
+    while(&lt;S&gt;)
+    {
+	last if /^Feed server$/ ;
+    }
+   
+    # Send the stuff to the server
+    print "Sending to server.\n";
+    open(INPUT, $infile) || die "can't open $infile: $!";
+    while(&lt;INPUT&gt;)
+    {
+	print S;
+    }
+    close INPUT;
+
+    # Wait for the server to finish processing.. tell the user it is processing
+    print "Waiting for server to process.\n";
+    while(&lt;S&gt;)
+    {
+	last if /^Server response$/;
+    }
+
+    # Now grab the server's response
+    open(OUTPUT, "&gt; $outfile") || die "can't open $outfile: $!";
+    while(&lt;S&gt;)
+    {
+	print OUTPUT;
+    }
+    close(OUTPUT);
+
+    close S;
+    print "Finished with server.\n";
+}
+
+## Main
+## Deal with user requests
+
+
+# Process incoming money
+
+sub processincoming
+{
+    if($ARGV[0] ne '-')
+    {
+	$ARGV[0] = &amp;expandfile($ARGV[0]);
+    }
+    open(FILE, "&gt; temp.dat") || die "can't create temp.dat: $!";
+    print FILE &lt;&gt;;
+    close FILE;
+
+    system("$mmclient temp.dat");
+    unlink("temp.dat");
+    &amp;deal;
+}
+
+# Initialize client
+
+sub initialize
+{
+    system("$mmclient -i");
+    &amp;deal;
+}
+
+# Exchange coins
+
+sub exchangecoins
+{
+    system("$mmclient -x");
+    &amp;deal;
+}
+
+sub deal
+{
+    &amp;connectgrab($host, $port, "output.asc", "serverreply.asc");
+
+    system("$mmclient serverreply.asc");
+#    unlink("serverreply.asc");
+#    unlink("output.asc");
+}
+
+sub extractcoins
+{
+
+#    if($ARGV[0] eq '-')
+#    {
+#	# Error
+#	print "Must specify a filename to extract coins to\n";
+#	exit;
+#    }
+
+    if($ARGV[0] ne '-')
+    {
+	$file = &amp;expandfile($ARGV[0]);
+	
+	if( -e $file )
+	{
+	    # Error
+	    print "File already exists\n";
+	    exit;
+	}
+	# Check if the file can be made
+	open(FILE, "&gt; $file") || die "Can't create $file: $!";
+	close FILE;
+	unlink($file);
+    }
+
+    system("$mmclient -p");
+    # Now move coins.dat away so that another extraction doesn't mean money
+    # is lost
+
+    # Send it to another file or stdout
+
+    if($file)
+    {
+	rename("coins.dat", $file);
+	print "Coins moved to $file\n";
+    }
+    else
+    {
+	print "Coins going out, ascii armored.\n";
+	open(COINSDAT, "coins.dat");
+	open(ASCII, "| $pgp -af 2&gt;/dev/null");
+	print ASCII &lt;COINSDAT&gt;;
+	close ASCII;
+	close COINSDAT;
+#	unlink("coins.dat");
+    }
+}
+
+sub expandfile
+{
+    # If a file has a leading / don't add the startdir
+    # otherwise prepend $startdir
+
+    local($fname) = @_;
+    if(index($fname, '/') == 0)
+    {
+	return($fname);
+    }
+    else
+    {
+	return($startdir . "/" . $fname);
+    }
+}
+
+#########
+# THE MAIN
+#########
+
+
+# This bit of the program takes the cmdline arguments, etc.
+$startdir = $ENV{'PWD'};
+chdir($ENV{'HOME'} . "/.bank") || die "can't chdir to ~/.bank: $!";
+
+$command = $ARGV[0];
+shift;
+
+unless($ARGV[0])
+{
+    unshift(ARGV, '-');
+}
+
+
+&amp;processincoming if $command eq '-incoming';
+&amp;initialize if $command eq '-initialize';
+&amp;exchangecoins if $command eq '-exchange';
+&amp;extractcoins if $command eq '-extract';
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00907.html">Magic Money on a port</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00927.html">Re: Penet Spoofing</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00907.html">Magic Money on a port</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00925.html">PGP 2.5 Warning</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00918"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00918"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

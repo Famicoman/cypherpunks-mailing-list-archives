@@ -1,0 +1,166 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: IP Bouncer.. source included. -->
+<!--X-From-R13: znexNpbbzof.nah.rqh.nh ([nex) -->
+<!--X-Date: Thu, 19 Nov 92 04:30:00 PST -->
+<!--X-Message-Id: 9211191229.AA12629@coombs.anu.edu.au -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>IP Bouncer.. source included.</TITLE>
+<LINK REV="made" HREF="mailto:mark@coombs.anu.edu.au">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00159.html">Date Prev</A>][<A HREF="msg00166.html">Date Next</A>][<A HREF="msg00159.html">Thread Prev</A>][<A HREF="msg00166.html">Thread Next</A>][<A HREF="index.html#00172">Date Index</A>][<A HREF="threads.html#00172">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>IP Bouncer.. source included.</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: IP Bouncer.. source included.</LI>
+<LI><em>From</em>: <A HREF="mailto:mark@coombs.anu.edu.au">mark@coombs.anu.edu.au</A> (Mark)</LI>
+<LI><em>Date</em>: Thu, 19 Nov 92 23:29:46 EST</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Ok an IP bouncer is something that runs on a host that basically accepts
+connections on one port and redirects them to another specified host and port.
+The one below is for tcp connections but it could also be for udp with
+a little work. I actually have the code for a 'server' version of this that
+you connect to it, tell it which host you want and then it opens a 
+connection to it. It's on another machine at the moment which is down.
+
+
+I had the sent to me via IRC a while ago and have used it off and on. Ive
+been meaning to fine tune it a bit as it's supposed to chew CPU a bit...
+
+-------cut here--------cut here--------cut here---------cut here-------------
+/* This file is telserv.c and is part of the Telnet Server package v. 1.0,
+   written by "Hal-9000".  Much of this package was developed by Richard
+   Stephens and my thanks go to "Xanadude" for providing me with that
+   section.
+
+   To compile, type "cc -O -s telserv.c -o telserv". */
+
+#include &lt;stdio.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;errno.h&gt;
+#include &lt;netinet/in.h&gt;
+#include &lt;arpa/inet.h&gt;
+
+#define SERV_TCP_PORT 12345 /* port I'll listen for connections on */
+#define REM_HOST_ADDR "128.128.128.7" /* host I will bounce to */
+#define REM_TCP_PORT 23               /* port I will bounce to */
+
+main()
+{
+  int sockfd, newsockfd, clilen, childpid;
+  struct sockaddr_in  cli_addr, serv_addr;
+  sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  bzero((char *) &amp;serv_addr, sizeof(serv_addr));
+  serv_addr.sin_family      = AF_INET;
+  serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+  serv_addr.sin_port        = htons(SERV_TCP_PORT);
+  bind(sockfd, (struct sockaddr *) &amp;serv_addr, sizeof(serv_addr));
+  listen(sockfd, 5);
+  while (1) {
+    clilen = sizeof(cli_addr);
+    newsockfd=accept(sockfd, (struct sockaddr *) &amp;cli_addr, &amp;clilen);
+    fcntl(newsockfd,F_SETFL,O_NDELAY);
+    childpid = fork();
+    if (childpid == 0) {         /* child process */
+      close(sockfd);             /* close original socket */
+      telcli(newsockfd);         /* process the request */
+      exit(0);
+    }
+
+    close(newsockfd);            /* parent process */
+    wait(0);
+    }
+  }
+
+telcli(clisockfd)
+{
+  int servsockfd;
+  struct sockaddr_in  serv_addr;
+  bzero((char *) &amp;serv_addr, sizeof(serv_addr));
+  serv_addr.sin_family       = AF_INET;
+  serv_addr.sin_addr.s_addr  = inet_addr(REM_HOST_ADDR);
+  serv_addr.sin_port         = htons(REM_TCP_PORT);
+  servsockfd = socket(AF_INET, SOCK_STREAM, 0);
+  connect(servsockfd, (struct sockaddr *) &amp;serv_addr, sizeof(serv_addr));
+  fcntl(servsockfd,F_SETFL,O_NDELAY);
+  communicate(servsockfd,clisockfd);
+  close(servsockfd);
+  exit(0);
+}
+
+communicate(servsockfd,clisockfd)  {
+   char rec[1];
+   int num;
+   extern int errno;
+   while (1) {
+     num=read(servsockfd,rec,1);
+	 if ((num==-1) &amp;&amp; (errno != EWOULDBLOCK)) return;
+	 if (num==0) return;
+     if (num==1) write(clisockfd,rec,1);
+     num=read(clisockfd,rec,1);
+	 if ((num==-1) &amp;&amp; (errno != EWOULDBLOCK)) return;
+	 if (num==0) return;
+	 if (num==1) write(servsockfd,rec,1);
+     }
+}
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00159.html">Finally back</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00166.html">Anymous Remailers and Newsposters</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00159.html">Finally back</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00166.html">Anymous Remailers and Newsposters</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00172"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00172"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

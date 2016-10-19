@@ -1,0 +1,219 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Eternity service proxies -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Thu, 1 May 1997 12:58:24 +0800 -->
+<!--X-Message-Id: 199705010441.FAA00950@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Eternity service proxies</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[Date Prev][<A HREF="msg00001.html">Date Next</A>][Thread Prev][<A HREF="msg00034.html">Thread Next</A>][<A HREF="index.html#00000">Date Index</A>][<A HREF="threads.html#00000">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Eternity service proxies</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>Subject</em>: Eternity service proxies</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 1 May 1997 05:41:55 +0100</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@algebra.com">owner-cypherpunks@algebra.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+[btw what do people think of the practice of putting To: cypherpunks,
+and Bcc: coderpunks@toad, cryptography@c2 as I have done here?  I do
+this for stuff when I'm interested in comments of people who are on
+cryptography but not cypherpunks, similarly for coderpunks to avoid
+the non-crossposting issue with coderpunks, and avoid extra moderation
+work for Perry with cryptography.  I know you get multiple copies if
+you're on all lists, how else does one reach you all?  Myself I have a
+procmail recipie which junks multiple copies, like:
+
+:0 Wh: msgid.lock
+| formail -D 128000 msgid.cache
+
+]
+
+My announce was rather hurried, and someone suggested to me the use of
+a proxy as an architecture for interfacing to the eternity service
+rather than the cgi based system I have.
+
+The person who suggested this to me also described some work on a
+"universal proxy framework" which is designed to enable things like
+"cookie-cutting, onion routing etc."  Also it was suggested this is a
+cheaper way to implement a proxy.
+
+Here are some comments on possible architectures for an eternity
+service.
+
+There are a number of places where one might put a eternity server:
+
+  - cgi script on your ISP for yourself and others to use
+
+  - cgi script and local web server on your dial up linux box
+
+  - standalone eternity proxy running on an ISP
+
+  - local proxy
+
+  - proxy framework module (local or remote? does it support both)
+
+  - apache module "eternity proxy module"
+
+  - browser plugin (if this has the power to do it)
+
+My ideal interface would have been a web proxy, as this allows the
+user to transparently integrate this into their browser.  You may be
+able to set your browser to use the proxy to handle *.eternity, and
+have the rest go direct, but I'm not so sure on this point.
+Regardless, the proxy can forward requests as cacheing proxies do for
+documents not in *.eternity.
+
+My first consideration was to get a proof of concept going as quickly
+as possible.  What you are looking at is a weekend hack + 3 days
+debugging and cleaning up.
+
+Proxies have higher user requirements to set up, you need root, or at
+least ability to leave processes running indefinately, and some
+mechanism to restart them on reboot (or do it manually).
+
+My cgi-bin implementation allows you to run with cgi access, and cron,
+or at a pinch to do without cron even.
+
+Local proxies have higher development costs, in that it involves
+windows code to be of use for the majority of users, which has much
+higher development cost.  The universal proxy framework (which I am
+not familiar with) would allow a local proxy to be implemented more
+easily if I understand correctly.
+
+Local handling of at least the last layer of decryption would help
+from a security point of view.  Or the local proxy could be a full
+eternity server for your own use.
+
+The ones I've made possible with my cgi based implementation are the
+first two, I chose them over proxies simply because they are the
+easiest to implement first.
+
+Basically what I have implemented is a poor mans remote proxy or (with
+a local webserver) a poor unix person's local proxy.  You give it URLs
+of the form:
+
+  <A  HREF="http://www.foo.com/cgi-bin/eternity?url=http://blah.eternity/blah/">http://www.foo.com/cgi-bin/eternity?url=http://blah.eternity/blah/</A>
+
+The cgi script modifies on the fly URLs in documents (if they are type
+text/html) and involve *.eternity to have prefix:
+
+  cgi-bin/eternity?url=
+
+Well actually it copes with local, and site relative urls also (where
+site is the eternity virtual site).  Normal URLs are left as is.
+
+Proxy is the more elegant way to do it as you don't have to re-write
+urls on the fly.
+
+There are advantages to running the server (proxy or otherwise) on an
+ISP rather than locally:
+
+- if you're using the cgi solution and an SSL web server you get SSL
+  encryption on the link.  This way people don't get to see your
+  requests, if they are handled locally by your ISP from it's news
+  spool.
+
+- it has lower bandwidth requirements which may be an advantage, as
+  you don't have to down load all the eternity documents, only the ones
+  you want to read as you browse them
+
+- if the eternity server is running on your ISP and the ISP has a
+  local newspool people outside the ISP can not see your requests go
+  to the NNTP server to see which articles you are reading.
+
+There are some advantages to local proxies:
+
+- you don't rely on the ISP or the eternity service operator not to
+  log exdirectory URLs, and not to log your accesses.  (However note
+  that your ISP can observe your use of the NNTP server, unless you
+  protect against this by saving all eternity web pages locally, so
+  that you never have to do a NNTP lookup per article).
+
+- if you are accessing URLs which are private (encrypted with a
+  password inside the final layer) you don't need to give this
+  password to the server to get it to decrypt for you.  (You don't
+  need to with the remote proxy, but you get back a PGP message which
+  you then have to manually decrypt, unless you can figure out a
+  browser plugin to automatically decrypt PGP documents on the fly as
+  they are read).
+
+A local proxy used in combination with remote proxy or cgi-proxy would
+allow another architecture.  Your local proxy obtains it's article
+hash -&gt; message-id/newsgroup/article-number database from a real
+remote eternity proxy which is watching news as it comes in.
+
+Then it can fetch the articles itself with lower overhead.
+
+Another architecture (moving more towards Anderson's meaning of an
+eternity service) is the idea of forwarding requests between eternity
+servers.  In this way the eternity servers would be "remailing" your
+requests.  If your entry point into the eternity service network was
+via an SSL protected link, and the links between the eternity servers
+were encrypted, the eternity servers as a whole would disguise who was
+accessing what.  You could allow proxying of normal web pages too, and
+create a distributed version of anonymizer.com as a side effect.
+
+Adam
+
+-- 
+Have *you* exported RSA today? --&gt; <A  HREF="http://www.dcs.ex.ac.uk/~aba/rsa/">http://www.dcs.ex.ac.uk/~aba/rsa/</A>
+
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Next by Date:
+<STRONG><A HREF="msg00001.html">PGPSteps</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00034.html">Re: Why I delete cc;s to other mailing lists</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00000"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00000"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

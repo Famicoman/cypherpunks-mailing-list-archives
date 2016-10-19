@@ -1,0 +1,141 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Use of the IV in DES &#38; stuffing the first block w/ random stuff -->
+<!--X-From-R13: Pvyy Egrjneg <fgrjnegfNvk.argpbz.pbz> -->
+<!--X-Date: Tue, 15 Aug 95 13:44:22 PDT -->
+<!--X-Message-Id: 199508152039.NAA15590@ix7.ix.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Use of the IV in DES &amp; stuffing the first block w/ random stuff</TITLE>
+<LINK REV="made" HREF="mailto:stewarts@ix.netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00648.html">Date Prev</A>][<A HREF="msg00655.html">Date Next</A>][<A HREF="msg00640.html">Thread Prev</A>][<A HREF="msg00657.html">Thread Next</A>][<A HREF="index.html#00649">Date Index</A>][<A HREF="threads.html#00649">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Use of the IV in DES &amp; stuffing the first block w/ random stuff</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "Josh M. Osborne" &lt;<A HREF="mailto:stripes@va.pubnix.com">stripes@va.pubnix.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Use of the IV in DES &amp; stuffing the first block w/ random stuff</LI>
+<LI><em>From</em>: Bill Stewart &lt;<A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 15 Aug 1995 13:39:59 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+At 09:52 AM 8/15/95 -0400, you wrote:
+&gt;I have recently started writing a small pair of encription and
+&gt;decription programs.  I was planning of gennerating the key by
+&gt;taking the MD5 of the text password supplied by the user.
+
+A reasonable approach, but be careful in your implementation.
+I haven't seen the book "A Million Wimpy Passwords and their MD5s" yet,
+but the CD-ROM version may be out soon :-)  And you can probably
+ftp it from dockmaster.
+
+&gt;Seeing that I have 64 bits left over (MD5 gives me 128 bits, single
+&gt;DES needs 56, tripple DES needs 168 - so I have a bit over 64 bits
+&gt;left in both cases), is there anything useful that I could do with them?
+&gt;
+&gt;Does setting the IV (normally left at zero) buy me anything?
+
+IVs are designed to let you put random stuff in them to discourage
+known-plaintext attacks, replay attacks, etc.   However, suppose you
+take a known 64 bits from MD5(password) and put them in the IV -
+instead of the Bad Guy needing to brute-force 168-bit-deep Triple DES,
+he gets to brute force MD5s of human-selected passwords instead,
+which makes a lot of pre-computation possible.
+
+Also, for 3-Key Triple-DES, how do you get 168 bits of key from
+128bits of MD5?  (for 2-Key 3-DES, you only need 112 bits...)
+If you do something like M1=MD5(Key), M2=MD5(M1,Key), realize 
+you've got at most 128 bits of real key instead of 168, 
+though that probably needn't worry you too much...
+
+&gt;Does cramming it into the first data block help protect me from
+&gt;known plaintext attacks?  (I was going to use CBC so unless they
+&gt;know the first block they can't use a known plaintext attack, right?)  
+Won't hurt, as long as you remember to remove it on the decrypt-end.
+
+&gt;Or am I better off putting the extra 64 bits of "key" into the IV,
+&gt;and generating a strong random number to stuff in the first block
+&gt;- since the decoder can just ignore that block anyway.
+Put the strong random number in the IV, if you've _got_ a source
+of strong random numbers...
+
+You might want to do something fancy like choose a random salt,
+use the salt for the IV, and use MD5(salt,human-selected-key) for the key.
+This makes pre-computation much less useful (unless you're careless
+and use MD5(key,salt) instead if MD5(salt,key)...), and means that
+you use a different session key for each batch of stuff you encrypt,
+even though you're using the same key.  If you're paranoid about replay
+attacks, you could let some of the bits of the salt be random and some 
+be a counter, and never accept a key smaller than the one from the
+previous successfully-decrypted message.
+#---
+#                                Thanks;  Bill
+# Bill Stewart, Freelance Information Architect, stewarts@ix.netcom.com
+# Phone +1-510-247-0664 Pager/Voicemail 1-408-787-1281
+#---
+
+Storyteller makes no choice - soon you will not hear his voice.
+His job was to shed light, and not to master.      RIP, Jerry
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00657" HREF="msg00657.html">Re: Use of the IV in DES &amp; stuffing the first block w/ random stuff</A></STRONG>
+<UL><LI><EM>From:</EM> "Josh M. Osborne" &lt;stripes@va.pubnix.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00648.html">Re: CoS Raid on "Copyright Terrorist"</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00655.html">Re: Object Oriented Crypto API</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00640.html">Use of the IV in DES &amp; stuffing the first block w/ random stuff</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00657.html">Re: Use of the IV in DES &amp; stuffing the first block w/ random stuff</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00649"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00649"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

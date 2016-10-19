@@ -1,0 +1,134 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: PGP key generation -->
+<!--X-From-R13: tufink!unyNhharg.GG.@SF (Vny Tvaarl) -->
+<!--X-Date: Tue, 8 Dec 92 14:53:49 PST -->
+<!--X-Message-Id: 9212082250.AA22082@nano.noname -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>PGP key generation</TITLE>
+<LINK REV="made" HREF="mailto:ghsvax!hal@uunet.UU.NET">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00087.html">Date Prev</A>][<A HREF="msg00086.html">Date Next</A>][<A HREF="msg00083.html">Thread Prev</A>][<A HREF="msg00086.html">Thread Next</A>][<A HREF="index.html#00084">Date Index</A>][<A HREF="threads.html#00084">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>PGP key generation</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: PGP key generation</LI>
+<LI><em>From</em>: <A HREF="mailto:ghsvax%21hal@uunet.UU.NET">ghsvax!hal@uunet.UU.NET</A> (Hal Finney)</LI>
+<LI><em>Date</em>: Tue, 8 Dec 92 14:50:00 PST</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Steve Witham asks about PGP's "peasant_modmult" routine, how it can
+subtract the modulus on each addition.  It doesn't, but the code is a
+little misleading (taken from mpilib.c, PGP 2.1):
+
+    while (bits--)
+    {	mp_shift_left(prod);
+	msub(prod,pmodulus);	/* turns mult into modmult */
+	if (sniff_bit(multiplier,bitmask))
+	{   mp_add(prod,multiplicand);
+	    msub(prod,pmodulus);	/* turns mult into modmult */
+	}
+	bump_bitsniffer(multiplier,bitmask);
+    }
+
+What is confusing is that "msub" looks like "mp_sub".  Actually, msub
+is a macro defined in mpilib.h:
+
+#define msub(r,m) if (mp_compare(r,m) &gt;= 0) mp_sub(r,m)
+	/* Prevents r from getting bigger than modulus m */
+
+So, msub actually only subtracts if it's necessary, as would be
+expected.
+
+
+Jim McGrath asks:
+
+&gt; When PGP generates keys doesn't it always pick d and e to have
+&gt; the same number of bits, ie 446 for the strongest type?
+
+d and e are the decryption and encryption exponents.  e is chosen to
+be small, typically the number 17 or slightly larger.  d is then about
+the size of n, your key modulus.
+
+p and q, the two primes which are multiplied to get n, are about the
+same size, usually.  PGP does have some code to make sure they aren't
+too close to the same size (taken from rsagen.c, PGP 2.1):
+
+        /*	See if p and q are far enough apart.  Is q-p big enough? */
+        mp_move(u,q);	/* use u as scratchpad */
+        mp_sub(u,p);	/* compute q-p */
+        if (mp_tstminus(u))	/* p is bigger */
+        {    mp_neg(u);
+            too_close_together = (countbits(u) &lt; (countbits(p)-7));
+        }
+        else		/* q is bigger */
+            too_close_together = (countbits(u) &lt; (countbits(q)-7));
+
+        /* Keep trying q's until we get one far enough from p... */
+    } while (too_close_together);
+
+What this does is make sure that |p-q| is &gt; 1/128 of the larger of p
+or q.  This is designed to make sure that p and q are both very far
+from the square root of n.  I.e. if n were 1024 bits, p and q could
+both be about 512 bits, but they would be at least about 2^505 from
+the square root of n, foiling the square root attacks.
+
+Hal
+74076.1041@compuserve.com
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00087.html">No Subject</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00086.html">Re Anonymous address problems etc</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00083.html">peasant_multiply question</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00086.html">Re Anonymous address problems etc</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00084"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00084"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

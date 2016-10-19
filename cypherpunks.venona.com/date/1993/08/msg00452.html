@@ -1,0 +1,269 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: PROTOCOL: Encrypted Open Books -->
+<!--X-From-R13: Sevp Vhturf <uhturfNfbqn.orexryrl.rqh> -->
+<!--X-Date: Mon, 16 Aug 93 14:02:16 PDT -->
+<!--X-Message-Id: 9308162057.AA05059@soda.berkeley.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9308102059.AA22885@snark.shearson.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>PROTOCOL: Encrypted Open Books</TITLE>
+<LINK REV="made" HREF="mailto:hughes@soda.berkeley.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00450.html">Date Prev</A>][<A HREF="msg00453.html">Date Next</A>][<A HREF="msg00204.html">Thread Prev</A>][<A HREF="msg00202.html">Thread Next</A>][<A HREF="index.html#00452">Date Index</A>][<A HREF="threads.html#00452">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>PROTOCOL: Encrypted Open Books</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: PROTOCOL: Encrypted Open Books</LI>
+<LI><em>From</em>: Eric Hughes &lt;<A HREF="mailto:hughes@soda.berkeley.edu">hughes@soda.berkeley.edu</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 16 Aug 93 13:57:51 -0700</LI>
+<LI><em>In-Reply-To</em>: "Perry E. Metzger"'s message of Tue, 10 Aug 1993 16:59:18 -0400 &lt;<A HREF="msg00204.html">9308102059.AA22885@snark.shearson.com</A>&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Kent Hastings wondered how an offshore bank could provide assurances
+to depositors.  I wondered the same thing a few months ago, and
+started working on what Perry calls the anonymous auditing problem.  I
+have what I consider to be the core of a solution.
+
+All the following protocols and ideas are in the public domain.
+
+The following is long.
+
+My notation here will also be much less formal than I am capable of; I
+don't want to make the uninitiated read TeX.
+
+The basic idea is that summation can be performed encrypted by using
+exponentiation in a finite field.  That is, if I represent an amount x
+by g^x and an amount y by g^y, then I can compute the sum of x and y
+by multiplying g^x and g^y, getting g^(x+y).  Very basic.
+
+So let us take a very simple version of this protocol, which leaves
+out many desiderata.  If a shared funds account, say, has a bunch of
+transactions made on it, then we can publish each of those amounts x_i
+(for the non-TeX'd, underscore means subscript) encrypted as g^(x_i).
+I know what my transaction number, i, is, and what the amount was, so
+I can verify that my transaction appeared in the public list.  We also
+publish the beginning and ending balances, givings use a total
+difference X.  Now anyone can verify that g^X equals g^(Sum_i x_i).
+That is, everyone can verify that the aggregate effect of the
+transactions is what is claimed without revealing the amounts of any
+of them.
+
+What does this protocol reveal?  It reveals the number of transactions
+on each account and thus the total number of transactions.  It is also
+subject to known plaintext attack.  If I get an account on this system
+and make one transaction in each amount, I can decrypt by table lookup
+the whole transaction flow.  The total number of transaction accounts
+is also revealed, or, for a bank, the number of customers.
+
+We can easily solve the known plaintext attack by blinding each
+transaction.  Instead of publishing pairs &lt;i, g^(x_i)&gt;, we have for
+each transaction a blinding factor r_i and publish triples
+
+	&lt;i, g^(x_i + r_i), h^(r_i)&gt;
+
+The notation has grown.  g is a generator of a finite field G, and h
+is a generator of a different finite field H.  
+
+We also publish R = Sum_i r_i in addition to X = Sum_i x_i.
+
+What is the public verification procedure?  Basically the same as the
+first case, but in addition taking into account the blinding factors.
+
+Step 1.  Calculate Product_i h^(r_i) and make sure that it equals h^R.
+This validates the blinding factors.
+
+Step 2.  Calculate Product_i g^(x_i + r_i) and make sure that it
+equals g^(X+R).  This, given the validity of the blinding factors,
+validates the actual transactions.
+
+How does this resist known plaintext attack?  Since the blinding
+factors r_i are flatly distributed over their range (caveat! you pick
+the order of G smaller than of H to assure this), the x_i + r_i sum
+acts exactly as a one-time pad to encrypt the amount.  In summary,
+what is going on here is that both the messages (amounts) and the keys
+(the blinding factors) are being sent out as images of one-way
+functions (exponentiations) that preserve exactly the relationships
+that we want.
+
+There's more.  For a real business, we want to keep double entry books
+and not just single entry accounts as above.  By extending the number
+of terms in the transaction, we can do that too.  In double entry
+bookkeeping, the total amounts for each transaction must sum to zero
+over the various accounts being transacted upon; I say this knowing
+that when you print out the information for an accountant you'll have
+to do some sign twiddling for the asset and liability/equity halves of
+the books.  Also, a single transaction may involve more than two
+accounts, even if in practice most involve only two.
+
+The basic idea here is that each transaction is a set of the above
+transactions whose sum must be zero.  So for a transaction i, we publish
+a set of triples, indexed by j, 
+
+	&lt; T_i,j, g^( m_i,j + r_i,j ), h^( r_i,j ) &gt;
+
+where the subscripts are doubly indexed and where T_i,j represents the
+account that amount m_i,j is changing.  Now we can perform, on each
+transaction, the following very similar verification procedure for
+each fixed i.
+
+Step 1.  Verify that Product_j h^( r_i,j ) = 1.  This verifies that
+the blinding factors sum to zero.
+
+Step 2.  Verify that Product_j g^( m_i,j + r_i,j ) = 1.  Since the
+blinding factors sum to zero, this ensures that the transaction
+amounts sum to zero.
+
+Not that both of these sums are done over j, not i.  In other words,
+we validate each transaction individually.
+
+Now we also publish aggregate changes in the public accounts just as
+before.  The holders of private accounts know what how their accounts
+have changed.  Then we can use the the single account verification
+method as above to verify that the totals match.  Everyone can verify
+that the public accounts match, and the holders of private accounts
+can verify that they match.
+
+To summarize: The transactions are doubly indexed.  If you group by
+transaction, then you verify that each transaction sums to zero.  If
+you group by account, then you verify that the change in that account
+is as expected, be it public or private.
+
+In the scenario that Kent originally proposed, one of the public
+accounts would be a gold account, which through independent public
+auditing would be verified to be accurate.  I personally would not use
+gold but rather denominate certain accounts in shares of mutual funds,
+which are resistant to the currency inflations of mining and stockpile
+sales.
+
+What information is still being disclosed?  The most worrisome to me
+is that the total number of transactions per account is revealed, that
+is, aggregate activity, but not total money flux.  I have an insight
+that may allow the _account_ to be blinded as well as the amounts, and
+be revealed in aggregate just as the amounts are, but I have not
+worked out the details because I am not fully up to speed on the
+relevant math.  
+
+BEGIN BIG MATH
+I only expect a few people to follow the next paragraphs, so if you
+don't understand it, skip it.
+
+Here's the idea.  The modular exponentiation is performed in a finite
+ring.  We choose a ring that has lots of distinct prime ideals of
+sufficiently large order.  To each account we assign one ideal.  We
+represent dollar amounts as elements of this ideal; since the ideal is
+prime, this is straightforward.  The property of the ideal we use is
+that the sum of any two elements of the ideal is also in the ideal.
+Hence by partitioning the ring, we also partition the computation of
+the accounts.  We are blinding the transcations by account because we
+rely on the fact that blinding is not an intra-ideal operation, and
+thus does not preserve that invariant, which would otherwise be
+public.
+
+We must be careful not to allow operations that would result in an
+element which was in the intersection of two ideals.  This requires
+upper bounds both on the transaction amount and on the number of
+transactions per cycle.  There might be rings of order p^n+1 which
+would be suitable for this operations, but I am not sure of the
+security of the discrete log in such cases, except for p=2, in which
+case it is bad.
+
+END OF BIG MATH
+
+The protocol as specified, though, is useful as it stands.  I have not
+specified all the details.  For example the blinding factors should
+likely be created in a cooperative protocol at the point of
+transaction; blinding factors for intra-bank transactions should not
+contain subliminal channels.  Certificates of deposit and withdrawal
+should be tied to the published transaction information.  Etc.
+Remember, this is the core of an idea.
+
+One criticism I do wish to address now.  I don't think it matters if
+the bank manufactures fake transactions.  The customer can reveal the
+sum of all the blinding factors for transactions on that account, in
+public, and can thus prove what should have been there.  Since the
+blinding factors were committed to in public, there is a strong
+assurance that these blinding factors are what they are claimed to be.
+This in itself can be made into an actual proof of liability.  Note
+that even this revelantion does not compromise individual
+transactions.  It only reveals the aggregate value change, which is
+exactly what is at issue with the bank.
+
+On the other hand, all of the bank assets that are held external to
+that organization can be externally audited in the same way.  The
+other institutions that hold money might be persuaded to undertake a
+legal obligation to honor what the encrypted open books say they
+should have; this may not be difficult because they can verify that
+their record of the transactions matches what has been published.
+
+If we use the contents of the encrypted books at the organizational
+boundary points to create suitable legal opbligations, we can mostly
+ignore what goes on inside of the mess of random numbers.  That is,
+even if double books were being kept, the legal obligations created
+should suffice to ensure that everything can be unwound if needed.
+This doesn't prevent networks of corrupt businesses from going down
+all at once, but it does allow networks of honest businesses to
+operate with more assurance of honesty.
+
+Eric
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00204" HREF="msg00204.html">Re: ADICO: Anarchist FDIC</A></STRONG>
+<UL><LI><EM>From:</EM> "Perry E. Metzger" &lt;pmetzger@lehman.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00450.html">Inslaw files</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00453.html">Re: Solicitation of Tax Evasion--An Example</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00204.html">Re: ADICO: Anarchist FDIC</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00202.html">So. Cal. Cypherpunks</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00452"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00452"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

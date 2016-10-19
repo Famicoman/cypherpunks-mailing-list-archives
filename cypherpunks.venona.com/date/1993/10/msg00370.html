@@ -1,0 +1,214 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Diffie&#45;Helman example in g++ -->
+<!--X-From-R13: pznaNWA.QA[ (Rbhtynf Pnearf) -->
+<!--X-Date: Fri, 8 Oct 93 12:56:09 PDT -->
+<!--X-Message-Id: 9310081951.AA12236@illuminati.IO.COM -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Diffie-Helman example in g++</TITLE>
+<LINK REV="made" HREF="mailto:cman@IO.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00374.html">Date Prev</A>][<A HREF="msg00375.html">Date Next</A>][<A HREF="msg00373.html">Thread Prev</A>][<A HREF="msg00428.html">Thread Next</A>][<A HREF="index.html#00370">Date Index</A>][<A HREF="threads.html#00370">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Diffie-Helman example in g++</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Diffie-Helman example in g++</LI>
+<LI><em>From</em>: <A HREF="mailto:cman@IO.COM">cman@IO.COM</A> (Douglas Barnes)</LI>
+<LI><em>Date</em>: Fri, 8 Oct 1993 14:51:12 -40962758 (CDT)</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Here is a little demo using the big Integer routines from libg++
+illustrating how Diffie-Hellman key exchange works. Basically,
+I wanted to prove to myself that it works, and thought others might
+appreciate it.
+
+Doug
+===============================================================
+
+
+// Demo of mathematics for Diffie-Hellman type key exchange
+//
+// Useful to convince oneself that it really does work and that
+// a patent on it is pretty silly. 
+//
+// Douglas Barnes (cman@io.com)
+//
+// Based on algorithm from Cryptography and Data Security, by Dorothy E.
+// Denning, 1983, Addison-Wesley. 
+//
+
+// Note: you will need to have GNU libg++, or hack it to use big integer
+//       math you do have.
+
+#include &lt;stdlib.h&gt;
+#include &lt;time.h&gt;
+#include &lt;sys/types.h&gt;
+#include "Integer.h"
+
+Integer&amp; RandBigInt(int bits);
+Integer&amp; FastExp(Integer&amp; A, Integer&amp; B, Integer&amp; p);
+
+#define keysize 644
+
+main()
+{
+
+Integer p;
+Integer a;
+Integer XA, XB, K1, KA, KB, YA, YB, T;
+
+char state[256];
+
+pow(2, keysize, p);
+p = p - 1;
+
+// Does anyone have a clue what good values of 'a' are in this
+// algorithm?
+
+a = 127;
+
+// Set up random stuff
+initstate(time(0), state, 256);
+
+cout &lt;&lt; "A and B pick random numbers in the Galois field [0, p - 1]\n";
+cout &lt;&lt; "where p is (2^" &lt;&lt; keysize &lt;&lt; ") - 1:\n" &lt;&lt; p &lt;&lt; "\n";
+
+XA = RandBigInt(keysize);
+cout &lt;&lt; "\nA picks a random secret XA: \n" &lt;&lt; XA &lt;&lt; "\n";
+
+XB = RandBigInt(keysize);
+cout &lt;&lt; "\nB picks a random secret XB: \n" &lt;&lt; XB &lt;&lt; "\n";
+
+YA = FastExp(a, XA, p);
+YB = FastExp(a, XB, p);
+
+cout &lt;&lt; "\nA gives B a message YA (a^XA mod p): \n" &lt;&lt; YA &lt;&lt; "\n";
+cout &lt;&lt; "\nB gives A a message YB (a^XB mod p): \n" &lt;&lt; YB &lt;&lt; "\n";
+
+KA = FastExp(YB, XA, p);
+cout &lt;&lt; "\nA now knows the key is (YB^XA mod p): \n" &lt;&lt; KA &lt;&lt; "\n";
+
+KB = FastExp(YA, XB, p);
+cout &lt;&lt; "\nB now knows the key is (YA^XB mod p): \n" &lt;&lt; KB &lt;&lt; "\n";
+
+cout &lt;&lt; "\nComputing the key (which is a^XA^XB mod p) from (a^XA mod p) and\n"; 
+cout &lt;&lt; "(a^XB mod p) is equivalent to performing two discrete log calculations;\n";
+cout &lt;&lt; "the number of steps to perform discrete logs grows exponentially\n";
+cout &lt;&lt; "in proportion to the # of bits in the field. For a 'p' of 644 bits,\n";
+cout &lt;&lt; "Denning estimates 1.2 x 10^23 steps.\n";
+
+}
+
+// Calculate a^z mod n
+//
+// Based on the fact that (a^3 mod n) is the same thing
+// as: (((a * a) mod n) * a) mod n
+//
+// Gets its speed from the fact that, for example, n^18 is the 
+// same as (n^2)^9
+
+Integer&amp;
+FastExp(Integer&amp; a, Integer&amp; z, Integer&amp; n)
+{
+   Integer a1, z1, two; 
+   static Integer x;
+
+   a1 = a; 
+   z1 = z;
+   x = 1;
+   two = 2;
+   
+   while(z1 != 0)
+   {
+      while((z1 % 2) == 0)
+      {
+         div(z1, two, z1);
+         a1 = (a1 * a1) % n;
+      }
+      z1 = z1 - 1;
+      x = (x * a1) % n;
+   }
+
+   return x;
+      
+}
+
+// Yes, I know the random stuff is lame. This is a demo.
+Integer&amp; 
+RandBigInt(int bits)
+{
+   int i;
+   int randval;
+   static Integer retval;
+
+   retval = 0;
+   for(i = 0; i&lt;bits; i++)
+   {
+      retval |= (random()&amp;01);
+      lshift(retval, 1, retval);
+   }
+
+   return retval;
+}
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00428" HREF="msg00428.html">Re: Diffie-Helman example in g++</A></STRONG>
+<UL><LI><EM>From:</EM> mgream@acacia.itd.uts.edu.au (Matthew Gream)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00374.html">Re: The death of the list as we know it (tm)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00375.html">Re: The death of the list as we know it (tm)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00373.html">Sorry about that last message</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00428.html">Re: Diffie-Helman example in g++</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00370"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00370"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

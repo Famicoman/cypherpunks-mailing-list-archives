@@ -1,0 +1,238 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: RC4 for HP48 -->
+<!--X-From-R13: pchaxNerznvy.rpnsr.bet (SQnsr Oabalzbhf Drznvyre) -->
+<!--X-Date: Mon, 22 Jan 96 18:22:03 PST -->
+<!--X-Message-Id: 199601230223.CAA11426@pangaea.hypereality.co.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>RC4 for HP48</TITLE>
+<LINK REV="made" HREF="mailto:cpunk@remail.ecafe.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02631.html">Date Prev</A>][<A HREF="msg02620.html">Date Next</A>][<A HREF="msg02614.html">Thread Prev</A>][<A HREF="msg01222.html">Thread Next</A>][<A HREF="index.html#02651">Date Index</A>][<A HREF="threads.html#02651">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>RC4 for HP48</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: RC4 for HP48</LI>
+<LI><em>From</em>: <A HREF="mailto:cpunk@remail.ecafe.org">cpunk@remail.ecafe.org</A> (ECafe Anonymous Remailer)</LI>
+<LI><em>Date</em>: Tue, 23 Jan 1996 02:23:03 GMT</LI>
+<LI><em>Complaints-To</em>: complaints@remail.ecafe.org</LI>
+<LI><em>Remailed-By</em>: ECafe Anonymous Remailer</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+ 
+	Here is the RC4 cipher for the HP-48 calculator.  It 
+complements the DES implementation by William E. Sommerfeld.  
+RC4 has a higher throughput than DES, but its key setup is 
+slower.  The key may be up to 256 characters (2048 bits) -- 
+the maximum supported by the RC4 algorithm.
+ 
+Here are sample timings for a HP-48GX.  The SX will be 
+correspondingly slower.
+Key Setup (200 bits)     25.18 sec
+RC4 throughput            5.06 cps
+String to Array          61.83 cps
+Array to String          56.12 cps
+ 
+	The HP-48 comes with a 2400 baud IR link and a 
+1200/2400/9600 baud RS232 port.  The 48S, 48SX and 48G have 
+32Kb of RAM, almost none of which is used by the operating 
+system.  The 48GX has 128Kb of RAM.  With an entry price of 
+~100$ US, I feel that the HP-48 series would be a good choice 
+for a smart token.  Possible uses are as digital cash wallets 
+and authentication tokens, not the mention simple encrypted 
+dumb terminals.
+ 
+Installation:
+ 
+	If you have a serial cable, download the code below to 
+your HP and call it 'RC4'.  This will create a directory 
+called 'RC4' with four programs in it.  If you don't have a 
+cable you can type the whole thing in; it's not too large.  
+Store it as 'RC4' and again it will create a directory.  Remember
+not to type the "%%HP: T(3)A(D)F(.);" -- it's only needed for
+a serial download.
+ 
+Instructions:
+ 
+	These instructions assume that you are familiar with 
+stream-ciphers in general.  If you are not, you might want to 
+get _Applied Cryptography_ by Bruce Schneier from your library 
+or book store.
+ 
+	Bit streams are represented as one dimensional arrays of 
+real numbers between 0 and 255.  Yes, that's right, this 
+cipher uses floating-point!  In User-RPL it's the fastest way.  
+To convert between strings and arrays use the commands S2A and 
+A2S.
+ 
+	S2A     "String" -&gt; [Array]
+	A2S     [Array] -&gt; "String"
+ 
+	To setup a key, use the SK command.  It takes a 
+bitstream representing the keytext and returns the key 
+context.  They keytext can be up to 256 bytes long.  
+Additional bytes will not be used.  The key context is another 
+bitstream with 256 values in it.  Because of time/memory 
+tradeoffs, a key context takes 2082 bytes of RAM to store.  If 
+memory is tight, use A2S to compress the key context to a 
+string.
+ 
+	SK      [Key text] -&gt; [Key context]
+ 
+	To encrypt something use the RC4 command.  The first 
+argument is the key context, the second is the plaintext or 
+ciphertext, both in bitstream form.  It returns the updated 
+key context and the ciphertext or plaintext.
+ 
+RC4     [Key context], [Plaintext] -&gt; 
+	   [New key context], [Ciphertext]
+or
+RC4     [Key context], [Ciphertext] -&gt; 
+	   [New key context], [Plaintext]
+ 
+Enjoy
+	The Cunning Artificers
+ 
+- -- CUT HERE --
+%%HP: T(3)A(D)F(.);
+DIR
+  SK
+    \&lt;&lt; DTAG OBJ\-&gt; OBJ\-&gt; DROP 0 255
+      FOR N N NEXT 259 258
+      PICK + 0 259 4 FOR N OVER
+      PICK N PICK + + 256 MOD DUP 255 - NEG N
+      4 - DUP2 IF \=/
+	THEN DUP2
+	  IF &gt;
+	    THEN SWAP
+	  END 
+	  DUP2 6 + ROLL SWAP 6 +
+	  ROLL SWAP 4 ROLL 5 + ROLLD SWAP 3 +
+	  ROLLD
+	ELSE 
+	  DROP2
+	END SWAP 1 - DUP
+	IF 260 &lt;
+	THEN 
+	  DROP 258 PICK 259 +
+	END SWAP -1
+      STEP DROP2 0
+      0 258 \-&gt;ARRY OVER 2
+      + ROLLD DROPN "Key"
+      \-&gt;TAG
+    \&gt;&gt;
+  RC4
+    \&lt;&lt; DTAG DUP SIZE OBJ\-&gt; DROP 3 PICK
+	258 GET 4 PICK 257 GET 1 + 1 4 ROLL
+	FOR N 256 MOD 1 + DUP 5 PICK SWAP
+	GET 3 ROLL + 256 MOD 1 + DUP 5 ROLL
+	SWAP 4 PICK CSWP DUP DUP 5 PICK GET
+	OVER 5 PICK GET + 256 MOD 1 + GET 5
+	ROLL DUP N GET R\-&gt;B 3 ROLL R\-&gt;B XOR B\-&gt;R
+	N SWAP PUT 4 ROLL 4 ROLL 1 - SWAP
+	NEXT 4 ROLL 257 3 ROLL 1 - PUT
+	258 3 ROLL PUT "Updated key" \-&gt;TAG
+	SWAP "Result" \-&gt;TAG
+    \&gt;&gt;
+  S2A
+    \&lt;&lt; DUP SIZE
+      \&lt;&lt; \-&gt; LEN
+	\&lt;&lt; 1 LEN
+	  START DUP NUM SWAP TAIL
+	  NEXT DROP LEN
+	\&gt;&gt;
+      \&gt;&gt; EVAL 1
+      \-&gt;LIST \-&gt;ARRY
+    \&gt;&gt;
+  A2S
+    \&lt;&lt; DTAG OBJ\-&gt; OBJ\-&gt; DROP "" SWAP 1
+	SWAP START SWAP CHR SWAP + NEXT
+    \&gt;&gt;
+END
+- -- CUT HERE --
+ 
+- -----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: 2.6.2
+ 
+mQCNAzEAEf4AAAEEAMONoLHj5CwKvaM6ch9GOcUjgoVS5sjXa4TzD2ohhtHFYR9l
+QzNj0vNASBQKE/Mk9Flqg+dtitS7S7B0qZQ+mQmMT73yniun596jt1NCJ5sLBKrM
+jDvYK3wGbycVX43RBiR3iwJZGq5blfWqNRE7kFdTxgu+bCdtLOFNVew9oBf9AAUR
+tBZUaGUgQ3VubmluZyBBcnRpZmljZXJz
+=pf3Y
+- -----END PGP PUBLIC KEY BLOCK-----
+ 
+ 
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+ 
+iQCVAwUBMQRCWuFNVew9oBf9AQEPJgP/QzwxGIWU0sf+a8Vzj2tXtMqRhRQjG4Qp
+Pcrwr76WhM/2KnHGNAdC3lKwyEK17cu32zbmPePhOvtdUNyV3L1KZlBioURK5Kxu
+ZspnOLCmlKo8lbOa5mJl2bmV55W49B96ua+yxst1XaOzhfYDN/KjZsztGRnEbQx9
+VovMpLXooLo=
+=4pzv
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01222" HREF="msg01222.html">RC4 for HP48</A></STRONG>
+<UL><LI><EM>From:</EM> m5@dev.tivoli.com (Mike McNally)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02631.html">Re: IPSEC == end of firewalls (was Re: (fwd) e$: PBS NewsHour, Path Dependency, IPSEC, Cyberdog, and the Melting of Mr.)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02620.html">IBM knuckles under</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02614.html">[Fwd: Re: Netscape + Verifone]</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01222.html">RC4 for HP48</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02651"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02651"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

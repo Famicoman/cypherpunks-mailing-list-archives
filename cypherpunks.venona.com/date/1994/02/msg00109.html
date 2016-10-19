@@ -1,0 +1,351 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: NxM DES -->
+<!--X-From-R13: evggreNpnpghf.bet (Freel Dvggre) -->
+<!--X-Date: Tue, 1 Feb 94 23:25:29 PST -->
+<!--X-Message-Id: 9402020724.AA29200@cactus.org -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>NxM DES</TITLE>
+<LINK REV="made" HREF="mailto:ritter@cactus.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00102.html">Date Prev</A>][<A HREF="msg00106.html">Date Next</A>][<A HREF="msg00110.html">Thread Prev</A>][<A HREF="msg00106.html">Thread Next</A>][<A HREF="index.html#00109">Date Index</A>][<A HREF="threads.html#00109">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>NxM DES</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: NxM DES</LI>
+<LI><em>From</em>: <A HREF="mailto:ritter@cactus.org">ritter@cactus.org</A> (Terry Ritter)</LI>
+<LI><em>Date</em>: Wed, 2 Feb 1994 01:24:10 -0600 (CST)</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+
+                   Ritter Software Engineering
+                       2609 Choctaw Trail
+                       Austin, Texas 78745
+                (512) 892-0494, ritter@cactus.org
+
+
+
+          Strong Block Ciphers from Weak Ones: NxM DES
+               A New Class of DES Operating Modes
+
+                          Terry Ritter
+                        January 31, 1994
+
+
+Introduction
+
+Many security vendors are now preparing a new generation of software
+and hardware products.  Given the well-known criticism of DES, and the
+government's unwillingness to publish their new Skipjack algorithm,
+much attention has been focused on triple-DES as a replacement for DES.
+But triple-DES requires three times the processing of normal DES, and
+retains the same small block size which must be increasingly vulnerable
+to improved dictionary attacks.  Thus it is reasonable to seek
+alternatives to triple-DES, and compare them with respect to keyspace,
+processing requirements, and block size.  Vendors should be cautioned
+that triple-DES is not the only, nor necessarily the best, alternative
+to DES.  They should consider delaying implementation of alternatives
+until a consensus develops on exactly what the replacement should be.
+
+New ciphering algorithms are often challenged to "prove" they are
+stronger than DES.  Since it is impossible to measure the "strength"
+of a cipher (and there has been no absolute proof of strength for any
+practical cipher), new cipher algorithms are often considered
+curiosities.  On the other hand, DES itself is well-known and accepted
+(despite having no proof of strength), so there seems to be great
+interest in the possibility of forming from DES a stronger cipher. 
+Triple-DES is one approach at forming that stronger cipher, and is what
+we could call a 1x3 DES structure: one DES block wide by three DES
+cipherings deep.  Naturally, we expect software for any three-level
+ciphering to operate at about one-third the speed of normal DES. 
+
+There is an alternative approach which offers a larger keyspace,
+reduced processing, and larger block sizes (which, nevertheless, can
+often be used without data-expansion beyond that of normal DES).  I
+call that approach "NxM DES," of which 2x2 DES is perhaps the easiest
+nontrivial example:
+
+
+2x2 DES
+
+Instead of repeatedly enciphering a single 8-byte block, consider using
+multiple DES cipherings to form a 16-byte block operation and thereby
+improve plaintext block statistics.  2x2 DES will be two DES blocks
+wide by two DES cipherings deep.  
+
+First, encipher two data blocks with DES, each under a different key. 
+Exchange half the data in the first and second blocks.  Then encipher
+the resulting blocks again, using two more keys:
+
+Let us denote a DES enciphering by:  
+
+     ciphertext := DESe( plaintext, key ) .  
+
+We want to encipher two DES-size blocks, call them A and B, and end up
+with ciphertext blocks G and H:
+
+     C := DESe( A, k1 );          D := DESe( B, k2 );
+     E := C[0..3],D[4..7];        F := D[0..3],C[4..7];
+     G := DESe( E, k3 );          H := DESe( F, k4 );
+
+The byte-index notation on the second line is intended to convey the
+exchange of the rightmost four bytes of the first two DES ciphertexts. 
+The exchange is a permutation, costless in hardware, and simple and
+cheap in software.  This particular permutation is also a self-inverse,
+so that the same permutation can be used for both enciphering and
+deciphering.  If we give each two-bytes of data a symbol and denote the
+original data as:
+
+     0123  4567
+
+then after the permutation we have:
+
+     0167  4523 .
+
+For example,
+
+     A:    01A1D6D039776742       B:   5CD54CA83DEF57DA
+     k1:   7CA110454A1A6E57       k2:  0131D9619DC1376E
+     C:    690F5B0D9A26939B       D:   7A389D10354BD271
+     E:    690f5b0d354bd271       F:   7a389d109a26939b
+     k3:   07A1133E4A0B2686       k4:  3849674C2602319E
+     G:    b4de11d10c55c267       H:   64f1a0b723d360a7 .
+
+Deciphering is similar to enciphering, except that the last-stage keys
+are used first, and we use DES deciphering instead of enciphering:
+
+     E := DESd( G, k3 );          F := DESd( H, k4 );
+     C := E[0..3],F[4..7];        D := E[0..3],F[4..7];
+     A := DESd( C, k1 );          B := DESd( D, k2 );
+
+Thus, 2x2 DES enciphers DES blocks A and B to DES blocks G and H in
+four DES cipherings.  This is faster than triple DES, because twice as
+much data are enciphered in each block:  2x2 DES has a cost similar to
+double-DES.  But 2x2 DES is potentially stronger than triple-DES,
+because each of the resulting ciphertext bits is a function of 128
+plaintext bits (instead of 64), as well as three DES keys.  (Although
+four keys are used in 2x2 DES, only three keys affect each output
+block, a 168-bit keyspace.) 
+
+2x2 DES does have a larger block size, so, when used alone, last-block
+padding overhead increases from four bytes (on average) to eight; a
+four-byte data expansion.  Naturally, when used alone in CBC mode, the
+initialization vector (IV) will also be larger, 16 bytes instead of 8. 
+This 12-byte overall increase in overhead should be weighed against the
+stronger 16-byte block size, since strength is the reason for moving
+away from normal DES in the first place.  
+
+
+4x2 DES
+
+In a manner similar to 2x2 DES, we can consider enciphering four DES
+blocks of plaintext, sharing data between them, and then enciphering
+the resulting four blocks again.  4x2 DES has a larger keyspace than
+2x2 DES, yet retains the same ciphering cost.  4x2 DES does have some
+additional last-block and IV overhead, in return for a greater keyspace
+and larger block-size strength.  Each 4x2 ciphering requires eight DES
+keys:  
+
+     E[0..7] := DESe( A, k1 );
+     F[0..7] := DESe( B, k2 );
+     G[0..7] := DESe( C, k3 );
+     H[0..7] := DESe( D, k4 );
+
+     (swap right-hand half of the data in {E,F} and {G,H})
+     I := E[0..3],F[4..7]
+     J := F[0..3],E[4..7]
+     K := G[0..3],H[4..7]
+     L := H[0..3],G[4..7]
+
+     (swap the middle half of the data in {I,L} and {J,K})
+     M := I[0..1],L[2..5],I[6..7]
+     N := J[0..1],K[2..5],J[6..7]
+     O := K[0..1],J[2..5],K[6..7]
+     P := L[0..1],I[2..5],L[6..7]
+
+     Q := DESe( M, k5 );
+     R := DESe( N, k6 );
+     S := DESe( O, k7 );
+     T := DESe( P, k8 );
+
+The intermediate permutation involves four 32-bit exchange operations,
+an expense still trivial compared to the DES ciphering operations.  (In
+a hardware implementation, the byte-swaps are the connections always
+needed between stages, just connected differently, with no added
+expense at all.)  This permutation is also a self-inverse.  If we
+denote each two-bytes of the data symbolically:
+
+     0123  4567  89ab cdef
+
+then after the permutation, we have:
+
+     0da7  49e3  852f c16b .
+
+
+Alternately, if we denote the data prior to permutation as:
+
+     0000  1111  2222 3333
+
+then after the permutation we have:
+
+     0321  1230  2103 3012 ,
+
+showing that each permuted block contains exactly two bytes from each
+of the four original DES blocks.  Each 8-byte output block in 4x2 DES
+is a function of 32 bytes of input plaintext, as well as five DES keys,
+a 280-bit keyspace.
+
+For example,
+
+     A:    01A1D6D039776742       B:   5CD54CA83DEF57DA 
+     C:    0248D43806F67172       D:   51454B582DDF440A
+
+     k1:   7CA110454A1A6E57       k2:  0131D9619DC1376E
+     k3:   07A1133E4A0B2686       k4:  3849674C2602319E
+
+     E:    690F5B0D9A26939B       F:   7A389D10354BD271
+     G:    868EBB51CAB4599A       H:   7178876E01F19B2A
+
+     M:    690f876ecab4d271       N:   7a38bb5101f1939b 
+     O:    868e9d109a269b2a       P:   71785b0d354b599a
+
+     k5:   04B915BA43FEB5B6       k6:  0113B970FD34F2CE
+     k7:   0170F175468FB5E6       k8:  43297FAD38E373FE
+
+     Q:    89af722f592664c4       R:   012d483a04db300f
+     S:    dd60060ad098e3e0       T:   a3832dc4ff5c99ad .
+
+
+Again, 4x2 DES deciphering is similar, except that we use the last-
+stage keys first, and DES deciphering instead of enciphering.  
+
+
+NxM DES
+
+8x2 DES would have a 64-byte block and 16 DES keys, yet should still
+be considerably faster than triple-DES.  Even larger blocks are
+possible, but would seem to require exchange operations on non-byte
+boundaries (to assure that each permuted block contains bits from each
+stage-one ciphertext block), so 16x2 DES and larger structures may have
+a larger software permutation cost.  Nevertheless, the Nx2 approach
+gives us a way to increase the keyspace while generally retaining
+processing costs similar to double-DES.
+
+DES structures with additional ciphering levels, such as 2x3 DES or
+4x3 DES, are also available, at a processing cost similar to triple-
+DES, but with the increased strength of a larger block size.  A 2x3 DES
+structure would have a 280-bit keyspace similar to 4x2 DES, but with
+50 percent higher processing costs.  A 4x3 DES structure could be
+appropriate for some applications, but would have a huge 504-bit
+keyspace which would require us to create, transport and store the
+associated 84-byte key set.  
+
+
+Large Blocks in Existing Systems
+
+It should be possible to adapt many existing systems to use larger
+blocks without further data expansion.  Consider an 82-byte message,
+which would normally be structured as eleven 8-byte DES blocks, for a
+total of 88 bytes:  An NxM DES alternative might use two 4x2 DES
+blocks, one 2x2 DES block, and one 1x3 DES block, for 32+32+16+8 or 88
+bytes, exactly the same as normal DES.  A 63-byte message (normally 8
+DES blocks) would use just two 4x2 DES blocks for a total of 64 bytes,
+also the same as normal DES.  If larger blocks are always used until
+smaller blocks would be more efficient, there is exactly one way to
+structure any given amount of data, and the resulting length is
+sufficient to reproduce the multiple-size blocking structure.  The
+overhead of these blocking manipulations remains insignificant when
+compared to the DES ciphering operations.  We could call this sort of
+use of multi-size blocking "NxM+ DES," and 4x2+2x2+1x3 DES (which we
+could call "4x2+ DES") would seem to be a very practical system.  
+
+Clearly, in CBC mode, 4x2 DES will require a larger IV than normal DES. 
+Perhaps the IV could be transferred as part of the key-exchange; there
+is obviously no way to avoid using larger keys if we want a stronger
+cipher, whatever approach we use.  Smaller blocks at the end of a data
+area could just take the left-most part of the preceding block as their
+chain value.  Similarly, a 2x2 DES block might use the left-most two
+DES keys at both levels of a 4x2 DES block (k1,k2,k5,k6), while a 1x3
+DES block might just use the first three keys of the 2x2 DES block.  
+
+Overall, 4x2+ DES might be a simple firmware upgrade for existing DES
+hardware.  
+
+
+Summary
+
+Because the DES cipher is well known, there is interest in creating a
+stronger cipher which builds on normal DES as a base.  By introducing
+a larger block width in addition to repeated cipherings, additional
+complexity can be obtained with a moderate increase in processing. 
+This approach is unusual in that various levels of strength can be
+obtained at virtually the same processing cost, a cost comparable to
+double-DES and substantially less than triple-DES.  Furthermore, the
+larger data blocks can be used even in systems which would not support
+data expansion beyond that inherent in normal DES.  Consequently, the
+NxM DES approach would seem to have significant practical advantages
+over either double-DES or triple-DES as a replacement for DES.  
+
+NxM DES is a product of my own research.  I am not aware that this
+approach has been previously published.  
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00102.html">SuperPing1.2</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00106.html">Anonymous mail service up for alpha testing</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00110.html">Re: SuperPing1.2</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00106.html">Anonymous mail service up for alpha testing</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00109"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00109"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

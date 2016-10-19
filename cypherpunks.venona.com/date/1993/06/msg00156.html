@@ -1,0 +1,147 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: HELP: pgp, .forward, mh -->
+<!--X-From-R13: fgvtNargpbz.pbz (Egvt) -->
+<!--X-Date: Fri, 4 Jun 93 09:58:07 PDT -->
+<!--X-Message-Id: 9306041658.AA28725@netcom.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199306031404.AA18382@Menudo.UH.EDU -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: HELP: pgp, .forward, mh</TITLE>
+<LINK REV="made" HREF="mailto:stig@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00153.html">Date Prev</A>][<A HREF="msg00164.html">Date Next</A>][<A HREF="msg00108.html">Thread Prev</A>][<A HREF="msg00110.html">Thread Next</A>][<A HREF="index.html#00156">Date Index</A>][<A HREF="threads.html#00156">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: HELP: pgp, .forward, mh</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Karl Barrus &lt;<A HREF="mailto:elee9sf@Menudo.UH.EDU">elee9sf@Menudo.UH.EDU</A>&gt;, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: HELP: pgp, .forward, mh</LI>
+<LI><em>From</em>: <A HREF="mailto:stig@netcom.com">stig@netcom.com</A> (Stig)</LI>
+<LI><em>Date</em>: Fri, 4 Jun 1993 09:58:26 PDT</LI>
+<LI><em>In-Reply-To</em>: Karl Barrus &lt;elee9sf@Menudo.UH.EDU&gt; (on Jun  3,  9:04am)      &lt;<A HREF="msg00108.html">199306031404.AA18382@Menudo.UH.EDU</A>&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+To quote: Karl Barrus &lt;elee9sf@Menudo.UH.EDU&gt;
+Regarding: HELP: pgp, .forward, mh
+&gt; 
+&gt; 
+&gt; Situation: I'd like mail that arrives at my other account to be
+&gt; encrypted and then forwarded to this account.  I have spent a few
+&gt; hours trying various things and nothing seems to work.
+&gt; 
+&gt; I've tried this as my .forward file:
+&gt; 
+&gt; "| /myhome/pgp -fea barrus | mail elee9sf@menudo.uh.edu"
+&gt; 
+&gt; but all that arrives at elee9sf is a blank message.
+&gt; 
+&gt; I've tried
+&gt; 
+&gt; "| /myhome/remail.script"
+&gt; 
+
+The problem is that when sendmail executes your filter, your
+environment is all messed up.  HOME and USER aren't even initialized.
+PATH is probably /bin:/usr/bin.
+
+&gt; 
+&gt; So, if that's impossible, how do I get my elee9sf account to do it?  I
+&gt; use mh on menudo, and have tried
+&gt; 
+&gt; to barrus@tree.egr.uh.edu | A "/path/pgp -fea barrus | /path/rvcstore +tonext"
+
+This works when you send mail to yourself because your environment
+gets passed along to your mail filter.
+
+
+Here's a good wrapper script to use ....
+
+
+#!/bin/sh
+
+HOME=YOUR-DIRECTORY
+PGPPATH=YOUR-PGP-DIRECTORY
+PATH=$HOME/bin:/usr/local/bin:/usr/ucb:/bin:/usr/bin:/etc:/usr/etc
+
+export HOME PATH PGPPATH
+
+cd $HOME
+
+exec &gt;&gt; $HOME/Inbox/FILTERLOG 2&gt;&amp;1	# this logs error messages so
+					# that you can learn from them
+
+FF=/tmp/FILTER.$$
+touch $FF
+chmod 600 $FF
+
+(tee $FF; echo '') &gt;&gt; Inbox/everything	# this saves your mail in case
+					# it gets dropped on the floor
+
+PGP COMMAND GOES HERE
+
+rm $FF
+
+exit 0
+
+/* Jonathan Stigelman, Stig@netcom.com, PGP public key by finger  */
+/* fingerprint = 32 DF B9 19 AE 28 D1 7A  A3 9D 0B 1A 33 13 4D 7F */
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00108" HREF="msg00108.html">HELP: pgp, .forward, mh</A></STRONG>
+<UL><LI><EM>From:</EM> Karl Barrus &lt;elee9sf@Menudo.UH.EDU&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00153.html">Lobbying for Cryptoprivacy, non-U.S.</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00164.html">Re: Software infrastructure</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00108.html">HELP: pgp, .forward, mh</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00110.html">RE: Term software develo</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00156"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00156"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

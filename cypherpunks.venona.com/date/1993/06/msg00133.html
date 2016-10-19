@@ -1,0 +1,231 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: CryptoStacker, long term vision -->
+<!--X-From-R13: Sevp Vhturf <uhturfNfbqn.orexryrl.rqh> -->
+<!--X-Date: Thu, 3 Jun 93 22:17:48 PDT -->
+<!--X-Message-Id: 9306040514.AA18001@soda.berkeley.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.3.03.9306032345.E28432&#45;e100000@rtfm -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>CryptoStacker, long term vision</TITLE>
+<LINK REV="made" HREF="mailto:hughes@soda.berkeley.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00141.html">Date Prev</A>][<A HREF="msg00135.html">Date Next</A>][<A HREF="msg00143.html">Thread Prev</A>][<A HREF="msg00193.html">Thread Next</A>][<A HREF="index.html#00133">Date Index</A>][<A HREF="threads.html#00133">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>CryptoStacker, long term vision</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: CryptoStacker, long term vision</LI>
+<LI><em>From</em>: Eric Hughes &lt;<A HREF="mailto:hughes@soda.berkeley.edu">hughes@soda.berkeley.edu</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 3 Jun 93 22:14:09 -0700</LI>
+<LI><em>In-Reply-To</em>: RYAN Alan Porter's message of Thu, 3 Jun 1993 23:00:47 -0400 (EDT) &lt;<A HREF="msg00143.html">Pine.3.03.9306032345.E28432-e100000@rtfm</A>&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; I am trying to find a convinient method for
+&gt;keeping keys that an end user would be happy with.
+
+There need not be a single method used.  This is the whole point of
+making a system with hooks--hooks for encryption, hooks for key
+management, hooks for drive control.  Not only does this make for more
+flexible software, but its effect on modularity is striking.
+
+One requirement of any keying method, however, is that the keys be
+physically removable from the locale of the machine.  That nixes a
+couple of the suggestions you mentioned.  Any keying material for the
+volume of data represented by a hard disk will be longer than human
+memory or tolerance of delay.
+
+In an encrypted telecommunications system, the keys should be changed
+frequently.  This is not necessary in the case of encrypted disks.
+You will know when your drive has been compromised; it won't be there
+any more.  Unlike telecommunications, where one assumes that the
+eavesdropper has access to all of the data flow at all times, an
+encrypted hard disk gets looked at once.
+
+Of the two remaining solutions on the list, PCMCIA and floppy, there
+is no reason to chose one over the other.  Properly modular software
+should be able to support both.  Floppies will come first because
+there's no new hardware, but I personally would be much more
+comfortable using the more robust medium of EEPROM on a removable
+card.
+
+&gt;Yes, I can see the advantages of using a device driver for this
+&gt;application.  
+
+The suggestion to use the MSDOS network redirector is also worth
+heeding.  The CD extensions, for example, use it even though that
+drive is sitting right there in the machine.  Using the redirector
+would allow one to support both separate partitioning and filesystem
+within a file.  Here's another case where modularity wins.  Many
+people may only need a bit of encrypted data, and a one or two Mb file
+might do it for them.  (Sector remapping, BTW, is no big deal.)
+Again, you don't have to do both at the outset.
+
+re: choosing DES for the cipher
+
+&gt;Is it just my impression or did you just tell me that
+&gt;	   1) DES is too slow to use, I am stupid for trying.
+
+Yes and no.
+
+&gt;	   2) DES is what I should use.
+
+Yes, at first.
+
+I remain to be convinced that software encryption of any kind is
+feasible for efficient bulk hard disk encryption.  To be sure, there
+will always be the need for less efficient but secure storage.  As I
+said in another posting, DES is the fastest trusted symmetric keyed
+block cipher around.
+
+I do not think you are stupid for trying DES.  I _will_ think you are
+stupid, however, if you go ahead and implement it without first doing
+some estimates on the amount of time it will take and the effect on
+disk performance and latency.  It is planning I am talking about here,
+not any particular final decision.
+
+You should allow hooks in the system for different block ciphers.  If
+you do this, then some sort of algorithm byte should be present in the
+partition information.
+
+&gt;How do codebook and counter mode relate to the layering that I
+&gt;hear about (ie, single, double, triple DES) 
+
+Single and multiple DES are still block operations.  Codebook and
+counter modes refer to ways that block ciphers may be used; they are
+not specific to DES.
+
+Re: large amounts of keying material
+&gt;I agree about length and multitude.  How does the key length affect the
+&gt;speed of the algorithm?
+
+There are two lengths here, do not confuse them.  The first is the
+length of the key to the block cipher.  The second is the total length
+of all such keys in aggregate.  The first length is not directly
+relevant; it is the speed of the cipher which it keys that is.  For
+simple iterated DES, however, these coincide.  Single DES takes one
+third as long as triple DES.
+
+As far as aggregate length goes, the only time here is for one array
+indirection, which is miniscule in comparison to the encryption time.
+
+&gt;I am also concerned about having the keys sitting around in memory once
+&gt;they are read from the disk.  
+
+For a standalone machine, this is not a concern.  For a networked
+machine, one may simply consider that all of memory is available to an
+intruder.  No memory protection is available.  There is no way around
+such a fundamental limitation other than hardware.  Therefore, don't
+worry about it, and inform the user of the issue.
+
+&gt;&gt; Keys in the driver should time out after some specifiable period.
+
+As I did not mention previously, this is an extremely difficult
+problem in DOS.
+
+&gt;&gt; Files that are open when the time-out occurs and the programs that
+&gt;&gt; have them open are going to have to be dealt with gracefully.
+
+&gt;[...] tying the timer into the int 24 routine which
+&gt;terminates program execution, so that if enough time had passed it would
+&gt;shut down the drive, but only AFTER you have exited your program.  
+
+No good.  I use Desqview, which multitasks the machine.  There's good
+reason not to require single tasking for this project.  Many TSR do
+effective multitasking already.
+
+This is a really sticky problem.  The criterion here is that programs
+with open files whould still be able to access them, and possibly even
+to write to them.  No other access would be permitted.  This requires
+abstraction at the file system level, not the device level, and thus
+would require mixing abstraction levels.  Ick.
+
+The logging file systems mentioned in the context of Unix are what is
+needed here, because the recent activity need not be encrypted.
+
+If graceful shutdown cannot be achieved, there will still be times
+when ungraceful shutdown will be useful.  One should not judge in
+advance another's relative values of information compromise and a
+slightly corrupted disk.  At the very least, there should exist a
+program to zero out the keying material.
+
+Re: conversion from non-encrypted to encrypted
+
+&gt;I think that this is likely to be the biggest problem with my system
+&gt;as I am considering it.  [...]  I think that a system like the
+&gt;aforementioned would be possible to painlessly install with an
+&gt;installation program [...] with no backing up and repartitioning
+&gt;involved.
+
+That's fine, but that program is going to have to get written as well,
+and it's going to have to be as reliable as a disk optimization
+program.  After each sector write the disk is going to have to be in a
+stable configuration, so if power fails at that moment, all is not
+lost.  This will not be easy, since you'll be dinking with the
+partition table all the time.
+
+If you can get such a thing working, it would enormously increase the
+actual usage of the encrypted disk drivers.  It is an elegant idea,
+but a difficult one to implement.
+
+Eric
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00143" HREF="msg00143.html">Re: CryptoStacker, long term vision</A></STRONG>
+<UL><LI><EM>From:</EM> RYAN Alan Porter &lt;ryan@rtfm.mlb.fl.us&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00141.html">Re: Software infrastructure</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00135.html">Software infrastructure</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00143.html">Re: CryptoStacker, long term vision</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00193.html">Re: CryptoStacker, long term vision</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00133"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00133"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

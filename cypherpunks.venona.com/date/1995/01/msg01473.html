@@ -1,0 +1,212 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Telnet Acrobatics -->
+<!--X-From-R13: tuvbNzlevnq.cp.pp.pzh.rqh ([nggurj Uuvb) -->
+<!--X-Date: Sun, 29 Jan 95 14:55:34 PST -->
+<!--X-Message-Id: m0rYiZL&#45;0006TuC@myriad.pc.cc.cmu.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Telnet Acrobatics</TITLE>
+<LINK REV="made" HREF="mailto:ghio@myriad.pc.cc.cmu.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01468.html">Date Prev</A>][<A HREF="msg01474.html">Date Next</A>][<A HREF="msg01463.html">Thread Prev</A>][<A HREF="msg01478.html">Thread Next</A>][<A HREF="index.html#01473">Date Index</A>][<A HREF="threads.html#01473">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Telnet Acrobatics</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Telnet Acrobatics</LI>
+<LI><em>From</em>: <A HREF="mailto:ghio@myriad.pc.cc.cmu.edu">ghio@myriad.pc.cc.cmu.edu</A> (Matthew Ghio)</LI>
+<LI><em>Date</em>: Sun, 29 Jan 95 17:58 EST</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+What follows are two small programs which I thought might be of interest to
+cypherpunks.  The first (socket.c) is a simple daemon which binds a port
+and accepts connections, and then forks child processes for each one.
+The second (relay.c) is a simple telnet program which opens a connection to
+the specified remote host and port number.  Put together they can be used
+as a telnet relay ("proxy server") that works like the term redir command.
+This in itself is useful, if you want to hide where you're coming in from,
+bypass a broken router or get through a firewall.  But, take a look at the
+loop at the end of the second program.  It simply reads input from one
+socket and writes it to another.  It would seem to me very easy to add
+an encryptor/decryptor to this process and encrypt your telnet sessions.
+You'd just need to exchange a key (via PGP) with the remote system, and
+decide on a port number, then run crypt/dec daemons on both systems.  The
+socket.c program might also be useful for socket-based remailing.  (Tho
+you can set it up in your inetd.conf instead, if you have root access.)
+
+However, I'm having a bit of trouble compiling these on some platforms.
+I do not know who the original author is.  (These came out of a toolkit
+for breaking system security and the author did not want to be known.)
+After including a few additional libraries, I was able to compile both
+under Linux, and it seems to work reasonably well.  They'll also
+compile under SunOS, if you include &lt;sys/termios.h&gt;, but it won't
+handle non-blocking I/O correctly, and can hang.  I can't get relay.c
+to compile under Ultrix, though socket.c seems to work.  socket.c also
+has a tendency to leave zombie processes hanging under Linux.
+
+Anyone want to take a shot at debugging/porting it on other platforms
+or adding crypto?
+
+begin 644 socket.c
+M(VEN8VQU9&amp;4@/'-Y&lt;R]T&gt;7!E&lt;RYH/@HC:6YC;'5D92`\&lt;WES+W-I9VYA;"YH
+M/@HC:6YC;'5D92`\&lt;WES+W-O8VME="YH/@HC:6YC;'5D92`\;F5T:6YE="]I
+M;BYH/@HC:6YC;'5D92`\;F5T9&amp;(N:#X*(VEN8VQU9&amp;4@/'-Y&lt;R]T:6UE+F@^
+M("\J(%)E&lt;75I&lt;F5D(&amp;9O&lt;B!,:6YU&gt;"`H8G5T(&amp;YO="!3=6Y/4RD@*B\*(VEN
+M8VQU9&amp;4@/'5N:7-T9"YH/B`O*B!297%U:7)E9"!F;W(@3&amp;EN=7@@*&amp;)U="!N
+M;W0@4W5N3U,I("HO"B`@("`@("`@("`@("`@(`IR96%P*"E["B`@("`@("`@
+M:6YT(',["B`@("`@("`@=VAI;&amp;4H=V%I="@F&lt;RDA/2TQ*3L*?0IM86EN*&amp;%C
+M+&amp;%V*6EN="!A8SL*:6YT("HJ878["GL*("`@("`@("!S=')U8W0@&lt;V]C:V%D
+M9')?:6X@;7EA.PH@("`@("`@('-T&lt;G5C="!S97)V96YT("IS&lt;`H@("`@("`@
+M(#L*("`@("`@("!F9%]S970@;75F.PH@("`@("`@(&amp;EN="!M&gt;69D+&amp;YE=RQX
+M+&amp;UA&gt;&amp;9D/6=E=&amp;1T86)L97-I&gt;F4H*3L*("`@("`@("!S:6=N86PH4TE'0TQ$
+M+')E87`I.PH@("`@("`@(&amp;EF*"AM&gt;69D/7-O8VME="A!1E])3D54+%-/0TM?
+M4U1214%-+`H@("`@("`@("`@("`P*2D\,"EE&gt;&amp;ET*#$I.PH@("`@("`@(&amp;UY
+M82YS:6Y?9F%M:6QY/4%&amp;7TE.150["B`@("`@("`@8GIE&lt;F\H)FUY82YS:6Y?
+M861D&lt;BP*("`@("`@("`@("`@&lt;VEZ96]F*&amp;UY82YS:6Y?861D&lt;BDI.PH@("`@
+M("`@(&amp;EF*"AS&lt;#UG971S97)V8GEN86UE*&amp;%V6S%=+")T8W`B*2D*("`@("`@
+M("`@("`@/3TH&lt;W1R=6-T('-E&lt;G9E;G0@*BDP*7L*("`@("`@("`@("`@("`@
+M(&amp;EF*&amp;%T;VDH879;,5TI/#TP*65X:70H,2D["B`@("`@("`@("`@("`@("!M
+M&gt;6$N&lt;VEN7W!O&lt;G0*("`@("`@("`@("`@("`@("`@("`]:'1O;G,H871O:2AA
+M=ELQ72DI.PH@("`@("`@('T@96QS92!M&gt;6$N&lt;VEN7W!O&lt;G0]&lt;W`M/G-?&lt;&amp;]R
+M=#L*("`@("`@("!I9BAB:6YD*&amp;UY9F0L"B`@("`@("`@("`@("AS=')U8W0@
+M&lt;V]C:V%D9'(@*BDF;7EA+'-I&gt;F5O9BAM&gt;6$I*2EE&gt;&amp;ET*#$I.PH@("`@("`@
+M(&amp;EF*&amp;QI&lt;W1E;BAM&gt;69D+`H@("`@("`@("`@("`Q*3PP*65X:70H,2D["FQO
+M;W`Z(`H@("`@("`@($9$7UI%4D\H)FUU9BD["B`@("`@("`@1D1?4T54*&amp;UY
+M9F0L)FUU9BD["B`@("`@("`@:68*("`@("`@("`H&lt;V5L96-T*&amp;UY9F0K,2PF
+M;75F+#`L,"PP*2$],7Q\(49$7TE34T54*&amp;UY9F0L)FUU9BDI9V]T;PH@("`@
+M("`@("`@("!L;V]P.PH@("`@("`@(&amp;EF*"AN97&lt;]86-C97!T*&amp;UY9F0L,"PP
+M*2D\,"EG;W1O(&amp;QO;W`["B`@("`@("`@:68H9F]R:R@I"B`@("`@("`@("`@
+M(#T],"E["B`@("`@("`@("`@("`@("!F;W(H&gt;#TR.W@\;6%X9F0[&gt;"LK*6EF
+M*'@A/6YE=REC;&amp;]S92AX*3L*("`@("`@("`@("`@("`@(&amp;9O&lt;BAX/3`[&gt;#P*
+M("`@("`@("`@("`@("`@("`@("!.4TE'.W@K*RES:6=N86PH&gt;"Q324=?1$9,
+M*3L*("`@("`@("`@("`@("`@(&amp;1U&lt;#(H;F5W+#`I.PH@("`@("`@("`@("`@
+M("`@8VQO&lt;V4H;F5W*3L*("`@("`@("`@("`@("`@(&amp;1U&lt;#(*("`@("`@("`@
+M("`@("`@("`@("`H,"PQ*3L*("`@("`@("`@("`@("`@(&amp;1U&lt;#(H,"PR*3L*
+M("`@("`@("`@("`@("`@(&amp;5X96-V*&amp;%V6S)=+&amp;%V*S(I.PH@("`@("`@("`@
+M("`@("`@97AI="@Q*3L*("`@("`@("!]"B`@("`@("`@8VQO&lt;V4H;F5W*3L*
+5("`@("`@("!G;W1O(&amp;QO;W`["GT*
+`
+end
+begin 644 relay.c
+M(VEN8VQU9&amp;4@/'-T9&amp;EO+F@^"B-I;F-L=61E(#QN971D8BYH/@HC:6YC;'5D
+M92`\&lt;WES+W1Y&lt;&amp;5S+F@^"B-I;F-L=61E(#QS&gt;7,O9FEL92YH/@HC:6YC;'5D
+M92`\;F5T:6YE="]I;BYH/@HC:6YC;'5D92`\&lt;WES+W-O8VME="YH/@HC:6YC
+M;'5D92`\97)R;F\N:#X*(VEN8VQU9&amp;4@/&amp;9C;G1L+F@^"B-I;F-L=61E(#QS
+M&gt;7,O:6]C=&amp;PN:#X*(VEN8VQU9&amp;4@/'5N:7-T9"YH/@HC:6YC;'5D92`\&lt;WES
+M+W1I;64N:#X*+RHC:6YC;'5D92`\&lt;WES+W1E&lt;FUI;W,N:#XJ+R`@+RH@4F5Q
+M=6ER960@9F]R(%-U;D]3("AB=70@;F]T($QI;G5X*2`J+PH*=F]I9"!M86EN
+M*&amp;EN="!A&lt;F=C+&amp;-H87(@*BIA&lt;F=V*0I["B`@&lt;F5G:7-T97(@8VAA&lt;B`@("`@
+M("`J&lt;#L*("!R96=I&lt;W1E&lt;B!C:&amp;%R("`@("`@("ID97-T.PH@(')E9VES=&amp;5R
+M(&amp;EN="!X.PH@(&amp;-H87(@:&amp;]S=&amp;YA;65;,C4V73L*("!I;G0@861D&lt;CL*("!I
+M;G0@8V]N;F5C=&amp;EO;E]O:SL*("!S=')U8W0@:&amp;]S=&amp;5N="`J:&amp;]S=#L*("!I
+M;G0@&lt;F5M;W1E9F0["B`@:6YT(&amp;9D.PH@('-T&lt;G5C="!S;V-K861D&lt;E]I;B!R
+M96UO=&amp;5S97)V97(["B`@=6YS:6=N960@8VAA&lt;B!C.PH@(&amp;9D7W-E="!R96%D
+M9F1S.PH@(&amp;9D7W-E="!W&lt;FET969D&lt;SL*("!F9%]S970@97AC97!T9F1S.PH@
+M('-T&lt;G5C="!T97)M:6]S('1I;W-T&lt;CL*("!I;G0@&lt;CTQ.PH@(&amp;EN="!W/3$[
+M"B`@8VAA&lt;B!B=69F97);,3`R-%T["B`@:6YT(&amp;\["B`@"B`@&lt;W1R8W!Y*&amp;AO
+M&lt;W1N86UE+&amp;%R9W9;,5TI.PH@(&amp;AO&lt;W0@/2!G971H;W-T8GEN86UE("AH;W-T
+M;F%M92D["B`@:68@*"%H;W-T*2!P&lt;FEN=&amp;8H(B5S.B!U;FMN;W=N(&amp;AO&lt;W1&lt;
+M;B(L(&amp;AO&lt;W1N86UE*3L*("!B8V]P&gt;2`H:&amp;]S="T^:%]A9&amp;1R+"`F861D&lt;BP@
+M-"D["B`@&lt;F5M;W1E&lt;V5R=F5R+G-I;E]F86UI;'D@/2!H;W-T+3YH7V%D9')T
+M&gt;7!E.PH@(')E;6]T97-E&lt;G9E&lt;BYS:6Y?&lt;&amp;]R="`](&amp;AT;VYS*&amp;%T;VDH87)G
+M=ELR72DI.PH@(`H@('`@/2`H8VAA&lt;B`J*2HH:&amp;]S="T^:%]A9&amp;1R7VQI&lt;W0I
+M.PH@(&amp;9O&lt;B`H9&amp;5S="`]("AC:&amp;%R("HI)G)E;6]T97-E&lt;G9E&lt;BYS:6Y?861D
+M&lt;BP@&gt;"`](&amp;AO&lt;W0M/FA?;&amp;5N9W1H.R`M+7@@/CT@,#L@*0H@("`@*F1E&lt;W0K
+M*R`]("IP*RL["B`@"B`@&lt;F5M;W1E9F0@/2!S;V-K970H:&amp;]S="T^:%]A9&amp;1R
+M='EP92P@4T]#2U]35%)%04TL(#`I.PH*("!C;VYN96-T:6]N7V]K(#T@8V]N
+M;F5C="`H&lt;F5M;W1E9F0L("AS=')U8W0@&lt;V]C:V%D9'(@*BDF&lt;F5M;W1E&lt;V5R
+M=F5R+"!S:7IE;V8H&lt;F5M;W1E&lt;V5R=F5R*2D["@H@(&amp;EF("AC;VYN96-T:6]N
+M7V]K(#P@,"D*("`@('L*("`@("`@&lt;')I;G1F("@B0V]N;F5C=&amp;EO;B!%&lt;G)O
+M&lt;EQN(BD["B`@("`@(&amp;9F;'5S:"`H&lt;W1D;W5T*3L*("`@('T*"B`@+RH@3VMA
+M&gt;2P@8V]N;F5C=&amp;EO;B!E&lt;W1A8FQI&lt;VAE9"X@*B\*"B`@9F-N=&amp;PH&lt;F5M;W1E
+M9F0L($]?3D].0DQ/0TLI.PH@(&amp;9D/3`["B`@9F-N=&amp;PH9F0L($]?3D].0DQ/
+M0TLI.PH*("!I;V-T;"AF9"P@1DE/3D))3RP@*&amp;EN="`J*3$I.R`O*B!.;VXM
+M0FQO8VMI;F&lt;@22]/("HO"B`@:6]C=&amp;PH&lt;F5M;W1E9F0L($9)3TY"24\L("AI
+M;G0@*BDQ*3L*("`*("!I;V-T;"AF9"P@5$-'1513+"`F=&amp;EO&lt;W1R*3L*("!T
+M:6]S='(N8U]L9FQA9STP.R`O*B!$:7-A8FQE(&amp;%L;"!P&lt;F]C97-S:6YG.R!U
+M;F%L=&amp;5R960@."UB:70@8VAA;FYE;"`J+PH@('1I;W-T&lt;BYC7VEF;&amp;%G/3`[
+M"B`@=&amp;EO&lt;W1R+F-?;V9L86&lt;],#L*("!T:6]S='(N8U]C8UM624Y44ET],#L*
+M("!T:6]S='(N8U]C8UM6455)5%T],#L*("!T:6]S='(N8U]C8UM614]&amp;73TP
+M.PH@(&amp;EO8W1L*&amp;9D+"!40U-%5%,L("9T:6]S='(I.PH*("!I;V-T;"AR96UO
+M=&amp;5F9"P@5$-'1513+"`F=&amp;EO&lt;W1R*3L*("!T:6]S='(N8U]L9FQA9STP.R`O
+M*B!$:7-A8FQE(&amp;%L;"!P&lt;F]C97-S:6YG.R!U;F%L=&amp;5R960@."UB:70@8VAA
+M;FYE;"`J+PH@('1I;W-T&lt;BYC7VEF;&amp;%G/3`["B`@=&amp;EO&lt;W1R+F-?;V9L86&lt;]
+M,#L*("!I;V-T;"AR96UO=&amp;5F9"P@5$-31513+"`F=&amp;EO&lt;W1R*3L*("`*("!&amp;
+M1%]:15)/*"9W&lt;FET969D&lt;RD["B`@1D1?6D523R@F97AC97!T9F1S*3L*("`*
+M("!W:&amp;EL92AR(3TP)B9W(3TP*2!["B`@("!&amp;1%]:15)/*"9R96%D9F1S*3L*
+M("`@($9$7U-%5"AF9"P@)G)E861F9',I.PH@("`@1D1?4T54*')E;6]T969D
+M+"`F&lt;F5A9&amp;9D&lt;RD["B`@("!S96QE8W0H,38L("9R96%D9F1S+"`F=W)I=&amp;5F
+M9',L("9E&gt;&amp;-E&lt;'1F9',L*'-T&lt;G5C="!T:6UE=F%L("HI,"D["B`@("`O*B!4
+M:&amp;ES('=O&lt;FMS(&amp;)U="!I&lt;R!W87D@=&amp;]O('-L;W&lt;N+BX@*B\*("`@("\J=SUR
+M96%D*&amp;9D+"9C+#$I.VEF("AW/C`I('=R:71E*')E;6]T969D+"9C+#$I.RHO
+M"B`@("`O*G(]&lt;F5A9"AR96UO=&amp;5F9"PF8RPQ*3MI9B`H&lt;CXP*2!W&lt;FET92AF
+M9"PF8RPQ*3LJ+PH@("`@=SUR96%D*&amp;9D+&amp;)U9F9E&lt;BPQ,#(T*3MI9B`H=SXP
+M*0H@("`@&gt;PH@("`@("!O/3`["B`@("`@('=H:6QE*&amp;\\=RD@;SUW&lt;FET92AR
+M96UO=&amp;5F9"QB=69F97(K;RQW+6\I.PH@("`@?0H@("`@&lt;CUR96%D*')E;6]T
+M969D+&amp;)U9F9E&lt;BPQ,#(T*3MI9B`H&lt;CXP*0H@("`@&gt;PH@("`@("!O/3`["B`@
+M("`@('=H:6QE*&amp;\\&lt;BD@;SUW&lt;FET92AF9"QB=69F97(K;RQR+6\I.PH@("`@
+L?0H@('T*"B`@8VQO&lt;V4H&lt;F5M;W1E9F0I.PH@(&amp;-L;W-E*&amp;9D*3L*("`*?0H@
+`
+end
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01478" HREF="msg01478.html">Re: Telnet Acrobatics</A></STRONG>
+<UL><LI><EM>From:</EM> Matt Blaze &lt;mab@crypto.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01468.html">Six month mail processing delay :-)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01474.html">Telnet Acrobatics</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01463.html">Re: Six month mail processing delay :-)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01478.html">Re: Telnet Acrobatics</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01473"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01473"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

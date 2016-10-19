@@ -1,0 +1,245 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: encrypted irc -->
+<!--X-From-R13: Fvzbgul @rjfunz <arjfunzNjvyvxv.rat.unjnvv.rqh> -->
+<!--X-Date: Sun, 25 Apr 93 12:04:37 PDT -->
+<!--X-Message-Id: 9304251904.AA09776@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>encrypted irc</TITLE>
+<LINK REV="made" HREF="mailto:newsham@wiliki.eng.hawaii.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00579.html">Date Prev</A>][<A HREF="msg00581.html">Date Next</A>][<A HREF="msg00575.html">Thread Prev</A>][<A HREF="msg00583.html">Thread Next</A>][<A HREF="index.html#00577">Date Index</A>][<A HREF="threads.html#00577">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>encrypted irc</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: encrypted irc</LI>
+<LI><em>From</em>: Timothy Newsham &lt;<A HREF="mailto:newsham@wiliki.eng.hawaii.edu">newsham@wiliki.eng.hawaii.edu</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 25 Apr 1993 09:05:40 -1000 (HST)</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+I have implemented an encryption scheme with key exchange
+in an IRC client.  It is now in working condition.  Here
+are the details.  Mail me if you wish to have a copy
+sent to you.
+
+---- file: README ----------
+
+this is a tinyirc client (client not written by me)
+but I added in encryption..  Right now encryption is
+done in DES for messages and RSA for key exchange.
+
+To set it up,  unarchive (you probably already did this)
+then type :
+     make
+this should make a program called 'sock'
+
+now you need to go into the RSA directory and make yourself
+a keypair.
+
+     cd RSA
+     make genrsa
+     make genprim
+     genrsa
+
+this makes two files  'public' and 'secret'.  You need to install
+these:
+     mv secret ..
+     mv public ../&lt;yournick&gt;
+
+and give out your public key to everyone you want to talk to.
+This lets them send their key to you.
+
+run sock:
+      cd ..
+      sock
+
+join the same channel as your friend you wish to talk to:
+      /join #channel
+
+send them your key,  this lets them read any message typed by
+you (note you have to be in the same channel as them)
+      /key &lt;your friend&gt;
+
+(note the public key must be in the current directory)
+your friend will receive your key, and now everything you type
+can be read by him.  In order to send your key to your friend
+you must have the file &lt;your friend&gt; in your directory that
+is &lt;your friend&gt;'s public key.  He must have the matching
+secret key in the file 'secret' in his directory.  If your
+friend changes nick's and the filename of his key isnt the
+same as his nick you can specify the file:
+       /key &lt;your friend&gt; &lt;filename of his key&gt;
+
+thats it!  Everything you type is encrypted with the same key
+which is chosen at random when you start up 'sock'.  Every time
+you use sock a new key is used.  Every time you want to talk to
+a new person you have to send them your key.  Anyone who has
+your key can read any of your messages,  so if you dont want
+people reading your messages dont give them your key.  Everything
+you type is encrypted.
+
+
+some public keys are already provided in pubkeys/*
+copy them into current directory to use them.
+--------
+Weaknesses:
+
+  (1) serial number and DES key are generated with rand()
+      after seeding with time value.  They are generated at
+      the same time, and serial number is a publically known
+      value.  This could allow people to brute force search
+      through the pseudo-random numbers and find your key.
+      This *should* be fixed, any ideas/
+
+  (2) RSA key as created by 'genrsa' is not very long!  It
+      is crackable right now.  This could be lengthened
+      easily enough by modifying genrsa.c .  The rest of
+      the program doesnt care what length key is used.
+
+  (3) You can send alot of garbage to someone's screen by
+      sending out wrong key's and/or sending out bad
+      data matching keys already aquired.
+      possible solution: header inside of the encrypted
+      data.  1 character would give a 1/256 chance of
+      this attack working.
+
+  (4) probably alot more I didnt think about.
+
+----------
+Protocol:
+
+there are two types of messages,  one to send keys across
+to other people, one to send across encrypted messages, all
+messages are sent to the current irc channel, not through messages
+to individual people:
+
+   SKPJACK:xxxx:yyyy:zzzzz
+        xxxx - the nick name of the intended recipient
+        yyyy - the serial number of the key being transfered
+        zzzz - ascii encoded RSA data
+     messages of this format are used to send private keys (DES
+     keys) to the recipient, ie   /key nick.
+     Messages received are ignored if xxxxx isnt our current nick.
+
+   CLIPPER:xxxx:yyyy
+         xxxx - the serial number of the key used to encrypt
+         yyyy - the ascii encoded crypted data (DES)
+     messages of this format are used to send encrypted chat
+     messages.  Messages received are ignored if we dont have
+     the key corresponding to the serial number. 
+
+   ascii coding:  each byte is broken into 2 nybbles (4 bits)
+   and sent across as two characters,  the first nybble
+   is sent as   hi+'a' and the second is sent as lo+'A'
+   so alternate characters are always upper then lower then
+   upper case and so on.  (byte = hi&lt;&lt;4 + lo)
+    
+   Keys are generated randomly and each key has a random 
+   32 bit serial number associated with it.  The program
+   uses the serial number to decided which key to decrypt 
+   with.  The program keeps all the keys it receives.
+   All messages you type are sent with your key,  all messages
+   you receive are decoded with the key matching the serial
+   number sent with it.
+   
+     
+-----
+CREDITS
+
+Alot of this software was not written by me, In fact my part
+was minimal.  I stole code from the following people:
+
+The basic IRC client (tinyIRC) by:
+ Nathan Laredo - "Green" 
+ gt7080a@prism.gatech.edu 
+
+
+The RSA package by:    (email address is no longer valid)
+
+  Martin Nicolay		( martin@trillian.megalon.de )
+  Fliederstr. 23
+  4100 Duisburg 1
+  W-Germany
+
+I couldn't reach him via email.  I got this package via
+anon-ftp,  I hope he doesnt mind use of it in this program.
+
+
+The DES package (d3des):
+
+ D3DES (V5.09) -
+
+ A portable, public domain, version of the Data Encryption Standard.
+
+ Written with Symantec's THINK (Lightspeed) C by Richard Outerbridge.
+ Thanks to: Dan Hoey for his excellent Initial and Inverse permutation
+ code;  Jim Gillogly &amp; Phil Karn for the DES key schedule code; Dennis
+ Ferguson, Eric Young and Dana How for comparing notes; and Ray Lau,
+ for humouring me on.
+
+ Copyright (c) 1988,1989,1990,1991,1992 by Richard Outerbridge.
+ (GEnie : OUTER; CIS : [71755,204]) Graven Imagery, 1992.
+
+He says "public domain" and then later "Copyright".  I assume
+he means "freely distributable, useable".
+
+If any of you are out there thanx alot!  Your code is much
+appreciated.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00579.html">Re: Consumer phone privacy info sheet</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00581.html">Re:  Congressional FAX numbers</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00575.html">Crypto references</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00583.html">Congressional phone/fax, VA 11th district</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00577"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00577"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

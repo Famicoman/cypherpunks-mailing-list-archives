@@ -1,0 +1,203 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: distributed mailing list architecture (fwd) -->
+<!--X-From-R13: Xvz Qubngr <enintrNSW@EFSW@.ffm.pbz> -->
+<!--X-Date: Thu, 13 Feb 1997 12:12:05 &#45;0800 (PST) -->
+<!--X-Message-Id: 199702132012.MAA10181@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>distributed mailing list architecture (fwd)</TITLE>
+<LINK REV="made" HREF="mailto:ravage@EINSTEIN.ssz.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00669.html">Date Prev</A>][<A HREF="msg02138.html">Date Next</A>][<A HREF="msg02104.html">Thread Prev</A>][<A HREF="msg00649.html">Thread Next</A>][<A HREF="index.html#00664">Date Index</A>][<A HREF="threads.html#00664">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>distributed mailing list architecture (fwd)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: distributed mailing list architecture (fwd)</LI>
+<LI><em>From</em>: Jim Choate &lt;<A HREF="mailto:ravage@EINSTEIN.ssz.com">ravage@EINSTEIN.ssz.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 13 Feb 1997 13:29:23 -0600 (CST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Forwarded message:
+
+&gt; Date: Fri, 7 Feb 1997 20:11:15 GMT
+&gt; From: Adam Back &lt;aba@dcs.ex.ac.uk&gt;
+&gt; Subject: distributed mailing list architecture
+
+&gt; Igor Chudov &lt;ichudov@algebra.com&gt; writes:
+&gt; &gt; I'd suggest a simplier solution: to connect each server with a couple,
+&gt; &gt; or maybe three, other servers. This scheme is rather robust, does not
+&gt; &gt; consume too much CPU time and bandwidth, and is easy to implement.
+&gt; 
+&gt; I'm not sure what the architecture you are suggesting is, but this is
+&gt; what I suggest as the simplest to set up.
+
+I envision it to look like a fishnet.
+
+&gt; Have one main majordomo.
+
+There should be no "one main" anything on this project.
+
+&gt; You subscribe to the main majordomo request address, and it forwards
+&gt; your subscription request to a random mail-exploder.
+&gt; 
+&gt; You unsubscribe to the main majordomo request address, and it forwards
+&gt; your subscription to all the mail-exploders request addresses
+&gt; (unsubscribe traffic is low anyway, keeping track of who is subscribed
+&gt; where at the main major domo doesn't seem worth it).
+&gt; 
+&gt; Each person who wishes to run an exploder is subscribed (manually) to
+&gt; the main majordomo.
+&gt; 
+&gt; You submit articles to the main majordomo, and it sends copies of the
+&gt; articles to it's subscribers (the mail-exploders).
+&gt; 
+&gt; The mail-exploders send mail to the address on their subscriber lists.
+&gt; 
+&gt; (John Gilmore suggested this architecture, as a simpler alternative).
+
+Simpler? Hardly.
+
+With the remailer chain proposal we could have a working remailer network
+up in a couple of more days. What you propose will take weeks to write
+and debug code and then follow it through.
+
+No, this approach is neither simple or efficient.
+
+What I call a fishnet toplogy is much cleaner. Each node only has to
+filter messages where it was in the source chain. Easy to do with procmail,
+if you look at the first example on the man page, eg how to dump to
+dev/null, you find a perfect example of what procmail needs to do. It does
+not need to know who else is on the network (as in a star) and its traffic
+consists of one copy of each incoming instead of n copies from each of
+the 'star' remailers plus the outgoing from the local subscribers. A easy
+protocol can be arranged so that if the downstream remailer breaks it
+subscribes to the next one in the chain, again easy to do with just a few
+lines of code...
+
+
+  If (bounce count of next site expires)
+    {
+       subscribe backup feed
+    }
+  If (next site returns)
+    {
+       unsubscribe backup feed
+    }
+
+
+
+As to the actual architecture:
+
+
+                      A --&gt; D
+                     ^ \   ^ \
+                    /   v /   v
+                   C &lt;-- B &lt;-- E
+                         ^
+                         |
+                         v
+                         N  (mail-news gateway)
+
+
+Again, several nice features are:
+
+  *  Can be gotten up from a stock majordom/procmail install in a
+     trivial manner
+
+  *  Site only has to filter mail from itself
+
+  *  It only has to keep up with two sites in the network instead
+     of many (support for limited scope and anonymity)
+
+  *  Each site gets a critical feed from only 1 other site so traffic of
+     duplicates is a minimum
+
+  *  Except for sites on the boundary of the net every site has two
+     places to send its output, adding to robustness, if we allow
+     the edges to wrap (eg torus) then no sites have less than 2
+     other sites to send traffic to.
+
+  *  Supports various levels of encryption or authentication on a link
+     by link basis, not forcing all members to submint to a general
+     architecture
+
+  *  Scales easily, something the star model does not do since hub
+     machines must grow at a rate dependant on the total number of
+     remailers in the chain this equates to mullah and lots of it
+     should the network take off
+
+  *  The actual number of machines in a given chain is flexible, I
+     would guess the number should match a plane tiling figure,
+     triangle (n=3), squares (n=4), or hexagons (n=6)
+
+  *  Traffic analysis and sync floods are harder to impliment in this
+     architecture than a star or hub based network
+
+  *  Supports 'little' machines and operators who are not guru's
+     or have deep pockets
+
+
+                                                   Jim Choate
+                                                   CyberTects
+                                                   ravage@ssz.com
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00669.html">Re: Cypherpunks Distributed Remailer (fwd)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02138.html">Re: (2) More on Digital Postage</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02104.html">distributed mailing list architecture (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00649.html">More on Digital Postage</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00664"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00664"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,168 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Disguise_PGP_Ascii -->
+<!--X-From-R13: abobqlNfuryy.cbegny.pbz -->
+<!--X-Date: Tue, 17 May 94 02:53:56 PDT -->
+<!--X-Message-Id: 199405170955.CAA03436@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Disguise_PGP_Ascii</TITLE>
+<LINK REV="made" HREF="mailto:nobody@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01031.html">Date Prev</A>][<A HREF="msg01036.html">Date Next</A>][<A HREF="msg01030.html">Thread Prev</A>][<A HREF="msg01038.html">Thread Next</A>][<A HREF="index.html#01035">Date Index</A>][<A HREF="threads.html#01035">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Disguise_PGP_Ascii</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Disguise_PGP_Ascii</LI>
+<LI><em>From</em>: <A HREF="mailto:nobody@shell.portal.com">nobody@shell.portal.com</A></LI>
+<LI><em>Date</em>: Tue, 17 May 1994 02:55:00 -0700</LI>
+<LI><em>Comments</em>: This message is NOT from the person listed in the Fromline.  It is from an automated software remailing service operating atthat address.  Please report problem mail to &lt;hfinney@shell.portal.com&gt;.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+It occurred to me that if we are going to be posting pgp'ed files to a
+newsgroups it might be best to remove the PGP headers and make the
+ciphertext look more text-like.  So here is some code to do that, sort of.
+Basically I kept it simple so it's easy to read.
+
+To make this:
+
+- -----BEGIN PGP MESSAGE-----
+Version: 2.3a
+
+pgAAANL6C1+DERhOIhjtLQnEA0GZOnXmXa7xSqPTdX1Retrkn+CnnqkBrdGXQ/sO
+9Gl+k4MjG/8991Erhl+cay+SBSKS+YoGNp79mwEnvwHICq/WsMs6lTo6GudHku/e
+9gnXVHkYg5/lYbAWFLRnIMDhGpeeUqCEoG5vlhl++JMwzgc/lqGCwZAeUd+q5UXG
+bqm/sGAo80xtG2hs1LqLPP0lCoqSZ5cJkuNRJBgpm+r8P4PHijCLr9iAE4InFy+F
+otm+Ut8SDYbt8OjR9WPig8V7aYdp8x0=
+=i8Hu
+- -----END PGP MESSAGE-----
+
+turn into this:
+
+- --- --BEG IN  PGP M ESSAG E ---- -.. Ver s ion :  2.3a .. .. pgAAA N L
+6C1+ DER hO IhjtL Qn E A0G ZO n X mXa7 x SqP TdX1 Retrk n+Cnn qk Br
+dG XQ/sO ..9Gl +k4 MjG/8 9 91Er hl+ca y+SB SKS+ Yo GNp 79 m wEnv w 
+HICq /W sMs 6lT o 6GudH ku /e..9 gn XVHk Yg 5/lY bAW FLRn IMDh Gp e
+eUq CEo G5 v lhl++ J M w zgc / lqGCw ZAe Ud+q5 UXG ..bq m/s GAo 80xt 
+G2 hs1Lq L PP0lC oqS Z5c JkuN RJBg pm+r8 P4P H ijC Lr9iA E4 InFy
++ F..ot m+U t8 SD Ybt8O jR 9WPig 8V 7 aYd p8x 0=..= i8 H u..--- --E ND
+ P GP  ME S SAG E---- -..   
+
+type "st e &lt; infile &gt; outfile"
+
+And to convert it back type "st d &lt; infile &gt; outfile"
+
+ST.C:
+
+#include &lt;stdio.h&gt;
+#include &lt;time.h&gt;
+#ifdef MSDOS || __OS2__
+#include &lt;stdlib.h&gt; // for exit()
+#endif
+void
+main(int argc, char **argv)
+{
+    int         i = 0, j = 0, k;
+    char        c;
+    if (argc &gt; 2)
+    fprintf(stderr, "\nUsage: %s [e|d] &lt; infile &gt; outfile\n", argv[0]), exit(1);
+    srand(time(0));
+    while (!feof(stdin)) {
+        if (toupper(*argv[1]) == 'E') {
+            k = rand() % 5;
+            for (i = 0; i &lt; k + 1; i++, j++) {
+                if (!(j % 50)) putchar('\n');
+                c = getchar();
+                if (c == '\n') printf("..");
+                else putchar(c);
+            }
+            putchar(' ');
+        } else if (toupper(*argv[1]) == 'D') {
+            switch (c = getchar()) {
+                case ' ':
+                case '\n':
+                    break;
+                case '.':
+                    if (i == 1) putchar('\n');
+                    i = !i;
+                    break;
+                default:
+                    putchar(c);
+                    break;
+            }
+        } else
+        fprintf(stderr, "\nUsage: %s [e|d] &lt; infile &gt; outfile\n", \
+                argv[0]), exit(1);
+    }
+}
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a
+
+iQCcAgUBLdh1frhnz857T+PFAQH9RQQ2KC5uYfO8tLlq1X8PcmuJy0Akog84lyfK
+sYEiiwMHJsNm6/isVWvihZHBct/DuBkqtNsWXzwxl1rxlVvjTjOMyyDioidbfqnb
+IOWLXkY+/vzdvgxr/Z0tV31mwCVoCcHIMUeBZ9+PBCHt16YCEb7emPE0/QzLFWnB
+VNUSkSW+hYtP8Ezg1UoS
+=TESU
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01031.html">No Subject</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01036.html">Re: FBI decryption capability / MSDOS disk wipe question</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01030.html">[ANON]: "Why We Fight!"</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01038.html">Wouldn't it be nice,</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01035"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01035"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

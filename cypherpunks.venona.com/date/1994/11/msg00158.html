@@ -1,0 +1,240 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: 1st Draft Mixmaster chaining instructions -->
+<!--X-From-R13: ypbggeryyNcbcznvy.hpfq.rqh (Znapr Qbggeryy) -->
+<!--X-Date: Sun, 20 Nov 94 17:07:54 PST -->
+<!--X-Message-Id: aaf5a23e05021004ce63@[137.110.24.249] -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>1st Draft Mixmaster chaining instructions</TITLE>
+<LINK REV="made" HREF="mailto:lcottrell@popmail.ucsd.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00154.html">Date Prev</A>][<A HREF="msg00165.html">Date Next</A>][<A HREF="msg00290.html">Thread Prev</A>][<A HREF="msg00167.html">Thread Next</A>][<A HREF="index.html#00158">Date Index</A>][<A HREF="threads.html#00158">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>1st Draft Mixmaster chaining instructions</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:remailer%2Doperators@c2.org">remailer-operators@c2.org</A></LI>
+<LI><em>Subject</em>: 1st Draft Mixmaster chaining instructions</LI>
+<LI><em>From</em>: <A HREF="mailto:lcottrell@popmail.ucsd.edu">lcottrell@popmail.ucsd.edu</A> (Lance Cottrell)</LI>
+<LI><em>Date</em>: Sun, 20 Nov 1994 17:07:02 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Here is the first draft of the instructions for using Mixmaster to
+build remailer messages. I am posting it to give a flavor of what the
+program does, and to request comments, both on the features and on
+the clarity of the help file itself.
+
+Instructions for using Mixmaster to create type 2 remailer messages.
+
+I assume that you have either compiled Mixmaster, or that you have acquired
+a precompiled copy.
+
+While you do not need PGP to use Mixmaster, it is useful for key
+management, and is required if you desire security of the content of the
+message you are sending (which will be visible to the last remailer).
+
+
+Theory and purpose of remailers:
+
+The purpose of anonymous remailers (hereafter simply remailers), is to
+provide protection against traffic analysis. Traffic analysis is the study
+of who you are communicating with, when, and how often. This reveals more
+than you might expect about your activities. It will indicate who your
+friends and colleagues are (and they can be told apart by looking at the
+times you contact them). What your interests are, from which catalog
+companies you contact, and which ftp and WWW sites you visit. Traffic
+analysis can even reveal business secrets, e.g. your frequent contact with
+a rival could give hints of an impending merger.
+
+Remailers protect your email from traffic analysis. The original remailers
+did this by removing all headers, except the subject line, from any message
+you sent to them and then forwarding them a destination of your choice. The
+recipient of such a message would not know who had sent it.
+
+The addition of encryption to this scheme gave significant protection from
+attackers who simply look at passing messages for to and from fields.
+Passing a message through several remailers in a row is much better, but
+still vulnerable to an attacker who can watch messages go into and out of
+each remailer.
+
+Two more elements are required: messages must be reordered within the
+remailer before being forwarded (this is being done by a few of the old
+style remailers), and all messages must be indistinguishable. This last is
+the primary improvement with the type 2 remailer, Mixmaster.
+
+
+Using type 2 remailers:
+
+The trend towards ever more complicated remailer message formats has been
+clear for some time. Several programs have been written to automatically
+build messages which will be remailed by several remailers. This process is
+called chaining.
+With type 2 remailers it is no longer possible to create these messages by
+hand. Mixmaster takes a message you wish to send, a list of remailers to
+chain it through, and a final destination, and builds the packet which the
+remailers will use. For simplicity I will first describe the interactive
+use of Mixmaster, then I will discuss how it can be controlled through
+command line arguments.
+
+
+Interactive use of Mixmaster:
+
+If you run Mixmaster with no arguments, you will be prompted for all the
+required information.
+
+First you will be asked to specify the final destination of the message.
+This is the full email address where you want your message delivered.
+Remember that the message is being sent by the last remailer in the chain,
+so you must specify the full internet address (e.g.
+name@machine.place.com), you may not use local mail aliases. You may enter
+multiple recipients on separate lines. Hit return on a blank line to stop
+entering destinations. You must have at least one.
+
+Next you will be asked to enter any headers you want to have inserted
+before the message. These are those lines  at the beginning of email
+messages, like From: fred@bedrock.univ.edu, or Subject: Party invitation.
+If you want your message to have a subject when it is delivered, you must
+enter a line
+Subject: your subject here.
+Note that Subject must be capitalized, with the : and space as shown.
+A subject header can be added by using the -s command line argument.
+When you are done entering headers, hit return (it is OK to have zero headers).
+
+You will now be presented with a list of  remailers through which you can
+chain your messages. The order in which you choose them is the order in
+which they will be traversed by your message. You may choose up to 20 of
+them, but remember that the reliability and speed of the chain diminish as
+the number of remailers in the chain increases. Four is a reasonable number
+of remailers to use. It is fine to use a given remailer more than once in
+your chain. Press return on a blank line to stop entering remailers.
+
+Finally you will be asked what file you want to send. This must be an ASCII
+file. You may either enter the name of an existing file, or you may choose
+to enter the message directly by typing "stdin" as the file name. This is
+intended for use by scripts. There are no editing capabilities when using
+stdin. Enter the end of file character (EOF is ^D) when you are done
+entering the file.
+
+Mixmaster will now build the type 2 remailer packet, and send it to the
+first remailer in the chain.
+
+
+Command line arguments to Mixmaster:
+
+Mixmaster [-c] [in.filename] [-f] [-s "subject"] [-o "outfile"] [-to
+a@b.com] [-l 3 2 6 ...]
+
+ -c      this indicates that chaining rather than remailer functions are
+desired. It is a NOP since chaining is the default operation.
+
+"filename"      if a filename is given, then this will be used as the input
+file. As in the interactive mode, you may choose "stdin". No filename will
+be prompted for.
+
+ -f      filter mode. All prompts suppressed, but input still accepted as
+described in the interactive section. The remailer list must be specified
+on the command line.
+
+ -s "subject"    Adds a subject line to the message. The user should NOT
+include Subject: in this string. Mixmaster will not prompt for other
+headers if -s is used.
+
+ -o "outfile"    Specify an output file rather than sending the message to
+the first remailer automatically. If outfile is "stdout", then the remailer
+packet will be printed to stdout.
+
+ -to foo@bar.org specifies the final destination of the message. Only one
+destination can be specified. Mixmaster will not prompt for other
+destinations if -to is used.
+
+ -l 4 3 5 ...    Specifies the list of remailers to chain through. This must
+be the last argument on the command line. A maximum of 20 remailers may be
+specified. Mixmaster will not prompt for other remailers if -l is used.
+
+
+- --------------------------------------------------
+Lance Cottrell  who does not speak for CASS/UCSD
+loki@nately.ucsd.edu
+PGP 2.6 key available by finger or server. Encrypted mail welcome.
+Home page <A  HREF="http://nately.ucsd.edu/~loki/">http://nately.ucsd.edu/~loki/</A>
+Home of "chain" the remailer chaining script.
+For anon remailer info, mail remailer@nately.ucsd.edu Subject: remailer-help
+
+"Love is a snowmobile racing across the tundra.  Suddenly
+it flips over, pinning you underneath.  At night the ice
+weasels come."
+                        --Nietzsche
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6
+
+iQCVAwUBLs/ymFVkk3dax7hlAQFKqgP9Enq5xOZm2Dm1WudNeRjssV/VeJ7YLr0V
+2n5ZaRnMaPqHe5efeMY3N7Ry1YoqGaQdYfD7Ar9koDUFPA0Lizh9QtDSLdeG8IVv
+RWcz7CxWjtt02yc1/PLY3TO9b3VRb0zSFzcwu0QBI17ZVK+rF6cT/SEuZFAjgW9D
+CJ5rWJH25Vk=
+=i4cN
+-----END PGP SIGNATURE-----
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00167" HREF="msg00167.html">Re: 1st Draft Mixmaster chaining instructions</A></STRONG>
+<UL><LI><EM>From:</EM> werewolf@io.org (Mark Terka)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00154.html">REMAILER PROPOSAL</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00165.html">Re: remailer security, sendmail</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00290.html">Re: REMAILER PROPOSAL</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00167.html">Re: 1st Draft Mixmaster chaining instructions</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00158"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00158"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

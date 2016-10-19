@@ -1,0 +1,163 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Timing Attack Paper -->
+<!--X-From-R13: Pvyy Egrjneg <fgrjnegfNvk.argpbz.pbz> -->
+<!--X-Date: Tue, 12 Dec 1995 16:52:15 +0800 -->
+<!--X-Message-Id: 199512120729.XAA21395@ix12.ix.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Timing Attack Paper</TITLE>
+<LINK REV="made" HREF="mailto:stewarts@ix.netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00269.html">Date Prev</A>][<A HREF="msg00273.html">Date Next</A>][<A HREF="msg00636.html">Thread Prev</A>][<A HREF="msg00290.html">Thread Next</A>][<A HREF="index.html#00270">Date Index</A>][<A HREF="threads.html#00270">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Timing Attack Paper</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:gibo@ripco.com">gibo@ripco.com</A> (Giles Bowkett)</LI>
+<LI><em>Subject</em>: Re: Timing Attack Paper</LI>
+<LI><em>From</em>: Bill Stewart &lt;<A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 11 Dec 1995 23:27:52 -0800</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+At 09:39 PM 12/11/95 CST, gibo wrote:
+&gt;I went to
+&gt;
+&gt;<A  HREF="http://www.cryptography.com/timingattack.html">http://www.cryptography.com/timingattack.html</A>
+&gt;
+&gt;and found the whole thing to be totally incomprehensible from
+&gt;a layman's point of view.  I apologize for having not read
+&gt;"Applied Cryptography", which might have made the abstract a
+&gt;simpler read - but even if I had I'd have been baffled by a
+&gt;lot of the terminology and equations in this paper.
+&gt;
+&gt;Can anyone post a brief summary which explains the essential
+&gt;workings of the attack?  I'd be very grateful.
+
+Briefly, most public-key calculations are _slow_, and use
+512-2048-bit numbers which get represented as arrays of
+machine integers. The amount of time they take depends on the values
+you're multiplying together, especially because the algorithms
+used to do the arithmetic less slowly take shortcuts whenever
+possible to avoid unnecessary work.  If you watch the time
+that it takes for a machine to do calculations using its private
+keys, for some algorithms you can guess a bit or two of the key.
+If you're clever, and have the ability to feed the victim
+different numbers for it to calculate on (e.g. make a bunch
+of connections using Diffie-Hellman), you can guess different
+bits each time, and gradually get the whole thing.
+
+It helps to watch this a number of times to get better statistics,
+so you can tell what's real calculation and what's just speed-randomness.
+Obviously, it also helps if you're running a program on the same
+machine as the target you're trying to hit, but you can still gain
+some information if you're running across a network and having to
+estimate random network delays.  In these cases, you just have to 
+watch longer to get stats.
+
+A common algorithm for doing modular exponentiation (the core
+of the Diffie-Hellman and RSA algorithms) looks like this:
+
+To calculate y**x mod m  (all this arithmetic is multiple-precision)
+(and maybe there's an off-by-one error or two in this :-)
+This uses successive squaring to do the calculation in log2(x) time
+instead of just doing x multiplies by y, which would be very slow
+since x is typically 500-1000 bits long...  Remember that
+multiplying two 1024-bit numbers typically involves multiplying two
+arrays of 32 numbers 32 bits long, which takes 32*32 or 1024 multiply steps.
+And modulo calculations are also slow.
+        prod = 1
+        square = y
+        log2x = number of bits in x
+        for i = 1 to log2x+1  {
+                if (x odd) then {
+                        prod = prod * square
+                        if ( prod &gt; m ) then prod = prod mod m
+                }
+                # else if (x even), don't bother
+                square = square * square
+                if (square &gt; m) square = square mod m
+                x = x / 2
+        }
+
+You can figure out the timing for the squaring calculations yourself.
+Since you get to pick y, you can manipulate it to guess a bit about
+how long x is, and notice from the different timings how many
+times there was a prod*square calculation (which tells you how many
+bits were odd), as well as how many prod mod m calculations.
+
+You can get a certain amount of defense by keeping around prod1 and prod2,
+and calculating prod1 = prod1 * square (the real value) for odd
+and prod2 = prod2 * square (a dummy you'll discard later) for even,
+and doing something useful to obscure the mod m calculations,
+like keeping a dummy around to divide if prod1 or prod2 is less than m.
+Aside from slowing things down by 50%, if you're not careful, there's
+still information that leaks from the timing.  
+
+For other algorithms, sometimes the calculations you've got to do timings
+on are more subtle, like DES, but you can still often guess things,
+and Paul gives a bunch of calculations for these.  They're more statistical,
+since the effects you're chasing are subtler, but you still get information.
+
+
+#--
+#				Thanks;  Bill
+# Bill Stewart, Freelance Information Architect, stewarts@ix.netcom.com
+# Phone +1-510-247-0663 Pager/Voicemail 1-408-787-1281
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00269.html">PAY-OFF TIME FOR BUG-BUSTERS, NETSCAPE PLEDGES "DOGFIGHT"</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00273.html">Re: Timing Attacks</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00636.html">Re: PAY-OFF TIME FOR BUG-BUSTERS, NETSCAPE PLEDGES "DOGFIGHT"</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00290.html">Timing Attack Paper</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00270"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00270"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

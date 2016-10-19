@@ -1,0 +1,217 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: New remailer... -->
+<!--X-From-R13: Vny <74076.1041NQbzchEreir.QA[> -->
+<!--X-Date: Tue, 13 Oct 92 13:37:43 PDT -->
+<!--X-Message-Id: 921013203148_74076.1041_DHJ21&#45;1@CompuServe.COM -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>New remailer...</TITLE>
+<LINK REV="made" HREF="mailto:74076.1041@CompuServe.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00081.html">Date Prev</A>][<A HREF="msg00080.html">Date Next</A>][<A HREF="msg00094.html">Thread Prev</A>][<A HREF="msg00080.html">Thread Next</A>][<A HREF="index.html#00082">Date Index</A>][<A HREF="threads.html#00082">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>New remailer...</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: CYPHERPUNKS &lt;<A HREF="mailto:CYPHERPUNKS@TOAD.COM">CYPHERPUNKS@TOAD.COM</A>&gt;</LI>
+<LI><em>Subject</em>: New remailer...</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:74076.1041@CompuServe.COM">74076.1041@CompuServe.COM</A>&gt;</LI>
+<LI><em>Date</em>: 13 Oct 92 16:31:48 EDT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I have been experimenting with Eric's remailing software on
+the Sun 4 I use at work.  This is what I've found.
+
+First, Eric's descriptions of how all the different software
+components work together have been very helpful.  The software
+has gone through three revisions as Eric added new features, so
+I implemented them in that order - first the basic remailer,
+then adding the "##" and "::" support for header management.
+
+(I had to get perl and slocal before I could get started.
+Luckily my system already uses sendmail.)
+
+Basically, I was able to put the parts together the way Eric
+described and have it work.  I was able to send messages and
+have them remailed.  I even did some tests bouncing mail between
+my remailer and Eric's.
+
+Then I tried adding a new feature to the remailer - automatic
+message decryption using PGP.  It's not really very secure since
+anyone with root privileges at my site can see my pass phrase,
+but my site is pretty isolated (a 2400 baud modem is the only link
+to the outside world).  For this I had to add one line to Eric's
+model .maildelivery file to invoke my PGP filter, and had to write
+about a five line shell script to run PGP in a useful way.  I
+am still tuning this a little bit but I can send the exact scripts
+out when people are ready for them.
+
+One nice thing about this is that, with my remailer plus Eric's,
+and with the decryption option, you can now send anonymous messages
+for which no one person can tell that you did it.  What you would
+do is to send the message first through Eric's remailer, so I
+don't know where it came from, then through my remailer, but with
+the message encrypted so that Eric can't tell where it's going after
+it leaves me.  If more people will run remailers then we'll have
+much more security.
+
+I will now tell you how to use it, in case you want to experiment.
+But remember that all messages are going across an intermittently-
+polled 2400 baud modem, so don't expect fast turnaround and please
+don't send a large volume of messages.  Also, please don't pass
+information about this remailer beyond this list, for now.
+
+The remailer is at hal@ghs.com.  The basic remailing operation is
+as Eric has described: either put "Request-Remailing-To: &lt;dest&gt;" in
+the header of the message, or put, as the first two lines of the
+body of your message:
+
+::
+Request-Remailing-To: &lt;dest&gt;
+
+And follow these two lines with a blank line, then the message to
+be forwarded.
+
+Decryption is just a little complicated.  The thing to remember is
+that you want to do more than just have me decrypt the message.  You
+want me to then remail the message after decryption.  This means
+that you should prepare a message with remailing instructions as
+above, then encrypt the whole thing, including the "::" and
+"Request-Remailing-To:" lines.  Encrypt using PGP with the public
+key I show below, and use the -a flag for Ascii output.
+
+This will create a PGP output file, typically with the extension .asc.
+The first line will be:
+
+-----BEGIN PGP MESSAGE-----
+
+Now, you can send this message to me, but you have to do one more
+thing.  You have to mark it as an encrypted message, by putting the
+line "Encrypted: PGP" in the header.  If you can't put stuff into
+the headers of messages, then use Eric's "::" feature and add the
+following two lines, then a blank line, before "-----BEGIN PGP MESSAGE-----":
+
+::
+Encrypted: PGP
+
+Don't forget the blank line after these two.
+
+Now, this message can be sent to my remailer.  It will be decrypted
+and then remailed to whomever you requested.
+
+I know this sounds complicated, so let me break it down into steps:
+
+  1. Create the message.
+
+  2. Add "::" and "Request-Remailing-To: &lt;dest&gt;" and a blank line to the
+	top.
+
+  3. Encrypt the whole file using PGP and the public key below.
+
+  4. Add "::" and "Encrypted: PGP" and a blank line to the top of
+  	the encrypted file.
+
+  5. Send it to hal@ghs.com.
+
+That's not so bad, is it?
+
+Now, if you're really adventurous, here's how to do the double-remailing
+process I described above, the one which keeps any one remailer from
+knowing who's talking to whom.
+
+  1. Create the message.
+
+  2. Add "::" and "Request-Remailing-To: &lt;dest&gt;" and a blank line to the
+	top.
+
+  3. Encrypt the whole file using PGP and the public key below.
+
+  4. Add "::" and "Request-Remailing-To: hal@ghs.com", then a blank line,
+  	then "##" then "Encrypted: PGP", then a blank line, to the top of
+  	the encrypted file.
+  
+  5. Send it to hughes@soda.berkeley.edu
+
+The only complicated step is step 4, where you put in the remailing
+request to go from Eric's system to mine, and use the "##" line so
+that the outgoing message has "Encrypted: PGP" in the header.
+
+If you want real security, encrypt the message using your friend's
+public key after step 1 and send that.  Then nobody will even know
+what you're saying, let alone who you're talking to.
+
+As promised, here's the public key for my remailer:
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: 2.01
+
+mQBNAirY9EoAAAEB/iuDBqpeJ8gsNQwJNRYWBxH7uP95ApQ92CDhCmuSEJ0Tta0l
+oCrC+8Br+D7Nfotb7hJlI0A1CYGAlmCsRO8VEmkABRO0H1JlbWFpbGluZyBTZXJ2
+aWNlIDxoYWxAZ2hzLmNvbT6JAJUCBRAq2ISQqBMDr1ghTDcBARYlBADCjkCkIDvA
+7QFtpYUlYjz/2U+/oDuMZBDlmAw8BCg3sdJG7hnxPE4yVgKoH/ozsb23pbFTPB8H
+WNEjqTqixNybOKSKH9T8iCaRDA8+bS6xPN4YlWKD/Wg2EiyuOjD3v/vWgiZXzMR5
+hpe0CYVJ6bM++hptXu+JxqDReJIot5FFbQ==
+=p8FS
+-----END PGP PUBLIC KEY BLOCK-----
+
+
+Hal
+74076.1041@compuserve.com
+
+P.S. Coming soon: anonymous return addresses!
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00081.html">Mail headers</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00080.html">Where to get further information about PEM</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00094.html">re: Re: Mr. Squirrel</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00080.html">Where to get further information about PEM</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00082"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00082"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

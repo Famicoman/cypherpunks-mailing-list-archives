@@ -1,0 +1,632 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Object Oriented Crypto API -->
+<!--X-From-R13: "Dnl Qebzjryy" <f5pebzjNjngfba.voz.pbz> -->
+<!--X-Date: Wed, 2 Aug 95 11:26:05 PDT -->
+<!--X-Message-Id: 9508021824.AA16891@play.watson.ibm.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Object Oriented Crypto API</TITLE>
+<LINK REV="made" HREF="mailto:s5cromw@watson.ibm.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00127.html">Date Prev</A>][<A HREF="msg00102.html">Date Next</A>][<A HREF="msg00105.html">Thread Prev</A>][<A HREF="msg00134.html">Thread Next</A>][<A HREF="index.html#00107">Date Index</A>][<A HREF="threads.html#00107">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Object Oriented Crypto API</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Object Oriented Crypto API</LI>
+<LI><em>From</em>: "Ray Cromwell" &lt;<A HREF="mailto:s5cromw@watson.ibm.com">s5cromw@watson.ibm.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 2 Aug 1995 14:24:18 -0400 (EDT)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+C'punks,
+  It seems to me that one of the reasons why crypto isn't being incorporated
+into lots of applications is because there is no good general purpose
+plug-n-play crypto-library.  I mean something that is so easy to use
+that a Visual Basic programmer would understand it. I've had personal
+experience with RSA's BSAFE library and I have to admit, it has
+a better software architecture than any of the cypherpunk attempts.
+It's highly portable and highly object oriented. Algorithms can be
+dropped in and out easily. But it suffers from not being user
+extensible, not having a variety of algorithms, and faking
+object-orientation in C.  I think we can do better. (and we're not
+as legally restricted as they are) We also need an architecture
+that will facilitate collective work so that we do not duplicate
+efforts.
+
+  I recently checked out Crypto++ by Wei Dai. It's a real tour de
+force of algorithms, and probably violates more patents in a single
+piece of software than any in history. ;-) But it has some small design
+quirks, and with a little bit of modification on the user interface
+side (leveraging the code already written), I think it can be improved
+by leaps and bounds. (IMHO)
+
+Prelude
+-------
+  C++ will be our language of choice. A C-to-C++ API will be discussed
+later. Note: in some parts, only pseudo-C++ is used, so don't expect this
+to pass a C++ grammar.
+
+The Design Goal
+---------------
+  The goal is to define an architecture permitting a simple API which
+can perform all of the standard cryptographic operations (Encryption,
+Signing, Key Management, etc) without strict dependency on any
+algorithm, file format, or I/O mechanism. An application writer
+should be able to incorporate cryptography into his application
+without worrying about fileformats, key management, cryptographic
+algorithms, or distribution. He should be able to seemlessly operate
+on PEM messages, pgp files, etc without even knowing what the files
+are. (I've looked at GSSAPI, it addresses different issues)
+
+Here's a first-pass API:
+
+Encrypt(EncryptionAlgorithm, EncryptionKey, PlainText, CipherText)
+Decrypt(DecryptionAlgorithm, DecryptionKey, CipherText, PlainText)
+Sign(SignatureAlgorithm, PrivateKey, PlainText, Signature)
+Verify(VerifierAlgorithm, PublicKey, PlainText, Signature)
+GetKey(KeyDomain, KeyId, Key)
+PutKey(KeyDomain, KeyId, Key)
+GenerateKey(EncryptionAlgorithm, RandomNumberGenerator, Key)
+
+That's it, just 7 functions to perform almost all cryptographic
+algorithms in the universe. P-Key and Symmetric systems aren't even
+treated differently. A few more could be added to the API, but that's
+the gist. Now let's look at how we will accomplish this abstraction.
+
+Polymorphism is your friend
+---------------------------
+
+  While Crypto++ does have an object hierarchy, polymorphism is rarely
+used. For instance, the Sign function signs raw data, not "Digests"
+It does sign a Digest if you give it raw data that is a Digest, but
+the point is, the function doesn't know. The idea of Signing should
+be abstracted above and away from low-level representations and
+the underlying cryptosystem itself.
+
+(this philosophy of abstraction is drawn strongly from STL - the
+standard template library which is a C++ working draft. It's a
+great library design)
+
+  Let's look at a single example: The Encrypt function.
+
+  All encryption algorithms have a property in common, whether it is
+a public key system, a symmetric block cipher, or a stream cipher: the
+encryption key. Therefore, they can all be treated as-a member of a class
+of EncryptionAlgorithm objects which implement a function called
+encrypt(), which takes some plaintext, an encryption key, and outputs
+some ciphertext. Nothing magical here, simple object-orientation.
+
+A hypothetical abstract base EncryptionAlgorithm class might look like:
+
+class EncryptionAlgorithm
+{
+public:
+  virtual encrypt(EncryptionKey&amp; key, PlainText&amp; p, CipherText&amp; c) = 0;
+  virtual EncryptionKey generate_key(RandomNumberGenerator&amp; rng) = 0;
+};
+
+
+And a possible concrete class:
+
+class DESEncryptAlgorithm : public EncryptionAlgorithm
+{
+  typedef DESEncryptionKey keytype;
+public:
+  encrypt(DESEncryptionKey&amp; key, PlainText&amp; p, CipherText&amp; c);
+  keytype generate_key(RandomNumberGenerator&amp; rng);
+};
+
+
+So to encrypt something with DES, you'd instantiate a DESEncryptionAlgorithm,
+say labeled des, generate a key by asking the class to generate one, and
+then call
+
+Encrypt(des, deskey, plaintext, ciphertext);
+
+But that 'des' could have just as well been a RSAEncryptionAlgorithm class,
+in which case, the plaintext would have been encrypted with an rsa
+public key (independent of whether DES or IDEA is being used as the
+underlying BlockCipher)
+
+Our design methodology throughout this article will be to look for common
+behavior between algorithms and where it is found, define an abstract
+base class around that behavior. Any specialization will be handled by
+subclassing.
+
+The case for Decrypt() looks almost identical, in fact, we could
+overload Encrypt(), and call them both Crypt() and have assymetrical
+ciphers work like symmetric ciphers. (the compiler would detect
+a DecryptionAlgorithm instead of EncryptionAlgorithm and do the
+neccessary magic) I feel this is a bad design decision because
+it is confusing and removes some type safety. The processes of
+encryption and decryption are semantically different, therefore
+they deserve separate interfaces.
+
+Now that you've see an example, let's proceed with the design.
+
+SignatureAlgorithm
+------------------
+Signature systems typically sign "Message Digests", so intuition should
+lead us to assume that we must have a "MessageDigest" object which
+a SignatureAlgorithm may sign. "Message Digests" are generally produced
+by one-way secure hash algorithms, so we also need a SecureHashAlgorithm
+object that computes a MessageDigest given a PlainText. A MessageDigest
+should be convertable to a BitString for signing. Finally, a signature
+should be abstracted into a Signature class which has an equality
+condition. With those thoughts, here's a proposed class.
+
+
+class SignatureAlgorithm
+{
+private:
+  SecureHashAlgorithm&amp; hashref;
+public:
+  SignatureAlgorithm(SecureHashAlgorithm&amp; h);
+  virtual Signature sign(PublicKey, PlainText, CipherText) = 0;
+};
+
+class Signature
+{
+public:
+  virtual operator==(Signature&amp; s) = 0;
+  // functions to cast to/from bitstring
+};
+
+Concrete example:
+
+class RSASignature : public Signature { };
+
+class RSASignatureAlgorithm: public SignatureAlgorithm,
+			     private RSADecryptionAlgorithm
+	                    (privately inherited because
+                             the relationship is "implemented-in-terms-of")
+{
+  typedef RSADecryptionAlgorithm::keytype keytype;
+  typedef RSASignature sigtype;	
+  RSASignatureAlgorithm(SecureHashAlgorithm&amp; h) :
+	SignatureAlgorithm(h) {  }
+  sigtype sign(keytype&amp; privatekey, Plaintext&amp; p, CipherText&amp; c)
+	{
+	    decrypt(privatekey, hashref.digest(p), c);
+	    return sigtype(c); /* signature constructed from signed
+                                  message digest bitstring */
+	}
+};
+
+Notice how the message digest (hash) algorithm is a polymorphic type. When
+the object is constructed, it can be told to use any hash algorithm
+independent of hash size, etc.
+
+Verification works similarly. A concrete example
+
+class RSAVerifierAlgorithm: public SignatureAlgorithm,
+	                    private RSAEncryptionAlgorithm
+{
+  verify(keytype&amp; publickey, Plaintext&amp; p, Signature&amp; s)
+	{
+            CipherText c;
+	    encrypt(publickey, p, c);
+	    return sigtype(c) == s;
+	}
+}
+
+Key Retrieval
+-------------
+I will assume for sake of simplicity that all keys have a KeyId associated
+with them, perhaps just the name of the person who owns the key. A KeyID
+is much like an ISBN number for a book. Whether you're in the Library
+of Congress, B Dalton Bookstore, or searching an electronic catalog,
+you can still find the book. What's common about the different mediums
+where the book is located is that 1) it's still a book, and 2) it has an
+ISBN. So, our model will be to generalize the places keys are found into
+things called KeyDomain, and to generalize the ID of a key into something
+called a KeyID. The function of a KeyDomain is to be able to retrieve/store
+a Key based on a KeyID. A KeyDomain might be just a KeyRing on your
+filesystem, or it may be a KeyServer. The key idea ( ;-) ) here is that
+it doesn't matter.
+
+Problems however start to arise when a single KeyDomain can store keys
+for multiple algorithm types. For instance, a KeyServer storing keys
+for both DSA and RSA. I don't know if this is a bad idea or not, but
+since people will probably want to do it, it's probably a good idea to
+support it.  One possibility is to have the KeyDomain return a generic
+Key pointer, and use RTTI (run time type identification) to cast the
+pointer to the appropriate type. I think this is a bad paradigm which
+will lead to lots of programming errors and most C++ compilers don't
+support RTTI yet. Therefore, my idea is to have a KeyDomain for each
+cryptosystem which returns only keys of the type that cryptosystem
+uses. The KeyDomain itself may be a KeyServer that connects to some
+internet based server which stores lots of different key types, but
+the idea is that the KeyServer filters out key requests which do not
+conform to the type required. If you ask an RSAKeyServer for a KeyID
+that corresponds to a DSA key, it will fail to find it even though the
+physical server may actually store it.
+
+The same comments go for a KeyRing which stores multiple types. A typical
+object hierarchy may look like this:
+
+                                 KeyDomain
+                               (Returns Key)
+                                /          \
+                         RSAKeyDomain       DSAKeyDomain
+                        (Returns RSAKey)    (Returns DSAKey)
+                            /    \                /         \
+                     RSAKeyRing  RSAKeyServer  DSAKeyRing    DSAKeyServer
+
+(The *KeyRing and *KeyServer above also multiply inherit from KeyRing and
+KeyServer represpectively. This is to encapsulate network and file i/o
+abstractions) My first shot at the base class is
+
+class KeyDomain
+{
+  typedef Key keytype;
+  virtual keytype fetch(KeyId) = 0;
+  virtual keytype put(KeyId) = 0;
+};
+
+class RSAKeyDomain
+{
+  typedef RSAKey keytype;
+  virtual keytype fetch(KeyId) = 0;
+  virtual keytype put(KeyId) = 0;
+};
+
+KeyRing and KeyServer are important because they will encapsulate
+the i/o functions neccessary and store information (like the hostname
+and port of a keyserver), but I can not define them right now without
+more research into existing formats and protocols. Just picture
+in your head, the KeyRing and KeyServer objects containing a nebulous
+cloud which does the appropriate magic.
+
+class KeyRing
+{
+  magic_io_function(magic_arg); // implements file system fetches
+}
+
+class RSAKeyRing : public RSAKeyDomain, public KeyRing
+{
+  // example fetch
+  keytype fetch(KeyId) { return magic_io_function(magic_manipulate(KeyId)); }
+};
+
+Key Generation
+--------------
+  Key generation is dependent on two things. The cryptographic algorithm
+being used and the random number generator used. The problem with the
+examples given earlier is that the generation of encryption and decryption
+keys can normally not be done separately. An encryption and decryption
+key are intimately related by virtue of the fact that they are semantic
+inverses. Therefore, what really should be generated is not individual
+keys, but key pairs. Furthermore, since the encryptor usually generates
+the keys, I'm placing the KeyPair generating function on the
+EncryptionAlgorithm. An alternative architecture is to define another
+object hierarchy called "KeyGenerator" and subclass "RSAKeyGenerator",
+"DESKeyGenerator", etc. In the case of symmetric algorithms, such as a
+DESKeyPair, the object would only store the secret key, but the
+"get" functions on the object would return the same key whether you are
+asking for the encryption key or the decryption key.
+
+Imagine the following
+
+BlumBlumShubGenerator bbsg(KeyStrokeBitSource());
+DESAlgorithm des;
+DESKeyPair dpair = des.generate_key(bbsg);
+
+des.encrypt(dpair.encryptionkey(), plaintext, ciphertext);
+
+DESKeyPair might look like this
+
+class DESKeyPair : public KeyPair
+{
+private:
+  private_storage_type x;
+public:
+ // both functions return the same key 'x'
+  DESEncryptionKey encryptionkey() { return DESEncryptionKey(x); }
+  DESDecryptionKey decryptionkey() { return DEDDecryptionKey(x); }
+}
+
+Division of Labor
+-----------------
+  By defining a standard set of abstract interfaces, reuseable software
+components are possible. This means that cypherpunks can write code
+at the micro-level,  optimize it, implement the newest algorithms,
+and distribute the result, which can then automagically be included
+in software applications by simply relinking. (and with a Java
+implementation, it really is automagic ;-)) Also, since only
+those objects which are used are linked in, executable size can be
+kept small. By using abstract base classes, and isolating implementation
+from interface, recompiles can be kept to a minimum.
+
+
+Low Level Hierarchy
+-------------------
+  Since public key algorithms often need BlockCiphers to accomplish
+encryption, several further abstractions are needed.
+
+
+BlockCipherEncrypt (child of EncryptionAlgorithm)
+     encrypt(key, plaintext, ciphertext)
+     generate_key(randomnumbergenerator)
+BlockCipherDecrypt (child of DecryptionAlgorithm)
+     decrypt(key, plaintext, ciphertext)
+
+These are generic classes that specify an interface for symmetric
+block ciphers.
+
+
+example (refined from earlier):
+class DESEncryptionAlgorithm: public BlockCipherEncrypt
+{
+	typedef DESKey keytype;
+	encrypt(key, plaintext, ciphertext);
+	keytype generate_key(RandomNumberGenerator);
+}
+
+
+A public key algorithm is a special case of an algorithm, so
+
+class PublicKeyEncryptionAlgorithm : public EncryptionAlgorithm
+{
+private:
+   BlockCipherEncrypt&amp; bc_enc;
+public:
+    	PublicKeyEncryptionAlgorithm(BlockCipher&amp; bc);
+	encrypt(PublicKey, PlainText, CipherText);
+        raw_encrypt(PublicKey, PlainText, Ciphertext); // used for signing
+                                                       // digests
+}
+
+All public key algorithms are constructed with a BlockCipher so that
+the encrypt function knows which cipher to use (unless of course
+you are only using raw_encrypt(). Using normal encrypt() without
+initializing with a BlockCipher should throw an exception). The
+PublicKeyDecryptionAlgorithm class is defined similarly with
+BlockCipherDecrypt;
+
+Given these classes, here's what how an RSA concrete class might look.
+
+class RSAimplement; // implements low-level rsa operation
+                    // after all, encryption and decryption are just
+                    // modular exponentiation. Let's call this
+                    // rsa_op(factor, exponent, modulus)
+
+class RSAEncryptionAlgorithm : public PublicKeyEncryptionAlgorithm,
+                               private RSAimplement
+{
+	RSAEncryptionAlgorithm(BlockCipherEncrypt&amp; foo) : bc_enc(foo) {}
+	encrypt(RSAPublicKey&amp; r, PlainText&amp; p, CipherText&amp; c)
+	{
+	   BlumBlumShubGenerator bbs(KeyBoardRandomBitSource());
+	   BlockCipherKey session_key=bc_enc.generate_key(bbs);
+	   bc_enc.encrypt(session_key, p, c);
+	   rsa_op(session_key, r.exponent(), r.modulus());
+	}
+}
+
+Typical usage pattern might be as follows:
+
+
+DESAlgorithm des;
+RSAAlgorithm rsa(des);
+KeyID kid("deepthroat");
+RSAKeyServer rsaks("blacknet.net", PORT_BLACK);
+PlainText p; // pictures of Senator Exon being spanked by his Mistress
+CipherText c;
+RSAKey pkey;
+RFC822Encoding email;
+
+pkey=rsaks.fetch(kid)
+Encrypt(rsa, pkey, p, c);
+email.encode(c);
+
+cout &lt;&lt; email;
+
+Auxillary class hierarchies
+---------------------------
+  Many of the above classes depend on polymorphic lower-level classes
+to implement hash algorithms, key generation, random number generation,
+number theory, primality testing, output encoding, and so on. The
+following are just a few example hierarchies. (class interfaces will be
+defined later)
+
+
+These classes form the hash of a Plaintext and return MessageDigest
+SecureHashAlgorithm---------------------------------------------------
+         |                   |                    |                  |
+    MD5Algorithm      NISTSecureHash            Haval              Snefru
+
+
+These classes return a random bitstring of a specified number of bits
+RandomNumberGenerator-------------------------------------------------
+         |                   |                    |                  |
+ BlumBlumShubGenerator   HashGenerator        UnixRand      RadioactiveHardWare
+
+
+These classes test an Integer for the specified typed of primality and
+optionally suggest an increment value (to find the next such prime)
+ProbablePrimeTest-----------------------------------------------------
+         |                   |                    |                  |
+    FermatTest          MillerRabin            StrongPrime        BlumPrime
+
+(e.g. a RandomPrime routine might take a RandomNumberGenerator and a
+       ProbablePrimeTest as arguments. It uses the RNG to get a starting
+       point, sieves a number, and if it passes the test, lets the
+       PPT object test it for the right qualities. )
+
+Comments
+--------
+  Some of you may be asking "what's the point? Some libraries like Crypto++
+can already compute all these things." The point of this exercise is to
+devise an object hierarchy, interface, and dependency between these
+algorithms so that they can interoperate without the user having to know
+how they interoperate (or perform conversions himself between the different
+formats each algorithm expects) Algorithms share common data formats and
+interfaces.
+
+  One crucial design feature of this hierarchy is that the graphs contain
+no cycles. This alleviates the need to worry about virtual base classes
+in multiple inheritance or object overlap.
+
+Criticism
+---------
+  * overuse of subclassing might be slow
+    answer: the performance impact of a virtual function call is minimal
+            in comparison to performing a modular exponention
+
+  * encapsulating raw data like digests into objects like MessageDigest
+        when they are just going to be converted back to a raw bitstring
+        is a waste of time and cpu
+    answer: the cost is of setting a pointer to a databuffer and
+            returning that pointer thru a class interface which can be
+            inlined. the gain in abstraction which allows several different
+            representations of digests, plus the type safety is worth the
+            trade off. In the worst case, typedef MessageDigest to your
+            favorite type.
+
+  * C is more popular, we need a C library, not a C++ one
+    answer: define a C interface library which hides the C++ and
+            controls objects via takes. e.g.
+            enum algorithms { RSA_ALGORITHM, DES_ALGORITHM, ... }
+            encrypt(RSA_ALGORITHM, ....);
+            the encrypt function would perform a case statement on
+            these tags and allocate the appropriate C++ objects.
+            We still gain abstraction and component behavior.
+
+  * I think your class hierarchy sucks
+    answer: then make some suggestions on how to improve it
+
+  * object oriented programming is a fad, it doesn't gain you anything
+    answer: it all depends on the design. Almost all new langages now a days
+            are OO, and C++ is one of the fastest growing languages in the
+            market. OO has proven advantages.
+
+  * this is too much work
+    answer: the bulk of the work is already done. Crypto++ has the
+            actual implementation of most of these functions. All we
+            need to do write the definitions of these classes with
+            appropriate forwarding functions.
+
+  * The NSA doesn't like "crypto hooks", this object oriented component
+    system allows any algorithm to be "dropped in"
+    answer: NSA who? Sorry, I don't recall.
+
+
+Encoding
+--------
+  I purposely left this part out. It's the most complex piece of the design
+but it is doable. The basic idea is to make all the objects "persistent"
+in that they have a type id, and know how to translate themselves into
+an internal stream based data format. Encoding objects would construct
+streams out of keys, and algorithm outputs, and ciphertexts, and Integers,
+etc. Later, StreamModules would take these streams and translate them into
+the appropriate real world format (like PGP's CTB cyphertext block stuff)
+Likewise, those same modules would constuct a protocol stream from
+the real world format, and Decoding objects would turn those into objects.
+
+
+
+Finally, a picture
+------------------
+
+
+EncryptionAlgorithm----
+     |	               |
+ PKeyEncAlgorithm      BlockCipherEncAlgorithm
+   | 	     |	             | 	         |    	
+  RSAEncAlg  ElGamalEncAlg   DESEncAlg   IDEAEncAlg
+      |            |    	 |            |
+      |            |             |            |
+      |            |    	 |            |
+ RSAAlgorithm  ElGamalAlg    DESAlgorithm  IDEAAlgorithm
+      |            |             |            |
+      |            |    	 |            |
+      |            |    	 |            |
+  RSADecAlg  ElGamalDecAlg   DESDecAlg   IDEAEncAlg
+     |       |               |           |
+ PKeyDecAlgorithm      BlockCipherDecAlgorithm
+     |                 |
+DecryptionAlgorithm----
+
+
+
+
+-Ray Cromwell &lt;rjc@clark.net&gt;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+From owner-cypherpunks  Wed Aug  2 14:31:05 1995
+Return-Path: &lt;owner-cypherpunks&gt;
+Received: by toad.com id AA11854; Wed, 2 Aug 95 14:31:05 PDT
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00127.html">Re: Pat Robertson Fears E-cash?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00102.html">NYET--attempted formal specs (again)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00105.html">Mierda</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00134.html">Re:  Object Oriented Crypto API</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00107"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00107"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

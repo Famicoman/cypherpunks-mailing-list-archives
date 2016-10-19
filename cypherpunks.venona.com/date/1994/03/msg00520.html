@@ -1,0 +1,773 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Block Mixing Transforms -->
+<!--X-From-R13: evggreNpnpghf.bet (Freel Dvggre) -->
+<!--X-Date: Sat, 12 Mar 94 21:18:36 PST -->
+<!--X-Message-Id: 9403130516.AA27259@cactus.org -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Block Mixing Transforms</TITLE>
+<LINK REV="made" HREF="mailto:ritter@cactus.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00517.html">Date Prev</A>][<A HREF="msg00524.html">Date Next</A>][<A HREF="msg00577.html">Thread Prev</A>][<A HREF="msg00666.html">Thread Next</A>][<A HREF="index.html#00520">Date Index</A>][<A HREF="threads.html#00520">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Block Mixing Transforms</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Block Mixing Transforms</LI>
+<LI><em>From</em>: <A HREF="mailto:ritter@cactus.org">ritter@cactus.org</A> (Terry Ritter)</LI>
+<LI><em>Date</em>: Sat, 12 Mar 1994 23:16:36 -0600 (CST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+
+                    Ritter Software Engineering
+                        2609 Choctaw Trail
+                        Austin, Texas 78745
+                 (512) 892-0494, ritter@cactus.org
+
+
+
+     Keyed Balanced Size-Preserving Block Mixing Transforms
+
+                          Terry Ritter
+                         March 12, 1994
+
+
+
+ Introduction
+
+ Modern block ciphers seek to emulate extremely large substitution
+ tables algorithmically, using complex combinations of various simple
+ internal mechanisms.  These internal mechanisms include small
+ substitutions and trivial combinings, but the art and mystery
+ of block cipher design is how to couple these simple and weak
+ operations in ways which produce a strong overall cipher.
+
+ One apparently new type of mechanism which might be useful in block
+ cipher design would take two blocks in, share data between them,
+ and then produce two generally-different blocks as a result.  In
+ particular, this mechanism might be used to mix data to (and from)
+ a pair of substitutions, thus hopefully producing a stronger result
+ than the two substitutions operating separately and independently.
+ In most cases, it would be necessary for the mechanism to have an
+ inverse, and to produce output blocks of the same size as the input.
+ The result would be a mechanism which could be inserted anywhere
+ in the internal data paths common in block-cipher designs.
+
+
+ Block Mixing Transforms
+
+ Consider constructs like this:
+
+             A              B
+             |              |
+             v              v
+             Mixing Transform
+             |              |
+             v              v
+             X              Y
+
+             X              Y
+             |              |
+             v              v
+             Inverse Transform
+             |              |
+             v              v
+             A              B
+
+ Capital letters represent data blocks.  Alternately, we can
+ describe the transform, in general, as:
+
+      X := f1( A, B );   Y := f2( A, B );
+
+      A := f3( X, Y );   B := f4( X, Y );
+
+ The intent of such a system is to mix two input blocks in a complex
+ yet reversible way.  This could provide two advantages:
+
+      1) It should make each output bit a function of all the input
+      bits (on average), thus providing a way to expand block size
+      while using smaller block-cipher functions.  Hopefully the
+      construct would also defeat attempts to "divide-and-conquer"
+      the smaller functions separately.
+
+      2) It could provide a way to connect block-cipher functions
+      in sequence, while eliminating any fixed direct connection
+      between the blocks, such connections being vulnerable to
+      "fix-in-the-middle" attack.
+
+ A mixing transform is not unlike a "butterfly" section in a fast
+ Fourier transform (FFT) [3].  But the usual FFT operates on complex
+ values which are normally represented in floating-point.  When
+ implemented in fixed-point (as needed for mixing data blocks), the
+ normal FFT butterfly expands the range of the input values, thus
+ requiring a larger amount of storage (a larger block size) for the
+ result.  Fast Hadamard / Walsh transforms [2] behave similarly.
+
+ For cryptography, we need transforms which are "size preserving"
+ so that we can perform fixed-size block operations (such as DES)
+ either on the input data or on the transformed results.  It was
+ not clear to me that this was going to be possible (at least with
+ equations of practical complexity) until Eli Biham provided some
+ examples of size-preserving mixing transforms:
+
+      X := A - B;   Y := 2A - B;
+
+      A := Y - X;   B := Y - 2X;
+
+ for n-bit blocks, A, B, X, and Y, and arithmetic mod 2^n.
+
+ There are actually many such transforms, and Biham has found a
+ generalized form:
+
+      (-1  1  )
+      (-w  w-1)
+
+ and
+
+      (w-1  -1)
+      (w    -1)
+
+ where w is some constant.  For example, when w = 2:
+
+      X := -1*A +     1*B  =  B -  A
+      Y := -2*A + (2-1)*B  =  B - 2A
+
+      A := (2-1)*X + -1*Y  =   X - Y
+      B :=     2*X + -1*Y  =  2X - Y
+
+ with the arithmetic mod 2^n.
+
+ To see inverse, note that
+
+      A  =   X - Y  =   (B - A) - (B - 2A)  =  A
+      B  =  2X - Y  =  2(B - A) - (B - 2A)  =  B
+
+ These are fixed, linear transformations.  If we know the input
+ values, and the transformation, we will also know the output
+ values.  Even when the full equation is unknown, the simplicity
+ and linearity of these transforms means that they require
+ special protection in cryptographic applications.  Mixing
+ transforms can only be used when both the input and the output
+ values cannot be exposed simultaneously.
+
+ Alas, the transform mentioned above has a problem:  Specifically,
+ the least-significant-bit (lsb); that is, lsb(Y) = lsb(B).  This
+ is because the expression B - 2A has shifted A left one bit,
+ leaving the bottom bit of B exposed.  This provides a bit of direct
+ correlation between an input value and an output value.  This is
+ probably sufficient to support a practical "fix-in-the-middle"
+ attack if the transform is used to isolate two DES operations.
+
+ Consider these correlation experiments on the above transform with
+ 4-bit blocks:
+
+           x3  x2  x1  x0  y3  y2  y1  y0
+
+      b0   64  64  64  64  64  64  64 128
+      b1   64  64  64  64  64  64  64  64
+      b2   64  64  64  64  64  64  64  64
+      b3   64  64  64  64  64  64  64  64
+      a0   64  64  64  64  64  64  64  64
+      a1   64  64  64  64  64  64  64  64
+      a2   64  64  64  64  64  64  64  64
+      a3   64  64  64  64  64  64  64  64
+
+ This is a 0 -&gt; 0 correlation count.  For each possible input value
+ (over both A and B), for each input bit which is zero (somewhere in
+ A and B) and each output bit which is zero (somewhere in X and Y),
+ a count is recorded.  The count of 128 means that y0, the lsb of Y,
+ occurs twice as often as expected when the lsb of B is zero.
+
+ Similarly,
+
+           64  64  64  64  64  64  64   0
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+
+ a 0 -&gt; 1 correlation count, shows that no cases exist where the
+ lsb of B is a one and the lsb of Y is a zero.
+
+
+ Cryptographic Mixing
+
+ In [8] I introduced a new type of reversible stream-cipher combiner
+ (the first stream-cipher combiner, which we now call "exclusive-OR"
+ or "mod-2 addition" was described by Vernam [12]).  "Combiner" is
+ the traditional cryptographic name for a mixing function.  [11,5,1]
+ (Non-reversible combiners are also used, typically to make confusion
+ sequences difficult to penetrate. [e.g., 6])  Combiners and mixing
+ transforms have much in common.
+
+ Basically, a combiner will look like any other two-input one-output
+ function:
+
+             A             B
+             |             |
+             v             v
+             Mixing Function
+             |
+             v
+             C
+
+             C              B
+             |              |
+             v              v
+             Inverse Function
+             |
+             v
+             A
+
+ The capital letters represent the block size; in a typical stream
+ cipher these are byte values.  A is the plaintext, B the confusion
+ stream, C the ciphertext.  Note that exactly the same confusion
+ stream is needed to recover the original data; this is the heart
+ of stream-cipher security.
+
+ There are many two-input functions, but most are not useful as
+ cryptographic data combiners, which must be reversible and must
+ have no correlation between either input and the output.  Combiners
+ which do have correlation [e.g., 4] fall to statistical attacks
+ [e.g., 10].  If we see mixing transforms as a matched-set of
+ cryptographic combiners, we can see that correlation is a problem
+ with the example transform.  (Biham did have an example of one
+ balanced but non-keyed transform based on rotation and subtraction
+ mod 2^n.)
+
+
+ Mixing in Mod-2 Polynomials
+
+ Since the "weak" exclusive-OR form of combiner has long been
+ available, modern combiner designs are normally intended to be
+ "stronger" and, thus, are more complex.  But it is not at all clear
+ that "stronger" is what we need in a mixing transform.  Presumably,
+ "strength" can be provided more efficiently by some other function,
+ like DES, or a substitution table.  Thus, we may really want a
+ modest-strength extremely-fast mixing solution, and one approach
+ is to consider the well-known field of mod-2 polynomials.
+
+ In mod-2 arithmetic, addition is the same as subtraction
+
+      X + Y  =  X - Y
+
+ and any value added to itself is zero
+
+      X + X = 0
+
+ so, in general, multiplication cannot be achieved by addition
+
+      X + X &lt;&gt; 2X
+
+ (assuming X is non-zero) but is instead achieved by shifting.
+ Then
+
+      2X + X = 3X
+
+ so multiplication is not restricted to binary powers.  Of course
+
+      3X + X = 2X
+
+ which just shows that mod-2 arithmetic can be surprising.
+
+ It is interesting to see just how unusual good mixing transforms
+ are.  Consider a first approach
+
+      X := A + B;  Y := A - B;
+
+ (mod-2, mod-p, where p is some primitive mod-2 polynomial of
+ appropriate degree for the size of the data blocks).  While this
+ is a reasonable approach in the integers, in mod-2 polys,
+ A + B = A - B.  This means that  X = Y, and the two resulting
+ identical blocks cannot possibly carry enough information to
+ provide an inverse transform for two arbitrary input blocks.
+ It does not work.
+
+ Next consider
+
+      X := A + B;  Y := A + 2B;
+
+ with inverse operations
+
+      A := (2X + Y) / 3;   B := (X + Y) / 3;
+
+ (mod-2, mod-p), and the division done by multiplying by the inverse
+ of 3, mod p.  (Appropriate inverse equations may not always exist;
+ finding the inverse equations is interesting in itself.)  This
+ works.  But here  X  is never affected by p at all, thus producing
+ an extremely regular (and un-keyed) transformation.  And the
+ inverse multiplication is, in general, far more expensive than
+ multiplication by a small integer.
+
+ Finally, consider
+
+      X := 2A + 3B;   Y := 3A + 2B;
+
+      A := 2X + 3Y;   B := 3X + 2Y;
+
+ Again, operations are mod-2 and mod-p, where p is some primitive
+ mod-2 polynomial of appropriate degree for the data blocks X, Y,
+ A and B.  This works, and the transform is a self-inverse.  The
+ primitive affects the result in both data blocks.  And the
+ multiplications are simple.
+
+ Correlation experiments conducted as before show a nice, balanced,
+ uncorrelated system:
+
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+           64  64  64  64  64  64  64  64
+
+ These functions are extremely fast.  Addition is a simple
+ exclusive-OR.  Multiplication by two is simply a left-shift and
+ a conditional add of the primitive.  Multiplication by three is
+ a multiplication by two plus an addition.
+
+
+ Keyed Mixing Transforms
+
+ The mod-2 polynomial transforms depend on having some primitive of
+ the appropriate degree.  Different primitives produce different
+ mixing functions, with similar overall performance.  This leads
+ to the possibility of keying the transforms by selecting arbitrary
+ primitives.  (Some references to primitive-finding algorithms
+ are given in [9].)
+
+ Rabin gives the number of degree-n primitives as about p^n / n
+ [7].  Thus, for degree 64, we have about 2^64 / 2^6 or about 2^58
+ primitives.  This means that each randomly-selected degree-64
+ primitive carries about 58 bits of key.  Of course, this key can
+ only be effective to the extent that the linear transformation
+ cannot be attacked and the primitive thus deduced.
+
+
+ Some Consequences
+
+ If a single input bit changes on one of the mixing transform input
+ blocks, we can be sure that at least one bit will change in both
+ output blocks.
+
+ If two input bits change, we can be sure that these bits will not
+ "cancel" each other; changes will still occur in the output blocks.
+
+ If many input bits are changed, and the transform primitive is
+ known, it is possible to engineer a no-change in one output block
+ (although this is unlikely to happen by chance).  Should this be
+ undesirable, it might be made impossible by design (such as
+ ciphering the input blocks before mixing), or by keying the
+ transform (so the necessary bit patterns are unknown).
+
+ If it becomes possible to define the input to, and what the output
+ must be from a ciphering element, it will be possible to key-search
+ that element independent of other elements, and this is what we
+ hope to avoid.  To prevent this it may be necessary to use keyed
+ input and output transforms, or even multiple ciphering levels
+ between transforms.
+
+
+ Applications
+
+ It is crucial to remember that these simple, high-speed, but linear
+ mixing transforms can be said to have "strength" only if the input
+ and output values are never both available.  That is, these
+ structures do not by themselves handle "known-plaintext" attack.
+ (Of course, the same could be said for many other simple internal
+ mechanisms used in block cipher construction.)
+
+ Simple constructs like
+
+           A      B
+           |      |
+           v      v
+           MixTrans
+           |      |
+           v      v
+           C      D
+
+ are not likely to be very useful as ciphers by themselves, even if
+ the mixing transformation is keyed and the blocks are large.
+
+ On the other hand, constructs like
+
+           A      B
+           |  p1  |
+           v  v   v
+           MixTrans
+           |      |
+           v      v
+          DES1   DES2
+           |      |
+           |  p2  |
+           v  v   v
+           MixTrans
+           |      |
+           v      v
+           C      D
+
+ are considerably more interesting.  Note that this construct
+ ciphers a double-size DES block at single-DES rates.  It seems to
+ require keyed mixing transforms.  Similarly,
+
+           A      B
+           |      |
+           v      v
+          DES1   DES2
+           |      |
+           |  p   |
+           v  v   v
+           MixTrans
+           |      |
+           v      v
+          DES3   DES4
+           |      |
+           v      v
+           C      D
+
+ will cipher a double-size DES block at double-DES rates, and at
+ least superficially avoids all weakness in the mixing transform by
+ placing strength in each input and output port.  This may avoid
+ the need to key the mixing transform.
+
+ Alternately,
+
+             A              B
+             |      k1      |
+             v      v       |
+            XOR &lt;- DES1-----|
+             |              |
+             |      k2      |
+             |      v       v
+             |---- DES2 -&gt; XOR
+             |              |
+             |      p       |
+             v      v       v
+             Mixing Transform
+             |              |
+             |      k3      |
+             v      v       |
+            XOR &lt;- DES3 ----|
+             |              |
+             |      k4      |
+             |      v       v
+             |---- DES4 -&gt; XOR
+             |              |
+             v              v
+             C              D
+
+ also ciphers at double-DES rates.
+
+ Of course, larger external blocks mean an increase in the number
+ of internal data paths, making various sorts of interconnection
+ configurations possible.  Thus
+
+           A      B      C      D
+           |  p1  |      |  p2  |
+           v  v   v      v  v   v
+           MixTrans1     MixTrans2
+        p3 |      |  p4  |      |
+        v  v      v  v   v      v
+       -Trans3    MixTrans4     Mix-
+           |      |      |      |
+           v      v      v      v
+          DES1   DES2   DES3  DES4
+           |      |      |      |
+           |  p5  |      |  p6  |
+           v  v   v      v  v   v
+           MixTrans5     MixTrans6
+        p7 |      |  p8  |      |
+        v  v      v  v   v      v
+       -Trans7    MixTrans8     Mix-
+           |      |      |      |
+           v      v      v      v
+           E      F      G      H
+
+ will cipher quadruple-size DES blocks at single-DES rates,
+
+           A      B      C      D
+           |      |      |      |
+           v      v      v      v
+          DES1   DES2   DES3   DES4
+           |      |      |      |
+           |  p1  |      |  p2  |
+           v  v   v      v  v   v
+           MixTrans1     MixTrans2
+       p3  |      |  p4  |      |
+       v   v      v  v   v      v
+      -Trans3     MixTrans4     Mix-
+           |      |      |      |
+           v      v      v      v
+          DES5   DES6   DES7   DES8
+           |      |      |      |
+           v      v      v      v
+           E      F      G      H
+
+ will cipher quadruple-size DES blocks at double-DES rates, and
+
+           A              B              C              D
+           |      k1      |              |      k2      |
+           v      v       |              v      v       |
+          XOR &lt;- DES1 ----|             XOR &lt;- DES2 ----|
+           |              |              |              |
+           |      k3      |              |      k4      |
+           |      v       v              |      v       v
+           |---- DES3 -&gt; XOR             |---- DES4 -&gt; XOR
+           |              |              |              |
+           |              |              |              |
+           |      p1      |              |      p2      |
+           v      v       v              v      v       v
+           MixingTransform1              MixingTransform2
+   p3      |              |      p4      |              |
+   v       v              v      v       v              v
+ -Transform3              MixingTransform4              Mixing-
+           |              |              |              |
+           |      k5      |              |      k6      |
+           v      v       |              |      v       |
+          XOR &lt;- DES5 ----|             XOR &lt;- DES6 ----|
+           |              |              |              |
+           |      k7      |              |      k8      |
+           |      v       v              |      v       v
+           |---- DES7 -&gt; XOR             |---- DES8 -&gt; XOR
+           |              |              |              |
+           v              v              v              v
+           E              F              G              H
+
+ will also cipher quad-size blocks at double-DES rates.  But in
+ each case, four double-level mixing transforms could be replaced
+ by a single double-size mixing transform:
+
+           A      B      C      D
+           |      |  p1  |      |
+           v      v  v   v      v
+           ---------mix1---------
+           |      |      |      |
+           v      v      v      v
+          DES1   DES2   DES3  DES4
+       p2  |      |      |      |
+       v   v      v      v      v
+       ix2---------      --------m
+           |      |      |      |
+           v      v      v      v
+           E      F      G      H
+
+
+           A      B      C      D
+           |      |      |      |
+           v      v      v      v
+          DES1   DES2   DES3   DES4
+           |      |      |      |
+           |      |  p   |      |
+           v      v  v   v      v
+           ---------mix----------
+           |      |      |      |
+           v      v      v      v
+          DES5   DES6   DES7   DES8
+           |      |      |      |
+           v      v      v      v
+           E      F      G      H
+
+
+           A              B              C              D
+           |      k1      |              |      k2      |
+           v      v       |              v      v       |
+          XOR &lt;- DES1 ----|             XOR &lt;- DES2 ----|
+           |              |              |              |
+           |      k3      |              |      k4      |
+           |      v       v              |      v       v
+           |---- DES3 -&gt; XOR             |---- DES4 -&gt; XOR
+           |              |              |              |
+           |              |      p       |              |
+           v              v      v       v              v
+           ---------------------mix----------------------
+           |              |              |              |
+           |      k5      |              |      k6      |
+           v      v       |              |      v       |
+          XOR &lt;- DES5 ----|             XOR &lt;- DES6 ----|
+           |              |              |              |
+           |      k7      |              |      k8      |
+           |      v       v              |      v       v
+           |---- DES7 -&gt; XOR             |---- DES8 -&gt; XOR
+           |              |              |              |
+           v              v              v              v
+           E              F              G              H
+
+ These are new ciphering architectures.  Clearly, it is not known
+ how strong these constructs would be.  However, this situation can
+ hardly be considered unusual.
+
+ Other opportunities exist when constructing completely new block
+ ciphers.  These might, for example, be based on byte-wide key-
+ permuted substitutions, thus avoiding differential attacks on
+ fixed "optimal" tables.  Thus
+
+    ------------------------------mix------------------------------
+    --------------mix-------------- --------------mix--------------
+    ------mix------ ------mix------ ------mix------ ------mix------
+    --mix-- --mix-- --mix-- --mix-- --mix-- --mix-- --mix-- --mix--
+    mix mix mix mix mix mix mix mix mix mix mix mix mix mix mix mix
+    S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+    mix mix mix mix mix mix mix mix mix mix mix mix mix mix mix mix
+    --mix-- --mix-- --mix-- --mix-- --mix-- --mix-- --mix-- --mix--
+    ------mix------ ------mix------ ------mix------ ------mix------
+    --------------mix-------------- --------------mix--------------
+    ------------------------------mix------------------------------
+
+ enciphers 256-bit blocks through 32 keyed 8-bit substitutions by
+ using five levels of input keyed mixing transform and five levels
+ of output keyed mixing transforms of varying size.  Clearly, there
+ are a plethora of alternate interconnection possibilities here.
+ For example, the mixing rows could be permuted, different sizes
+ of mixing combined in some rows, the mixing not arranged on 2^n
+ boundaries, etc., etc.  Since the mixing transforms are extremely
+ fast, we would expect this 256-bit system to be much faster than
+ 64-bit single-DES.
+
+ And,
+
+    S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+    mix mix mix mix mix mix mix mix mix mix mix mix mix mix mix mix
+    --mix-- --mix-- --mix-- --mix-- --mix-- --mix-- --mix-- --mix--
+    ------mix------ ------mix------ ------mix------ ------mix------
+    --------------mix-------------- --------------mix--------------
+    ------------------------------mix------------------------------
+    --------------mix-------------- --------------mix--------------
+    ------mix------ ------mix------ ------mix------ ------mix------
+    --mix-- --mix-- --mix-- --mix-- --mix-- --mix-- --mix-- --mix--
+    mix mix mix mix mix mix mix mix mix mix mix mix mix mix mix mix
+    S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S S
+
+ enciphers 256-bit blocks through 64 keyed 8-bit substitutions by
+ using nine levels of mixing transforms of varying size.  With the
+ substitutions all keyed, we can probably avoid keying the mixing
+ transforms.  Again, there are a plethora of alternate
+ interconnection possibilities.
+
+
+ Summary
+
+ Practical, high-speed, keyed, balanced, and size-preserving block
+ mixing transforms are introduced for cryptographic service.
+
+
+ References
+
+ [1]   Arko, R.  1961.  Mechanical Signal Combiner.  U.S. Patent
+       3,159,712.
+
+ [2]   Beauchamp, K.  1984.  Applications of Walsh and Related
+       Functions.  Academic Press.
+
+ [3]   Brigham, E.  1974.  The Fast Fourier Transform.
+       Prentice-Hall.
+
+ [4]   Geffe, P.  1973.  How to protect data with ciphers that are
+       really hard to break.  Electronics.  January 4.  99-101.
+
+ [5]   Kohler, H.  1951.  Combining Circuits.  U.S. Patent 2,567,214.
+
+ [6]   Massey, J., and R. Rueppel.  1989.  Method of, and Apparatus
+       for, Transforming a Digital Data Sequence into an Encoded
+       Form.  U.S. Patent 4,797,922.
+
+ [7]   Rabin, M.  1980.  Probabilistic Algorithms in Finite Fields.
+       SIAM Journal on Computing.  9(2): 273-280.
+
+ [8]   Ritter, T.  1990.  Substitution Cipher with Pseudo-Random
+       Shuffling:  The Dynamic Substitution Combiner.  Cryptologia.
+       14(4): 289-303.
+
+ [9]   Ritter, T.  1991.  The Efficient Generation of Cryptographic
+       Confusion Sequences.  Cryptologia.  15(2): 81-139.
+
+ [10]  Siegenthaler, T.  1985.  Decrypting a Class of Stream Ciphers
+       Using Ciphertext Only.  IEEE Transactions on Computers.
+       C-34: 81-85.
+
+ [11]  Smith, H.  1950.  Combining Circuit.  U.S. Patent 2,496,317.
+
+ [12]  Vernam, G.  1919.  Secret Signaling System.  U.S. Patent
+       1,310,719.
+
+ ---
+ Terry Ritter   ritter@cactus.org (alas, cactus.org dies March 18)
+                ritter@io.com (perhaps temporarily)
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00666" HREF="msg00666.html">Block Mixing Transforms</A></STRONG>
+<UL><LI><EM>From:</EM> jkreznar@ininx.com (John E. Kreznar)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00517.html">Re: your mail</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00524.html">No Subject</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00577.html">re: voice encryption</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00666.html">Block Mixing Transforms</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00520"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00520"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

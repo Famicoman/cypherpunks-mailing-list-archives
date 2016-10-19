@@ -1,0 +1,245 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Exit Remailer Suggestion -->
+<!--X-From-R13: vnatNpf.orexryrl.rqh (Wna Ubyqoret) -->
+<!--X-Date: Sat, 9 Aug 1997 06:10:38 +0800 -->
+<!--X-Message-Id: 5sg43l$v7v$1@abraham.cs.berkeley.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 19970807192254.40.qmail@zipcon.net -->
+<!--X-Reference: 199708080936.KAA01816@server.test.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Exit Remailer Suggestion</TITLE>
+<LINK REV="made" HREF="mailto:iang@cs.berkeley.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00337.html">Date Prev</A>][<A HREF="msg00313.html">Date Next</A>][<A HREF="msg00295.html">Thread Prev</A>][<A HREF="msg00512.html">Thread Next</A>][<A HREF="index.html#00333">Date Index</A>][<A HREF="threads.html#00333">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Exit Remailer Suggestion</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>Subject</em>: Re: Exit Remailer Suggestion</LI>
+<LI><em>From</em>: <A HREF="mailto:iang@cs.berkeley.edu">iang@cs.berkeley.edu</A> (Ian Goldberg)</LI>
+<LI><em>Date</em>: 8 Aug 1997 21:46:29 GMT</LI>
+<LI><em>Distribution</em>: isaac</LI>
+<LI><em>Newsgroups</em>: isaac.lists.cypherpunks</LI>
+<LI><em>Organization</em>: ISAAC Group, UC Berkeley</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00249.html">19970807192254.40.qmail@zipcon.net</A>&gt; &lt;<A HREF="msg00295.html">199708080936.KAA01816@server.test.net</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+In article &lt;<A HREF="msg00295.html">199708080936.KAA01816@server.test.net</A>&gt;,
+Adam Back  &lt;aba@dcs.ex.ac.uk&gt; wrote:
+&gt;
+&gt;Mike Duvos &lt;enoch@zipcon.net&gt; writes:
+&gt;&gt; Someone wrote:
+&gt;
+&gt;(That someone was me).
+&gt;
+&gt;&gt;  &gt; What about AOL disks?  We need shorter lived, disposable
+&gt;&gt;  &gt; remailers as exit remailers...  Let them take the heat,
+&gt;&gt;  &gt; while the real remailers walk.  Lets see a series of
+&gt;&gt;  &gt; "exitman" remailers.  Exitman remailers are walking targets
+&gt;&gt;  &gt; left to fend for themselves as long as they may.
+&gt;&gt; 
+&gt;&gt; By reconfiguring current remailers to use a public Email service
+&gt;&gt; as the last link in the chain, we tap a potentially infinite
+&gt;&gt; supply of disposable accounts, on advertising-supported service
+&gt;&gt; providers with skins as thick as those of the bulk emailers.
+&gt;&gt; 
+&gt;&gt; Sounds like a plan to me.
+&gt;
+&gt;OK, lets _do_ it!
+
+Sounds good to me.  Hotmail makes a note of the IP address that connected
+to it, but luckily there's no shortage of HTTP proxies out there...
+
+   - Ian
+
+#!/usr/bin/perl -w
+
+##
+## sendhotmail: pipe an RFC822 mail message into this, and it will send it
+##              out from a hotmail account via an HTTP proxy
+##
+## Initial revision 19970808 by Ian Goldberg &lt;ian@cypherpunks.ca&gt;
+##
+
+## Set the following to your proxy host and port.
+##  Look at the files pointed at by
+##   <A  HREF="http://ircache.nlanr.net/Cache/Tracker/caches/">http://ircache.nlanr.net/Cache/Tracker/caches/</A>
+##  for sample entries, but most of them don't allow just anyone to connect
+##  to hotmail through them.
+
+$proxyhost = 'proxy.slt.lk';
+$proxyport = 8080;
+
+## This is your hotmail login name and password
+$login = ## Fill this in yourself
+$passwd = ## Fill this in yourself
+
+## End Configuration
+
+sub escapetext {
+    my $t = $_[0];
+    $t =~ s/([\000-\037\200-\377\{\}\|\\\^\[\]\`\"\&lt;\&gt;\:\@\/\;\?\=\&amp;\%\.\#])/"%".unpack('H2',$1)/eg;
+    $t =~ s/ /+/g;
+    $t;
+}
+
+## Parse the incoming mail (note that we don't handle continuation headers)
+## Also, the To, Cc, and Bcc headers ought to be in a form hotmail understands
+## (no full names, etc.).  We try to do the stripping properly.
+
+$to = '';
+$subject = '';
+$cc = '';
+$bcc = '';
+while(&lt;STDIN&gt;) {
+    if (/^To:\s+(.*)/io) {
+	$to = $1;
+	$to =~ s/\(.*?\)//g;
+	$to =~ s/\".*?\"//g;
+	$to = &amp;escapetext($to);
+    } elsif (/^Subject:\s+(.*)/io) {
+	$subject = &amp;escapetext($1);
+    } elsif (/^Cc:\s+(.*)/io) {
+	$cc = $1;
+	$cc =~ s/\(.*?\)//g;
+	$cc =~ s/\".*?\"//g;
+	$cc = &amp;escapetext($cc);
+    } elsif (/^Bcc:\s+(.*)/io) {
+	$bcc = $1;
+	$bcc =~ s/\(.*?\)//g;
+	$bcc =~ s/\".*?\"//g;
+	$bcc = &amp;escapetext($bcc);
+    }
+    last if /^$/;
+}
+$msg = &amp;escapetext(join("\r\n", &lt;STDIN&gt;));
+
+use LWP;
+
+## Begin magic
+
+$ua = new LWP::UserAgent;
+$ua-&gt;proxy('http', "<A  HREF="http://${proxyhost}:${proxyport}/">http://${proxyhost}:${proxyport}/</A>");
+
+$url = new URI::URL '<A  HREF="http://www.hotmail.com/cgi-bin/password.cgi">http://www.hotmail.com/cgi-bin/password.cgi</A>';
+$request = new HTTP::Request('POST', $url);
+$request-&gt;header(Pragma =&gt; 'no-cache');
+$request-&gt;content("login=${login}&amp;curmbox=ACTIVE");
+
+$response = $ua-&gt;request($request);
+$body = $response-&gt;content;
+$body =~ /\&lt;\s*form\s+[^&gt;]*action=\"(.*?)\"/io or die "Cannot log in";
+
+$url = new URI::URL $1, $url;
+$body = $';
+$body =~ s/\&lt;\s*\/form\s*\&gt;.*//;
+$body =~ /\&lt;\s*input\s+[^&gt;]*name=\"disk\"\s+value(=\"(.*?)\")?/io or die "Cannot give passwd";
+$disk = $2 || "";
+
+$request = new HTTP::Request('POST', $url);
+$request-&gt;header(Pragma =&gt; 'no-cache');
+$request-&gt;content("passwd=${passwd}&amp;frames=no&amp;disk=${disk}&amp;curmbox=ACTIVE&amp;login=${login}&amp;js=no");
+$response = $ua-&gt;request($request);
+$body = $response-&gt;content;
+
+$body =~ /\&lt;\s*area\s+[^&gt;]*href=\"(\/cgi-bin\/compose.*?)\"/io or die "Cannot compose";
+$composeurl = new URI::URL $1, $url;
+$body =~ /\&lt;\s*area\s+[^&gt;]*href=\"(\/cgi-bin\/logout.*?)\"/io or die "Cannot compose";
+$logouturl = new URI::URL $1, $url;
+
+$request = new HTTP::Request('GET', $composeurl);
+$request-&gt;header(Pragma =&gt; 'no-cache');
+$response = $ua-&gt;request($request);
+$body = $response-&gt;content;
+
+$body =~ /\&lt;\s*form\s+[^&gt;]*action=\"(.*?)\".*?\&gt;/io or die "Cannot send message";
+$url = new URI::URL $1, $composeurl;
+$body = $';
+$data = '';
+while(1) {
+    $body =~ /^\s*\&lt;\s*input\s+type=\"?hidden\"?\s+name=\"(.*?)\"\s+value(=\"(.*?)\")?\s*\&gt;/io or last;
+    $name = $1; $value = $3 || ""; $body = $';
+    $data .= $name."=".$value."&amp;";
+}
+$data .= "to=${to}&amp;subject=${subject}&amp;cc=${cc}&amp;bcc=${bcc}&amp;body=${msg}&amp;Send.x=1&amp;Send.y=1";
+
+$request = new HTTP::Request('POST', $url);
+$request-&gt;header(Pragma =&gt; 'no-cache');
+$request-&gt;content($data);
+$response = $ua-&gt;request($request);
+$body = $response-&gt;content;
+
+$request = new HTTP::Request('GET', $logouturl);
+$request-&gt;header(Pragma =&gt; 'no-cache');
+$response = $ua-&gt;request($request);
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00512" HREF="msg00512.html">sendhotmail, version 1.2</A></STRONG>
+<UL><LI><EM>From:</EM> iang@CS.Berkeley.EDU (Ian Goldberg)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00249" HREF="msg00249.html">Exit Remailer Suggestion</A></STRONG>
+<UL><LI><EM>From:</EM> Mike Duvos &lt;enoch@zipcon.net&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00295" HREF="msg00295.html">Re: Exit Remailer Suggestion</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Back &lt;aba@dcs.ex.ac.uk&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00337.html">recursive auction markets in software</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00313.html">Did anyone archive MPJ's site?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00295.html">Re: Exit Remailer Suggestion</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00512.html">sendhotmail, version 1.2</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00333"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00333"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

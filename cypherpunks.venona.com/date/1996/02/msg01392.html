@@ -1,0 +1,229 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: A brief comparison of email encryption protocols -->
+<!--X-From-R13: Znherapr Zhaqoynqr <ytyNdhnypbzz.pbz> -->
+<!--X-Date: Sat, 17 Feb 1996 11:05:09 +0800 -->
+<!--X-Message-Id: v03004d0cad4ac6d75935@[129.46.110.231] -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199602142049.MAA20108@infinity.c2.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: A brief comparison of email encryption protocols</TITLE>
+<LINK REV="made" HREF="mailto:lgl@qualcomm.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01400.html">Date Prev</A>][<A HREF="msg01320.html">Date Next</A>][<A HREF="msg01197.html">Thread Prev</A>][<A HREF="msg01383.html">Thread Next</A>][<A HREF="index.html#01392">Date Index</A>][<A HREF="threads.html#01392">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: A brief comparison of email encryption protocols</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Raph Levien &lt;<A HREF="mailto:raph@c2.org">raph@c2.org</A>&gt;, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A>,       <A HREF="mailto:resolving%2Dsecurity@imc.org">resolving-security@imc.org</A>, <A HREF="mailto:pgp%2Dmime@purpletape.cs.uchicago.edu">pgp-mime@purpletape.cs.uchicago.edu</A>,       <A HREF="mailto:pem%2Ddev@neptune.tis.com">pem-dev@neptune.tis.com</A></LI>
+<LI><em>Subject</em>: Re: A brief comparison of email encryption protocols</LI>
+<LI><em>From</em>: Laurence Lundblade &lt;<A HREF="mailto:lgl@qualcomm.com">lgl@qualcomm.com</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 16 Feb 1996 17:02:56 -0800</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01197.html">199602142049.MAA20108@infinity.c2.org</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Raph, your summary is very useful!  I would like to make a few comments and
+suggest a model for breaking down an email encryption system into four
+components: the trust model, the key/certificate distribution system, the
+on-the-wire certificate data structure and the on-the-wire transport data
+structure.  The comments:
+
+At 12:49 PM 2/14/96, Raph Levien wrote:
+&gt;....
+&gt; An additional grave concern is key management. Contrary to some
+&gt;beliefs, key management is not a solved problem. All of the proposals
+&gt;contain some mechanism for key management, but none of them have been
+&gt;demonstrated to be scalable to an Internet-wide email system. My
+&gt;belief is that the problems with key management do not stem from the
+&gt;classic Web of trust/certification hierarchy split, but the
+&gt;nonexistence of a distributed database (with nice interfaces) for
+&gt;holding keys. The encryption protocols also stand in the way of such a
+&gt;database, with key formats that are either overly complex, inadequate,
+&gt;or both.
+
+Here here! agreed!
+
+
+&gt;   S/MIME remains firmly grounded in the X.509 certification
+&gt;hierarchy, although the FAQ claims that the guidelines for hierarchies
+&gt;are "more flexible" than in PEM.
+
+X.509 v3 explicitly does allow for more flexibility.  To quote from section
+12.4.1:
+
+ g) Complete flexibility in trust models is required.  A strict hierarchical
+    model which is adequate for a single organization is not adequate when
+    considering the needs of multiple interconnected enterprises.  Flexibility
+    is required in the selection of the first trusted CA in a certification
+    path.  In particular, it should be possible to require that the
+    certification path start in the local security domain of the public-key
+    user system.
+
+
+&gt;   Probably the most controversial aspect of S/MIME is its signature
+&gt;format. An S/MIME signed message is a MIME multipart in which the
+&gt;first part is the data to be signed, and the second part is a complete
+&gt;PKCS #7 (section 10) signed message.
+
+It is certainly technically possible to use the multipart/signed format
+from RFC-1847 (also used in PGP/MIME) with PKCS #7.  It certainly seems
+superior is almost every way to the multipart/alternative in the current
+S/MIME draft.  Also Steve D. pointed out that the multipart/alternative
+format is not the primary signature format.
+
+
+Going back to breaking things down into four parts, these are some points I
+know about.  Please correct me if I say something wrong and pardon some of
+the details most of us already know:
+
+The Trust Model
+---------------
+Any fully implemented system will have to choose some form of a trust
+model.  Some possibilities are:
+  * web of trust
+  * strict hierarchy
+  * web of hierarchies or some other hybrid
+
+The important thing here is that there are many trust models that are valid
+and useful and it may be useful for other components of the system to be
+neutral to the trust model as is clearly the case with MOSS.
+
+The Key Distribution System
+---------------------------
+A lot of components may go into this (protocols, client/server
+architectures, local key stores) and it is probably the most complicated
+part of any system.  Some options are:
+  * distribution of keys manually via e-mail
+  * automatic non-interactive lookup of keys from a server
+  * interactive browsing of a key store for keys
+  * revocation lists or none
+  * online certificate verification via a secure channel
+  * certificate caching
+
+Probably the best thing to say, is that there's a lot of work to do here.
+
+The Certificate format
+----------------------
+It seems possible to pick a certificate format independent of the other
+issues.  Doing so would allow us to leverage components like we do with
+other data objects like MIME.  There probably only two major contenders:
+  * X.509 v3
+     + broadly supported by standard bodies
+     + supported by several industries (e.g., banking)
+     + very rich and flexible
+     + ASN.1
+     - ASN.1 (tough for a student to get an ASN.1 compiler)
+     - complicated
+  * PGP keys
+     + widely deployed
+     + simple to write code for
+     - difficult to lookup (linear search on key id required)
+     - too simple to support many trust models and distribution systems
+
+Note that both use the RSA algorithms, so they are interchangeable at some
+very basic level.
+
+The Transport of Content format
+-------------------------------
+This is the format of the actual message that is sent from one user to the
+next.  I'm going to discard anything that doesn't handle MIME because I
+don't think they are important any more.  Raph described a lot of this so
+I'll just mention a few considerations explicitly about transport formats.
+   * PGP/MIME
+       From a data structure format this is a compact binary format.  It
+       seems reasonable to implement, is documented and requires no special
+       tools.  There is a performance problem with key look ups
+       for signed message because a linear search is required unless the
+       key or other data is always included with the message.
+
+   * S/MIME  (PKCS + MIME)
+       Uses PKCS format with some MIME formatting.  The main problems here
+       are the multipart/alternative format for signatures and the ASN.1
+       requirement.  An ASN.1 compiler is required to implement this.  PKCS
+       has actually been around for a while and has been used for a number
+       of cryptographic systems.
+
+   * MOSS
+       MOSS is perhaps the easiest to implement and the most flexible since
+       it is an ASCII text protocol like other Internet protocols and because
+       it explicitly supports several trust models.
+
+I think the most important observation is that PGP/MIME and MOSS share the
+security multiparts structure from RFC 1847.  It is also possible to use
+the security multiparts format with PKCS #7 and thus S/MIME could be
+changed to support it.  If this happened we'd have something in common for
+all formats and it would make life much easier for all e-mail client
+authors.  An added bonus is that RFC-1847 support allows an e-mail client
+to support encryption and signing of full MIME entities with an external
+program that can be configured like MIME content viewers are with something
+like the mailcap facility.  It can be something as simple as a UNIX pipe to
+a command like pgp.
+
+Laurence Lundblade      &lt;lgl@qualcomm.com&gt;
+QUALCOMM Inc.           619-658-3584
+
+
+
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01197" HREF="msg01197.html">A brief comparison of email encryption protocols</A></STRONG>
+<UL><LI><EM>From:</EM> Raph Levien &lt;raph@c2.org&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01400.html">Re: ITAR Amended to Allow Personal Use Exemptions</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01320.html">Cypherpunks Decency Act</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01197.html">A brief comparison of email encryption protocols</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01383.html">Re: A brief comparison of email encryption protocols</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01392"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01392"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

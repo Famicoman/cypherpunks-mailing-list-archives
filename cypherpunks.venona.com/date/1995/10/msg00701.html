@@ -1,0 +1,167 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: NEW Netscape RNG hole -->
+<!--X-From-R13: Buvy Yneygba <xneygbaNargfpncr.pbz> -->
+<!--X-Date: Sun, 8 Oct 95 01:39:18 PDT -->
+<!--X-Message-Id: 30778E3D.4CBD@netscape.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9510080732.AA14015@anon.penet.fi -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: NEW Netscape RNG hole</TITLE>
+<LINK REV="made" HREF="mailto:karlton@netscape.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00707.html">Date Prev</A>][<A HREF="msg00706.html">Date Next</A>][<A HREF="msg00707.html">Thread Prev</A>][<A HREF="msg00749.html">Thread Next</A>][<A HREF="index.html#00701">Date Index</A>][<A HREF="threads.html#00701">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: NEW Netscape RNG hole</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: NEW Netscape RNG hole</LI>
+<LI><em>From</em>: Phil Karlton &lt;<A HREF="mailto:karlton@netscape.com">karlton@netscape.com</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 08 Oct 1995 01:39:25 -0700</LI>
+<LI><em>Newsgroups</em>: mcom.list.cypherpunks</LI>
+<LI><em>Organization</em>: Netscape Communications</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00707.html">9510080732.AA14015@anon.penet.fi</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+RingZero wrote:
+&gt; 
+&gt; Did anyone else notice a bug in the new, public Netscape
+&gt; RNG code? It appears that on Windows builds, during the
+&gt; RNG seeding, the function that hashes in file contents
+&gt; (EnumSystemFiles) doesn't close a file handle (lFileHandle).
+
+I think you mean lFindHandle. I'm not a windows programmer, so I have
+no idea if the enumerator needs to be cleaned up, but I will forward
+your message to the appropriate folks here.
+
+&gt; This doesn't hurt too badly on the client, but on a server,
+&gt; leaking these resources is deadly.
+
+Not really. SEC_SystemInfoForRNG is called ONCE for each execution.
+This is true for servers and for clients. Did you rig up a test
+bed that called SEC_SystemInfoForRNG in a loop? In addition, if
+the server cannot open any more files, it will have difficulty
+delivering any information (compromised or not) to any clients.
+
+The clients use the SEC_GetNoise data each time they go idle to
+re-initialize the PRNG seed. The servers also re-initialize the
+PRNG seed periodically. That function does not use any file
+handles.
+
+&gt; I ran some experiments. It took a few thousand calls before
+&gt; these open file handles forced not only the file content function
+&gt; to fail, but also made OTHER calls quietly fail. With these calls
+&gt; quietly failing, the RNG is significantly weakened. In my tests
+&gt; on Windows NT, ALL of the following RNG functions failed:
+&gt; 
+&gt; * GetComputerName
+&gt; * GetVolumeInformation
+&gt;         volume Name,
+&gt;         volume Serial Number,
+&gt;         Maximum Filename Length
+&gt;         Filesystem Flags
+&gt;         Filesystem Name
+&gt; * GetDiskFreeSpace
+&gt;         SectorsPerCluster
+&gt;         BytesPerSector
+&gt;         Free Clusters
+&gt;         Total Clusters
+&gt; * subroutine for the inclusion of system files, both number of them &amp; 
+contents
+&gt;         ReadSystemFiles()
+&gt; * subroutine used for other history file accesses
+&gt;         SEC_FileForRNG(*filename)
+
+SEC_FileForRNG does close every file it opens. As I said before,
+I don't know what the rules are for closing the enumerators.
+ 
+&gt; How did this get past Netscape testers?
+
+The tested servers worked? :-)
+
+&gt; Does anyone
+&gt; know if this was fixed before Netscape shipped?
+
+The code that was made available for download was the same that
+was in the shipped updates.
+
+&gt; Does
+&gt; it rate a shirt, or does this mean  Jeff W. gets to shave his
+&gt; head? I seem to remember him promising to shave it if we
+&gt; could show a significant weakness in the new RNG code,
+&gt; and since this does (IMO)...
+
+That was me (Phil Karlton) and not Jeff who put his locks (pun intended)
+at risk. You haven't demonstrated to me that there is significant
+weakness. I'll keep my hair for another day.
+
+I don't think you are going to get a shirt. It's hard to mail one
+to an anonymous person. On the other hand, they are not mine to
+give or withhold.
+
+PK
+--
+Philip L. Karlton			karlton@netscape.com
+Principal Curmudgeon			<A  HREF="http://www.netscape.com/people/karlton">http://www.netscape.com/people/karlton</A>
+Netscape Communications Corporation
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00707" HREF="msg00707.html">NEW Netscape RNG hole</A></STRONG>
+<UL><LI><EM>From:</EM> an402976@anon.penet.fi (RingZero)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00707.html">NEW Netscape RNG hole</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00706.html">Netscape 2.0 beta</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00707.html">NEW Netscape RNG hole</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00749.html">Re: NEW Netscape RNG hole</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00701"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00701"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

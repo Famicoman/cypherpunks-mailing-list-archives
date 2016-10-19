@@ -1,0 +1,514 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: (fwd) Random Numbers &#45; SPECTRAL.FOR -->
+<!--X-From-R13: Xvz pubngr <enintrNotn.pbz> -->
+<!--X-Date: Thu, 7 Jul 94 13:11:14 PDT -->
+<!--X-Message-Id: 199407072011.PAA29181@ivy.bga.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>(fwd) Random Numbers - SPECTRAL.FOR</TITLE>
+<LINK REV="made" HREF="mailto:ravage@bga.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00380.html">Date Prev</A>][<A HREF="msg00383.html">Date Next</A>][<A HREF="msg00380.html">Thread Prev</A>][<A HREF="msg00383.html">Thread Next</A>][<A HREF="index.html#00381">Date Index</A>][<A HREF="threads.html#00381">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>(fwd) Random Numbers - SPECTRAL.FOR</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: (fwd) Random Numbers - SPECTRAL.FOR</LI>
+<LI><em>From</em>: Jim choate &lt;<A HREF="mailto:ravage@bga.com">ravage@bga.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 7 Jul 1994 15:11:02 -0500</LI>
+<LI><em>Newsgroups</em>: sci.stat.math,sci.math,sci.math.num-analysis</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Newsgroups: sci.stat.math,sci.math,sci.math.num-analysis
+Path: bga.com!news.sprintlink.net!news.onramp.net!convex!cs.utexas.edu!swrinde!ihnp4.ucsd.edu!agate!library.ucla.edu!csulb.edu!csus.edu!netcom.com!deleyd
+From: deleyd@netcom.com
+Subject: Random Numbers - SPECTRAL.FOR
+Message-ID: &lt;deleydCsIBEG.L2B@netcom.com&gt;
+Organization: NETCOM On-line Communication Services (408 261-4700 guest)
+Date: Wed, 6 Jul 1994 06:59:04 GMT
+Lines: 426
+Xref: bga.com sci.stat.math:1318 sci.math:15356 sci.math.num-analysis:3357
+
+{Approx. 420 lines}
+
+	PROGRAM SPECTRAL
+! Performs the spectral test for a linear congruential random number generator.
+! 
+!  This program adapted from:
+!
+!     ALGORYTHM  AS 193 APPLIED STATISTICS, (1983) VOL. 32, NO.3 PG. 328-335
+!     T. R. Hopkins
+! Modified to run on VAX/VMS systems using REAL*16 (64 bit) variables.
+! The original is FORTRAN-66 compliant.
+!
+! Consider linear congruential generators of the form:
+!		SEED = (A*SEED + C) mod M
+!
+! Given A, and M, the spectral test calculates NUSQ (NU**2), LOGNU (base 2),
+! and MU.  As a guide, Knuth suggests a multiplier A may be considered
+! adequate if the values of MU returned by the spectral test are &gt; 0.1 .
+! For an exceptionally good multiplier, these values will all be greater
+! than unity.
+!
+! The spectral test may be applied if:
+!    1.  The sequence has maximal period, or
+!    2.  M is prime and C = 0 and the period length is M-1, or
+!    3.  M = 2**e and A mod 8 = 5 or A mod 8 = 3.
+!        In this third case the spectral test is applied using
+!        A = A and M = 2**(e-2).  For example, in analyzing RANDU,
+!        use A = 65539 and M = 536870912 (2**29).
+!
+! Further information on the spectral test is in:
+!
+!   Knuth, Donald E.  "The Art of Computer Programming Vol. 2: Seminumerical
+!     algorithms, 2nd edition.  Reading, Mass.: Addison-Wesley. 1981
+!
+! The value of parameter BIGT determines how many dimensions are calculated.
+! Higher dimensions may be obtained by changing this parameter and recompiling.
+! Note that 12 is about the highest feasible.  Above 12 the program may take
+! days to complete.
+C Example:
+C    MTH$RANDOM is defined as
+C 
+C             SEED = (69069*SEED + 1) MOD 2**32
+C 
+C     Here A = 69069
+C      and M = 2**32 = 4294967296
+C 
+C    $ RUN SPECTRAL
+C    INPUT A: 69069
+C    INPUT M: 4294967296
+C 
+C    A=                          69069.0
+C    M=                     4294967296.0
+C    BIGT=           6
+C    NUSQ=
+C      NUSQ (           2)=                4243209856.000000
+C      NUSQ (           3)=                   2072544.000000
+C      NUSQ (           4)=                     52804.000000
+C      NUSQ (           5)=                      6990.000000
+C      NUSQ (           6)=                       242.000000
+C    LOGNU=
+C      LOGNU(           2)=                        15.991254
+C      LOGNU(           3)=                        10.491486
+C      LOGNU(           4)=                         7.844180
+C      LOGNU(           5)=                         6.385538
+C      LOGNU(           6)=                         3.959432
+C   MU=
+C      MU=  (           2)=                         3.103734
+C      MU=  (           3)=                         2.909942
+C      MU=  (           4)=                         3.203639
+C      MU=  (           5)=                         5.006469
+C      MU=  (           6)=                         0.017052
+C 
+C Now examine the MU values.  All values are above 1 except the very last
+C value MU(6) is 0.01, indicating MTH$RANDOM may not perform as well in a
+C 6-D test.
+C 
+C 
+C Run spectral again this time trying the values for the bad RANDU generator:
+C 
+C    MTH$RANDOM is defined as
+C 
+C             SEED = (65539*SEED) MOD 2**31
+C 
+C     Here A = 65539
+C      and M = 2**31 but we use M = 2**29 for reasons discussed above
+C 
+C 
+C    $ RUN SPECTRAL
+C    INPUT A: 65539
+C    INPUT M: 536870912   !(2**29)
+C 
+C    A=                          65539.0
+C    M=                      536870912.0
+C    BIGT=           6
+C    NUSQ=
+C      NUSQ (           2)=                 536936458.000000
+C      NUSQ (           3)=                       118.000000
+C      NUSQ (           4)=                       116.000000
+C      NUSQ (           5)=                       116.000000
+C      NUSQ (           6)=                       116.000000
+C    LOGNU=
+C      LOGNU(           2)=                        14.500088
+C      LOGNU(           3)=                         3.441322
+C      LOGNU(           4)=                         3.428990
+C      LOGNU(           5)=                         3.428990
+C      LOGNU(           6)=                         3.428990
+C    MU=
+C      MU=  (           2)=                         3.141976
+C      MU=  (           3)=                         0.000010
+C      MU=  (           4)=                         0.000124
+C      MU=  (           5)=                         0.001421
+C      MU=  (           6)=                         0.015025
+C 
+C Notice here the MU values for dimensions 2 through 6 are all extremely
+C small.  This generator does horribly on these dimensions.  The spectral
+C test noticed it right away.
+
+	PARAMETER BIGT = 6	!Number of dimensions to go up to.  Max is 12.
+	PARAMETER IU = BIGT	!(Beyond 12 program may take days to run.)
+	PARAMETER IV = BIGT
+	INTEGER*4 IFAULT
+	REAL*16 A, M, MU(BIGT), NUSQ(BIGT), LOGNU(BIGT), U(IU,BIGT),
+	2	V(IV,BIGT), Z(BIGT)
+
+100	FORMAT(' INPUT A: ',$)
+101	FORMAT(' INPUT M: ',$)
+200	FORMAT(BN,G33.0)
+
+201	WRITE(6,100)
+	READ(5,200) A		!MTH$RANDOM example: A = 69069.0
+	WRITE(6,101)
+	READ(5,200) M		!MTH$RANDOM example: M = 4294967296.0  (2**32)
+
+	CALL SPECT(A,M,BIGT,MU,NUSQ,LOGNU,U,IU,V,IV,Z,IFAULT)
+
+	IF (IFAULT .GT. 0) THEN
+	  IF (IFAULT .EQ. 1) THEN
+	    PRINT*, ' BIGT &lt; 2'
+	  ELSEIF (IFAULT .EQ. 2) THEN
+	    PRINT*, ' A .GE. M  .OR.  A .LE. 0  .OR.  M .LE. 0'
+	  ELSEIF (IFAULT .EQ. 3) THEN
+	    PRINT*, ' M &gt; Mmax'
+	  ELSEIF (IFAULT .EQ. 4) THEN
+	    PRINT*, ' A and M not relatively prime'
+	  ELSEIF (IFAULT .EQ. 5) THEN
+	    PRINT*, ' Intermediate result &gt; Mmax * Mmax'
+	  ELSE
+	    PRINT*, ' IFAULT .GT. 5'
+	  ENDIF
+	  STOP
+	ENDIF
+
+	WRITE(6,1) A
+	WRITE(6,2) M
+	WRITE(6,3) BIGT
+	WRITE(6,41)
+	DO I=2,BIGT
+	  WRITE(6,4) I,NUSQ(I)
+	ENDDO
+	WRITE(6,51)
+	DO I=2,BIGT
+	  WRITE(6,5) I,LOGNU(I)
+	ENDDO
+	WRITE(6,61)
+	DO I=2,BIGT
+	  WRITE(6,6) I,MU(I)
+	ENDDO
+
+1	FORMAT(' A=',F33.1)
+2	FORMAT(' M=',F33.1)
+3	FORMAT(' BIGT=',I)
+41	FORMAT(' NUSQ=')
+4	FORMAT('   NUSQ (',I,')=',F33.6)
+51	FORMAT(' LOGNU=')
+5	FORMAT('   LOGNU(',I,')=',F33.6)
+61	FORMAT(' MU=')
+6	FORMAT('   MU=  (',I,')=',F33.6)
+C	GOTO 201
+	END
+
+      SUBROUTINE SPECT(A, M, BIGT, MU, NUSQ, LOGNU, U, IU, V, IV, Z,
+     *  IFAULT)
+C
+C     ALGORYTHM  AS 193 APPLIED STATISTICS, (1983) VOL. 32, NO.3 PG. 328-335
+C     T. R. Hopkins
+C
+C     A REVISED ALGORITHM FOR THE SPECTRAL TEST
+C     Modified to use REAL*16 variables for VAX/VMS
+C
+      IMPLICIT NONE
+      INTEGER*4 I, I2, J, K
+      INTEGER*4 BIGT, IU, IV, T, T1, IFAULT
+      REAL*16 A, M, MU(BIGT), NUSQ(BIGT), LOGNU(BIGT),
+     *  U(IU, BIGT), V(IV, BIGT), Z(BIGT),
+     *  H, HPRIME, MMAX, MMAX2, MSQ, P, PI, PPRIME, Q,
+     *  QTEMP, R, S, SIGN, UC, VC, VIJ, VJJ, W, ZERO, ONE, TWO, FOUR,
+     *  DINT, DNINT, VPROD
+      DATA ZERO /0.0Q0/, ONE /1.0Q0/, TWO /2.0Q0/, FOUR /4.0Q0/
+C
+C        SUITABLE VALUES FOR
+C        1) IBM REAL*8
+C        DATA MMAX/33554432.0D0/
+C        2) IBM REAL*16
+C        3) CDC 7600 DOUBLE PRECISION
+C        DATA MMAX/35184372088832.0D0/
+C        DATA MMAX /9007199254740992.0D0/
+C
+C     A VAX/VMS REAL*16 has precision approximately one part in 2**112
+C     Knuth claims values rarely if ever exceed M**2
+C     So Hopkins takes maxval = 8*m**2  and solves 2**112 = 8*m**2 for M
+C     giving Mmax = 2**(112/2)/8
+      DATA MMAX /9.0Q15/
+C
+C        TEST THE VALIDITY OF THE INPUT PARAMETERS
+C
+      MMAX2 = MMAX * MMAX
+      IFAULT = 0
+      IF (BIGT .LT. 2) IFAULT = 1
+      IF (A .GE. M .OR. A .LE. ZERO .OR. M .LE. ZERO) IFAULT = 2
+      IF (M .GT. MMAX) IFAULT = 3
+      IF (IFAULT .GT. 0) RETURN
+C
+C        CHECK A AND M ARE RELATIVELY PRIME
+C        NEED VALID A AND M
+C        USE EUCLIDS ALGORITHM
+C
+      H = A
+      HPRIME = M
+   10 R = QMOD(HPRIME, H)
+
+      IF (R .EQ. ZERO) GOTO 20
+      HPRIME = H
+      H = R
+      GOTO 10
+   20 IF (H .NE. ONE) IFAULT = 4	! A and M not relatively prime
+      IF (IFAULT .NE. 0) RETURN
+      MSQ = M * M
+C
+C        ALL STEPS REFER TO THOSE IN KNUTHS ALGORITHM
+C        STEP 1 - INITIALIZATION
+C
+      H = A
+      HPRIME = M
+      P = ONE
+      PPRIME = ZERO
+      R = A
+      S = ONE + A * A
+C
+C        STEP 2 - EUCLIDEAN STEP
+C
+   30 Q = QINT(HPRIME / H)
+      UC = HPRIME - Q * H
+      VC = PPRIME - Q * P
+      W = UC * UC + VC * VC
+      IF (W .GE. S) GOTO 40
+      S = W
+      HPRIME = H
+      H = UC
+      PPRIME = P
+      P = VC
+      GOTO 30
+C
+C        STEP 3 - COMPUTE NU(2)
+C
+   40 UC = UC - H
+      VC = VC - P
+      W = UC * UC + VC * VC
+      IF (W .GE. S) GOTO 50
+      S = W
+      HPRIME = UC
+      PPRIME = VC
+   50 NUSQ(2) = S
+C
+C        INITIALIZE U AND V MATRICES
+C        NOTE WE STORE BY COLUMNS WHEREAS KNUTH STORES BY ROWS
+C
+      T = 2
+      U(1, 1) = -H
+      U(1, 2) = -HPRIME
+      U(2, 1) = P
+      U(2, 2) = PPRIME
+      SIGN = ONE
+      IF (PPRIME .GT. ZERO) SIGN = -ONE
+      V(1, 1) = SIGN * PPRIME
+      V(1, 2) = -SIGN * P
+      V(2, 1) = SIGN * HPRIME
+      V(2, 2) = -SIGN * H
+C
+C        STEP 4 - ADVANCE T
+C
+   60 IF (T .EQ. BIGT) GOTO 200
+      T1 = T
+      T = T + 1
+      R = QMOD(A * R, M)
+      U(1, T) = -R
+      U(T, T) = ONE
+      U(T, 1) = ZERO
+      V(1, T) = ZERO
+      V(T, T) = M
+      DO 70 I = 2, T1
+        U(I, T) = ZERO
+        U(T, I) = ZERO
+        V(I, T) = ZERO
+   70 CONTINUE
+      DO 90 I = 1, T1
+        QTEMP = V(1, I) * R
+        Q = QNINT(QTEMP / M)
+        V(T, I) = QTEMP - Q * M
+        DO 80 I2 = 1, T
+   80    U(I2, T) = U(I2, T) + Q * U(I2, I)
+   90 CONTINUE
+      S = QMIN1(S, VPROD(U(1, T), U(1, T), T))
+      K = T
+      J = 1
+C
+C        STEP 5 - TRANSFORM
+C
+  100 DO 120 I = 1, T
+        IF (I .EQ. J) GOTO 120
+        VIJ = VPROD(V(1, I), V(1, J), T)
+        VJJ = VPROD(V(1, J), V(1, J), T)
+        IF (TWO * QABS(VIJ) .LE. VJJ) GOTO 120
+        Q = QNINT(VIJ / VJJ)
+        DO 110 I2 = 1, T
+          V(I2, I) = V(I2, I) - Q * V(I2, J)
+          U(I2, J) = U(I2, J) + Q * U(I2, I)
+  110   CONTINUE
+      K = J
+  120 CONTINUE
+C
+C        STEP 6 - EXAMINE NEW BOUND
+C
+      IF (K .EQ. J) S = QMIN1(S, VPROD(U(1, J), U(1, J), T))
+C
+C        STEP 7 - ADVANCE J
+C
+      J = J + 1
+      IF (J .EQ. T + 1) J = 1
+      IF (J .NE. K) GOTO 100
+C
+C        STEP 8 - PREPARE FOR SEARCH
+C
+C        MU AND LOGNU ARE USED TO STORE KNUTHS X AND Y RESPECTIVELY
+C
+      DO 130 I = 1, T
+        MU(I) = ZERO
+        LOGNU(I) = ZERO
+        QTEMP = VPROD(V(1, I), V(1, I), T)
+        IF (QTEMP .GT. MMAX2) GOTO 240	!Intermediate result &gt; Mmax * Mmax
+        QTEMP = QTEMP / MSQ
+        Z(I) = QINT(QSQRT(QINT(QTEMP * S)))
+  130 CONTINUE
+      K = T
+C
+C        STEP 9 - ADVANCE XK
+C
+  140 IF (MU(K) .EQ. Z(K)) GOTO 190
+      MU(K) = MU(K) + ONE
+      DO 150 I = 1, T
+  150  LOGNU(I) = LOGNU(I) + U(I, K)
+C
+C        STEP 10 - ADVANCE K
+C
+  160 K = K + 1
+      IF (K .GT. T) GOTO 180
+      MU(K) = -Z(K)
+      DO 170 I = 1, T
+  170  LOGNU(I) = LOGNU(I) - TWO * Z(K) * U(I, K)
+      GOTO 160
+  180 S = QMIN1(S, VPROD(LOGNU, LOGNU, T))
+C
+C        STEP 11 - DECREASE K
+C
+  190 K = K - 1
+      IF (K .GE. 1) GOTO 140
+      NUSQ(T) = S
+      GOTO 60
+C
+C        CALCULATE NU AND LOG(NU)
+C
+  200 DO 210 I = 2, BIGT
+        MU(I) = QSQRT(NUSQ(I))
+        LOGNU(I) = QLOG(MU(I)) / QLOG(TWO)
+  210 CONTINUE
+C
+C        CALCULATE TRANSFORMED MU VALUES
+C
+      PI = 3.14159 26535 89793 23846 26433 83279 50288 41971 69399 37511
+      Q = ONE
+      DO 220 T = 2, BIGT, 2
+        Q = Q * PI * TWO / QEXT(T)
+        MU(T) = Q * MU(T) ** T / M
+  220 CONTINUE
+      IF (BIGT .EQ. 2) RETURN
+      Q = TWO
+      DO 230 T = 3, BIGT, 2
+        Q = Q * PI * TWO / QEXT(T)
+        MU(T) = Q * MU(T) ** T / M
+  230 CONTINUE
+      RETURN
+
+  240 IFAULT = 5	!Intermediate result &gt; Mmax * Mmax
+      RETURN
+      END
+
+
+      REAL*16 FUNCTION VPROD(U, V, T)
+C
+C     ALGORYTHM  AS 193 APPLIED STATISTICS, (1983) VOL. 32, NO.3 PG. 328-335
+C
+C     AUXILIARY FUNCTION TO CALCULATE THE INNER PRODUCT OF
+C     THE TWO VECTORS U AND V OF LENGTH T.
+C     Modified to REAL*16
+C
+      INTEGER T
+      REAL*16 U(T), V(T), SUM, ZERO
+      DATA ZERO /0.0Q0/
+C
+      SUM = ZERO
+      DO 10 I = 1, T
+   10 SUM = SUM + U(I) * V(I)
+      VPROD = SUM
+      RETURN
+      END
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00380.html">(fwd) Random Numbers - CORELA.FOR</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00383.html">(fwd) Re: BSD random() - any good (source included)?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00380.html">(fwd) Random Numbers - CORELA.FOR</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00383.html">(fwd) Re: BSD random() - any good (source included)?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00381"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00381"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

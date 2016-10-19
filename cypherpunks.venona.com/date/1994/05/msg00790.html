@@ -1,0 +1,202 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Cypherpunks Goals: Bad debate drives out good debate -->
+<!--X-From-R13: tgbnyNna&#45;grnyynpu.pbz (Uenunz Fbny) -->
+<!--X-Date: Thu, 12 May 94 04:16:39 PDT -->
+<!--X-Message-Id: 199405121116.MAA23115@an&#45;teallach.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Cypherpunks Goals: Bad debate drives out good debate</TITLE>
+<LINK REV="made" HREF="mailto:gtoal@an-teallach.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00756.html">Date Prev</A>][<A HREF="msg00759.html">Date Next</A>][<A HREF="msg00780.html">Thread Prev</A>][<A HREF="msg00781.html">Thread Next</A>][<A HREF="index.html#00790">Date Index</A>][<A HREF="threads.html#00790">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Cypherpunks Goals: Bad debate drives out good debate</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Cypherpunks Goals: Bad debate drives out good debate</LI>
+<LI><em>From</em>: <A HREF="mailto:gtoal@an%2Dteallach.com">gtoal@an-teallach.com</A> (Graham Toal)</LI>
+<LI><em>Date</em>: Thu, 12 May 1994 12:16:06 +0100</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+		You have a good summary of what's going on. Personally I've
+	found it useful to create a filter for my cypherpunks mail to send
+	posts from people whom I respect more into a seperate folder such that
+	the signal-to-noise ratio in that folder is higher. When I have more
+	time I read the folder with the lower signal-to-noise ratio, but I
+	often do not have those resources.
+		I don't really have to deal with bad posts because I don't see
+	most of them unless I have some extra time on my hands... Others
+	interested in rational discussion and debate and actual-doing-things
+	might find this a useful technique.
+
+Ditto.  Actually I gateway c'punks straight into a local 'mail.cypherpunks'
+group, with the hack script below (there might be an easier way, but I had
+the code around anyway).
+
+First, I created a user called 'cypher', then gave it this .forward:
+
+suilven% cd ~cypher
+suilven% cat .forward
+"|mail2news mail.cypherpunks cypherpunks@toad.com"
+
+Since I'm running the smrsh security wrappers, mail2news has to be in the
+special smrsh directory, /usr/adm/sm.bin.
+
+mail2news:
+#!/usr/contrib/bin/taintperl
+#
+# mail2news - Incredibly simple program to take a mail message from
+#             stdin and insert it into a moderated newsgroup so you can
+#             read mailing list messages via news instead of mail.
+#
+# Usage: mail2news &lt;newsgroup&gt; &lt;reply-gateway&gt;
+#
+# Author: Stephen Hebditch &lt;steveh@orbital.demon.co.uk&gt;
+#
+# Operation:
+#   1. Create a new local group (e.g. orbital.lists.uri) with moderated
+#      status to contain the local messages.
+#   2. Make sure the newsgroup isn't going to propagate outside your
+#      system.
+#   3. Modify mailpaths (C News) or moderators (INN) so that your local
+#      replies get sent back to the mailing list.
+#   4. Use a mail filter program (such as comes with elm) to divert
+#      messages arriving from the list to this program instead.
+#
+
+# Add local config info here
+# Make secure (from 'perl' man page)
+$ENV{'PATH'} = '/bin:/usr/bin:/usr/local/bin';
+$ENV{'IFS'} = '' if $ENV{'IFS'} ne '';
+
+$path = $ENV{'PATH'};    # Not tainted
+
+$domain = "suilven.an-teallach.com";
+$rnews = "/bin/rnews";
+$update = "/usr/local/bin/op updatetrn";
+$user = "news";	# If badly installed, news will get the replies
+$newsgroup = $ARGV[0];
+if (!$newsgroup)
+	{
+	die ("No newsgroup name supplied\n");
+	}
+
+$replyaddr = $ARGV[1];
+if (!$replyaddr)
+	{
+	$replyaddr = $user;
+	}
+
+$body = 0;
+$kill = 0;
+$subject = 0;
+
+open (NEWS, "|$rnews") || die ("Can't run $rnews: $!\n");
+print (NEWS "Newsgroups: $newsgroup\nPath: $domain!not-for-mail\n");
+print (NEWS "Followup-To: poster\nReply-To: $replyaddr\n");
+while (&lt;STDIN&gt;)
+	{
+	chop;
+	if (!$body)
+		{
+		if (/^Subject:\s+(.*)$/io)
+			{
+			if ($1 ne "")
+				{
+				$subject++;
+				print (NEWS "$_\n");
+				}
+			}
+		# Add here any headers you wish to kill
+		elsif (/^(Received|Return-Path|X400-Received|Newsgroups|Path|To|Reply-To):/io)
+			{
+			$kill++;
+			}
+		elsif (/^From\s.*$/io)
+			{
+			}
+		elsif ((/^\s.*$/io) &amp;&amp; ($kill))
+			{
+			}
+		elsif ($_ eq "")
+			{
+			$body++;
+			if (!$subject)
+				{
+				print (NEWS "Subject: &lt;no subject&gt;\n")
+				}
+			print (NEWS "Approved: news@$domain\n\n");
+			}
+		else
+			{
+			$kill = 0;
+			print (NEWS "$_\n");
+			}
+		}
+	else
+		{
+		print (NEWS "$_\n");
+		}
+	}
+
+close (NEWS);
+system($update);
+
+exit (0);
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00756.html">Re: Cypherpunks Goals: Bad debate drives out good debate</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00759.html">Re: Here they come...</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00780.html">Re: Cypherpunks Goals: Bad debate drives out good debate</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00781.html">Re: Cypherpunks Goals: Bad debate drives out good debate</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00790"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00790"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

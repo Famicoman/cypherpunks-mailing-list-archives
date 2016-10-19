@@ -1,0 +1,181 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Remailer chain length? -->
+<!--X-From-R13: Xvz Qubngr <enintrNffm.pbz> -->
+<!--X-Date: Sun, 2 Jun 1996 00:39:01 +0800 -->
+<!--X-Message-Id: 199606011336.IAA11002@einstein.ssz.com -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Remailer chain length?</TITLE>
+<LINK REV="made" HREF="mailto:ravage@ssz.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00011.html">Date Prev</A>][<A HREF="msg00010.html">Date Next</A>][<A HREF="msg00087.html">Thread Prev</A>][<A HREF="msg00289.html">Thread Next</A>][<A HREF="index.html#00009">Date Index</A>][<A HREF="threads.html#00009">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Remailer chain length?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Remailer chain length?</LI>
+<LI><em>From</em>: Jim Choate &lt;<A HREF="mailto:ravage@ssz.com">ravage@ssz.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 1 Jun 1996 08:36:58 -0500 (CDT)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Hi Scott,
+
+Forwarded message:
+
+&gt; Subject: Re: Remailer chain length? 
+&gt; Date: Fri, 31 May 1996 14:55:58 -0500
+&gt; From: Scott Brickner &lt;sjb@universe.digex.net&gt;
+&gt; 
+&gt; &gt;If this is strictly true, why not simply run several instances of a remailer
+&gt; &gt;on the same machine. Then randomly chain them prior to sending them off
+&gt; &gt;site. This would be a lot cheaper and faster than trying to convince
+&gt; &gt;hobbyist to set it up or businesses to to use their profit &amp; legal council.
+&gt; 
+&gt; Because it's not strictly true.  Implicit in traffic analysis is looking
+&gt; at the "envelopes" of the traffic.  Since this means intercepting those
+&gt; envelopes, once you've put your monitor on the first remailer at a site,
+&gt; you've probably gotten all the rest at the site for free.
+&gt; 
+&gt; I don't think multiple remailers at the same site help anything.
+&gt; 
+
+I agree completely. If traffic analysis is going to be done on a single box
+it isn't going to matter how many remailers are there.  The monitor will
+simply grab them all. At this point it simply maps them thusly:
+
+
+      incoming message &gt; remailer #1 &gt; .... &gt; remailer #n &gt; outgoing
+
+
+That this really maps to is obvious:
+
+
+      incoming message &gt; remailer #1-#n &gt; outgoing
+
+
+The only thing this does is increase the number of valid entries in the
+From: field. Succesful traffic analysis does not require that the From:
+field contain only a single item. As a matter of fact it makes no difference
+what the headers contain unless the body is put in some kind of envelope for
+final delivery. Why? Because all one has to do is look at the body of the
+text which will not have changed. This leads to a simple model, based on a
+physical remailer:
+
+        1. Physical remailer receives an evelope addressed to them.
+        2. They open it and find a $1 money order (for paying the remailer)
+           and another envelope with another delivery address on it.
+        3. Remailer puts $1 in bank and the interior letter in the mail.
+
+To convert this to electronic means:
+
+        1. Remailer receives a email that is encrypted except for the
+           header.
+        2. Remailer decrypts mail (ie removes the outer envelope) and
+           find three items, block of encrypted data (ie inner envelope)
+           with header to next site and e$ token for $1.
+        3. Remailer sends the data on its way.
+
+There are a couple of points to be made.
+
+        1. No traffic is handled in the clear except for the header to
+           the current destination all others are nested in encryption.
+        2. Remailer chaining is handled entirely by the customer
+           (ie customer addresses the envelopes)
+        3. $1 is the smallest amount normaly accepted as a fee for a
+           valid contract.
+        4. Remailer can't look at data because there is no way to find the
+           correct sequence of keys to unlock the nested encryption.
+        5. Automaticaly limits spamming unless a remailer allows cloning
+           AND all recipients share a commen private key.
+        6. It maps 1:1 onto the physical remailer model with the same limits
+           on information at each stage. This allows one to directly apply
+           the current history of precedence involving anonymity and
+           physical remailers.
+
+Under todays current legal and social structure this is the only model that
+will prevent remailers from being held accountable for their traffic and at
+the same time provide enough income to keep legal protection at hand. Note
+that I am not saying you still can't be brought brought up on charges,
+simply that you (as a remailer) now have the structure in place to fight it
+succesfuly.
+
+This is the basic model that the Austin Cypherpunks are working on at the
+currrent time. The big problem we have right now is determining if the body
+is actualy encrypted. We have done some basic tests of encryption-spoofing
+using pgp and it is looks to be a thorny problem. It simply is not trivial
+to look at a block of characters and determine if they are actualy
+encrypted. You can't rely on the wrapper around the data put there by the
+encryption program because this can be kept intact and the data changed. As
+long as the checksum matches it all looks the same. Even if the test is done
+with a dictionary  this won't help because rsa does not guarantee that once
+the data is encrypted that the output would be gibberish, sort of like the
+"All the monkeys in the world typing create Shakespeare" story. It is
+completely feasible (though unlikely) for the encrypted text to be something
+meaningful in some language or another.
+
+
+                                                      Jim Choate
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00289" HREF="msg00289.html">Re: Remailer chain length?</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Shostack &lt;adam@homeport.org&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00011.html">Re: [Off-Topic]  "Curfews"</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00010.html">Fairness, Justice, and Cypherpunks (fwd)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00087.html">Re: opinions on book "The Truth Machine"</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00289.html">Re: Remailer chain length?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00009"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00009"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

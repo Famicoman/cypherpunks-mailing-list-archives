@@ -1,0 +1,209 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Card Playing Protocol? (fwd) -->
+<!--X-From-R13: Oefra Dnl Oenpuryvna <enenpuryNcevfz.cbyl.rqh> -->
+<!--X-Date: Fri, 22 Jul 94 23:02:11 PDT -->
+<!--X-Message-Id: Pine.3.05.9407230153.A11719&#45;d100000@prism.poly.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Card Playing Protocol? (fwd)</TITLE>
+<LINK REV="made" HREF="mailto:rarachel@prism.poly.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01223.html">Date Prev</A>][<A HREF="msg01226.html">Date Next</A>][<A HREF="msg01221.html">Thread Prev</A>][<A HREF="msg01240.html">Thread Next</A>][<A HREF="index.html#01234">Date Index</A>][<A HREF="threads.html#01234">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Card Playing Protocol? (fwd)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:kentborg@world.std.com">kentborg@world.std.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Card Playing Protocol? (fwd)</LI>
+<LI><em>From</em>: Arsen Ray Arachelian &lt;<A HREF="mailto:rarachel@prism.poly.edu">rarachel@prism.poly.edu</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 23 Jul 1994 01:49:53 -0400 (GMT+4:00)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+
+
+---------- Forwarded message ----------
+Date: Sat, 23 Jul 1994 01:19:02 -0400 (GMT+4:00)
+From: Arsen Ray Arachelian &lt;rarachel@prism.poly.edu&gt;
+To: "Roy M. Silvernail" &lt;roy@sendai.cybrspc.mn.org&gt;
+Subject: Re: Card Playing Protocol?
+
+
+
+On Wed, 20 Jul 1994, Roy M. Silvernail wrote:
+
+&gt; The effect could be different.  I use i there because I want to traverse
+&gt; the deck from one end to the other, and exchange each card with a
+&gt; randomly selected card from the unprocessed remainder.  This algorithm
+&gt; goes back to my 8-bit days, when speed was everything.  Although some
+&gt; cards might be handled twice (probably about 35%, but I haven't done the
+&gt; math), each position in the deck is filled only once (except the last
+&gt; one, which is forced from the other 53).
+&gt; 
+&gt; A card in position X will, in its turn, be moved to a random position
+&gt; between itself and one end of the deck.  But that card is also subject
+&gt; to being 'picked from behind' when an earlier card is exchanged.  So any
+&gt; given card may end up on either side of its beginning location.
+&gt; 
+&gt; But I think there's something to what you're saying.  I can't articulate
+&gt; it, but I get a sense that the single-pass algorithm might have a
+&gt; definable shape
+
+The issue is this:  at the start a card has a 1/54 chance of being swapped
+with &gt;ANY&lt; card.  The second card has a chance of 1/53 of being swapped
+with &gt;ANY&lt; card, the third, a chance of 1/52... the 50th card has a chance
+of 1/4, ... the 53rd card has a 1/2 chance of being swaped with the last
+card or remains in its place (swapped with itself.)
+
+So what I'm getting at is that the cards at one end of the deck have more
+"mobility" than the cards in the other end of the deck.  The 1st cards
+have a more spread out distribution so they have LESS of a chance of being
+swapped out with the cards at the back of the deck.  The cards at the back
+of the deck have a very tight space from which to be swapped. Therein lies
+the problem of sorting.  As for SPEED, in the eight bit days, it would be
+faster to do a MOD with a CONSTANT number than with a variable.  Why? 
+Because the compiler can find ways of optimizing the MOD via right shifts
+and substractions rather than using repeated substraction alone.
+
+There was some challenge somewhere to come up with ways of dividing
+numbers via shifting and substraction some time ago.  I'm sure the
+division for 54 is faster than a general integer divide by substraction. 
+It's hard to figure out how to divide by 54 via shifting, however, it
+would do wonders for an eight bit machine. These days, some machines have
+integer/floating division right in the CPU that's just as fast or almost
+as fast.  With FPU's, even faster than shifting. :-)
+
+Let's see... how do I break 54 down.... hmmm..  Okay, if we trash the
+jokers it becomes easier:  52/4 == 52&gt;&gt;2.  This equals 13.  Now 13 being a
+prime can't be divided...  I guess this is one way of looking at the card
+value and stripping off the suite.  However, having divided by 4, you
+saved yourself four times the work already.
+
+So you take your picked card C and substract C&gt;&gt;2 from it.  If the result
+is positive, you've got a remainder to a division by 4.  You then
+substract 13 until you would get a negative value if you did one more
+substraction.  The left over value is the mod 54 (I think.  Someone
+correct me if I'm wrong.)
+
+Anyhow, this is moot as you don't need to do this by hand anymore anyway.. :-)
+Besides, if you want to cheat a bit, you can always take lrand() &amp;0x0000003F
+which would give you a range from 0 to 63, and if you should get a value
+larger than 53, you substract 54 from it. :-)  Since all you want is a
+random number from 0 to 53, it doesn't much matter.  I guarantee that this
+is faster than division on most of the common machines anyway. :-)
+
+&gt; An interesting thought.  Guessing a card's location is pretty tough,
+&gt; though.  I was thinking more of seasoned players noticing the absence of
+&gt; patterns they had become accustomed to.  I know I saw some definite
+&gt; trends when I was an avid Cribbage player.
+
+Yes, but an AI could also be trained with these patterns.  A neural
+network attached to a tracking engine that keeps track of his hand and
+guesses at his opponents hand and the "odds" of what cards can come up
+next against the odds of what he needs to win with isn't easy, but if done
+right, it can prove a formidable opponent for the beginer poker player. :-)
+
+It would be matched by seasoned players undoubtedly.  However, what I'm
+getting to here is an automated digital cash paying/payed casio dealer. 
+That is you could set up a telnet site where others can gamble against
+your computer.  (I'll leave the legalities of this to others :-)  If this
+machine is done the right way, even with mental poker and even if it can't
+cheat you, it's still a very good card shark.  You could charge say, half
+a ghostmark or whatever per 10 games just to play, plus a minimum bet of
+one ghostmark per hand with doubling/raising/etc being allowed.
+
+Hell, if you really want to get sick, you can have the AI keep databases
+of the player's past patterns and how he ticks.  Unless players use random
+anonymous packet bouncers, such AI's could be properly used to run a real
+cypherspace &lt;g&gt; casino.  I'm sure if we look up some mobsters and give
+them this idea they'd be happy to implement it once digital cash appears
+in wide use.
+
+Of course we're talking about ten years in the future, or never if digi
+cash never makes it...
+
+Don't however think that this can't be done.  There are chess games that
+"think" ahead.  If programmed with the right set of fuzzy rules and given
+extensive databases as to the opponents past moves/prefrences/bluffs/etc,
+such an AI would be a great card shark.
+
+Of course our player may decide to write a better auto-player and have it
+play against another AI. :-)  But hey, if we're going to have smart
+agents, their owners can be "backers" as there are for real gamblers out
+there already. :-)
+
+&gt; In poker, each hand gets a fresh shuffle.  Blackjack will exhaust the
+&gt; deck to a certain point and then shuffle.  Depending on the house,
+
+Yep.. the reason I asked was because in high school we played by almost no
+rules. We'd have games where the "odd" numbered cards were wild, picture
+cards wild, etc.... shit like that was common place...  I guess it's
+bastardisation, but hey, it was fun and not for money.  And we didn't
+reshuffle often.
+
+BTW: Idea to prevent dealer cheating while shuffling the deck: Alice
+Builds the deck from Ace of Spades to King o'Diamonds, encrypts it,
+shuffles it herself, passes it to Bob, who shuffles it again, and encrypts
+it, then passes it to Alice who picks her hand, etc.
+
+If the cards are shuffled between every hands, this would prevent an AI
+from keeping tack of the odds of unplayed cards.
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01223.html">Re: Double DES calculations</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01226.html">900 Mhz. cordless phone with encryption</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01221.html">Accessing the Cpunk WAIS archive</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01240.html">Re: Card Playing Protocol? (fwd)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01234"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01234"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

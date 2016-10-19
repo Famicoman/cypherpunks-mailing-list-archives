@@ -1,0 +1,183 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: hashcash spam prevention &#38; firewalls -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Sat, 13 Dec 1997 19:20:07 +0800 -->
+<!--X-Message-Id: 199712131036.KAA00930@server.eternity.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 34921c6b.2682714@128.2.84.191 -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: hashcash spam prevention &amp; firewalls</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00624.html">Date Prev</A>][<A HREF="msg00612.html">Date Next</A>][<A HREF="msg00611.html">Thread Prev</A>][<A HREF="msg00615.html">Thread Next</A>][<A HREF="index.html#00622">Date Index</A>][<A HREF="threads.html#00622">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: hashcash spam prevention &amp; firewalls</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:phelix@vallnet.com">phelix@vallnet.com</A></LI>
+<LI><em>Subject</em>: Re: hashcash spam prevention &amp; firewalls</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 13 Dec 1997 10:36:23 GMT</LI>
+<LI><em>CC</em>: <A HREF="mailto:cypherpunks@Algebra.COM">cypherpunks@Algebra.COM</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg00611.html">34921c6b.2682714@128.2.84.191</A>&gt; (phelix@vallnet.com)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+Phelix &lt;phelix@vallnet.com&gt; writes:
+&gt; 
+&gt; &gt;The Right Way to do it perhaps is as an SMTP extension, however I
+&gt; &gt;consider this impractical in the short term because as far as I know
+&gt; &gt;there is no SMTP extension plug-in mechanism [...]
+&gt; 
+&gt; How does PGP do it with their policy enforcer?
+
+Their controversial GAK ready policy enforcer works as a a local SMTP
+proxy.  You set up your normal SMTP server on another machine, and
+configure the policy enforcer to forward mails to the normal SMTP
+server.  Or presumably if you can configure your SMTP server to accept
+connections on a port other than 25 you could have the SMTP enforcer
+on the same machine.
+
+The same thing could work for a hashcash filter, and it is one
+feasible solution.
+
+&gt; &gt;Secondly the proxy approach prevents some of the SMTP server functions
+&gt; &gt;from operating properly because the process on the other end of the
+&gt; &gt;socket is our hashcash proxy on localhost rather than the remote mail
+&gt; &gt;hub (modern sendmails can be configured to perform reverse name
+&gt; &gt;lookups on IP addresses, call ident (ident sucks anyway IMO), or block
+&gt; &gt;based on IP address or domain, etc.)  Is this kind of thing likely to
+&gt; &gt;be a big problem?
+&gt; 
+&gt; I don't see why.  Just have the proxy work both ways.  Isn't it possible
+&gt; for the proxy to keep track of which message came from which address and
+&gt; relay server requests back to the right user?  (I'm not familiary with how
+&gt; sendmail works, so I'm probably missing something)
+
+The functionality which is lost is the possibility for the sendmail to
+be configured to do a reverse DNS lookup on the IP address which is
+connecting to it, and check that that domain is the same as the domain
+in the From field.  Also ident lookups don't work anymore either.
+However I am not sure how reliable either of these mechanisms are, and
+I'm not sure that many people are using them because they would be
+unlikely to be reliable in the general case.
+
+So probably this is not a problem.
+
+&gt; &gt;This still leaves open the question of the user generating their own
+&gt; &gt;hashcash postage.  Again this could be problematic for neophytes.  One
+&gt; &gt;solution is to include a URL for a web page including a javascript
+&gt; &gt;hashcash generator -- this means that no new software must be
+&gt; &gt;installed, the user cut and pastes the generated hashcash into their
+&gt; &gt;message.
+&gt; 
+&gt; How many of the popular email pacakges have support for plug-ins?
+&gt; Netscape Communicator is the only package (that neophytes will use) I know
+&gt; of that doesn't support email plugins.  Perhaps in this case a small proxy
+&gt; could be installed on the user's machine.  The only thing it would have to
+&gt; do is generate hashcash for outgoing messages.  
+
+A local SMTP proxy to add hashcash on the way out should work fine.
+
+&gt; &gt;require valid hashcash on all mail, _until_ the
+&gt; &gt;recipient replies to a mail.  This is good because people rarely reply
+&gt; &gt;to spammers.
+&gt; &gt;
+&gt; &gt;Then you add some hashcash accounting so that users who overspend
+&gt; &gt;(consuming more than say 1 minutes CPU consumption on the server in a
+&gt; &gt;24 hour period have their email bounced with explanation of how to
+&gt; &gt;generate their own hashcash as a heavy user).
+&gt; 
+&gt; What's the difference between this and simply keeping track of how many
+&gt; messages each user sends in a 24 hour period and blocking people who are
+&gt; obviously spamming?
+
+The difference is that it allows the ISP which is hit by spam attacks
+to install a hashcash filter.
+
+With simple resource metering at the spammers ISP side, the spammers
+typically abuse other peoples open SMTP agents to forward their spams
+for them.
+
+Their ISPs can do little about this.
+
+Really it's best if the sender is left to generate his own hashcash,
+the motivation for working out ways to have the originators ISP's
+outgoing SMTP hub generate hashcash for them is that it is simpler to
+install in the short term.
+
+Adam
+-- 
+Now officially an EAR violation...
+Have *you* exported RSA today? --&gt; <A  HREF="http://www.dcs.ex.ac.uk/~aba/rsa/">http://www.dcs.ex.ac.uk/~aba/rsa/</A>
+
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00615" HREF="msg00615.html">Not quite as much Blood in the Streets</A></STRONG>
+<UL><LI><EM>From:</EM> frissell@panix.com</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00611" HREF="msg00611.html">Re: hashcash spam prevention &amp; firewalls</A></STRONG>
+<UL><LI><EM>From:</EM> phelix@vallnet.com</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00624.html">hashcash =&gt; mailing lists get spam instead</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00612.html">Re: hashcash spam prevention &amp; firewalls (fwd)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00611.html">Re: hashcash spam prevention &amp; firewalls</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00615.html">Not quite as much Blood in the Streets</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00622"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00622"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

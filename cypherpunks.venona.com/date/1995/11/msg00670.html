@@ -1,0 +1,278 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Java security (reposted from RISKS) -->
+<!--X-From-R13: fgrirajNorfg.pbz (Egrira Iryyre) -->
+<!--X-Date: Tue, 14 Nov 1995 19:20:18 +0800 -->
+<!--X-Message-Id: v01530507accdb2e28a83@[206.86.1.35] -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Java security (reposted from RISKS)</TITLE>
+<LINK REV="made" HREF="mailto:stevenw@best.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00600.html">Date Prev</A>][<A HREF="msg00681.html">Date Next</A>][<A HREF="msg00679.html">Thread Prev</A>][<A HREF="msg00629.html">Thread Next</A>][<A HREF="index.html#00670">Date Index</A>][<A HREF="threads.html#00670">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Java security (reposted from RISKS)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Java security (reposted from RISKS)</LI>
+<LI><em>From</em>: <A HREF="mailto:stevenw@best.com">stevenw@best.com</A> (Steven Weller)</LI>
+<LI><em>Date</em>: Mon, 13 Nov 1995 18:45:28 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+------------------------------
+
+Date: Fri, 10 Nov 1995 15:45:00 -0800
+From: Marianne.Mueller@eng.sun.com (Marianne Mueller)
+Subject: regarding Java security
+
+This response was recently posted to comp.lang.java.
+Marianne Mueller &lt;mrm@eng.sun.com&gt;, Java Products Group, Sun Microsystems, Inc.
+
+Article 4356 of comp.lang.java:
+Path: handler.Eng.Sun.COM!puffin.Eng.Sun.COM!mrm
+&gt;From: mrm@puffin.Eng.Sun.COM (Marianne Mueller)
+Newsgroups: comp.lang.java
+Subject: Re: PRINCETON STUDENTS FIND HOLE IN INTERNET SECURITY SOFTWARE
+Date: 9 Nov 1995 00:50:27 GMT
+Organization: Sun Microsystems, Inc.  Mt. View, Ca.
+Keywords: alpha3 hotjava security
+
+The paper written by the two students at Princeton describes possible
+attacks on the alpha3 HotJava browser, which have all been fixed in JDK
+beta.  Granted, until this week, the source code for JDK beta wasn't
+available, so it's understandable that they analyzed the alpha3 source base.
+
+We understand people need more information on the security model, and we're
+taking time right now to document the security story more rigorously.  A
+security FAQ, an updated whitepaper, detailed user documentation and
+detailed implementor's documentation are all being worked on.
+
+The Java security mechanisms include:
+
+        Java language mechanisms
+
+          * no pointers
+          * private interfaces, classes and methods
+          * class loader that enforces namespace divisions
+          * runtime byte code verifier that enforces language
+            type rules and name space divisions
+
+        Browser mechanisms, used by JDK beta appletviewer and by
+        Netscape Navigator 2.0beta
+
+          * AppletSecurity: extends java.lang.SecurityManager; strict
+            applet checks
+          * AppletClassLoader: extends java.lang.ClassLoader; strict
+            class loading
+
+The goal for JDK beta is to enable browsers to run untrusted applets
+in a trusted environment.  The approach is to be conservative at
+first, and to add functionality when it can be added securely.
+
+So, JDK beta applets (and Netscape 2.0beta applets) may not do the
+following.
+
+  1.  Files:
+
+        Access Control Lists are greatly restricted in beta,
+        as compared to the situation in the alpha3 HotJava browser.
+        ACLs are initialized - only once - by the applet security
+        manager, and are not user configurable.
+
+        For a file not on the access control list, an applet cannot
+
+        - check for the existence of the file
+        - read the file
+        - write the file
+        - check the file type
+        - check if the file is a directory
+        - check the timestamp when the file was last modified
+        - check the file's size
+        - create a directory
+        - rename the file
+        - list the files in this file (as if it were a directory)
+
+        Applets cannot
+
+        - create a FileInputStream
+        - create a RandomAccessFile, either for reading or writing
+        - Open file descriptors
+
+  2.  Sockets:
+
+        Applets cannot
+
+        - Create socket connections other than to its own host
+        - Create a socket factory
+
+  3.  Loading/linking:
+
+        Applets cannot
+
+        - Create class loaders
+        - Access a package in the sun.* hierarchy
+        - Define a new class in the java.* hierarchy
+        - Link dynamic libraries using System.loadLibrary()
+        - Disable or override the AppletSecurityManager
+
+  4.  Process control:
+
+        Applets cannot
+
+        - Define native methods
+        - Fork processes
+        - Manipulate threads or thread groups outside of the
+          applet's thread group
+        - Exit the virtual machine (e.g., the browser or the appletviewer)
+
+  5.  awt:
+
+        Applets cannot
+
+        - Create toplevel windows that don't have a warning banner
+
+Applets can use network connections only to connect to the host they
+originate from, to download files that are part of the applet's
+implementation.  Those files might be java bytecode class files, or they
+might be input files used by the applet (GIF, JPEG, audio, other data
+files.)
+
+Taking a look at the specific attacks mentioned in the paper -
+
+        alpha3 HotJava                  JDK
+        ----------------------          ---
+
+1.      socket accept() and             applets cannot use
+        listen() aren't protected       accept() and listen()
+        adequately, allowing a
+        browser to eavesdrop
+
+2.      applets can connect to          applets cannot connect
+        the SMTP (mail) port on         to the SMTP port on
+        some web server and use         the computer the applet
+        that as a covert channel        is visiting
+
+3.      InetAddress.getByName()         applets cannot use
+        is public and does not          InetAddress to inquire
+        check the security mode         about hosts they are
+        before making DNS request       not already allowed to
+                                        connect to
+
+4.      applets can use DNS to          applets may not get the
+        create a covert channel         internet address of any
+                                        host
+
+5.      Access Control Lists (ACLs)     ACLs are greatly restricted
+        for reading and writing         in JDK beta.
+        files are not strict enough     Reading/writing files is
+                                        disabled for web browsers,
+                                        such as Netscape Navigator 2.0.
+
+6.      applets can use the             System.getenv() is obsolete
+        System.getenv() method          and is not part of the JDK
+        to gather information about     API
+        the computer that it is
+        running on
+
+7.      applets can change the          applets cannot read or alter
+        property manager database       client properties
+
+8.      applets can change the          The fields that hold the
+        HTTP and FTP proxy server       HTTP and FTP proxy names are
+                                        private.  The values are stored
+                                        in a property manager database
+                                        that an applet cannot read or
+                                        write.
+
+It's very difficult, if not impossible, for a web browser to completely
+prevent denial of service attacks.  The JDK applet API doesn't claim to
+prevent denial of service attacks.  A "denial of service" attack is where
+someone writes an applet whose goal is to consume all available resources on
+your computer, forcing you to kill the browser you're running.  For example,
+someone could write an applet that creates a million pop-up windows.  The
+windows don't do anything, but creating a million of them might use up all
+the virtual memory on your computer and you'd have to kill the web browser
+to reclaim the virtual memory.
+
+Before people engage in too much wailing and gnashing of teeth about
+how applets have been too severely restricted -
+
+We want to enable applets to do interesting things, including making
+socket connections, and reading and writing to the file system.  One
+way to enable that is to used a signed class loader.  When a trusted
+applet is loaded, then the applet could be granted permission to do
+some of the things they are prevented from doing by default.
+
+The goal is to ensure that untrusted applets can't steal or damage
+information on a computer running a Java-enabled browser.  Later, we can
+allow trusted applets to do things that untrusted applets are not allowed to
+do.  Since an implementation bug in a trusted applet could open a loophole
+that could be exploited by an untrusted applet, design matters.
+
+Marianne  Java Products Group  <A  HREF="http://java.sun.com/people/mrm/">http://java.sun.com/people/mrm/</A>
+
+------------------------------
+
+-------------------------------------------------------------------------
+Steven Weller                      |  "The Internet, of course, is more
++1 415 390 9732                    |  than just a place to find pictures
+                                   |  of people having sex with dogs."
+stevenw@best.com                   |       -- Time Magazine, 3 July 1995
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00600.html">Re: DejaNews all over again</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00681.html">No Subject</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00679.html">ssl-encrypted web server comparison</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00629.html">ecash in pcweek</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00670"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00670"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

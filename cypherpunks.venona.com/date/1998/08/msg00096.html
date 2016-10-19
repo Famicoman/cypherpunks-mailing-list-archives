@@ -1,0 +1,217 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Noise source processing -->
+<!--X-From-R13: Rnivq Vbavt <ubavtNfcelarg.pbz> -->
+<!--X-Date: Thu, 6 Aug 1998 07:31:04 &#45;0700 (PDT) -->
+<!--X-Message-Id: 3.0.5.32.19980806073033.007cf540@m7.sprynet.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.LNX.3.96.980805210406.11770A&#45;100000@albert -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Noise source processing</TITLE>
+<LINK REV="made" HREF="mailto:honig@sprynet.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00095.html">Date Prev</A>][<A HREF="msg00101.html">Date Next</A>][<A HREF="msg00104.html">Thread Prev</A>][<A HREF="msg00101.html">Thread Next</A>][<A HREF="index.html#00096">Date Index</A>][<A HREF="threads.html#00096">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Noise source processing</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:mgraffam@mhv.net">mgraffam@mhv.net</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Noise source processing</LI>
+<LI><em>From</em>: David Honig &lt;<A HREF="mailto:honig@sprynet.com">honig@sprynet.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 06 Aug 1998 07:30:33 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00087.html">Pine.LNX.3.96.980805210406.11770A-100000@albert</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+At 09:12 PM 8/5/98 -0400, mgraffam@mhv.net wrote:
+&gt;Hello all..
+&gt;
+&gt;After a little bit of work I have put together a white noise source 
+&gt;(hacked FM reciever, heavily shielded to reduce local EMR bias) and
+&gt;have it jacked into a mic port on one of my machines. I would like
+&gt;to develop of bit of code (oh, horror :) to take bits from the sound
+&gt;card, and bits from /dev/random, and mix them together to get a
+&gt;random number stream.
+&gt;
+&gt;The noise coming off of the sound card is more beige than white though..
+&gt;
+&gt;Does anyone know of any papers, articles or whatever on good techniques to
+&gt;remove bias from the audio source? 
+
+Let me save you the trouble.  First, RFC 1750 gives some background
+including the info-theory behind bit 'distillation'.
+
+I have digitized FM radio hiss using a $10 transistor radio feeding
+into the LINE in of my soundcard.  The spectrum looks poisson
+with prominant, periodically spaced noise spikes.  It does not pass Diehard.
+
+But if you take the PARITY of 8 bits to get one bit, then assemble bytes
+out of these bits, the results pass Diehard.  
+
+This works with 44Khz, 16 bit sampling, with full-volume hiss feeding the
+soundcard.
+I have yet to try this with a video adc sampling snow.
+
+1. There are some nice spectrogramming shareware programs out there.
+2. Diehard is invaluable.
+3. Language is so vague.  Don't export this filter:
+
+
+/*
+Alemb.c
+Alembic bit distiller
+Takes 8 bytes, computes the parity of each, composes a byte from the bits.
+
+2 Aug Ported from Alembic.java which I had prototyped earlier
+3 Aug modified to be faster
+*/
+
+#include &lt;stdio.h&gt;
+/* return parity of byte input */
+int parity(int c)
+{
+	int i,p=0;
+	for (i=0; i&lt;8; i++) {
+		p ^= c &amp; 1;
+		c &gt;&gt;= 1;
+		}
+	return p;
+}
+
+
+
+main(int argc, char **argv) {
+	int c=0, p, n, i;
+	int count=0, accum=0;
+	int ones=0, zeroes=0;
+	unsigned char parlut[256];
+	unsigned char buff[8];
+	FILE *fptr, *of;
+	char *infname="test.wav";
+	char *outfname="test.bin";
+	int hist[256], max;
+
+	if (argc&gt;1) infname=argv[1];
+	if (argc&gt;2) outfname=argv[2];
+
+    fprintf(stderr,"Alembic C 4 in=%s out=%s\n", infname, outfname);
+
+
+	fptr = fopen(infname,  "rb");
+       of   = fopen(outfname, "wb");
+
+ 	for (p=0; p&lt;256; p++) { parlut[p]=parity(p); /*  initialize parity table */
+							hist[p]=0;	}
+
+	n=8;
+	while (n==8) {
+
+		n=fread(buff, 1,8, fptr);
+		count += n;
+
+		if (n==8) {
+			for (i=0; i&lt;8; i++) {
+				p =  parlut[ buff[i] ] ;
+				accum &lt;&lt;= 1;
+				accum |= p;
+
+				/* measure */
+				if (p==1) ones++; else zeroes++;
+				}
+			 fwrite(&amp;accum,1,1,of);
+			 hist[accum]++;
+			accum=0;
+
+		}
+
+
+	}
+
+	printf("In: %0d bytes\n", count);
+	printf("Out: %0d bytes\n", count/8);
+	printf("output: 1's=%0d %0f% \n", ones, 100.0*ones/(ones+zeroes));
+	printf("output: 0's=%0d %0f% \n", zeroes, 100.0*zeroes/(ones+zeroes));
+	max=0;
+	for (i=0; i&lt;256; i++) {if (max&lt;hist[i]) max=hist[i];}
+	for (i=0; i&lt;256; i++) {
+		printf("%0d %0d %lf\n", i, hist[i], 100.0*hist[i]/max);
+	}
+
+}
+
+
+
+
+
+honig@alum.mit.edu
+
+  
+
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00101" HREF="msg00101.html">Re: Noise source processing</A></STRONG>
+<UL><LI><EM>From:</EM> mgraffam@mhv.net</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00087" HREF="msg00087.html">Noise source processing</A></STRONG>
+<UL><LI><EM>From:</EM> mgraffam@mhv.net</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00095.html">Re: text analysis</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00101.html">Re: Noise source processing</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00104.html">Re: Noise source processing</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00101.html">Re: Noise source processing</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00096"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00096"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

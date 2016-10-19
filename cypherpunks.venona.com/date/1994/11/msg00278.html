@@ -1,0 +1,162 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: New remailer concept. -->
+<!--X-From-R13: Oyrk Egenfurvz <nyrkNbznun.pbz> -->
+<!--X-Date: Tue, 22 Nov 94 20:47:01 PST -->
+<!--X-Message-Id: 199411230447.WAA01411@omaha.omaha.com -->
+<!--X-Content-Type: text -->
+<!--X-Reference: 199411230329.VAA01286@omaha.omaha.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: New remailer concept.</TITLE>
+<LINK REV="made" HREF="mailto:alex@omaha.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00275.html">Date Prev</A>][<A HREF="msg00274.html">Date Next</A>][<A HREF="msg00314.html">Thread Prev</A>][<A HREF="msg00257.html">Thread Next</A>][<A HREF="index.html#00278">Date Index</A>][<A HREF="threads.html#00278">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: New remailer concept.</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: New remailer concept.</LI>
+<LI><em>From</em>: Alex Strasheim &lt;<A HREF="mailto:alex@omaha.com">alex@omaha.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 22 Nov 1994 22:47:40 -0600 (CST)</LI>
+<LI><em>In-Reply-To</em>: &lt;199411230329.VAA01286@omaha.omaha.com&gt; from "alex" at Nov 22, 94 09:29:19 pm</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+&gt; The answer of course is encryption, but that is a problem when 
+&gt; you are writing to your, well... , "crypto challenged" 
+&gt; friends.   Also, two way encrypted messages to most discussion 
+&gt; lists is not possible (to my knowledge).
+
+I hacked up some simple stuff which lets you read and send mail from a
+remote unix account.  It's not exactly what you want, but it's pretty easy
+to do.  (This stuff is pretty trivial, so if that bothers you, don't read
+on.)  This lets you get an account on a freenet like nyx which will 
+respect your privacy, and use that address to communicate to the rest of 
+the world.
+
+First of all, I used filter and a sh script called secsh which allows me
+to mail and execute arbitrary sh scripts on the remote account, provided
+that they bear a valid, authorized pgp signature.  If incoming mail has a
+trigger word in the subject line, it gets piped into a script which checks
+the sig and runs it if the sig checks out.  Here's secsh:
+
+	#!/bin/sh
+	PGP=/usr/local/bin/pgp              	 # the location of pgp
+	PGPPATH=wherever	                 # the location of config.txt
+	  export PGPPATH                         #   and pubring.pgp
+	PATH=a copy of your path
+	  export PATH
+	trap 'rm -f /tmp/ss$$; exit 1' 1 2 15
+	if ($PGP -f +batchmode &lt; $1 &gt; /tmp/ss$$ 2&gt;/dev/null)
+	then
+	  /bin/sh /tmp/ss$$
+	fi
+	rm /tmp/ss$$
+
+It's a good idea to point PGPPATH at a special pgp dir, because this will 
+pass any script with a sig that validates with any key on your keyring.	
+
+I use another script, mlscpt, which looks sort of like a dumb version of
+the mail command.  It takes a destination address and a subject as input,
+and reads incoming mail from stdin.  A sh script which extracts and mails
+the letter is emitted to stdout.  Here's mlscpt:
+
+	#!/bin/sh
+	echo "#!/bin/sh
+	sed -e '/BEGINCRM/d' -e '/ENDCRM/d' &lt;&lt; \End_of_File | mail -s '$2' $1
+	BEGINCRM"
+	cat
+	echo "ENDCRM
+	End_of_File"
+
+You can use another, trivial script, to call mlscpt, sign the result, and 
+mail it off to the remote account.  Mine uses a dummy key to encrypt the 
+output, for no good reason:  the secret key, which isn't protected with a 
+passphrase, is on the remote account's key ring, so it unwraps 
+automatically.  Here trigger stands for the trigger word which causes the 
+incoming mail to be fed into secsh:
+
+	#!/bin/sh
+	mlscpt "$1" "$2" | pgp -efs dummy | mail -s trigger account@domain.edu
+	echo " "
+
+It's also trivial to cause incoming mail to be encrypted and forwarded to 
+your home account, but I can't find mine and I'm too lazy to look up the 
+PGP command args which are needed.
+
+I used to use something similar to mlscpt as a "return address" for the 
+cp remailer system:  I'd send people a script which would append a header 
+to their letter and send it off to the first remailer on the chain.  I 
+quit using it because lots of sensible people were reluctant to run 
+strange scripts which they had recieved from some anonymous guy through a 
+remailer.
+
+==
+Alex Strasheim | finger astrashe@nyx.cs.du.edu
+alex@omaha.com | for my PGP 2.6.1. public key
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBLtLJWBEpP7+baaPtAQFPlAQAwSFUFRbGaUOZUwiNBfoSCJGPbAkRHeM0
+xqKWhBH13HTTH52AIiQWUdBtKN6nJEj7bAf3VQRuSgZ6lxfXEDRI5QrytZJLHzwx
+LMTiGbdMin264RtFREwn5RSEOkr8oAJqge7srdKyoD1Lu7X8C1Y+TxLPuUcSVWKA
+EMU5NDBNS3I=
+=s09x
+-----END PGP SIGNATURE-----
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00275.html">Re: Brad Templeton, ClariNet, and remailers</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00274.html">Re: Admiral Inman</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00314.html">Re: New remailer concept.</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00257.html">CID</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00278"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00278"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

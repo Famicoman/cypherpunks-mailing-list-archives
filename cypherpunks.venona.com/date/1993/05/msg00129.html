@@ -1,0 +1,270 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: DH: Draft RSAREF/Diffie&#45;Hellman specification -->
+<!--X-From-R13: Sevp Vhturf <uhturfNfbqn.orexryrl.rqh> -->
+<!--X-Date: Wed, 5 May 93 16:13:01 PDT -->
+<!--X-Message-Id: 9305052309.AA00684@soda.berkeley.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>DH: Draft RSAREF/Diffie-Hellman specification</TITLE>
+<LINK REV="made" HREF="mailto:hughes@soda.berkeley.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00126.html">Date Prev</A>][<A HREF="msg00132.html">Date Next</A>][<A HREF="msg00128.html">Thread Prev</A>][<A HREF="msg00132.html">Thread Next</A>][<A HREF="index.html#00129">Date Index</A>][<A HREF="threads.html#00129">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>DH: Draft RSAREF/Diffie-Hellman specification</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: DH: Draft RSAREF/Diffie-Hellman specification</LI>
+<LI><em>From</em>: Eric Hughes &lt;<A HREF="mailto:hughes@soda.berkeley.edu">hughes@soda.berkeley.edu</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 5 May 93 16:09:30 -0700</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Jim Bidzos sent the following to me, and I've received his blessing to
+forward it to cyphperpunks.  Note that it is a draft specification,
+not the actual one.  For those who have no idea what Diffie-Hellman
+key exchange is, this document may give you some idea.
+
+Eric
+-----------------------------------------------------------------------------
+
+Date: Wed, 5 May 93 15:21:20 PDT
+From: jim@RSA.COM (Jim Bidzos)
+
+FYI. Subject to change, but probably minor ones.  This will be added
+to RSAREF and will be subject to RSAREF license terms when released.
+
+--Jim
+
+Date: Fri, 30 Apr 93 16:05:14 PDT
+From: burt@RSA.COM (Burt Kaliski)
+To: jim@RSA.COM
+Subject: Draft RSAREF/Diffie-Hellman specification
+
+            RSAREF/Diffie-Hellman Interface Specification
+
+                           RSA Laboratories
+                            April 30, 1993
+
+      Copyright (C) 1993 RSA Laboratories, a division of RSA Data
+                 Security, Inc. All rights reserved.
+
+                      DRAFT -- SUBJECT TO CHANGE
+
+
+The Diffie-Hellman extension to RSAREF adds three routines:
+
+   R_GenerateDHParams    generates Diffie-Hellman parameters
+   R_SetupDHAgreement    sets up a key agreement
+ R_ComputeDHAgreedKey    computes the agreed-upon key
+
+To generate new Diffie-Hellman parameters, an application calls
+R_GenerateDHParams, giving the length of the Diffie-Hellman prime and
+a random structure. R_GenerateDHParams generates the parameters and
+returns the status of the operation. Several users may share given
+Diffie-Hellman parameters, or they may be unique to a given user.
+
+To set up a key agreement, communicating applications call
+R_SetupDHAgreement, giving these parameters:
+
+  -  the Diffie-Hellman parameters
+  -  a random structure
+
+R_SetupDHAgreement generates a new "public value" and a new "private
+value" for each party and returns the status of the operation. The
+applications then exchange their public values.
+
+To compute the agreed-upon key, the applications call
+R_ComputeDHAgreedKey, giving these parameters:
+
+  -  the Diffie-Hellman parameters
+  -  the other party's public value
+  -  the private value
+
+R_ComputeDHAgreedKey computes the agreed-upon key and returns the
+status of the operation.
+
+The applications may encrypt subsequent data under the agreed-upon
+key. When the length of the Diffie-Hellman prime is large enough, it
+is considered impractical for someone who sees the Diffie-Hellman
+parameters and the exchanged public values to determine to
+agreed-upon key, so the subsequent encryption is secure.
+
+
+R_GenerateDHParams
+
+int R_GenerateDHParams (
+  R_DH_PARAMS *params,             /* new Diffie-Hellman parameters */
+  R_DH_PROTO_PARAMS *protoParams,       /* D-H prototype parameters */
+  R_RANDOM_STRUCT *randomStruct                 /* random structure */
+);
+
+R_GenerateDHParams generates random Diffie-Hellman parameters,
+storing the result in params. protoParams specifies the lengths in
+bits of the Diffie-Hellman prime.
+
+randomStruct must have been seeded.
+
+Return value:       0    success
+       RE_MODULUS_LEN    prime length invalid
+       RE_NEED_RANDOM    randomStruct is not seeded
+
+
+R_SetupDHAgreement
+
+int R_SetupDHAgreement (
+  unsigned char *publicValue,                   /* new public value */
+  unsigned int *publicValueLen,           /* length of public value */
+  unsigned char *privateValue,                 /* new private value */
+  unsigned int *privateValueLen,         /* length of private value */
+  R_DH_PARAMS *params,                 /* Diffie-Hellman parameters */
+  R_RANDOM_STRUCT *randomStruct                 /* random structure */
+);
+
+R_SetupDHAgreement sets up a Diffie-Hellman key agreement by
+generating a public value and a private value from the Diffie-Hellman
+parameters. It stores the resulting public value in publicValue and
+the resulting private value in private value, and their lengths in
+publicValueLen and privateValueLen.
+
+The private value is a random number x, and the public value is the
+number y such that
+
+                            y = g^x mod p,
+
+where p and g are the prime and generator in params.
+
+publicValue and privateValue will be represented most significant
+byte first, with no leading zero bytes. publicValueLen and
+privateValueLen will not be greater than MAX_DH_PRIME_LEN.
+
+randomStruct must have been seeded.
+
+Return value:       0    success
+       RE_NEED_RANDOM    randomStruct is not seeded
+             (others to be determined)
+
+
+R_ComputeDHAgreedKey
+
+int R_ComputeDHAgreedKey (
+  unsigned char *agreedKey,                       /* new agreed key */
+  unsigned int *agreedKeyLen,               /* length of agreed key */
+  unsigned char *otherPublicValue,          /* other's public value */
+  unsigned int otherPublicValueLen,       /* length of public value */
+  unsigned char *privateValue,                     /* private value */
+  unsigned int privateValueLen,          /* length of private value */
+  R_DH_PARAMS *params                  /* Diffie-Hellman parameters */
+);
+
+R_ComputeDHAgreedKey computes an agreed key from the other party's
+public value, a private value, and the Diffie-Hellman parameters. It
+stores the resulting agreed key in agreedKey, and its length in
+agreedKeyLen.
+
+The agreed key is the number z such that
+
+                            z = (y')^x mod p,
+
+where y' is the other party's public value, x is the private value,
+and p is the prime in params.
+
+agreedKey will be represented most significant byte first, with no
+leading zero bytes. agreedKeyLen will not be greater than
+MAX_DH_PRIME_LEN.
+
+Return value:       0    success
+             (others to be determined)
+
+
+R_DH_PARAMS
+
+typedef struct {
+  unsigned int bits;                     /* length in bits of prime */
+  unsigned char prime[MAX_DH_PRIME_LEN];                   /* prime */
+  unsigned char generator[MAX_DH_PRIME_LEN];           /* generator */
+} R_DH_PARAMS;
+
+An R_DH_PARAMS value is a structure specifying Diffie-Hellman
+parameters. There are three fields:
+
+                bits     length in bits of the prime (not less than
+                           MIN_DH_PRIME_BITS and not greater than
+                           MAX_DH_PRIME_BITS)
+
+             modulus     prime p, represented as a MAX_DH_PRIME_LEN-
+                           byte number, most significant byte first,
+                           as many leading zero bytes as necessary
+
+           generator     generator g, represented like prime
+
+
+R_DH_PROTO_PARAMS
+
+typedef struct {
+  unsigned int bits;                     /* length in bits of prime */
+} R_DH_PROTO_PARAMS;
+
+An R_DH_PROTO_PARAMS value is a structure specifying the length in
+bits of the Diffie-Hellman prime for parameter generation. There is
+one field:
+
+                bits     length in bits of the prime (not less than
+                           MIN_DH_PRIME_BITS and not greater than
+                           MAX_DH_PRIME_BITS)
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00126.html">Re: ADMIN: Handling of "tags"</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00132.html">HOW TO FAKEMAIL</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00128.html">Additional amendments to the ECPA?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00132.html">HOW TO FAKEMAIL</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00129"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00129"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

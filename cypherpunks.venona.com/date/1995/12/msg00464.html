@@ -1,0 +1,147 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Secured RM ? (source) -->
+<!--X-From-R13: "Xbfu [. Afobear" <fgevcrfNin.choavk.pbz> -->
+<!--X-Date: Sat, 16 Dec 1995 12:38:55 +0800 -->
+<!--X-Message-Id: WAA10910.199512150328@garotte.va.pubnix.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.LNX.3.91.800121064335.1068A&#45;100000@HellSpawn.gate.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Secured RM ? (source)</TITLE>
+<LINK REV="made" HREF="mailto:stripes@va.pubnix.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00508.html">Date Prev</A>][<A HREF="msg00506.html">Date Next</A>][<A HREF="msg00539.html">Thread Prev</A>][<A HREF="msg00459.html">Thread Next</A>][<A HREF="index.html#00464">Date Index</A>][<A HREF="threads.html#00464">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Secured RM ? (source)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: root &lt;<A HREF="mailto:root@HellSpawn.gate.net">root@HellSpawn.gate.net</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Secured RM ? (source) </LI>
+<LI><em>From</em>: "Josh M. Osborne" &lt;<A HREF="mailto:stripes@va.pubnix.com">stripes@va.pubnix.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 14 Dec 1995 22:28:44 -0500</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: Your message of "Mon, 21 Jan 1980 06:53:36 EST."            &lt;Pine.LNX.3.91.800121064335.1068A-100000@HellSpawn.gate.net&gt; </LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+In message &lt;Pine.LNX.3.91.800121064335.1068A-100000@HellSpawn.gate.net&gt;, root w
+rites:
+&gt;
+&gt;OK ... here we go.. Based on discussion on this list this is what I 
+&gt;hacked out to (hopefully) more securely remove a file under unix. 
+&gt;I'd really apreciate any input, but my main interest is in the security of 
+&gt;the protocol in general and not the sloppy and embarassing C 
+&gt;programming.. :) 
+
+Well it seems to assume that it only needs to write 1024 bytes past the
+end of the file.  You either don't need to write any bytes at all past 
+the end, or you need to write one "block" past the end (normally 8K,
+but it varies), you can use fsstat(2) on many systems to find the block
+size for a filesystem.
+
+Secondly you need to flush the data out to the file (use fflush(3), and
+fsync(2) if available, otheruse call sync(2) *twice*).  If you don't some
+small set of Unix systems may notice that you are writing to a file that
+no longer exists, and not do the writes at all.
+
+Thirdly you should make several passes over the file, writing diffrent
+patterns on each pass (and remember the flush &amp; sync after each pass -
+while it is uncommon for Unix systems to supres writes to unlinked files
+it is extreamly common for them to detect multiple writes to the same part
+of a file, and only do the last one).
+
+Forth - and this is the kicker - there is no gaurentee that the filesystem
+itself won't keep a copy of the old data for some reason.  Three examples:
+
+ * a compressed filesystem may write the new data elsewhere because it
+ compresses diffrently from the old data - you should be able to defeat
+ this by filling the disk several times with random paterns
+
+ * the log structured filesystem (LFS) *will* write the new data elsewhere,
+ and the space the old data is on will not be overwritten untill the
+ cleaner comes and examines the part of the disk it is on - again filling the
+ disk several times with random patterns should cause an overwrite
+
+ * NetApp's NFS appliance ("the toaster") can (and normally is) configured
+ to take "snapshots" of the filesystem at various times, this makes the
+ blocks the file is currently on read-only, and any ovewrites will merely
+ allocate new space.  The old copy of the file will be readable for some
+ peroid of time (frequently up to a week) under a diffrent name - here you
+ will be unable to fill the disk (unless you are the NetApp admin - then
+ you can delete the appropriate snapshots and fill the disk...)
+
+
+While we are at it you probbably want to use stat(2) to find the length
+of the file, and you can get far more I/O if you allocate a sizeable
+chunk of memory (say 1K, or 8K) and use writev(2) to shove multiple copies
+of it out per syscall...    and some indenting on the code would make
+it more readable (and simpler for you to write as well).
+
+&gt;While we're here..  I havn't been able to find anyone on the planet who's 
+&gt;seen or heard of a linux un-remove, which makes testing my code very 
+&gt;tricky.  If anyone can point me at it I'd apreciate it. Hell, if someone 
+&gt;can definitively say they've /seen/ such a thing it'd be nice. So far 
+&gt;i've found one person who insists that his system admins sisters 
+&gt;boyfriends cousin from Saint Petersburg has been using un-rm for unix for 
+&gt;years. *sigh* 
+
+I don't know of a real un-rm.  In "the old days" there was a fsdb (filesystem
+debugger) that could be used to alter the filesystem at a low level.  If
+you knew enough you could "un-rm" a file.  It had to be a very valuable
+file to be worth it!).  At some sites they alias rm to do something like
+"mv $1 .$1.deleted", making an un-rm is left as an exercize for the
+intrested reader.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00508.html">Re: ADDRESS DATABASE?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00506.html">Alien Abductees, Flat Earthers, and other Fringoids</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00539.html">Re: Secured RM ? (source)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00459.html">Re: Secured RM ? (source)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00464"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00464"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

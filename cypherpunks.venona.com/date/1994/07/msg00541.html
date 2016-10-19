@@ -1,0 +1,222 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Tamper&#45;Proof Software? No! -->
+<!--X-From-R13: ewpNtah.nv.zvg.rqh (Dnl) -->
+<!--X-Date: Mon, 11 Jul 94 08:18:36 PDT -->
+<!--X-Message-Id: 9407111518.AA02589@geech.gnu.ai.mit.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Tamper-Proof Software? No!</TITLE>
+<LINK REV="made" HREF="mailto:rjc@gnu.ai.mit.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00538.html">Date Prev</A>][<A HREF="msg00539.html">Date Next</A>][<A HREF="msg00529.html">Thread Prev</A>][<A HREF="msg00507.html">Thread Next</A>][<A HREF="index.html#00541">Date Index</A>][<A HREF="threads.html#00541">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Tamper-Proof Software? No!</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Tamper-Proof Software? No!</LI>
+<LI><em>From</em>: <A HREF="mailto:rjc@gnu.ai.mit.edu">rjc@gnu.ai.mit.edu</A> (Ray)</LI>
+<LI><em>Date</em>: Mon, 11 Jul 94 11:18:38 WET DST</LI>
+<LI><em>Cc</em>: <A HREF="mailto:rjc@gnu.ai.mit.edu">rjc@gnu.ai.mit.edu</A> (Ray)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+ 
+     In your essay, you overlook the use of pseudo-code interpreters
+ and cryptographic code mangling. It is not possible to make software
+ unconditionally tamper proof, but it is possible to make it hard,
+ perhaps as hard as finding a hamiltonian of a graph. I speak as a
+ person with a 3 year cracking/tampering background. Let me pass on an
+ experience I once had:
+ 
+     I was trying to crack this game with a dongle. The code had dongle
+ checks spread throughout it. I thought I could merely search for the
+ signature of the dongle check and fix all of them, but the check was
+ different each time, disguised by indirect addressing, illegal
+ instructions, interrupt tricks, and stack tricks.  The only solution
+ was a tedious process of tracing the execution of the program and
+ backtracing the failure routine. That wasn't the only problem though.
+ On top of the dongle checks, checks for the dongle check routine and
+ various checksum routines were spread throughout the code. In fact,
+ there were so many of these checks that trying to separate the "useful
+ part" of the program, and the dongle checks was hard because they were
+ virtually everywhere.  yes, it cost the game speed, but the game
+ wasn't one that was particulary synced wih the display. Anyway, it
+ took about a week of hacking on and off to find them all. There were
+ about 30. What if there had been 1000? What if the code wasn't pure
+ assembly, but a p-code interpreter which executed not a straight
+ byte-code, but an actual recursive encryption algorithm in the
+ interpreter? In other words, 0x80 might stand for "add a to b" in one
+ instance, but in the next instance, "suicide mode" Perhaps the library
+ i/o for the p-code itself also changes/gets mangled through the
+ process. Furthermore, let us assume that this mangling is in some
+ sense, cryptographically strong.  A few things become very hard:
+ 
+ 1) writing a decompiler for the general case 
+ 2) separating the "application" from the "protection" Why? Because in some 
+ sense, you'd have to rewrite the interpreter, or the application to remove 
+ all the "suicide" instructions. The p-code could be set up so in fact, most
+ instructions are suicide unless decrypted properly.  Thus, if you were
+ to remove one suicide instruction, all of a sudden, a perfectly
+ legimate section of code would become riddled with them.  Removing
+ protection would no longer be as simple as "NOPing out" the
+ instruction. The code would be, by the nature of the interpreter,
+ interdependent in a way far deeper than "checking for the presence of
+ the dongle check routine"
+ 
+ (note: this scenario is not isomorphic to the usual protection trick
+ of having an interrupt decrypt the next instruction to be executed
+ and encrypting the previously executed instruction. In that
+ scenario, the re-encrypter can be disabled, so that after a
+ complete execution, the code is plaintext for the debugger to save to 
+ disk. Here, the problem is that the code is never "decrypted"
+ in the first place. What changes, is the meaning of the instruction
+ set itself.)
+ 
+ I suppose, one could attempt to isolate the suicide routine and just
+ make it do nothing. That still doesn't solve the problem that a
+ section of code has been mangled and probably not doing what it is
+ supposed to.
+ 
+   While a determined hacker could still break through this, I'd say
+ that it would make the effort not worth it in most cases. Currently,
+ most software protection is so simple that an hour of so in a debugger
+ can isolate a manual check, and remove it. Most of the time, code is
+ only skimmed.  My cryptographic p-code proposal forces the hacker to
+ virtually disassemble and understand the function of the entire
+ interpreter, write a decompiler, remove any protection algorithms from
+ the code, and then somehow, fix the interpreter so that the code still
+ works.
+ 
+   Imagine the task of having to create a plaintext which will generate
+ a certain MD5 hash. Here, you'd have to remove the protection, but
+ make sure the cryptographic execution flow of the interpreter matched
+ the original. i.e. coming up with *different* code (sans protection)
+ that causes the interpreter to decode the stream in the same manner.
+ 
+ (if you want to know how code is p-compiled, I can explain later
+ after I flesh it out more. I suspect I am probably reinventing the
+ wheel for the Nth time, but I haven't read anything on it, so I may
+ as well make a fool of myself.)
+ 
+    Instead of picturing my p-code proposal, picture a much simpler
+ idea. A seething morass of code, most of it garbage, protection
+ decoys, all of it interdependent with other checks (chained in various
+ ways), and somewhere in the middle of it all, is the application.  I
+ don't care what romantic vision of teenage hackers you have, it is
+ possible to make removing the protection require the effort of
+ rewriting a large chunk of the application. One of the other things I
+ used to do was "NTSC fixing", taking PAL frequency games and fixing
+ them for US computers. In some cases, it was simple (chop off the
+ bottom of the screen, adjust rasters and timing) But sometimes, it
+ required rewriting a portion of the graphics engine.  This was no joy
+ and sometimes I just gave up. If crackers had to alter just 10% of an
+ application to get it to work unprotected, I think that would be a
+ sufficient deterrent to most of them. Depending on how much speed
+ you wanted to trade off, you could probably make the code arbitrarily
+ "deep" (or, as Tim likes to talk about, imagine a hacker that has to
+ crack a program encoded as DNA!)
+ 
+ digression:
+ 
+     Now grant me something more powerful. Imagine in the future that
+ most software is in the form of distributed objects and that many of
+ those objects reside and execute on remote systems. If these remote
+ systems require cryptographic authentication before they allow a
+ remote execution (e.g. Telescript), copy protection can be
+ conditionally secure as RSA. Cracking would require writing a
+ replacement object or buying one, presuming of course, major objects
+ weren't trade secrets and you only had the API to work with. (once
+ again, the function arguments could be permuted crytographically, so
+ that even if you had the API, you still couldn't write a replacement)
+ The result, is that you'd have to pay for software because software
+ would consist of a client + object services, and the objects would
+ require cryptographic cash/authentication to use, and replacements
+ would be hard to write. However, unlike dongles, the system would be
+ totally automatic and convenient, so there would be none of the problems
+ associated with traditional protection (pain of look-up-in-the-manual or 
+ dongle).  The same system could be extended to hypertext publishing where
+ documents are distributed all over the net in different databases.
+ One could pirate a "snapshot" of a document, but what makes the
+ documents valuable is the dynamic quality of hypertext, being able to
+ lay it out however you choose, and follow links. This means you need
+ constant access to the databases, and therefore you pay for the
+ service.
+ 
+   My point in writing all this, is to disagree with Tim's implication
+ in the cryptoanarchist manifesto, that cryptographic technology will
+ eliminate intellectual property. Cryptography doesn't eliminate barbed
+ wire, it is the ultimate fence. While it could provide untracable
+ networks for "information laundering", it can also provide
+ authenticated networks for unpiratable software, or teach us how to
+ compile code in a manner that is "expensive" or as Tim might say
+ "logically deep".  (too deep to unravel its full meaning.)
+ 
+(I agree if Tim meant that it would make *legal* protection of iprop
+impossible, but I consider legal protection irrelevent anyway. If I need
+something protected, I'll do it myself, not depend on government)
+
+   Well, I've said my peace. Now Tim can tear my argument to pieces. ;-)
+ 
+ -Ray
+Any and all mistakes the result of lack of sleep...ZzzzT. 
+ 
+"Information wants to be free..."
+
+"Not if Mathematics has anything to say about it."
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00538.html">Re: NII, NSA and Computer Security Act of 1987</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00539.html">Mass forwards vs. pointers</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00529.html">Tamper-Proof Software? No!</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00507.html">Forwarding &amp; Reference Pointers</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00541"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00541"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

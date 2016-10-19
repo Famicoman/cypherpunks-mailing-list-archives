@@ -1,0 +1,333 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Mixmaster + T1 -->
+<!--X-From-R13: @nguna Lbbx <ambbxNotn.pbz> -->
+<!--X-Date: Thu, 9 Feb 95 04:11:02 PST -->
+<!--X-Message-Id: Pine.3.89.9502090624.J21224&#45;0100000@lia.bga.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Mixmaster + T1</TITLE>
+<LINK REV="made" HREF="mailto:nzook@bga.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00424.html">Date Prev</A>][<A HREF="msg00426.html">Date Next</A>][<A HREF="msg00424.html">Thread Prev</A>][<A HREF="msg00426.html">Thread Next</A>][<A HREF="index.html#00425">Date Index</A>][<A HREF="threads.html#00425">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Mixmaster + T1</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Mixmaster + T1</LI>
+<LI><em>From</em>: Nathan Zook &lt;<A HREF="mailto:nzook@bga.com">nzook@bga.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 9 Feb 1995 06:10:37 -0600 (CST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>, <A HREF="mailto:lcottrell@popmail.ucsd.edu">lcottrell@popmail.ucsd.edu</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+ 
+ 
+*** Background
+ 
+Cypherpunk remailers have been very effectively keeping the net.cops at
+bay--mostly because the net.cops aren't _real_ cops.  Lance has offered a
+standard that goes quite a distance towards defeating the latter opponent.
+I hope that my suggestions can close the gap.  The remailers, and their
+mailers, use IDEA, RSA, MD5, PGP, and D-H.
+ 
+ 
+ 
+*** Threat Model
+ 
+Our attacker, Eve, is a wealthy national government.  Eve has corrupted at
+least some of the law enforcement agencies, but not much of the judiciary.
+Contact with the remailers has not been outlawed.  Individual use of strong
+crypto has not been outlawed.  ( I know this probably violates the equality
+of power demand, but...)  Alice and Bob are sending each other messages
+through the net, and know that they are being watched.  Eve does not have
+the secret (PGP/RSA) keys of anyone she has not explicitly compromised.
+ 
+The historical examples might be Chinese dissidents, Afgan or Nicuaraguian
+freedom fighters, David Koresh, Randy Weaver, or Mary of Scotland.
+ 
+ 
+ 
+*** Goal
+ 
+Our goal is to help Alice and Bob carry on an extended conversation without
+Eve being able to produce proof that either one of them actually sent any
+real message.  This include the possibility that on occasion, theirs is the
+only real message in the remailer net.  By produce I include manufacture.
+Forward security for all involved is preferable.
+ 
+ 
+ 
+*** Attack Modes
+ 
+I believe that there are five primary modes of attack:  traffic analysizing
+individual remailers, traffic analysizing the remailer net as a whole,
+compromising remailers, correlating the reception of messages by Bob or
+Alice with their later outside actions, and fabricating messages from Alice
+to Bob.
+ 
+ 
+ 
+*** Basic Abilities
+ 
+Eve knows all of our protocals, and can convince the Internet that she is
+anyone.  She records all traffic into or out of all remailers, as well as
+Alice and Bob.  She runs most of the remailers, and can temporarily and
+selectively block traffic through the remailers.
+ 
+ 
+ 
+*** Attack Methods.
+ 
+I will not redetail the standard attacks which include flushing, spam-
+copying, single copying (stuttering), size matching, or We Dai.  I will,
+however, detail certain attacks that I believe are either new or have not
+been generally discussed.
+ 
+ 
+** Fabricating Evidence
+ 
+As we have seen with our own government, lack of evidence is a condition
+that governments can correct by fiat.  (Randy Weaver)  Alice has to be able
+to prove that a message on the Internet "from" her to a remailer did not in
+fact originate with her.
+ 
+ 
+** Sandwiching
+ 
+(This attack may not be possible at this time.  But it is hard to know...)
+If Eve owns remailers on either side of another, she may seed "random" data
+with particular data in order to determine what IDEA key was used on the
+data.
+ 
+ 
+** Remailer Spoofing
+ 
+Eve can attempt to process messages on a remailer's behalf.
+ 
+ 
+** Message Body Matching
+ 
+If a copy of a message can be sent through, the first part of the body
+(following the headers) can be compared.  If random garbage has been tacked
+on by the other remailer, it will be distinguished.  
+ 
+ 
+ 
+*** Definitions for Standard
+ 
+Remailers and mailers together are generically called users.  Alice is
+sending a message to Bob.
+ 
+All remailers operate on ticks.  At certain GMTs, all remailers process all
+of their accumulated messages, then forward them, holding some over for the
+next batch.
+ 
+The term message refers to either the final message to be sent to Bob, or
+its encrypted counterparts--including padding.  A header is a set of
+communications to a remailer, or to Bob.  A message packet is a message
+with all of its headers.  A T1 packet is the collection of all message
+packets going from one user to another on a given tick, with additional
+header information.
+ 
+ 
+ 
+*** Standard for Exchanging T1 Packets
+ 
+T1 packets are IDEA encrypted.  The key is exchanged through a DH exchange
+which takes place inside previous T1 packets.  The keys are DHed so that
+the compromise of one T1 packet does not lead to the compromise of all
+subsequent packets.
+ 
+In order to establish the original IDEA keys, a sender would contact a
+reciever with a special "origination" packet request.  Such requests would
+intiate contact between users, or could be used to establish secure IDEA
+tick keys in the event of a failed connection, or compromised key.  This
+packet includes a disposable RSA key, which the receiver would use to PGP a
+disposable RSA key in return.  IDEA keys for future packets could be passed
+through these RSA keys.  The RSA keys would themselves be signed by the
+public key associated with each user.
+ 
+ 
+ 
+*** The Structure of a T1 Packet
+ 
+T1 packets would include the DH key exchanges for future ticks, a
+timestamp, all message packets destined for the reciever this tick, an MD5
+of the previous T1 packet recieved (decrypted), and an MD5 of the rest of
+the message, as a checksum.  This could be turned into a signature,
+possibly with the timestamp.  If the MD5 from the previously recieved
+packet matches, the copy of the old sent T1 packet is destroyed.  If it is
+bad, the old packet is resent, with a different key.
+ 
+ 
+ 
+*** Selection of Message Packets to a User
+ 
+Mailers specify a number of message packets that they receive each tick
+from various remailers.  If a remailer has more messages packets for a
+mailer on a given tick than the mailer receives, the extras are held over,
+and a notice is sent so that the mailer can determine if he should raise
+his limit.  If the number of "real" packets to a user is below his limit,
+dummy packets are sent to him through other remailers, on a sliding scale.
+ 
+A user sends the same number of message packets to each remailer every
+tick.  There is a minimum number of message packets that a remailer will
+send to each other remailer each turn.
+ 
+/* This eliminates the ability to trace a flood of messages, even if they
+all took the same path. */
+ 
+Messages being held are flaged with the number of ticks that they have been
+held.  There is a maximum number of ticks that a message packet can be held.
+ 
+Mailers send the same number of message packets each tick to each remailer
+that they might use.
+ 
+ 
+ 
+*** Use of Dummy Message Packets
+ 
+Dummy message packets are used to pad traffic.  Dummy messages are always
+sent at least to third party remailers.  The distribution of these third
+parties is random.
+ 
+/* If Eve runs some remailers, she can immediately eliminate dummy message
+sent to her machines.  But if these do not originate in the machine that
+sent the message, her gain is much weakened.  If Eve controls most of the
+remailers, it may be necessary to send dummy messages through three
+remailers in order to obscure traffic flow.  If the distrubtion were flat,
+real messages would stand out. */
+ 
+ 
+ 
+*** The Structure of a Message Packet
+ 
+All message bodies are standard sized, and have a standard number of
+standard sized headers.  The reconstitution of oversized messages is
+handled by Bob's client.  The division of oversized messages is handled by
+Alice's client.  An exception is made for mail-to-news gateways, to
+reconstitute the oversized message at the last remailer.  Such exceptions
+include a rough check to insure that the message is either valid ASCII
+armour, or some language.
+ 
+The header to a remailer includes the forwarding address, a timestamp, and
+the IDEA keys to be used on each other header, as well as the body.  (Each
+is different.  See below.) After decrypting, the headers are circulated.
+When creating the timestamp for a header number n, Alice uses the time of
+the nth tick coming.
+ 
+The top header itself is RSAed with the user's public key.
+ 
+/*  If Eve manages, though a sandwich attack, to divine the idea key used
+on a header, she can use this to trace the message.  If we include only the
+key and an increment, she can get this information if she has two remailers
+before the good one.  If we include the key, an increment, and a
+permutation of the headers, she can guess the key.  */
+ 
+The header for Bob includes an MD5 of the message, flags in case the
+message is oversized, and a timestamp.
+ 
+ 
+ 
+*** Elimination of Duplicate Packets
+ 
+An MD5 record is kept of every message, every header, and every T1 packet
+recieved or sent for M ticks.  M is related to the number of headers and
+the maximum number of ticks that a message is held--with room for error.
+If a match is found, the entire packet is rejected.  If a message arrives
+with a timestamp older than M ticks, it is rejected.  If a message arrives
+with a timestamp in the future, it is held until that time.
+ 
+ 
+ 
+*** Incorporation of Encrypted Reply Blocks
+ 
+Encrypted Reply Blocks would be the PGPed version of a header set.  The
+receiver would know the IDEA keys used on the body, and the order, so he
+could reverse the operation.  The keys could even be included in the final
+header.  It is not possible in this system to allow multiple encrypted
+reply block responses without possible compromise of the recipient.
+ 
+ 
+ 
+*** Weaknesses
+ 
+Clients are required to be as sophisticated as hosts.  Clients must be able
+to handle lots of dummy mail.  Both hosts and clients must have access to
+good, secure, random data sources.  Hosts must be able to protect their
+data for a period of hours or days.  Hosts and clients need to be able to
+protect their DH information.
+ 
+Nathan
+ 
+Flame on!!
+ 
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+ 
+iQEVAwUBLzmk/XmgMs8UcStNAQEQQQgAkJyeh2vgOnsbVzuHrqGKVPE0pIoh37ms
+DtMxD7mJVMp40fGlQJmk8dT3WeVUpgeFIvJxeNvMZ86jyN51smZkjqUBNWFhJikT
+HBnAlDuf82g1GbuhPsR9J2vMTtTHcsfs+ytTWDp2g+xr1nWHngki4wBjPy2oOCP9
+dxu5vamUnDy0oFatMmGxIZyN9jTzB7NynaXVLkDWL3Hh8amUwyW9nq7LGQJ8Oiuh
+2xY4uizxJ+/SjxnATxUznT9i099xC3ClpRGX1n/3fdXY5Mu5MAJoRO6sjL5Fakz4
+3i0qWNlv8ZJCqCetSqnQrINFFd6bpDhiAz5/CU4kQ9/HtStIVl/88A==
+=kziG
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00424.html">Threat models. [was: Why encrypt intra-remailernet]</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00426.html">Best encryption device driver for MS-DOS?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00424.html">Threat models. [was: Why encrypt intra-remailernet]</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00426.html">Best encryption device driver for MS-DOS?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00425"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00425"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

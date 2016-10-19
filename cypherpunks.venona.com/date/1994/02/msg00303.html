@@ -1,0 +1,190 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Some stuff about Diffie&#45;Hellman (and more :&#45;) -->
+<!--X-From-R13: epnvaNargpbz.pbz (Dboreg Qnva) -->
+<!--X-Date: Sat, 5 Feb 94 10:20:14 PST -->
+<!--X-Message-Id: 199402051816.KAA28356@mail.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Some stuff about Diffie-Hellman (and more :-)</TITLE>
+<LINK REV="made" HREF="mailto:rcain@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00316.html">Date Prev</A>][<A HREF="msg00315.html">Date Next</A>][<A HREF="msg00423.html">Thread Prev</A>][<A HREF="msg00319.html">Thread Next</A>][<A HREF="index.html#00303">Date Index</A>][<A HREF="threads.html#00303">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Some stuff about Diffie-Hellman (and more :-)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A> (cypherpunks)</LI>
+<LI><em>Subject</em>: Some stuff about Diffie-Hellman (and more :-)</LI>
+<LI><em>From</em>: <A HREF="mailto:rcain@netcom.com">rcain@netcom.com</A> (Robert Cain)</LI>
+<LI><em>Date</em>: Sat, 5 Feb 1994 10:16:20 -0800 (PST)</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+In the Diffie-Hellman exchange there is a well-known-prime, w, and a
+well-knwon-modulus, m.  For those interested that don't know I think
+it then proceeds as follows (don't have notes in front of me so please
+someone correct me if I'm misremembering it) where ** is the power or
+exponentiation operator and % is the modulus operator:
+
+	1) Bob generates a one time random prime, b, then computes
+		B = (w ** b) % m
+	   and sends B to Carol.
+
+	2) Carol generates a one time random prime, c, then computes
+		C = (w ** c) % m
+	   and sends C to Bob.
+
+	3) Bob generates a session key:
+		K = (B ** c) % m
+
+	4) Carol generates a session key:
+		K = (C ** b) % m
+
+Carol and Bob have the same K because:
+	K == (C ** b) % m == (B ** c) % m == (w ** (b * c)) % m
+
+From just the knowledge of B and C a snoop cannot determine
+b from B, within computational reason (the root modulus being as
+difficult as factoring), nor c from C, and because K cannot be 
+determined from B and C without knowing b or c, she is screwed.
+
+Now, the tutorial over :-), the question is; is there a "standard"
+well-known-prime, w, and a "standard" well-known-modulus, m, and if
+not, let's define one.  I suppose that PGP uses a well known pair but
+they are big and not easy to hand around without going through media (I
+think.)  When defined algorithmically they might be easier to actually
+incorporate in a program or a product than great big numbers.  If this
+has not been done, I propose a simply stated algorithm for finding a
+"standard" w and m that will allow interoperation among all future
+implementations of D-H as follows:
+
+	Let "standard" w be the first prime found probing from the
+	starting point w' = n!, with a well-known n that should be
+	small. I am not sure what n should be to generate a large
+	enough w'.  Let's just say the smallest n that generates a 1000
+	digit number.  There is a well known primality testing
+	algorithm by Lenstra that is pretty agreed upon by the number
+	theory crowd (I have it coded by Lenstra and more on that
+	later.) So, let w be the first number larger than w' that
+	passes Lenstra's primality test.  Any program or device
+	employing D-H will have this algorithm in it somewhere for
+	generating each session specific b and c so all we need to
+	agree on is 1000 (or whatever is decided to be a large enough
+	prime for all practical purposes.)
+
+I leave a "standard" for m up for discussion because I don't have
+the material in front of me that tells the criterion for selecting
+strong m's and there are some considerations.  I would like it to
+be algoritmically defined though using standard long modulus, long
+integer arthmetic and some small, easy to remember number.
+
+Whatcha think?
+
+Oh, for those of you that actually code this stuff like me, I have
+Lenstra's long integer function package in C that I "ported" from K&amp;R
+to ANSI and edited and reorganized the documentation in the process.  I
+interacted with him in that process and it is a stable and reliable
+package.  This was a year ago so he has most likely added to it by now
+but this snapshot I have is very complete and has way more than is
+needed to do nearly anything in crypto.  And it is by Lenstra himself!
+A cool guy BTW.  The problem:  I did have to make some changes to
+macros and sundry things to ANSIfy it and may have introduced errors.
+It runs his demonstration programs that are part of the package and
+gives the correct results and these programs exercise a good part of
+it, especially the areas I had to mess with.  BUT: I have not had the
+time to sit down and look hard at a true verification suite and he
+doesn't have one either. So, caveat emptor, I offer this package (and
+the original from which it was derived) to *one* person that can put it
+in a relevant ftp site.  Is that you, Sameer?
+
+BTW, D-H is useless across a medium in which there can be an active
+snoop or spoof as I guess we call him.  Whit, Marty and Ron agree as of
+a discussion a year ago.  The spoof just has a pair of boxes and
+separately negotiates a session with Bob and one with Carol so that
+clear text passes between his pair.  There is no way in theory to
+detect the presence of our friendly spoof.  :-)
+
+I've found a solution to this that is more than sufficiently secure in
+practice and even theoretically secure in most practical situations.
+I'm not sure what to do with it.  I would like to retire on it though
+(and get a couple "voluntary income tax" liens off my back :-) and
+perhaps even endow some kind of institute.  Actually I worry more about
+being retired because of it if you get my paranoid drift.  I guess that
+is why I'm lettin' y'all know about it here first.  I am also curious
+about how you folks here feel about someone wanting to personally
+benefit financially from an algorithm/protocol invention/discovery like
+this but I don't want nor will get into any flame war.  :-(
+
+
+Peace,
+
+Bob
+
+-- 
+Bob Cain    rcain@netcom.com   408-354-8021
+
+ "Morality is largely a rationalization of the  point you happen to occupy
+  in the power pattern at a given time.  If you're a *Have-Not* you're out
+  to *get*, and   your morality is an appeal to a law higher than man-made
+  laws--the noblest  ideals of  justice and  equality.  When you  become a 
+  *Have* then you are out to *keep* and your morality is one of law, order
+  and the rights of property over other rights."
+
+                                                       Saul D. Alinsky
+                                                          1909-1972
+
+--------------PGP 1.0 or 2.0 public key available on request.------------------
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00316.html">Re: how to solve this prob.</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00315.html">MAIL: Re: remailers revisted</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00423.html">Re: MAIL: questionnaire</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00319.html">Re:  Some stuff about Diffie-Hellman (and more :-)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00303"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00303"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

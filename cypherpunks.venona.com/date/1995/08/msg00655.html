@@ -1,0 +1,258 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Object Oriented Crypto API -->
+<!--X-From-R13: "Dnl Qebzjryy" <f5pebzjNjngfba.voz.pbz> -->
+<!--X-Date: Tue, 15 Aug 95 13:51:27 PDT -->
+<!--X-Message-Id: 9508152050.AA21250@play.watson.ibm.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199508031625.JAA11761@jobe.shell.portal.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Object Oriented Crypto API</TITLE>
+<LINK REV="made" HREF="mailto:s5cromw@watson.ibm.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00649.html">Date Prev</A>][<A HREF="msg00656.html">Date Next</A>][<A HREF="msg00155.html">Thread Prev</A>][<A HREF="msg00173.html">Thread Next</A>][<A HREF="index.html#00655">Date Index</A>][<A HREF="threads.html#00655">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Object Oriented Crypto API</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A> (Hal)</LI>
+<LI><em>Subject</em>: Re: Object Oriented Crypto API</LI>
+<LI><em>From</em>: "Ray Cromwell" &lt;<A HREF="mailto:s5cromw@watson.ibm.com">s5cromw@watson.ibm.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 15 Aug 1995 16:50:28 -0400 (EDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:s5cromw@watson.ibm.com">s5cromw@watson.ibm.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00134.html">199508031625.JAA11761@jobe.shell.portal.com</A>&gt; from "Hal" at Aug 3, 95 09:25:26 am</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Sorry I took so long to respond.
+
+Hal wrote:
+&gt; I enjoyed Ray's message about the crypto library interface.  I haven't
+&gt; had time to study it closely, but I have a couple of quick comments:
+&gt;
+&gt; I thought Wei's library looked pretty easy to use already.  Maybe Ray
+&gt; could show an example of what would be needed with Wei's library to do
+&gt; some "typical" crypto function, say encrypting a message with someone
+&gt; else's RSA key.  Then we could compare it with how the same function
+&gt; would look with Ray's proposed interface.
+
+  Wei's library is easy to use from a certain standpoint. It depends
+on a ASN.1 stream paradigm to stack cryptographic layers. However, I
+think it is lacking in certain areas which makes it difficult
+to use, and it is completely missing many functions such as
+key distribution and management.
+
+To RSA encrypt with Wei's library, you have to open the key file
+(or read it into memory somehow), and instantiate a "BufferedTransformation"
+which is a sort of internal stream library. Then you construct
+a RSAPublicKey object around the BufferedTransformation, then you
+generate a random blockcipher key, and tell the RSAPublicKey object
+to encrypt it. Next, you encode your plaintext with the block cipher
+separately using the blockcipher key. I'm going to ignore the
+actual syntax of Wei's library for the moment (because I don't remember
+it) and use pseudo code.
+
+key_data_stream = FileSource("publickey.data") /* like ifstream() */
+RSAPublicKey rsa_object(key_data_stream);
+random_blockcipher_key = /* generate the key somehow, note, key generation
+	                    is not standardized across all encryption
+                            algorithms, so the application writer
+                            must know how to generate the session key
+                            manually */
+rsa_object.Encrypt(random_blockcipher_key, encryptedkey);
+DESEncryption desenc(random_blockcipher_key);
+desenc.ProcessBlock(plaintext, ciphertext);
+/* write "encryptedkey" and "ciphertext" somewhere */
+
+
+
+
+
+
+Under my scheme, it would look something like this
+
+/* we are given PlainText p, a KeyID which is of the format
+   KeyID ::= identifier ['::' keyserver]
+   identifier ::= RFC822_EMAIL_ADDR | HEX_STRING;
+   keyserver ::= FULLY_QUALIFIED_DOMAIN_NAME;
+
+   example: "Ray Cromwell" &lt;rjc@clark.net&gt;::keyserver.com
+   we are doing RSA encryption with DES
+*/
+
+DESEncryptionAlgorithm des;
+RSAEncryptionAlgorithm rsa(des);
+
+Encrypt(rsa, KeyId, p, c);
+
+
+
+
+Here's the explaination of what's going on underneath (refer to
+my OO Crypto API article if needed)
+
+DES is a BlockCipherEncryptionAlgorithm (child of EncryptionAlgorithm)
+RSA is a PublicKeyEncryptionAlgorithm (also a child of EncryptionAlgorithm)
+that expects to be constructed with a BlockCipherEncryptionAlgorithm
+because it uses a blockcipher as the underlying encryption technique
+and only encrypts the session key. Any old BlockCipherEncryptionAlgorithm
+will do, DES, IDEA, etc. RSA doesn't care.
+
+Encrypt() is a global function which takes as its first argument
+an EncryptionAlgorithm, second, a KeyID, and third/fourth a plaintext
+and ciphertext tokenized stream (to be explained later). Encrypt()
+doesn't care what the cryptosystem is, it's a single entry point
+for the application developer.
+
+Encrypt's pseudocode looks like this
+
+Encrypt(EncryptionAlgorithm encalg, KeyID kid, Plaintext p, Ciphertext c)
+{
+    KeyDomain kdom=encalg.GetKeyDomain(kid);
+    EncryptionKey ek = GetKey(kdom, kid);
+    encalg.encrypt(ek, p, c);
+}
+
+Line 1 asks the EncryptionAlgorithm (whatever type it really is), to
+return a KeyDomain for that cryptosystem. A KeyDomain is an abstract
+universal object for fetching any key type from any place. It could
+for instance, be fetching the key from a disk file, from an email
+signature, or am internet key server.
+
+Line 2 calls a global key management function GetKey which queries
+a KeyDomain with the KeyID to return an EncryptionKey.
+
+Line 3 calls the encrypt function on the EncryptionAlgorithm.
+
+I have toyed with other interfaces. For instance, since we want to
+support the definition of new KeyDomain types, we really should allow
+an overloaded Encrypt where the EncryptionKey is passed as an argument,
+so that the application developer can use third party KeyDomains.
+
+Every EncryptionAlgorithm (hereafter abbreviated EA, where DA is
+a DecryptionAlgorithm) knows how to generate a KeyPair which
+contains an encryption and decryption key such that
+DA(keypair.decryption_key, EA(keypair.encryption_key, plaintext)) == plaintext
+Whether the cipher is symmetric or not is irrevelent. The RSAEncryptionAlgorithm
+encrypt() function basically calls generate_key() on the block cipher
+and uses that as the session key. Application developers are shielded
+from the representation of keys and the generation of them.
+
+
+The real dream is to have a generic crypto library which can encrypt
+anything using any algorithm fetching keys from any medium and
+reading and writing any valid crypto file format. Application developers
+could write code to operate on PGP file formats, RSAREF, PEM, or
+anything without having to know anything about those formats at all.
+The only thing that is standardized is the KeyID format. Sort of
+a Universal Resource Name (URN) for key identification. Perhaps
+"key://keyserver.domain/keyid" would be better.
+
+
+Reading and Writing any file format
+-----------------------------------
+  How would an application be able to operate on a RIPEM message, and a
+PGP file without knowing about the format of either?
+
+  The general scheme is to use a tokenized stream which records
+what has been done to the plaintext, and then some stream encoding
+objects which "map" the stream to the local format as long as the
+stream is consistent with the algorithms the file format supports. Think
+of the stream as a string in a regular language (in the sense of automata
+theory). The stream "mapper" is a deterministic finite automaton
+which processes the "string" (the stream tokens) and determines
+1) whether the string is acceptable by the language (file format)
+it's mapping to, and 2) generates side effects which write out the
+format to a buffer or file.
+
+Consider the following symbol set,
+S={ RSA_ENCRYPTION, PUBLICKEY_REF, DES_ENCRYPTION, IDEA_ENCRYPTION }
+
+A tokenized stream might look like
+
+RSA_ENCRYPTION PUBLICKEY_REF [pkey data] [encrypted session key]
+DES_ENCRYPTION [ciphertext]
+
+A PGPEncoder would reject this stream because it doesn't use IDEA.
+
+
+Encoders would have the job of verifying consistency of the
+stream with the underlying file format, and also whether or not
+the stream was encoded properly in the first place. If the
+stream is invalid, exceptions are thrown. If some tokens are
+missing (such as a timestamp), the Encoder can supply them.
+
+&gt; The other point is that there needs to be the ability to encrypt only
+&gt; a bit of a message at a time.  Particularly with public key the first
+&gt; message may be special in that it generates a session key which is used
+&gt; for the remainder.  So an interface for piecewise encryption and
+&gt; decryption is necessary.
+
+The way to do this is to provide secondary interfaces across all
+Algorithms which allow the operations of Init, Update, and Finalize,
+much like RSA's MD5 interface operates.
+
+-Ray
+
+
+
+From owner-cypherpunks  Tue Aug 15 15:06:28 1995
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00134" HREF="msg00134.html">Re:  Object Oriented Crypto API</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00649.html">Re: Use of the IV in DES &amp; stuffing the first block w/ random stuff</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00656.html">Re: Purple Boxes</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00155.html">Re: Object Oriented Crypto API</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00173.html">Re: Object Oriented Crypto API</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00655"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00655"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

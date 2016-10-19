@@ -1,0 +1,196 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: SUMMARY: Not&#45;so&#45;volatile volatile memory -->
+<!--X-From-R13: cthg01Npf.nhpxynaq.np.am (Brgre Uhgznaa) -->
+<!--X-Date: 2 Sep 1995 18:26:03 GMT -->
+<!--X-Message-Id: 42a7jr$1me@net.auckland.ac.nz -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>SUMMARY: Not-so-volatile volatile memory</TITLE>
+<LINK REV="made" HREF="mailto:pgut01@cs.auckland.ac.nz">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00081.html">Date Prev</A>][<A HREF="msg00083.html">Date Next</A>][<A HREF="msg00075.html">Thread Prev</A>][<A HREF="msg00234.html">Thread Next</A>][<A HREF="index.html#00093">Date Index</A>][<A HREF="threads.html#00093">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>SUMMARY: Not-so-volatile volatile memory</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>Subject</em>: SUMMARY: Not-so-volatile volatile memory</LI>
+<LI><em>From</em>: <A HREF="mailto:pgut01@cs.auckland.ac.nz">pgut01@cs.auckland.ac.nz</A> (Peter Gutmann)</LI>
+<LI><em>Date</em>: 2 Sep 1995 18:26:03 GMT</LI>
+<LI><em>Newsgroups</em>: comp.lsi,sci.crypt</LI>
+<LI><em>Organization</em>: University of Auckland</LI>
+<LI><em>Sender</em>: <A HREF="mailto:pgut01@cs.auckland.ac.nz">pgut01@cs.auckland.ac.nz</A> (Peter Gutmann)</LI>
+<LI><em>Xref</em>: nntp.Stanford.EDU comp.lsi:3047 sci.crypt:28855</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+
+About a month ago, I asked for comments about recovering data from
+semiconductor memory after power had been removed.  After much procrastinating,
+I've finally finished the summary of what people sent me.  Many thanks to
+everyone who responded, in particular to Bob Hale for answering many questions
+about the possibility of recovering data from DRAM's.
+ 
+If anyone has any further comments to add to this (I'm particularly interested
+in actual figures for data retention in DRAM cells, although I've been told
+this is burn-before-reading proprietary information), you can send it to me at
+the above address.
+ 
+Peter.
+
+-- Summary: Data retention in semiconductor memory --
+ 
+Contrary to conventional wisdom, "volatile" semiconductor memory does not
+entirely lose its contents when power is removed.  Both static (SRAM) and
+dynamic (DRAM) memory retain some information on the data stored in it while
+power was still applied.  SRAM is particularly susceptible to this problem, as
+storing the same data in it over a long period of time has the effect of
+altering the preferred power-up state to the state which was stored when power
+was removed.  Older SRAM chips could often "remember" the previously held state
+for several days.  In fact, it is possible to manufacture SRAM's which always
+have a certain state on power-up, but which can be overwritten later on - a
+kind of "writeable ROM".
+ 
+DRAM can also "remember" the last stored state, but in a slightly different
+way.  It isn't so much that the charge (in the sense of a voltage appearing
+across a capacitance) is retained by the RAM cells, but that the thin oxide
+which forms the storage capacitor dielectric is highly stressed by the applied
+field, or is not stressed by the field, so that the properties of the oxide
+change slightly depending on the state of the data.  One thing that can cause a
+threshold shift in the RAM cells is ionic contamination of the cell(s) of
+interest, although such contamination is rarer now than it used to be, because
+robotic handling of the materials and the purity of chemicals is greatly
+improved.  However, even a perfect oxide is subject to having its properties
+changed by an applied field.  When it comes to contaminants, sodium is the most
+common offender - it is found virtually everywhere, and is a fairly small (and
+therefore mobile) atom with a positive charge.  In the presence of an electric
+field, it migrates towards the negative pole with a velocity which depends on
+temperature, concentration of the sodium, the oxide quality, and the other
+impurities in the oxide such as dopants from the processing.  If the electric
+field is zero and, given enough time, the sodium contamination tends to spread
+itself around evenly.
+ 
+Other factors which affect the rate of change are temperature, the field
+strength of the stored charge, the quality of the oxide, and the concentration
+of dopants and other impurities which have already been mentioned above.  The
+stress on the cell a cumulative effect, much like charging an RC circuit.  If
+the data is applied for only a few milliseconds then there is very little
+"learning" of the cell, but if it is applied for hours then the cell will
+acquire a strong (relatively speaking) change in its threshold.
+ 
+The effects of the stress on the RAM cells can be measured using the built-in
+self test capabilities of the cells, which provide the the ability to impress a
+weak voltage on the storage cell in order to measure its margin.  Cells will
+show different margins depending on how much oxide stress has been present.
+Many DRAM's have undocumented test modes which allow some normal I/O pin to
+become the power supply for the RAM core when the special mode is active.
+ 
+One way to activate the special test mode might be to underdrive a pin and turn
+on its protection diodes(s), which will be recognized internally and will
+change a multiplexer so that the core is powered by some pin which is normally
+a digital I/O pin.  Another way, if the DRAM has suitable clocks, is to
+recognise an invalid combination of clocks (such as CAS before RAS, if the DRAM
+doesn't use that mode for higher speed operation) to enable the test mode.
+Great care must be taken to ensure that the test mode isn't inadvertently
+entered so that the memory system appears to be malfunctioning (for example in
+the first case if the system has substantial undershoot at the wrong time, the
+test mode could be activated).  This problem can be avoided by designing the
+test mode signals such that a certain set of states which would not occur in a
+normally-functioning system has to be traversed to activate the mode.
+Manufacturers won't admit to such capabilities in their products because they
+don't want their customers using them and potentially rejecting devices which
+comply with their spec sheets, but have little margin beyond that.
+ 
+One way to speed up the annihilation of stored bits in semiconductor memory is
+to heat it.  Both DRAM's and SRAM's will lose their contents a lot more quickly
+at Tjunction = 140C than they will at room temperature.  Several hours at that
+temperature with no power applied will clear their contents sufficiently to
+make recovery difficult.  Conversely, to extend the life of stored bits with
+the power removed, drop the temperature below -60C (some people even claim that
+you can permanently "imprint" an SRAM with its stored bits by rapidly cooling
+it below liquid nitrogen's boiling point).  In any case it should lead to
+weeks, instead of hours or days, of data "retention".
+ 
+Simply repeatedly overwriting the data held in DRAM with new data isn't nearly
+as effective as it is for magnetic media.  The new data will begin stressing or
+relaxing the oxide as soon as it is written, and the oxide will immediately
+begin to take a "set" which will either reinforce the previous "set" or will
+weaken it.  The greater the amount of time that new data has existed in the
+cell, the more the old stress is "diluted", and the less reliable the
+information extraction will be.  Generally, the rates of change due to stress
+and relaxation are in the same order of magnitude.  Thus, a few microseconds of
+storing the opposite data to the currently stored value will have little effect
+on the oxide.  Ideally, the oxide should be exposed to as much stress at the
+highest feasible temperature and for as long as possible to get the greatest
+"erasure" of the data.  Unfortunately if carried too far this has a rather
+detrimental effect on the life expectancy of the RAM.
+ 
+Therefore the goal to aim for when sanitising memory is to store the data for
+as long as possible rather than trying to change it as often as possible.
+Conversely, storing the data for as short a time as possible will reduce the
+chances of it being "remembered" by the cell.  Based on tests on DRAM cells, a
+storage time of one second causes such a small change in threshold that it
+probably isn't detectable.  On the other hand, one minute probably is
+detectable, and 10 minutes is certainly detectable.
+ 
+The most practical solution to the problem of DRAM data retention is therefore
+to constantly flip the bits in memory to ensure that a memory cell never holds
+a charge long enough for it to be "remembered".  While not practical for
+general use, it is possible to do this for small amounts of data such as
+encryption keys.  
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00081.html">Re: Phil Zimmermann/Amnesty International?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00083.html">No Subject</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00075.html">Cypherpunks Santa Cruz -- Great Party!</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00234.html">Re: SUMMARY: Not-so-volatile volatile memory</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00093"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00093"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,178 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Truly Stealthy PGP (algorithm) -->
+<!--X-From-R13: uhturfNnu.pbz (Sevp Vhturf) -->
+<!--X-Date: Mon, 7 Mar 94 08:42:22 PST -->
+<!--X-Message-Id: 9403071634.AA10351@ah.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199403061922.LAA26901@jobe.shell.portal.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Truly Stealthy PGP (algorithm)</TITLE>
+<LINK REV="made" HREF="mailto:hughes@ah.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00337.html">Date Prev</A>][<A HREF="msg00336.html">Date Next</A>][<A HREF="msg00308.html">Thread Prev</A>][<A HREF="msg00316.html">Thread Next</A>][<A HREF="index.html#00335">Date Index</A>][<A HREF="threads.html#00335">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Truly Stealthy PGP (algorithm)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Truly Stealthy PGP (algorithm)</LI>
+<LI><em>From</em>: <A HREF="mailto:hughes@ah.com">hughes@ah.com</A> (Eric Hughes)</LI>
+<LI><em>Date</em>: Mon, 7 Mar 94 08:34:04 -0800</LI>
+<LI><em>In-Reply-To</em>: Hal's message of Sun, 6 Mar 1994 11:22:17 -0800 &lt;<A HREF="msg00308.html">199403061922.LAA26901@jobe.shell.portal.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;If I understand Eric's general idea, we would keep trying session keys
+&gt;under a set of rules which would lead to the desired statistical
+&gt;distribution of the encrypted key.  
+
+I actually said nothing about how to get the particular distribution
+of keys specified, since that was another issue.  I was more concerned
+with just getting the one result across.
+
+&gt;Here is an algorithm which would work.
+
+It does work, and I'll put down a proof sketch below.
+
+Notation alert:
+&gt;Let L be the next power of 256 above the modulus n.  Let t be the integer
+&gt;part of L/n, so that L = n*t + s with s in [0,n).  Call the PGP IDEA session
+&gt;key SK, and the encrypted version of that m = SK^e.  Now do these steps:
+
+&gt;1) Pick a random SK in [0,n).
+
+This random number in [0,n) is the wrong distribution, but that's OK,
+since we'll be throwing some numbers away.
+
+&gt;2) RSA-encrypt it to form m = SK^e mod n.
+
+RSA encryption is a bijection (an 1-1 map).  If it were not, there
+would be two or more possible decryptions for a given ciphertext.
+Therefore RSA encryption is a permutation, and a permutation of
+probabilities preserves expected values of functions of the
+probability, such as entropy.  Since we assume the entropy of the SK
+is maximal (probabilistic entropy), therefore the entropy of the m's
+is maximal.  So the m's have a flat distribution.
+
+(As always, the above statements about bijection hold only if SK is
+multiple of one of the divisors of the modulus.  But then if you do
+find one of those, you've also factored the modulus and thus broken
+the key.  We assume this doesn't happen, since if it does little of
+this matters anyway.)
+
+&gt;3) Choose a random k in [0,t].
+&gt;4) Calculate the "stegged" encrypted key as M = m + k*n.  
+
+Hal now observes that M is uniformly distributed.  This is correct,
+and happens because m is in [0,n) and we are adding a multiple of n to
+m.  This means that each M has a unique represenative as some pair
+&lt;m,k&gt;.  Since both m and k are independently random (max entropy, flat
+distribution), so is M.
+
+&gt;5) if M is not in [0,L) (i.e. if M &gt;= L) then go back to step 1.
+&gt;The idea is that once we get M uniform in [0,(t+1)*n) we can make it
+&gt;uniform in [0,L) simply by rejecting those candidates which were too high.
+
+What we have here is a Markov chain.  We have accepting states and
+rejecting/retrying states.  Since the probabilities in the chain are
+independent of each other and are also time-invariant, the
+distribution of final probabilities is the same as the distribution of
+normalized accepting probabilities.
+
+In simple terms, you can just retry until you get it right.  Since the
+probabilities are all the same before, they will all be the same
+after, only larger to account for the fact that some possibilities
+didn't work.
+
+[re: rejection and retry]
+&gt;This will only happen if k=t and m&gt;=s.
+
+That's right, and that means that for m &lt; s you have valid k in
+[0,t+1) and for m &gt;= s only for [0,t).  If you go back an look at the
+entropy expression, you'll see exactly this difference in relative
+probability for the two parts of [0,n).
+
+&gt;Now, it seems to me that the worst case for rejection is when n=L-1, in
+&gt;which case t=1, s=1, and almost one-half of all initial SK choices will
+&gt;be rejected.  
+
+Right, but the worst case for rejection is not the same as the worst
+case for entropy loss, which occurs at n=L/2+1 and s=t-1, i.e. at the
+other end of the spectrum entirely.
+
+&gt;Following Eric's reasoning, this would be an effective loss
+&gt;of one bit of key length, from say 1024 to 1023, which is tolerable.
+
+Actually not.  The loss of effective key length happens based on the
+posterior distribution of the session keys, not on the number of
+rejections that happen in the process.
+
+&gt;Using this algorithm with the current Stealth PGP would produce a
+&gt;"truly stealthy" version which I think would be indistinguishable from
+&gt;random bytes without access to the receiver's private key.
+
+Indeed.  Observe, though, that as far as deployment went, this would
+require modification to PGP itself for it to be anything like
+widespread.
+
+Eric
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00308" HREF="msg00308.html">Truly Stealthy PGP (algorithm)</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00337.html">Re: Where'd pgptools go?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00336.html">Re: Format of PGP ciphered message</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00308.html">Truly Stealthy PGP (algorithm)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00316.html">PGP (surprise, surprise..)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00335"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00335"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

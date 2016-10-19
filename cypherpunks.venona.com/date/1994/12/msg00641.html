@@ -1,0 +1,177 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: extra dashes in PGP&#45;related blocks? -->
+<!--X-From-R13: Rrerx Ogxvaf <jneybeqN[WF.SRG> -->
+<!--X-Date: Mon, 12 Dec 94 13:47:43 PST -->
+<!--X-Message-Id: 9412122147.AA17081@hodge&#45;podge.MIT.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9412121933.AA04137@nottingham.riskdev.ml.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: extra dashes in PGP-related blocks?</TITLE>
+<LINK REV="made" HREF="mailto:warlord@MIT.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00608.html">Date Prev</A>][<A HREF="msg00619.html">Date Next</A>][<A HREF="msg00624.html">Thread Prev</A>][<A HREF="msg00643.html">Thread Next</A>][<A HREF="index.html#00641">Date Index</A>][<A HREF="threads.html#00641">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: extra dashes in PGP-related blocks?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:andrew@riskdev.ml.com">andrew@riskdev.ml.com</A> (Andrew Brown)</LI>
+<LI><em>Subject</em>: Re: extra dashes in PGP-related blocks? </LI>
+<LI><em>From</em>: Derek Atkins &lt;<A HREF="mailto:warlord@MIT.EDU">warlord@MIT.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 12 Dec 1994 16:47:00 EST</LI>
+<LI><em>Cc</em>: <A HREF="mailto:jrochkin@cs.oberlin.edu">jrochkin@cs.oberlin.edu</A> (Jonathan Rochkind), <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: Your message of "Mon, 12 Dec 1994 14:33:20 EST."            &lt;<A HREF="msg00624.html">9412121933.AA04137@nottingham.riskdev.ml.com</A>&gt; </LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+To: andrew@riskdev.ml.com (Andrew Brown)
+cc: jrochkin@cs.oberlin.edu (Jonathan Rochkind), cypherpunks@toad.com
+Subject: Re: extra dashes in PGP-related blocks? 
+
+&gt; &gt;&gt; From: Jonathan Rochkind
+&gt; &gt;
+&gt; &gt;When people have been posting their public keys, or encrypted address
+&gt; &gt;blocks, to various lists I'm on, all of the "-----BEGIN whatever..." lines
+&gt; &gt;seem to have a "- " preppended to them. So, for instance, they look like:
+&gt; &gt;
+&gt; &gt;- -----BEGIN PGP MESSAGE-----
+&gt; &gt;Version: 2.6.2
+&gt; &gt;[stuff]
+&gt; &gt;- -----END PGP MESSAGE-----
+&gt; 
+&gt; pgp is putting those extra "- " pieces in (guess you didn't read all
+&gt; your pgp docs :-),  it does that so that it can tell the difference between
+&gt; pgp begin/end blocks and other stuff, kinda like sendmail "quoting" lines
+&gt; beginning with a dot with an extra dot.  the difference here is that
+&gt; sendmail removes any leading dots before delivery and pgp doesn't after
+&gt; removing a signature.  yeah, you do have to load it into an editor but
+&gt; mailing something to a remailer shoud not "hork" it.  the pgp running on
+&gt; the remailer will just "- " the stuff and include it literally.
+
+Uhh, this is not at all true.  When PGP verifies a message, it will
+strip out the quoting dashes in the output.  This is documented in RFC
+822 (I think) about quoting messages.
+
+Just run the message through PGP and it will strip out the first level
+of quoting in the output message, and you should be able to then run
+PGP on the rest of the message as well.
+
+This is not a bug, it is a feature to let PGP know *WHAT* was being
+signed, so that nested PGP clearsigned-messages don't interfere with
+each other.  If it didn't quote, then if I wanted to clearsign a PGP
+message, the output would look something like:
+
+- -----BEGIN PGP SIGNED MESSAGE-----
+
+stuff here
+
+- -----BEGIN PGP SIGNED MESSAGE-----
+
+more stuff here
+
+- -----BEGIN PGP SIGNATURE-----
+inside signature
+- -----END PGP SIGNATURE-----
+
+- -----BEGIN PGP SIGNATURE-----
+outside signature
+- -----END PGP SIGNATURE-----
+
+If you have this, how do you deal with it?  This is the same as the
+paranteses-matching-problem: If you are trying to match opens with
+closes, you have the problem that you could always have so many opens
+that you overrun your counter before you get to any closes!
+
+So, PGP uses the RFC-822 quoting mechanism to quote internal messages.
+This is perfectly legal.
+
+As for MIME: If you are using PGP to secure MIME objects, you should
+take the _OUTPUT_ from PGP and send that back into the MIME reader.
+MIME should NOT be going inside the PGP block.  So, the behavior you
+are seeing is perfectly reasonable for a broken mail-reader!  Fix your
+mail reader to run the PGP-secured message through PGP, and then run
+the output through MIME, and you will be fine!
+
+Enjoy!
+
+- -derek
+
+         Derek Atkins, SB '93 MIT EE, G MIT Media Laboratory
+       Member, MIT Student Information Processing Board (SIPB)
+    Home page: <A  HREF="http://www.mit.edu:8001/people/warlord/home_page.html">http://www.mit.edu:8001/people/warlord/home_page.html</A>
+       warlord@MIT.EDU    PP-ASEL     N1NWH    PGP key available
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQBuAwUBLuzEuDh0K1zBsGrxAQFcUgLDB1WGn7TQTf4+8FgYyszcNHgcMQTcVd3w
+aTXunh0K7vPjos4JkVl4p5MQkNICjDxNC2KkgQkxeIs7Yy8VgaACSwIfhDrxs3+K
+gMalhp2FHO3S/ZvnIo7RSmk=
+=btQx
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00643" HREF="msg00643.html">Re: extra dashes in PGP-related blocks?</A></STRONG>
+<UL><LI><EM>From:</EM> andrew@riskdev.ml.com (Andrew Brown)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00624" HREF="msg00624.html">Re: extra dashes in PGP-related blocks?</A></STRONG>
+<UL><LI><EM>From:</EM> andrew@riskdev.ml.com (Andrew Brown)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00608.html">Re: Children's Books Mentioning Privacy</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00619.html">Re: Clarification of my remarks about Netscape</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00624.html">Re: extra dashes in PGP-related blocks?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00643.html">Re: extra dashes in PGP-related blocks?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00641"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00641"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

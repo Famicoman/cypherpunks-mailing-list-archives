@@ -1,0 +1,173 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Ssh security hole? -->
+<!--X-From-R13: Fngh Kybara <lybNpf.uhg.sv> -->
+<!--X-Date: Thu, 13 Jul 95 16:03:36 PDT -->
+<!--X-Message-Id: 199507132303.CAA18383@shadows.cs.hut.fi -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9507132008.AA27925@ima.pa.dec.com.pa.dec.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Ssh security hole?</TITLE>
+<LINK REV="made" HREF="mailto:ylo@cs.hut.fi">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00225.html">Date Prev</A>][<A HREF="msg00202.html">Date Next</A>][<A HREF="msg00209.html">Thread Prev</A>][<A HREF="msg00244.html">Thread Next</A>][<A HREF="index.html#00275">Date Index</A>][<A HREF="threads.html#00275">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Ssh security hole?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:mazieres@pa.dec.com">mazieres@pa.dec.com</A></LI>
+<LI><em>Subject</em>: Re: Ssh security hole?</LI>
+<LI><em>From</em>: Tatu Ylonen &lt;<A HREF="mailto:ylo@cs.hut.fi">ylo@cs.hut.fi</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 14 Jul 1995 02:03:08 +0300</LI>
+<LI><em>Cc</em>: <A HREF="mailto:rtm@eecs.harvard.edu">rtm@eecs.harvard.edu</A>, <A HREF="mailto:dm@eecs.harvard.edu">dm@eecs.harvard.edu</A>, <A HREF="mailto:tbl@eecs.harvard.edu">tbl@eecs.harvard.edu</A>,       <A HREF="mailto:ssh@clinet.fi">ssh@clinet.fi</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;9507132008.AA27925@ima.pa.dec.com.pa.dec.com&gt;(mazieres@pa.dec.com)</LI>
+<LI><em>Organization</em>: Helsinki University of Technology, Finland</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+(I'll forward your message to a couple of lists where it might be
+of interest; the original message is at end.)
+
+I think you are right in your analysis.  There is indeed a problem
+with RSA authentication.  Basically what this means is that if you log
+into a corrupt host, that host can at the same time log into another
+host with your account (by fooling you to answer to the request)
+provided that you use the same RSA identity for both hosts.
+
+A workaround is to use a different identity for each host you use.
+The default identity can be specified on a per-host basis in the
+configuration file, or by -i options.
+
+And, yes, I think the same problem might occur with client host
+authentication.  Though, there you would still have to do IP-spoofing,
+DNS spoofing or similar to get through (breaking RSA based host client
+effectively reduces RhostsRSAAuthentication to conventional .rhosts
+authentication).
+
+The protocol will need to be changed somewhat because of this.  I'll
+think about it tomorrow and let you say you opinion about it.
+
+Thanks!
+
+    Tatu Ylonen &lt;ylo@cs.hut.fi&gt;
+
+Date: Thu, 13 Jul 1995 13:08:15 -0700
+From: David Mazieres &lt;mazieres@pa.dec.com&gt;
+To: ssh-bugs@cs.hut.fi
+Cc: rtm@eecs.harvard.edu, dm@eecs.harvard.edu, tbl@eecs.harvard.edu
+Subject: Ssh security hole?
+
+I believe there is a serious problem with the RSA authentication
+scheeme used in ssh, but then again I could be misreading the proposed
+RFC.  Is the following really the case?
+
+As I understand the protocol, here is what happens during SSH_AUTH_RSA
+authentication.
+
+Suppose the holder of SKu, is allowed access to account U on machine B
+(which holds SKb).  Both PKu and PKb are widely known.  In addition,
+machine B has a session key, PKs, which changes every hour.  When U on
+machine A wants to log into machine B, here's what I think happens
+based on my reading of the RFC:
+
+A -&gt; B: A
+
+B -&gt; A: (PKb, PKs, COOKIE)
+	[A flags an error if PKb is not the stored value.]
+
+A -&gt; B: (COOKIE, {{Kab}_PKs}_PKb)
+A -&gt; B: {U}_Kab
+A -&gt; B: {PKu}_Kab
+	[B aborts if SKu is not allowed access to account U.]
+
+B -&gt; A: {{N}_PKu}_Kab
+
+A -&gt; B: {{N}_MD5}_Kab (*)
+	[B aborts if the MD5 hash is invalid.]
+
+B -&gt; A: access to acount U with all data encrypted by Kab.
+
+The problem is, suppose U actually wanted to log into machine C, which
+was maintained by an untrusted person.  The person maintaining C could
+initiate a connection to B the minute U tried to log into C.  When
+given a challenge {{N}_PKu}_Kbc, C could simply give this to A as the
+challenge to respond to, and then forward the response to B.
+
+To fix the problem, A must at the very least include B in the
+response line marked (*).  I have reason to believe (after having just
+seen a lecture on authentication), that you might even need to include
+more.  A safe bet might be (but then again I am no expert):
+
+A -&gt; B: {(N, A, B, Kab)}_MD5
+
+I think similar problems arise for the other authentication methods.
+
+Other than that, though, I am really impressed by by ssh.  It's easy
+to install and easy to use.  In fact, it is even more convenient to
+use than standard rsh, because the X forwarding happens
+automatically.
+
+Thanks for such a great package!
+
+David
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00244" HREF="msg00244.html">Re: Ssh security hole?</A></STRONG>
+<UL><LI><EM>From:</EM> "Perry E. Metzger" &lt;perry@imsi.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00292" HREF="msg00292.html">Re: Ssh security hole?</A></STRONG>
+<UL><LI><EM>From:</EM> "Rev. Ben" &lt;samman@CS.YALE.EDU&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00225.html">Re: Anti-Electronic Racketeering Act of 1995 (fwd)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00202.html">Re: Fight, or Roll Over?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00209.html">The Anti-Racketeering fiasco meets Mozilla</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00244.html">Re: Ssh security hole?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00275"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00275"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

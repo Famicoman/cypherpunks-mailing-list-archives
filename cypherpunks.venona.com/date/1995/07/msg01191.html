@@ -1,0 +1,144 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: ssh protocol -->
+<!--X-From-R13: fgrjnegfNvk.argpbz.pbz (Pvyy Egrjneg) -->
+<!--X-Date: Mon, 31 Jul 95 23:23:17 PDT -->
+<!--X-Message-Id: 199508010620.XAA28764@ix6.ix.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: ssh protocol</TITLE>
+<LINK REV="made" HREF="mailto:stewarts@ix.netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01193.html">Date Prev</A>][<A HREF="msg01192.html">Date Next</A>][<A HREF="msg01189.html">Thread Prev</A>][<A HREF="msg01192.html">Thread Next</A>][<A HREF="index.html#01191">Date Index</A>][<A HREF="threads.html#01191">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: ssh protocol</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: ssh protocol</LI>
+<LI><em>From</em>: <A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A> (Bill Stewart)</LI>
+<LI><em>Date</em>: Mon, 31 Jul 1995 23:24:15 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Matt Ghio wrote (on cypherpunks):
+&gt;I've been playing with the cryptotcp program available from utopia..  It
+&gt;has some bugs but works pretty well, if you don't mind waiting 20-30
+&gt;seconds at the beginning.  It does a Diffie-Hellman exchange and 3DES over
+&gt;telnet.  How hard would it be to add some sort of authentication to this
+&gt;program?
+
+I haven't actually compiled the code (it's not very DOS-friendly), but it looks
+easily modified; some parts of the problem are still hard, such as identifying
+the client to the server.  Some issues to deal with for adding authentication:
+
+0) RSAREF2.0 would have been nice, and comes with D-H and DES.
+
+1) The option negotiation is simple but hard-coded; it would be easy to add
+one thing at a time, but would benefit from a more flexible option-negotiator.
+That would also let you pretend it was just a general-purpose telnet-with-
+various-processors and avoid ITAR restrictions for the
+authentication-plus-compression
+bones version, but the authors, not being Yankees, don't have to worry about
+that.
+
+2) Authentication means that some process on each machine is willing to make
+a digital signature using a private key - how do you store that key safely?
+For a client operated by a human, that's not a big problem; for a server,
+or a client operated by a program without a direct user-interface, it's harder.
+Do you just leave the key in a file (trusting root?)  Do you only start the
+server daemon by hand?  For most Unix applications, I suppose a root-read-only
+file containing the key is OK, since if a cracker can read that file you've
+got far more serious problems (and the cracker can take over your email anyway.)
+
+3) One big difficulty in authentication systems is securely but conveniently
+exchanging authentication parameters; you don't want to risk man-in-the-middle
+by trusting keys you got from the other side (otherwise you could use plain
+D-H),
+but getting keys from a keyserver is slow and hard to integrate, and
+requiring the other side to already have your key parameters limits your
+usefulness.  
+
+3A) How do you know who you're talking to so you know which authentication data
+to use?  For the client, that's pretty easy - the client knows it's calling
+server@foo.bar.edu, so it can get the keys in advance and not worry.
+(It still needs the PGP web-of-trust or X.509 hierarchy to validate the keys.)
+But how does the server know who the client is?  IP address?  What if it's
+spoofed?
+What if it does a DNS lookup, which gets spoofed?  You could use a password-file
+equivalent, but that does mean you can only send mail to people who trust you?
+
+3B) How do you do error recovery in PGP, i.e. you either can't find the
+other side's
+keys, or can find them but can't validate them because you don't have a web
+of trust
+that gets from you to them.  Do you just fail the call?  (That's secure but
+boring.)
+If you complete the call anyway, that means there's a major security risk,
+which is that Bad Guys can spoof keys by sending you keys you can't validate.
+
+3C) If you use X.509 hierarchical certification, you _can_ just hand across
+the certificate instead of waiting for a PGP keyserver to respond, since the
+web of trust is built-in if you're part of the same hierarchy, but there's
+still the problem (for the server) of knowing whose certificate to use.
+#---
+#                                Thanks;  Bill
+# Bill Stewart, Freelance Information Architect, stewarts@ix.netcom.com
+# Phone +1-510-247-0664 Pager/Voicemail 1-408-787-1281
+#---
+# Crypto in 3-4 lines of perl --&gt; <A  HREF="http://dcs.ex.ac.uk/~aba/">http://dcs.ex.ac.uk/~aba/</A>
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01193.html">Re: OS noise  [Was: a hole in PGP]</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01192.html">Currency risk on bank accounts (Was: Zimmermann legal fund)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01189.html">There's a hole in your crypto, dear Eliza dear Eliza...</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01192.html">Currency risk on bank accounts (Was: Zimmermann legal fund)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01191"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01191"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

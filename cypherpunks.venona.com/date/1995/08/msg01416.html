@@ -1,0 +1,206 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: SSL trouble -->
+<!--X-From-R13: Bvrgr Pebbxf <Bvrgr.PebbxfNpy.pnz.np.hx> -->
+<!--X-Date: Mon, 28 Aug 95 11:16:33 PDT -->
+<!--X-Message-Id: "swan.cl.cam.:216660:950828181616"@cl.cam.ac.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9508281635.AA19987@cantina.verity.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: SSL trouble</TITLE>
+<LINK REV="made" HREF="mailto:Piete.Brooks@cl.cam.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01390.html">Date Prev</A>][<A HREF="msg01419.html">Date Next</A>][<A HREF="msg01384.html">Thread Prev</A>][<A HREF="msg01405.html">Thread Next</A>][<A HREF="index.html#01416">Date Index</A>][<A HREF="threads.html#01416">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: SSL trouble</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:patrick@Verity.COM">patrick@Verity.COM</A> (Patrick Horgan)</LI>
+<LI><em>Subject</em>: Re: SSL trouble</LI>
+<LI><em>From</em>: Piete Brooks &lt;<A HREF="mailto:Piete.Brooks@cl.cam.ac.uk">Piete.Brooks@cl.cam.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 28 Aug 1995 19:16:09 +0100</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:hallam@w3.org">hallam@w3.org</A>, <A HREF="mailto:Piete.Brooks@cl.cam.ac.uk">Piete.Brooks@cl.cam.ac.uk</A></LI>
+<LI><em>In-Reply-To</em>: Your message of Mon, 28 Aug 1995 09:35:48 -0700. &lt;<A HREF="msg01384.html">9508281635.AA19987@cantina.verity.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; I did a distributed scheme for something else that had two levels, a master
+&gt; and a group of slaves.  Only the slaves talked to the master.  For this 
+&gt; effort I think a variation of the idea would be better.  Have all of the
+&gt; brutes contact the master, who will, in the first transaction assign them
+&gt; to the next slave in a round-robin fashion.
+
+Well, imagine my suprise  ....  [[ reference to ISIRTA ]]
+
+One of the things that the latest brloop does is make a call to the master
+server asking for a list of servers to contact :-))
+
+Note that it is a list, and it tries them in order (all A RRs).
+
+&gt; Then all of the transactions from that point would take place between the
+&gt; brute and the slave:)
+
+Currently just all the "allocate" transactions -- I haven't written my
+ACK reflector yet, so all ACKs go direct th the ACK master.
+
+&gt; The slaves would each be delegated large chunks of the keyspace,
+
+No -- the slaves will not "be delegated" (as in pre-assigned address space),
+they will just ask the master for it as they need it.
+Sure, the'll do it in reasonable sized chunks, but not (2**16)/16 ....
+
+&gt; but not keyspace/numslaves.  Maybe 1/16th or something like that, and could
+&gt; ask for more when their space was depleted.  Periodically, perhaps when
+&gt; requesting more key space, and/or when a timer pops, the slaves could report
+&gt; results.
+
+Nah - results still go direct pro tem.
+
+&gt; What I mean is that every so often they'd report even if they didn't need
+&gt; more keyspace yet, iff they had any new stats to report.
+
+Sure.
+
+&gt; The nice thing here is that the work of the master and of the slaves is
+&gt; almost the same.i
+
+You got it !
+
+&gt; The slaves don't have to do the initial assignment of slave,
+(slave -&gt; slaves I assume)
+
+&gt; and the master doesn't have to report results, but everything else
+&gt; is the same.
+
+Yup -- code sharing !
+
+&gt; With careful design you could use the same daemon for both
+&gt; with a command line argument to tell it if it was the master (-m) or the
+&gt; slave (-s).
+
+Well, not even that !
+
+The slaves don't have the config file with the key info in it ...
+
+&gt; Of course I'm sure you see that this allows you to add as
+&gt; many levels as you want to the hierarchy.
+
+Indeed.
+
+BUT ....
+
+These cache servers are asking for non trivial amounts of keyspace.
+As such there should not be *too* many, and then need to be "managed" ...
+If one crashes, the logs need to be scanned to see how to restart it (so that
+it starts by doling out the segments that it had no sub-doled to its clients).
+
+&gt; A slave doesn't care whether a slave or a brute talks to it.
+
+Indeed -- that's how it was designed ...
+
+However, note that with big cache servers (as opposed to Local CPU Farm servers
+where all clients are the same "ID") reports of sub-allocation have to be
+passed back to the root :-(
+
+&gt; You could make the slave software available as well, and a site with many
+&gt; machines could have only the slave contact the master to get assigned a
+&gt; slave to talk to, and could configure all of their brutes to talk to
+&gt; their own slave.
+
+Indeed -- the Local CPU Farm cache server is just about ready for ALPHA testers
+
+&gt; Software like this is easy to write, (and fun), and we should go for it:)
+
+Done ...
+
+&gt; Of course I do everything like this in C++, but I suppose perl would be the
+&gt; most portable.  It's a shame it's so aethestically displeasing to the eye.
+
+Yeah -- but being based on C, C++ didn't stand much chance ...
+
+&gt; perl's never a pleasant read.
+
+... but better than C++ -- sure.
+
+
+PS1: PERL gurus: Anyone know how to test whether there is input waiting on a
+     file handle ? I know about seeing if there is data waiting for the next
+     sysread type read, but not on the next &lt;SERVE&gt; type read. Ideas ?
+
+PS2: PERL gurus: I fixed the SGI Challenge problem by HACKing it -- as I
+     thought it was a probleb with stdio in and out on the same socket.
+     The perl mand page warns:
+	If  your  stdio  requires an seek or eof between reads and
+	writes on  a  particular  stream,  so  does  perl.   (This
+	doesn't apply to sysread() and syswrite().)
+     so I change the one "print SERVE" line to a "syswrite(SERVE" and that
+     fixed it. However, does anyone know the "correct" way to use stdio for I/O?
+
+PS3: I'd like to get the raw date in brloop (a sh script). In perl I'd just
+     use "time", and I can't see a way to get "date +" to yield the raw time.
+     I could use "date=`perl -e 'print time'`" but that seems OTT, and perl
+     may not be on teh users PATH. Any suggestions ?
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01405" HREF="msg01405.html">Re: SSL trouble</A></STRONG>
+<UL><LI><EM>From:</EM> "Josh M. Osborne" &lt;stripes@va.pubnix.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01384" HREF="msg01384.html">Re: SSL trouble</A></STRONG>
+<UL><LI><EM>From:</EM> patrick@Verity.COM (Patrick Horgan)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01390.html">R.I.P. John Brunner</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01419.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01384.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01405.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01416"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01416"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,200 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: CAs and Digital Timestamping -->
+<!--X-From-R13: X[YSZESKNqrycuv.pbz -->
+<!--X-Date: Fri, 26 Jan 1996 14:17:09 +0800 -->
+<!--X-Message-Id: 01I0FXIXB84Y9DCXJ9@delphi.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>CAs and Digital Timestamping</TITLE>
+<LINK REV="made" HREF="mailto:JMKELSEY@delphi.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01584.html">Date Prev</A>][<A HREF="msg01610.html">Date Next</A>][<A HREF="msg01630.html">Thread Prev</A>][<A HREF="msg01355.html">Thread Next</A>][<A HREF="index.html#01583">Date Index</A>][<A HREF="threads.html#01583">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>CAs and Digital Timestamping</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: CAs and Digital Timestamping</LI>
+<LI><em>From</em>: <A HREF="mailto:JMKELSEY@delphi.com">JMKELSEY@delphi.com</A></LI>
+<LI><em>Date</em>: Thu, 25 Jan 1996 21:40:31 -0500 (EST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+[ To: sci.crypt, sci.crypt.research, cypherpunks ##
+  Date: 01/25/96 10:08 am ##
+  Subject: CAs and Digital Timestamping ]
+
+At the RSA conference last week, it occurred to me that there's a
+really neat application for digital timestamps (as done by Surety).
+Whenever a CA (Certification Authority) issues a public key
+certificate, it should also digitally timestamp it.  This provides a
+relatively clean way to recover from top-level CA key compromises.
+
+First of all, let's talk about hash trees.  A hash tree (I think the
+idea was originated by Merkle, but I could be wrong) is a binary
+tree.  Each node in the tree eventually winds up with a hash value
+associated with it.  The bottom nodes on the tree are hashes of
+individual messages.  The other nodes are made up of the hash of all
+their children.  This looks like this:  (pardon the ASCII art)
+
+:                               H_0 = hash(H_1,H_2)
+:                          /                    \
+:              H_1 = hash(H_3, H_4)        H_2 = hash(H_5,0)
+:             /         \                     /         \
+:    H_3 = hash(M_0)  H_4 = hash(M_1)  H_5= hash(M_2)     0
+:
+:
+
+The neat thing about this is that, if I know H_0, then when someone
+wants to verify that M_0 appears in the hash, they only have to tell
+me H_4 and H_2, and the position of M_0 in the tree.  I can then
+find H_3 = hash(M_0), H_1 = hash(H_3,H_4), and verify that the final
+H_0 = hash(H_1, H_2) gives the right output value.  (Compare this
+with a hashing chain, and you can see that, for large trees, there's
+a big advantage here.  The number of values needed to authenticate a
+given message in this tree is log_2(number of messages in the tree),
+while the number of values to verify a chain is is the whole number
+of messages in the chain.
+
+In the digital timestamping service offered by Surety, they use hash
+trees of this kind, because this allows efficient verification of a
+digital timestamp.  The idea behind this is that a message is hashed
+into the hash tree, and that the final value of the hash tree each
+day or week is widely published, including in the New York Times. So
+long as it's not feasible to go back and change that value, and it's
+not possible to find collisions for the hash function, any hash
+value that appears in that tree must have been presented to the
+timestamping people at some point before that tree's final hash was
+calculated.
+
+Here's how we use this in having a CA sign certificates.
+
+CA Signs a Key:
+
+1.   At the beginning of the day, the CA generates a random value,
+R_0, and has it digitally timestamped.  The resulting timestamp is
+used as one of the entries in today's hash tree.  (If the CA is
+their own digital timestamp service, then they'll have to use the
+previous day's ending value, which is reasonable enough.  They'll
+also have to work a lot harder to publish this value each day or
+week.)
+
+2.   For each certificate to be generated:
+
+     a.   The CA verifies the information in Certificate_u, then
+          signs it with SK_{CA}.  Certificate_u contains some
+          indication of the time and date.
+
+     b.   The CA hashes Certificate_u into its daily hash tree.
+
+     c.   The CA sends Certificate_u to user u.
+
+3.   At the end of the day, the CA publishes its own final hash tree
+value, and gets this value digitally timestamped.  (This amounts to
+having the CA act as its own "node." for the timestamping service.)
+
+Now, imagine that the CA's key has been compromised.  (We have to
+assume that the CA's daily operations were OK--if not, there doesn't
+seem to be a clean way to recover cleanly.)  The person who has the
+CA's key can issue false certificates.  After a while, one of these
+false certificates are noticed.  How do we recover?
+
+We use the hash trees and the digital timestamps which we've made in
+the past to verify each certificate presented for recertification.
+The digital timestamps allow us to immediately verify that this
+certificate was issued by this CA at this time.  And we can be
+certain that this hash tree is correct because it's been digitally
+timestamped.
+
+What this does, essentially, is to allow us to quickly recover from
+key compromises.  We still have problems if someone can take over
+the operations of our CA for a few days or weeks, though in that
+case, we probably know the likely dates.  No compromise at the CA
+can put a different date's timestamp on a certificate.
+
+Now, I should note that I think Merkle talks about using hash trees
+to do public key certificates, in his thesis, and the idea may be
+patented.  (It's been a couple of years since I looked at his
+thesis, so this is a little hazy.)  However, we're not using them
+here to provide certificates--we're using them to authenticate the
+certificates in the event of a catastrophic key compromise.  I don't
+think Merkle talked about this, but I could be mistaken.  (At any
+rate, I've never seen any mention of it since then, though it's an
+obviously useful idea.)  If the tree structure is patented, then we
+could still do this by using chains or some other structure.  Does
+anyone know if this basic idea has been proposed before?  I am
+pretty sure I haven't seen it, but it seems pretty obvious now that
+I think about it.  We could even recover using this method from a
+break of the hash function supported (so long as the timestamps are
+done with multiple hash functions, and at least one isn't broken),
+or the public key algorithm used.
+
+   --John Kelsey, jmkelsey@delphi.com / kelsey@counterpane.com
+ PGP 2.6 fingerprint = 4FE2 F421 100F BB0A 03D1 FE06 A435 7E36
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBMQfn70Hx57Ag8goBAQETUQQA3S7k8rrYDud5N3uVdUqSVHC3VH+Tpmuu
+wcRisf8PrYX/I9Q4vBTN7SS0H30Xl1bRTQyS1mQP+CuyBlESi1qn0OMKbgAYPndd
+1qYOvrX/29fMbhrO7VQjAcSAHpCZOvoVfsq0fWwv4zzUIhJBZNFnMxdSm4eNrmEv
+U3/oo5CiM2o=
+=7TIl
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01584.html">Re: Lotus Notes</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01610.html">Re: "This post is G-Rated"</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01630.html">Re: Etch-a-sketch</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01355.html">Are Cypherpunks Influential?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01583"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01583"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

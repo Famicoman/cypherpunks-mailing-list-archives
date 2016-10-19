@@ -1,0 +1,115 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Dictionary searching code -->
+<!--X-From-R13: senagmNargpbz.pbz (Pvyy Tenagm) -->
+<!--X-Date: Sat, 20 Apr 1996 17:58:25 +0800 -->
+<!--X-Message-Id: 199604200639.XAA24430@netcom9.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Dictionary searching code</TITLE>
+<LINK REV="made" HREF="mailto:frantz@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01192.html">Date Prev</A>][<A HREF="msg01200.html">Date Next</A>][<A HREF="msg01202.html">Thread Prev</A>][<A HREF="msg01234.html">Thread Next</A>][<A HREF="index.html#01198">Date Index</A>][<A HREF="threads.html#01198">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Dictionary searching code</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Adam Shostack &lt;<A HREF="mailto:adam@lighthouse.homeport.org">adam@lighthouse.homeport.org</A>&gt;,       <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A> (Cypherpunks Mailing List)</LI>
+<LI><em>Subject</em>: Re: Dictionary searching code</LI>
+<LI><em>From</em>: <A HREF="mailto:frantz@netcom.com">frantz@netcom.com</A> (Bill Frantz)</LI>
+<LI><em>Date</em>: Fri, 19 Apr 1996 23:41:50 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+At  8:02 PM 4/19/96 -0500, Adam Shostack wrote:
+&gt;        Does anyone have some code that will search a dictionary, and
+&gt;tell me *quickly* if an arbitrary chunk of text is in the dictionary?
+&gt;Pre-indexing steps are fine, as is using big chunks of disk for hash
+&gt;tables.  The point of course, is to check arbitrary possible plaintext
+&gt;that a test decryption produces.
+
+This application sounds perfect for Bloom filters.  The basic idea of a
+Bloom filter is to build a database by taking each word in the dictionary
+and hashing with N different hashes.  The hashes do not need to by
+cryptographically secure, but they do need to be good hashes, XOR doesn't
+make it.  You use those hashes as bit offsets in a giant bit map, which is
+the database.  When building the database you turn on the bits at each of
+these N locations.
+
+When accessing the database, you hash the chunk of text with the same
+hashes, and then test the bits in the database at those offsets.  If any of
+the bits are zero, then the chunk of text is not in the dictionary.
+
+The failure mode is to say something is in the dictionary when it isn't. 
+If half the bits in the database are on, then the probability of failure is
+2**(-N), so if N==10, then the failure rate is 1 in 1024.  If empirically,
+you get a higher failure rate, check the quality of your hashes.
+
+For cryptanalysis, I might pick a higher N and eyeball check for failures. 
+Say you want 1 in a million failure rate, and have an 80,000 word
+dictionary.  You need a 20 * 80,000 * 2 bit database, which is 400,000
+bytes.
+
+Regards - Bill
+
+
+------------------------------------------------------------------------
+Bill Frantz       | The CDA means  | Periwinkle  --  Computer Consulting
+(408)356-8506     | lost jobs and  | 16345 Englewood Ave.
+frantz@netcom.com | dead teenagers | Los Gatos, CA 95032, USA
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01192.html">Re: Dictionary searching code</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01200.html">Re: why compression doesn't perfectly even out entropy</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01202.html">Re: Dictionary searching code</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01234.html">Re: Dictionary searching code</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01198"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01198"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

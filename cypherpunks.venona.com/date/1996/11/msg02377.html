@@ -1,0 +1,229 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: IPG algorithim -->
+<!--X-From-R13: vpuhqbiNnytroen.pbz (Wtbe Quhqbi N ubzr) -->
+<!--X-Date: Sat, 30 Nov 1996 13:30:14 &#45;0800 (PST) -->
+<!--X-Message-Id: 199611302127.PAA14989@manifold.algebra.com -->
+<!--X-Content-Type: text -->
+<!--X-Reference: 199611302118.NAA12825@slack.lne.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: IPG algorithim</TITLE>
+<LINK REV="made" HREF="mailto:ichudov@algebra.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02370.html">Date Prev</A>][<A HREF="msg02371.html">Date Next</A>][<A HREF="msg02370.html">Thread Prev</A>][<A HREF="msg02378.html">Thread Next</A>][<A HREF="index.html#02377">Date Index</A>][<A HREF="threads.html#02377">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: IPG algorithim</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:ericm@lne.com">ericm@lne.com</A> (Eric Murray)</LI>
+<LI><em>Subject</em>: Re: IPG algorithim</LI>
+<LI><em>From</em>: <A HREF="mailto:ichudov@algebra.com">ichudov@algebra.com</A> (Igor Chudov @ home)</LI>
+<LI><em>Date</em>: Sat, 30 Nov 1996 15:27:10 -0600 (CST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:ichudov@algebra.com">ichudov@algebra.com</A>, <A HREF="mailto:wichita@cyberstation.net">wichita@cyberstation.net</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg02370.html">199611302118.NAA12825@slack.lne.com</A>&gt; from "Eric Murray" at Nov 30, 96 01:18:12 pm</LI>
+<LI><em>Organization</em>: Bool Sheet Software</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:ichudov@algebra.com">ichudov@algebra.com</A> (Igor Chudov)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Eric Murray wrote:
+&gt; 
+&gt; 
+&gt; 
+&gt; I have translated the IPG algorithim's "engine" to C, to generate
+&gt; some random values from it for testing purposes.  It does not
+&gt; look very random in either the xnoisesph program or the DIEHARD
+&gt; test battery.   However I may well have misinterprested Mr. Wood's
+&gt; description (his writing is, as Mr. Chudov points out, difficult to
+&gt; understand) or written my code incorrectly.  Here it is, play
+&gt; with it yourself.  To my untrained eye the lack of randomness
+&gt; in what's essentially a stream cipher would be disturbing.
+&gt; However I am not a cryptoanalysist so I do not know to
+&gt; what extent this weakens the cipher.
+
+Thanks for an interestnig approach to testing (see below).
+
+&gt; The IPG description does not say (but implies to me) that
+&gt; the various tables that are to be filled in by "random" values must
+&gt; be filled in by PRNGs that are seeded with the same seeds by
+&gt; each of the party that knows the key.  Otherwise the "encryptor
+&gt; streams" that are generated will be unrelated and decryption will not
+&gt; be possible.  To make my test work I have used the simple rand()
+&gt; function to fill in the tables.
+
+A good point.
+
+&gt; Corrections are welcome.
+
+see below.
+ 
+&gt; 
+&gt; #include &lt;stdio.h&gt;
+&gt; 
+&gt; /* a C translation of the IPG "EUREKA" algorithim's "engine".
+&gt; ** This is supposed to produce random numbers for the IPG
+&gt; ** "encryptor stream".
+&gt; ** See <A  HREF="http://www.netprivacy.com/">http://www.netprivacy.com/</A> for the original description.
+&gt; ** Eric Murray  ericm@lne.com  This code placed under GNU copyleft.  */
+&gt; 
+&gt; /* machine-dependent stuff, change to suit different platforms: */
+&gt; typedef unsigned char byte;
+&gt; typedef unsigned short uint16;
+&gt; 
+&gt; 
+&gt; /* tables: */
+&gt; uint16 A[53];
+&gt; uint16 B[53];
+&gt; uint16 C[53];
+&gt; 
+&gt; 
+&gt; int init_table(uint16*table, uint16 min, uint16 max)
+&gt; {
+&gt; 	/* IPG specifies no algorithim for producing the "random"
+&gt; 	** initial values in the ABC tables, but it's obvious that
+&gt; 	** it requires a PRNG that's somehow seeded from the "key".
+&gt; 	** I've just used rand() here.  In UNIX rand() called with no
+&gt; 	** seed is supposed to seed itself with 0. */
+&gt; 	int i;
+&gt; 	int count, r;
+&gt; 
+&gt; 	for(i = 0; i &lt; 53; i++) {
+&gt; 		table[i] = min + (rand() % (max - min));
+&gt; 	}
+&gt; }
+&gt; 
+&gt; main(int argc, char **argv)
+&gt; {
+&gt; 	uint16 jv;
+&gt; 	int argcnt, i, n, count, diehard, nelem;
+&gt; 
+&gt; 	diehard = 0;
+&gt; 	argcnt = 1;
+
+how about doing randomize()?
+
+&gt; 	if (argc &gt;= 2) {
+&gt; 		if (strncmp(argv[argcnt],"-d") == 0) {
+&gt; 			diehard++;
+&gt; 			argcnt++;
+&gt; 		}
+&gt; 	}
+&gt; 	if (argc &gt; argcnt - 1 ) {
+&gt; 		n = atoi(argv[argcnt]);
+&gt; 		fprintf(stderr,"Generating %d values\n",n);
+&gt; 	}
+&gt; 	else {
+&gt; 		n = 2000;
+&gt; 	}
+&gt; 
+&gt; 	/* seed tables: */
+&gt; 	fprintf(stderr,"Seeding:  A");  fflush(stderr);
+&gt; 	init_table(A,0,65535);
+&gt; 	fprintf(stderr," B");  fflush(stderr);
+&gt; 	init_table(B,0,12227);
+&gt; 	fprintf(stderr," C");  fflush(stderr);
+&gt; 	init_table(C,16384,20361);
+&gt; 	fprintf(stderr,"\n");  fflush(stderr);
+&gt; 
+&gt; 	/* generate n values: */
+&gt; 	for(; n &gt; 0; n--) {
+&gt; 		/* jv is "random" (where's it seeded from?) */
+&gt; 		jv = (uint16)(rand() % 53);
+&gt; 
+&gt; 		/* count limits the number of traverses to 53^2 so we don't get stuck */
+&gt; 		for(count = 0; count &lt; 2809; count++) {
+
+2809 is a too small limit. For example, if ALL B == 1, A == 16385, and 
+C == 20361, the loop may need (20361-16385) passes to get to the &lt; 16384
+value.
+
+Again, if all A = 16385, all B = 0, all C = 16386, the loop will never 
+end with a correct A (your code reflects that).
+
+&gt; 			jv++;
+&gt; 			if (jv == 53) jv = 0;
+&gt; 			A[jv] = (A[jv] + B[jv]) % C[jv];
+&gt; 			if (A[jv] &lt; 16384) break;
+&gt; 		}
+&gt; 		if (count == 2809) fprintf(stderr,"Oops.\n");
+&gt; 		else {
+&gt; 			if (!diehard) {
+&gt; 				printf("%d\n",A[jv]);
+&gt; 			}
+&gt; 			else {
+&gt; 				/* print output in DIEHARD required format:
+&gt; 				** actually since we have 16-bit ints and DIEHARD
+&gt; 				** wants 32-bit ints, we print 20 per line instead of 10 */
+&gt; 				if (nelem++ &gt; 19) {printf("\n"); nelem = 0;}
+&gt; 				printf("%4.4x",(unsigned int)A[jv]);
+&gt; 			}
+&gt; 		}
+&gt; 	}
+&gt; }
+&gt; 
+&gt; 
+
+You are also bringing a good point that Chi-squared tests are not
+sufficient to make any conclusions about usefulness of this particular
+pseudo random number generator.
+
+	- Igor.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="02370" HREF="msg02370.html">Re: IPG algorithim</A></STRONG>
+<UL><LI><EM>From:</EM> Eric Murray &lt;ericm@lne.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02370.html">Re: IPG algorithim</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02371.html">Re: Strong-crypto smart cards in Singapore and Germany</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02370.html">Re: IPG algorithim</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02378.html">Re: IPG algorithim</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02377"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02377"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

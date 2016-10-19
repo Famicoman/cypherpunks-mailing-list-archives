@@ -1,0 +1,231 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Checklist -->
+<!--X-From-R13: Rnavry Qbycv <pbycvNovbgrfg.ovb.cheqhr.rqh> -->
+<!--X-Date: Thu, 16 Oct 1997 14:13:52 &#45;0700 (PDT) -->
+<!--X-Message-Id: 199710161850.NAA17808@biotest.bio.purdue.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Checklist</TITLE>
+<LINK REV="made" HREF="mailto:colpi@biotest.bio.purdue.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01832.html">Date Prev</A>][<A HREF="msg00853.html">Date Next</A>][<A HREF="msg00847.html">Thread Prev</A>][<A HREF="msg00858.html">Thread Next</A>][<A HREF="index.html#01833">Date Index</A>][<A HREF="threads.html#01833">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Checklist</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:misc@openbsd.org">misc@openbsd.org</A></LI>
+<LI><em>Subject</em>: Checklist</LI>
+<LI><em>From</em>: Daniel Colpi &lt;<A HREF="mailto:colpi@biotest.bio.purdue.edu">colpi@biotest.bio.purdue.edu</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 16 Oct 1997 13:50:30 -0500 (EST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+Greetings and Salutations,
+
+A few days ago, I asked for help in making a step by step list on how
+to "copy" OpenBSD from one computer to another.  Well I got a few 
+answers, but many people wanted me to post this list when I was done.
+So this is it, a mindless checklist of everything I did to "convert 
+a DEC 3100 to the Dark Side"
+
+If you can think of something I have missed, please throw me an e-mail.
+
+Thanks
+
+Daniel Colpi
+colpi@purdue.edu
+
+
+======================================================================
+
+So, you want another OpenBSD computer hu?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+(assuming same disk setup, target is disk #0, and source is disk #1)
+(also assuming rrz0a -&gt; /    ; rrz0c -&gt; swap
+               rrz0d -&gt; /usr ; rrz0e -&gt;/usr/target  )
+(Note: I am on a /bio backbone, this isn't going to be the same for you)
+(Note: /bio/scratch3 is a temp space that I can write to)
+
+___Save Files
+   ___dump root to scratch (just in case)
+                             --&gt;% dump -0f /bio/scratch3/dump /dev/rrz0a
+   ___/etc/passwd --&gt; % mv /etc/passwd /bio/scratch3/passwd.target
+   ___/etc/crontab
+      ___any self created scripts you made to run with crontab
+   ___/etc/fstab
+   ___/usr/local/etc/mk-exports
+   ___/etc/export.hosts
+   ___/etc/export.fs.[n]
+      (if you have a drive that is set up the way you want for target
+      machine, you might want to save it to a file to save you some
+      time)
+      (Note: you might want to do this on a machine that is already
+             converted)
+   ___save your partition list  --&gt;% disklabel -r /dev/rrz1a &gt;&gt; temp_part
+                                   % mv temp_part /bio/scratch3
+___Shut down target
+___Connect source drive
+___Make sure drives are jumpered not to conflict (target=&gt;0 ; source=&gt;1)
+___Plug in and power up
+   ___Make sure clock is right time (some old computers lose some time)
+   ___Make sure you see both drives (ie drive 1 &amp; drive 0)
+___Run disklabel  (I had drouble labeling the disk, but this worked)
+        --&gt;% disklabel -r /dev/rrz1a &gt;&gt; temp
+           % disklabel -B -R /dev/rrz0a temp
+           % disklabel -e /dev/rrz0a
+   ___ / = _______________
+   ___ swap = ____________
+   ___ /usr = ____________ / ______________ (target / source)
+                                            (remove src if desired)
+   ___ /usr/target = _______________
+        (if you have a "cookie-cut" version you can just:)
+        --&gt;% disklabel -B -R /dev/rrz0a /bio/scratch3/temp_part
+___Run newfs  --&gt;% newfs /dev/rrz0[ad]
+___Transfer files
+          ---&gt;% mount /dev/rz0a  /mnt
+              % cd /mnt
+              % df -k .     (make sure enough room)
+              % df -k /
+              % dump 0f - /dev/rrz1a | restore -rf -
+              % rm restoresystable   (if you don't do this you'll be sorry)
+              % cd /
+              % umount /mnt
+              % mount /dev/rz0d  /mnt                ---+
+              % cd /mnt                                 |
+              % df -k .                                 |  Repeate this 
+              % dump 0f - /dev/rrz1d | restore -if -    |   section if
+      restore &gt; add [all dir's you want to keep]        |     needed
+      restore &gt; extract                                 |       on
+      restore &gt; set owner/mode for /./? [yn] n          |     other
+      restore &gt; quit                                    |   partitions
+      (Note: it will say "DUMP not completed" if you    |
+       did not restore everything.  This is not a bad   |
+       thing, ignore it)                                |
+              % rm restoresystable (might not be there) |
+              % cd /                                    |
+              % umount /mnt                          ---+
+___Configure  (BE CAREFUL to configure /mnt/etc  NOT /etc !!!!)
+   ___mount /usr ---&gt;% mount /dev/rz0d  /mnt
+   ___remove /mnt/etc/npt.drift
+   ___make dir /mnt/usr/preserve
+   ___replace all scripts made to be run by crontab
+   ___move /bio/scratch3/mk-exports /mnt/usr/local/etc/mk-exports
+   ___umount /mnt
+   ___mount /   ---&gt;% mount /dev/rz0a /mnt
+   ___replace rest of scripts to be used by crontab
+   ___move /bio/scratch3/export.hosts /mnt/etc/export.hosts
+   ___move /bio/scratch3/export.fs.[n] /mnt/etc/export.fs.[n]
+   ___hostname
+      ___/mnt/etc/hostname.le1
+      ___/mnt/etc/exports        (or run /usr/local/etc/mk-exports)
+      ___/mnt/etc/hosts  (change IP number too)
+      ___/mnt/etc/myname
+   ___/mnt/etc/rc   (maybe not if (flavor == vanilla))
+   ___/mnt/etc/mygate
+   ___/mnt/etc/passwd
+      ___/usr/local/bin/tcsh (OpenBSD doesn't come with tcsh)
+      ___reconfigure passwd file (for correct format)
+          __ % mv /bio/scratch3/passwd.target /mnt/etc/passwd.orig
+    same /   % nawk -F: ' { print $1 FS $2 FS $3 FS $4 "::0:0:" $5 FS \
+    line \__ $6 FS $7 } ' /mnt/etc/passwd.orig &gt;&gt; /mnt/etc/passwd
+             % pwd_mkdb -c /mnt/etc/passwd
+             % pwd_mkdb -d /mnt/etc/ /mnt/etc/passwd
+             % pwd_mkdb -d /mnt/etc/ -p /mnt/etc/passwd
+             % chmod 600 /mnt/passwd.orig
+   ___do you want permissive /mnt/root/.rhosts (bilbo root ; gimli root)
+   ___how about cooperative /mnt/etc/ttys   (%s/network/network secure)
+   ___if your source machine boots off disk 1 and target boots off
+      disk 0, you need to make sure the correct kernal is at /mnt/bsd
+   ___umount /mnt
+___Power down
+___Remove source drive
+___Correct jumpers if nessary
+___Power up
+___Before starting OpenBSD at Boot Ram type:
+        &gt;&gt; printenv
+        &gt;&gt; setenv bootpath rz(0,0,0)/bsd
+___Boot off of target disk
+   ___restore user file system
+      ---&gt;% cd /usr/target
+          % rsh bilbo ls /usr/amanda/\*
+       __    (now in order)
+ same /   % rsh bilbo cat /usr/amanda/target.date.[0-&gt;(n-1)] \
+ line \__   &lt; /dev/null | resore -rf -
+             (now when done with above loop (IN ORDER!!!!!))
+          % rm restoresystable
+   ___recreate crontab
+      ---&gt;% crontab -e
+___Checks
+   ___ping source machine (to make sure not same IP addresses)
+   ___run ntpq -p 
+   ___finger @localhost
+   ___finger @target
+   ___cd into /bio/scratch3/
+   ___run date
+   ___telnet to target from another machine
+   ___ftp one file from another machine
+   ___cd to /bio/target from another machine
+___Go home early
+
+Nessary Tools:
+===============
+   Screwdrivers (if internal drives)
+   Postit-notes (for keeping drives straight)
+   One hell of a lot of coffee
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01832.html">Re: kernal timezone options</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00853.html">Re: fallacy alert!</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00847.html">FBI allowed to keep file on New York man's lawful activities</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00858.html">Re: FCPUNX:proposal: commercial data recovery</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01833"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01833"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

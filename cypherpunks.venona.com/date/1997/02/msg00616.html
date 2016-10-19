@@ -1,0 +1,214 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: subscribe -->
+<!--X-From-R13: vpuhqbiNnytroen.pbz -->
+<!--X-Date: Wed, 12 Feb 1997 21:12:00 &#45;0800 (PST) -->
+<!--X-Message-Id: 199702130512.VAA29302@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: subscribe</TITLE>
+<LINK REV="made" HREF="mailto:ichudov@algebra.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01138.html">Date Prev</A>][<A HREF="msg00617.html">Date Next</A>][<A HREF="msg02036.html">Thread Prev</A>][<A HREF="msg02048.html">Thread Next</A>][<A HREF="index.html#00616">Date Index</A>][<A HREF="threads.html#00616">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: subscribe</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Jim Choate &lt;<A HREF="mailto:ravage@EINSTEIN.ssz.com">ravage@EINSTEIN.ssz.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: subscribe</LI>
+<LI><em>From</em>: <A HREF="mailto:ichudov@algebra.com">ichudov@algebra.com</A></LI>
+<LI><em>Date</em>: Wed, 12 Feb 1997 20:48:34 -0600 (CST)</LI>
+<LI><em>Cc</em>: Cypherpunks &lt;<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>&gt;, <A HREF="mailto:cypherpunks@algebra.com">cypherpunks@algebra.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Jim Choate wrote:
+&gt; 
+&gt; 
+&gt; Hi Igor,
+&gt; 
+&gt; &gt; I will not impact me negatively. I do, however, suggest very strongly
+&gt; &gt; that hosts should be subscribed to each other thgrough another mechanism
+&gt; &gt; and not majordomo, in order to prevent mail loops, header rewriting and such.
+&gt; 
+&gt; Suggestions? What I had in mind was that any messages that get sent on
+&gt; cpunks@ssz.com get sent over to algebra. One mechanism I would like to play
+&gt; with is a 'linked list' of remailers. Remailer A sends only to B and
+&gt; receives only from C...
+&gt; 
+&gt; 
+&gt;                                A
+&gt;                              ^   v
+&gt;                              C &lt; B
+
+&gt; Then to stop loops B deletes all outgoing mail from B. Since email can be
+&gt; forwarded from many sites the search must traverse the entire forward chain
+&gt; killing the message if B appears as a source. I suspect a simple procmail sort
+&gt; can accomplish this. My next step is to brush up on my procmail. I hope to
+&gt; have something in a couple of days that will allow you to subscribe
+&gt; cpunks@algebra to cpunks@ssz and both ends will be filtering.
+
+Here's how I do it (it is pretty close to your proposal): 
+
+1) I delete duplicate messages (by looking up the database of
+message-IDs) right away
+2) I bounce all incoming messages to several other list servers
+3) I pipe the article to majordomo for distribution.
+
+Note that majordomo changes headers and I wuold like to feed
+other servers with UNCHANGED articles.
+
+Here's the .procmailrc that takes care of this:
+
+(OTHER_HOSTS will be redefined to include, e.g., cypherpunks@ssz.com)
+
+# Please check if all the paths in PATH are reachable, remove the ones that
+# are not.
+#
+# NOTE: I use lockfiles extensively (and even excessively) because
+# I do not want to overburden the system. Since I am on a
+# PPP link that is not always on, sometimes large amounts of 
+# submissions come in simultaneously and that may impair
+# performance of the overall system. You do not REALLY need
+# to use these lockfiles otherwise.
+###################################################################
+
+PATH=/bin:/usr/bin:/usr/local/bin:$HOME/bin
+MAILDIR=$HOME/Mail	# You'd better make sure it exists
+DEFAULT=$MAILDIR/mbox
+# VERBOSE=ON
+LOGFILE=$MAILDIR/from
+LOCKFILE=$HOME/.lockmail
+
+OTHER_HOSTS="cypherpunks@zzzz.com"
+
+:0 c
+$MAILDIR/allmail
+
+############################################################ mailbombing
+############################################################ end mailbombing
+
+:0
+* ^TOcypherpunks
+* !^X-Loop:
+* !FROM_MAILER
+* !FROM_DAEMON
+{
+  #
+  # This recipe removes duplicates!
+  #
+  :0 Wh: msgid.lock
+  | formail -D 128000 msgid.cache
+
+  # send it to all other hosts
+  :0 c
+  !$OTHER_HOSTS
+
+  # add X-Loop:
+  :0 fhw
+  | formail -I "X-Loop: cypherpunks@algebra.com"
+
+  # send it to people
+  :0 c
+  | cypherpunks-send-subscribers
+
+  # Accounting, logging
+  :0
+  | cypherpunks-accounting
+}
+
+:0:
+* ^TOcypherpunks-request
+$DEFAULT
+
+# all the rest is trash
+:0
+$DEFAULT
+
+# thats where it should be
+#/dev/null
+
+&gt; Another nice advantage of this architecture is that 'rings' of remailers can
+&gt; be interconnected by simply sending output to more than one site. Might even
+&gt; be a good stability rule, "Never have a remailer send to more than 1 machine
+&gt; in its 'own' ring". I see no limit other than resources that would limit the
+&gt; number of rings an individual remailer might be in.
+
+A very good point.
+
+&gt; The address is 'cypherpunks@ssz.com' but as alluded to above. I would  like
+&gt; to let it run 1 way for a day or so to get an idea of the stability of our
+&gt; network link. You might consider creating a bogus username on your end.
+&gt; Subscribe that user to the SSZ remailer and to your own mail list. Then use
+&gt; procmail to filter all outgoing mail of that user since its incoming would
+&gt; be from your list and its outgoing would go to mine, which then forwards
+&gt; them to your list. We might want to call the bogus user 'gatekeeper'.
+
+Yes, we really should make darn sure that no loops are poissible
+before inviting people to subscribe to our lists.
+
+&gt; If its agreeable lets get together on the cpunks-hosts list tomorrow and
+&gt; discuss this a little more.
+&gt; 
+&gt; If you don't mind, please forward this to the cpunks@toad list with your
+&gt; responces. I would like to expose it to a little criticism.
+&gt; 
+
+
+
+	- Igor.
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01138.html">FIGHT THE INTERNET TAX</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00617.html">Cypherpunks Distributed Remailer</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02036.html">Re: subscribe</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02048.html">Re: subscribe</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00616"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00616"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

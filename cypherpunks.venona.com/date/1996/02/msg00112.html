@@ -1,0 +1,222 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Technical comments on RC2 from John Kelsey -->
+<!--X-From-R13: "onyqjva" <onyqjvaNDEO.QA[ (Dboreg I. Pnyqjva)> -->
+<!--X-Date: Sat, 3 Feb 1996 01:58:30 +0800 -->
+<!--X-Message-Id: 9601028232.AA823281610@snail.rsa.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Technical comments on RC2 from John Kelsey</TITLE>
+<LINK REV="made" HREF="mailto:"baldwin"">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00035.html">Date Prev</A>][<A HREF="msg00120.html">Date Next</A>][<A HREF="msg00035.html">Thread Prev</A>][<A HREF="msg00120.html">Thread Next</A>][<A HREF="index.html#00112">Date Index</A>][<A HREF="threads.html#00112">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Technical comments on RC2 from John Kelsey</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Technical comments on RC2 from John Kelsey</LI>
+<LI><em>From</em>: "baldwin" &lt;<A HREF="mailto:baldwin@RSA.COM">baldwin@RSA.COM</A> (Robert W. Baldwin)&gt;</LI>
+<LI><em>Date</em>: Fri, 02 Feb 96 09:24:04 PST</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+        Here are some interesting technical comments on RC2 from
+sci.crypt.  If you already read sci.crypt, delete this now and
+accept my apologies for wasting your time.
+                --Bob
+
+
+______________________________ Forward Header __________________________________
+From: John Kelsey &lt;jmkelsey@delphi.com&gt; 
+Newsgroups: sci.crypt
+Subject: Re: RC2 source code
+Date: Tue, 30 Jan 96 10:20:43 -0500
+Organization: Delphi (info@delphi.com email, 800-695-4005 voice) 
+
+-----BEGIN PGP SIGNED MESSAGE-----
+
+[ To: sci.crypt ## Date: 01/29/96 09:18 pm ##
+  Subject: RC2 source code ]
+
+&gt;From: anon-remailer@utopia.hacktic.nl (Anonymous) 
+&gt;Newsgroups: sci.crypt
+&gt;Subject: RC2 source code
+&gt;Date: 29 Jan 1996 06:38:04 +0100
+
+This was interesting.  Is this another "S1," or another 
+"alleged-RC4?"  The whole thing looks pretty believeable, i.e., it 
+doesn't have any obviously dumb parts that I can see.
+
+Note that alleged RC2's block encryption function looks an awful lot 
+like one round of MD5 performed on 16-bit sub-blocks, using the 
+bitwise selection function as the nonlinear function, and a 
+key-derived constant table.  Additionally, in rounds four and eleven, 
+there are four lookups into the expanded key array.
+
+The encryption function could be rewritten as
+
+for(i=0;i&lt;16;i++){
+     a = rotl(a + bsel(d,c,b) + *sk++, 1); 
+     b = rotl(b + bsel(a,d,c) + *sk++, 2); 
+     c = rotl(c + bsel(d,c,b) + *sk++, 3); 
+     d = rolt(d + bsel(c,b,a) + *sk++, 5);
+
+     if((i==4)||(i==11)){
+          a += xk[d&amp;0x3f];
+          b += xk[a&amp;0x3f];
+          c += xk[b&amp;0x3f];
+          d += xk[c&amp;0x3f];
+     }
+}
+
+If this is accurate, it may give us some insight into Rivest's 
+development of MD4 and MD5, which were radically different than MD2. 
+What are the dates on this?  Did Rivest do MD4 or RC2 first?  This 
+may be the first block cipher in the commercial/academic world to 
+use a UFN structure.  One interesting part of this is the use of the 
+subkey array as an S-box twice during the encryption process.  I'm 
+curious as to why this would be used only twice, rather than each 
+round, i.e.
+
+a += bsel(b,c,d) + *sk++ + s[d&amp;0x3f];
+
+Sticking a very different internal transformation in may have been 
+an attempt to make iterative (i.e., differential) attacks harder, 
+since there's no longer a single round function through which you 
+can pass differential characteristics.  This depends upon when RC2 
+was developed and released.
+
+Note that the claim that "RC2 is not an iterative block cipher" 
+seems to be based on the fact that it has two instances where a 
+different round function is thrown in.  (Essentially, it's actually 
+an 18-round cipher with two different round functions, one of which 
+is used only twice.)  This other round function isn't very 
+impressive, since it uses only six bits of the source block to 
+affect the target block.
+
+A one-bit change in a randomly-distributed input block looks
+look like it will propogate pretty quickly:  There's a roughly 0.5 
+probability that it doesn't make it through the bsel function.  If 
+it does, then there's about a 0.5 probability that it will cause a 
+change in the carry bit.  This happens four times per "round," so a 
+one-bit change should have about a 2^{-8} chance to make it through 
+one round as a one-bit change, and so about a 2^{-128} chance to 
+make it through all sixteen rounds, assuming no impact from either 
+of the two S-box lookups. Does this look right, or am I missing 
+something?  (This is a first approximation--if our bit is in the 
+high-order position anywhere, then it *can't* cause a carry bit, but 
+there's no obvious way to keep it there for long.)  By choosing the 
+input block, I can ensure that one-bit XOR difference makes it 
+through the first step or two, but that doesn't do too much for an 
+actual attack.
+
+Other XOR differences can help with the first round or so, but stop 
+being helpful afterward.  It generally looks hard to prevent 
+diffusion by choosing other values, at least using XOR differences, 
+because each subblock is rotated a different amount in each round. 
+(The bits don't keep lining up.)
+
+We can also try to do a differential attack based on subtraction 
+modulo 2^16, based partially on Tom Berson's attempt to 
+differentially attack MD5 using subtraction modulo 2^32.  This gets 
+complicated because of the rotations and the bit selection 
+operations, but it ought to be tried if it hasn't already.
+
+The key scheduling is also interesting, and somewhat reminiscent of 
+MD2's internal operations.  Each expanded key byte after the first N 
+(where N is the number of bytes in the user's key) is determined by 
+two bytes--the previous expanded key byte, and the expanded key byte 
+N positions back.  This means that we probably don't get ideal 
+mixing of the key bytes in the early expanded key bytes, but it 
+isn't clear to me that there will be a lot of problems with 
+reasonable key lengths.  (Note that a reasonable key length would be 
+128 bits=16 bytes, and that it should come from the output of a good 
+one-way hash function.)  I wouldn't recommend using the key schedule 
+to hash passphrases, since long passphrases would leave us with many 
+very low-entropy subkey values.  In general, I think that really 
+large user keys will leave us vulnerable to a variety of related-key 
+attacks and other nasty stuff.  I'm a little curious as to the 
+purpose of phase 2 of the key schedule, but since it's only used 
+when a watered-down version of the algorithm is wanted (right?), I 
+haven't spent much time looking at it.
+
+Does alleged RC2's key schedule use the same permutation table as 
+MD2 does?  For small systems, this might have been a reasonably nice 
+space savings.  (On the other hand, if you have a hash function 
+available at the same time, it makes sense to go ahead and use it in 
+your key schedule, which isn't done here.)
+
+The algorithm looks like it will have reasonable performance on 
+16-bit machines like the 8086, which was almost certainly one of the 
+requirements for the algorithm, given the times it was used.
+
+Comments?
+
+   --John Kelsey, jmkelsey@delphi.com / kelsey@counterpane.com
+ PGP 2.6 fingerprint = 4FE2 F421 100F BB0A 03D1 FE06 A435 7E36
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBMQ43Q0Hx57Ag8goBAQG0LQQAiohrNSPvKzSIJjMeWjrK/r7HZOWp0Mhg 
+zcq60rIyPMpsDnxuk7VlLrU2XBy0Aff4QpO8jORS3VFKtaLH5XJehc7WTZF+1En1 
+ux4prro+Gpvn99HToTqKa6igxlEGYShskoF/aBIkszZAg6m/P92BPyZ/PW3tnMtp 
+MoMcdNGcO0I=
+=ttGl
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00035.html">Re: [NOISE][CONTEST][FACTS] don't help much, do they?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00120.html">End-to-End Encryption</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00035.html">Re: [NOISE][CONTEST][FACTS] don't help much, do they?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00120.html">End-to-End Encryption</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00112"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00112"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

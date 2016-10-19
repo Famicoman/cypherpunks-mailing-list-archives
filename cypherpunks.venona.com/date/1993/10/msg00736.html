@@ -1,0 +1,182 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Crypto Technique -->
+<!--X-From-R13: Yney Zhv Pneehf <xyoneehfNbjyarg.evpr.rqh> -->
+<!--X-Date: Sun, 17 Oct 93 14:00:44 PDT -->
+<!--X-Message-Id: 9310171914.AA03297@arcadien.owlnet.rice.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Crypto Technique</TITLE>
+<LINK REV="made" HREF="mailto:klbarrus@owlnet.rice.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00740.html">Date Prev</A>][<A HREF="msg00734.html">Date Next</A>][<A HREF="msg00888.html">Thread Prev</A>][<A HREF="msg00735.html">Thread Next</A>][<A HREF="index.html#00736">Date Index</A>][<A HREF="threads.html#00736">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Crypto Technique</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Crypto Technique</LI>
+<LI><em>From</em>: Karl Lui Barrus &lt;<A HREF="mailto:klbarrus@owlnet.rice.edu">klbarrus@owlnet.rice.edu</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 17 Oct 93 14:14:38 CDT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+I think that the proposed one-way function is too easy to invert.  
+
+To decrypt a message requires producing the inverses for each
+function, which in turn requires knowing the constants (c1, c2, ...).
+
+But these constants can be easily obtained from expanding the general
+form of the equation and setting coefficients equal to one another.
+
+The resulting equations are in an easy to solve form (I think it's
+called upper triagonal form in linear algebra (?)).  As it turns out,
+only a fraction of the simultaneous equations generated are needed to
+solve for the constants.
+
+For instance, at the end of this message is the polynomial obtained
+from the following nested equations:
+
+a = 1/2 x^2 + 1/2 x + c1
+b = 1/2 a^2 + 1/2 a + c2
+c = 1/2 b^2 + 1/2 b + c3
+d = 1/2 c^2 + 1/2 c + c4
+
+d is then the resulting 16th degree polynomial at the end of this
+message.
+
+[By the way, I used Mathematica to do this - the Expand[] function.]
+
+The reason the resulting simultaneous equations can be solved so
+easily is they are in a form convenient for back-substitution:
+
+The coefficient for x^14 is (9/8192 + c1/2048)
+                    x^12 is (139/16384 + c1 7/512 + 7/2048 c1^2 + c2/1024)
+                    etc.
+
+The first equation immediately yields c1; this in the next yields c2,
+etc.
+
+So the various constants can be obtained with no trouble.
+
+Here is the polynomial d:
+
+c1/8 + (7*c1^2)/32 + (7*c1^3)/32 + (25*c1^4)/128 + c1^5/8 + (5*c1^6)/64 + 
+  c1^7/32 + c1^8/128 + c2/4 + (3*c1*c2)/8 + (9*c1^2*c2)/16 + (7*c1^3*c2)/16 + 
+  (3*c1^4*c2)/8 + (3*c1^5*c2)/16 + (c1^6*c2)/16 + (3*c2^2)/8 + 
+  (3*c1*c2^2)/8 + (9*c1^2*c2^2)/16 + (3*c1^3*c2^2)/8 + (3*c1^4*c2^2)/16 + 
+  c2^3/4 + (c1*c2^3)/4 + (c1^2*c2^3)/4 + c2^4/8 + c3/2 + (c1*c3)/4 + 
+  (3*c1^2*c3)/8 + (c1^3*c3)/4 + (c1^4*c3)/8 + (c2*c3)/2 + (c1*c2*c3)/2 + 
+  (c1^2*c2*c3)/2 + (c2^2*c3)/2 + c3^2/2 + c4 + x/16 + (7*c1*x)/32 + 
+  (21*c1^2*x)/64 + (25*c1^3*x)/64 + (5*c1^4*x)/16 + (15*c1^5*x)/64 + 
+  (7*c1^6*x)/64 + (c1^7*x)/32 + (3*c2*x)/16 + (9*c1*c2*x)/16 + 
+  (21*c1^2*c2*x)/32 + (3*c1^3*c2*x)/4 + (15*c1^4*c2*x)/32 + 
+  (3*c1^5*c2*x)/16 + (3*c2^2*x)/16 + (9*c1*c2^2*x)/16 + (9*c1^2*c2^2*x)/16 + 
+  (3*c1^3*c2^2*x)/8 + (c2^3*x)/8 + (c1*c2^3*x)/4 + (c3*x)/8 + (3*c1*c3*x)/8 + 
+  (3*c1^2*c3*x)/8 + (c1^3*c3*x)/4 + (c2*c3*x)/4 + (c1*c2*c3*x)/2 + 
+  (15*x^2)/128 + (49*c1*x^2)/128 + (159*c1^2*x^2)/256 + (45*c1^3*x^2)/64 + 
+  (155*c1^4*x^2)/256 + (51*c1^5*x^2)/128 + (21*c1^6*x^2)/128 + 
+  (c1^7*x^2)/32 + (21*c2*x^2)/64 + (57*c1*c2*x^2)/64 + (39*c1^2*c2*x^2)/32 + 
+  (39*c1^3*c2*x^2)/32 + (45*c1^4*c2*x^2)/64 + (3*c1^5*c2*x^2)/16 + 
+  (21*c2^2*x^2)/64 + (27*c1*c2^2*x^2)/32 + (27*c1^2*c2^2*x^2)/32 + 
+  (3*c1^3*c2^2*x^2)/8 + (3*c2^3*x^2)/16 + (c1*c2^3*x^2)/4 + (7*c3*x^2)/32 + 
+  (9*c1*c3*x^2)/16 + (9*c1^2*c3*x^2)/16 + (c1^3*c3*x^2)/4 + (3*c2*c3*x^2)/8 + 
+  (c1*c2*c3*x^2)/2 + (35*x^3)/256 + (109*c1*x^3)/256 + (95*c1^2*x^3)/128 + 
+  (105*c1^3*x^3)/128 + (185*c1^4*x^3)/256 + (49*c1^5*x^3)/128 + 
+  (7*c1^6*x^3)/64 + (43*c2*x^3)/128 + (27*c1*c2*x^3)/32 + 
+  (87*c1^2*c2*x^3)/64 + (35*c1^3*c2*x^3)/32 + (15*c1^4*c2*x^3)/32 + 
+  (21*c2^2*x^3)/64 + (21*c1*c2^2*x^3)/32 + (9*c1^2*c2^2*x^3)/16 + 
+  (c2^3*x^3)/8 + (7*c3*x^3)/32 + (7*c1*c3*x^3)/16 + (3*c1^2*c3*x^3)/8 + 
+  (c2*c3*x^3)/4 + (305*x^4)/2048 + (127*c1*x^4)/256 + (855*c1^2*x^4)/1024 + 
+  (495*c1^3*x^4)/512 + (755*c1^4*x^4)/1024 + (21*c1^5*x^4)/64 + 
+  (7*c1^6*x^4)/128 + (21*c2*x^4)/64 + (243*c1*c2*x^4)/256 + 
+  (339*c1^2*c2*x^4)/256 + (15*c1^3*c2*x^4)/16 + (15*c1^4*c2*x^4)/64 + 
+  (75*c2^2*x^4)/256 + (9*c1*c2^2*x^4)/16 + (9*c1^2*c2^2*x^4)/32 + 
+  (c2^3*x^4)/16 + (25*c3*x^4)/128 + (3*c1*c3*x^4)/8 + (3*c1^2*c3*x^4)/16 + 
+  (c2*c3*x^4)/8 + (69*x^5)/512 + (475*c1*x^5)/1024 + (801*c1^2*x^5)/1024 + 
+  (447*c1^3*x^5)/512 + (35*c1^4*x^5)/64 + (21*c1^5*x^5)/128 + 
+  (135*c2*x^5)/512 + (207*c1*c2*x^5)/256 + (15*c1^2*c2*x^5)/16 + 
+  (15*c1^3*c2*x^5)/32 + (3*c2^2*x^5)/16 + (9*c1*c2^2*x^5)/32 + (c3*x^5)/8 + 
+  (3*c1*c3*x^5)/16 + (497*x^6)/4096 + (837*c1*x^6)/2048 + 
+  (1437*c1^2*x^6)/2048 + (345*c1^3*x^6)/512 + (175*c1^4*x^6)/512 + 
+  (7*c1^5*x^6)/128 + (231*c2*x^6)/1024 + (153*c1*c2*x^6)/256 + 
+  (75*c1^2*c2*x^6)/128 + (5*c1^3*c2*x^6)/32 + (15*c2^2*x^6)/128 + 
+  (3*c1*c2^2*x^6)/32 + (5*c3*x^6)/64 + (c1*c3*x^6)/16 + (391*x^7)/4096 + 
+  (663*c1*x^7)/2048 + (531*c1^2*x^7)/1024 + (105*c1^3*x^7)/256 + 
+  (35*c1^4*x^7)/256 + (81*c2*x^7)/512 + (45*c1*c2*x^7)/128 + 
+  (15*c1^2*c2*x^7)/64 + (3*c2^2*x^7)/64 + (c3*x^7)/32 + (2337*x^8)/32768 + 
+  (123*c1*x^8)/512 + (675*c1^2*x^8)/2048 + (105*c1^3*x^8)/512 + 
+  (35*c1^4*x^8)/1024 + (99*c2*x^8)/1024 + (45*c1*c2*x^8)/256 + 
+  (15*c1^2*c2*x^8)/256 + (3*c2^2*x^8)/256 + (c3*x^8)/128 + (101*x^9)/2048 + 
+  (311*c1*x^9)/2048 + (175*c1^2*x^9)/1024 + (35*c1^3*x^9)/512 + 
+  (25*c2*x^9)/512 + (15*c1*c2*x^9)/256 + (259*x^10)/8192 + 
+  (85*c1*x^10)/1024 + (147*c1^2*x^10)/2048 + (7*c1^3*x^10)/512 + 
+  (21*c2*x^10)/1024 + (3*c1*c2*x^10)/256 + (9*x^11)/512 + (77*c1*x^11)/2048 + 
+  (21*c1^2*x^11)/1024 + (3*c2*x^11)/512 + (139*x^12)/16384 + 
+  (7*c1*x^12)/512 + (7*c1^2*x^12)/2048 + (c2*x^12)/1024 + (7*x^13)/2048 + 
+  (7*c1*x^13)/2048 + (9*x^14)/8192 + (c1*x^14)/2048 + x^15/4096 + x^16/32768
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a
+
+iQCVAgUBLMGZfoOA7OpLWtYzAQHZ7QP8Dl0YlZaDCcOmloRmxVH7s3eGaARM6xBx
+q38k3ck6zw6bCFRxR2rQFflokxauEZ455l8sJv3iMJYTimORoetq6zEygZ8Wchsa
+5/P1kZJL4sIQYkMuc/+iZqad9WJZz5nerHRQ/nu+2kfBJCCl8Xrvytwg9xhO4s4G
+sCUccLBHuIA=
+=BE17
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00740.html">Re: crypto technique</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00734.html">Problems of anonymous posts</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00888.html">Re: crypto technique</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00735.html">Re:  crypto technique</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00736"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00736"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,256 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: bug in my Maurer code; retraction of claim; ref -->
+<!--X-From-R13: Rnivq Vbavt <ubavtNfcelarg.pbz> -->
+<!--X-Date: Fri, 30 Oct 1998 17:05:45 +0800 -->
+<!--X-Message-Id: 3.0.5.32.19981029122825.007d1cd0@m7.sprynet.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>bug in my Maurer code; retraction of claim; ref</TITLE>
+<LINK REV="made" HREF="mailto:honig@sprynet.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01155.html">Date Prev</A>][<A HREF="msg01140.html">Date Next</A>][<A HREF="msg01155.html">Thread Prev</A>][<A HREF="msg01157.html">Thread Next</A>][<A HREF="index.html#01141">Date Index</A>][<A HREF="threads.html#01141">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>bug in my Maurer code; retraction of claim; ref</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A></LI>
+<LI><em>Subject</em>: bug in my Maurer code; retraction of claim; ref</LI>
+<LI><em>From</em>: David Honig &lt;<A HREF="mailto:honig@sprynet.com">honig@sprynet.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 29 Oct 1998 12:28:25 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+There was a numerical bug in the C code for Maurer's Univ. Stat. Test
+for Randomness which I posted.  The "float" variable "Sum" 
+should be "double".  This will cause an incorrect input-size dependence
+for large &gt;40Mbyte files.
+
+Measuring (with the fixed version) the output of a block cipher in feedback
+mode, I find that it DOES NOT differ from truly nondeterministic noise, as
+I had claimed.  The difference I had observed was due to a larger sample
+size for my cipher-noise.  Boy do I feel stupid.
+
+Needless to say, sorry about any inconvenience.
+
+The fixed code follows at the bottom.  This version also spits out
+an early estimate after a million samples; this turns out to be
+very close to the final value for (homogenous) large samples.
+
+
+Also:
+
+I recently found the following amendment to Maurer's work
+at <A  HREF="http://www.eleves.ens.fr:8080/home/coron/escience.html#1">http://www.eleves.ens.fr:8080/home/coron/escience.html#1</A>
+
+Abstract. Maurer's universal test is a very common randomness test, capable
+of detecting a wide gamut of statistical defects. The algorithm is simple
+(a few Java code lines), flexible (a variety of parameter combinations can
+be chosen by the tester) and fast.
+Although the test is based on sound probabilistic grounds, one of its
+crucial parts uses the heuristic approximation:
+c(L,K) = 0.7 - 0.8/L + (1.6 + 12.8/L)K-4/L
+In this work we compute the precise value of c(L,K) and show that the
+inaccuracy due to the heuristic estimate can make the test 2.67 times more
+permissive than what is theoretically admitted.
+Moreover, we etablish a new asymptotic relation between the test parameter
+and the source's entropy.
+09/08/98 - Jean-Sébastien Coron
+
+
+
+
+
+.....................................
+
+
+/*
+UELI.c
+28 Oct 98
+
+This implements Ueli M Maurer's
+"Universal Statistical Test for Random Bit Generators"
+using L=16
+
+Accepts a filename on the command line;
+writes its results, with other info, to stdout.
+
+Handles input file exhaustion gracefully.
+
+Ref: J. Cryptology v 5 no 2, 1992 pp 89-105
+also on the web somewhere, which is where I found it.
+
+-David Honig
+honig@sprynet.com
+
+
+Built with Wedit 2.3, lcc-win32
+<A  HREF="http://www.cs.virginia.edu/~lcc-win32">http://www.cs.virginia.edu/~lcc-win32</A>
+
+
+26 Sept CP Release
+Version Notes:
+
+	This version does L=16.  It evolved from an L=8 prototype
+	which I ported from the Pascal in the above reference.
+
+	I made the memory usage reasonable
+	by replacing Maurer's "block" array
+	with the 'streaming' fgetc() call.
+
+
+27 Oct 98 compiled under Sun cc OK if C++ stuff taken out..
+28 Oct 98 made "Sum" into a double, from float; fixes
+		a bug found with larger (40M files); reposted
+		with retraction.
+
+
+
+
+Usage:
+	ULI filename
+	outputs to stdout
+
+*/
+
+#define L 16		// bits per block
+#define V (1&lt;&lt;L)	// number of possible blocks
+#define Q (10*V)    // at LEAST 10 * V, to assure each block seen
+#define K (100*Q)   // at LEAST 100 * Q, as large as possible
+#define MAXSAMP (Q + K)
+
+#include &lt;stdio.h&gt;
+#include &lt;math.h&gt;
+
+
+int main( int argc, char **argv )
+{
+FILE *fptr;
+int i;
+int b, c;
+int table[V];
+double sum=0.0;
+int run;
+
+// Human Interface
+printf("UELI 27 Oct 98 double-precision, with early value\n L=%d %d %d \n",
+L, V, MAXSAMP);
+if (argc &lt;2)
+	{printf("Usage: ULI filename\n"); exit(-1); }
+else
+	printf("Measuring file %s\n", argv[1]);
+
+// FILE IO
+fptr=fopen(argv[1],"rb");
+if (fptr == NULL) {printf("Can't find %s\n", argv[1]); exit(-1); }
+
+// INIT
+for (i=0; i&lt;V; i++) table[i]=0;
+for (i=0; i&lt;Q; i++)	{
+	b= fgetc(fptr)&lt;&lt;8 | fgetc(fptr);
+	table[ b ]=i;
+}
+
+printf("Init done\n");
+
+// COMPUTE
+run=1;
+for (i=Q;  run &amp;&amp; i&lt;Q+K; i++)
+	{
+	// COMPOSE A 16-bit quantity
+	b=fgetc(fptr);
+	c=fgetc(fptr); if (c&lt;0 || b&lt;0) run=0;
+	if (run) { b = b&lt;&lt;8 | c;
+			sum += log( (double) ( i-table[b] ) ) ;
+			table[ b ]=i;
+		}
+
+	if (i==1000000+Q)
+	printf("Early measurement after %d samples = %g\n\n", i-Q, (sum/( (double)
+(i-Q) ) ) /  log(2.0));
+
+	}
+
+	if (!run) printf("Premature end of file; read %d blocks.\n", i-Q);
+	sum = (sum/( (double) (i-Q) ) ) /  log(2.0);    // i should be K if enough
+samples
+	printf("%s fTU= %g\n\n", argv[1], sum);
+	printf("Expected value for L=16 is 15.167379 \n");
+
+	// Add further interpretation/thresholding of the number of sigmas from
+expected,
+	// and include the fudge factors explained in the paper.
+
+
+} // end
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01155.html">Re: MIB Subpoenas</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01140.html">Re: log files (was: Re: dbts: Cryptographic Dog Stocks, The Dirigible Biplane, and Sending the Wizards Back to Menlo Park )</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01155.html">Re: MIB Subpoenas</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01157.html">4 Horseman not so bad..</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01141"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01141"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

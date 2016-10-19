@@ -1,0 +1,548 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: New block mode of operation -->
+<!--X-From-R13: crnprNPWJ.pbz -->
+<!--X-Date: Thu, 17 Mar 94 18:46:27 PST -->
+<!--X-Message-Id: 9403172142.memo.9558@BIX.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>New block mode of operation</TITLE>
+<LINK REV="made" HREF="mailto:peace@BIX.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00763.html">Date Prev</A>][<A HREF="msg00761.html">Date Next</A>][<A HREF="msg00763.html">Thread Prev</A>][<A HREF="msg00778.html">Thread Next</A>][<A HREF="index.html#00764">Date Index</A>][<A HREF="threads.html#00764">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>New block mode of operation</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:pem%2Ddev@tis.com">pem-dev@tis.com</A></LI>
+<LI><em>Subject</em>: New block mode of operation</LI>
+<LI><em>From</em>: <A HREF="mailto:peace@BIX.com">peace@BIX.com</A></LI>
+<LI><em>Date</em>: Thu, 17 Mar 1994 21:42:18 -0500 (EST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Fellow cryptorians:
+
+The following is a draft of a paper that describes a mode of
+operation that I personally feel is useful for bulk data
+encryption for PEM, RIPEM, EDI, PGP and any other secure email
+application.  In particular, submode CC1 is proposed for these
+applications.  I would welcome any suggestions that would help in
+evaluating this method in those venues.
+
+peace at acm.org
+
+-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+              Cipher-Chain-Cipher Mode of Operation
+           for Improving the Security of Block Ciphers
+
+                       by Thomas C. Jones
+
+
+1 ABSTRACT
+
+As a way to extend the usefulness of encryption with the DES and
+prevent several of the more common attacks on the DES, a new mode
+of operation is defined that can be used with any block cipher,
+including DES.  This mode of operation performs a cipher
+operation both before and after a chaining operation and so could
+be called cipher-chain-cipher (CCC) mode of operation.  It is
+characterized by never performing any operation with the
+plaintext data except immediately after one cipher operation and
+immediately prior to another, so that cipher operations separate
+the plaintext and ciphertext in both directions.  Thus the common
+known-text attack and chosen-text attack are avoided and, for
+some implementations, only two DES operations are required per
+plaintext block.
+
+
+2 BACKGROUND
+
+Existing block encryption algorithms, such as the Data Encryption
+Standard (FIPS 46) have reached the end of their useful life.  It
+was expected when the DES was first issued in 1976 that it would
+be used for 5 to 10 years.  It is a tribute the care with which
+this algorithm was constructed, that it is only now yielding to
+practical cryptanalysis.  In particular, the 56 bit key used with
+the DES can be determined by brute force attack using specially
+designed hardware operating in parallel.
+
+In practical applications of the DES, there are a wide range of
+ways to combine the input plaintext with the DES algorithm to
+produce an output ciphertext.  In order to promote
+interoperability and good cryptographic practice the NIST issued
+"Modes of Operation of the DES" as FIPS 81.  The most popular of
+the modes of operation for bulk plaintext data to be encrypted is
+Cipher Block Chaining (CBC).
+
+Several candidate algorithms have been offered as a replacement
+for the DES, but the large installed base of DES hardware and
+industry expertise in applying the DES have worked against the
+adoption of any of these candidates.  Experience has shown that
+untested cryptographic algorithms are likely to have
+unanticipated security weaknesses.  This also works against the
+adoption of new algorithms.
+
+When the bankers were looking for a stronger algorithm than the
+DES for protection of cryptographic keying material, they chose
+to leave the underlying DES algorithm in place, but apply the
+algorithm three separate times to the input plaintext to yield a
+"super-encrypted" output ciphertext.  This has been considered to
+be a special mode of operation known as EDE (for encrypt-decrypt-
+encrypt) with 2 independent 56 bit keys.  The reason that three
+were chosen, rather than two, relates to a particular
+cryptanalytic attack called "meet in the middle" where the
+cryptanalyst starts exhaustive first stage encryption of
+plaintext simultaneously with exhaustive second stage decryption
+of ciphertext and comparing the resulting values.  While the
+computer storage required for this attack is impractical today,
+the theoretical existence of the attack discourages double DES
+modes of operation.
+
+It is well known that the redundancy of common data streams, such
+as the English language, results in ciphertext that can be
+decrypted to only one plaintext that is realistically English. 
+The amount of ciphertext that is needed to have some assurance
+that only a single plaintext interpretation is known as the
+"unicity distance".  For DES and English the unicity distance is
+slightly longer that one 8 byte block.  This means that if the
+language was known to be English, only two blocks of ciphertext
+would be required to have a high degree of confidence that any
+decryption that yielded English text would be the only decryption
+that would do so.  Even more to the point, if a computer could
+quickly assess the likelihood that a decryption of a single
+ciphertext block looked like English, only a single additional
+decryption would be required to verify that.  This would make an
+attack, that tested every one of the possible keys, likely to
+succeed.  The only thing that has prevented such a "brute force"
+attack has been the time and effort to perform such an attack. 
+That sort of brute force attack is now within the grasp of well-
+financed commercial enterprises, not to mention secret
+governmental agencies.
+
+Several cryptanalytic attacks have been mounted on the DES to
+find some simpler way than brute force to recover the key given
+the output ciphertext and some other information.  Most of these
+attacks rely on access to a large amount of plaintext and the
+corresponding ciphertext, this is called a "known plaintext
+attack".  Existing modes of operation do not significantly reduce
+the threat of a known plaintext attack.  Several methods are
+already known to reduce the threat of this attack, principle
+among them is restricting the use of each DES key to a single
+document or interchange.  That is the method recommended here.
+
+If the cryptanalyst has access to the cryptographic engine with
+the key loaded, then two other attacks are possible.  The "chosen
+plaintext attack" relies on the analysis of the underlying
+structure of the block algorithm by feeding it special
+combinations of bits that test particular functional
+characteristics of that structure.  "Differential cryptanalysis"
+is an attack that relies on changing single bits in the plaintext
+and checking the effect on the ciphertext.  While it seems
+unlikely that a user would allow any active DES key to be used in
+this way, resistance to these attacks is considered appropriate
+in academic circles.
+
+More traditional cryptanalysis relied strictly on redundancy that
+could be exploited with access to only the ciphertext itself.  So
+far no method of attack on ciphertext has proven to be quicker
+than the brute force method mentioned above.  It is up to the
+user to employ proven good algorithms in a cryptographically
+sound way with secure physical protection of the keying material. 
+It is claimed that the cipher-chain-cipher modes of operation
+offer a sound way to extend the life of DES for encrypting bulk
+data such as that found in electronic mail systems.
+
+
+3 SUMMARY
+
+The CCC mode of operation provides a way for input plaintext to
+be combined with DES block encryption and chaining from one stage
+to another to add an apparently random input component to each
+stage.  The essentials of the method is its separation of the
+input and the output data at each stage by interposing a cipher
+operation between them.  This requires a cipher operation on the
+output ciphertext before it is combined with the input plaintext,
+as well as a cipher operation on the result of the combining
+operation.  Thus the cryptanalyst is not aware of either data
+stream that is to be combined with the input plaintext, nor of
+the output of the combining of the plaintext with the apparently
+random data that is combined with the plaintext.
+
+One reason for combining some apparently random value with the
+input plaintext is to provide a means for whitening the input
+data; that is, for masking any repeating pattern in the input
+plaintext so that the output ciphertext would also fail to
+contain any repeating pattern.  It might be possible for some
+cryptanalyst to obtain some meaning from the existence of the
+repeating pattlue to the receiver.  One good
+method is to place all the above values into a single packet that
+is encrypted with the receiver's public key component.  The
+resulting encrypted packet can then be transmi at least as
+good a security level as is available from this mode of operation
+with the cryptographic algorithms used for bulk data encryption. 
+The interchange is thus broken into two parts: the first
+involving the selection and secure transmittal of the keying
+material which is then used in the second part to encrypt the
+bulk data according to the modes of operation described in detail
+below.
+
+Once the keying material has been generated, the bulk data is
+broken into blocks as required by the block cryptographic
+algorithm and processed as specified.  The first step is to
+optionally cipher the input plaintext using the first key.  The
+second step is to chain together this result with apparently
+random data feed from the prior step.  The final step is to
+cipher the result of the chaining operation and then to transmit
+the cipher block created.  The word cipher is used here to mean
+either encryption or decryption, since the exact mode that the
+block cryptographic algorithm is used at each stage is not
+material to the modes of operation described.
+
+
+4 DESCRIPTION
+
+Other modes of operation, which may have been established by the
+Federal Government for other reasons, have not been able to deter
+certain types of cryptanalytic attack.  The weakness found in
+these other modes is shown, together with the advantages of this
+new mode of operation.
+
+
+             Plain1            Plain2
+               |                 |
+               v                 v         
+IV -----------&gt;X    +-----------&gt;X    +------&gt;
+               |    |            |    |
+             +----+ |          +----+ |
+Key --------&gt;| En |-+---------&gt;| En |-+------&gt;
+             +----+ |          +----+ |
+               |----+            |----+
+               v                 v
+            Cipher1           Cipher2
+
+Where:  X       = bit-by-bit exclusive-or operation
+        En      = DES 8 byte block encryption
+        De      = DES 8 byte block decryption
+        Op      = Selection of an input plus encryption
+        Plainx  = One of the 8 byte input blocks of plaintext
+        Cipherx = One of the 8 byte output blocks of ciphertext
+        Key     = 56 bit DES single length key
+        IV      = 64 bit Initial Value for chaining operation
+
+This shows the Cipher Block Chaining mode of operation of the
+DES.  It is very effective at hiding any pattern in the input
+plaintext, but does little to deter a cryptanalyst, since if the
+input plaintext, and output ciphertext are known, then the input
+and output to the cipher operation are known as well.
+
+The fxample of CCC will show how to defeat this sort of
+attack by separating the chaining operation from the feedback of
+the ciphertext.
+
+
+               Plain1          Plain2
+                 |               |
+IV --------+     |    +----+     |    +----+
+           v     |    |    v     |    |    v
+         +----+  |    |  +----+  |    |  
+Key2 ---&gt;| En |--+----+-&gt;| En |--+----+-&gt;
+         +----+  |    |  +----+  |    |  
+           |     v    |    |     v    |
+           +---&gt; X    |    +---&gt; X    |
+           |    |          |    |
+                 v    |          v    |
+               +----+ |        +----+ |
+Key3 ---------&gt;| De |-+-------&gt;| De |-+------&gt;
+               +----+ |        +----+ |
+                 |----+          |----+
+                 v               v
+              Cipher1         Cipher2
+
+The CCC-Encrypt operation consists of DES block encryption of the
+ciphertext output from the last stage, an exclusive-or (bit by
+bit addition) with the next plaintext input, and a final DES
+block decryption to form the next ciphertext output block.  The
+initial value (IV) serves as a apparently random input to the
+first stage, while the output of each stage serves as a
+apparently random input to each stage after the first.  The above
+diagram show the first two full stages of encryption.
+
+                   Cipher1        Cipher2
+                      |              |
+                +-----+----+    +----+----
+                v          |    v
+              +----+       |  +----+ 
+Key2 --------&gt;| En |-------+-&gt;| En |-------&gt;
+              +----+       |  +----+        
+IV --------+    |          |    |    
+           |    |          |    |
+           v    |          v    |
+         +----+ |        +----+ |
+Key1 ---&gt;| En |-+-------&gt;| En |-+---------&gt;
+         +----+ |        +----+ |
+           |    v          |    v
+           +--&gt; X          +--&gt; X
+                |               |
+                v               v
+             Plain1           Plain2
+
+The CCC-Decrypt operation consists of DES block encryption of the
+ciphertext output from the last stage, a DES block encryption of
+the cipher text input to the current stage, and an exclusive-or
+with the output of both DES block encryptions.  One attack on
+this mode is differential cryptanalysis, since, although the
+exact value of input to the final cipher stage is not known, a
+cryptanalyst that had access to the cryptographic engine with the
+key loaded could process plaintext that differed by only a single
+bit which would result in only a single bit change in the input
+to the final cipher stage.  The cryptanalysis would then be
+performed on the ciphertext output. 
+
+
+The CCC-encrypt operation can be generalized as shown in the
+following diagrams.
+
+       Plain1        Plain2
+         |             |
+         v             v
+       +----+        +----+
+Key1 -&gt;| En |-------&gt;| En |-----&gt;
+       +----+        +----+
+         |             |
+Key2 ----+------+------+------+---&gt;
+         |      v      |      v
+         v    +----+   v    +----+
+IV -----&gt;X --&gt;| Op |--&gt;X --&gt;| Op |-&gt;
+         |    +----+   |    +----+
+         v      ^      v      ^
+       +----+   |    +----+   |
+Key3 -&gt;| De |---+---&gt;| De |---+---&gt;
+       +----+   |    +----+   |
+         |------+      |------+
+         v             v
+       Cipher1       Cipher2
+
+The generalized CCC-encrypt operation consists of an initial DES
+encrypt operation on the plain text using the first key, followed
+by a chaining operation and then a DES decrypt operation on the
+result of the chaining operation using the third key.  Several
+operations are possible with the chaining operation which uses
+the second key.  In all cases the input to the exclusive-or
+operation is the result of a variable operation shown above as Op
+and the output from the first cipher operation.  The variable
+operation in the middle can have one of two sources, and may use
+the second key shown in the diagram. 
+
+       Cipher1       Cipher2
+         |             |
+         +------+      +-------+
+         v      |      v       |
+       +----+   |    +----+    |
+Key3 -&gt;| En |---+---&gt;| En |----+----&gt;
+       +----+   |    +----+    |
+         |--+   |      |--+    |
+         |  |   v      |  |    v
+         v  |  +----+  |  |  +----+
+IV -----&gt;X  +-&gt;| Op |-&gt;X  +-&gt;| Op |-&gt;
+         |     +----+  |     +----+
+         |       ^     |       ^
+Key2 ----+-------+-----+-------+-----&gt;
+         v             v
+       +----+        +----+
+Key1 -&gt;| De |-------&gt;| De |---------&gt;
+       +----+        +----+
+         |             |
+         v             v
+       Plain1        Plain2
+
+ The generalized CCC-decrypt operation just reverses these
+operations, except for the chaining operation, which stays the
+same in the encrypt and decrypt operations.
+
+Several submodes are available from this generalized mode of
+operation depending on the nature of the operator used between
+chaining operations.  Below are listed four submodes that may
+have particular interest.
+
+Mode CC0 - This mode does not use Key1, so the first cipher
+operation is the identity.  The chaining operation is defined to
+be the DES on the feedback from the final cipher operation.  This
+is exactly the first example shown above.  Its advantage is that
+it uses only two keys and two DES operations per input block. 
+The disadvantages are discussed above.
+
+Mode CC1 - This modeof the exclusive-or operation. 
+This means that the exclusive-or product is just the accumulation
+of all the first stage ciphers with the initialization vector. 
+This mode also only uses two independent key values and two DES
+operation per input block.  A further advantage is that the
+interior chaining operation only uses data that is not available
+to the cryptanalyst in either the known-text or the chosen-text
+attack.
+
+Mode CC2 - This mode is identical to mode CC1 except that the
+chaining operation is the DES performed on the result of the
+prior exclusive-or.  This mode requires three DES operation per
+input block, but gains by confusion of the diffusion entry added
+in between each data cipher operation.
+
+Mode CC3 - This mode is identical to mode CC2 except that the
+source of the data for the DES operation prior to chaining is not
+the prior chaining operation, but feedback from the output stage
+of the final cipher operation.  This too requires three DES
+operations per input block.
+
+
+5 EXAMPLE
+
+It will be assumed that the block ciphers of interest all result
+in the same amount of output ciphertext as input plaintext with
+the possible addition of a fixed length initial value and a
+variable length padding to create some optimal length.  In the
+DES this optimal data length is any stream that is an exact
+multiple of 8 bytes.  Variants of this method could be used with
+other block lengths or with byte oriented modes of operation.
+
+While this new mode of operation is expected to find its greatest
+use with bulk encryption using data blocks equal in length to the
+block length inherent in the underlying block encryption
+algorithm, any length block of data could be utilized with any
+block length encryption algorithm.  This section shows how bulk
+data can be segmented into 64 byte blocks and encrypted using the
+64 byte block DES algorithm.  For added security, the secret
+keying material and the DES operations are shown to be contained
+inside the security perimeter of a cryptographic module which is
+mounted inside of a personal computer using a common operating
+system.  It would be equally useful to move some, or all, of the
+cryptographic operations to code operating under the personal
+computer's operation system.
+
+It is critical to the security of the overall system that the
+secret keying material, consisting of the two DES keys and the
+initial value (IV), be known only to the originating and
+receiving party to the interchange.  One way to do this, and to
+prevent the accumulation of information for a cryptanalytic
+attack on the secret keying material, is to create a new packet
+of keying material for each interchange using some suitably
+random generator within the security perimeter and encrypt the
+entire packet of keying material using this, or some other
+encryption method such as the RSA public key encryption method. 
+Using DES as the underlying secret key encryption algorithm may
+necessitate other measures when generating the keying material,
+such as weak key elimination and key parity generation.
+
+In any case there are two or three DES keys with parity are 64
+bits in length.  The initial value is the size of the block which
+is also 64 bits.  At least one byte will be used to determine the
+exact mode of operation.  Since the first key is optional, the
+block of secret data can be constructed as 200 to 264 bits in the
+following form:
+
+   +------+----+------+------+----------------+
+   | mode | IV | Key3 | Key2 | Key1(optional) |
+   +------+----+------+------+----------------+
+
+This data is just a valuable as the plaintext of the message to
+be protected, since an attacker is assumed to have access to the
+ciphertext, so this data will recover the plaintext.  It should
+be noted that it is not any more valuable than the plaintext
+since it will be used only once to protect one message or
+interchange.  Therefore, if the plaintext data is contained on a
+personal computer, the enciphering operation can also be
+performed on the same personal computer.
+
+On the other hand, the private components of the public key will
+be used to decode essentially all the secured messages that are
+received over its life, and so its value is the sum of all such
+message.  Thus the private components must be protected to a
+commensurate level with this value.  Additional means for
+protection should include a security perimeter containing these
+components together with the operations that are possible with
+them.  The security perimeter must be able to physically show
+when an attack on the components was made.  Several devices now
+have such a security perimeter including: NIST 140-1
+cryptographic modules, smart cards with cryptographic co-
+processors and PCMCIA cards.
+
+Once suitable keying material is obtained, the originator of the
+message may take appropriate means to reduce the redundancy of
+the plaintext by compressing it.  Compression, if successful,
+always makes the task of the cryptanalyst more difficult by
+reducing the redundancy in the plaintext, and making any trial
+decryption more likely to yield a possibly good text plaintext
+example.
+
+-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+This paper represents ideas that may be subject to patent
+applications by the author or by others.  To the author's
+knowledge, the mode of operation described in this paper was
+invented by the author.  To the extent that any of these ideas do
+belong to the author, he grants anybody the right to use his
+ideas in code compiled by the user for personal, non-commercial
+use.   No warrenty of any sort is implied by this grant.  This 
+paper is copyright (c) 1994 by Thomas C. Jones and may
+be reproduced only with this notice intact.
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00778" HREF="msg00778.html">Re: New block mode of operation</A></STRONG>
+<UL><LI><EM>From:</EM> Ed Switalski &lt;E.Switalski@bnr.co.uk&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00763.html">Re: Did Ames Disclose Clipper to Russians?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00761.html">encrypt me</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00763.html">Re: Did Ames Disclose Clipper to Russians?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00778.html">Re: New block mode of operation</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00764"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00764"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

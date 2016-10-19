@@ -1,0 +1,147 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: thoughts on RC4 -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Thu, 15 Sep 94 08:46:49 PDT -->
+<!--X-Message-Id: 199409151546.IAA02879@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9409151452.AA03618@webster.imsi.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: thoughts on RC4</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00483.html">Date Prev</A>][<A HREF="msg00494.html">Date Next</A>][<A HREF="msg00491.html">Thread Prev</A>][<A HREF="msg00495.html">Thread Next</A>][<A HREF="index.html#00485">Date Index</A>][<A HREF="threads.html#00485">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: thoughts on RC4</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: thoughts on RC4</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 15 Sep 1994 08:46:31 -0700</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00491.html">9409151452.AA03618@webster.imsi.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+perry@imsi.com (Perry E. Metzger) writes:
+
+&gt;Unlike most ciphers, RC4 doesn't seem to have any particular word
+&gt;length dependancies in its principles. That is to say, a cipher like
+&gt;IDEA has lots of magic numbers involved, but RC4 does not, which means
+&gt;that one could, in principle, extend it from being byte oriented
+&gt;stream to being word oriented stream without causing particular
+&gt;harm. (It would, of course, become incompatible, but thats not a real
+&gt;issue.) Can anyone see any reason why one could not change RC4 tO
+&gt;being a word oriented stream cipher, call it "ERC4"?
+
+I'm not sure exactly how you would generalize it.  Right now it has a 256
+entry table which holds a permutation of the values in 0..255.  A byte is
+selected from this table and xor'd with the data stream.  To increase to
+four bytes per entry and keep it as a permutation we would have to have 4
+billion entries taking up 16 GB of memory which seems a bit much.
+Altenatively we could still have 256 entries but have them four bytes
+each, but then it's not clear that you keep the cryptographic properties
+since you no longer have a permutation.
+
+However a good application of Perry's suggestion would be to go to a
+two-byte formulation.  You would have 64K entries of two bytes each,
+holding a permutation of 0..65535, and then use the same algorithm with
+the 256's replaced by 65536 and the chars replaced by shorts.  This would
+retain the cryptographic properties and IMO would make many sorts of
+attacks harder (at least requiring more data, probably by a factor of
+256).  The main down side is that key setup takes 256 times longer, but
+it shouldn't take much time to init a 64K entry table with a couple of
+indexes and xor's per entry.  So on the whole it seems like a worthwhile
+extension.
+
+I wonder if the NSA would approve it?  I think it was Bill Sommerfield
+who pointed out that it was a little curious that NSA approves RC4 with a
+40 bit key when hardware-assisted search like the DES key cracker would
+appear to be impractical.  Maybe some other parallel machine would be
+suitable, though.  (But another possibility is that they can break the
+cypher and the key length restriction is just cover for that.)
+
+Trying to get a 16-bit RC4 approved for export would perhaps not work
+for 40 bit keys because key setup takes 256 times longer, but key size
+could be decreased to 32 bits to compensate.  OTOH maybe that is not
+necessary because probably the whole array does not have to be set up
+in order to tell whether a given key will work.  1/3 of the entries in
+the table are fixed once they have been swapped once, so if you checked
+after doing the first 20 entries, say, about 7 should have their final
+values, and we can perhaps reject a key already in a known plaintext
+situation just from that.  So actually the large table size may not
+help against exhaustive key search.  (The mod I suggested to the key
+setup would defend against this possibility, which raises the question
+of whether this design aspect was chosen to allow for export approval.)
+
+Hal
+
+Hal
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00495" HREF="msg00495.html">Re: thoughts on RC4</A></STRONG>
+<UL><LI><EM>From:</EM> "Perry E. Metzger" &lt;perry@imsi.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00490" HREF="msg00490.html">Re: thoughts on RC4</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00499" HREF="msg00499.html">Re: thoughts on RC4</A></STRONG>
+<UL><LI><EM>From:</EM> Bill Sommerfeld &lt;sommerfeld@orchard.medford.ma.us&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00491" HREF="msg00491.html">thoughts on RC4</A></STRONG>
+<UL><LI><EM>From:</EM> perry@imsi.com (Perry E. Metzger)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00483.html">Re: RC4 compatibility testing</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00494.html">Re: RC4 compatibility testing</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00491.html">thoughts on RC4</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00495.html">Re: thoughts on RC4</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00485"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00485"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,174 @@
+<!-- MHonArc v2.4.4 -->
+<!--X-Subject: Re: EFF misstatements in DeCSS brief -->
+<!--X-From-R13: qnjNpf.orexryrl.rqh (Rnivq Intare) -->
+<!--X-Date: Sun,  9 Jan 2000 18:49:04 &#45;0800 (PST) -->
+<!--X-Message-Id: 85bfdr$ga4$1@blowfish.isaac.cs.berkeley.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 20000109222017.15530.qmail@nym.alias.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: EFF misstatements in DeCSS brief</TITLE>
+<LINK REV="made" HREF="mailto:daw@cs.berkeley.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00295.html">Date Prev</A>][<A HREF="msg00297.html">Date Next</A>][<A HREF="msg00295.html">Thread Prev</A>][<A HREF="msg00304.html">Thread Next</A>][<A HREF="index.html#00296">Date Index</A>][<A HREF="threads.html#00296">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: EFF misstatements in DeCSS brief</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>Subject</em>: Re: EFF misstatements in DeCSS brief</LI>
+<LI><em>From</em>: <A HREF="mailto:daw@cs.berkeley.edu">daw@cs.berkeley.edu</A> (David Wagner)</LI>
+<LI><em>Date</em>: 9 Jan 2000 18:16:27 -0800</LI>
+<LI><em>Delivered-To</em>: cypherpunks-archive@venona.org</LI>
+<LI><em>Distribution</em>: isaac</LI>
+<LI><em>Newsgroups</em>: isaac.lists.cypherpunks</LI>
+<LI><em>Old-Subject</em>: Re: EFF misstatements in DeCSS brief</LI>
+<LI><em>Organization</em>: A poorly-installed InterNetNews site</LI>
+<LI><em>References</em>: &lt;<A HREF="msg00286.html">20000109222017.15530.qmail@nym.alias.net</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner-cypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+By the way, I'd also like to suggest that we shouldn't be too quick
+to dismiss the possibility that the CSS was revealed and broken using
+a purely cryptanalytic attack.  In other words, I'd like to suggest
+that the CSS may have been discovered using just black-box access to
+the cipher implementation (no disassembly or `reverse engineering').
+
+Looking at the cipher, it appears that it may be possible to discover
+much of its structure with many millions bytes of known text.  Here's
+the mathematical analysis.  Get many streams of known text, and derive
+the corresponding keystream output for each stream.  The internal state
+of the cipher is only 40 bits wide, so by the birthday paradox, there
+is a good chance of a `collision', i.e., an overlap in some pair of
+keystream sequences.  This overlap is easily detected if you only think
+to look for it, and it tells you a lot about the cipher.
+
+Obviously, obtaining millions of bytes of known text for CSS should be
+straightforward, given access to a DVD player (especially one in software).
+
+Without trying it, I can't say for 100% certain that this black-box
+attack would work, but now that we know the CSS innards, we can see
+that if anyone thought to try this approach, it seems credible that
+it could provide enough of a foot in the door to derive the details
+of the CSS algorithm [*] through purely mathematical means.
+
+Don't get me wrong: I'm not claiming that the purely mathematical
+approach is especially easy, only that it appears as though it might
+work.  If _I_ were forced to learn the CSS from scratch, I'd probably
+break out my disassembler -- I'm lazy! and the math route seems likely
+to require more work -- but others might well prefer the black-box approach.
+
+I can also say that there have been rumors for some time that the DVD
+crypto had been broken by some sort of cryptanalytic means, apparently
+using only black-box access to the algorithms.  Of course, one can't
+know whether the rumor is true, but now that we know the CSS cipher,
+it sounds like a plausible scenario.  I wouldn't rule it out...
+
+Admittedly, the EFF brief doesn't actually make the case for this scenario.
+(Instead, they just say that it's the plaintiffs' burden to make the
+case that this scenario couldn't have happened, and the plaintiffs
+haven't shouldered that burden.)  Nonetheless, if we are asked to judge
+this dispute from a purely technical perspective (forget the legal
+arguments for the moment), I think the evidence supports the possibility
+that the CSS may have been revealed using no disassembly or reverse
+engineering whatsoever.
+
+Any thoughts?
+
+-- David
+
+
+
+[*] Obviously, this `collision' technique allows you to learn how the
+    streamcipher output is combined with the plaintext to yield ciphertext.
+
+    More subtly, it may also allow the observant cryptanalyst to deduce
+    the existence of the `carry' bit in the way the two LFSRs' outputs
+    are combined to yield keystream bytes, i.e., equation (4) of
+    <A  HREF="http://crypto.gq.nu/">http://crypto.gq.nu/</A>.
+    
+    This insight might spark the hypothesis that the keystream might be
+    generated as the sum of two LFSRs.  If you think to check this
+    possibility, an obvious approach is to try sliding two keystream
+    sequences against each other and subtracting; and, if you get the
+    offset right (prob. 1/2^25, so by the birthday paradox, thousands
+    of streams should suffice), you'll find a repeating sequence of
+    period 2^14 in the difference.  And, if you manage to get this far,
+    the rest is child's play: the periodic sequence of 2^14 bytes is
+    just the entire output of the 17-bit LFSR, so the feedback taps are
+    immediately revealed, and the rest will just fall out.  (There's
+    also an alternate approach: instead of sliding, subtracting, and
+    looking for cycles, you can just slide, subtract, and apply
+    Berlekamp-Massey to a sequence of ~ 34 consecutive difference bits.
+    This alternative might be faster in practice.)
+
+    If you were going to actually do this, there are plenty of false trails
+    one might get sidetracked on; but it seems clear that there are plenty
+    of clues here to point your way, and if you don't miss them and work
+    diligently, you may be able to recover the CSS algorithm without
+    overmuch trouble.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00304" HREF="msg00304.html">Re: EFF misstatements in DeCSS brief</A></STRONG>
+<UL><LI><EM>From:</EM> Dave Emery &lt;die@die.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00286" HREF="msg00286.html">Re: EFF misstatements in DeCSS brief</A></STRONG>
+<UL><LI><EM>From:</EM> lcs Mixmaster Remailer &lt;mix@anon.lcs.mit.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00295.html">Security by Not Peeking</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00297.html">Re: Too much jerking off....</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00295.html">Security by Not Peeking</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00304.html">Re: EFF misstatements in DeCSS brief</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00296"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00296"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

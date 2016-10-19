@@ -1,0 +1,166 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: ecash remailer -->
+<!--X-From-R13: Pvyy Egrjneg <fgrjnegfNvk.argpbz.pbz> -->
+<!--X-Date: Thu, 2 Nov 1995 11:36:46 +0800 -->
+<!--X-Message-Id: 199511020239.SAA27491@ix.ix.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: ecash remailer</TITLE>
+<LINK REV="made" HREF="mailto:stewarts@ix.netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00002.html">Date Prev</A>][<A HREF="msg00018.html">Date Next</A>][<A HREF="msg00001.html">Thread Prev</A>][<A HREF="msg00060.html">Thread Next</A>][<A HREF="index.html#00035">Date Index</A>][<A HREF="threads.html#00035">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: ecash remailer</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Michael Froomkin &lt;<A HREF="mailto:froomkin@law.miami.edu">froomkin@law.miami.edu</A>&gt;</LI>
+<LI><em>Subject</em>: Re: ecash remailer</LI>
+<LI><em>From</em>: Bill Stewart &lt;<A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 01 Nov 1995 18:38:25 -0800</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+At 01:20 PM 11/1/95 -0500, Michael Froomkin &lt;froomkin@law.miami.edu&gt; wrote:
+&gt;I thought a property of Chaumian DigiCash was that a coin *had* to go back
+&gt;to the bank before it could be spent again.  
+
+No.  The basic Chaum Digicash method looks like this:
+1) Alice creates a number of a recognizable form (Chaum's 1985 CACM paper
+uses n1n2n3...n64n1n2n3....n64, i.e. a 64-bit number concatenated with itself).
+2) Alice blinds the number and sends it to the bank (along with some request
+for withdrawing money from her account or payment in other coin or whatever.)
+3) The bank signs the number and sends it back.
+4) Alice unblinds the coin; now it's good, recognizably signed, and untraceable.
+
+5a) Alice gives the coin to Bob, who deposits it; the bank records the coin
+number,
+and in case of double-spending, the first person to the bank wins.
+This is useful for on-line transactions, or off-line where everyone trusts
+each other.
+
+OR 5b) Alice gives the coin to Bob using a complicated cut&amp;choose protocol that
+doesn't give away her identity if it's only used once, but if she also gives the
+same coin to Carol with the same protocol, Bob and Carol can identify Alice
+with probability 1 - 1/2**n, for some adequately large n.  This is more work,
+but you can use it for off-line transactions where you don't trust Alice
+not to double-spend.  The protocol doesn't say what to do to Alice if you
+catch her
+cheating; depending on the environment you can debit her account or sue her etc.
+
+6) Bob now has a number, signed by the Bank of Foo, which he can either give
+to them
+to deposit or get cash or use for highway toll (if Foo is really the highway
+company)
+or give to somebody else to spend (which is a little messy in the cut&amp;choose
+method.)
+
+&gt;Logically, I can see at least four possibilities:
+&gt;1) payee data is encoded onto the coin at time of payment, making it 
+&gt;impossible for Carol to bank the coin.  I see no evidence of this in the 
+&gt;docs at the Digicash site, but I just rechecked quickly and may have 
+&gt;missed it.
+
+The basic protocol doesn't say anything about what a valid coin looks like;
+you could use the example in Chaum's paper or a long string followed by
+a checksum or whatever.  You _could_ put the payee's name account number
+in the string as the 64-bit "random" number, or even put both payer and payee.
+The bank could insist on that sort of thing if they wanted.
+If I remember right, the version in the Digicash trial left you the choice
+of filling in a specific payee or using "@" for bearer-payable coins.
+
+&gt;2) No payee data as such is encoded on the coin but it is marked "spent" 
+&gt;to prevent multiple uses by payee to the detriment of payor.  
+
+The bank marks the coin spent upon deposit.
+
+&gt;3) the Digicash software only allows you to send a "spent" coin to the 
+&gt;bank.  You have to hack the software to send the coin to Carol (do you 
+&gt;have to break your own key?).
+
+I don't know if their merchant-client software lets you do this or not,
+but it's just a matter of implementation, not protocol.
+
+&gt;4) nothing in the DigiCash software or protocol prevents you from sending 
+&gt;a coin to Carol so long as you trust Carol not to get you in trouble by 
+&gt;misusing the coin in some way.  That's why Chaum is interested in 
+&gt;hardware based agents that would keep you from respending coins you receive.
+
+Your problem isn't trusting Carol not to get you in trouble,
+it's trusting Alice not to spend the coin again.
+Hardware-based agents are interesting because they make it easier to
+enforce double-spending prevention in off-line systems, and to offer
+better anonymity because you've got more trust that the person didn't 
+double-spend.  Stefan Brands has done a lot of work on this.
+
+In on-line systems you can check whether a coin's been spent already
+by depositing it - the problem is that on-line systems aren't
+always convenient for many applications (e.g. newspaper machines),
+and the costs of communication for an on-line system may be higher
+than the cost of a sufficiently smart smart-card.
+#---
+#                                       Thanks;  Bill
+# Bill Stewart, Freelance Information Architect, stewarts@ix.netcom.com
+# Phone +1-510-247-0664 Pager/Voicemail 1-408-787-1281
+#---
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00060" HREF="msg00060.html">Re: ecash remailer</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00002.html">Cable TV Privacy (was Re: InfoWar)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00018.html">Hit-and-Run Anonymous Posts (Re: "Dr." Fred)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00001.html">Re: ecash remailer</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00060.html">Re: ecash remailer</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00035"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00035"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

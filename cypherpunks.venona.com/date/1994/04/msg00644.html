@@ -1,0 +1,241 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: New anon mailer idea? -->
+<!--X-From-R13: tgbnyNna&#45;grnyynpu.pbz (Uenunz Fbny) -->
+<!--X-Date: Thu, 14 Apr 94 13:45:19 PDT -->
+<!--X-Message-Id: 199404142043.VAA21347@an&#45;teallach.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: New anon mailer idea?</TITLE>
+<LINK REV="made" HREF="mailto:gtoal@an-teallach.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00610.html">Date Prev</A>][<A HREF="msg00620.html">Date Next</A>][<A HREF="msg00583.html">Thread Prev</A>][<A HREF="msg00634.html">Thread Next</A>][<A HREF="index.html#00644">Date Index</A>][<A HREF="threads.html#00644">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: New anon mailer idea?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A></LI>
+<LI><em>Subject</em>: Re: New anon mailer idea?</LI>
+<LI><em>From</em>: <A HREF="mailto:gtoal@an%2Dteallach.com">gtoal@an-teallach.com</A> (Graham Toal)</LI>
+<LI><em>Date</em>: Thu, 14 Apr 1994 21:43:14 +0100</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+: Graham Toal's suggestion for automatic insertion of an encrypted
+: return address block is interesting.  We had some discussion here last
+: year of a similar approach, although Graham's twist of using a symmetric
+: rather than PK cypher for the return address is new.  A few thoughts:
+
+I'm not sure it matters; it was just to focus the mind on the point
+that even if a PK cypher was being used in practice, it was *in effect*
+a private key cypher because its security depended in part on keeping
+the decoding key secret within the remailer.  Primarily I suggested
+something like DES/IDEA because RSA keys are expensive to generate, and
+for this scheme you definitely need one new password for every incoming mail.
+
+:  - You'd want this feature to be optional.  Some people might not want
+:    their anonymity limited by having their return address recorded, even
+:    in encrypted form.
+
+Yes, I agree.  I think Eric von Hollander is doing this for *every* posting
+in the soda implementation he hacked up impressively quickly, and I'm not
+sure that's wise. (Eric will correct me if I read his docs wrongly)  I've
+a feeling some of his customers might complain when they realise!  (*I*'m
+not complaining - I think it's great that he added this feature so quickly)
+
+:  - Graham is right about the advantages of use-once (or use-only-a-few-times)
+:    return addresses.  Chaum discusses how multiple use of return addresses
+:    allows these systems to be broken, similar to the way Graham describes.
+
+I also hope Eric is using individually-created DES keys for every incoming
+post and not a single shared key.  That would be a serious risk.  I get
+the impression he's not, from his comment about the system being vulnerable
+to known-plaintext attacks.  (Eric, if I'm right, could you change your
+hack to use disposable DES keys asap please?)
+
+:  - The use of a symmetric cypher is a very nice way of getting the use-once
+:    capability, along with the "burn after reading" effect of a remailer
+:    chain which destroys itself as it goes.  But it could be a considerable
+:    burden on the remailer operator to maintain the database.  One possibility
+:    would be to fix a maximum time limit on how long the return addresses are
+:    kept "alive" and require some real money to keep them longer.
+
+I'm not sure I agree with that.  Actually I think the database management
+might be trivial - here's one suggestion. Let's say the invented random
+key is a hex string - well, we need 64 bits for a DES key, that's 16 hex
+digits, so lets be generous and make our random hex string 24 digits
+instead.  We just take the first six digits as an identifying tag and
+use that tag as a filename to store the rest of the key.  The tag is
+output in front of the encrypted block too, so when you come to decrypting
+the data, it's a straight file-open call to find the correct key.  We
+don't have the problem here that we do with the pgp key-id's clashing,
+because if the key generator returns a clash, it can easily generate
+a second key.
+
+(If you're saying that deleting time-expired keys is onerous, well,
+it's just a case of mastering the unix 'find' command ;-) )
+
+So if you're saying that finding a key will be expensive, I disagree;
+if you're saying that the database might get rather large, I do agree.
+Since these reply tokens aren't the same as well-known anonymous addresses,
+maybe it's sensible to insist from the start that they have a lifetime
+of no more than (say) a year; which can be shortened by user request on
+creation, but not extended.
+
+This is a plus feature in my opinion, because it avoids the problems
+Julf has had with lots of stale ID's needing to be purged.
+
+:  - What we would really like is for the recipient to hit the "reply" button
+:    and be able to send his mail back.  It sounds like this system would still
+:    require some cut-and-paste.  We already have programs to create encrypted
+:    remailer chain addresses fairly automatically.  It would be nice to automate
+:    this last little bit.  Unfortunately, there seems to be no easy way to
+:    make this work under Graham's scheme.
+
+No, I don't think that any cut and paste is required *at all* over the
+normal inclusion of the sender's mail in your reply.  The remailer could
+grep the body of the mail for the magic tokens that delimit such a
+header block, and find it that way.  (Allowing for indentation markers
+etc - not hard - the current usenet voting software does something
+similar) eg if you had:
+
+	&gt; : *** Remailer reply block ***
+	&gt; : jdhfkhdfkshfkhgkhfgkhf
+	&gt; : *** End remailer reply block***
+
+in your mail, you can see it's still pretty easy for a program to extract
+the encoded bit... - just find the magic start token, note the stuff on
+the line before it, and strip similar stuff out until it finds the end
+token.
+
+:  - It doesn't look like this would be an easy drop-in to the current remailers,
+:    unfortunately.  The syntax for how the address would be built up as it
+:    passes through a chain of remailers is a little unclear as well.
+
+I've discussed this in a previous post.  I think it's actually easy.
+
+The very first message goes out from the first remailer looking like this:
+
+(original text is the single line:
+username@real_site.com
+)
+
+which encodes to:
+
+*** Remailer reply block ***
+jdhfkhdfkshfkhgkhfgkhf
+*** End remailer reply block***
+
+which is inserted at the top of the mail.
+
+The next remailer extracts the encoded data, and prepares this text:
+
+last_remailer@wherever.edu
+jdhfkhdfkshfkhgkhfgkhf
+
+and encodes it, and sends it out in the mail in place of the
+original block, looking like this:
+
+*** Remailer reply block ***
+dfkjgahfskghfghfskhgkfhgfs
+kjfdskjsfdhgkjfhsgkjhf
+*** End remailer reply block***
+
+
+(OK, slight poetic licence here - I'm using 1 1:1 cypher; in fact
+you'd expect the text to get bigger each time to cover the binary
+encoding method used)
+
+So the net effect is that the encoded text gets larger, but the
+mail is otherwise identical as it passes from site to site.
+
+: The idea does have a lot of promise, though, and I think it is definately
+: worth keeping in mind for the next generation of remailers.
+
+I might even start using them myself :-)
+
+One more point...
+
+I've been saying that the encrypted reply block is most easily
+thought about if *all* it contains is an email address.  I think in
+practice you'd probably want to be able to store arbitrary remailer
+flags in here, like the command 'delete this DES key as soon as
+you've handled this reply' - this would in fact be more robust
+than keeping the same information in the DES key file itself, which
+was my original suggestion.  And it would allow fairly arbitrary
+extension of the whole scheme.  One way of implementing it that
+I can see is if the encrypted part of a block was a series of
+mail-header-like lines, eg:
+
+The cleartext would be:
+
+Reply-To: gtoal@an-teallach.com
+Initial-Usage-Limit: 5
+Expire-Completely-After: 12/25/94
+Decrement-Use-Count-By: 1
+Random-Remailer-Hops-Left-In-M&amp;M-Machine: 3
+Previous-encrypted-Block:
+	jhufdkjlwhfsjhgflkjfshkjfdhkjffsvjlfsjvkl
+	lkjdhfkldshfksahfkshdgkhfgvkhdfkvbghfdkvhfdkj
+	jhflkdsajhfkljshdfkjhsdkfljhdskhfksdhfkjdshf
+	ljdsfhdkghlksfhglkfdjhglkjfhglkjhfgkjfh
+
+which would be wrapped and inserted in the usual way.
+
+G
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00610.html">Re(2): Cyber PsyOps &amp; Media</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00620.html">Re: Soldier of Fortune</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00583.html">Re: New anon mailer idea?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00634.html">Re: New anon mailer idea?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00644"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00644"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

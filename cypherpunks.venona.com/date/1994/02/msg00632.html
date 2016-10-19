@@ -1,0 +1,140 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: More on magic money problem -->
+<!--X-From-R13: djregl&#45;erznvyreNargpbz.pbz -->
+<!--X-Date: Fri, 11 Feb 94 00:10:24 PST -->
+<!--X-Message-Id: 199402110804.AAA23472@mail.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>More on magic money problem</TITLE>
+<LINK REV="made" HREF="mailto:qwerty-remailer@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00621.html">Date Prev</A>][<A HREF="msg00634.html">Date Next</A>][<A HREF="msg00634.html">Thread Prev</A>][<A HREF="msg00638.html">Thread Next</A>][<A HREF="index.html#00632">Date Index</A>][<A HREF="threads.html#00632">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>More on magic money problem</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: More on magic money problem</LI>
+<LI><em>From</em>: <A HREF="mailto:qwerty%2Dremailer@netcom.com">qwerty-remailer@netcom.com</A></LI>
+<LI><em>Date</em>: Fri, 11 Feb 1994 00:04:17 -0800</LI>
+<LI><em>Comments</em>: This is anonymous mail. Report problems to qwerty@netcom.com.</LI>
+<LI><em>Remailed-By</em>: Qwerty Remailer &lt;qwerty@netcom.com&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+It appears that the problem with bigendian magic money is specific
+to the "mint" function.  Minting one coin works OK, but minting more
+than one causes every coin after the first to be rejected by the client.
+Creating a coins.dat file with the -p function of the client works OK,
+even with more than one coin.  Sending the output.asc to the server works
+OK too, as does handling the ascii file that comes back from the server.
+Only minting fails.
+
+Here are hex dumps of two coins.dat files.  The first one is OK.  It was
+created by "c -p" and has two coins.  Key size is 512.
+
+0000000  c0c4 f7c6 cbe5 af34 0893 a6dc ab39 4292
+0000020  8200 1101 000d 01fd 1098 23f4 a67e 1f58
+0000040  8fbe 3199 67cb dc70 6cd1 6921 df53 aa8a
+0000060  8b5b 2a63 5e67 94da 9b18 7f03 ece9 34b2
+0000100  0535 75f3 4e6a 3a45 b25e 565e 3fbb 14db
+0000120  f3fb c6a7 6def cf77 c05a 9043 0ba7 e490
+0000140  0ff5 fa15 83ae cbb3 1a00 1101 000d 01fe
+0000160  2c61 ff65 299d 987f 4d88 0a3c 4b13 9f8f
+0000200  612a dba6 ad6f 250d f665 ce0c 868f 3b62
+0000220  5d1f 725f 449e 15bc da50 c270 5fba 2386
+0000240  49ad 2c45 e26e b3af b94e deed b1e6 5f15
+
+Here is a similar coins.dat file created by "s m" and also holding two
+coins of the same value (but different bit patterns, of course):
+
+0000000  c086 9b22 8601 2974 3e71 d344 f7f1 ab13
+0000020  6400 1101 000d 01fd 10ea 1ecb 711a 5114
+0000040  5361 a558 9e67 a0ce 9eda 49af 58e1 9203
+0000060  8f6b 9056 673c 88fb 79da 4a21 0e98 0e95
+0000100  08a6 40f9 81f6 9e76 21e7 ea8d accf 0ef1
+0000120  6e41 3657 aacf 34fb c0cc 8cc5 f400 0130
+0000140  1400 0000 0000 0000 5900 1101 000d 01ff
+0000160  5568 2e3d 9c7e ded9 6489 ba47 687e dc1a
+0000200  f4e6 743e 2f12 f095 1363 7b03 6394 83ef
+0000220  dbab 598b 60db ecf0 d09a d5ce 5ea8 d2e6
+0000240  8277 1061 076b fd00 8aa8 edd9 17d0 3eeb
+
+It is immediately obvious that the 2nd, bad, file has a block of 7
+zeros where the other one has random data (on the line labeled
+000140).  If I am interpreting this file right, this block of 0's is
+towards the end of what should be a 16 byte block of random numbers.
+So it looks like something overwrote 7 bytes of this 16 byte block
+before it could be stored.
+
+Hope this helps.
+
+BTW, for the curious, the format of the coins.dat file is as follows.
+For each coin, there is first a c0.  Then there are 16 random bytes,
+the "coin ID".  Then there is a PGP-style multi-precision integer
+which is the exponent corresponding to the coin.  In this case it is
+0011 01000d.  The first two bytes are the number of bits in the MPI,
+(11 hex equals 17 decimal) and then there are as many bytes as are
+implied by that many bits; these hold the value.  This exponent MPI is
+followed by another MPI which holds the bank's signature.  This
+can be expressed as (C.ID)^(1/e), where e is the exponent, and C.ID is
+a byte of 0, a byte of 1, padding bytes of ff, the magic 18-byte "ASN"
+string, then 16 bytes of the coin ID.
+
+In the examples above, the first coin ends exactly in the middle of
+the row labelled 000120.  Try to see if you can pick out the
+sub-fields of each coin in the files.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00621.html">message pools revisited</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00634.html">Re: message pools.</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00634.html">Re: message pools.</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00638.html">Glimpse of the Bowel Movement</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00632"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00632"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

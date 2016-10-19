@@ -1,0 +1,129 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Chaumian ecash without RSA -->
+<!--X-From-R13: Rnivq Intare <qnjNpf.orexryrl.rqh> -->
+<!--X-Date: Mon, 1 Apr 1996 03:05:03 +0800 -->
+<!--X-Message-Id: 199603311610.IAA10786@joseph.cs.berkeley.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Chaumian ecash without RSA</TITLE>
+<LINK REV="made" HREF="mailto:daw@cs.berkeley.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01852.html">Date Prev</A>][<A HREF="msg01853.html">Date Next</A>][<A HREF="msg01845.html">Thread Prev</A>][<A HREF="msg01857.html">Thread Next</A>][<A HREF="index.html#01848">Date Index</A>][<A HREF="threads.html#01848">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Chaumian ecash without RSA</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:daw@cs.berkeley.edu">daw@cs.berkeley.edu</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Chaumian ecash without RSA</LI>
+<LI><em>From</em>: David Wagner &lt;<A HREF="mailto:daw@cs.berkeley.edu">daw@cs.berkeley.edu</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 31 Mar 1996 08:10:01 -0800</LI>
+<LI><em>Newsgroups</em>: sci.crypt</LI>
+<LI><em>Organization</em>: ISAAC Group, UC Berkeley</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:daw@cs.berkeley.edu">daw@cs.berkeley.edu</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I've always seen Chaum's anonymous ecash system described in terms of RSA.
+RSA has this ungainly patent which probably will be around for quite some
+time, yet the Diffie-Hellman patent expires pretty soon.  With that motivation,
+here's a Chaumian anonymous ecash protocol based on Diffie-Hellman.
+
+Take a publicly known group G and generator g; breaking Diffie-Hellman and
+taking discrete logs in this group should be hard.  For instance, G might
+be (Z/pZ)^*, the integers modulo a prime p.
+
+The bank picks a secret value k, and publishes g^k.
+
+To withdraw a coin, Alice picks an x, sets
+	y = x | hash(x),                [  | is concatenation  ]
+chosen so that y is in G.  Alice chooses a random secret blinding factor b,
+sends to the bank
+	A-&gt;B: y g^b,
+and the bank returns
+	B-&gt;A: (y g^b)^k,
+debiting Alice's account.
+
+Note that this is a (blinded) Diffie-Hellman key exchange with public
+exponentials g^k and y g^b; the bank returns the exchanged "secret".
+
+Alice unblinds this value, computing
+	z = (y g^b)^k (g^k)^{-b}
+and now c = (x,z) is a coin in the digital cash system.  Note z = y^k.
+
+We use the traditional online clearing protocol; to deposit the coin, a
+shop S sends
+	S-&gt;B: x, z.
+The bank checks to make sure the coin hasn't already been spent, and then
+computes
+	y = x | MD5(x),
+checking whether y^k = z.  If equality holds, and the coin hasn't already
+been spent, then the bank credits S's account and adds the coin to the
+list of spent coins.
+
+This is just the same old Chaum anonymous ecash protocol, except that I've
+replaced the RSA operations by Diffie-Hellman ones.  It's a lesser-known
+fact that you can blind a Diffie-Hellman key exchange just as you can blind
+a RSA signature.
+
+The security of this protocol depends on the intractibility of breaking
+Diffie-Hellman.  In particular, given public exponentials g^k and y = g^m,
+for k,m unknown, it must be impossible to compute g^{km} = y^k.  Furthermore,
+this protocol depends on the hash function being one-way and possessing no
+interactions with Diffie-Hellman or modular exponentiation.
+
+Comments?
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01852.html">Re: SNI_ffs</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01853.html">Re: SNI_ffs</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01845.html">Re: Question about integrity of Blind Signature</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01857.html">Medusa's Tentacles</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01848"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01848"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

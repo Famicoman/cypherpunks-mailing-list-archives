@@ -1,0 +1,164 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Attacks on remailers -->
+<!--X-From-R13: o44729Nnpuvyyrf.pgq.nay.tbi (Enzhry Bvtt) -->
+<!--X-Date: Thu, 26 Aug 93 00:35:43 PDT -->
+<!--X-Message-Id: 9308260733.AA26970@achilles.ctd.anl.gov -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199308251542.AA23719@mwunix.mitre.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Attacks on remailers</TITLE>
+<LINK REV="made" HREF="mailto:b44729@achilles.ctd.anl.gov">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00755.html">Date Prev</A>][<A HREF="msg00759.html">Date Next</A>][<A HREF="msg00719.html">Thread Prev</A>][<A HREF="msg00790.html">Thread Next</A>][<A HREF="index.html#00753">Date Index</A>][<A HREF="threads.html#00753">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Attacks on remailers</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:jthomas@mitre.org">jthomas@mitre.org</A></LI>
+<LI><em>Subject</em>: Attacks on remailers</LI>
+<LI><em>From</em>: <A HREF="mailto:b44729@achilles.ctd.anl.gov">b44729@achilles.ctd.anl.gov</A> (Samuel Pigg)</LI>
+<LI><em>Date</em>: Thu, 26 Aug 93 02:33:50 CDT</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: J_G_Thomas%CAASD1@mwmgate1.mitre.org's message of Wed, 25 Aug 93 11:39:11 EDT &lt;<A HREF="msg00719.html">199308251542.AA23719@mwunix.mitre.org</A>&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;&gt;&gt;&gt;&gt; On Wed, 25 Aug 93 11:39:11 EDT, J_G_Thomas%CAASD1@mwmgate1.mitre.org said:
+
+	Joe&gt; Samuel Pigg &lt;b44729@achilles.ctd.anl.gov&gt; wrote:
+
+&gt; Actually what I was proposing was the direct usage of SMTP itself rather
+&gt; than going through the host machine's mail system. As anyone can do it,
+&gt; it would help with the usage of student accounts as remailers.
+&gt; And with direct SMTP (socket connections to port 25 of the receiving machine)
+&gt; you have some control over the header information that is generated.
+
+&gt; The protocol is outlined in RFC821 if anyone wants to look at it.
+
+	Joe&gt; The trouble is, one side (the receiver) is still keeping
+	Joe&gt; logs, since only sendmail (or some other root process
+	Joe&gt; doing the same job) can bind to port 25.  On most
+	Joe&gt; machines, that means logs.  There are plenty of ports
+	Joe&gt; over 1000 that user processes can bind to, and that
+	Joe&gt; cypherpunk remailers can support, if we want to go that
+	Joe&gt; way.  I think it's worth thinking about.  (This is in
+	Joe&gt; addition to receiving mail delivered normally to their
+	Joe&gt; e-mail adresses, probably either by port-25/sendmail or
+	Joe&gt; uucp).
+
+	Joe&gt; We could start by having cypherpunk remailers talk to
+	Joe&gt; _each_other_ on an agreed- upon, unlogged port, using RFC
+	Joe&gt; 821 protocol.  Final hops to non-remailer addresses will
+	Joe&gt; have to be handled on port 25, of course, but within the
+	Joe&gt; remailer web we can avoid sendmail logs entirely.  After
+	Joe&gt; that's implemented, we could talk about using a different
+	Joe&gt; protocol.
+
+	Joe&gt; A new protocol is probably the cleanest way to solve the
+	Joe&gt; problem of traffic analysis of messages addressed with
+	Joe&gt; encrypted address blocks.  The best way to get security
+	Joe&gt; in a remailer chain is to nest your encryption, so only
+	Joe&gt; one layer gets peeled off in each remailer hop.  That
+	Joe&gt; isn't possible with encrypted address blocks, since the
+	Joe&gt; sender will only know the address (and public key) of the
+	Joe&gt; first remailer in the chain.  All hops after the first
+	Joe&gt; one must send the same message out as they got in, with
+	Joe&gt; just a layer off the encrypted address block.  But if
+	Joe&gt; remailers talked to each other by first doing RSA-signed
+	Joe&gt; Diffie- Hellman key exchange, then encrypting the
+	Joe&gt; traffic, a packet snooper wouldn't be able to correlate
+	Joe&gt; incoming and outgoing messages.
+
+	Joe&gt; Thoughts?
+
+I think this is probably the best solution proposed to date.
+
+Does the RSA-signed DH key exchange mentioned above provide security
+against possible spoofing on the remailer machine (someone else using the
+agreed-upon port)? How exactly would such a thing be implemented?
+
+	Joe&gt; Joe (they're trying to pry me away from my NeXT, so don't
+	Joe&gt; reply directly to the From: line; use jthomas@mitre.org)
+
+On the user side, I think a good tool to augment this would be a
+mailer program which kept a list of the functioning remailers with
+keys, and randomly selected a route through them using a random
+(reasonable) number of hops, and performing the necessary nested
+encryptions.  Then it could start the remailer hopping process via
+special socket connection to the first remailer in the chain.
+
+Perhaps a protocol could be worked out for the mailer program to
+request from any one of the remailers a current list of the
+functioning remailers? (in an effort to transparentize the process
+some more, as manually maintaining a list of current remailers would
+be tedious.)
+
+
+We would need to work out the protocol details beforehand, such as how
+to handle busy ports etc.
+(Who wants to work on this project with me?)
+
+
+Can someone supply a reference for DH key exchange? (for me, as I don't
+know the details and so can't implement it. (is it patented?))
+
+-Sam
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00719" HREF="msg00719.html">Re: Attacks on remailers</A></STRONG>
+<UL><LI><EM>From:</EM> J_G_Thomas%CAASD1@mwmgate1.mitre.org</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00755.html">Re: Source Code NOT available for ViaCrypt PGP</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00759.html">Re: Visa, HNC Inc. develop neural network as a weapon to fight fraud</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00719.html">Re: Attacks on remailers</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00790.html">Attacks on remailers</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00753"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00753"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

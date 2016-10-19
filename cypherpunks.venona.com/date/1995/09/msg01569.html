@@ -1,0 +1,132 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Random Number State -->
+<!--X-From-R13: Sevp Kbhat <rnlNzvapbz.bm.nh> -->
+<!--X-Date: Wed, 20 Sep 95 20:38:49 PDT -->
+<!--X-Message-Id: Pine.SOL.3.91.950921113535.21127D&#45;100000@orb -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9509202150.AA08164@toad.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Random Number State</TITLE>
+<LINK REV="made" HREF="mailto:eay@mincom.oz.au">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01484.html">Date Prev</A>][<A HREF="msg01479.html">Date Next</A>][<A HREF="msg01721.html">Thread Prev</A>][<A HREF="msg01647.html">Thread Next</A>][<A HREF="index.html#01569">Date Index</A>][<A HREF="threads.html#01569">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Random Number State</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Random Number State</LI>
+<LI><em>From</em>: Eric Young &lt;<A HREF="mailto:eay@mincom.oz.au">eay@mincom.oz.au</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 21 Sep 1995 12:05:01 +1000 (EST)</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01444.html">9509202150.AA08164@toad.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Some some ramblings on the RNG seeding issue, comments welcome.
+
+I'm sort of in the position of Netscape in that I have an SSL library 
+that needs good random numbers for both RSA key generation (soon DH)
+and SSL sessions.
+While most of the discussions have been how to generate random data, one 
+solution I will probably follow is that when any 'semi-random' data is 
+generated, make sure to save this for seed data the next time the
+application starts.  I have faith in the RNG capabilites of my RNG (based 
+on MD5) and my RAND_seed() routine only 'adds' to the RNG state (about 
+1k's worth is kept).  I can continue to 'mix' the RNG state at any point in 
+time.  My RND_seed() xors into the existing state, it does not overwrite.
+
+Because my SSL/encryption library contains 'everything', I have the
+ability to put calls to my RNG_seed() routine in places like when I 
+decrypt a private key.  I can pass both the password (if the key was 
+encrypted) and the private key 
+into the RNG state (making sure any data that goes into the RNG state 
+can not be determinied if a 'core' file is generated).
+I will probably also put the time() into the RNG state whenever an 
+SSL_connect or SSL_accept is made (I think I do already).  I may also put in 
+select data that has been read from the remote host
+While most of this data can be determined by watching 
+network activity, if it is just a delta to the initial random 
+state it is somewhat more useful.
+
+The first time use 'x' runs the application they are made to 'generate' 
+some reasonable random data.  For all subsequent executions of the 
+program, any more semi (psuedo?) random data generated can be mixed in 
+with the initial random data.  The profile of the usage of the 
+application would end up determining the random data to use.
+
+I feel it is a bit much to try to generate good random data every time 
+an application is run.
+
+I believe this is the type of aproach PGP uses (I have not looked at the 
+code).
+
+eric
+PS  I also do some 'evil' things in that I load 'garbage' bytes from the 
+    stack into my RNG state whenever the RNG is called.  It may not be 
+    random, but I bet it is hard to determine from the outside the 
+    running program :-)  It can only help :-).
+--
+Eric Young                  | Signature removed since it was generating
+AARNet: eay@mincom.oz.au    | more followups than the message contents :-)
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01444" HREF="msg01444.html">Project: a standard cell random number generator</A></STRONG>
+<UL><LI><EM>From:</EM> John Gilmore &lt;gnu@toad.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01484.html">Spam of c'punks list: cleaning it up now.</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01479.html">Re: Project: a standard cell random number generator</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01721.html">Re: /dev/random for Linux</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01647.html">Re: Project: a standard cell random number generator</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01569"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01569"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

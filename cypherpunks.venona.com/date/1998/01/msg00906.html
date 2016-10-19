@@ -1,0 +1,479 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: [Long] How to recover private keys for various Microsoft products -->
+<!--X-From-R13: cthg001Npf.nhpxynaq.np.am (Brgre Uhgznaa) -->
+<!--X-Date: Tue, 20 Jan 1998 23:37:38 +0800 -->
+<!--X-Message-Id: 88531016604880@cs26.cs.auckland.ac.nz -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>[Long] How to recover private keys for various Microsoft products</TITLE>
+<LINK REV="made" HREF="mailto:pgut001@cs.auckland.ac.nz">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00889.html">Date Prev</A>][<A HREF="msg00892.html">Date Next</A>][<A HREF="msg00999.html">Thread Prev</A>][<A HREF="msg00891.html">Thread Next</A>][<A HREF="index.html#00906">Date Index</A>][<A HREF="threads.html#00906">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>[Long] How to recover private keys for various Microsoft products</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cryptography@c2.net">cryptography@c2.net</A></LI>
+<LI><em>Subject</em>: [Long] How to recover private keys for various Microsoft products</LI>
+<LI><em>From</em>: <A HREF="mailto:pgut001@cs.auckland.ac.nz">pgut001@cs.auckland.ac.nz</A> (Peter Gutmann)</LI>
+<LI><em>Date</em>: Wed, 21 Jan 1998 04:29:26 (NZDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:pgut001@cs.auckland.ac.nz">pgut001@cs.auckland.ac.nz</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+    How to recover private keys for Microsoft Internet Explorer, Internet
+            Information Server, Outlook Express, and many others
+                                      - or -
+                 Where do your encryption keys want to go today?
+ 
+                    Peter Gutmann, &lt;pgut001@cs.auckland.ac.nz&gt;
+ 
+Summary
+-------
+ 
+Microsoft uses two different file formats to protect users private keys, the
+original (unnamed) format which was used in older versions of MSIE, IIS, and
+other software and which is still supported for backwards-compatibility reasons
+in newer versions, and the newer PFX/PKCS #12 format.  Due to a number of
+design and implementation flaws in Microsofts software, it is possible to break
+the security of both of these formats and recover users private keys, often in
+a matter of seconds.  In addition, a major security hole in Microsofts
+CryptoAPI means that many keys can be recovered without even needing to break
+the encryption.  These attacks do not rely for their success on the presence of
+weak, US-exportable encryption, they also affect US versions.
+ 
+As a result of these flaws, no Microsoft internet product is capable of
+protecting a users keys from hostile attack.  By combining the attacks
+described below with widely-publicised bugs in MSIE which allow hostile sites
+to read the contents of users hard drives or with an ActiveX control, a victim
+can have their private key sucked off their machine and the encryption which
+"protects" it broken at a remote site without their knowledge.
+ 
+Once an attacker has obtained a users private key in this manner, they have
+effectively stolen their (digitial) identity, and can use it to digitally sign
+contracts and agreements, to recover every encryption session key it's ever
+protected in the past and will ever protect in the future, to access private
+and confidential email, and so on and so on.  The ease with which this attack
+can be carried out represents a critical weakness which compromises all other
+encryption components on web servers and browsers - once the private key is
+compromised, all security services which depend on it are also compromised.
+ 
+A really clever attacker might even do the following:
+ 
+- Use (say) an MSIE bug to steal someones ActiveX code signing key.
+- Decrypt it using one of the attacks described below.
+- Use it to sign an ActiveX control which steals other peoples keys.
+- Put it on a web page and wait.
+ 
+On the remote chance that the ActiveX control is discovered (which is extremely
+unlikely, since it runs and deletes itself almost instantly, and can't be
+stopped even with the highest "security" setting in MSIE), the attack will be
+blamed on the person the key was stolen from rather than the real attacker.
+ 
+This demonstrates major problems in both Microsoft's private key security
+(an attacker can decrypt, and therefore misuse, your private key), and ActiveX
+security (an attacker can create an effectively unstoppable malicious ActiveX
+control and, on the remote chance that it's ever discovered, ensure that
+someone else takes the blame).
+ 
+ 
+Background
+----------
+ 
+About a year ago I posted an article on how to break Netscape's (then) server
+key encryption to the cypherpunks list (Netscape corrected this problem at
+about the same time as I posted the article).  However more than a year after
+the code was published, and 2 1/2 years after a similar problem with Windows
+.PWL file encryption was publicised, Microsoft are still using exactly the
+same weak, easily-broken data format to "protect" users private keys.  To
+break this format I simply dusted off my year-old software, changed the
+"Netscape" strings to "Microsoft", and had an encryption-breaker which would
+recover most private keys "protected" with this format in a matter of seconds.
+ 
+In addition to the older format, newer Microsoft products also support the
+PKCS #12 format (which they originally called PFX), which Microsoft render as
+useless as the older format by employing the RC2 cipher with a 40-bit key.  In
+a truly egalitarian manner, this same level of "security" is used worldwide,
+ensuring that even US users get no security whatsoever when storing their
+private keys.  However even RC2/40 can take awhile to break (the exact
+definition of "a while" depends on how much computing power you have available,
+for most non-funded attackers it ranges from a few hours to a few days).
+Fortunately, there are enough design flaws in PKCS #12 and bugs in Microsofts
+implementation to ensure that we can ignore the encryption key size.  This has
+the useful - to an attacker - side-effect that even if Microsoft switch to
+using RC2/128 or triple DES for the encryption, it doesn't make the attackers
+task any more difficult.  By combining the code to break the PKCS #12 format
+with the code mentioned above which breaks the older format, we obtain a single
+program which, when run on either type of key file, should be able to recover
+the users private keys from most files in a matter of seconds.
+ 
+A (somewhat limited) example of this type of program is available in source
+code form from <A  HREF="http://www.cs.auckland.ac.nz/~pgut001/pubs/breakms.c">http://www.cs.auckland.ac.nz/~pgut001/pubs/breakms.c</A>.  Because
+it's meant as a proof-of-concept program it's somewhat crude, and restricted to
+recovering passwords which are single dictionary words.  Note: This does not
+mean that using (say) two words as a password instead of one will protect your
+private key.  All it means is that I haven't bothered to write anything more
+sophisticated - no doubt anyone who was serious about this could adapt
+something like cracklib's password-generation rules and routines to provide a
+more comprehensive and powerful type of attack.  Similarly, by making trivial
+changes to the key file data format it's possible to fool the program until
+someone makes an equally trivial change to the program to track the format
+change - this is meant as a demonstrator only, not a do-everything encryption
+breaker.
+ 
+To use the program, compile and invoke it with:
+ 
+  breakms &lt;Microsoft key file&gt; &lt;word list file&gt;
+ 
+Here's what the output should look like (some of the lines have been trimmed a
+bit):
+ 
+  File is a PFX/PKCS #12 key file.
+  Encrypted data is 1048 bytes long.
+  The password which was used to encrypt this Microsoft PFX/PKCS #12 file is
+    'orthogonality'.
+ 
+  Modulus = 00BB6FE79432CC6EA2D8F970675A5A87BFBE1AFF0BE63E879F2AFFB93644D [...]
+  Public exponent = 010001
+  Private exponent = 6F05EAD2F27FFAEC84BEC360C4B928FD5F3A9865D0FCAAD291E2 [...]
+  Prime 1 = 00F3929B9435608F8A22C208D86795271D54EBDFB09DDEF539AB083DA912D [...]
+  Prime 2 = 00C50016F89DFF2561347ED1186A46E150E28BF2D0F539A1594BBD7FE4674 [...]
+  Exponent 1 = 009E7D4326C924AFC1DEA40B45650134966D6F9DFA3A7F9D698CD4ABEA [...]
+  Exponent 2 = 00BA84003BB95355AFB7C50DF140C60513D0BA51D637272E355E397779 [...]
+  Coefficient = 30B9E4F2AFA5AC679F920FC83F1F2DF1BAF1779CF989447FABC2F5628 [...]
+ 
+Someone sent me a test Microsoft key they had created with MSIE 3.0 and the
+program took just a few seconds to recover the password used to encrypt the
+file.
+ 
+One excuse offered by Microsoft is that Windows NT has access control lists
+(ACL's) for files which can be used to protect against this attacks and the one
+described below.  However this isn't notably useful: Most users will be running
+Windows '95 which doesn't have ACL's, of the small remainder using NT most
+won't bother setting the ACL's, and in any case since the attack is coming from
+software running as the current user (who has full access to the file), the
+ACL's have no effect.  The ACL issue is merely a red herring, and offers no
+further protection.
+ 
+ 
+Further Attacks (information provided by Steve Henson &lt;shenson@bigfoot.com&gt;)
+---------------
+ 
+There is a further attack possible which works because Microsoft's security
+products rely on the presence of the Microsoft CryptoAPI, which has a wonderful
+function called CryptExportKey().  This function hands over a users private key
+to anyone who asks for it.  The key is encrypted under the current user, so any
+other program running under the user can obtain their private key with a single
+function call.  For example an ActiveX control on a web page could ask for the
+current users key, ship it out to a remote site, and then delete itself from
+the system leaving no trace of what happened, a bit like the mail.exe program I
+wrote about 2 years ago which did the same thing for Windows passwords.  If the
+control is signed, there's no way to stop it from running even with the highest
+security level selected in MSIE, and since it immediately erases all traces of
+its existence the code signing is worthless.
+ 
+Newer versions of the CryptoAPI which come with MSIE 4 allow the user to set a
+flag (CRYPT_USER_PROTECTED) which specifies that the key export function should
+be protected with no protection (the default), user notification, or password
+protection.  However the way this is implemented makes it pretty much useless.
+Firstly, if the certificate request script used to generate the key doesn't set
+this flag, you end up with the default of "no protection" (and the majority of
+users will just use the default of "no protection" anyway).  Although Microsoft
+claim that "reputable CA's won't forget to set this flag", a number of CA's
+tested (including Verisign) don't bother to set it (does this mean that
+Microsoft regard Verisign as a disreputable CA? :-).  Because of this, they
+don't even provide the user with the option of selecting something other than
+"no security whatsoever".
+ 
+In addition at least one version of CryptoAPI would allow the "user
+notification" level of security to be bypassed by deleting the notification
+dialog resource from memory so that the call would quietly fail and the key
+would be exported anyway (this is fairly tricky to do and involves playing with
+the CPU's page protection mechanism, there are easier ways to get the key than
+this).
+ 
+Finally, the "password protection" level of security asks for the password a
+whopping 16 (yes, *sixteen*) times when exporting the key, even though it only
+needs to do this once.  After about the fifth time the user will probably click
+on the "remember password" box, moving them back to zero security until they
+reboot the machine and clear the setting, since the key will be exported with
+no notification or password check once the box is clicked.
+ 
+To check which level of security you have, try exporting your key certificate.
+If there's no warning/password dialog, you have zero security for your key, and
+don't even need to use the encryption-breaking technique I describe elsewhere
+in this article.  Any web page you browse could be stealing your key (through
+an embedded ActiveX control) without you ever being aware of it.
+ 
+ 
+Details on Breaking the Older Format
+------------------------------------
+ 
+The Microsoft key format is very susceptible to both a dictionary attack and to
+keystream recovery.  It uses the PKCS #8 format for private keys, which
+provides a large amount of known plaintext at the start of the data, in
+combination with RC4 without any form of IV or other preprocessing (even though
+PKCS #8 recommends that PKCS #5 password-based encryption be used), which means
+you can recover the first 100-odd bytes of key stream with a simple XOR (the
+same mistake they made with their .PWL files, which was publicised 2 1/2 years
+earlier).  Although the password is hashed with MD5 (allowing them to claim the
+use of a 128-bit key), the way the key is applied provides almost no security.
+This means two things:
+ 
+1. It's very simple to write a program to perform a dictionary attack on the
+   server key (it originally took me about half an hour using cryptlib,
+   <A  HREF="http://www.cs.auckland.ac.nz/~pgut001/cryptlib/">http://www.cs.auckland.ac.nz/~pgut001/cryptlib/</A>, another half hour to rip
+   the appropriate code out of cryptlib to create a standalone program, and a
+   few minutes to retarget the program from Netscape to Microsoft).
+ 
+2. The recovered key stream from the encrypted server key can be used to
+   decrypt any other resource encrypted with the server password, *without
+   knowing the password*.  This is because there's enough known plaintext
+   (ASN.1 objects, object identifiers, and public key components) at the start
+   of the encrypted data to recover large quantities of key stream.  This means
+   that even if you use a million-bit encryption key, an attacker can still
+   recover at least the first 100 bytes of anything you encrypt without needing
+   to know your key (Frank Stevenson's glide.exe program uses this to recover
+   passwords from Windows .PWL files in a fraction of a second).
+ 
+The problem here is caused by a combination of the PKCS #8 format (which is
+rather nonoptimal for protecting private keys) and the use of RC4 to encryt
+fixed, known plaintext.  Since everything is constant, you don't even need to
+run the password-transformation process more than once - just store a
+dictionary of the resulting key stream for each password in a database, and
+you can break the encryption with a single lookup (this would be avoided by
+the use of PKCS #5 password-based encryption, which iterates the key setup and
+uses a salt to make a precomputed dictionary attack impossible.  PKCS #5
+states that its primary intended application is for protecting private keys,
+but Microsoft (and Netscape) chose not to use this and went with straight RC4
+encryption instead).  This is exactly the same problem which came up with
+Microsoft's .PWL file encryption in 1995, and yet in the 2 1/2 years since I
+exposed this problem they still haven't learnt from their previous mistakes.
+ 
+For the curious (and ASN.1-aware), here's what the data formats look like.
+First there's the outer encapsulation which Microsoft use to wrap up the
+encrypted key:
+ 
+  MicrosoftKey ::= SEQUENCE {
+    identifier          OCTET STRING ('private-key'),
+    encryptedPrivateKeyInfo
+                        EncryptedPrivateKeyInfo
+    }
+ 
+Inside this is a PKCS #8 private key:
+ 
+  EncryptedPrivateKeyInfo ::= SEQUENCE {
+    encryptionAlgorithm EncryptionAlgorithmIdentifier,
+    encryptedData       EncryptedData
+    }
+ 
+  EncryptionAlgorithmIdentifier ::= AlgorithmIdentifier
+ 
+  EncryptedData = OCTET STRING
+ 
+Now the EncryptionAlgorithmIdentifier is supposed to be something like
+pbeWithMD5AndDES, with an associated 64-bit salt and iteration count, but
+Microsoft (and Netscape) ignored this and used straight rc4 with no salt or
+iteration count.  The EncryptedData decrypts to:
+ 
+  PrivateKeyInfo ::= SEQUENCE {
+    version             Version
+    privateKeyAlgorithm PrivateKeyAlgorithmIdentifier
+    privateKey          PrivateKey
+    attributes    [ 0 ] IMPLICIT Attributes OPTIONAL
+    }
+ 
+  Version ::= INTEGER
+ 
+  PrivateKeyAlgorithmIdentifier ::= AlgorithmIdentifier
+ 
+  PrivateKey ::= OCTET STRING
+ 
+  Attributes ::= SET OF Attribute
+ 
+(and so on and so on, I haven't bothered going down any further).  One thing
+worth noting is that Microsoft encode the AlgorithmIdentifier incorrectly by
+omitting the parameters, these should be encoded as a NULL value if there are
+no parameters. In this they differ from Netscape, indicating that both
+companies managed to independently come up with the same broken key storage
+format.  Wow.
+ 
+For people picking apart the inner key, Microsoft also encode their ASN.1
+INTEGERs incorrectly, so you need to be aware of this when reading out the
+data.
+ 
+ 
+Details on Breaking the PFX/PKCS #12 Format
+-------------------------------------------
+ 
+The PFX/PKCS #12 format is vastly more complex (and braindamaged) than the
+older format.  You can find an overview of some of the bletcherousness in this
+format at <A  HREF="http://www.cs.auckland.ac.nz/~pgut001/pfx.html">http://www.cs.auckland.ac.nz/~pgut001/pfx.html</A>.  After Microsoft
+originally designed the format (calling it PFX) and presented it to the world
+as a fait accompli, cleanup crews from other companies rushed in and fixed some
+of the worst problems and security flaws.  However by this time Microsoft had
+already shipped implementations which were based on the earlier version with
+all its flaws and holes, and didn't want to change their code any more.  A
+side-effect of this was that to be compatible, other vendors had to copy
+Microsofts bugs rather than produce an implementation in accordance with the
+standard.  Newer versions of the standard have now been amended to define the
+implementation bugs as a part of the standard.
+ 
+Anyway, as a result of this it's possible to mount three independant types of
+attack on Microsoft's PFX/PKCS #12 keys:
+ 
+1. Attack the RC2/40 encryption used in all versions, even the US-only one.
+2. Attack the MAC used to protect the entire file.  Since the same password is
+   used for the MAC and the encrypted key, recovering the MAC password also
+   recovers the password used to encrypt the private key.  The cleanup crews
+   added a MAC iteration count to make this attack harder, but Microsoft
+   ignored it.
+3. Attack the private key encryption key directly.  Like the MAC's, this also
+   has an interation count.  Microsoft don't use it.
+ 
+Even if one of these flaws is fixed, an attacker can simply switch over and
+concentrate on a different flaw.
+ 
+I decided to see which one could be implemented the most efficiently.
+Obviously (1) was out (you need to perform 2^39 RC2 key schedules on average
+to find the key), which left (2) and (3).  With the refinements I'm about to
+describe, it turns out that an attack on the private key encryption is
+significantly more efficient than an attack on the MAC.
+ 
+To understand how the attack works, you need to look at how PKCS #12 does its
+key processing.  The original PFX spec included only some very vague thoughts
+on how to do this.  In later PKCS #12 versions this evolved into a somewhat
+garbled offshoot of the PKCS #5 and TLS key processing methods.  To decrypt
+data which is "protected" using the PKCS #12 key processing, you need to do the
+following:
+ 
+  construct a 64-byte "diversifier" (which differs depending on whether you
+        want to set up a key or an IV) and hash it;
+  stretch the salt out to 64 bytes and hash it after the diversifier hash;
+  stretch the password out to 64 bytes (using incorrect processing of the
+        text string, this is one of Microsofts implementation bugs which has
+        now become enshrined in the standard) and hash it after the salt hash;
+  complete the hash and return the resulting value as either the key or the
+        IV, depending on the diversifier setting;
+ 
+(it's actually rather more complex than that, this is a stripped-down version
+which is equivalent to what Microsoft use).
+ 
+This process is carried out twice, once for the key and once for the IV.  The
+hashing is performed using SHA-1, and each of the two invocations of the
+process require 4 passes through the SHA-1 compression function, for a total
+of 8 passes through the function.  Because the PKCS #12 spec conveniently
+requires that all data be stretched out to 64 bytes, which happens to be the
+data block size for SHA-1, there's no need for the input processing which is
+usually required for SHA-1 so we can strip this code out and feed the data
+directly into the compression function.  Thus the compression function (along
+with the RC2 key setup) is the limiting factor for the speed of an attack.
+Obviously we want to reduce the effort required as much as possible.
+ 
+As it turns out, we can eliminate 6 of the 8 passes, cutting our workload by
+75%.  First, we observe that the the diversifier is a constant value, so
+instead of setting it up and hashing it, we precompute the hash and store the
+hash value.  This eliminates the diversifier, and one pass through SHA-1.
+ 
+Next, we observe that the salt never changes for the file being attacked, so
+again instead of setting it up and hashing it, we precompute the hash and
+store the hash value.  This eliminates the diversifier, and another pass
+through SHA-1.
+ 
+Finally, all that's left is the password.  This requires two passes through
+the compression function, one for the password (again conveniently stretched
+to 64 bytes) and a second one to wrap up the hashing.
+ 
+In theory we'd need to repeat this process twice, once to generate the
+decryption key and a second time to generate the decryption IV which is used
+to encrypt the data in CBC mode.  However the start of the decrypted plaintext
+is:
+ 
+  SEQUENCE {
+    SEQUENCE {
+      OBJECT IDENTIFIER,
+          ...
+ 
+and the SEQUENCE is encoded as 30 82 xx xx (where xx xx are the length
+bytes).  This means the first 8 bytes will be 30 82 xx xx 30 82 xx xx, and
+will be followed by the object identifier.  We can therefore skip the first 8
+bytes and, using them as the IV, decrypt the second 8 bytes and check for the
+object identifier.  This eliminates the second PKCS #12 key initialisation
+call which is normally required to generate the IV.
+ 
+As this analysis (and the program) shows, Microsoft managed to design a
+"security" format in which you can eliminate 75% of the encryption processing
+work while still allowing an attack on the encrypted data.  To make it even
+easier for an attacker, they then dumbed the key down to only 40 bits, even in
+the US-only version of the software.  In fact this doesn't really have any
+effect on security, even if they used 128-bit RC2 or triple DES or whatever,
+it would provide no extra security thanks to the broken key processing.
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00891" HREF="msg00891.html">Re: [Long] How to recover private keys for various Microsoft products</A></STRONG>
+<UL><LI><EM>From:</EM> "William H. Geiger III" &lt;whgiii@invweb.net&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="00908" HREF="msg00908.html">Re: [Long] How to recover private keys for various Microsoft products</A></STRONG>
+<UL><LI><EM>From:</EM> phelix@vallnet.com</LI></UL></LI>
+<LI><STRONG><A NAME="00913" HREF="msg00913.html">Re: [Long] How to recover private keys for various Microsoftproducts</A></STRONG>
+<UL><LI><EM>From:</EM> Steve Schear &lt;schear@lvdi.net&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="01007" HREF="msg01007.html">Re: [Long] How to recover private keys for various Microsoft products</A></STRONG>
+<UL><LI><EM>From:</EM> Black Unicorn &lt;unicorn@schloss.li&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00889.html">Re: (eternity) Eternity as a secure filesystem/backup medium (fwd)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00892.html">Intel, MS, &amp; Compaq to boost Inet access x30 w/ new modem [CNN]</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00999.html">Re: Intel introduces new compression technology for surfers  [CNN]</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00891.html">Re: [Long] How to recover private keys for various Microsoft products</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00906"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00906"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,366 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Some idle comments on speech over data... -->
+<!--X-From-R13: "tgbnyNtgbny.pbz" <tgbnyNcvmmnobk.qrzba.pb.hx> -->
+<!--X-Date: Sat, 21 Aug 93 12:17:36 PDT -->
+<!--X-Message-Id: 9308202113.AA16085@pizzabox.demon.co.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Some idle comments on speech over data...</TITLE>
+<LINK REV="made" HREF="mailto:gtoal@pizzabox.demon.co.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00636.html">Date Prev</A>][<A HREF="msg00638.html">Date Next</A>][<A HREF="msg00650.html">Thread Prev</A>][<A HREF="msg00640.html">Thread Next</A>][<A HREF="index.html#00624">Date Index</A>][<A HREF="threads.html#00624">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Some idle comments on speech over data...</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:netphone@moink.nmsu.edu">netphone@moink.nmsu.edu</A></LI>
+<LI><em>Subject</em>: Some idle comments on speech over data...</LI>
+<LI><em>From</em>: "<A HREF="mailto:gtoal@gtoal.com">gtoal@gtoal.com</A>" &lt;<A HREF="mailto:gtoal@pizzabox.demon.co.uk">gtoal@pizzabox.demon.co.uk</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 20 Aug 93 21:13:24 GMT</LI>
+<LI><em>Reply-To</em>: Graham Toal &lt;<A HREF="mailto:gtoal@an%2Dteallach.com">gtoal@an-teallach.com</A>&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+A little bit of context first, since this message is going out to two
+lists to save me explaining things twice:  I posted on the cypherpunks
+list recently about a little hardware hack I had planned, asking for
+technical help (which I received - thanks, to those of you who sent
+schematics etc!)
+
+I also received a few mails from people who didn't know the background
+to what I was doing, who thought it was a fairly worthless exercise.
+
+So rather than explain again to everyone individually, I'll make this
+post to cypherpunks for everyone who is interested.
+
+Now, there's a second list I'm on - netphone@moink.nmsu.edu - which was
+set up some time ago as a discussion group for people working on various
+independent projects to do with speech over data, mainly so that we
+could get together and swap notes.  The group went rather quiet a few
+months back after a post from Henning Schulzrinne telling us about
+nevot - a speech over internet project, that seemed pretty well advanced -
+so we all thought 'fine, this is being taken care of, there's less
+urgency for us to hack something in a hurry'.
+
+Also at the time there was a lot of talk about various people working
+on secure speech over modems using either the Zyxel modem with built-in
+codec, or using soundblaster cards.  Unfortunately none of the people
+working in this area would stand up and be counted - all you'd hear
+would be pgp mail saying 'don't worry, it's happening, be cool, shut up,
+and don't rock the boat in public...' - for some reason the guys on
+this project seemed more paranoid than most.  (The netphone group by
+the way was about *voice* over *net* - if someone happened to add
+encryption later, fine, but it wasn't in the groups stated goals,
+so we were all pretty open about what we were doing ourselves...)
+As far as i can see, nothing has actually happened on any of those
+secret projects - i suspect the problems were too difficult, or the
+kids doing them were just all talk.
+
+Anyway, nevot looked like the way things were going to happen - except
+that when you actually fetched the code, you discovered that unless you
+had hardware support, none of the sound compression schemes gave
+good enough performance for real-time speech over v32bis, especially
+since you also had the overhead of slip or ppp.  And it was *very much*
+a Unix program, it'll take a long time to port it to DOS I suspect, yet
+DOS (unfortunately, but it's a fact of life) is what most of the
+harware out there is running... - very few of us can afford high-powered
+private sparcs, or 64K comms, which is what nevot et al need.  (by 'et al',
+I actually mean Van Jacobson's 'vt', though I haven't actually seen that
+program yet, if it exists; I'm not sure of any other compressed-speech
+over net programs.  'netfone' isn't compressed and needs an ethernet)
+
+So, the situation is that we have a nice bit of research done on protocols
+and necessary housekeeping stuff like network lag recovery etc, and
+silence detection, but no systems that run on cheap hardware or v32bis
+modems, which many more of us have access to than networked unices.
+
+Well, one big problem now seems to be solved: Tony Robinson (on the
+netphone list; don't think he's a cypherpunk - pops up in comp.speech
+now and then) has written a new piece of ADPCM code with some new
+algorithms of his own, and he gets 8 bit sample -&gt; 3 bits of compression
+with it, which is pretty damn good, but even better than that it's
+*fucking fast*... - orders of magnitude faster than real-time.  Anyone
+who has played with the GSM 'toast' program or the CELP demo thats
+around somewhere will appreciate what that means...
+
+And of course the compression is sampling rate independent.  So I reckon
+that taking something like /dev/audio's 8000s/sec and just averaging 
+successive samples down to 4000s/sec will give us a baud rate that
+fits very nicely into v32bis, thank you very much.  And I know that
+4000s/sec is adequate for speech because I've run experiments and tried
+it - trivial linear interpolation between samples to scale it back up
+to 8000s/sec, and out to /dev/audio, is perfectly intelligible.  Not
+*great*, but intelligible.
+
+I've passed this info on to Henning for nevot, if he's willing to try
+it, though I haven't received a reply.  It's quite possible one of us
+is having mail problems.  If there are any other nevot hackers here,
+and you want to have a go yourself, Tony's code is available from
+svr-ftp.eng.cam.ac.uk:comp.speech/sources/shorten-2.alpha.2.tar.Z
+I really urge anyone experimenting with sound compression to try it.
+
+Now, the next news: I told cypherpunks that my old uncle, who was
+an *electrical* engineer in the coal mines (ie high voltage stuff etc)
+is now taking night classes in electronics, just for fun - and was
+talking with me recently about suggestions for projects for his
+class... they're a bit short of ideas, and I'm *never* short of ideas :-)
+[so far they've been doing silly stuff like doorbell chimes, or a
+detector for finding mains cables in walls]
+
+So I suggested that he builds a cheap sound sampler that I can plug
+into the netphone project...
+
+Well, lots of people wrote to me saying that this was wasted effort
+since a mass-market solution should be based on available kit like
+a soundblaster.  To which I don't disagree - it should, and it will;
+it's just that the old guy is going to build *something* and I'd
+rather it was useful.  [Thanks to all the people who suggested
+various ISDN codecs by the way, and gave info on driving PC ports -
+any more info is still welcome.  Faxes of datasheets wouldn't go
+amiss either! - it's hard for me to get that sort of stuff...]
+
+*but*... the scheme I'm going to use this sampler in *is* amenable
+to a mass-market solution.  The netphone people have heard this
+already, but here it is again for the cypherpunks:
+
+&lt;&lt;&lt;&lt; start of repost from netphone list from 3 or 4 months ago:
+
+: OK, here's the philosophy... we should have separate bits of hardware for
+: each identifiable task, and string them together like unix pipes. That way
+: we minimise CPU overhead *and* allow any individual task to be replaced
+: by any hardware/software combination we already have that does the job.
+: 
+: Specifically, I'm thinking of this:
+: 
+: A) A cheap digitiser as suggested earlier.  This has a mic socket for your
+: average cheap microphone as with any cassette recorder, and a parallel port
+: output that's compatible with bi-directional printer ports such as the one
+: on the IBMPC.  In the middle is an a2d.  Maybe uLaw, maybe not.
+: 
+: B) We have a compression board that has a parallel input port (getting data
+: from the above) and a serial output port.  In the middle is either a CPU
+: or custom hardware.  Doesn't matter.
+: 
+: C) We have a crypto board which has a serial input port and a serial output
+: port.  In the middle is a CPU.  Almost anything will do.
+: 
+: With these, we can build any system we like.  The three products are
+: independent, thus letting us develop them in parallel, and (C) is probably
+: just your own computer anyway.  If you've got a really beefy CPU, all three
+: might be real unix software pipes...
+: 
+: The compression board can be either a micro running ADPCM (like shorten V2)
+: or a DSP as discussed.  I'd say we try both - you now have *all* the spec
+: you need to build it: centronix interface parallel in, taking bytes at
+: 8000/sec, and rs232 out, writing data at 9600bps. (leaving bandwidth for
+: network layer over v32bis slip or ppp...)  Again, if you have a spare
+: machine, you could simply use a PC for this task as well.  Would have to be
+: your best one, but fast 486's will cope with some of the good compression
+: schemes mentioned.
+: 
+: The crypto board is an optional extra that doesn't affect the design of the
+: rest of the system at all and needn't be discussed.  If you're a PC user and
+: don't have the CPU for crypto as well as everything else you're doing, borrow
+: another PC and have it run as a filter reading from COM1 and writing to
+: COM2...  PCs are cheap and lying around all over the place.  Or *any* old
+: computer you have with two serial ports.  An Amiga or whatever old junk
+: you thought you'd never use again...
+: 
+: So, in summary: you could implement this with existing kit *now* using
+: 1 average sparc for the 8000K samples, one good PC for the high-quality
+: compression, and one average PC for a crypto filter.  Then feed the output
+: into your internet machine (in my case, another PC talking SLIP down a
+: v32bis modem)   ...   and then you replace the computers one by one as
+: you build the custom devices.
+: 
+: Pipelined parallelism is the way to go folks.  I'm convinced this is
+: the best way to get this project started.  And the modular approach will
+: be really attractive to home hackers who get the design off the net or
+: more likely a magazine... not too much to get working at once - keeps them
+: interested.  Hey *there's* a thought!  Whatever happened to Steve 'Circuit
+: Cellar' Ciarcia?  A three-part hardware series in Byte synchronised with
+: articles on Clipper and 'how you can do it yourself' :) would be one hell
+: of a coup...  Anyone got good contacts at Byte?
+: 
+: Graham
+: 
+: PS *Do* we have any electronics hackers here, or should I go recruiting...?
+: PPS Speech *output* left as an exercise for the reader :)
+
+&gt;&gt;&gt;&gt;&gt; end of repost
+
+Since then, I've thought about the detailed design of the sampler part, and
+that's what I'm going to ask my uncle to build.  In fact, I just went out
+and bought the $7 microphone today, and the kit box :-)
+
+For the benefit of the netphone list who didn't see my cypherpunks post,
+and to give a bit more detail to the c-p's who suggested there were fatal
+flaws in what i was thinking about, here's the hardware plan:
+
+There's a cheap microphone, and a d2a and a parallel port, and a timer.
+The PC reads from the printer port and fetches a byte when the status
+byte says 'ready'.  The PC does *not* have to do accurate timing, or
+work under interrupt - all it has to do is make sure it's dealt with the
+sample before it's time for another one.  The sampler hardware does
+the 8000/sec (or more likely 4000/sec, switchable) timing, and doesn't
+say 'data ready' after a read until that length of time has elapsed.
+
+I chose interruptless parallel rather than interrupt-driven serial because
+serial would either have to do expensive on-chip compression, or drive
+the PC at very high speed - and I know from extensive comms experience
+that PCs *really* can't stand up to much over 19.2K - low-end PCs
+*certainly* can't.  With this scheme there's virtually no overhead at
+all in getting the data to the cpu - it's almost an idle process.
+
+Interrupt driven parallel wouldn't be too bad either, at 4000/sec, though
+it does make the code harder to write.  I'm very wary of predicating a
+project on tricky PC assembler - it can't be easy, otherwise there'd
+already be code (for example) to do something like getting bytes in a
+/dev/audio-like manner from say a SoundBlaster card.  And i haven't
+found it yet if there is (though someone mailed me today to say he 
+thought he had a copy of such code somewhere)
+
+Anyway, the point is that this box can be replaced by a soundblaster or
+by reading from /dev/audio - it's just another pipe in the series,
+but having a design lets us push it in some electronics magazine and
+get public awareness up another notch. But it's no big deal; it's not
+critical to the project.
+
+To the people who said it really should be serial and compressed - yes,
+I agree - that's the *next* box - a little micro running Tony's code
+that has parallel in and serial out.  Or that micro can be a PC as it
+stands - no problem.  PC's are cheap and plentiful.
+
+And the next box takes that serial stream and encrypts it.  That too can
+be a PC, or if you have a powerful PC, make it a process on the one
+that did the compression.  And finally the serial data can be shoved
+down a modem directly, or you can use vt's protocols etc and send it
+over the net, or the same protocols over slip and send *that* down
+a modem.  The modular approach lets you do all sorts of things.
+
+Anyway, I was fed up with people talking about this project but never
+seeing anything working (except for Henning's laudable efforts - shame
+about the low-end users) so I got off my butt and am doing something
+about it myself.
+
+If anyone else wants to join in, the tasks needing done are:
+
+* add Tony Robinson's lossy compression to nevot
+
+* get a nevot-compatible program running on DOS and Mac over SLIP
+(major project here, but I know at least one guy who's starting
+some work on a Mac project, and I want to twist his arm to make
+it nevot compatible rather than Mac-proprietary, if he's listening :-) )
+
+* help me (in the next couple of weeks, since the old guy's class
+restarts soon) with details of chips that he can use in a sampler -
+I've been told that there are several 'combo codecs' or maybe isdn
+codecs that do almost all the work - if we can make something that's
+100% data compatible (uLaw) with a Sun, so much the better! (makes for
+easier development cycle and testing over the internet)
+
+* make nevot baud-rate/lag adaptive so that it works when scaled down
+to 14.4Kbaud and below (say when modems adapt to noise and run at
+9600 - no problem, adjust the sample rate to 3000s/sec or whatever
+as appropriate)
+
+* experiment with crude zero-crossing algorithms (the kind they used
+in kiddy micros 15 years ago with 1-bit speakers) to hack a *really*
+low baud rate fallback algorithm to add to the protocols in nevot so
+you can *guarantee* some speech getting through under even the worst
+conditions.  (We're talking around 4800baud here folks... maybe even
+2400 if in dire straights - there may be times when getting the info
+over is more important than sounding like a dying dalek...) [btw, the
+zero-cossing stuff is also sometimes known as 'time encoded speech']
+
+* hack up a much cruder system than nevot, which works in half-duplex
+mode, for low-powered systems that can't do incoming and outgoing 
+speech compression/decompression at once - make it a sort of old-
+fashioned ham-radio interface, where you do the equivalent of 'over'
+at the end of an utterance, and the whole lot is sent, stored, and
+played back at the right speed, even if transmission over the medium
+isn't fast enough to keep up with speech.  Such a program would
+*guarantee* that even the world's slowest modem would still allow
+crypto speech, even though the interface would take some getting
+used to for modern kids who never had the pleasure of half-duplex
+comms :-)  This system needn't assume any specific underlying protocol -
+udp, tcp/ip, appletalk, whatever - just treat the comms medium as
+an error-corrected byte-stream and use what's available.  Ie it'll
+work even if all you have is a 2400bd v42 modem...   Oh, and make
+this code *portable* - the only device dependent bit it needs is
+'put byte to comms port' and 'get byte from comms port' - you
+shouldn't even need to poll the port to see if data is ready, if
+you do it properly - remember, it's half-duplex: put stuff in the
+protocol you invent to turn the line around...
+
+Pretend it's very fast turnaround voice-mail if that makes you
+feel any better about it ;-)
+
+--
+
+That's about it for now.  Actually I'm getting married in a couple
+of days (to another cypherpunk as it happens) so I'll be mostly off
+the net for two weeks, but please write if you've anything to say
+and I'll answer all your mail as soon as I'm back on line.
+
+thanks for reading all this!
+
+Graham
+PS If anyone has comments to make to everyone rather than to me,
+the cypherpunks list is cypherpunks@toad.com and the netphone list
+is netphone@moink.nmsu.edu - I recommend technical discussions to
+the latter and general comments or politics or questions to the former.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00636.html">Re: Cracking &amp; auditing crypto protocols</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00638.html">Re: mail header parser?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00650.html">Re:  Cracking &amp; auditing crypto protocols</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00640.html">anecdote about Prodigy</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00624"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00624"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,326 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Playing Cards -->
+<!--X-From-R13: cuNargpbz.pbz (Brgre Vraqevpxfba) -->
+<!--X-Date: Fri, 15 Nov 1996 07:22:25 &#45;0800 (PST) -->
+<!--X-Message-Id: v02140b03aeb239f7c4bb@[192.0.2.1] -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Playing Cards</TITLE>
+<LINK REV="made" HREF="mailto:ph@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01208.html">Date Prev</A>][<A HREF="msg01228.html">Date Next</A>][<A HREF="msg01154.html">Thread Prev</A>][<A HREF="msg01255.html">Thread Next</A>][<A HREF="index.html#01210">Date Index</A>][<A HREF="threads.html#01210">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Playing Cards</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Playing Cards</LI>
+<LI><em>From</em>: <A HREF="mailto:ph@netcom.com">ph@netcom.com</A> (Peter Hendrickson)</LI>
+<LI><em>Date</em>: Fri, 15 Nov 1996 07:22:27 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+(My apologies to those who are seeing this twice.  I sent it
+yesterday but it does not seem to have made it through.)
+
+A number of us have been concerned about how PGP generates entropy.
+Striking the keyboard beats using time as a source of random numbers,
+but the degree of entropy is not well understood.  Are there machines
+where - for some reason - the keyboard strikes fall into some sort
+of pattern?
+
+And that's just when you are generating your public/private key pair.
+What happens when you are just generating 128-bit keys for individual
+messages?  Where is the entropy coming from?  I don't understand
+completely, but somehow PGP collects entropy from the system and then
+runs it into IDEA and then uses the numbers from the output.  When the
+program is not running, a pool of this data is kept in randseed.bin.
+
+We already know it's a problem because it is hard to understand what
+it is even doing, much less determine if it is consistent with sound
+engineering practice.
+
+This problem is certainly not confined to PGP.  A lot of people have
+worked hard to make computers deterministic.  What do you do when you
+need entropy?
+
+Yes, you can buy a chip which generates random numbers at nearly any
+bandwidth you like.  But, right there you have a problem.  How do you
+know the output is really random?  The answer is that you do not.
+
+Playing cards are a nice source of randomness because they are widely
+available and their behavior has been under study for a long time by
+people with strong financial reasons for finding flaws.  I slightly
+prefer cards to dice because dice may be slightly predictable or even
+loaded.
+
+It would be nice if cryptography software would allow you to enter
+randomly selected playing cards from time to time to increase the
+entropy of keys.  Careful people (Black Unicorn?) would enter the
+cards prior to sending each message.
+
+A well shuffled deck of 54 cards has about 237 bits of entropy.  This
+is easy to use: the program asks the order of the cards, converts this
+to a string, and runs it through a one-way hash.  (Entering the cards
+is a bit of a nuisance.  Is there an easy way to have them read
+automatically?)
+
+The Economist reports that seven riffle shuffles bring a deck "very
+close to being random".  ("Science and Technology: How to win at poker
+and other science lessons" The Economist, October 12, 1996, pp:88-89.)
+
+Cards have other uses.  You can assign a (large) number to each
+configuration of the deck.  This allows you to use a deck of cards to
+represent numbers.  That is certainly convenient for generating large
+random numbers.  I have included some Lisp code below which converts
+both ways between shuffled decks of cards and unique numbers.
+
+This could be quite useful for strong steganography.  Let's say you
+have 230 bits you want to deliver across a border.  It is unlikely
+that anybody will study a deck of cards very carefully.  Of course,
+you need not limit yourself to cards.  Any set of objects which can be
+ordered will do the trick.  For instance, a shelf with 100 books may
+be used to store 524 bits.  One thousand books may store 8529 bits.
+How many bits can you store in that database which is in apparently
+random order?
+
+You can hide your data in two decks.  There is a natural order to
+cards: pick your favorite ordering of the suits and then do the rest
+numerically.  However, if you shuffle one deck of cards and lay them
+in a row, you could use that ordering to define the mapping of the
+second deck of cards to numbers.  The Enemy may seize one deck or the
+other, but without both, the number will not be revealed.  While I
+hesitate to use the term, this is a one-time pad.  The first deck can
+be thought of as the key and the second deck is the message.
+
+How the Lisp Code Works
+-----------------------
+
+Let's use as an example a deck of five cards numbered from 0 to 4.
+There are 5! = 120 combinations of these cards.  We can think
+of each card as a "digit" in a slightly odd numbering system.
+
+In decimal arithmetic, we have columns whose value increments by 10^0,
+10^1, 10^2, etc.  In our numbering system of five cards, columns
+increment by 0, 1, 2!, 3!, and 4!.
+
+Consider the card sequence of (4 3 2 1 0).  We wish to compute the
+value stored in the leftmost column.  Since there are five choices of
+cards, this divides the number of possible combinations into five
+pieces of 4! combinations each.  So, in this example, the value in the
+first column will be 4*4! = 96.  This leaves us with cards (3 2 1 0).
+We can look at this as a smaller number represented by a deck of four
+cards.  This smaller number is added later to the larger number to get
+the final total number for our original deck.  The first column of our
+smaller deck is 3*3! = 18.  The next one is 2*2! = 4, the one after
+that is 1*1! = 1, and the last card never matters because there is
+only one card to choose (0*0!).  The total is 96 + 18 + 4 + 1 = 119.
+This is the highest number we can represent with a deck of five
+cards.
+
+Consider the card sequence (0 1 2 3 4).  This is the smallest value we
+can represent, 0.  The value of the first column is 0*4! = 0.  This
+leaves us with (1 2 3 4).  But what has happened here?  We can't treat
+this as a normal smaller deck because it is missing a card.  Besides,
+1*1! = 1, which is not the zero we expected.  We must renumber the
+cards so that it is a reasonable deck again.  The sequence of cards we
+should really be looking at is (0 1 2 3).  This means the value of the
+next column should be 0*3!.  Then we renumber the deck and continue
+until we run out of cards.  The answer is 0.
+
+For an exercise, what is the value of (4 2 1 3 0)? (Answer at end.)
+
+Now, how do we construct the deck given only the number defining its
+combination?  The code below is recursive.  It computes the first
+digit and then calls itself to recursively find the remaining cards.
+The cards returned are always an internally consistent deck of cards;
+that is, if sorted they will be consecutively numbered starting from
+0.  When a new card is inserted, the cards have to be renumbered to
+accomodate the new one by incrementing every card which has the same
+or greater face value as the card being inserted.  (Insertion is
+slightly misleading here because you place the card at the head of the
+list.  Insertion refers to the conceptual process of inserting the
+card into the pre-existing order and adjusting the other values to
+allow it.)
+
+In other languages, this might be a little more complicated to
+implement.  Lisp provides a nice bignum package and also (I believe) a
+compiler which knows how to convert the recursive routines below into
+iterative routines.  This code performs quite well even on a small
+slow machine.
+
+;;;-*- Mode: Lisp; Package: COMMON-LISP-USER -*-
+
+(defun compute-combination-number (cards)
+  "Converts list of numbered cards into a unique number representing
+their order."
+  (cond ((&gt; (length cards) 1)
+         (+ (* (car cards)
+               (factorial (1- (length cards))))
+            (compute-combination-number (renumber-cards cards))))
+        (t 0)))
+
+(defun renumber-cards (cards)
+  "Removes lead card from deck, decrements higher numbered cards
+by one so there are no gaps."
+  (let ((renumbered-cards-reversed)
+        (lead-card (car cards)))
+    (dolist (card (cdr cards))
+      (cond ((&gt; card lead-card)
+             (push (1- card) renumbered-cards-reversed))
+            (t
+             (push card renumbered-cards-reversed))))
+    (reverse renumbered-cards-reversed)))
+
+(defun reconstruct-deck (combination-number deck-size)
+  "Converts unique number representing order of a deck of cards
+and returns a list of numbers representing the deck."
+  (cond ((not (&lt;= deck-size 1))
+         (multiple-value-bind (digit remaining-combination-number)
+                              (floor combination-number
+                                     (factorial (1- deck-size)))
+           (insert-card digit (reconstruct-deck
+                               remaining-combination-number
+                               (1- deck-size)))))
+        (t (list 0))))
+
+(defun insert-card (new-card card-list)
+  "Inserts a card into a deck, increasing by one every card which
+is of higher or equal number so there are no duplicate cards."
+  (let ((new-deck-reversed))
+    (push new-card new-deck-reversed)
+    (dolist (card card-list)
+      (cond ((&gt;= card new-card)
+             (push (1+ card) new-deck-reversed))
+            (t
+             (push card new-deck-reversed))))
+    (reverse new-deck-reversed)))
+
+(defun factorial (number)
+  (cond ((or (= number 1) (= number 0)) 1)
+        (t (* number (factorial (1- number))))))
+
+;;; Testing routines
+
+(defun shuffle-deck (deck-size)
+  (randomize-list (build-card-list deck-size)))
+
+(defun randomize-list (some-list)
+  (do ((randomized-list nil))
+      ((null some-list) randomized-list)
+    (let ((item-number (random (length some-list))))
+      (push (elt some-list item-number)
+            randomized-list)
+      (setf some-list
+            (remove (elt some-list item-number) some-list)))))
+
+(defun build-card-list (deck-size)
+  "Returns a list of consecutive numbers representing a deck of
+cards."
+  (do ((card-list nil)
+       (count 0 (1+ count)))
+      ((= deck-size count) card-list)
+    (push count card-list)))
+
+(defun identicalp (list-one list-two)
+  "Returns non-nil if the two lists are identical."
+  (eval (cons 'and (map 'list #'equal list-one list-two))))
+
+(defun exhaustively-test-card-combinations (deck-size)
+  "Verifies that the correct deck is reconstructed from the unique
+order number for every combination of a small deck of cards."
+  (let ((combinations (factorial deck-size)))
+    (do ((combo-number 0 (1+ combo-number)))
+        ((= combinations combo-number) t)
+      (cond ((not (= (compute-combination-number
+                      (reconstruct-deck combo-number deck-size))
+                     combo-number))
+             (warn "Test failed for ~D" combo-number))))))
+
+(defun test-one-deck (deck-size)
+  "Shuffles a deck of cards and verifies that it may be reconstructed
+from the unique number representing its order."
+  (let* ((original-deck (shuffle-deck deck-size))
+         (reconstructed-deck (reconstruct-deck
+                              (compute-combination-number original-deck)
+                              deck-size)))
+    (cond ((not (identicalp original-deck reconstructed-deck))
+           (warn "Test failed for ~A" original-deck)))))
+
+(defun test-many-decks (trials max-deck-size)
+  "Shuffles trials decks of maximum size max-deck-size and verifies
+that their order may be reconstructed from the unique number we compute."
+  (do ((trial-number 0 (1+ trial-number)))
+      ((= trials trial-number) t)
+    (test-one-deck (1+ (random max-deck-size)))))
+
+(defun complete-combination-test ()
+  "Good test of all the card combination routines."
+  (format t "Performing exhaustive test.~%")
+  (exhaustively-test-card-combinations 6)
+  (format t "Performing random test on large decks.~%")
+  (test-many-decks 10 100))
+
+;; (Exercise Answer: (4 2 1 3 0) = 111)
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01255" HREF="msg01255.html">Re: Playing Cards</A></STRONG>
+<UL><LI><EM>From:</EM> "Mark M." &lt;markm@voicenet.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01208.html">Re: Members of Parliament Problem</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01228.html">ABI_tch</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01154.html">Playing Cards</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01255.html">Re: Playing Cards</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01210"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01210"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

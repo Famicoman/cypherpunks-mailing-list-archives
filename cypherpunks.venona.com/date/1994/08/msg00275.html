@@ -1,0 +1,197 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Improved remailer reordering -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Sat, 6 Aug 94 08:31:20 PDT -->
+<!--X-Message-Id: 199408061531.IAA28014@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Improved remailer reordering</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00279.html">Date Prev</A>][<A HREF="msg00276.html">Date Next</A>][<A HREF="msg00274.html">Thread Prev</A>][<A HREF="msg00292.html">Thread Next</A>][<A HREF="index.html#00275">Date Index</A>][<A HREF="threads.html#00275">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Improved remailer reordering</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Improved remailer reordering</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 6 Aug 1994 08:31:55 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Here is an interesting result I came up with while lying in bed last
+night.  It has to do with the latency/reordering issue.
+
+As Eric and others have pointed out, what you want with a remailer is to
+mix up the messages so you can't link incoming to outgoing one.  This
+implies that you have more than one message to work with, otherwise you
+don't have anything to mix.  And this implies some necessary latency; you
+have to wait until you have more than one message on hand before sending
+things out.  However, note that latency in itself is generally bad.  You
+shouldn't wait longer than you need to to attain the desired degree of
+mixing.
+
+One simple way this can work is by batching messages up.  This could be
+done by running the remailer at regular intervals, choosing the intervals
+so that you tend to have enough messages on hand based on average arrival
+times.  But a simpler way is to simply wait until you have N messages on
+hand, then to promptly mix them up and send them out.  This way you have
+a predictable number of messages to mix each time.  Note that in a system
+like this you might as well send them all out as soon as the Nth message
+comes in; there is no point in holding on to them for any extra time as
+it adds latency without improving mixing.
+
+The interesting thing I came up with is that there is a simple modification
+to this batching scheme which gives better mixing with less average latency.
+To describe it I need some mathematics.
+
+One way to measure the benefit of a given degree of message-mixing is by
+looking at the uncertainty of position of a given message coming in and
+going out.  If we had batches of 4, for example, a given message coming
+in has its position known with certainty.  Going out, it may be any one of
+four messages, and the probability of it being any one of them is 1/4.
+
+A measure that is used for situations like this is entropy.  It is defined
+as the negative of the sum of the product of each probability times its
+log.  (I will use log to the base 2 for the calculations for simplicity.)
+That is, E = - sum pi * log pi.
+
+For the incoming message, we have just {1} as the probability distribution.
+We know exactly where it is and the probability is 1 that it is there.
+For the outgoing we have {1/4,1/4,1/4,1/4} as the distribution.  It may
+be any of these four messages with equal probability.  Applying the entropy
+formula to these we get E=0 for the incoming, and E=2 for the outgoing.
+If we had batches of 8 instead the distribution would have been {1/8,1/8,
+1/8,1/8,1/8,1/8,1/8,1/8}, for E=3.  Note that entropy is a log measure
+like the Richter scale.  An increase from 2 to 3 is just as big as an
+increase from 1 to 2.
+
+To consider different batching strategies, consider a remailer where the
+messages come in one per hour, at 1:00, 2:00, 3:00, etc.  A four-fold
+batching strategy would save up messages until there were four, then
+randomly reshuffle them and send them out.  For this case we'd wait until
+the 4:00 message, then shuffle numbers 1,2,3,4 and send them out, say,
+at 4:01, in some random order, maybe 2,1,4,3.  Then we'd save up more
+until 8:01 at which time we might send out 7,5,8,6.  Note first that there
+is no point in waiting till after 4:01; once we have the four messages we
+might as well go.  Note too that the average latency for messages in this
+system is 1.5 hours (the four messages have latencies of 0,1,2 and 3 hours).
+
+Four-fold batching produces entropy E of 2 and average latency L of 1.5
+hours.  Three-fold batching has E=1.58 and L=1; two-fold batching has
+E=1 and L=.5.  Generally, N-fold batching has E=log base 2 of N, L=(N-1)/2.
+
+Okay, with this background, we can consider the alternative which gives
+improvement.  It is to have some "rollover" of messages.  Instead of sending
+all of the messages in a batch out, you retain some of them and use them
+to start the next batch.  I call an (M,N) rollover system one which uses
+batches of M messages but retains N as rollover, sending M-N out each time.
+By this definition the four-fold latency system above could be called a
+(4,0) rollover where the 0 means we don't roll any over and send them all
+out.
+
+The simplest rollover case is (2,1).  This uses batches of 2 messages,
+where you choose one at random to send out and keep one.  Then when the
+next message arrives you again choose at random between the new one and
+the old one, send that out, and keep the other.
+
+In the timing example above, suppose we have the message from 1:00.  Then
+at 2:00 when that message arrives, we pick one of the two messages at
+random and send it out.  Suppose it is number 2.  We retain number 1 until
+3:00.  Then we choose at random between 1 and 3.  Maybe we pick 1 this
+time.  We keep 3 until 4:00, then choose at random between 3 and 4, and
+so on.
+
+Each message has a 1/2 chance of being sent out immediately, a 1/4 chance
+of being sent out after 1 hour, a 1/8 chance of going out after 2 hours,
+a 1/16 chance of going out after 3 hours, and so on.  This means that the
+outgoing probability distribution is {1/2,1/4,1/8,1/16,...}.  The entropy
+of this probability distribution is 1/2+2/4+3/8+4/16+5/32+6/64+... from
+the formula above, which works out to be 2.  The average latency is
+0+1/4+2/8+3/16+4/32+5/64+..., which works out to be 1.
+
+So, (2,1) rollover batching produces E=2 and L=1.  This is the same entropy
+as (4,0) batching with less average latency.  Alternatively, it is more
+entropy than (3,0) batching with the same average latency.  It also has
+the advantage that you never have to hold more than two messages, compared
+with three or four for the alternatives.  So this scheme has several ad-
+vantages over simple batching.
+
+Now, it does have one disadvantage, which is that there is no upper bound
+on the latency of a message.  With the (4,0) batching you may have had
+more latency, but you at least know that nothing would have more than 3
+message-times.  With (2,1) there is a small chance of having very large
+latencies.  In fairness, though, it should be pointed out that in a real
+system messages arrive at irregular intervals rather than the clockwork
+model I used above, so even (4,0) would have random latency ceilings.  Also,
+it might be possible to modify (2,1) so that messages never waited more than
+some maximum number of hours without seriously hurting the entropy.
+
+I haven't tried working out the details of other rollover methods, but I
+suspect that this will be a general method of improving entropy at little
+cost in latency.  In real life we would want large entropies but starting
+with a (10,0) I'll bet many rollover systems would be superior.
+
+Hal
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00292" HREF="msg00292.html">Improved remailer reordering</A></STRONG>
+<UL><LI><EM>From:</EM> hughes@ah.com (Eric Hughes)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00279.html">Re: Remailer ideas (Was: Re: Latency vs. Reordering)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00276.html">Re: fast 386 DES code figures</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00274.html">latency</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00292.html">Improved remailer reordering</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00275"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00275"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

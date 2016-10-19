@@ -1,0 +1,208 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: 2&#45;way anonymous via SASE -->
+<!--X-From-R13: "Xba 'Wnva' Pbbar" <obbarNcfp.rqh> -->
+<!--X-Date: Tue, 1 Feb 94 07:10:34 PST -->
+<!--X-Message-Id: 9402011510.AA03122@igi.psc.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199402010131.RAA05280@jobe.shell.portal.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: 2-way anonymous via SASE</TITLE>
+<LINK REV="made" HREF="mailto:boone@psc.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00012.html">Date Prev</A>][<A HREF="msg00007.html">Date Next</A>][<A HREF="msg00003.html">Thread Prev</A>][<A HREF="msg00104.html">Thread Next</A>][<A HREF="index.html#00015">Date Index</A>][<A HREF="threads.html#00015">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: 2-way anonymous via SASE</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: 2-way anonymous via SASE </LI>
+<LI><em>From</em>: "Jon 'Iain' Boone" &lt;<A HREF="mailto:boone@psc.edu">boone@psc.edu</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 01 Feb 94 10:10:17 -0500</LI>
+<LI><em>In-Reply-To</em>: Message from Hal &lt;hfinney@shell.portal.com&gt;   of "Mon, 31 Jan 94 17:31:29 PST." &lt;199402010131.RAA05280@jobe.shell.portal.com&gt; </LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Hal &lt;hfinney@shell.portal.com&gt;  writes:
+&gt;
+&gt; From: "Jon 'Iain' Boone" &lt;boone@psc.edu&gt;
+&gt; 
+&gt; &gt;   What if you have a remailer that only assigns you an id for that message
+&gt; &gt;   so that your id is equivalent to (say) the Message-ID (or some portion
+&gt; &gt;   thereof)?  How do you return-path without specifying?
+&gt; 
+&gt; Your syntax is a bit hard to follow here, but I'm guessing that you are
+&gt; proposing such a remailer as a way of providing for return paths.  The
+&gt; remailer would remember the message-id's of outgoing messages, and would
+&gt; remember where those messages came from.  Then if a reply came back for
+&gt; one of those message-id's it could send it to that remembered address.
+&gt; 
+&gt; There were some proposals along these lines made last year, or maybe back
+&gt; in 1992.  This scheme doesn't seem to generalize well to multi-remailer
+&gt; paths.  Also, I think people would be nervous about having remailers keep
+&gt; this kind of out-to-in mapping information.
+
+  I think that I am confused.  Please bear with me.  
+
+  Jim Miller &lt;jim@bilbo.suite.com&gt; writes:
+  &gt;
+  &gt; The general idea is that each anonymous messages will include a SASE that
+  &gt; can be used to reply to the sender, without revealing the identity of the
+  &gt; sender to the message recipient.  To reply, the recipient will copy the
+  &gt; SASE from the original message and past it into a special section of the
+  &gt; reply message.  Remailers will examine this section of the reply message
+  &gt; and use its contents to route the message back to the sender of the
+  &gt; original message.
+
+  Now, what is this SASE?  Apparently it is either a) a fully-specified
+  return-path (presumably a chain of anonymous ids at various remailers),
+  b) a next-hop address (anonymousid at the next remailer that "knows"
+  where to send the message), or c) some combination of the previous two.
+
+  Is there another possibility that I have missed?
+
+  Let's assume that the SASE is of type-a.
+  
+  Let's assume three remailers (and my accounts on them) named:
+
+  anon1+@foo.bar.edu
+  anon2+@biff.bam.com
+  anon3+@fred.barney.org
+  
+  Then, if I want to anonymously send mail to you ( &lt;hfinney@shell.protal.com&gt; )
+  , I need to specifiy your address as normal, but specifiy some optional 
+  header (X-Anonymous-Sender-Path) like this:
+
+  &lt;anon3+"anon2+"anon1+@foo.bar.edu"@biff.bam.com"@fred.barney.org&gt; 
+  
+  which says to my mailer that, while the ultimate destination is 
+  &lt;hfinney@shell.portal.com&gt;, it should first mail it to the 
+  X-Anonymous-Sender-Path address.
+
+  HOST: fred.barney.org  Account: anon3+
+
+  This anon3+@fred.barney.org account will accept the mail (it accepts anything
+  like anon3+*@fred.barney.org, so it doesn't matter about the stuff in quotes)
+  It then strips off the anon3+@fred.barney.org section, and re-writes the
+  X-Anonymous-Sender-Path to read like this:
+
+  &lt;anon2+"anon1+@foo.bar.edu"@biff.bam.com&gt;
+
+  It would then instantiate another optional header (X-Anonymous-Return-Path)
+  like this:
+
+  &lt;anon3+@fred.barney.org&gt;
+
+  It would change the Sender: header to say "Anonymous User 3" or whatever 
+  it would normally say, and mail it to biff.bam.com.
+
+  HOST: biff.bam.com  Account: anon2+
+
+  This account accepts the mail and re-writes the headers like this:
+
+  X-A-S-P: &lt;anon1+@foo.bar.edu&gt;
+
+  X-A-R-P: &lt;anon2+"anon3+@fred.barney.org"@biff.bam.com&gt;
+
+  Sender: "Anonymous User 2"@biff.bam.com
+
+  and mails the mail to anon1+@foo.bar.edu
+
+  HOST: foo.bar.edu  Account: anon1+
+
+  This account accepts the mail and re-writes the headers like this:
+
+  X-A-R-P: &lt;anon1+"anon2+"anon3+@fred.barney.org"@biff.bam.com"@foo.bar.edu&gt;
+
+  Sender: "Anonymous User 1"@foo.bar.edu
+
+  Notice that it leaves off the X-Anonymous-Sender-Path: header since it is
+  empty.
+
+  It then mails it to hfinney@shell.portal.com.
+
+  You receive the mail and read the message.  Now, the sender indicates that
+  it is from "Anonymous User 1"@foo.bar.edu, but the X-A-R-P: indicates that
+  it is really from anon3+@fred.barney.org!  So, as long as fred.barney.org
+  can be trusted, no one can tell who I am, right?  And, except for anon3,
+  none of the others needs to be my account!  This requires changing the
+  mail agent on my end, though, and possibly yours.
+
+  Replying follows the same sort of path, except in reverse.
+
+  Of course, you could also allow for a Return-Path header which was not
+  re-writeable, to force a seperate path to get back to me.  And, you can
+  also change the software so that I initially send to 
+  hfinney%shell.portal.com@fred.barney.org, which would *not* require any
+  rewriting of mail-agent software.
+
+  Is this at all coherent?
+
+  If the return-path is type B, I don't see how you can avoid having the
+  ID-mapping which makes the overall scheme weaker.  I don't have a good
+  handle of the type c.
+
+
+&gt; I understand there is already at least one 24-bit collision on the
+&gt; public key servers, not unexpected given a few thousand keys.
+
+  Hmm... I'm not sure I followed all of the math, but how's this for
+  a signature?
+
+
+ Jon Boone | PSC Networking | boone@psc.edu | (412) 268-6959
+ PGP Public Key fingerprint =  23 59 EC 91 47 A6 E3 92  9E A8 96 6A D9 27 C9 6C
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00012.html">Cypherpunk article in NY Newsday</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00007.html">Privacy As Roadkill</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00003.html">Re: 2-way anonymous via SASE</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00104.html">Re: 2-way anonymous via SASE</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00015"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00015"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

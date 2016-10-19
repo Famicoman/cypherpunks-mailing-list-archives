@@ -1,0 +1,556 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: return.C &#45;&#45; performance tracking tool (fwd) -->
+<!--X-From-R13: vpuhqbiNnytroen.pbz (Wtbe Quhqbi N ubzr) -->
+<!--X-Date: Mon, 23 Feb 1998 20:25:00 &#45;0800 (PST) -->
+<!--X-Message-Id: 199802240424.WAA21282@manifold.algebra.com -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>return.C -- performance tracking tool (fwd)</TITLE>
+<LINK REV="made" HREF="mailto:ichudov@algebra.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00826.html">Date Prev</A>][<A HREF="msg00827.html">Date Next</A>][<A HREF="msg00854.html">Thread Prev</A>][<A HREF="msg00846.html">Thread Next</A>][<A HREF="index.html#00825">Date Index</A>][<A HREF="threads.html#00825">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>return.C -- performance tracking tool (fwd)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A> (Cypherpunks)</LI>
+<LI><em>Subject</em>: return.C -- performance tracking tool (fwd)</LI>
+<LI><em>From</em>: <A HREF="mailto:ichudov@algebra.com">ichudov@algebra.com</A> (Igor Chudov @ home)</LI>
+<LI><em>Date</em>: Mon, 23 Feb 1998 22:24:35 -0600 (CST)</LI>
+<LI><em>Organization</em>: Bool Sheet Software</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:ichudov@algebra.com">ichudov@algebra.com</A> (Igor Chudov)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+I have been using this program for a while and decided to share it
+with the other readers. It is written in C++.
+
+/***********************************************************************
+
+This program calculates the total portfolio return.  It may be used
+to find out an individual's stock picking performance and compare it
+to some benchmark.
+
+Right now it compiles under Unix, but I would expect it to work under
+DOS and Win32 console interface. To compile it, type
+
+	gcc -lm -lg++ -o return return.C
+
+This program was written because I was not satisfied with the existing
+portfolio tracking websites due to their extremely limited and incorrect
+functionality.
+
+It works by treating your investments as a "mutual fund". It tracks
+the number of "shares" held. It means that additional cash infusions,
+withdrawals, stock splits, sales of securities do not affect the per share
+value. This is done so that the changing size of the portfolio would not
+skew the estimate of the true performance of the stock picker. However,
+dividends, fees and recorded capital appreciation do affect the per
+share value.
+
+Short sales are allowed by specifying a negative stock amount.
+
+I strongly suggest that investors regularly record stock prices into their
+transaction files (using the VAL operator) to monitor how they are doing.
+
+USAGE:
+
+	portfolio-return transaction-file-name TICKER=price TICKER=price ...
+
+EXAMPLE
+
+	portfolio-return MYSTOCKS.TXT MSFT=130 T=65.56
+
+It reads a text file that contains the record of transactions, and 
+prices, and requests to print out the portfolio value.
+
+# This is a typical file used to calculate total return.
+# This file contains comments, marked by "#" characters,
+# and transaction info.
+#
+# Transaction info consists of records of the following form:
+#
+# INV Amount                    -- tells how much was invested in Category
+# PUR Ticker numshares share_price   -- stock purchase info
+# SAL Ticker numshares share_price   -- stock sale
+# DIV Ticker Amount                  -- how much dividend was received
+# WDR Amount                         -- cash withdrawal
+# VAL Ticker Amount                  -- Value per share
+# SPL Ticker new_to_old              -- stock split
+# FEE amount                         -- various fees (like margin loan 
+#					interest, commission etc)
+# (negative FEE means incoming cash, from e.g interest on the cash held
+# by the broker)
+# PRN Comment                        -- Print portfolio with Comment
+#
+
+Happy investing.
+
+Copyright (c) Igor Chudov 1997. 
+
+	ichudov@algebra.com
+	<A  HREF="http://www.algebra.com/~ichudov">http://www.algebra.com/~ichudov</A>
+
+GNU Copyright applies. There is NO WARRANTY WHATSOEVER. By using this
+program you agree to indemnify and hold it author harmless from any
+liabilities resulting in connection with your use of the program.
+
+You are allowed to copy this program freely provided that the copyright 
+notice remains intact.
+
+*/
+ 
+#include &lt;stdio.h&gt;
+#include &lt;iostream.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;ctype.h&gt;
+ 
+#define Money       double
+#define StockTicker char *
+#define Date        int
+ 
+class Stock {
+public:
+   Stock( const StockTicker theTicker,
+          int theQuantity = 0,
+          Money theValue = 0.0 )
+      : Ticker( strdup( theTicker ) ),
+        Quantity( theQuantity ),
+        Value( theValue )
+        {
+           // nothing
+        }
+ 
+   ~Stock( void ) { delete[] Ticker; }
+   void  Purchase( int theQuantity )         { Quantity += theQuantity; }
+   int   GetQuantity( void ) const           { return Quantity; };
+   void  SetValue( Money theValue )          { Value = theValue; }
+   Money GetValue( void ) const              { return Value; }
+   const StockTicker GetTicker( void ) const { return Ticker; }
+   void  Split( Money factor ) { Quantity *= factor, Value /= factor; }
+private:
+   Money Value;
+   StockTicker Ticker;
+   int Quantity;
+};
+ 
+typedef Stock * PStock;
+ 
+class Portfolio {
+public:
+  Portfolio( void );
+  ~Portfolio( void );
+ 
+  // What can happen to the portfolios:
+  // Add cash to the portfolio
+  void Invest( Money Cash );
+ 
+  // Purchase (or sell (even short) if Quantity is negative)
+  void Purchase( const StockTicker Ticker, int Quantity, Money Value );
+ 
+  // Dividend received, 1 success, 0 failure
+  int Dividend( const StockTicker Ticker, Money DividendPerShare );
+ 
+  // Split, factor is new # of shares to old # of shares, 1 success, 0 failure
+  int Split( const StockTicker Ticker, Money factor );
+ 
+  // Withdrawal
+  void Withdraw( Money Amount );
+
+  // Fee -- margin interest, commission etc
+  void Fee( Money amount );
+ 
+  // Change in Stock valuation
+  int Valuation( StockTicker Ticker, Money theValue );
+ 
+  /////////////////////////////
+  // Equity = Cash + StockValue
+  Money Equity( void ) const;
+ 
+  Money EquityPerShare( void ) const { return Equity()/NumShares; }
+ 
+  int GetNumShares( void ) const { return NumShares; }
+ 
+  void Print( ostream &amp; os, const char * comment = 0 );
+ 
+protected:
+ 
+  void Revaluate( void );
+ 
+  int FindStock( const StockTicker Ticker );
+ 
+private:
+ 
+  Stock ** Stocks;
+  int NumberStocks;
+  int MaxNumberStocks;
+  Money Return;
+  Money LastDate;
+  Money Cash;
+  Money NumShares;
+};
+ 
+Portfolio::Portfolio( void )
+   : NumberStocks( 0 ),
+     MaxNumberStocks( 100 ),
+     Cash( 0.0 ),
+     NumShares( 0 ),
+     Return( 0.0 ),
+     LastDate( 0 )
+{
+   Stocks = new PStock[ MaxNumberStocks ];
+}
+ 
+Portfolio::~Portfolio( void )
+{
+   delete[] Stocks;
+}
+ 
+void Portfolio::Invest( Money theCash )
+{
+//cout &lt;&lt; "investing " &lt;&lt; theCash &lt;&lt; endl;
+ 
+   if( NumShares != 0 )
+     {
+       NumShares += theCash/EquityPerShare();
+       Cash += theCash;
+     }
+   else
+     {
+       Cash = theCash;
+       NumShares = Cash;
+     }
+}
+ 
+ 
+void Portfolio::Withdraw( Money Amount )
+{
+   Invest( -Amount );
+}
+ 
+void Portfolio::Fee( Money Amount )
+{
+   Cash -= Amount;
+}
+ 
+int Portfolio::FindStock( const StockTicker Ticker )
+{
+  for( int i = 0; i &lt; NumberStocks; i++ )
+    if( !strcmp( Ticker, Stocks[i]-&gt;GetTicker() ) )
+      {
+        return i;
+        break;
+      }
+  return -1;
+}
+ 
+void Portfolio::Purchase( const StockTicker Ticker,
+                          int Quantity,
+                          Money Value )
+{
+   int found = FindStock( Ticker );
+ 
+   if( found == -1 ) // need to add a stock
+     {
+       if( NumberStocks == MaxNumberStocks ) // need to resize
+         {
+            Stock ** NewStocks = new PStock[ MaxNumberStocks * 2 ];
+            memcpy( NewStocks, Stocks, sizeof( Stock ) * MaxNumberStocks );
+            delete[] Stocks;
+            Stocks = NewStocks;
+            MaxNumberStocks *= 2;
+         }
+       found = NumberStocks++;
+       Stocks[found] = new Stock( Ticker, Quantity, Value );
+     }
+   else
+     {
+        Stocks[found]-&gt;Purchase( Quantity );
+        Stocks[found]-&gt;SetValue( Value );
+     }
+ 
+   Cash -= Quantity * Value;
+}
+ 
+int Portfolio::Dividend( const StockTicker Ticker, Money DividendPerShare )
+{
+  int found = FindStock( Ticker );
+ 
+  if( found == -1 )
+     return 0;
+ 
+  Cash += DividendPerShare * Stocks[found]-&gt;GetQuantity();
+}
+ 
+int Portfolio::Split( const StockTicker Ticker, Money Factor )
+{
+  int found = FindStock( Ticker );
+ 
+  if( found == -1 )
+     return 0;
+ 
+  Stocks[found]-&gt;Split( Factor );
+}
+ 
+ 
+int Portfolio::Valuation( StockTicker Ticker, Money theValue )
+{
+  int found = FindStock( Ticker );
+  if( found == -1 )
+     return 0; // failure
+ 
+  Stocks[found]-&gt;SetValue( theValue );
+ 
+  return 1; // success
+}
+ 
+ 
+Money Portfolio::Equity( void ) const
+{
+   Money e = Cash;
+ 
+   for( int i =0; i &lt; NumberStocks; i++ )
+      e += Stocks[i]-&gt;GetQuantity() * Stocks[i]-&gt;GetValue();
+ 
+   return e ;
+}
+ 
+void Portfolio::Print( ostream &amp; os, const char * comment )
+{
+  os &lt;&lt; endl &lt;&lt; "Portfolio: " &lt;&lt; (comment ? comment : "" ) &lt;&lt; endl;
+ 
+  for( int i = 0; i &lt; NumberStocks; i++ )
+     os &lt;&lt; Stocks[i]-&gt;GetTicker() &lt;&lt; " "
+        &lt;&lt; Stocks[i]-&gt;GetQuantity() &lt;&lt; " "
+        &lt;&lt; Stocks[i]-&gt;GetValue() &lt;&lt; ", Total = "
+        &lt;&lt; Stocks[i]-&gt;GetValue() * Stocks[i]-&gt;GetQuantity() &lt;&lt; endl;
+  os &lt;&lt; "Cash: " &lt;&lt; Cash &lt;&lt; endl;
+ 
+  cout &lt;&lt; "Equity = " &lt;&lt; Equity() &lt;&lt; endl;
+  cout &lt;&lt; "Number of Shares = " &lt;&lt; GetNumShares() &lt;&lt; endl;
+  cout &lt;&lt; "Share Value = " &lt;&lt; EquityPerShare() &lt;&lt; endl;
+}
+ 
+void ReadHistory( Portfolio &amp; portfolio, FILE * f )
+{
+   while( !feof( f ) )
+     {
+        char buf[2048];
+        buf[0] = 0;
+        fgets( buf, sizeof( buf ), f );
+ 
+        //cout &lt;&lt; buf;
+        char * p = strchr( buf, '#' );
+        if( p != 0 ) *p = 0;  // Comment #
+ 
+        for( p = buf; *p; p++ ) *p = toupper( *p );
+ 
+        if( !strncmp( buf, "INV", 3 ) )
+         {
+            //cout &lt;&lt; "investing" &lt;&lt; endl;
+ 
+            float amount;
+            if( sscanf( buf+4, "%f", &amp;amount ) == 1 )
+               portfolio.Invest( amount );
+            else
+               fprintf( stderr, "Invalid transaction: %s\n", buf );
+         }
+        else if( !strncmp( buf, "WDR", 3 ) )
+         {
+            float amount;
+            if( sscanf( buf+4, "%f", &amp;amount ) == 1 )
+               portfolio.Invest( -amount );
+            else
+               fprintf( stderr, "Invalid transaction: %s\n", buf );
+         }
+        else if( !strncmp( buf, "PUR", 3 ) )
+         {
+            float price;
+            int numshares;
+            char ticker[2048];
+ 
+            if( sscanf( buf+4, "%s %d %f", &amp;ticker, &amp;numshares, &amp;price ) == 3 )
+              portfolio.Purchase( ticker, numshares, price );
+            else
+              fprintf( stderr, "Invalid transaction: %s\n", buf );
+         }
+        else if( !strncmp( buf, "FEE", 3 ) )
+         {
+            float amount;
+ 
+            if( sscanf( buf+4, "%f", &amp;amount ) == 1 )
+              portfolio.Fee( amount );
+            else
+              fprintf( stderr, "Invalid transaction: %s\n", buf );
+         }
+        else if( !strncmp( buf, "SAL", 3 ) )
+         {
+            float price;
+            int numshares;
+            char ticker[2048];
+ 
+            if( sscanf( buf+4, "%s %d %f", &amp;ticker, &amp;numshares, &amp;price ) == 3 )
+              portfolio.Purchase( ticker, -numshares, price );
+            else
+              fprintf( stderr, "Invalid transaction: %s\n", buf );
+         }
+        else if( !strncmp( buf, "DIV", 3 ) )
+         {
+            float div;
+            char ticker[2048];
+            if( sscanf( buf+4, "%s %f", &amp;ticker, &amp;div ) == 2 )
+              portfolio.Dividend( ticker, div );
+            else
+              fprintf( stderr, "Invalid transaction: %s\n", buf );
+         }
+        else if( !strncmp( buf, "VAL", 3 ) )
+         {
+            float val;
+            char ticker[2048];
+            if( sscanf( buf+4, "%s %f", &amp;ticker, &amp;val ) == 2 )
+              portfolio.Valuation( ticker, val );
+            else
+              fprintf( stderr, "Invalid transaction: %s\n", buf );
+         }
+        else if( !strncmp( buf, "SPL", 3 ) )
+         {
+            float factor;
+            char ticker[2048];
+            if( sscanf( buf+4, "%s %f", &amp;ticker, &amp;factor ) == 2 )
+              portfolio.Split( ticker, factor );
+            else
+              fprintf( stderr, "Invalid transaction: %s\n", buf );
+         }
+        else if( !strncmp( buf, "PRN", 3 ) )
+         {
+              portfolio.Print( cout, buf + 4 );
+         }
+     }
+}
+ 
+int main( int argc, char *argv[] )
+{
+   Portfolio portfolio;
+ 
+   FILE * input;
+   if( argc &gt;= 2 )
+   {
+      if( (input = fopen( argv[1], "r" )) == 0 )
+      {
+         fprintf( stderr, "Can't open %s.\n"
+               "Usage: %s activity-file TICK=val TICK1=val ...\n",
+               argv[1], argv[0] );
+         exit( 1 );
+      }
+   }
+   else
+   {
+      input = stdin;
+   }
+
+   ReadHistory( portfolio, input );
+ 
+   for( argc--; argc &gt; 1; argc-- )
+      // process arguments of form "TICKER=value"
+     {
+       char buf[ 2048 ];
+       strcpy( buf, argv[argc] );
+
+       for( char * p = buf; *p; p++ ) *p = toupper( *p );
+ 
+       char * pvalue = strchr( buf, '=' );
+ 
+       if( pvalue == 0 )
+         {
+           cerr &lt;&lt; "Wrong argument: " &lt;&lt; argv[argc]
+                &lt;&lt; ". Must be of form TICKER=value" &lt;&lt; endl;
+           continue;
+         }
+ 
+       *pvalue++=0;
+ 
+       float value;
+ 
+       if( sscanf( pvalue, "%f", &amp;value ) != 1 )
+       {
+          cerr &lt;&lt; "Wrong argument: " &lt;&lt; argv[argc]
+               &lt;&lt; ". Must be of form TICKER=value" &lt;&lt; endl;
+          continue;
+       }
+ 
+       if( !portfolio.Valuation( buf, value ) )
+       {
+          cerr &lt;&lt; "Ticker " &lt;&lt; buf &lt;&lt; " not found in the portfolio!" &lt;&lt; endl;
+       }
+     }
+ 
+   portfolio.Print( cout, "Final Result" );
+ 
+   printf( "\n\n"
+"Copyright (C) Igor Chudov, ichudov@algebra.com,\n"
+"	<A  HREF="http://www.algebra.com/~ichudov\n\n">http://www.algebra.com/~ichudov\n\n</A>"
+"No warranty is provided with this free program. GNU Copyright applies.\n" );
+
+}
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00846" HREF="msg00846.html">Re: return.C -- performance tracking tool (fwd)</A></STRONG>
+<UL><LI><EM>From:</EM> Alexandre Maret &lt;amaret@infomaniak.ch&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00826.html">DDJ Crypto CD has arrived!</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00827.html">IRC CHAT  Terrorism and Desert Thunder</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00854.html">Re: DDJ Crypto CD has arrived!</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00846.html">Re: return.C -- performance tracking tool (fwd)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00825"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00825"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

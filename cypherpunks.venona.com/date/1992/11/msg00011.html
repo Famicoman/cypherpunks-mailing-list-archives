@@ -1,0 +1,299 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: random numbers (resend) -->
+<!--X-From-R13: Brgre Euvcyrl <fuvcyrlNgsf.QA[> -->
+<!--X-Date: Thu, 5 Nov 92 18:25:03 PPE -->
+<!--X-Message-Id: 9211060124.AA11182@edev0.TFS -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>random numbers (resend)</TITLE>
+<LINK REV="made" HREF="mailto:shipley@tfs.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00010.html">Date Prev</A>][<A HREF="msg00012.html">Date Next</A>][<A HREF="msg00036.html">Thread Prev</A>][<A HREF="msg00013.html">Thread Next</A>][<A HREF="index.html#00011">Date Index</A>][<A HREF="threads.html#00011">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>random numbers (resend)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: random numbers (resend)</LI>
+<LI><em>From</em>: Peter Shipley &lt;<A HREF="mailto:shipley@tfs.COM">shipley@tfs.COM</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 05 Nov 92 17:24:21 -0800</LI>
+<LI><em>Phone</em>: (510) 849-2230</LI>
+<LI><em>Posted-Date</em>: Thu, 05 Nov 92 17:24:21 -0800</LI>
+<LI><em>Snail-Address</em>: 2560 Bancroft way #51;Berkeley CA 94704-1700</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+[my first send bounced so I am resending]
+
+Here is some code to run on a SparcStaion (I or II) to generate random
+numbers based on noise from the audio chip.  I have not tested the true
+randomness of the out but cause I don't know how.  Thus if anyone can
+please do and send me the results.  I suppose some minor tweeking can be
+made for the mid range gain for a better spread. 
+
+unfortunatly there is no way to turn off the u-law audio compression
+the chip uses to outputs data if you plot the out put you will see the
+problem the compression caused.
+
+
+
+#! /bin/sh
+# here be a shar file
+echo x - Audio/Makefile
+cat &gt;Audio/Makefile &lt;&lt;'!E!O!F!'
+
+LD= $(CC)
+CC= cc
+
+LDFLAGS=-g
+CFLAGS=-g -I/usr/demo/SOUND -I/usr/local/include
+
+LIBS= -L/usr/demo/SOUND/ -laudio
+
+audio_rand: audio_rand.o
+	$(LD) $(LDFLAGS) audio_rand.o $(LIBS) -o $@
+
+test: audio_rand
+	audio_rand | head -10000 &gt; \#fff
+	echo "plot '#fff'" | gnuplot
+
+!E!O!F!
+#! /bin/sh
+echo x - Audio/audio_rand.c
+cat &gt;Audio/audio_rand.c &lt;&lt;'!E!O!F!'
+static char *_author = "Peter Shipley\n";
+
+#define AUDIO_CHIP
+#include &lt;stdio.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;sys/ioctl.h&gt;
+#include &lt;sun/audioio.h&gt;
+#include &lt;sbusdev/audio_79C30.h&gt;
+#include &lt;multimedia/ulaw2linear.h&gt;
+
+static char *_who_did_it = "Peter M Shipley (1992) [v0.1]\n";
+
+/* X:  0-15 
+   R:  16-31
+   GX: 32-33
+   GR: 33-34
+*/
+
+#define MMR2_BITS 45
+
+
+#define GX_GAIN 32
+
+
+main()
+{
+struct audio_ioctl ai;
+extern void bzero();
+int fd;
+int j, i;
+
+    if( (fd = open("/dev/audio", O_RDONLY)) &lt; 0) {
+	perror("open:");
+	exit(1);
+    }
+
+    bzero(ai, sizeof(struct audio_ioctl) );
+
+    ai.control = AUDIO_MAP_ALL;
+
+    if ( ioctl( fd, AUDIOGETREG, &amp;ai ) &lt; 0 ) {
+	perror( "AUDIOGETREG ALL:" );
+	exit(1);
+    }
+    /* set audio input to a unconnected pin (audio input B) */
+    ai.data[MMR2_BITS] = ( ai.data[MMR2_BITS] &amp; ~AUDIO_MMR2_BITS_AINB);
+
+    /* set gain of the GX reg to the max */
+    ai.data[GX_GAIN] = 0x7F;
+    ai.data[GX_GAIN+1] = 0x0;
+
+    for(i=0;;) {
+	char buf[BUFSIZ];
+
+	read(fd, buf, BUFSIZ);
+
+	for(j=0; j&lt;BUFSIZ ; j++)
+	    printf("%d %d\n", i++, audio_u2s(buf[j]));
+    }
+}
+!E!O!F!
+#! /bin/sh
+echo x - Audio/reg.c
+cat &gt;Audio/reg.c &lt;&lt;'!E!O!F!'
+static char *_author = "Peter Shipley\n";
+
+#define AUDIO_CHIP
+#include &lt;stdio.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;sys/ioctl.h&gt;
+#include &lt;sun/audioio.h&gt;
+#include &lt;sbusdev/audio_79C30.h&gt;
+
+static char * print_byte();
+
+static struct _map {
+	char *label;
+	char size;
+} map[] = {
+    "X filter", 16,
+    "R filter", 16,
+    "GX Gain", 2,
+    "GR Gain", 2,
+    "GER Gain", 2,
+    "Sidetone", 2,
+    "Frequency Tone gen", 2,
+    "Amplitude Tone gen", 2,
+    "MMR1", 1,
+    "MMR2", 1
+};
+
+#define NMAPS  (sizeof(map) / sizeof(struct _map) )
+
+struct audio_ioctl ai;
+
+main()
+{
+extern void bzero();
+int fd;
+int oldmmr2;
+int newmmr2;
+
+    if( (fd = open("/dev/audio", O_RDWR)) &lt; 0) {
+	perror("open:");
+	exit(1);
+    }
+
+    dump(fd);
+
+    /*
+    bzero(ai, sizeof(struct audio_ioctl) );
+    ai.control = AUDIO_MAP_GX;
+    if ( ioctl( fd, AUDIOGETREG, &amp;ai ) &lt; 0 ) {
+	perror( "AUDIOGETREG MMR2:" );
+	exit(1);
+    }
+
+    ai.data[0] = ai.data[1] = 0;
+    if ( ioctl( fd, AUDIOSETREG, &amp;ai ) &lt; 0 ) {
+	perror( "AUDIOSETREG MMR2:" );
+	exit(1);
+    }
+
+    */
+
+    sleep(5);
+    dump(fd);
+
+}
+
+
+dump(f)
+int f;
+{
+int i,k;
+
+    bzero(ai, sizeof(struct audio_ioctl) );
+    ai.control = AUDIO_MAP_ALL;
+    if ( ioctl( f, AUDIOGETREG, &amp;ai ) &lt; 0 ) {
+	perror( "AUDIOGETREG MMR2:" );
+	exit(1);
+    }
+
+
+    k=0;
+    for(i = 0 ; i &lt; NMAPS ; i++) {
+	int j;
+	(void) printf("%s:\n", map[i].label);
+	for(j=1; j &lt;= map[i].size; j++,k++) {
+	    (void) printf("%10s", print_byte(ai.data[k]));
+	    if ( (j % 7) == 0)
+		(void) fputc('\n', stdout);
+	}
+	(void) fputc('\n', stdout);
+    }
+
+    (void) fputc('\n', stdout);
+}
+
+
+
+
+static char *
+print_byte(c)
+char c;
+{
+static char bt[9];
+
+    bt[0] = ( (c &amp; 0x01) ? '1' : '0');
+    bt[1] = ( (c &amp; 0x02) ? '1' : '0');
+    bt[2] = ( (c &amp; 0x03) ? '1' : '0');
+    bt[3] = ( (c &amp; 0x04) ? '1' : '0');
+    bt[4] = ( (c &amp; 0x05) ? '1' : '0');
+    bt[5] = ( (c &amp; 0x06) ? '1' : '0');
+    bt[6] = ( (c &amp; 0x07) ? '1' : '0');
+    bt[7] = ( (c &amp; 0x08) ? '1' : '0');
+    bt[8] = NULL;
+
+    return bt;
+}
+!E!O!F!
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00010.html">a cryptographic deal with the devil</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00012.html">Re:  a cryptographic deal with the devil</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00036.html">Re:  a cryptographic deal with the devil</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00013.html">1993 RSA Data Security Conference</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00011"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00011"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

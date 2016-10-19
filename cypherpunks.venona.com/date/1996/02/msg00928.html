@@ -1,0 +1,1009 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: I decrypted Windows 95 share passwords... -->
+<!--X-From-R13: "Rnivq D." <fanxrlNjnz.hzq.rqh> -->
+<!--X-Date: Mon, 12 Feb 1996 02:45:40 +0800 -->
+<!--X-Message-Id: 199602111738.MAA15947@bb.hks.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>I decrypted Windows 95 share passwords...</TITLE>
+<LINK REV="made" HREF="mailto:snakey@wam.umd.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00918.html">Date Prev</A>][<A HREF="msg00927.html">Date Next</A>][<A HREF="msg00918.html">Thread Prev</A>][<A HREF="msg00927.html">Thread Next</A>][<A HREF="index.html#00928">Date Index</A>][<A HREF="threads.html#00928">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>I decrypted Windows 95 share passwords...</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: I decrypted Windows 95 share passwords...</LI>
+<LI><em>From</em>: "David R." &lt;<A HREF="mailto:snakey@wam.umd.edu">snakey@wam.umd.edu</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 11 Feb 1996 12:38:05 -0500</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+I just posted the following message to a few usenet groups.  I thought
+it might be of interest here too.  Note: I know nothing about 
+cryptography, and I didn't have to know anything about cryptography
+in order to break this pitiful Microsoft 'code'.
+
+David Ross
+snakey@cs.umd.edu
+
+Here's the message I posted:
+
+I recently was fiddling around with my Windows 95 registry and decided to
+see just how "encrypted" passwords for shared items _really_ are.  Well,
+after some experimentation, I was able to break the code!  This was
+rather surprising to me, considering I'm just a college student with
+absolutely no background in encryption.  I have submitted my findings to
+"Hack Microsoft" contest.  =)
+
+The implications of this discovery are not extremely apparent.  It would
+seem that anyone with access to your registry would already have access
+to anything else on your computer.  Nevertheless, the flawed belief that
+an encrypted password stored in your registry is actually encrypted to a
+degree expected from a company such as Microsoft could lead to potential
+security holes.  At least the fact that Microsoft _attempted_ to 
+encrypt these passwords might indicate that they saw some reason
+themselves to have them inaccessable.
+
+The included C code (with a description of the Microsoft 'encryption'
+included) will decode a password for a shared item from its byte code
+in the registry.
+
+David Ross
+snakey@cs.umd.edu
+
+Here's the program:
+
+/* This program takes an 'encrypted' Windows 95 share password and decrypts it.
+ * Look at:
+ * HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Network\LanMan
+ * to find a machine's shares.  Within the data for each share are two
+ * registry entries, Parm1enc and Parm2enc.  Parm1enc is the "Full access"
+ * password.  Parm2enc is the "Read only" password.
+ *
+ * David Ross  2/9/96
+ * snakey@cs.umd.edu
+ *
+ * Do not distribute this program for any commercial purpose without first
+ * contacting me for permission.
+ *
+ * DO NOT USE THIS PROGRAM FOR ILLEGAL OR UNETHICAL PURPOSES!
+ *
+ * A technical description of the 'code' can be found later on in this
+ * document. 
+ *
+ * Oh yeah...  a totally unsolicited self promotion here...  If anyone has
+ * a job for a junior year Computer Science student for summer '96, please
+ * let me know!  I'm familiar with Windows and Mac networking (especially 
+ * involving TCP/IP), fluent in C and C++, and working on becoming a
+ * proficient Windows programmer.
+ *
+ */
+
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+#define BUFFER 30
+
+int DecodeCharOne(unsigned char *);
+int DecodeCharTwo(unsigned char *);
+int DecodeCharThree(unsigned char *);
+int DecodeCharFour(unsigned char *);
+int DecodeCharFive(unsigned char *);
+int DecodeCharSix(unsigned char *);
+int DecodeCharSeven(unsigned char *);
+int DecodeCharEight(unsigned char *);
+
+main() {
+
+  int i;           /* Generic counter */
+  int eocc = 0;    /* Records if there has been an error */
+
+  /* The following structure stores the encoded bytes.  Decoded values
+   * replace the encoded values as the decoding process moves along
+   * The initial values show here are not used and are unimportant
+   */
+  unsigned char mybytes[] = { 0x15, 0xba, 0x6d, 0x86, 0x73, 0x89, 0xf4, 0x4a };
+  unsigned short tempshort;   /* Used as a go-between from sscanf() to
+				 mybytes[] so unaligned data accesses
+				 don't occur */
+
+  int goupto = 0;  /* Records how many characters there are to be decoded */
+  
+  /* The following code handles input */
+  char inpt[BUFFER];
+  char *inptptr;
+  
+  printf("Input the byte code in hex (ex: 76 d5 09 e3): ");
+  fgets(inpt, BUFFER, stdin);
+  
+  inptptr = strtok(inpt, " ");
+  if (inpt[0] != '\n')
+    while ((inptptr != NULL) &amp;&amp; (goupto &lt; 8)) {
+      sscanf(inptptr, "%hx", &amp;tempshort);
+      mybytes[goupto++] = tempshort;
+      inptptr = strtok(NULL, " ");
+    }
+  
+  /* Decode all the characters.  I could have made this stop immediately
+   * after an error has been found, but it really doesn't matter
+   */
+  if (!DecodeCharOne(&amp;mybytes[0])) eocc = 1;
+  if (!DecodeCharTwo(&amp;mybytes[1])) eocc = 1;
+  if (!DecodeCharThree(&amp;mybytes[2])) eocc = 1;
+  if (!DecodeCharFour(&amp;mybytes[3])) eocc = 1;
+  if (!DecodeCharFive(&amp;mybytes[4])) eocc = 1;
+  if (!DecodeCharSix(&amp;mybytes[5])) eocc = 1;
+  if (!DecodeCharSeven(&amp;mybytes[6])) eocc = 1;
+  if (!DecodeCharEight(&amp;mybytes[7])) eocc = 1;
+
+  /* If the password could be decoded, print it */
+  if (eocc) printf("The encrypted password is invalid.\n");
+  else {
+    printf("The decoded password is: \"");
+    for (i = 0; i &lt; goupto; i++) printf("%c",mybytes[i]);
+    printf("\"\n");
+  }
+}  /* End of main() */
+
+/*
+ * I will document this function, but not the seven other functions
+ * which decode the subsequent seven characters.  All of these functions
+ * are essentially the same.  Multiple functions are necessary though
+ * because each column of the password has a different set of encoding
+ * patterns.
+ *
+ * The following section will attempt to explain the encoding scheme
+ * for share passwords as stored in the Windows 95 registry.  I will
+ * try to explain this as clearly as I can, however I really have no
+ * background in encryption.  If you have any questions, please feel
+ * free to send them to me at snakey@cs.umd.edu.
+ *
+ * First off, share passwords can be anywhere from one character to
+ * eight.  "Read only" passwords and "Full access" passwords both use
+ * the same encoding scheme, and so they both can be decoded by this
+ * program.  There is a one-to-one relationship between the number of
+ * characters in a password and the number of bytes in the encoded
+ * password stored in the registry.  In fact, each encoded byte directly
+ * corresponds to the letter in the corresponding column of the
+ * unencoded password!  Ie: If I change a password "passwd" to "masswd",
+ * only the first byte of the encrypted password will change.  Knowing
+ * this, it is easy to see that all that needs to be done to decode
+ * the password is to find a mapping from an encoded byte to a decoded
+ * letter.  That's what this program does.  Unfortunately, things get
+ * a little tricky because a letter in the first column of a password
+ * is encoded using a slightly different algorithm than a letter
+ * in the second column, and so on.
+ *
+ * There is another complexity which we do not really need to worry
+ * about to a great extent, but we still need to be aware of.  Many
+ * characters, when entered into a password, map to the same encoded
+ * byte.  The best example of this is that both 'A' and 'a' are the
+ * same as far as share passwords are concerned.  There are numerous
+ * other examples of this, and this allows us to effectively limit the
+ * range of characters we need to be able to decode.  The range of
+ * ASCII values we will have to be able to decode turns out to be
+ * from 32 to 159.  ASCII values higher than 159 tend to map to
+ * encoded bytes which also represent more normal ASCII values.  So
+ * if a user manages to create a password with high ASCII values
+ * in it, that password will still be decoded by this program.
+ * Although the decoded password won't look the same as the original,
+ * it will work just as well.
+ *
+ * With all of the preliminaries out of the way, I can now move on
+ * to describing the mapping from an encoded byte to it's corresponding
+ * ASCII value.  I think the best way to describe this would be through
+ * a picture of exactly how the characters from 32 to 63 are mapped
+ * out in the code for the first letter in a password.  This table goes
+ * beyond the 80 column format maintained in the rest of this document,
+ * but it is really the best solution.  If the table below doesn't look
+ * right, load this file up in a text editor that supports greater than
+ * 80 columns.
+ *
+ *   Encoded byte (hex)    - 1F 1E 1D 1C 1B 1A 19 18 17 16 15 14 13 14 11 10 0F OE 0D 0C 0B 0A 09 08 07 06 05 04 03 02 01 00
+ *   ASCII value (decimal) - 42 43 40 41 46 47 44 45 34 35 32 33 38 39 36 37 58 59 56 57 62 63 60 61 50 51 48 49 54 55 52 53
+ *   Pair #                - |_6_| |_5_| |_8_| |_7_| |_2_| |_1_| |_4_| |_3_| |14_| |13_| |16_| |15_| |10_| |_9_| |12_| |11_|
+ *   Quad #                - |__________2__________| |__________1__________| |__________3__________| |__________4__________|
+ *   32 byte block #       - |______________________________________________1______________________________________________|
+ *
+ * The "Pair #", "Quad #", and "32 byte block #" rows each are there to
+ * make the general ordering of the code more visible.  The first thing to
+ * note is that the range of encoded byte values runs from 00 to 1f.  This
+ * will not always be the case for the first set of 32 characters.  In
+ * fact, the next set of 32 characters (ASCII 64 to ASCII 95) is not in
+ * the range of 20 to 3f in encoded form.  I never concerned myself with
+ * predicting exactly where each of the four 32 byte ranges are aligned
+ * within the range of 0 to 256.  In my decoding scheme, I simply specify
+ * the location of the first character in a 32 byte block (which I have
+ * pre-determined via experimentation) and determine the locations of the
+ * rest of the characters in the block relative to the inital value.  This
+ * amounts to a total of four hand-decoded characters for the entire code.
+ *
+ * From a starting point which is given (in this case the fact that ASCII
+ * 32 is encoded as 0x15), my decoding scheme follows a pattern that is
+ * probably already apparent to you if you have examined the above table
+ * closely.  First, if the encoded byte number is odd, it simple subtracts
+ * one from this byte number to get the byte number of the encoded form of
+ * the subsequent character.  This is much more simple than it sounds.
+ * As an example, given that the code for ASCII 32 is 0x15, the program
+ * knows that the code for ASCII 33 must be 0x14.  The tricky part is that
+ * this is not always true for every code.  Recall that there is a different
+ * coding scheme for each of the 8 columns in a password, and that the above
+ * table only describes the coding scheme for the first column.  Other columns
+ * reverse this relationship between the two ASCII values of a certain pair.
+ *
+ * Pairs are grouped into units of four, appearing in a predefined pattern.
+ * In this case, the first pair (by first I mean the pair with the lowest
+ * set of ASCII values) is put in the second slot of a quad (which contains
+ * four pairs).  The second pair is put in the first slot, the third is put
+ * in the fourth quad, and the fourth is put in the third quad.  This changes
+ * depending on the specific code used (of the 8 possible).
+ *
+ * Quads also fill a block in the same manner, however the ordering is NOT
+ * necessarily the same as the way pairs fit into quads!  As I described
+ * above, there are four blocks, and they fit into the entire range of
+ * 128 values just as pairs fit into quads and quads fit into blocks,
+ * via a pattern determined by whoever invented this encoding scheme.  It
+ * is important to realize that the range of 128 possible encoded
+ * values can be anywhere within the range of 0 to 256.  Ie: One block can
+ * be positioned from 0x00 to 0x1f, while another block in the same code
+ * can be positioned from 0xa0 to 0xbf.
+ *
+ * I realize that the above description is a bit complex, and it doesn't
+ * really cover much of _how_ my program decodes the the encoded values.
+ * If you honestly can't understand a word I've said, just go back to
+ * the table and really take a long look at it.  Print it out, put it
+ * under your pillow when you go to sleep.  Sooner or later the order
+ * of it all will dawn on you and you should be able to step through
+ * my code and see how it derives its answer, at least for the
+ * DecodeCharOne() routine.  Seven other tables (which I have rough
+ * copies of here on notebook paper) were needed to come up with
+ * the seven other decoders for the seven other character places.
+ *
+ */
+
+int DecodeCharOne(unsigned char *mychar) {
+  int i = 0;        /* Keeps track of the decoded character # minus 32 */
+  int cletter = 1;  /* Sets the current letter of the 8 char quad */
+  int blockl1 = 1;  /* Sets the current quad */
+  int blockl2 = 1;  /* Sets the current 32 char block */
+  int retval = 1;
+  /* We are on this col of the table: */
+  unsigned char code = 0x15;    /* The code for a space */
+  
+  /* This is the main loop.  It walks through each decoded character, finds
+   * its corresponding encoded value, and looks to see if that's the same as
+   * the encoded value we are looking for.  If it is, we have found our
+   * decoded character!
+   */
+  while((i&lt;256) &amp;&amp; (code != *mychar)) {
+    switch (cletter) {
+    case 1:
+      code--;
+      cletter++;
+      break;
+    case 2:
+      code += 3;
+      cletter++;
+      break;
+    case 3:
+      code--;
+      cletter++;
+      break;
+    case 4:
+      code -= 5;
+      cletter++;
+      break;
+    case 5:
+      code--;
+      cletter++;
+      break;
+    case 6:
+      code+=3;
+      cletter++;
+      break;
+    case 7:
+      code--;
+      cletter++;
+      break;
+    case 8:
+      cletter = 1;
+      switch (blockl1) {    /* After we hit character number 8, we have */
+      case 1:               /* to do a relative jump to the next quad */
+	code += 11;
+	blockl1++;
+	break;
+      case 2:
+	code -= 21;
+	blockl1++;
+	break;
+      case 3:
+	code += 11;
+	blockl1++;
+	break;
+      case 4:
+	blockl1 = 1;
+	switch (blockl2) {       /* After we hit the last quad, we have to */
+	case 1:                  /* jump to the next 32 character block. */
+	  code = 0x75;
+	  blockl2++;
+	  break;
+	case 2:
+	  code = 0x55;
+	  blockl2++;
+	  break;
+	case 3:
+	  code = 0xb5;
+	  blockl2++;
+	  break;
+	case 4:
+	  code = 0x15;
+	  blockl2 = 1;
+	  break;
+	}
+	break;
+      }
+      break;
+    }
+    i++;
+  }
+  if (i == 256) retval = 0;
+  else *mychar = i + 32;
+  return retval;
+}  /* End of DecodeCharOne() */
+
+int DecodeCharTwo(unsigned char *mychar) {
+  int i = 0;
+  int cletter = 1;
+  int blockl1 = 1;
+  int blockl2 = 1;
+  int retval = 1;
+  unsigned char code = 0xba;    /* The code for a space */
+  while((i&lt;256) &amp;&amp; (code != *mychar)) {
+    switch (cletter) {
+    case 1:
+      code++;
+      cletter++;
+      break;
+    case 2:
+      code -= 3;
+      cletter++;
+      break;
+    case 3:
+      code++;
+      cletter++;
+      break;
+    case 4:
+      code += 5;
+      cletter++;
+      break;
+    case 5:
+      code++;
+      cletter++;
+      break;
+    case 6:
+      code -= 3;
+      cletter++;
+      break;
+    case 7:
+      code++;
+      cletter++;
+      break;
+    case 8:
+      cletter = 1;
+      switch (blockl1) {
+      case 1:
+      	code -= 11;
+	blockl1++;
+	break;
+      case 2:
+	code -= 11;
+	blockl1++;
+	break;
+      case 3:
+	code -= 11;
+	blockl1++;
+	break;
+      case 4:
+	blockl1 = 1;
+	switch (blockl2) {
+	case 1:
+	  code = 0xda;
+	  blockl2++;
+	  break;
+	case 2:
+	  code = 0xfa;
+	  blockl2++;
+	  break;
+	case 3:
+	  code = 0x1a;
+	  blockl2++;
+	  break;
+	case 4:
+	  code = 0xba;
+	  blockl2 = 1;
+	  break;
+	}
+	break;
+      }
+      break;
+    }
+    i++;
+  }
+  if (i == 256) retval = 0;
+  else *mychar = i + 32;
+  return retval;
+}  /* End of DecodeCharTwo() */
+
+int DecodeCharThree(unsigned char *mychar) {
+  int i = 0;
+  int cletter = 1;
+  int blockl1 = 1;
+  int blockl2 = 1;
+  int retval = 1;
+  unsigned char code = 0x6d;    /* The code for a space */
+  while((i&lt;256) &amp;&amp; (code != *mychar)) {
+    switch (cletter) {
+    case 1:
+      code--;
+      cletter++;
+      break;
+    case 2:
+      code += 3;
+      cletter++;
+      break;
+    case 3:
+      code--;
+      cletter++;
+      break;
+    case 4:
+      code -= 5;
+      cletter++;
+      break;
+    case 5:
+      code--;
+      cletter++;
+      break;
+    case 6:
+      code += 3;
+      cletter++;
+      break;
+    case 7:
+      code--;
+      cletter++;
+      break;
+    case 8:
+      cletter = 1;
+      switch (blockl1) {
+      case 1:
+        code -= 5;
+        blockl1++;
+	break;
+      case 2:
+        code += 27;
+        blockl1++;
+        break;
+      case 3:
+        code -= 5;
+        blockl1++;
+        break;
+      case 4:
+	blockl1 = 1;
+	switch (blockl2) {
+	case 1:
+	  code = 0x0d;
+	  blockl2++;
+	  break;
+	case 2:
+          code = 0x2d;
+          blockl2++;
+          break;
+	case 3:
+          code = 0xcd;
+          blockl2++;
+          break;
+	case 4:
+	  code = 0x6d;
+	  blockl2 = 1;
+          break;
+	}
+	break;
+      }
+      break;
+    }
+    i++;
+  }
+  if (i == 256) retval = 0;
+  else *mychar = i + 32;
+  return retval;
+}  /* End of DecodeCharThree() */
+
+int DecodeCharFour(unsigned char *mychar) {
+  int i = 0;
+  int cletter = 1;
+  int blockl1 = 1;
+  int blockl2 = 1;
+  int retval = 1;
+  unsigned char code = 0x86;    /* The code for a space */
+  while((i&lt;256) &amp;&amp; (code != *mychar)) {
+    switch (cletter) {
+    case 1:
+      code++;
+      cletter++;
+      break;
+    case 2:
+      code -= 3;
+      cletter++;
+      break;
+    case 3:
+      code++;
+      cletter++;
+      break;
+    case 4:
+      code -= 3;
+      cletter++;
+      break;
+    case 5:
+      code++;
+      cletter++;
+      break;
+    case 6:
+      code -= 3;
+      cletter++;
+      break;
+    case 7:
+      code++;
+      cletter++;
+      break;
+    case 8:
+      cletter = 1;
+      switch (blockl1) {
+      case 1:
+        code += 13;
+        blockl1++;
+	break;
+      case 2:
+        code += 13;
+        blockl1++;
+        break;
+      case 3:
+        code += 13;
+        blockl1++;
+        break;
+      case 4:
+	blockl1 = 1;
+	switch (blockl2) {
+	case 1:
+          code = 0xe6;
+          blockl2++;
+	  break;
+	case 2:
+          code = 0xc6;
+          blockl2++;
+          break;
+	case 3:
+          code = 0x26;
+          blockl2++;
+          break;
+	case 4:
+	  code = 0x86;
+          blockl2 = 1;
+          break;
+	}
+	break;
+      }
+      break;
+    }
+    i++;
+  }
+  if (i == 256) retval = 0;
+  else *mychar = i + 32;
+  return retval;
+}   /* End of DecodeCharFour() */
+
+int DecodeCharFive(unsigned char *mychar) {
+  int i = 0;
+  int cletter = 1;
+  int blockl1 = 1;
+  int blockl2 = 1;
+  int retval = 1;
+  unsigned char code = 0x73;    /* The code for a space */
+  while((i&lt;256) &amp;&amp; (code != *mychar)) {
+    switch (cletter) {
+    case 1:
+      code--;
+      cletter++;
+      break;
+    case 2:
+      code--;
+      cletter++;
+      break;
+    case 3:
+      code--;
+      cletter++;
+      break;
+    case 4:
+      code += 7;
+      cletter++;
+      break;
+    case 5:
+      code--;
+      cletter++;
+      break;
+    case 6:
+      code--;
+      cletter++;
+      break;
+    case 7:
+      code--;
+      cletter++;
+      break;
+    case 8:
+      cletter = 1;
+      switch (blockl1) {
+      case 1:
+        code += 7;
+	blockl1++;
+	break;
+      case 2:
+        code -= 25;
+        blockl1++;
+        break;
+      case 3:
+        code += 7;
+	blockl1++;
+        break;
+      case 4:
+	blockl1 = 1;
+	switch (blockl2) {
+	case 1:
+          code = 0x13;
+          blockl2++;
+	  break;
+	case 2:
+          code = 0x33;
+          blockl2++;
+          break;
+	case 3:
+          code = 0x23;
+          blockl2++;
+	  break;
+	case 4:
+	  code = 0x73;
+          blockl2 = 1;
+          break;
+	}
+	break;
+      }
+      break;
+    }
+    i++;
+  }
+  if (i == 256) retval = 0;
+  else *mychar = i + 32;
+  return retval;
+}    /* End of DecodeCharFive() */
+
+int DecodeCharSix(unsigned char *mychar) {
+  int i = 0;
+  int cletter = 1;
+  int blockl1 = 1;
+  int blockl2 = 1;
+  int retval = 1;
+  unsigned char code = 0x89;    /* The code for a space */
+  while((i&lt;256) &amp;&amp; (code != *mychar)) {
+    switch (cletter) {
+    case 1:
+      code--;
+      cletter++;
+      break;
+    case 2:
+      code += 3;
+      cletter++;
+      break;
+    case 3:
+      code--;
+      cletter++;
+      break;
+    case 4:
+      code += 3;
+      cletter++;
+      break;
+    case 5:
+      code--;
+      cletter++;
+      break;
+    case 6:
+      code += 3;
+      cletter++;
+      break;
+    case 7:
+      code--;
+      cletter++;
+      break;
+    case 8:
+      cletter = 1;
+      switch (blockl1) {
+      case 1:
+        code -= 13;
+	blockl1++;
+	break;
+      case 2:
+	code += 19;
+        blockl1++;
+	break;
+      case 3:
+        code -= 13;
+	blockl1++;
+	break;
+      case 4:
+	blockl1 = 1;
+	switch (blockl2) {
+	case 1:
+          code = 0xe9;
+	  blockl2++;
+	  break;
+	case 2:
+          code = 0xc9;
+	  blockl2++;
+	  break;
+	case 3:
+          code = 0x29;
+	  blockl2++;
+	  break;
+	case 4:
+	  code = 0x89;
+          blockl2 = 1;
+          break;
+	}
+	break;
+      }
+      break;
+    }
+    i++;
+  }
+  if (i == 256) retval = 0;
+  else *mychar = i + 32;
+  return retval;
+}     /* End of DecodeCharSix() */
+
+int DecodeCharSeven(unsigned char *mychar) {
+  int i = 0;
+  int cletter = 1;
+  int blockl1 = 1;
+  int blockl2 = 1;
+  int retval = 1;
+  unsigned char code = 0xf4;    /* The code for a space */
+  while((i&lt;256) &amp;&amp; (code != *mychar)) {
+    switch (cletter) {
+    case 1:
+      code++;
+      cletter++;
+      break;
+    case 2:
+      code++;
+      cletter++;
+      break;
+    case 3:
+      code++;
+      cletter++;
+      break;
+    case 4:
+      code -= 7;
+      cletter++;
+      break;
+    case 5:
+      code++;
+      cletter++;
+      break;
+    case 6:
+      code++;
+      cletter++;
+      break;
+    case 7:
+      code++;
+      cletter++;
+      break;
+    case 8:
+      cletter = 1;
+      switch (blockl1) {
+      case 1:
+        code += 9;
+	blockl1++;
+	break;
+      case 2:
+	code -= 23;
+        blockl1++;
+	break;
+      case 3:
+        code += 9;
+	blockl1++;
+	break;
+      case 4:
+	blockl1 = 1;
+	switch (blockl2) {
+	case 1:
+          code = 0x94;
+	  blockl2++;
+	  break;
+	case 2:
+          code = 0xb4;
+	  blockl2++;
+	  break;
+	case 3:
+          code = 0x54;
+	  blockl2++;
+	  break;
+	case 4:
+	  code = 0xf4;
+          blockl2 = 1;
+          break;
+	}
+	break;
+      }
+      break;
+    }
+    i++;
+  }
+  if (i == 256) retval = 0;
+  else *mychar = i + 32;
+  return retval;
+}   /* End of DecodeCharSeven() */
+
+int DecodeCharEight(unsigned char *mychar) {
+  int i = 0;
+  int cletter = 1;
+  int blockl1 = 1;
+  int blockl2 = 1;
+  int retval = 1;
+  unsigned char code = 0x4a;    /* The code for a space */
+  while((i&lt;256) &amp;&amp; (code != *mychar)) {
+     switch (cletter) {
+     case 1:
+       code++;
+       cletter++;
+       break;
+     case 2:
+       code -= 3;
+       cletter++;
+       break;
+     case 3:
+       code++;
+       cletter++;
+       break;
+     case 4:
+       code += 5;
+       cletter++;
+       break;
+     case 5:
+       code++;
+       cletter++;
+       break;
+     case 6:
+       code -= 3;
+       cletter++;
+       break;
+     case 7:
+       code++;
+       cletter++;
+       break;
+     case 8:
+       cletter = 1;
+       switch (blockl1) {
+       case 1:
+	 code -= 11;
+	 blockl1++;
+	 break;
+       case 2:
+	 code += 21;
+	 blockl1++;
+	 break;
+       case 3:
+	 code -= 11;
+	 blockl1++;
+	 break;
+       case 4:
+	 blockl1 = 1;
+	 switch (blockl2) {
+	 case 1:
+	   code = 0x2a;
+	   blockl2++;
+	   break;
+	 case 2:
+	   code = 0x0a;
+	   blockl2++;
+	   break;
+	 case 3:
+	   code = 0xea;
+	   blockl2++;
+	   break;
+	 case 4:
+	   code = 0x4a;
+	   blockl2 = 1;
+	   break;
+	 }
+	 break;
+       }
+       break;
+     }
+     i++;
+  }
+  if (i == 256) retval = 0;
+  else *mychar = i + 32;
+  return retval;
+}    /* End of DecodeCharEight() */
+
+/* End of program */
+
+
+- ---
+[This message has been signed by an auto-signing service.  A valid signature
+means only that it has been received at the address corresponding to the
+signature and forwarded.]
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+Comment: Gratis auto-signing service
+
+iQBFAwUBMR4peyoZzwIn1bdtAQE0dQF9GzqfuxYsYp+x7nVKG0Kz3de74E4HBHxf
+IleTsbVrWWQWkV09WU7AVkvVlsajnhsC
+=r6cs
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00918.html">Selling the Sizzle of Crypto</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00927.html">Digital Rights...Management</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00918.html">Selling the Sizzle of Crypto</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00927.html">Digital Rights...Management</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00928"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00928"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,171 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Java's verifier (was Re: Java insecurity &#45; long &#45; argumentative &#45; you are warned.) -->
+<!--X-From-R13: Evzba Ecreb <frfNgvccre.bvg.hap.rqh> -->
+<!--X-Date: Mon, 13 Nov 1995 18:57:34 +0800 -->
+<!--X-Message-Id: Pine.SOL.3.91.951108225902.10149A&#45;100000@chivalry -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: v01510103acc4ce7ca31a@[206.1.161.4] -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Java's verifier (was Re: Java insecurity - long - argumentative - you ar</TITLE>
+<LINK REV="made" HREF="mailto:ses@tipper.oit.unc.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00491.html">Date Prev</A>][<A HREF="msg00634.html">Date Next</A>][<A HREF="msg00366.html">Thread Prev</A>][<A HREF="msg00390.html">Thread Next</A>][<A HREF="index.html#00485">Date Index</A>][<A HREF="threads.html#00485">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Java's verifier (was Re: Java insecurity - long - argumentative - you are warned.)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "Dietrich J. Kappe" &lt;<A HREF="mailto:goedel@tezcat.com">goedel@tezcat.com</A>&gt;</LI>
+<LI><em>Subject</em>: Java's verifier (was Re: Java insecurity - long - argumentative - you are warned.)</LI>
+<LI><em>From</em>: Simon Spero &lt;<A HREF="mailto:ses@tipper.oit.unc.edu">ses@tipper.oit.unc.edu</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 8 Nov 1995 23:33:54 -0800 (PST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00366.html">v01510103acc4ce7ca31a@[206.1.161.4]</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+On Tue, 7 Nov 1995, Dietrich J. Kappe wrote:
+&gt; 
+&gt; This "checking," as any comp-sci undergrad will tell you, amounts to solving
+&gt; the halting problem for the java interpreter. While this is possible for a
+[...]
+&gt; If you can write a checker that works in a reasonable amount of time, I'll
+&gt; write a turing machine simulator that'll do something nasty if the input
+&gt; machine halts. Then we'll split the fame and fortune for solving the 5 state
+
+Yeah, but when you graduate, they let you in to the real secret- if a 
+problem is NPC or Undecideable, either use some wild guesswork (oops, 
+heuristic), or try solving enough of the problem to be usable. 
+
+The java verifier not only terminates, but runs in time linear to the 
+size of the program to be verified. This is because the verifier doesn't 
+really calculate whether a program is safe or not; it determines whether 
+it can prove that the program is safe or not. It's possible to generate 
+sequences of bytecodes that do not perform unsafe accesses, yet which are 
+still rejected by the verifier because they violate it's requirements.
+
+The verifier can be considered to be an abstract interpretation over the 
+depth and type-state of the operand stack. If the state is known before 
+an instruction, it is always known after that instruction, and if there 
+is more than one way to arrive at an instruction, each control path must 
+arrive at that instruction with the same typestate.
+
+Examples (not real JavaVM, but similar)
+
+	load-int  &lt;int&gt;	== push an int onto the stack.
+			before: ...
+			after : ...,int
+
+	load-float &lt;flt&gt;== push a float onto the tack
+			before: ...
+			after: ...,float
+		
+	add-int		== pop two ints off the stack, push sum onto stack
+			before: ...,int,int
+			after:  ...,int
+
+	blt &lt;val&gt;&lt;add&gt;  == pop an int off the stack, compare to val, and 
+			      jump to address add if int is less than val
+
+			before:  ...,int
+			after:	 ...
+
+	jmp &lt;add&gt;	== jump to adddress add
+			before: ...
+			after: ...
+
+VALID
+	load-int  1	; stack = (int)
+	load-int  1	; stack = (int), (int)
+	add-int		; stack = (int)
+
+INVALID
+	load-int 1	; stack = (int)
+	load-float 1.0	; stack = (int) (float)
+	add-int		; error, stack != (int), (int)
+
+VALID
+	load-int 2	;stack = (int)
+	blt 1, a  	;stack = null
+	load-int 3	; stack = (int)
+	jmp b		; stack = (int)
+    a	load-int 1	; stack = (int);
+    b 	load-int 4	; stack = (int) (int)
+	add-int		; stack = (int)
+
+INVALID
+	load-int 2	;stack = (int)
+	blt 1, a  	;stack = null
+	load-float 3	; stack = (float)
+	jmp b		; stack = (float)	
+    a	load-int 1	; stack = (int);	
+    b 	load-int 4	; stack = ERROR (float || int)
+	add-int		; stack = (int) ERROR
+
+This last example is invlaid, even though it's possible in this case to show 
+dynamically that the program will always arrive at b with an int on the 
+stack; there are still two control paths that arive at b, one with an 
+int, the other with a float.
+
+I hope this makes sense
+
+Simon
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00366" HREF="msg00366.html">Re: Java insecurity - long - argumentative - you are warned.</A></STRONG>
+<UL><LI><EM>From:</EM> goedel@tezcat.com (Dietrich J. Kappe)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00491.html">Worth of Crypto Consulting</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00634.html">Re: Who needs time vaults anyway?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00366.html">Re: Java insecurity - long - argumentative - you are warned.</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00390.html">Re: Java insecurity - long - argumentative - you are warned.</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00485"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00485"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

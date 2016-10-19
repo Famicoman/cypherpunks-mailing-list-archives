@@ -1,0 +1,200 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: PCS Encryption? -->
+<!--X-From-R13: Uert Dbfr <tteNChnypbzz.pbz> -->
+<!--X-Date: Mon, 3 Feb 1997 07:25:52 &#45;0800 (PST) -->
+<!--X-Message-Id: 199702031525.HAA26015@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: PCS Encryption?</TITLE>
+<LINK REV="made" HREF="mailto:ggr@Qualcomm.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00086.html">Date Prev</A>][<A HREF="msg02951.html">Date Next</A>][<A HREF="msg00086.html">Thread Prev</A>][<A HREF="msg02953.html">Thread Next</A>][<A HREF="index.html#00123">Date Index</A>][<A HREF="threads.html#00123">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: PCS Encryption?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cryptography@c2.net">cryptography@c2.net</A></LI>
+<LI><em>Subject</em>: Re: PCS Encryption? </LI>
+<LI><em>From</em>: Greg Rose &lt;<A HREF="mailto:ggr@Qualcomm.com">ggr@Qualcomm.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 03 Feb 1997 12:44:08 +1100</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+"Douglas C. Merrill" writes:
+&gt;At 03:30 PM 2/1/97 -0500, Steven Bellovin wrote:
+&gt;&gt;And an illegal wiretap besides, most likely -- with a warrant, they could
+&gt;&gt;simply put the tap at the base station.  The story may be true, but it
+&gt;&gt;doesn't sound quite right to me.
+
+It doesn't sound quite right to me either.
+
+&gt;Phil Karn is, of course, the expert on this -- I hope he'll chime in soon
+&gt;-- Phil, you out there??
+
+I'm not Phil, but maybe I'll do.
+
+The three different digital standards in North
+America are TDMA, CDMA, and GSM (in NY and DC
+only AFAIK).  Newer analog phones use at least
+some of this, but I don't know much about them.
+I'll ignore GSM. There is a fair bit of
+commonality in the security of TDMA and CDMA
+because of their use of the "Common Cryptographic
+Algorithms". I like to think I'm only telling you
+things which are in the "Interface Specification
+for Common Cryptographic Algorithms Rev B.1".
+
+CAVE is used as a hashing algorithm for a number
+of purposes. Starting at the beginning (that's a
+very good place to start... shut up Julie) it is
+used to verify that the A-key programmed into the
+phone is correct; the dealer or whoever puts in
+26 digits, 20 of which are the A-key, and the
+other 6 are a checksum calculated with CAVE, and
+the Equipment Serial Number. (The ESN is always
+used by CAVE -- I won't mention it again.) If
+they agree, the phone buries the A-key very deep,
+never to be seen again. (A_Key_Checksum,
+A_Key_Verify)
+
+&gt;From time to time, but not very often, the network
+and the phone create "Shared Secret Data"; they
+start with a 56-bit random number and run CAVE on it and
+the A-key. The resulting 128 bits is split into 
+two 64-bit chunks called SSD_A and SSD_B. SSD_A is
+used for authentication purposes only, while SSD_B
+is used for the generation of keys for other
+cryptographic stuff. (SSD_Generation, SSD_Update)
+
+At various times, the base station authenticates
+the phone by sending down a random challenge (32
+bits); this is hashed by CAVE with some other
+use-dependent data (not secret, but intended to
+defeat replays) and SSD_A (either current or new,
+depending on context) to form an 18-bit
+signature. Since you only get one go to get it
+right, 18 bits was deemed enough. Again depending
+on context, the state of CAVE at the end of this
+process may be saved for use later. (Auth_Signature)
+
+The original intent seems to be that
+Auth_Signature would happen at the beginning of
+every call, but I don't think that is actually the
+case. I'm not certain about the telephony end of
+this stuff.
+
+Now comes the encryption stuff. At the beginning
+of each call, Key_VPM_Generation is called. (VPM
+is Voice Privacy Mask.) This uses CAVE,
+initialised to the saved state it had at the last
+Auth_Signature, and SSD_B, to achieve two things;
+it generates the CMEA key (64 bits), and it generates the
+Voice Privacy Mask.
+
+CMEA (Cellular Message Encryption Algorithm) is
+used to encrypt bits of the signalling stuff over
+the air, but never any end-user data. It is used
+in different ways by the three standards, as they
+have different message formats, but they all
+(AMPS, TDMA, CDMA) use it.
+
+The VPM is ignored by analog (I think). It is
+constant for the entire call, and is XORed with
+every frame for TDMA (cryptographically weak, as
+you can XOR any two frames to cancel it out, but
+since the frames are heavily compressed actually
+getting anything from this is not trivial). CDMA
+ignores all but the last 40 bits, which becomes
+the initial "long code" for the PN (Psuedo-random
+Noise) generator. This is a straightforward LFSR,
+which again, is not cryptographically strong in
+the face of known plaintext, but again, the input
+is heavily compressed. More importantly, though,
+for CDMA you need to have the long code before you
+can easily sort out the signal from the noise
+around it (it was originally developed from
+anti-jamming technology), and since it has a
+period of days before it repeats, the call will
+probably be over...
+
+The conclusion is that neither way of doing it is
+truly cryptographically strong, but both are a lot
+better than listening to Princess Di call Newt
+"Squidgy" on a Radio Shack scanner.
+
+Note, at this point, that neither the phone
+industry or the NSA particularly cares about
+end-user stuff being strong. The signalling
+messages have a 64-bit key used much more
+appropriately, and so cell-phone fraud is harder
+to achieve.
+
+&gt;Many folks think that "digital = secure" because you can't use radio
+&gt;shack(TM) listening devices.  This much is true.  However, you *Can* build
+&gt;other devices to listen in, and computer hardware is so cheap it's almost
+&gt;feasible -- though I haven't built one...  
+
+Or you can take the bits out of existing phones.
+
+Greg.
+
+Greg Rose               INTERNET: ggr@Qualcomm.com
+Qualcomm Australia      VOICE:  +61-2-9743 4646   FAX: +61-2-9736 3262
+6 Kingston Avenue       &lt;A HREF="<A  HREF="http://usenix.org/~ggr/">http://usenix.org/~ggr/</A>"&gt;homepage&lt;/A&gt;.
+Mortlake NSW 2137       35 0A 79 7D 5E 21 8D 47  E3 53 75 66 AC FB D9 45
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00086.html">Re: PCS Encryption?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02951.html">GAK cracking?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00086.html">Re: PCS Encryption?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02953.html">Re: PCS Encryption?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00123"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00123"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

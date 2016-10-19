@@ -1,0 +1,243 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: hopmail.bat for MSDOS -->
+<!--X-From-R13: Yney Pneehf <ryrr9fsN[rahqb.GV.SRG> -->
+<!--X-Date: Fri, 19 Feb 93 07:11:44 PST -->
+<!--X-Message-Id: 199302190429.AA10835@Menudo.UH.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>hopmail.bat for MSDOS</TITLE>
+<LINK REV="made" HREF="mailto:elee9sf@Menudo.UH.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00208.html">Date Prev</A>][<A HREF="msg00204.html">Date Next</A>][<A HREF="msg00221.html">Thread Prev</A>][<A HREF="msg00214.html">Thread Next</A>][<A HREF="index.html#00206">Date Index</A>][<A HREF="threads.html#00206">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>hopmail.bat for MSDOS</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: hopmail.bat for MSDOS</LI>
+<LI><em>From</em>: Karl Barrus &lt;<A HREF="mailto:elee9sf@Menudo.UH.EDU">elee9sf@Menudo.UH.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 18 Feb 1993 22:29:45 -0600</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Cypherpunks &amp; cypherpunkettes :-)
+
+At long last I beleive a working version of hopmail written in the
+MSDOS scripting is finished.  I've tested it and it seems to work (and
+I even sent messages with DOS CRLF's instead of unix NL and had no
+problems), but if you find problems let me know.  I'm assuming you are
+like me in that my pc doesn't have a dedicated net connection, so the
+scripts just prepare file, but don't mail them.  You would upload the
+file to your network account and go from there.
+
+Warning: the code is ugly, but I plead innocence, citing the
+constraints of the language!  I've never used so many goto's since my
+last BASIC program ~11 years ago.
+
+I think in the future I'll just write DOS stuff in C/C++, with system
+calls, and offer source with executables, so you can recompile if
+you've think I've added secret password catching commands :-)  I'd use
+4DOS and other enhancements like some people have suggested (thanks!)
+but I want to be sure as many people as possible can use the script,
+so using just plain old DOS seems the best way to go.  Well, the best
+way to go in DOS.
+
+I'll write a help file and offer it, the script, and anonmail.bat up
+for ftp.  Quickly, because getting input from the user in DOS is a
+real pain/impossible without resorting to extra programs/assembly
+hacks , all parameters are just entered on the command line.  Type
+hopmail and a short help screen will appear.
+
+Now I'll clean up the digital bank and circulate the source to those
+interested. 
+
+---------8&lt; -- cut here -- &gt;8----------
+@echo off
+rem hopmail.bat - allows routing a message through various remailers
+rem extropia not supported just yet
+rem Karl Barrus - elee9sf@menudo.uh.edu
+
+rem if no parameters, print help file
+if '%1'=='' goto help
+
+rem get file name
+shift
+set filename=%0
+if not exist %filename% goto errnofile
+
+rem check mode
+shift
+set mode=0
+if '%0'=='1' set mode=1
+if '%0'=='2' set mode=2
+if '%mode%'=='0' goto errmode
+
+rem set up encrypted pgp header
+echo :: &gt; zzztemp1.txt
+echo Encrypted: PGP &gt;&gt; zzztemp1.txt
+echo. &gt;&gt; zzztemp1.txt
+
+rem create null message
+echo. &gt; zzztemp3.txt
+
+rem get email address
+shift
+set to=%0
+if '%to%'=='' goto errmail
+
+:repeat
+shift
+if '%0'=='' goto finish
+
+if '%0'=='1' set rto=hh@pmantis.berkeley.edu
+if '%0'=='2' set rto=hh@cicada.berkeley.edu
+if '%0'=='3' set rto=hh@soda.berkeley.edu
+if '%0'=='4' set rto=hal@alumni.caltech.edu
+if '%0'=='5' set rto=remailer@rebma.mn.org
+if '%0'=='6' set rto=elee7h5@rosebud.ee.uh.edu
+if '%0'=='7' set rto=phantom@mead.u.washington.edu
+if '%0'=='8' set rto=hfinney@shell.portal.com
+
+rem set up remailing request header
+echo :: &gt; zzztemp2.txt
+echo Request-Remailing-To: %to% &gt;&gt; zzztemp2.txt
+echo. &gt;&gt; zzztemp2.txt
+
+rem append previous message
+copy zzztemp2.txt + zzztemp3.txt zzztemp4.txt &gt; nul
+del zzztemp2.txt
+rename zzztemp4.txt zzztemp2.txt
+
+if '%0'=='1' goto none
+if '%0'=='2' goto none
+if '%0'=='3' goto none
+
+pgp -ea zzztemp2.txt %rto% &gt; nul
+copy zzztemp1.txt + zzztemp2.asc zzztemp3.txt &gt; nul
+goto next
+
+:none
+copy zzztemp2.txt zzztemp3.txt &gt; nul
+
+:next
+set to=%rto%
+
+goto repeat
+
+:finish
+if '%mode%'=='1' goto incmessage
+
+rem append, user chose create to receive
+echo -----cut here---- &gt;&gt; %filename%
+copy %filename% + zzztemp3.txt  zzztemp4.txt &gt; nul
+echo. &gt;&gt; zzztemp4.txt
+echo To reply, save everything below the cut here marks &gt;&gt; zzztemp4.txt
+echo Type your reply below the blank line two lines above &gt;&gt; zzztemp4.txt
+echo Mail resultant file to %to% &gt;&gt; zzztemp4.txt
+del %filename%
+rename zzztemp4.txt %filename%
+goto done
+
+:incmessage
+rem user chose create header to send
+copy zzztemp3.txt + %filename% zzztemp4.txt &gt; nul
+del %filename%
+rename zzztemp4.txt %filename%
+echo Remember to mail %filename% to %to% 
+
+goto done
+
+:help
+echo Usage: hopmail filename mode address remailer# [remailer#]...
+echo Mode:
+echo 1: Mail a file via anonymous remailers
+echo 2: Create a remailing header and append to a file
+echo.
+echo Address:
+echo for mode 1, destination address
+echo for mode 2, your address
+echo.
+echo Remailers:
+echo 1: hh@pmantis.berkeley.edu
+echo 2: hh@cicada.berkeley.edu
+echo 3: hh@soda.berkeley.edu
+echo 4: hal@alumni.caltech.edu
+echo 5: remailer@rebma.mn.org
+echo 6: elee7h5@rosebud.ee.uh.edu
+echo 7: phantom@mead.u.washington.edu
+echo 8: hfinney@shell.portal.com
+rem echo 9: remail@extropia.wimsey.com
+goto end
+
+:errmode
+echo Error: mode must be 1 or 2
+goto end
+
+:errmail
+echo Error: no destination specified
+goto done
+
+:errnofile
+echo Error: file %filename% does not exist
+goto end
+
+:done
+del zzz*.*
+
+:end
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00208.html">the revocation blues</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00204.html">Re: toad.com mailing list postings from possible virus authors</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00221.html">Re: the revocation blues</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00214.html">PGP anonymous remailer</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00206"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00206"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

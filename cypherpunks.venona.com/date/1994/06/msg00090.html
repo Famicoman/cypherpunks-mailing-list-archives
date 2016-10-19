@@ -1,0 +1,134 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Matt Blaze's Clipper attack &#45;&#45; details -->
+<!--X-From-R13: fzoNerfrnepu.ngg.pbz -->
+<!--X-Date: Thu, 2 Jun 94 12:01:45 PDT -->
+<!--X-Message-Id: 9406021901.AA22805@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Matt Blaze's Clipper attack -- details</TITLE>
+<LINK REV="made" HREF="mailto:smb@research.att.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00081.html">Date Prev</A>][<A HREF="msg00076.html">Date Next</A>][<A HREF="msg00218.html">Thread Prev</A>][<A HREF="msg00092.html">Thread Next</A>][<A HREF="index.html#00090">Date Index</A>][<A HREF="threads.html#00090">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Matt Blaze's Clipper attack -- details</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Matt Blaze's Clipper attack -- details</LI>
+<LI><em>From</em>: <A HREF="mailto:smb@research.att.com">smb@research.att.com</A></LI>
+<LI><em>Date</em>: Thu, 02 Jun 94 14:55:22 EDT</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I spoke with Matt Blaze; he gave me permission to post a summary of his
+attacks.  But the paper is not yet available for ftp.
+
+Matt's work was done using a prototype Tessera card, with a SCSI-PCMCIA
+interface on a Sun 4.  That may (or may not) have implications for some
+of the performance numbers.
+
+There are two classes of ways to foil key escrow.  The less interesting
+class of attacks are non-interoperable.  That is, two rogue
+implementations can talk security, but can't talk to a conforming key
+escrow device.  But there's another attack possible, wherein a rogue
+application talks to a conforming device, but without presenting a
+valid LEAF.
+
+The LEAF contains a 32 bit unit id, an 80-bit session key encrypted
+with the per-device secret key, and a 16 bit checksum.  The whole thing
+is encrypted with the family key.  The checksum field is based on both
+the session key and the IV.  A receiving device will not decrypt unless
+it's handed a valid LEAF.  But it can only base its judgment on the
+checksum and on its external knowledge of the key and IV; the actual
+key in the LEAF is encrypted in a way that it cannot read.  LEAFs are
+sent out of band by the application; they're not concealed in the
+encrypted data stream.
+
+Non-interopable applications work by generating a LEAF/IV pair and not
+transmitting it.  (Users cannot control the IV; the Tessera interface
+(and maybe the Capstone chip) generates it.)  The receiving end does
+the same thing.  You don't need an IV for ECB mode, so you have at
+least some access to Skipjack that way.  But that's too slow; at least
+in the configuration tested, it took ~50 ms to do an ECB encryption.
+
+In CBC mode, if you have the wrong IV, the first block of plaintext
+will be garbled.  But the error recovery properties of CBC guarantee
+that all subsequent blocks will be decrypted correctly.  (Derivation is
+left as an exercise for the reader.)  The solution, then, is simple:
+just pad your messages with an 8-byte garbage header.
+
+OFB and CFB modes can be implemented as well.  The obvious way is via
+ECB mode, but that's too slow.  It turns out that with a bit of work,
+you can use CBC mode as a primitive to build OFB and CFB.  I'll
+describe that if anyone's really interested.
+
+The more interesting attack on key escrow is a rogue implementation
+that can interoperate with a conforming one.  The checksum is only 16
+bits; it's possible to brute-force it.  That is, generate random
+128-bit strings, and see if your own Tessera card will accept it as a
+valid LEAF.  Again, recall that it knows only the unencrypted key and
+the IV.  On average, you'll find a hit in 2^15 tries; at 50 ms per try,
+that's 28 minutes.  You can speed this up by running in parallel with
+multiple Tessera cards.
+
+		--Steve Bellovin
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00092" HREF="msg00092.html">Re: Matt Blaze's Clipper attack -- details</A></STRONG>
+<UL><LI><EM>From:</EM> "Perry E. Metzger" &lt;perry@imsi.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00081.html">Re: LEAF forgery</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00076.html">Re: PGP 2.6 FAQ</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00218.html">Re: LEAF forgery</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00092.html">Re: Matt Blaze's Clipper attack -- details</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00090"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00090"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,133 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: SSL trouble -->
+<!--X-From-R13: unyynzNj3.bet -->
+<!--X-Date: Sat, 26 Aug 95 10:59:28 PDT -->
+<!--X-Message-Id: 9508261758.AA25920@zorch.w3.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9508261034.AA15406@couchey.inria.fr -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: SSL trouble</TITLE>
+<LINK REV="made" HREF="mailto:hallam@w3.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01308.html">Date Prev</A>][<A HREF="msg01316.html">Date Next</A>][<A HREF="msg01321.html">Thread Prev</A>][<A HREF="msg01350.html">Thread Next</A>][<A HREF="index.html#01313">Date Index</A>][<A HREF="threads.html#01313">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: SSL trouble</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: SSL trouble  </LI>
+<LI><em>From</em>: <A HREF="mailto:hallam@w3.org">hallam@w3.org</A></LI>
+<LI><em>Date</em>: Sat, 26 Aug 95 13:58:24 -0400</LI>
+<LI><em>Cc</em>: <A HREF="mailto:hallam@w3.org">hallam@w3.org</A></LI>
+<LI><em>In-Reply-To</em>: Your message of "Sat, 26 Aug 95 12:34:10 +0200."            &lt;<A HREF="msg01311.html">9508261034.AA15406@couchey.inria.fr</A>&gt; </LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+There are more effective solutions than simple random search, these have been 
+known in the distributed processing arena for years.
+
+What you effectivelly have is a farmed solution to a problem with a high degree 
+of trivial parallelism. Farms always suffer from the server bottleneck problem. 
+The alternative is to use a multifarm, its a bit complicated to explain bu the 
+essence is that you distribute the farmming mechanism. The most extreeme example 
+of this is to have every slave also act as a master for some part of the problem. 
+Since the bandwidth/processing ratio is unfavourable it would be better to have a 
+small but non trivial (5-10) number of master controllers.
+
+
+The basic principles are to leverage pipelined parallelism, a slave does not 
+simply ask for a chunk of keyspace, process it, return results and ask for the 
+next chunk. Instead overlap work packages, give them more than one to work at at 
+once so that the system does not suspend waiting on the server.
+
+Size the chunks adaptively, the more keyspace a processor works through the more 
+packets it is given at once.
+
+Use integrity checks to ensure that the slaves are acting properly. One method of 
+doing this is to keep secret part of the known plaintext (say 16 bits). A slave 
+is required to report _all_ matches in the range to the master. Slaves who report 
+a statistically low number of matches may be considered suspicious. It is a 
+simple matter to allocate part of that keyspace to another processor for a 
+double-check.
+
+	[Its so obvious I'll apply for a patent on that technique]
+
+Another usefull technique is to require the slave to checksum some collateral 
+result from the calculation mix. Then if its simply braindead software it can be 
+detected.
+
+When running a multi-master farm it is important to realise that the slaves serve 
+all the masters, not just a single one. Masters can distribute work chunks 
+amongst themselves in larger chunks, as chunks are completed this is communicated 
+to the other workers.
+
+If we used the Web as a substrate for this work the control software could then 
+be used for other related tasks requiring large scale parallel processing on 
+networked workstations.  This was one of the original applications I looked at 
+back in 1992 when I was doing an awful lot of this type of work.
+
+
+		Phill Hallam-Baker
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01311" HREF="msg01311.html">SSL trouble</A></STRONG>
+<UL><LI><EM>From:</EM> Damien.Doligez@inria.fr (Damien Doligez)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01308.html">Modern Journalism (was: All about Bernstein)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01316.html">PGP and AIX</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01321.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01350.html">Re: SSL trouble</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01313"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01313"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

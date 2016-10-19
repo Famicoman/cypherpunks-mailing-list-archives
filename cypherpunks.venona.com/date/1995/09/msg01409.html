@@ -1,0 +1,140 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: drand48() bug -->
+<!--X-From-R13: Oeir Ywbryra <nxwbryrNfuvin.rr.fvhr.rqh> -->
+<!--X-Date: Wed, 20 Sep 95 08:38:52 PDT -->
+<!--X-Message-Id: 199509201538.KAA28316@shiva.ee.siue.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>drand48() bug</TITLE>
+<LINK REV="made" HREF="mailto:akjoele@shiva.ee.siue.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01406.html">Date Prev</A>][<A HREF="msg01392.html">Date Next</A>][<A HREF="msg02249.html">Thread Prev</A>][<A HREF="msg01392.html">Thread Next</A>][<A HREF="index.html#01409">Date Index</A>][<A HREF="threads.html#01409">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>drand48() bug</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:akjoele@shiva.ee.siue.edu">akjoele@shiva.ee.siue.edu</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: drand48() bug</LI>
+<LI><em>From</em>: Arve Kjoelen &lt;<A HREF="mailto:akjoele@shiva.ee.siue.edu">akjoele@shiva.ee.siue.edu</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 20 Sep 1995 10:38:58 -0500</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+jws@neon.netscape.com writes:
+&gt; Most of the unix machines do the same thing.  On SGI machines
+&gt; that have the hardware cycle counter, its value is used in place of the
+&gt; srand48(usec), lrand48() sequence.  BSDI the code used srandom and random.
+
+
+Kun Luo, one of our grad students here recently found a bug in Sun's implemen-
+tation of the drand48() function.  We reported it to Sun, and they acknowledged
+the bug exists - it seemed to be the first time they had heard of it, though.  
+The bug affects Sun's ANSI C compiler shipped with 
+SPARCWorks3.0 and consists of the following:  If you're compiling using the
+- -Xc flag (strict ANSI C, no SUN C compatibility extensions), the function
+drand48() is BROKEN.  It ALWAYS returns the number 9.000000, no matter what
+you seeded it with using srand48().
+
+to reproduce, compile the following program under Solaris 2.x using their
+C compiler AND the -Xc flag:
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;time.h&gt;
+ 
+void main(){
+   double number;
+   int  num = 1000;
+ 
+   srand48((int)time(NULL));
+   while(num --){
+        number = drand48();
+        printf("%lf\n", number);
+   }
+}
+
+By the way, Cyphepunks mail seems to indicate that Netscape uses lrand48()
+instead of drand48().  lrand48() is NOT broken.  The potential for disaster
+is high, though, for anyone blindly trusting vendor-provided pseudo-
+random number generators.  How many products are out there using drand48()
+as part of their random number generation scheme?
+
+- -Arve
+ 
+- -----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: 2.6.2
+ 
+mQCNAzAvqdwAAAEEAKRdBFn7O/h+wz3tOQwHWvaFKS6gi+UezzCXli/QnuCrJcUE
+agvlVVZ/PzKG5i23VdbghyHsVElvKzRW/D1pYor6xSluCftXzSxbCuiEIe2SXUsH
+65AqFN688upXzRKHcq3bU/eKB7xUOGqCDot8AzModnwE+XWCgdqn8CTZCNGhAAUR
+tCJBcnZlIEtqb2VsZW4gPGFram9lbGVAZWUuc2l1ZS5lZHU+
+=csFb
+- -----END PGP PUBLIC KEY BLOCK-----
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCUAwUBMGAusNqn8CTZCNGhAQEYdQP4+UGvLJKoQPWPLFMENDIPY1QSIuQdQxdt
+fTzWRNXsPadE4N40bHgucqZQG8Ze55JsKIrrhL9RZFIVx+ygxsmsSHsocu/kFbSW
+E7RNWMvoaoRAmB4KkWF+ofqRWl9Qo+r00CvgX1brsOdpjySVIkxml8/L7R/RBuQL
+aFNV5OBz2w==
+=saUT
+-----END PGP SIGNATURE-----
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01406.html">Cypherpunks Press release</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01392.html">Munitions shirt (again)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02249.html">Re: Cypherpunks Press release</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01392.html">Munitions shirt (again)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01409"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01409"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

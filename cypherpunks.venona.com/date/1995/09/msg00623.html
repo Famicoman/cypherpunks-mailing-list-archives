@@ -1,0 +1,128 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: 64 bit crypto -->
+<!--X-From-R13: gunqNunzzreurnq.pbz (Funqqrhf X. Prvre) -->
+<!--X-Date: Sun, 10 Sep 95 19:02:06 PDT -->
+<!--X-Message-Id: 199509110157.SAA01073@hammerhead.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: 64 bit crypto</TITLE>
+<LINK REV="made" HREF="mailto:thad@hammerhead.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00621.html">Date Prev</A>][<A HREF="msg00637.html">Date Next</A>][<A HREF="msg00628.html">Thread Prev</A>][<A HREF="msg00659.html">Thread Next</A>][<A HREF="index.html#00623">Date Index</A>][<A HREF="threads.html#00623">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: 64 bit crypto</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: 64 bit crypto</LI>
+<LI><em>From</em>: <A HREF="mailto:thad@hammerhead.com">thad@hammerhead.com</A> (Thaddeus J. Beier)</LI>
+<LI><em>Date</em>: Sun, 10 Sep 1995 18:57:36 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+John A. Limpert says:
+&gt; Why would the attacker need to run the key setup 65536 times?
+
+I could have been more clear.
+
+Forgive a little bit of code...
+
+Here is the beginning of the alleged RC4:
+		for(counter = 0; counter &lt; 256; counter++)
+					state[counter] = counter;
+        index2 = 0;
+        key-&gt;x = key-&gt;y = index1 = index2 = 0;
+        for(counter = 0; counter &lt; 256; counter++)
+        {
+                index2 = (key_data_ptr[index1] + state[counter] + index2) % 256;
+                swap_byte(&amp;state[counter], &amp;state[index2]);
+
+                index1 = (index1 + 1) % key_data_len;
+        }
+
+If it was changed to
+
+		for(counter = 0; counter &lt; 256; counter++)
+                    state[counter] = counter;
+        key-&gt;x = key-&gt;y = index1 = index2 = 0;
+		for(i = 0; i &lt; 65536) {	/* stir the pot a long time */
+			for(counter = 0; counter &lt; 256; counter++)
+			{
+					index2 = (key_data_ptr[index1] + state[counter] + index2) % 256;
+					swap_byte(&amp;state[counter], &amp;state[index2]);
+
+					index1 = (index1 + 1) % key_data_len;
+			}
+		}
+
+Then the prepare_key routine would take much much longer.
+
+The idea is that a 64 bit crypto routine can be arbitrarily
+secure against brute-forcing, if you are willing to pay a
+runtime penalty every time you use it.
+
+thad
+-- Thaddeus Beier                   email:  thad@hammerhead.com
+   Technology Development             vox:  408) 286-3376
+   Hammerhead Productions             fax:  408) 292-8624
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00659" HREF="msg00659.html">Re: 64 bit crypto</A></STRONG>
+<UL><LI><EM>From:</EM> Michael Handler &lt;grendel@netaxs.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00621.html">Digital Fingerprinting</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00637.html">Re: question about reputation</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00628.html">RE: 64 bit crypto</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00659.html">Re: 64 bit crypto</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00623"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00623"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

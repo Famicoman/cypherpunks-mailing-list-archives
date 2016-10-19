@@ -1,0 +1,190 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: standard for stegonography? -->
+<!--X-From-R13: Xrs Bbfxnamre <wrsNrr.yoy.tbi> -->
+<!--X-Date: Tue, 1 Mar 94 09:10:33 PST -->
+<!--X-Message-Id: 9403011710.AA08621@hot.ee.lbl.gov -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: standard for stegonography?</TITLE>
+<LINK REV="made" HREF="mailto:jef@ee.lbl.gov">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00024.html">Date Prev</A>][<A HREF="msg00031.html">Date Next</A>][<A HREF="msg00007.html">Thread Prev</A>][<A HREF="msg00016.html">Thread Next</A>][<A HREF="index.html#00010">Date Index</A>][<A HREF="threads.html#00010">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: standard for stegonography?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: standard for stegonography?</LI>
+<LI><em>From</em>: Jef Poskanzer &lt;<A HREF="mailto:jef@ee.lbl.gov">jef@ee.lbl.gov</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 01 Mar 94 09:10:20 PST</LI>
+<LI><em>In-Reply-To</em>: Your message of Tue, 01 Mar 94 04:07:38 EST.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;Now that I think about it, one wouldn't have to sacrifice any bandwidth 
+&gt;whatsoever!  As, the stego program could be made to do wrap-around 
+&gt;encoding.
+
+Indeed, that's what I implemented.  The current man page is appended.
+---
+Jef
+
+pnmstego(1)               USER COMMANDS               pnmstego(1)
+
+NAME
+     pnmstego - insert a stegonographic message into  a  portable
+     anymap
+
+SYNOPSIS
+     pnmstego [-offset n] [-components rgb] [-bitsched  10010...]
+     file [pnmfile]
+
+DESCRIPTION
+     Reads a portable anymap as input.  Hides another file within
+     the anymap by changing the low-order bits of each pixel, and
+     writes the modified anymap to standard output.
+
+     Stegonography means "hidden writing" - it's  for  storing  a
+     message  in  such  a way that an opponent won't even be sure
+     that the message is there, let alone  be  able  to  extract,
+     decrypt, and read it.  Pnmstego lets you store a file in the
+     low-order bits of a PPM or PGM image.  For a typical  maxval
+     of  256, this means the pixel values will be changed by only
+     1/256, which should not be noticable to someone viewing  the
+     image.
+
+     Only PGM and PPM images may be used - trying to hide a  file
+     in a PBM image would be easily visible, so it's not allowed.
+
+OPTIONS
+     The program has a bunch of flags that let you specify varia-
+     tions  on  exactly how the bits are hidden in the image.  If
+     you don't specify any flags, the default options give you  a
+     reasonable storage method, to wit:
+         -offset 0 -components b -bitsched 1
+     Letting the options default like this has the advantage that
+     you  can  send  a  stegoed file to someone without having to
+     specify what flags you used.  You can also put the file on a
+     public  FTP  server  for people to retrieve, without needing
+     any other communication.  However, there is a  disadvantage:
+     people  who  the  file  is  not intended for will be able to
+     extract it too.  If the resulting file  is  recognizable  in
+     some  way,  for instance if it's encrypted by PGP, then some
+     of the purpose of the stegonographic storage will have  been
+     compromised.   (A PGP file has a standard header and stores,
+     in cleartext, the keyid needed to decrypt a file.)
+
+     So, if you want the file to be absolutely positively hidden,
+     you  can  use  non-default  settings  for the options.  Just
+     don't forget what settings you used, and  remember  that  if
+     you  want  to send the file to someone else you will have to
+     communicate the necessary settings somehow.
+
+     Now, as for what the options do:
+
+     -offset     Specifies how far into the image to  start.   If
+                 the file runs off the end of the image, it wraps
+                 around back to the  beginning,  so  don't  worry
+                 about  specifying too large an offset.  In fact,
+                 you can even specify an offset larger  than  the
+                 image  size  -  the  initial  value gets wrapped
+                 around too  (modulus).   Basically,  any  32-bit
+                 number can be used.
+
+     -components This lets you specify which of the  red,  green,
+                 or  blue  color  components  is used for storing
+                 bits.  You give it a string made up from one  or
+                 more of the letters r, g, and b.  The default is
+                 b, use only the blue component.  See the section
+                 below  on quantization for why the default isn't
+                 rgb.  If the input image is a PGM file,  instead
+                 of PPM, this option is silently ignored.
+
+     -bitsched   This lets you skip using some possible bit posi-
+                 tions  in  the image.  If the file you're hiding
+                 is not so big that you need the whole  image  to
+                 store  it,  you  can  use this option to hide it
+                 better.  The  argument  is  just  an  arbitrary-
+                 length string of 1's and 0's - the 1's say which
+                 bit positions should be used, and the 0's  which
+                 should  be  skipped.   The default is to use all
+                 bit positions.
+
+QUANTIZATION
+     Normally, to store an image in  a  colormapped  file  format
+     such as GIF, you first run it through ppmquant.  However, if
+     you try to quantize, then stego, and then  convert  to  GIF,
+     you will find that the ppmquant step will fail with an error
+     about too many colors.   This  is  because  the  stego  step
+     increased  the number of colors.  You might think, ok, stego
+     first, then quantize; nope, the quantization  would  destroy
+     the  stegonographic  message.   Here's  what you do instead:
+     quantize down to half the number of colors you want  in  the
+     final  file,  and  then use only one of the three color com-
+     ponents to store the hidden file.  Using only  one  bit  per
+     pixel, the number of colors can at most double.  This is why
+     the default for the -components flag is to  use  only  blue.
+     So, the pipeline to use is:
+         ppmquant 128 image.ppm | pnmstego message.txt |
+           ppmtogif &gt; hidden.ppm
+
+SEE ALSO
+     pnmdestego(1), pnm(5)
+
+AUTHOR
+     Copyright (C) 1994 by Jef Poskanzer.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00024.html">Re: ditz in office</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00031.html">Re: ditz in office</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00007.html">Re: standard for stegonography?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00016.html">Re: standard for stegonography?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00010"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00010"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

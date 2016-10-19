@@ -1,0 +1,216 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Secure (!?) Remailer Net -->
+<!--X-From-R13: @nguna Lbbx <ambbxNotn.pbz> -->
+<!--X-Date: Sat, 28 Jan 95 05:25:18 PST -->
+<!--X-Message-Id: Pine.3.89.9501280738.A18649&#45;0100000@ivy.bga.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Secure (!?) Remailer Net</TITLE>
+<LINK REV="made" HREF="mailto:nzook@bga.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01412.html">Date Prev</A>][<A HREF="msg01414.html">Date Next</A>][<A HREF="msg01534.html">Thread Prev</A>][<A HREF="msg01416.html">Thread Next</A>][<A HREF="index.html#01413">Date Index</A>][<A HREF="threads.html#01413">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Secure (!?) Remailer Net</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Secure (!?) Remailer Net</LI>
+<LI><em>From</em>: Nathan Zook &lt;<A HREF="mailto:nzook@bga.com">nzook@bga.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 28 Jan 1995 07:25:05 -0600 (CST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+ 
+    Maybe I'm way behind the curve on this, but...
+ 
+    The traffic analysis that we've seen so far mainly just documents
+tcmay's "everybody a remailer" concept.  If you look, you will notice that
+these analyses all assume that Alice and Bob are _not_ remailers
+themselves, and for a good reason.  If Alice and Bob _are_ remailers,
+analysis of the type used here is worthless, especially if Alice and Bob
+have a policy of not sending any mail unless they first receive garbage,
+and of sending out garbage whenever they get a letter.
+ 
+    HOWEVER, the analysis makes another assumption--that messages are
+indistinguishable.  This assumption does not correlate, as I understand it,
+with the current remailer net.
+ 
+    There are, as I see it, a couple of modifications that (I think) would
+not impose to great a burden on our longsuffering coders, and, as a side
+benefit, might allow more flexibility in other matters as well.
+ 
+    Standard packet sizes, as I see it, are not very difficult to
+implement, with a couple of assumptions.  (I now assume that all traffic is
+intra-remailer-net)
+ 
+    First, the message is signed with the sender's key.  (More on that
+later.)
+ 
+    Suppose a signed message to be forwarded is smaller than the standard
+packet size.  The sending remailer adds a Cutmarks:  header.  At the end of
+the message, the cutmark is added, followed by sufficient garbage to fill
+out the standard packet size.  The message is then pgp'ed to the recipent
+_with COMPRESS = OFF_.
+ 
+    Upon receipt, the message is decrypted, and its origination can then be
+triply verified (at least).  From: line, packet size, and PGP signature.
+Since the message claims to be from a packeting remailer, the packet size
+should be the standard one.  The recipient now has the message that was
+sent to it.  This message is probably itself encrypted, so it can be
+handled (almost) as if this message were just received.  This includes
+stripping the garbage and (probably) decrypting the message to get the
+forwarding information.
+ 
+    Note that this system would allow the extropian remailer to be
+compatible with Matt Ghio's alias system.  (Right now, the remailer doesn't
+like separate pgp packets, or packets it can't read, or something.) Under
+the current system, the precausion is entirely warranted.
+ 
+    To make life even more fun, there is no good reason that non-remailers
+cannot be in on the action!  Alice, sending to Bob through Chaum, pretends
+to be a remailer.  That is, she prepares her message to Bob, (encrypted),
+and adds the Request-Remailing-To:  Bob@nowhere.org, and signs it.  She
+then observes that the message is too small, so she adds the Cutmarks:
+header, etc.  When Chaum receives the packet, he opens it, removes the
+cutmarks, and sees a signature he does not know.  Chaum then sends a
+request to pgp-key-server@omniscient.gov for the key, and holds the message
+until he gets it.  He then compares the address and name on the key
+recieved to the message.  The signature is good, so he is ready to send the
+packet to Bob.  But Bob can be in on the game as well, since there is no
+reason that he cannot handle the Cutmarks:, the signature, and the nested
+encryption.  In fact, Alice could include a copy of Bob's key in the
+message for Chaum to use, after a Recipient-Key:  header.  Bob can also
+verify that the message was actually routed through Chaum.  If Chaum is
+concerned that, at some future time, Eve might supeona his key ring in
+order to demonstrate that Alice and Bob are using Chaum, Chaum can
+alternately request keys that he does not need from the servers, and delete
+(older) keys in the ring.
+ 
+    In other words, if all the remailers can handle nested pgp packets and
+cutmarks, we are close to moving all small messages to a standard size.
+ 
+    What if the file is too big?
+ 
+    If the file is too big, break it in pieces.  We need a header,
+Multipart Message:  n of m.  Note that since this is assumed to be _inside_
+a pgp wrapper, it is secure.  The recipient could hold and merge the files
+as needed.  If the message to be forwarded is too big, split and continue.
+Since the messages are ascii armored, the split/combine protocal is to
+concatenate.  Message parts could be made equal size to minimize the chance
+of a message barely bumping over the limit as it moves.  Of course, Alice
+could break her message to Bob directly, but we cannot assume that all
+would do this for us.
+ 
+    This also means that if Alice sends a message to Bob in the clear
+through Chaum, and David, that the message will be encrypted from Chaum to
+David.  Thus, if Eve wants to know which message from Chaum to David is the
+one from Alice to Bob, (perhaps to know that it is _not_ the message from
+Frank she is interested in) she knows only that it was one of the messages
+from Chaum to David after Chaum got the message from Alice, and before
+David sent it to Bob.  While Chaum and David can both read the message, it
+still provides mixing capabilites inside the remailer net itself, and thus,
+some protection to Frank.  (Who apparently needs the help.)
+ 
+    A word on remailer keys:  Since pgp uses square-and-multiply for
+exponentiation, we see that the amount of work needed to sign a message is
+d(m) * (d(e) + o(e)) where d(m) is the digits of the modulous, d(e) digits
+of the exponent, and o(e) is the number of ones in e.  (I don't remember
+the technical term.) Since the public key is small, each of the parts of
+the private key will be large, BUT, there is no reason to assume that we
+cannot get lucky, and find an m such that d(e) + o(e) is much smaller than
+expected, (d(m) * 3/2, roughly) thus greatly reducing the system demand of
+the remailer.  In fact, it might be possible to move to 768-bit keys for
+those that have kept their sizes down in the past.  If pgp handles each
+prime separately, we look for a double-lucky modulous.  (And a source of
+random numbers that does not involve striking keys!)
+ 
+    Cypherpunks come up with really neato ideas for somebody ELSE to
+code...  (Sorry guys, but I've not figured out how to get Unix/TCP/etc
+working on my Amiga...yet...)
+ 
+ 
+    By the way, the following key id's are showing on the list, but are not
+on the servers:  27D5B76D 231C7021 34ED427F E37385DD.  The first is the
+auto-signer at bb.hks.net.  Also, my modem isn't too thrilled with my
+connection these days, If the signature fails, look for obvious errors in
+the text.  Sorry.
+ 
+ 
+    "PGP?"                      "ITAR!"                      "Oh, RKBA!"
+ 
+ 
+                   |--------------------------------------------------+
+  ----------------- 14712B4D 1994/12/26 Nathan H. Zook &lt;nzook@bga.com&gt; )
+ |44B3D866 3D551E2E ---------------------------------------------------
+ |F89222A6 338CDE24/ |
+  -----------------
+ 
+ 
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+ 
+iQEVAwUBLym3unmgMs8UcStNAQEAZggAlIsw7HDs4V2GU3DQo7Fx5TiRO6+6mW2B
+7Qjn6I+CY1URQQbA3bhPvYoJUt2o3DJ0BCLRej03L/7mdRJmqS3f/1m+juflqPm7
+oKlonwpOpFNg2kFSzjE4IpAgIcgi7tHgaLKsIfQ4+QO3s4pJdwAf8VMBHGLyWd2Z
+h9mNaKgUeKHjhHys2zATm6FNMipcAQgU8sFOl4/YIGyso+cfj4iSXAK4NM4tolDZ
+uca7l6bQdW5vwRjCJhNmKo+GuSHCY/QczbZZ9R5SkE58LrOVj1MY2x3qcg6gD04X
+Veddx83tLLsvnh02psRkWH+n0tv7GP8s8cle1ziJcgT96DrQIW6qMw==
+=t9x5
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01412.html">alt.religion.your.operating.system.sucks</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01414.html">NYT on Target Shimomura</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01534.html">Re: alt.religion.your.operating.system.sucks</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01416.html">Re:  Secure (!?) Remailer Net</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01413"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01413"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,759 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: description of the PC1 cipher &#45; please comment -->
+<!--X-From-R13: "nyrk" <nyrknaqreznvyNubgznvy.pbz> -->
+<!--X-Date: Mon, 21 Apr 1997 05:36:19 &#45;0700 (PDT) -->
+<!--X-Message-Id: 12401499302290@bplorraine.fr -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>description of the PC1 cipher - please comment</TITLE>
+<LINK REV="made" HREF="mailto:alexandermail@hotmail.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00632.html">Date Prev</A>][<A HREF="msg00636.html">Date Next</A>][<A HREF="msg00743.html">Thread Prev</A>][<A HREF="msg00636.html">Thread Next</A>][<A HREF="index.html#00642">Date Index</A>][<A HREF="threads.html#00642">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>description of the PC1 cipher - please comment</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: &lt;<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>&gt;</LI>
+<LI><em>Subject</em>: description of the PC1 cipher - please comment</LI>
+<LI><em>From</em>: "alex" &lt;<A HREF="mailto:alexandermail@hotmail.com">alexandermail@hotmail.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 21 Apr 1997 14:20:20 +0200</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Voici l'algorithme de codage PC1 ( Pukall Cipher 1 ). C'est un algorithme
+de chiffrement en continu ( chaque octet est chiffre separement ) en mode
+CFB ( chaque octet chiffre modifie le codage des suivants ). Il a ete cree
+en 1991 par Alexandre Pukall. L'algorithme est sous copyright mais en
+diffusion freeware. L'utilisation de l'algorithme PC1 et du protocole qui
+suivra est libre comme les modifications eventuelles a la condition unique
+que le nom de l'auteur soit mentionne dans la documentations et dans le
+logiciel qui pourrait se servir de l'algorithme.
+
+Il est preferable, si la cle utilisee avec l'algorithme PC1 est entree par
+l'utilisateur, de recommander a ce dernier d'utiliser des cles hachees.
+
+Il choisit une phrase facile a retenir :
+
+Rene et moi sommes alles a la peche samedi !
+
+et il prend la premiere lettre de chaque mot :
+
+Remsaalps! : ceci est la cle qu'il utilise ( l'algorithme PC1 accepte tous
+les caracteres ASCII et les caracteres EBCDIC de valeur 0 a 255 ).
+
+A noter que les variables utilisees dans l'algorithme, sont globales afin
+de permettre un brassage entre les differents appels de la fonction code()
+dans la fonction principale assemble ().
+
+Le type 'unsigned int' est une variable sur 16 bits ( valeur de 0 a 65535
+).
+Le type 'unsigned char' est une variable sur 8 bits ( valeur de 0 a 255 ).
+Le type 'short' est une variable sur 8 bits ( valeur de 0 a 255 ).
+
+****************************************************************************
+****************************************************************************
+****************************************************************************
+************************
+
+/* Fichier PC1COD.c */
+/* ecrit en Borland Turbo C 2.0 sur PC */
+/* Algorithme de CODAGE PC1 ( Pukall Cipher 1 ) */
+/* (c) Alexandre PUKALL 1991 */
+/* Utilisation et modifications libres si le nom de l'auteur est */
+/* inclu dans le programme final et la documentation du logiciel */
+/* dans un endroit accessible librement par l'utilisateur comme */
+/* les fenetres A propos des logiciels sous Windows sur PC */
+/* Cet algorithme a ete ecrit en Assembleur 6809 Motorola */
+/* le code C ci-dessous est la traduction rapide de cet algorithme */
+/* le fonctionnement est identique */
+
+/* A noter que dans cet exemple le programme de codage et le programme */
+/* de decodage sont separes */
+/* vous pouvez les reunir en un seul en modifiant la zone K */
+/* qui est legerement differente pour le codage et le decodage */
+/* a cause du lien entre le texte clair et la cle de chiffrement */
+
+
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+unsigned int ax,bx,cx,dx,si,tmp,x1a2,x1a0[5],res,i,inter,cfc,cfd,compte;
+unsigned char cle[11]; /* les variables sont definies de facon globale */
+short c;
+FILE *in,*out;
+
+fin()
+{
+/* on quitte en effacant toutes les variables utilisees par l'algorithme */
+
+for (compte=0;compte&lt;=9;compte++)
+ {
+  cle[compte]=0;
+ }
+ax=0;
+bx=0;
+cx=0;
+dx=0;
+si=0;
+tmp=0;
+x1a2=0;
+x1a0[0]=0;
+x1a0[1]=0;
+x1a0[2]=0;
+x1a0[3]=0;
+x1a0[4]=0;
+res=0;
+i=0;
+inter=0;
+cfc=0;
+cfd=0;
+compte=0;
+c=0;
+
+exit(0);
+}
+assemble()
+{
+
+   x1a0[0]= ( cle[0]*256 )+ cle[1];
+   code();
+   inter=res;
+
+   x1a0[1]= x1a0[0] ^ ( (cle[2]*256) + cle[3] );
+   code();
+   inter=inter^res;
+
+   x1a0[2]= x1a0[1] ^ ( (cle[4]*256) + cle[5] );
+   code();
+   inter=inter^res;
+
+   x1a0[3]= x1a0[2] ^ ( (cle[6]*256) + cle[7] );
+   code();
+   inter=inter^res;
+
+   x1a0[4]= x1a0[3] ^ ( (cle[8]*256) + cle[9] );;
+   code();
+   inter=inter^res;
+   i=0;
+}
+
+code()
+{
+   dx=x1a2+i;
+   ax=x1a0[i];
+   cx=0x015a;
+   bx=0x4e35;
+
+   tmp=ax;
+   ax=si;
+   si=tmp;
+
+   tmp=ax;
+   ax=dx;
+   dx=tmp;
+
+   if (ax!=0)
+    {
+      ax=ax*bx;
+    }
+
+   tmp=ax;
+   ax=cx;
+   cx=tmp;
+
+   if (ax!=0)
+    {
+      ax=ax*si;
+      cx=ax+cx;
+    }
+
+   tmp=ax;
+   ax=si;
+   si=tmp;
+   ax=ax*bx;
+   dx=cx+dx;
+
+   ax=ax+1;
+
+   x1a2=dx;
+   x1a0[i]=ax;
+
+   res=ax^dx;
+   i=i+1;
+ }
+ main()
+ {
+   si=0;
+   x1a2=0;
+   i=0;
+
+
+   /* C'est le cle ci-dessous ('Remsaalps!') que vous pouvez changer */
+
+   strcpy(cle,"Remsaalps!"); /* copie les 10 caracteres de la cle dans cle
+*/
+
+   /* ouverture du fichier ESSAI.TXT qui sera code */
+   /* ceci n'existe pas dans l'algorithme original ou tout se passe en RAM
+*/
+   /* il doit exister un fichier ESSAI.TXT dans le repertoire courant ! */
+   /* a vous de le creer ! */
+
+   if ((in=fopen("essai.txt","rb")) == NULL) {printf("\nErreur lecture
+fichier ESSAI.TXT !\n");fin();}
+   if ((out=fopen("sortie.txt","wb")) == NULL) {printf("\nErreur d'ecriture
+fichier SORTIE.TXT !\n");fin();}
+   /* le fichier code se trouve dans SORTIE.TXT */
+
+     while ( (c=fgetc(in)) != EOF)  /* la variable c recoit l'octet lu dans
+le fichier */
+      {
+	 assemble(); /* execute la routine de codage */
+	 cfc=inter&gt;&gt;8;
+	 cfd=inter&amp;255;  /* cfc^cfd = octet aleatoire */
+
+	 /* ZONE K !!!!!!!!!!!!! */
+	 /* ici le melange de c ( octet clair ) avec cle[compte] se situe */
+	 /* avant le codage de c */
+
+	 for (compte=0;compte&lt;=9;compte++)
+	 {
+	   /* on melange l'octet clair lu dans le fichier */
+	   /* a la cle utilisee pour le codage */
+
+	   cle[compte]=cle[compte]^c;
+	 }
+
+	 c = c ^ (cfc^cfd);
+	 fputc(c,out); /* ecriture de l'octet code dans le fichier SORTIE.TXT */
+      }
+      fclose (in);
+      fclose (out);
+      fin();
+   }
+
+
+****************************************************************************
+****************************************************************************
+****************************************************************************
+************************
+
+
+
+****************************************************************************
+****************************************************************************
+****************************************************************************
+************************
+
+
+
+/* Fichier PC1DEC.c */
+/* ecrit en Borland Turbo C 2.0 sur PC */
+/* Algorithme de DECODAGE PC1 ( Pukall Cipher 1 ) */
+/* (c) Alexandre PUKALL 1991 */
+/* Utilisation et modifications libres si le nom de l'auteur est */
+/* inclu dans le programme final et la documentation du logiciel */
+/* dans un endroit accessible librement par l'utilisateur comme */
+/* les fenetres A propos des logiciels sous Windows sur PC */
+/* Cet algorithme a ete ecrit en Assembleur 6809 Motorola */
+/* le code C ci-dessous est la traduction rapide de cet algorithme */
+/* le fonctionnement est identique */
+
+/* A noter que dans cet exemple le programme de codage et le programme */
+/* de decodage sont separes */
+/* vous pouvez les reunir en un seul en modifiant la zone K */
+/* qui est legerement differente pour le codage et le decodage */
+/* a cause du lien entre le texte clair et la cle de chiffrement */
+
+
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+unsigned int ax,bx,cx,dx,si,tmp,x1a2,x1a0[5],res,i,inter,cfc,cfd,compte;
+unsigned char cle[11]; /* les variables sont definies de facon globale */
+short c;
+FILE *in,*out;
+
+fin()
+{
+/* on quitte en effacant toutes les variables utilisees par l'algorithme */
+
+for (compte=0;compte&lt;=9;compte++)
+ {
+  cle[compte]=0;
+ }
+ax=0;
+bx=0;
+cx=0;
+dx=0;
+si=0;
+tmp=0;
+x1a2=0;
+x1a0[0]=0;
+x1a0[1]=0;
+x1a0[2]=0;
+x1a0[3]=0;
+x1a0[4]=0;
+res=0;
+i=0;
+inter=0;
+cfc=0;
+cfd=0;
+compte=0;
+c=0;
+
+exit(0);
+}
+assemble()
+{
+
+   x1a0[0]= ( cle[0]*256 )+ cle[1];
+   code();
+   inter=res;
+
+   x1a0[1]= x1a0[0] ^ ( (cle[2]*256) + cle[3] );
+   code();
+   inter=inter^res;
+
+   x1a0[2]= x1a0[1] ^ ( (cle[4]*256) + cle[5] );
+   code();
+   inter=inter^res;
+
+   x1a0[3]= x1a0[2] ^ ( (cle[6]*256) + cle[7] );
+   code();
+   inter=inter^res;
+
+   x1a0[4]= x1a0[3] ^ ( (cle[8]*256) + cle[9] );;
+   code();
+   inter=inter^res;
+   i=0;
+}
+
+code()
+{
+   dx=x1a2+i;
+   ax=x1a0[i];
+   cx=0x015a;
+   bx=0x4e35;
+
+   tmp=ax;
+   ax=si;
+   si=tmp;
+
+   tmp=ax;
+   ax=dx;
+   dx=tmp;
+
+   if (ax!=0)
+    {
+      ax=ax*bx;
+    }
+
+   tmp=ax;
+   ax=cx;
+   cx=tmp;
+
+   if (ax!=0)
+    {
+      ax=ax*si;
+      cx=ax+cx;
+    }
+
+   tmp=ax;
+   ax=si;
+   si=tmp;
+   ax=ax*bx;
+   dx=cx+dx;
+
+   ax=ax+1;
+
+   x1a2=dx;
+   x1a0[i]=ax;
+
+   res=ax^dx;
+   i=i+1;
+ }
+ main()
+ {
+   si=0;
+   x1a2=0;
+   i=0;
+
+
+   /* C'est le cle ci-dessous ('Remsaalps!') que vous pouvez changer */
+
+   strcpy(cle,"Remsaalps!"); /* copie les 10 caracteres de la cle dans cle
+*/
+
+   /* ouverture du fichier SORTIE.TXT qui sera decode */
+   /* ceci n'existe pas dans l'algorithme original ou tout se passe en RAM
+*/
+   /* il doit exister un fichier SORTIE.TXT dans le repertoire courant ! */
+   /* c'est le fichier code par l'algorithme PC1COD.c */
+
+   if ((in=fopen("sortie.txt","rb")) == NULL) {printf("\nErreur lecture
+fichier SORTIE.TXT !\n");fin();}
+   if ((out=fopen("essai.txt","wb")) == NULL) {printf("\nErreur d'ecriture
+fichier ESSAI.TXT !\n");fin();}
+   /* le fichier decode se trouve dans ESSAI.TXT */
+
+     while ( (c=fgetc(in)) != EOF)  /* la variable c recoit l'octet lu dans
+le fichier */
+      {
+	 assemble(); /* execute la routine de codage */
+	 cfc=inter&gt;&gt;8;
+	 cfd=inter&amp;255;  /* cfc^cfd = octet aleatoire */
+
+	 /* ZONE K !!!!!!!!!!!!!! */
+	 /* ici le melange de c ( octet clair ) se situe apres le */
+	 /* melange avec cle[compte] car il faut decoder d'abord */
+	 /* l'octet chiffre */
+
+	 c = c ^ (cfc^cfd);
+
+	 for (compte=0;compte&lt;=9;compte++)
+	 {
+	   /* on melange l'octet clair lu dans le fichier */
+	   /* a la cle utilisee pour le codage */
+
+	   cle[compte]=cle[compte]^c;
+	 }
+
+	 fputc(c,out); /* ecriture de l'octet decode dans le fichier ESSAI.TXT */
+      }
+      fclose (in);
+      fclose (out);
+      fin();
+   }
+
+
+
+****************************************************************************
+****************************************************************************
+****************************************************************************
+************************
+
+
+
+
+
+
+Cet algorithme a ete cree en 1991 pour coder les informations contenues sur
+une carte magnetique permettant de payer des places de cinema dans un
+complexe Multivision ( Cinema avec au moins 20 salles en son digital et
+ecran geant ). Il est toujours en activite.
+Les places peuvent etre achetees en guichets ou avec ces cartes. Les cartes
+doivent etre achetees auparavant et contiennent 10 places.
+Grace a cette carte les places sont achetees tres rapidement sans faire la
+queue, sur des bornes interactives avec ecran tactile ( 5 bornes sont
+disponibles ). Le processeur utilise est un 6809 ( processeur 8 bits ) de
+chez Motorola a 1 MHZ. La RAM est de 64 Ko et contient principalement les
+titres, les heures ... des films du jour. Elle est mise a jour a distance
+grace a une interface serie reliee a un serveur PC. Le PC indique egalement
+en temps reel a la RAM si une salle est complete et le logiciel bascule sur
+une autre salle si le film est joue dans plusieurs salle ou empeche la
+delivrance des billets. Les billets sont imprimes sur du papier pre-imprime
+grace a une imprimante matricielle et les billets tombent dans un petit bac
+ou le client les recupere.
+Le programme est ecrit en Assembleur 6809 et est stocke dans une puce ROM
+de 16 Ko ( ceci comprend le programme de saisie ecran, d'impression, de
+gestion de la carte, le programme de codage ... )
+
+Le protocole utilise pour coder les informations sur la carte magnetique
+nomme PP003 ( Protocole Pukall 003 ), est le suivant :
+
+La carte est valable 1 an tant qu'elle n'est pas utilisee, mais cette
+validite tombe a 6 mois apres la premiere utilisation.
+
+Le contenu de la carte est le suivant :
+
+
+- - Date de delivrance de la carte ( en clair : c'est a dire non crypte ) (
+format jj/mm/aa sur 3 octets ) : Champ 1
+- - Date de premiere utilisation de la carte ( en clair ) ( format jj/mm/aa
+sur 3 octets, tous a 0 si la carte n'est pas encore utilisee ) : Champ 2
+- - Date de derniere utilisation de la carte ( en clair ) ( format jj/mm/aa
+sur 3 octets, tous a 0 si la carte n'est pas encore utilisee ) : Champ 3
+- - Cle aleatoire sur 10 octets codee par la cle maitre du systeme qui
+change chaque semaine. : Champ 4
+- - 3 octets aleatoire codes : Champ 5
+- - 1 octet code qui contient le reste des places ( entre 0 et 10 ) : Champ
+6
+- - 3 octets aleatoire codes : Champ 7
+- - 7 octets codes qui contiennent le numero de la carte ( il est unique ).
+Chaque octet ne contient qu'un chiffre de 0 a 9. Les 7 octets permettent
+donc des numeros de carte jusqu'a 9999999. : Champ 8
+- - 2 octets codes qui contiennent la somme de tous les octets ci-dessus
+avant cryptage. : Champ 9
+
+
+Lors de l'achat de la carte les champs 4,5,7 sont initialises avec des
+octets aleatoires.
+Pour creer ces octets aleatoires le systeme fait appel a chaque fois que le
+client appuye sur l'ecran tactile ( dans la limite de 8 fois ) a la lecture
+du port synchronisation ecran qui retourne sur 2 octets, l'endroit ou se
+trouve le faisceau de balayage de l'ecran ce qui donne des octets
+totalement aleatoires ( 8*2 octets = 16 octets aleatoires ). ( Le client
+est oblige d'appuyer au moins 8 fois sur l'ecran du debut a la fin de la
+transaction d'obtention des billets ). Attention, les 2 octets retournes ne
+sont pas les coordonnees du point ou le doigt appuye sur l'ecran. Ces
+coordonnees sot calculees a l'aide d'une fine matrice electro-magnetique
+transparente collee sur l'ecran. Ces 2 octets correspondent a l'endroit
+precis ou se trouve le faisceau d'electron qui balaye le tube cathodique (
+50 fois par seconde ). Ce faisceau peut tres bien etre a l'oppose du point
+appuye sur l'ecran par le client. Ceci pour dire que ces 2 octets sont
+vraiment aleatoires.
+
+
+Le champ 4 ainsi initialise, est la cle de l'utilisateur.
+Cette cle est codee par l'algorithme PC1 par une cle maitre que seul le
+systeme connait ( cette cle change chaque semaine et elle est identique
+pour toutes les cartes pendant cette semaine )
+
+Les champs 5,6,7,8 et 9 sont codes par l'algorithme PC1 par la cle de
+l'utilisateur.
+
+Le champ 9 avant d'etre code est la somme de tous les octets precedents (
+avant codage pour les champs qui sont codes ). Ce champ permet, lors du
+decodage, de verifier qu'aucun champ precedent n'a ete change ).
+
+
+Chaque fois que le client insere sa carte dans la borne. Le champ 4 est
+decode en memoire grace a la cle maitre du systeme ( le systeme sait quelle
+cle il doit utiliser grace au champ 3 qui lui indique de quelle semaine
+date la cle maitre ). Grace a cette cle maitre le systeme decode le champ
+4.
+Grace a la cle utilisateur contenue maintenant dans le champ 4, le systeme
+decode les champs 5,6,7,8 et 9.
+Le systeme verifie grace au champ 9 que les autres champs n'ont pas ete
+modifies.
+
+Le systeme decremente ensuite le nombre de places demandees du champ 6.
+
+Ensuite les champs 4,5 et 7 sont reinitialisees avec de nouvelles valeurs
+aleatoires.
+
+La cle utilisateur ( champ 4 ) code ( avec PC1 ) les champs 5,6,7,8 et 9.
+
+Enfin la cle maitre change ( si la semaine est differente ) et cette cle
+code ( avec PC1 ) le champ 4.
+
+
+A noter que lorsque la transaction est terminee, le systeme envoie au
+serveur PC ( grace a l'interface serie ) le numero de la carte et la date
+de la derniere utilisation en clair ( la date du jour ). Le numero de la
+carte et la date sont stockes dans une base de donnees.
+Lorsque la carte est inseree a nouveau, le systeme decode tous les champs,
+puis demande au PC de lui envoyer la date de derniere utilisation pour le
+numero de carte qu'il vient de lire. Si la date est la meme, la transaction
+se poursuit, sinon la carte est invalidee ( tous les champs sont mis a 0 ).
+
+Ceci afin d'eviter que quelqu'un puisse copier sa carte ( neuve ou deja
+utilisee ) en un grand nombre d'exmplaires et puisse les vendre ( une carte
+magnetique peut etre facilement copiee avec un lecteur/enregistreur de
+carte magnetique ). Si cela arrive, une seule pourra etre utilisee, toutes
+les autres seront invalidees.
+
+Le seul moyen de frauder, est d'utiliser toutes les fausses cartes, chaque
+fois, le meme jour. Cela n'est pas viable pour un faussaire qui veut vendre
+les fausses cartes, il n'y a donc que peu de risques de fraudes.
+
+Pour rendre l'utilisation impossible le meme jour, il faudrait ajouter un
+champ heure:minutes:secondes a la date de la derniere utilisation, qui
+empecherait l'utilisation de fausses cartes le meme jour mais cela semble
+absolument inutile vu qu'un billet vendu doit toujours etre utilise pour la
+seance auquel il est destine, le jour meme. ( pas de risques de billets
+achetes avec les fausses cartes pour etre revendus ).
+
+De plus, et c'est cela la raison principale, les cartes magnetiques ( et
+les lecteurs utilises ) ne peuvent contenir ( lire ) plus de 35 octets, ce
+qui rend impossible l'ajout du champ en question.
+
+
+Voila le protocole utilise avec PC1 dans ce systeme.
+
+Les champs 5 et 7 sont utilises pour eviter les attaques par blocs rejoues
+( quelqu'un essaye de modifier le champ qui contient les places et le champ
+de controle, au hasard, pour augmenter les places disponibles : les champs
+aleatoires modifient beaucoup les resultats meme si on ne change qu'un bit
+dans le champ des places disponibles ). De plus, si une erreur de controle
+est detectee, la carte est invalidee completement. ( tous les champs sont
+mis a 0 ).
+Il n'y a donc pas de risque de fraude.
+
+Pourquoi avoir tant developpe la partie concernant le protocole ? Tout
+simplement parce que le protocole est aussi important sinon plus, que
+l'algorithme de cryptage lui-meme. Un mauvais protcole peut rendre un
+systeme complement insecurise malgre un algorithme completement sur.
+
+Par exemple, si l'algorithme PC1 ne codait que le champ qui contient les
+places ( champ 6 ) sans champ de controle,sans champ de numero de carte et
+sans valeur aleatoire ( juste une cle maitre contenue dans le systeme ), il
+suffirait a un attaquant de modifier le champ 6 et de faire 255 copies de
+la carte magnetique et ensuite d'essayer toutes ces cartes pour trouver
+quelle est la valeur qui code les places restantes.
+
+Grace aux valeurs aleatoires, aux champs de controle ... cela est
+impossible. Une modification dans le champ 6, entraine des modifications
+dans le codage des octets suivants qui seront detectees par le champ de
+controle et aussi lors du test sur le numero de carte. Le test est simple.
+Il verifie que tous les octets decodes du champ 8 sont bien compris entre 0
+et 9. Si des octets ont ete modifies avant, les octets du champ 8 seront
+modifies et ne seront plus compris entre 0 et 9. Un autre test s'effectue
+bien sur, sur le champ 6 qui doit etre compris entre 0 et 10.
+
+D'ou l'importance extreme du protocole.
+
+
+
+J'espäre que tout ceci vous sera utile.
+
+
+A noter que meme sur un processeur 8 bits cet algorithme est tres rapide
+s'il est programme en langage machine. Les multiplications en 16 bits
+peuvent se faire sans aucun probleme sur les processeurs 8 bits comme le
+6809. ( Pour la taille, le programme de codage prend a peu pres 2 Ko en
+Assembleur et il n'a pas ete optimise pour une taille plus reduite ).
+
+
+Voici le code de la routine de multiplication de 2 variables de 16 bits en
+Assembleur 6809 ( Le 6809 ne possede qu'une instruction de multiplication
+qui multiplie 2 variables de 8 bits et donne le resultat dans une variable
+de 16 bits mais grace a cette routine il multiplie 2 variables de 16 bits
+et donne le resultat dans une variable de 32 bits ).
+
+Le programme effectue c=a*b ( avec a et b sur 16 bits et c sur 32 bits )
+
+ADR1=a
+ADR2=b
+ADR3=c
+
+Dans cet exemple :
+
+a = 0xf7b4
+b = 0x23ff
+
+Apres lancement de la routine :
+
+c = 0x22d4584c
+
+Comme toutes nos multiplications sont sur 16 bits ( pour l'algorithme PC1 )
+on ne garde que les 16 derniers bits soit :
+c = 0x584c
+
+Voila comment comment on peut implementer l'algorithme PC1 sur de petits
+processeurs.
+
+
+
+Routine de multiplication 16 bits * 16 bits avec resultat en 32 bits ( ADR3
+) sur un processeur 8 bits ( le 6809 Motorola )
+
+(c) Alexandre PUKALL 1991
+
+
+     ORG     $8000
+     LDX     #ADR1
+     LDY     #ADR2
+     LDU     #ADR3
+     CLR     ,U
+     CLR     1,U
+     LDA     1,X
+     LDB     1,Y
+     MUL
+     STD     2,U
+     LDA     0,X
+     LDB     1,Y
+     MUL
+     ADDD     1,U
+     STD     1,U
+     BCC     PANU1
+     INC     0,U
+PANU1     LDA     1,X
+     LDB     0,Y
+     MUL
+     ADDD     1,U
+     STD     1,U
+     BCC     PANU2
+     INC     0,U
+PANU2     LDA     0,X
+     LDB     0,Y
+     MUL
+     ADDD     0,U
+     STD     0,U
+     RTS
+ADR1     FCB     $F7,$B4
+ADR2     FCB     $23,$FF
+ADR3     FCB     0,0
+     FCB     0,0
+     END
+
+
+End of message.
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBM0bJjfBldnLSXWtZAQGkSgP9E0py3nS6UE/fsSjiDOi9L54LXhrnx+1N
+7z67uGtv1z9vBsZoiRQt+NlNJk56F46r+5kUMrTnmQx2r6NkfX9ruIToiFTMQt58
+264x9SRAOuIyxUOOhfYW15fKjblrX8ylx8+exYKMMGqZd8FmKxyJShBNc5qIME+R
+RLmSkCHZziA=
+=WX87
+-----END PGP SIGNATURE-----
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00632.html">[ADMINISTRATIVIUM] Accounts payable</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00636.html">EUR_gov</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00743.html">Re: [ADMINISTRATIVIUM] Accounts payable</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00636.html">EUR_gov</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00642"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00642"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

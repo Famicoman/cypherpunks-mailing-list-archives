@@ -1,0 +1,156 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: contemplating remailer postage -->
+<!--X-From-R13: wvzNhh4.cfv.pbz -->
+<!--X-Date: Wed, 2 Feb 94 14:05:33 PST -->
+<!--X-Message-Id: 9402022200.AA01456@uu4.psi.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>contemplating remailer postage</TITLE>
+<LINK REV="made" HREF="mailto:jim@uu4.psi.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00139.html">Date Prev</A>][<A HREF="msg00154.html">Date Next</A>][<A HREF="msg00139.html">Thread Prev</A>][<A HREF="msg00196.html">Thread Next</A>][<A HREF="index.html#00146">Date Index</A>][<A HREF="threads.html#00146">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>contemplating remailer postage</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: contemplating remailer postage</LI>
+<LI><em>From</em>: <A HREF="mailto:jim@uu4.psi.com">jim@uu4.psi.com</A></LI>
+<LI><em>Date</em>: Wed, 2 Feb 94 15:55:30 -0600</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:Jim_Miller@suite.com">Jim_Miller@suite.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+Although lot of people (including me) have mentioned Digital Stamps, or  
+remailer postage, when describing advanced remailers, I've yet to see a  
+good description of a practical remailer postage mechanism.  I assume it  
+will be (or has been) modeled after one of the Chaumian digital cash  
+protocols.  If there has been work done on a remailer postage mechanism,  
+could somebody post the details? (or a reference)
+
+Here's what I think would make up a practical remailer postage mechanism:
+
+I think that each remailer should issue its own stamps, rather than using  
+a central digital postage service.  The existence of a centralize digital  
+postage service creates a single point of failure for the entire remailer  
+system.  It also complicates the protocol needed to validate digital  
+stamps and check for double spending.  Of course, having each remailer  
+issue its own stamps would increase the complexity for the users of the  
+remailer system.  However, I believe the increased user-side complexity  
+can be completely hidden within a good set of scripts (e.g. the scripts  
+could maintain a subdirectory for each remailer to hold stamps for that  
+remailer).
+
+If all digital stamps have the same "denomination", then the protocol for  
+obtaining stamps can be greatly simplified.  You wont need to engage in a  
+cut-and-choose protocol with the remailer (see page 121, Digital Cash  
+Protocol #4, Applied Cryptography).  To obtain 100 stamps from R1, Bob  
+would generate and blind 100 uniqueness strings (random numbers large  
+enough that they are unlikely to collide with anyone else's) and send them  
+all to R1.  R1 would simply sign all 100 of them and send them back.  Bob  
+would unblind them and store them in his "R1_stamps" subdirectory.
+
+Given the low value of individual stamps, it is probably not necessary to  
+try to determine who is attempting to double spend stamps.  Therefore,  
+stamps wouldn't need the identity strings used in Digital Cash Protocol  
+#4.  Also, since the remailer is both "bank" and "merchant", there's no  
+chance of the "merchant" cheating the "bank".
+
+...
+
+When Bob wants to route a message through R1, he place an R1 stamp at the  
+appropriate level within the nested envelopes.  These stamps can also be  
+used in SASE's.
+
+When R1 receives a stamped message (or SASE) it will check the signature  
+of the stamp.  If the signature doesn't verify, R1 discards the message.   
+If the signature verifies, R1 checks the uniqueness string against his  
+archive of "used" stamps.  If the uniqueness string is present in the  
+archive, the stamp has already been used and the message will be  
+discarded.  If the uniqueness string is not present in the archive, R1  
+will route the message on to the next hop.  Finally, R1 places the  
+uniqueness string in his "used stamp" archive.
+
+Seems simple enough.  The major sticking point (to me) is the remailer's  
+"used stamp" archive.  This could grow to be very large.  Something needs  
+to be done to keep the archive from getting too large.
+
+One idea is to have the remailer periodically change the key it uses to  
+sign stamps.  Changing the "stamp validation key" effectively invalidates  
+all unused stamps signed by that key.  If you haven't used the stamp by  
+that time, you're out of luck.  The remailer can purge its "used stamp"  
+archive whenever it changes its "stamp validation key".
+
+Of course, invalidating peoples' unused stamps out from under them is not  
+a nice thing for a remailer to do.  The remailer could provide a mechanism  
+whereby people could get new stamps from old, unused stamps.  To make this  
+work, the remailer would have to retain the previous "used stamp" archive  
+for a while to give people a chance to get new stamps.  However, there  
+still needs to be a limit on how long the remailer retains the "used  
+stamp" archives for old validation keys.  If you wait too long, you would  
+lose any chance to get new stamps from old.
+
+Comments welcome.
+
+Jim_Miller@suite.com
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00196" HREF="msg00196.html">Re: contemplating remailer postage</A></STRONG>
+<UL><LI><EM>From:</EM> Matthew J Ghio &lt;mg5n+@andrew.cmu.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00139.html">Remailer FAQ. Info request!</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00154.html">Quantum Crypto.</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00139.html">Remailer FAQ. Info request!</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00196.html">Re: contemplating remailer postage</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00146"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00146"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

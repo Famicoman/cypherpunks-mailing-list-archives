@@ -1,0 +1,137 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Transforming variable&#45;length to fixed keys -->
+<!--X-From-R13: cthg001Npf.nhpxynaq.np.am -->
+<!--X-Date: Sun, 29 Sep 1996 21:57:39 +0800 -->
+<!--X-Message-Id: 84399947820692@cs26.cs.auckland.ac.nz -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Transforming variable-length to fixed keys</TITLE>
+<LINK REV="made" HREF="mailto:pgut001@cs.auckland.ac.nz">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02520.html">Date Prev</A>][<A HREF="msg02536.html">Date Next</A>][<A HREF="msg02128.html">Thread Prev</A>][<A HREF="msg02546.html">Thread Next</A>][<A HREF="index.html#02585">Date Index</A>][<A HREF="threads.html#02585">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Transforming variable-length to fixed keys</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Transforming variable-length to fixed keys</LI>
+<LI><em>From</em>: <A HREF="mailto:pgut001@cs.auckland.ac.nz">pgut001@cs.auckland.ac.nz</A></LI>
+<LI><em>Date</em>: Mon, 30 Sep 1996 00:17:58 (NZST)</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:pgut001@cs.auckland.ac.nz">pgut001@cs.auckland.ac.nz</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;If the speed of your key generation is an issue, you could do something like:
+&gt;
+&gt;   key[] = { 0 };
+&gt;   const int nhashes = 4;
+&gt;   typedef void (*hashfnptr)(byte*, byte*, int);
+&gt;        /* array of hash functions */
+&gt;   hashfnptr hash[ nhashes ] = { md5, sha1, haval, ... };
+&gt;
+&gt;   state = hash[ 0 ]( algorithm, mode, parameters, userKey );
+&gt;
+&gt;   for count = 1 to iterations
+&gt;      for length = 1 to keyLength (in hash_output_size blocks)
+&gt;                /* selecting a hash function based on the state */
+&gt;         state = hash[ state % nhashes ]( state );
+&gt;         key[ length ] = hash[ state % nhashes]( state, userKey );
+&gt;
+&gt;This provides more expense in hardware for the same expense in software, so
+&gt;for the same CPU time you get more hardware expense, and could reduce the
+&gt;iterations for the same security.
+&gt;
+&gt;`nhashes' determined by the number of digest algorithms you consider
+&gt;trustworthy.
+&gt;
+&gt;(They need hardware for `nhashes' different digest algorithms).
+&gt;
+&gt;You need to do something about resolving the differing output and state sizes.
+ 
+Yeah, that's a particularly evil way of making things harder for people with
+keysearch engines.  That's why in cryptlib when I'm doing something like key
+exchange I encrypt all the parameters (algorithm, mode, etc etc) along with the
+session key, so an attacker can't even tell what algorithm you're using[1]. I'd
+thought of adding some sort of "choose a random algorithm and mode" capability
+to cryptlib, but the user interface was too difficult to handle (finding a way
+to let the user specify "We want a choice of DES-CFB, IDEA-OFB, DES-EDE-CBC, or
+Blowfish-PCBC" is a bit of a pain).  In the end I took the easy way out by
+adding an extended initialisation mode which allows the user to specify the
+algorithm if they want, but left the possibility of one-algorithm-per-round
+hashing alone.  A problem with using one of a fixed selection of algorithms is
+that as you add new modes the selection changes, so you need to add more state
+information to the key which specifies the choice of algorithms, which starts
+to get messy.
+ 
+I'd still love to add this in some form to keep the NSA amused... perhaps a
+bit vector of allowable algorithms and modes passed to the setup function.
+
+Peter.
+
+[1] There's a story from IBM when they were testing a new IBM-internal 
+    encryption system for long-haul telecoms applications.  They were 
+    playing around with bouncing encrypted transmissions off an IBM-owned 
+    satellite when they were contacted by the NSA who said "You're not using 
+    DES.  Stop it".
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="02546" HREF="msg02546.html">Re: Transforming variable-length to fixed keys</A></STRONG>
+<UL><LI><EM>From:</EM> Dustbin Freedom Remailer &lt;dustman@athensnet.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02520.html">Re: "Confessing to a felony"</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02536.html">PET_ard</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02128.html">Re: Transforming variable-length to fixed keys</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02546.html">Re: Transforming variable-length to fixed keys</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02585"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02585"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

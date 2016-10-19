@@ -1,0 +1,148 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: CYPHERPUNKS TO THE RESCUE -->
+<!--X-From-R13: [ngg Pynmr <znoNerfrnepu.ngg.pbz> -->
+<!--X-Date: Tue, 26 Jul 94 12:18:32 PDT -->
+<!--X-Message-Id: 9407261914.AA24348@big.info.att.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: CYPHERPUNKS TO THE RESCUE</TITLE>
+<LINK REV="made" HREF="mailto:mab@research.att.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01368.html">Date Prev</A>][<A HREF="msg01369.html">Date Next</A>][<A HREF="msg01368.html">Thread Prev</A>][<A HREF="msg01427.html">Thread Next</A>][<A HREF="index.html#01378">Date Index</A>][<A HREF="threads.html#01378">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: CYPHERPUNKS TO THE RESCUE</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: CYPHERPUNKS TO THE RESCUE </LI>
+<LI><em>From</em>: Matt Blaze &lt;<A HREF="mailto:mab@research.att.com">mab@research.att.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 26 Jul 94 15:23:48 -0400</LI>
+<LI><em>Posted-Date</em>: Tue, 26 Jul 94 15:23:48 -0400</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+norm@netcom.com (Norman Hardy) writes:
+
+&gt;At 09:51 1994/07/26 -0400, Russell Nelson wrote:
+&gt;&gt;Why not generate a random number, checksum it, and sign it using a
+&gt;&gt;public key?  Or is that overkill?
+&gt;...
+&gt;Seems good. But to thwart replay of the signed message the garage unit must
+&gt;never accept the same signed number twice. How about the car unit signing
+&gt;successive numbers. The garage unit would remember the last number that it
+&gt;accepted and only accept signed numbers larger than that. Garbled
+&gt;transmissions would then cause no problems. They would be fixed by yet new
+&gt;transmissions, just as with current units.
+&gt;
+
+As Eric Hughes points out (a couple of messages after these), you don't
+need public-key signatures for this; any secret key cipher or hash function
+will do, since the  base and remote trust each other unconditionally
+(at least for garage doors; nuclear weapons may be a different story).
+
+Both base and remote need to store a shared key and a counter; the remote 
+needs a transmitter and the base needs a receiver.  To authenticate
+itself, the remote sends {counter, hash(key,counter)} and then increments
+its counter.  The base calculates the hash for the received counter value,
+verifies that it matches the received hash value, verifies that the counter
+increases the stored counter value, stores the new value,  and opens
+the door.  A practical system system also probably include some mechanism
+for rekeying and for zeroizing the counters.
+
+There is no need for public key cryptography, two way communication (except
+for key setup), synchronized clocks, or extensive storage at either side.
+
+This protocol as described is very simple, almost trivial; given the right
+constraints it follows almost directly from the problem.  I mention
+it because very small variations and poorly chosen parameters render
+it vulnerable to several classic protocol failures.
+
+First, observe that this system has a work factor to break of no more than
+the SMALLER of the secret hash key and the size of the hash output.  Clearly,
+a single {counter, hash(key,counter)} message contains enough information to
+permit an conventional exhaustive search for key.  If the hash space is
+too small (say, 16 bits or so), the adversary can select an unused counter
+value and probe the receiver with random hash values until the door opens.
+Worse, if the bad guy selects a counter value that is much larger than the 
+remote's counter value, it has the added bonus of denial-of-service to the
+real user.
+
+Also, note that the order of operation on the receiver's part is critical.
+If the received counter value is stored BEFORE the hash is received, we
+are also vulnerable to denial-of-service (but at least not false
+authentication).
+
+Finally, there is the "man in the middle" attack, in which the bad guy
+intercepts a message intended for but never received by the base,
+records it, and plays it back later (but before the real owner returns
+to increment the counter again).  A likely scenario involves pushing the
+button twice on return home, but where only the first message is received by
+the base. One way to deal with this is to encourage frequent resyncs between
+the base and remote; for example, the remote, when in the garage, could send
+periodic "null" commands that increment the counters without actually
+opening the door.  (Of course, you'd need to make sure that these messages
+themselves cannot be used to construct spoofed open-door messages.)  Basing
+the counter in part on a real-time clock would also help here, but again,
+this complicates the protocol greatly and increases the opportunities for
+both denial-of-service (if the clocks get too far out of sync) and false
+authentication (if the clocks get reset - say at daylight savings time...)
+
+My point is not that this is a particularly hard problem, only that
+even simple cryptographic protocols can have serious bugs.
+
+-matt
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01368.html">Re: CYPHERPUNKS TO THE RESCUE</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01369.html">New Threat on the Horizon: Software Key Escrow</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01368.html">Re: CYPHERPUNKS TO THE RESCUE</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01427.html">Re: CYPHERPUNKS TO THE RESCUE</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01378"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01378"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

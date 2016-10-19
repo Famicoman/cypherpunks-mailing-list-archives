@@ -1,0 +1,219 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Timing attack against RSA -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Thu, 14 Dec 1995 14:02:29 +0800 -->
+<!--X-Message-Id: 199512140116.RAA22256@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Timing attack against RSA</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00404.html">Date Prev</A>][<A HREF="msg00402.html">Date Next</A>][<A HREF="msg00287.html">Thread Prev</A>][<A HREF="msg00405.html">Thread Next</A>][<A HREF="index.html#00385">Date Index</A>][<A HREF="threads.html#00385">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Timing attack against RSA</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Timing attack against RSA</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 13 Dec 1995 17:16:19 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Here is how I gather the timing attack against RSA decryption would
+work.  This is the chosen-ciphertext attack of Paul Kocher's.
+
+You know n, the public modulus; suppose it is 512 bits.  You want to
+know p and q, its prime factors.  You know the details of the server's
+implementation of RSA.  The server will do a decryption of the RSA
+message you send it, and give you some reply shortly after it is
+finished.
+
+You are going to send it bogus messages.  Normally, most random
+messages will encrypt under RSA to numbers of about 512 bits, but you will
+send it ciphertext which is about 256 bits long.  You are going to try
+to figure out the value of p.
+
+The server's algorithm is to take the ciphertext c, and first do:
+
+cp = c mod p
+cq = c mod q
+
+It will then do two modular exponentiations, mod p and mod q, and do a
+few more calculations, then return some result to you.
+
+The attack is to try to choose c to be about the same size as p, with the
+assumption being that if c is a bit less than p then c mod p will be fast
+since it doesn't have to do anything, while if c is somewhat larger than
+p then c mod p will be a little slower, since it will have to at least
+subtract p from c.  Paul Kocher has measured this timing difference as 17
+microseconds on one particular implementation.
+
+This is not going to be an easy time difference to measure.  In
+addition to doing the c mod p step, the algorithm also does all those
+other things:  the c mod q, the two RSA calculations, as well as
+whatever overhead is involved in the server's operation and the
+communication link.  The variations due to the RSA calculations
+themselves will have a standard deviation of about 250 microseconds,
+based on Paul's numbers (higher than his reported value because two
+exponentiations are done, plus some other work).  So this is a minimum
+amount of "noise" we must try to see through even if everything else is
+instantaneous.  This might be the situation in the case of a hardwware
+token which is doing RSA decryptions with a secret key.
+
+The first step will be to try to determine the length of p.  For this
+we will send in c values which are around 256 bits long.  We might
+start with some 250 bit values and some 260 bit values, hoping that p
+is in that range.  We do a whole lot of these, and we take the average
+time for them.  If p is between 250 and 260 bits long, then the 260 bit
+values should take at least 17 microseconds more time to calculate on
+the average than the 250 bit values.
+
+One interesting question is how many samples we would have to take in
+order to detect this difference.  One way to consider it is to ask,
+given that the samples have a standard deviation of about 250
+microseconds, how many samples do we have to take to reliably estimate
+the mean within an accuracy of about 10 microseconds, or 1/25 of a
+standard deviation?
+
+According to my limited knowledge of statistics, if we want to be right
+about 90% or 95% of the time, we need to have sqrt(number-of-samples) *
+1/25 be &gt; 3, or number-of-samples should be about 5000.  (Take this
+with a large grain of salt!)  So we will have to do some thousands of
+samples in order to average out the noise and get our mean this
+accurate, with good confidence.
+
+Once we have done these tests, we have determined that p is between our
+two values.  Now we can sub-divide the interval and poll with values
+which are, say, 255 bits long.  Again, we would have to do enough polls
+to determine the true mean time to within about 10 microseconds.
+
+After we repeat this three or four times, we will know the bit length
+of p; in effect, we know its first bit.  Now we can continue the
+divide and bracket procedure.  Each time, we must poll many times with
+c values whose most significant bits are halfway between the two
+bracketing values which we know contain p.  Each such sequence of about
+5000 polls yields us one more bit of p.
+
+We repeat this about 250 times, and we will have p, from which we can
+derive q, and we have broken the RSA key.  So, taking the estimate
+above of 5000 or so samples to get a bit of p, we will have to do about
+a million tests total to find p.  (BTW, in Paul's implementation it
+took about 1/3 second to do a decryption, so you're looking at about
+100 days of solid work to do the job.)
+
+This algorithm has some self-correcting features but it is not
+completely so.  Suppose p's first bits are actually 1011.  We have
+determined that it is between 1000 and 1100, and we want the 3rd bit.
+We poll with values which start with 1010, and (since with 90% accuracy
+we are wrong 10% of the time) we mistakenly conclude that the mean is
+the higher value, hence that p is less than 1010 and must start as
+100X.  We continue the procedure, and we will find that our new middle
+values are consistently less than p, so we gradually work out our
+estimate as 10011111...  Eventually this train of 1's might persuade us
+that we may have made a mistake back there, so we would go back and
+poll again to try to verify our earlier results.  (Of course, if
+another mistake happens during the 1's that will confuse us further...)
+
+Doing the attack across a network will be much more difficult because
+there will be a lot more variation in the turnaround time.  This will
+have the effect of increasing the standard deviation far above a
+quarter millisecond, up by probably at least an order of magnitude if
+not two or more.  Now we have to estimate a mean to within not 1/25,
+but maybe 1/1000 of a standard deviation, or worse.  This would
+increase the total number of samples necessary from a million up to the
+level of billions or trillions.
+
+One final note: two cases to which we might want to apply this would be
+Netscape's SSL as implemented by its secure servers, and DigiCash's
+bank software.  (I know Lucky said that DigiCash is immune to this
+attack, but maybe we would want to test it to see.) In either case,
+since we are sending a bogus 256 bit value, the data which decrypts
+will not be valid.  In the case of SSL we will probably get an error
+packet or maybe a broken connection to tell us when it has finished the
+decryption.  In the case of DigiCash, it does not need to do anything
+with the value it signs other than return it, so we will probably get a
+return packet.  However, it is not valid cash.  In order to convince
+DigiCash to send us this packet, it has to have deducted something from
+our account, at least a penny.  If it takes a billion connections to do
+the attack (which I think is an underestimate, corresponding to about a
+10 millisecond standard deviation on the timing values), that will cost
+10 million dollars.  So you better have pretty deep pockets to think
+about mounting this attack in that case.  For SSL, misses don't cost you
+anything, so maybe it would be worth trying, if you have a good,
+low-latency connection and a server with a light load.  The full attack
+would take too long but just determining the length of p would be quite a
+coup.
+
+Actually of course you would have to do some more research before
+mounting this attack; specifically, you'd want to know more about the
+timing of the software so you could estimate the costs of the mod p
+operation you are trying to catch.  If the number ends up being much less
+than 17 microseconds the attack gets that much harder.
+
+Hal
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6
+
+iQBVAwUBMM961RnMLJtOy9MBAQFBgAH/WQTMSvRySqNXpfnI4kNXUKQPAleV4NUL
+ciaDg9VrY8OOJ0cYO8aZ+RnGn+BKp7WFbIkIKFDO3mSE/o9Be2uI7w==
+=ijGI
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00404.html">Re: Attacking Clipper with timing info?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00402.html">Re: Attacking Clipper with timing info?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00287.html">Mike Godwin Re: Is there a lawyer in the house?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00405.html">3rd party beneficiaries and certificates</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00385"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00385"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

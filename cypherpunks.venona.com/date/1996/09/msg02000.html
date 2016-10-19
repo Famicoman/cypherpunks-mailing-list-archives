@@ -1,0 +1,154 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Transforming variable&#45;length to fixed keys -->
+<!--X-From-R13: cthg001Npf.nhpxynaq.np.am -->
+<!--X-Date: Mon, 23 Sep 1996 14:37:24 +0800 -->
+<!--X-Message-Id: 84345225525232@cs26.cs.auckland.ac.nz -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Transforming variable-length to fixed keys</TITLE>
+<LINK REV="made" HREF="mailto:pgut001@cs.auckland.ac.nz">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01926.html">Date Prev</A>][<A HREF="msg01935.html">Date Next</A>][<A HREF="msg01926.html">Thread Prev</A>][<A HREF="msg02128.html">Thread Next</A>][<A HREF="index.html#02000">Date Index</A>][<A HREF="threads.html#02000">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Transforming variable-length to fixed keys</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Transforming variable-length to fixed keys</LI>
+<LI><em>From</em>: <A HREF="mailto:pgut001@cs.auckland.ac.nz">pgut001@cs.auckland.ac.nz</A></LI>
+<LI><em>Date</em>: Mon, 23 Sep 1996 16:17:35 (NZST)</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:pgut001@cs.auckland.ac.nz">pgut001@cs.auckland.ac.nz</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I posted this to sci.crypt recently but the response to it was rather
+underwhelming, so I thought I'd repost it here to see if anyone has any
+comments on it.  What it is is a scheme for transforming arbitrary user keys
+(typically a long passphrase) into a fixed-length key for a particular
+algorithm.  This has the following properties:
+ 
+1. The user key 'userKey' is transformed into an algorithm-specific key 'key'
+   using a number of 'iterations' of a hash algorithm 'hash()'.
+ 
+2. The transformation is strongly serialized so that any form of attack
+   involving parallelization or precomputation isn't possible.
+ 
+3. The transformation is non-reversible, so that recovering the transformed key
+   won't recover the original key.
+ 
+4. The result of the transformation is algorithm-dependant, so that if an
+   attacker recovers a transformed key for one algorithm they can't recover the
+   transformed key (from the same user key) for another algorithm.
+ 
+5. The transformation can be iterated as often as required to make
+   password-guessing attacks difficult.
+ 
+6. The transformation process is algorithm-independant and can use any type of
+   hash algorithm and original and transformed key size.
+ 
+The transformation algorithm (which was designed with the help of John Kelsey)
+is as follows:
+ 
+   key[] = { 0 };
+   state = hash( algorithm, mode, parameters, userKey );
+ 
+   for count = 1 to iterations
+     for length = 1 to keyLength (in hash_output_size blocks)
+       state = hash( state );
+       key[ length ] = hash( state, userKey );
+ 
+The state acts as an RNG which ensures that the key hashing is serialized.
+ 
+The initial state depends on all encryption parameters, not just the user key.
+If we hashed the user key directly and then used it for a number of algorithms
+then someone who could recover the transformed key for one algorithm could
+compromise it if used for other algorithms (for example recovering a DES key
+would also recover half an IDEA key).  Hashing all algorithm-related parameters
+means that a successful attack one an algorithm, mode, or configuration won't
+allow the key for any other algorithm, mode, or configuration to be recovered.
+ 
+The code which implements the iterated hashing is:
+ 
+  /* Hash the variable-length input to a fixed-length output */
+  memset( key, 0, keyLength );
+  for( count = 0; count &lt; iterations; count++ )
+    {
+    for( keyIndex = 0; keyIndex &lt; keyLength; keyIndex += hashOutputSize )
+      {
+      /* state = hash( state ); key[ n ] = hash( state, userKey ) */
+      hash( state, state,   hashOutputSize, HASH_ALL );
+      hash( NULL,  state,   hashOutputSize, HASH_START );
+      hash( temp,  userKey, userKeyLength,  HASH_END );
+             |         |          |
+           output    input   input size
+ 
+      /* Copy as much of the hashed data as required to the output */
+      length = ( keyLength - keyIndex ) % hashOutputSize;
+      for( i = 0; i &lt; length; i++ )
+        key[ i ] ^= temp[ i ];
+      }
+    }
+ 
+Peter.
+ 
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="02128" HREF="msg02128.html">Re: Transforming variable-length to fixed keys</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Back &lt;aba@dcs.ex.ac.uk&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01926.html">LD</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01935.html">RE: Where to write crypto?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01926.html">LD</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02128.html">Re: Transforming variable-length to fixed keys</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02000"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02000"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

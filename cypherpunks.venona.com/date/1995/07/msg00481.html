@@ -1,0 +1,150 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Here it is; bi&#45;directional dining cryptographers -->
+<!--X-From-R13: fgrjnegfNvk.argpbz.pbz (Pvyy Egrjneg) -->
+<!--X-Date: Mon, 17 Jul 95 23:51:20 PDT -->
+<!--X-Message-Id: 199507180649.XAA25418@ix3.ix.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Here it is; bi-directional dining cryptographers</TITLE>
+<LINK REV="made" HREF="mailto:stewarts@ix.netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00472.html">Date Prev</A>][<A HREF="msg00482.html">Date Next</A>][<A HREF="msg01064.html">Thread Prev</A>][<A HREF="msg00492.html">Thread Next</A>][<A HREF="index.html#00481">Date Index</A>][<A HREF="threads.html#00481">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Here it is; bi-directional dining cryptographers</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Here it is; bi-directional dining cryptographers</LI>
+<LI><em>From</em>: <A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A> (Bill Stewart)</LI>
+<LI><em>Date</em>: Mon, 17 Jul 1995 23:52:38 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Context: Bidirectional DCnets, Alice and Bob simultaneously transmitting
+to each other.  Interesting approach, though you do have to schedule it
+somehow.  It's a different take on the uses of DCnets - the original
+was for an anonymous-1 to many rather than a 1 to 1 with only the two
+participants
+knowing, though in the first case the recipient can be known only to the sender
+if they want to arrange things that way through shared secrets or whatever.
+
+At 01:31 PM 7/17/95 +0100, Rev. Mark Grant wrote:
+&gt;Yes, but presumably it's expected that they would be using secure
+&gt;encryption on the messages that they're sending. That might still provide
+&gt;some information about the message for traffic analysis, e.g. if you send
+&gt;a PGP message you have your key-id at the beginning, and if you knew the 
+&gt;keys of all members of the DC-net you could XOR them and see who's 
+&gt;talking to who.
+
+Presumably people will use multiple key-ids on the net as well - Alice may
+have a general-use "Alice" key, and maybe also a general-use "Medusa" key,
+but Alice or Medusa may have also arranged with Bob to use a different key
+for traffic where he doesn't mind if she knows he sent it and he doesn't want
+anyone else knowing it's being sent to her.  Also, he can do this anonymously,
+so she doesn't know either:
+
+        Alice posts Plaintext("Hi, I'm Alice, key AAAA")
+        Bob   posts Encrypt(AAAA, "Hi, Alice, I'm Dr. X, Key XXXX, please
+                        post a key I can use to talk to you")
+        Alice posts Encrypt(XXXX, Signed(AAAA, "Hi, Dr. X, use key AXAX"))
+
+Bob's message lets him send stuff to Alice without anyone, including her,
+knowing it's from him, since the name X and key XXXX are new randoms.
+Alice signs her response so Dr. X knows that key AXAX will really go to
+Alice and
+not to Mallet who's impersonating Alice; she doesn't really care who X is.
+If traffic analysis is a concern (Alice noticing, for instance, that she's
+getting a _lot_ of requests from key AXAX for her remailer to send stuff
+to destination ZZZZ), Bob can keep sending her new requests for keys and ids,
+and not reuse them more than he thinks is safe.
+
+&gt;I'd have thought the most significant problem would be reserving the
+&gt;blocks in an anonymous fashion while not allowing denial-of-service
+&gt;attacks. 
+
+Since anybody can send bits at any time, and nobody can tell who without
+lots of collusion, you can't prevent denial-of-service (well, I assume not,
+unless there's something rather non-obvious in the literature.)
+The Bad Guy can decide if it's more fun to jam the reservations or the messages.
+What reservation does for you is gives a short inefficient period (with
+possible collisions, backoff-and-retry, etc., depending on algorithm) that
+you can use to 
+reserve a longer one-user period for message traffic, so you can spend most
+of your time talking instead of haggling over interruptions.
+
+One way to do reservations is to use some variant on Slotted Aloha for the
+reservation period - for example, everybody picks a random id number for the
+session,
+(with odd parity or odd high-bit to make collision detection easier),
+waits a random number of slots, and then sends their id number.
+If there's a collision, wait and retry, maybe with exponential backoff.
+After the first slot that's got data and looks like it doesn't have a collision,
+anybody who thinks that it was their number picks a different number,
+waits a short random number of slots and posts; first one wins.
+(If you're using 32-bit randoms and have fewer than a million players, 
+the chances of two undetected collisions in a row are really small,
+even if people cheat a bit on their backoffs.)  Winner announces how many
+slots he's going to use up for his message, so you know when to start again.
+#                                Thanks;  Bill
+# Bill Stewart, Freelance Information Architect, stewarts@ix.netcom.com
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00492" HREF="msg00492.html">Re: Here it is; bi-directional dining cryptographers</A></STRONG>
+<UL><LI><EM>From:</EM> Bryce Wilcox &lt;wilcoxb@nagina.cs.colorado.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00472.html">Re: Anti-Electronic Racketeering Act of 1995</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00482.html">Re: Anti-Electronic Racketeering Act of 1995</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01064.html">Re: Zimmerman legal fund</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00492.html">Re: Here it is; bi-directional dining cryptographers</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00481"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00481"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

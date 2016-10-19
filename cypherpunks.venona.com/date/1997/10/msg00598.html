@@ -1,0 +1,196 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: 6502 ML programming -->
+<!--X-From-R13: Xbanguna Ivraxr <XbaIvraxNvk.argpbz.pbz> -->
+<!--X-Date: Sat, 11 Oct 1997 12:29:14 +0800 -->
+<!--X-Message-Id: 3.0.3.32.19971010211816.02fa1704@popd.netcruiser -->
+<!--X-Content-Type: multipart/signed -->
+<!--X-Reference: 199710090439.XAA16340@einstein.ssz.com -->
+<!--X-Derived: pgp00005.pgp -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: 6502 ML programming</TITLE>
+<LINK REV="made" HREF="mailto:JonWienk@ix.netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00597.html">Date Prev</A>][<A HREF="msg00606.html">Date Next</A>][<A HREF="msg00492.html">Thread Prev</A>][<A HREF="msg00531.html">Thread Next</A>][<A HREF="index.html#00598">Date Index</A>][<A HREF="threads.html#00598">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: 6502 ML programming</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Jim Choate &lt;<A HREF="mailto:ravage@ssz.com">ravage@ssz.com</A>&gt;,       <A HREF="mailto:cypherpunks@ssz.com">cypherpunks@ssz.com</A> (Cypherpunks Distributed Remailer)</LI>
+<LI><em>Subject</em>: Re: 6502 ML programming</LI>
+<LI><em>From</em>: Jonathan Wienke &lt;<A HREF="mailto:JonWienk@ix.netcom.com">JonWienk@ix.netcom.com</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 10 Oct 1997 21:18:16 -0700</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00482.html">199710090439.XAA16340@einstein.ssz.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+At 11:39 PM 10/8/97 -0500, Jim Choate wrote:
+&gt;Forwarded message:
+&gt;
+&gt;&gt; Date: Wed, 8 Oct 1997 23:10:26 -0400
+&gt;&gt; From: ghio@temp0132.myriad.ml.org (Matthew Ghio)
+&gt;&gt; Subject: Re: [LONG, off-topic]] Interactive Programming
+&gt;
+&gt;&gt; Reminds me of a time, years ago, where I was trying to modify a program
+&gt;&gt; written in 6502 assembler.
+&gt;
+&gt;&gt; Consider the following line of C code:
+&gt;&gt; 
+&gt;&gt;   result = function(x,y,z);
+&gt;&gt; 
+&gt;&gt; One could write this in 6502 assembler as:
+&gt;&gt; 
+&gt;&gt;   JSR function
+&gt;&gt;   DATA x
+&gt;&gt;   DATA y
+&gt;&gt;   DATA z
+&gt;&gt;   STA result
+&gt;&gt; 
+&gt;&gt; where x,y,z,result are pointers to storage locations.
+&gt;
+&gt;There in no 'DATA' construct in 6502 assembly.
+&gt;
+&gt;This is some sort of macro that either the assembler or programmer
+&gt;defined. All official Rockwell/Commodore [1] 6502 assembly mnemonics are
+&gt;three letter. There are NO official macro's from MOS Technologies under
+&gt;either Rockwell or Commodore other than the ORG. ORG simply defined the
+&gt;starting address for the target code.
+
+I concur.
+
+&gt;The most efficient way to store data in 6502 is to put it in the first 256
+&gt;bytes of ram, then it could be called in no more than 2 clock cycles. Also,
+&gt;in 6502 good programmers use the branch instructions (BCC, BCS, BEO, BMI,
+&gt;BNE, BPL, BVC, BVS) because the JSR required three bytes versus 2 bytes for
+&gt;a Bxx. The only constraint was that the branch target must reside in the same
+&gt;256 byte page as the branch itself. The biggest boo-boo committed here was
+not
+&gt;realizing that branch offsets that took you across the upper page boundary
+&gt;would leave you at the lower page boundary plus some remaining offset.
+
+This is not quite correct.  I can't seem to find my Commodore 128
+Programmer's Reference Guide, (of all the things I lost going to the PC, I
+miss my PRG the most.  It contains complete BASIC &amp; assembler language
+reference guides, lists EVERY memory address used by the OS and what it
+does, register-level programming info on every chip, and even schematics
+for my 128!  Unfortunately, nobody seems to publish such a book for PC's,
+but I digress.)  The branching instructions used 1 byte for the in
+struction, followed by 1 data byte which was a signed integer.  This
+allowed one to branch up to 127 bytes ahead, or 128 bytes back from the
+current instruction address register value.  The coolest thing about this
+was that if you were able write your code to branch and not JMP or JSR,
+your code could be located anywhere in memory and it would work perfectly,
+which was very useful when writing interrupt wedges that were supposed to
+work on the C-64 and the C-128, or that could be loaded in various places
+in memory.
+
+&gt;Idealy a jump table was created that had the various target addresses for
+your
+&gt;routines. Then a Bxx followed by a indirect mode JMP (NOT a JSR). If that
+table
+&gt;was in the first 256 bytes it was possible to save a whole clock cycle AND a
+&gt;byte in the process. At 64k and 1Mhz clock these sorts of short-cuts were
+&gt;significant.
+
+This is where self-modifying code came in handy.  During initialization, a
+self-mod routine would increment the addresses in the jump table so they
+pointed to the proper addresses of the respective routines.
+
+&gt;Because of the architecture of the 6502 the 0 page of RAM was a very busy
+&gt;place indeed because any operation there automaticaly saved a byte and a
+&gt;clock cycle.
+
+If I remember correctly, there were all of 5 or 10 bytes available for
+"user programs", depending on which OS functions you were willing to break.
+
+My first computer was a Commodore VIC-20. 5 points and Geek of the Week to
+the first email correctly specifying the "Basic Bytes Free" on a vanilla
+VIC-20.
+
+Real Programmers don't use symbolic addresses.
+
+
+Jonathan Wienke
+
+What part of "the right of the people to keep and bear Arms, shall not be
+infringed" is too hard to understand? (From 2nd Amendment, U.S. Constitution)
+
+PGP 2.6.2 RSA Key Fingerprint: 7484 2FB7 7588 ACD1  3A8F 778A 7407 2928
+DSS/D-H Key Fingerprint: 3312 6597 8258 9A9E D9FA  4878 C245 D245 EAA7 0DCC
+Public keys available at pgpkeys.mit.edu. PGP encrypted e-mail preferred.
+
+Get your assault crypto before they ban it!
+
+US/Canadian Windows 95/NT or Mac users:
+Get Eudora Light + PGP 5.0 for free at <A  HREF="http://www.eudora.com/eudoralight/">http://www.eudora.com/eudoralight/</A>
+Get PGP 5.0 for free at <A  HREF="http://bs.mit.edu:8001/pgp-form.html">http://bs.mit.edu:8001/pgp-form.html</A>
+
+Non-US PGP 5.0 sources:
+<A  HREF="http://www.ifi.uio.no/pgp/">http://www.ifi.uio.no/pgp/</A>
+<A  HREF="http://www.heise.de/ct/pgpCA/download.shtml">http://www.heise.de/ct/pgpCA/download.shtml</A>
+<A  HREF="ftp://ftp.pca.dfn.de/pub/pgp/V5.0/">ftp://ftp.pca.dfn.de/pub/pgp/V5.0/</A>
+<A  HREF="ftp://ftp.fu-berlin.de/pub/pc/win95/pgp">ftp://ftp.fu-berlin.de/pub/pc/win95/pgp</A>
+<A  HREF="ftp://ftp.fu-berlin.de/pub/mac/pgp">ftp://ftp.fu-berlin.de/pub/mac/pgp</A>
+<A  HREF="http://www.shopmiami.com/utopia.hacktic.nl/pub/replay/pub/pgp/pgp50/win/">http://www.shopmiami.com/utopia.hacktic.nl/pub/replay/pub/pgp/pgp50/win/</A>
+
+RSA export-o-matic:
+print pack"C*",split/\D+/,`echo "16iII*o\U@{$/=$z;[(pop,pop,unpack"H*",&lt;&gt;
+)]}\EsMsKsN0[lN*1lK[d2%Sa2/d0&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;J]dsJxp"|dc`</PRE>
+<P><A HREF="pgp00005.pgp" >PGP signature</A></P>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00482" HREF="msg00482.html">6502 ML programming</A></STRONG>
+<UL><LI><EM>From:</EM> Jim Choate &lt;ravage@ssz.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00597.html">Re: Attitude and Assumptions</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00606.html">Re: Why Adam Back keeps politicizing technical issues (Re: Why Jon Callas keeps picking nits)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00492.html">Re: 6502 ML programming</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00531.html">Re: 6502 ML programming</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00598"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00598"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

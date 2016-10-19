@@ -1,0 +1,161 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Generating Random Numbers... -->
+<!--X-From-R13: pngnylfgNargpbz.pbz (Epbgg Qbyyvaf) -->
+<!--X-Date: Thu, 14 Oct 93 15:00:01 PDT -->
+<!--X-Message-Id: 9310142157.AA12040@newton.apple.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Generating Random Numbers...</TITLE>
+<LINK REV="made" HREF="mailto:catalyst@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00652.html">Date Prev</A>][<A HREF="msg00663.html">Date Next</A>][<A HREF="msg00652.html">Thread Prev</A>][<A HREF="msg00643.html">Thread Next</A>][<A HREF="index.html#00656">Date Index</A>][<A HREF="threads.html#00656">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Generating Random Numbers...</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:baldwin@LAT.COM">baldwin@LAT.COM</A></LI>
+<LI><em>Subject</em>: Re: Generating Random Numbers...</LI>
+<LI><em>From</em>: <A HREF="mailto:catalyst@netcom.com">catalyst@netcom.com</A> (Scott Collins)</LI>
+<LI><em>Date</em>: Thu, 14 Oct 1993 14:59:37 -0800</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Bob Baldwin writes:
+  &gt;The english language has an entropy of 1.0 to 1.5 bits per letter, so it
+  &gt;is safe to extract one bit per character.  [Shannon's work et al
+  &gt;demonstrates] that this bit per character is truely random.
+
+  - entropy -
+In information theory, a visceral meaning of the term 'entropy' is 'a
+measure of surprise', or unpredictability.  Entropy is the amount of
+information in some chunk of data, that could not be deduced.  Equating
+entropy with randomness is a tautology.  Entropy (like velocity) is
+relative, however, to the observer.  If the observer has a good model of
+the data, the entropy will be low (not much information present).  If the
+observer has a bad model, the entropy will be high.  One example that
+demonstrates a difference in relative entropies is a block of ciphertext. 
+The entropy of the block with respect to its intended recipient (who has
+the key) is low; with respect to an interloper (no key), it is high.
+
+  - the entropy of english text -
+The paper cited by nobody, and alluded to by Bob Baldwin, is a landmark
+paper in estimating the entropy of english text.  Note that these estimates
+are not lower bounds, but empirical values with respect to the human
+'predictors'; and that the (1, 1.5) bits per character are an _average_
+across an entire message.  For example, if the message begins "Four score
+", then, with respect to a typical American history student, there is very
+little entropy in the remainder of the sentence, should it continue " and
+seven years ago".
+
+  - turning entropy into random numbers -
+From reading Bob Baldwin's post, I am not sure how he intended to extract
+this 'one bit per character'.  You would certainly not just pick the n-th
+bit from every byte.  A good way to turn entropy into actual bits is to
+build a compressor.  A compressor is usually a combination of a predictor
+(or model) and an encoder.  The predictor plays the role of the human
+'predictors' in Shannon's experiment, and for each new symbol of the
+message, generates a probability that represents (inversely) its 'surprise'
+at seeing that symbol.  A good encoder uses the probabilities from the
+predictor to encode the symbol in the smallest number of bits.  The better
+the predictor, the less it is suprised, the larger the probabilities it
+returns to the encoder, the fewer number of bits output.  Thus, good
+predictors (and competent encoders) lead to efficient compressors.
+
+See Bell, Cleary, &amp; Witten, "Text Compression" Prentice Hall, 1990.  ISBN
+0-13-911991-4.  Especially Ch. 5 'From Probabilities to Bits'.
+
+  - entropy and transformations -
+Both Bob Baldwin and nobody discuss the use of hash functions on the text
+to get random numbers, and wonder if redundancy in the underlying message
+will 'show through'.  Cryptographically secure deterministic hash function
+are designed with this criteria in mind.  That is, one goal is that the
+entropy in the bits of the hash itself, relative to an observer who knows
+the input stream, is 0; to an observer who does not know the input stream,
+it is maximal (i.e., has a lower bound related to your predictability in
+selecting an input).
+
+nobody asks:
+  &gt;could someone here describe how this compares to other pseudo-random
+  &gt;sources?  how well would this function as a seed to some other
+  &gt;pseudo-random number generation process?
+
+Using hashes as random number generators is as secure as the hash which
+(for a cyptographically poor hash) may be dependent on the entropy of the
+input, and your use of it (e.g., don't always hash the 'Gettysburg Address'
+to get your random numbers).  Using compression to convert the entropy in a
+message (with respect to the compression model) into a random number is
+dependent on the quality of the model.  If you use a poor model, someone
+else will be able to find, and perhaps capitalize on, redundancy in your
+output.
+
+Related to this, in a conversation on this topic with Ron Rivest he noted
+that good enough compression might be secure in itself (with the model and
+its initial state as the key), and that he had students who were
+researching this.
+
+Hope this helps,
+
+
+Scott Collins         | "Few people realize what tremendous power there
+                      |  is in one of these things."     -- Willy Wonka
+......................|................................................
+BUSINESS.   voice:408.862.0540  fax:974.6094   collins@newton.apple.com
+Apple Computer, Inc.   5 Infinite Loop, MS 305-2B   Cupertino, CA 95014
+.......................................................................
+PERSONAL.   voice/fax:408.257.1746    1024:669687   catalyst@netcom.com
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00652.html">about Cypherpunks (fwd) "instant faq"</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00663.html">Re: Generating random numbers from english text</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00652.html">about Cypherpunks (fwd) "instant faq"</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00643.html">cypherpunk mindWHAT?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00656"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00656"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

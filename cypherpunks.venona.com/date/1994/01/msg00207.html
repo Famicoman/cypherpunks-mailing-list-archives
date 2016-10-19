@@ -1,0 +1,147 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Remote Job Entry validated by pgp (hack script) -->
+<!--X-From-R13: tgbnyNna&#45;grnyynpu.pbz (Uenunz Fbny) -->
+<!--X-Date: Fri, 14 Jan 94 04:22:49 PST -->
+<!--X-Message-Id: 199401141202.MAA21915@an&#45;teallach.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Remote Job Entry validated by pgp (hack script)</TITLE>
+<LINK REV="made" HREF="mailto:gtoal@an-teallach.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00202.html">Date Prev</A>][<A HREF="msg00204.html">Date Next</A>][<A HREF="msg00211.html">Thread Prev</A>][<A HREF="msg00204.html">Thread Next</A>][<A HREF="index.html#00207">Date Index</A>][<A HREF="threads.html#00207">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Remote Job Entry validated by pgp (hack script)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:alt%2Dsecurity%2Dpgp@demon.co.uk">alt-security-pgp@demon.co.uk</A>, <A HREF="mailto:alt%2Dsources@demon.co.uk">alt-sources@demon.co.uk</A>,       <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Remote Job Entry validated by pgp (hack script)</LI>
+<LI><em>From</em>: <A HREF="mailto:gtoal@an%2Dteallach.com">gtoal@an-teallach.com</A> (Graham Toal)</LI>
+<LI><em>Date</em>: Fri, 14 Jan 1994 12:02:07 GMT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+#!/bin/sh
+
+# This is a little hack to let me send myself signed pgp mail containing
+# a batch script and have it execute as me.  I knocked this up in a hurry
+# this evening when I needed to remote control a machine I couldn't easily
+# telnet to.  It's not especially elegant but then it's not especially
+# big, so if you don't like it, write your own the way you prefer.
+
+# Because this runs as a batch job, PGPPATH and PGPPASS must be
+# set in the environment.  If invoked from procmail, they have to
+# be defined in .procmailrc  Clearly you should use a different
+# private key to your personal one for mail.  Given that this is
+# only to stop outsiders accessing your account, it doesn't matter
+# that the exec-key is held online or in the environment - if someone
+# could hack your account to get the key they've already done enough
+# to hack your account anyway and having access to this exec-server
+# would give them no extra advantage...
+
+# I use procmail runes like this to execute this script:
+
+# :2
+# ^From.*gtoal
+# Subject: batch job
+
+# The From line is redundant, but I just put it in so I could easily
+# bounce requests from most unauthorised senders in a later procmail
+# rule.  Unauthorised senders posting as me are silently dropped
+# on the floor... (assuming the pgp signature check fails that is!)
+
+cat &gt; $PGPPATH/job.$$
+
+# This just extracts the first pgp message to a file to avoid possible
+# problems with spoofing... - it leaves the file empty if no pgp message
+# was found.  I use my own editor 'ecce' to do this - you might use
+# sed or perl or whatever...
+
+if [ -f /usr/local/lib/ecce ]; then
+# Skipping this stage probably doesn't hurt...
+/usr/local/lib/ecce $PGPPATH/job.$$ &lt;&lt; EOD
+f/-----BEGIN PGP MESSAGE-----/l0k-0f/-----END PGP MESSAGE-----/mk0,m-0k0;%c
+EOD
+fi
+
+# can't use -f filter mode because it's impossible to specify
+# the pubring to use if you do.
+# +batchmode is essential - it forces a return code of 0 if and
+# only if the pgp message was signed and the signator is explicitly
+# listed in 'execring.pgp'.
+
+pgp +batchmode $PGPPATH/job.$$ \
+               $PGPPATH/exec.$$ \
+               $PGPPATH/execring.pgp 
+if [ $? -ne 0 ]; then
+  # This goes into the procmail log
+  echo ILLEGAL REMOTE JOB - USER NOT IN EXECRING.PGP
+  # tidy up
+  rm -f $PGPPATH/job.$$
+  rm -f $PGPPATH/exec.$$
+  exit 1
+fi
+
+# execute the command - probably a script but could as easily be a
+# binary executable if properly compiled for the target host.
+
+chmod +x $PGPPATH/exec.$$
+$PGPPATH/exec.$$
+
+# tidy up
+rm -f $PGPPATH/job.$$
+rm -f $PGPPATH/exec.$$
+exit 0
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00202.html">Re: Welcome to IIA (fwd)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00204.html">please cancel</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00211.html">Cancel subscription.</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00204.html">please cancel</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00207"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00207"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,309 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Secure Mosaic / Net surfing -->
+<!--X-From-R13: Hvaprag.QngrNTGD[W@F.@SQFOD.QE.Q[G.SRG -->
+<!--X-Date: Sat, 25 Jun 94 00:02:06 PDT -->
+<!--X-Message-Id: 772527133/vac@FURMINT.NECTAR.CS.CMU.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Secure Mosaic / Net surfing</TITLE>
+<LINK REV="made" HREF="mailto:Vincent.Cate@FURMINT.NECTAR.CS.CMU.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01107.html">Date Prev</A>][<A HREF="msg01109.html">Date Next</A>][<A HREF="msg01107.html">Thread Prev</A>][<A HREF="msg01109.html">Thread Next</A>][<A HREF="index.html#01108">Date Index</A>][<A HREF="threads.html#01108">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Secure Mosaic / Net surfing</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Secure Mosaic / Net surfing </LI>
+<LI><em>From</em>: <A HREF="mailto:Vincent.Cate@FURMINT.NECTAR.CS.CMU.EDU">Vincent.Cate@FURMINT.NECTAR.CS.CMU.EDU</A></LI>
+<LI><em>Date</em>: Sat, 25 Jun 1994 02:52-EDT</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+I was surfing off the edges of my page and came across a 
+page about secure http/mosaic.  The page is:
+
+     <A  HREF="http://hoohoo.ncsa.uiuc.edu/docs/PEMPGP.html">http://hoohoo.ncsa.uiuc.edu/docs/PEMPGP.html</A>
+
+I include ASCII of this below.
+
+  -- Vince
+
+
+ Using PGP/PEM encryption
+
+This document is formatted roughly like a FAQ. Here are the section headings: 
+
+   What is PGP/PEM encryption? 
+   How are they used in HTTP? 
+   What do I need to use it? 
+   How do the keys get distributed? 
+   How bulletproof is it? 
+   Installation: server side. 
+   Installation: client side. 
+   What does the protocol look like? 
+
+
+
+What is PGP/PEM encryption?
+
+PGP and PEM are programs to allow you and a second party to communicate
+in a way which does not allow third parties to read them, and which
+certify that the person who sent the message is really who they claim
+they are. 
+
+PGP and PEM both use RSA encryption. The U.S. government has strict
+export controls over foreign use of this technology, so people outside
+the U.S. may have a difficult time finding programs which perform the
+encryption. 
+
+
+
+How are they used in HTTP?
+
+We have implemented a system by which NCSA Mosaic and NCSA httpd call
+external programs which encrypt and decrypt their communications and
+thus provide secure communications between the server and the client
+and ensure that a user is who he/she says they are. This system
+currently has hooks for PEM encryption as well as PGP encryption. As
+interest in this area grows, more will most likely be added. 
+
+
+
+What do I need to use it?
+
+You will need a working copy of either Pretty Good Privacy or RIPEM to
+begin with. You should be familiar with the program and have generated
+your own public/private key pair. 
+
+You should be able to use the TIS/PEM program with the PEM
+authorization type. I haven't tried it. This tutorial is written
+assuming that you are using RIPEM. 
+
+
+
+How do the keys get distributed?
+
+Currently, we have implemented this protocol with PEM and PGP using
+local key files on the server side, and on the client side with PEM
+using finger to retrieve the server's public key. 
+
+As you can tell, parties who wish to use Mosaic and httpd with PEM or
+PGP encryption will need to communicate beforehand and find a
+tamper-proof way to exchange their public keys. 
+
+
+
+How bulletproof is it?
+
+Pioneers get shot full of arrows. This work is currently in the
+experimental stages and thus may have some problems that I have
+overlooked. There aren't any that I can see but I've been looking at it
+for a long time. There may be some quirks in the additions to Mosaic
+and httpd as well. In particular, error recovery is not always as
+helpful as it could be. 
+
+The only known problem that I know about is that the messages are
+currently not timestamped. This means that a malicious user could
+record your encrypted message with a packet sniffer and repeat it back
+to the server ad nauseum. Although they would not be able to read the
+reply, if the request was something you were being charged for, you may
+have a large bill to pay by the time they're through. 
+
+
+
+Installation: The Server Side
+
+First, you must compile httpd with CFLAGS set to -DPEM_AUTH. This will
+enable the PEM and PGP authentication directives. 
+
+Next, look in the support/auth directory. This directory contains your
+encryption and decryption scripts, as well as bins for your remote
+users' public keys. 
+
+Edit ripem-dec, ripem-enc, pgp-enc, and pgp-dec and follow the
+instructions therein. You need not set up PGP if you don't plan to use
+it, and same with RIPEM. 
+
+Now, edit your server configuration file, usually conf/httpd.conf. You
+will want to add three new directives for PGP and three new directives
+for PEM depending on which you plan to use (or both). 
+
+PEMEncryptCmd /usr/local/etc/httpd/auth/ripem-enc
+PGPEncryptCmd /usr/local/etc/httpd/auth/pgp-enc
+
+These directives change what executables httpd will look for when it is
+trying to encrypt its reply to a client. Edit the pathnames to taste.
+
+PEMDecryptCmd /usr/local/etc/httpd/auth/ripem-dec
+PGPDecryptCmd /usr/local/etc/httpd/auth/pgp-dec
+
+These directives change what executables httpd will look for when it is
+trying to decrypt the client's request. 
+
+PEMServerEntity webmaster@foobar.org
+PGPServerEntity webmaster@foobar.org
+
+These directives set your entity name. This should be the same as the
+name you place on the public/private keys you generate for your server.
+If you make these directives different than the key names, your server
+and its client will become hopelessly confused. 
+
+You are now ready to protect directories of your server with this
+authorization scheme. 
+
+For a directory you want to protect, you should first set its AuthType.
+Use AuthType PGP for a directory you are protecting with PGP and
+AuthType PEM for a directory you are protecting with PEM.
+
+The require directive accepts key names as its arguments. The
+AuthGroupFile directive is valid as well, to create groups of keys. A
+full example: 
+
+AuthType PEM
+AuthGroupFile /httpd/.htgroup-pem
+Options None
+&lt;Limit GET&gt;
+require user robm@ncsa.uiuc.edu
+require group pemusers
+
+Let's say /httpd/.htgroup-pem reads: 
+
+pemusers: pls@ncsa.uiuc.edu In this case, this directory will be
+protected with PEM encryption and will require that only users
+robm@ncsa.uiuc.edu and pls@ncsa.uiuc.edu be allowed to access that
+directory. 
+
+
+
+Installation: the Client Side
+
+First, get a copy of Mosaic/X 2.2. If it hasn't been released yet, be
+patient. Compile it with -DPEM_AUTH to enable PEM/PGP authentication.
+
+Follow the instructions in each of the scripts in the auth subdirectory
+to customize them to your setup. 
+
+There are six new X resources which have been defined for PEM/PGP
+authentication.  They are: 
+
+Mosaic*pemEncrypt: /X11/robm/Mosaic/auth/ripem-enc
+Mosaic*pemDecrypt: /X11/robm/Mosaic/auth/ripem-dec
+Mosaic*pemEntity: robm@ncsa.uiuc.edu
+Mosaic*pgpEncrypt: /X11/robm/Mosaic/auth/pgp-enc
+Mosaic*pgpDecrypt: /X11/robm/Mosaic/auth/pgp-dec
+Mosaic*pgpEntity: robm@ncsa.uiuc.edu
+
+You should change the Encrypt and Decrypt entries to reflect where you
+are going to install your encryption and decryption crypts. You should
+change the Entity lines to the key name you have given the server
+maintainers for yourself. If you don't, bad things will happen. 
+
+
+
+What does the protocol look like?
+
+This protocol is almost word-for-word a copy of Tony Sander's RIPEM
+based scheme, generalized a little. Below, wherever you see PEM you can
+replace it with PGP and get the same thing.
+
+Client: 
+
+GET /docs/protected.html HTTP/1.0
+UserAgent: Mosaic/X 2.2
+
+
+Server: 
+
+HTTP/1.0 401 Unauthorized
+WWW-Authenticate: PEM entity="webmaster@hoohoo.ncsa.uiuc.edu"
+Server: NCSA/1.1
+
+
+Client: 
+
+GET / HTTP/1.0
+Authorization: PEM entity="robm@ncsa.uiuc.edu"
+Content-type: application/x-www-pem-request
+
+--- BEGIN PRIVACY-ENHANCED MESSAGE ---
+this is the real request, encrypted
+--- END PRIVACY-ENHANCED MESSAGE ---
+
+Server: 
+
+HTTP/1.0 200 OK
+Content-type: application/x-www-pem-reply
+
+--- BEGIN PRIVACY-ENHANCED MESSAGE ---
+this is the real reply, encrypted
+--- END PRIVACY-ENHANCED MESSAGE ---
+
+That's it. 
+
+
+Almost all of this stuff is my fault (including the implementations),
+so direct comments about it to me. 
+
+Rob McCool, robm@ncsa.uiuc.edu 
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01109" HREF="msg01109.html">Re: Secure Mosaic / Net surfing</A></STRONG>
+<UL><LI><EM>From:</EM> michael shiplett &lt;michael.shiplett@umich.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01107.html">difficulty of factoring / commerce net / etc</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01109.html">Re: Secure Mosaic / Net surfing</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01107.html">difficulty of factoring / commerce net / etc</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01109.html">Re: Secure Mosaic / Net surfing</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01108"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01108"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

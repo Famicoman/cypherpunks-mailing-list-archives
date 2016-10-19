@@ -1,0 +1,186 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: TCP/IP Stego (was CU&#45;SeeMe) -->
+<!--X-From-R13: Pra Vbyvqnl <apbtavgbNtngr.arg> -->
+<!--X-Date: Mon, 11 Mar 1996 05:22:51 +0800 -->
+<!--X-Message-Id: Pine.A32.3.91.960309005518.27482B&#45;100000@seminole.gate.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199603082056.MAA20781@netcom7.netcom.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: TCP/IP Stego (was CU-SeeMe)</TITLE>
+<LINK REV="made" HREF="mailto:ncognito@gate.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00534.html">Date Prev</A>][<A HREF="msg00674.html">Date Next</A>][<A HREF="msg00488.html">Thread Prev</A>][<A HREF="msg00430.html">Thread Next</A>][<A HREF="index.html#00541">Date Index</A>][<A HREF="threads.html#00541">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: TCP/IP Stego (was CU-SeeMe)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: TCP/IP Stego (was CU-SeeMe)</LI>
+<LI><em>From</em>: Ben Holiday &lt;<A HREF="mailto:ncognito@gate.net">ncognito@gate.net</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 9 Mar 1996 02:00:29 -0500 (EST)</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00488.html">199603082056.MAA20781@netcom7.netcom.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Okay, i'm going to try to address things systematically, here goes..
+(excuse non standard quoteing)
+_______________________
+
+&gt;From savron@world-net.sct.frSat Mar  9 00:54:38 1996
+
+&gt;Fine idea to create a subliminal channel using packet parity on an 
+&gt;ftp connection but this is not a peer connection , so can't be used 
+&gt;to do subliminal chat (for example) but could be used to do 
+&gt;subliminal mail delivery .
+
+------------------------
+
+Since the data is steg'd into the tcp header and not the data you are 
+sending (openly) it doesnt make much difference what client is generating 
+the packets. Could be a web server. Could be a Y/Ntalk client, a sendmail 
+daemon, or a telnet. The greatest restriction being that you only get 
+about 1k per 500k .. which is a bit cumbersome in most cases. More on 
+that later.
+
+------------------------
+
+&gt;From JonWienke@aol.comSat Mar  9 00:54:43 1996
+Subject: Re: TCP/IP Stego (was CU-SeeMe)
+
+&gt;This is a bad idea, because in addition to the extra processor overhead, it
+&gt;is an incredible waste of bandwidth.  For a 512 byte packet, you are only
+&gt;getting .02% efficiency, because you wouldn't be able to use the actual data
+&gt;in the packet; otherwise someone would probably notice the increased error
+&gt;rate if you dink around with the checksum.  
+
+No need to do anything strange to the checksum.  In the normal process of 
+framing packets data is buffered, and packets are 'padded' to make a full 
+packet. The hacked tcp protocol would simply be a bit more selective 
+about where and when padding was added. The checksum would still be a 
+valid checksum for that packet - we would simply select a packet that gave 
+a correct checksum value. The overhead for this is more than with 
+standard tcp but could hardly be considered a serious drain of cpu cycles.
+
+As for wasted bandwidth: That could be seen as a problem, but there are a 
+few things to offset the overhead, the big one being that it doesnt make 
+any difference what form the carrier data takes.. if you can generate 
+half a meg of ANYTHING that can be plausibly sent to another machine, 
+then you can send your 1k of data. If implemented properly the carrier 
+data wouldnt even need to all come in through the same route. This 
+scenario leaves any one who may be watching with quite a haystack, and a 
+very small needle to find.
+
+&gt;This does not provide adequate plausible deniability.  Stegoing a 16 bit 
+
+I disagree. Consider: the packet, taken bit by bit, or as a whole, 
+would be completely valid - with nothing added, or taken away except 
+perhaps the few octets that would need to be dropped to acheive the right 
+parity. This would actually be very few, since you have a 
+50% chance that the parity will be correct to begin with. 
+
+---------------------
+
+From: Jim McCoy &lt;mccoy@communities.com&gt;
+Subject: Re: TCP/IP Stego (was CU-SeeMe)
+
+
+&gt;I think that the original poster meant twiddling some of the (relatively)
+&gt;unused fields of the header which most routers and applications do not
+&gt;care about, the type-of-service field or priority would good place to
+&gt;start.  
+
+I'm pretty certain that altering TOS would pretty well scrap the packet, 
+but im not positive. &lt;shrug&gt;. Sequence numbers are definitly out. However 
+i think that playing with the priority flag could definitly work. Also a 
+parity check of the 'window' field could be done quite easily. Only 
+problem i see is that 'priority' packets basically are only used for 
+special characters and the like, for example to send 'ctrl-c' to a 
+abort a running ftp. Having a large number of priority packets would be 
+reletivly noticable. The window field is a bit more promising - you'd 
+need to prove the arrival sequence and timing of each packet and ack in the 
+stream to prove that it had been tweaked.
+
+&gt;This would have no effect on the data in the packet, particularly
+&gt;if you fiddle at the IP level instead of TCP.  
+[tons of good things I hadnt even thought of snipped]
+
+--------------------
+
+From: Bill Frantz &lt;frantz@netcom.com&gt;
+Subject: Re: TCP/IP Stego (was CU-SeeMe)
+
+&gt;If you can hack your TCP implementation, you should be able (with a high
+&gt;probability) stego information in a few bits of the TCP checksum by
+&gt;adjusting the packet boundries of the TCP stream.  An error correcting code
+&gt;protocol would cover the cases where you couldn't get that *%$# bit set
+&gt;correctly.  Please note that this technique would not result in TCP
+&gt;checksum errors.
+
+Thank you! This is what I was attempting (apparantly quite poorly) to say 
+in the original post. 
+
+:) 
+
+Benji
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00488" HREF="msg00488.html">Re: TCP/IP Stego (was CU-SeeMe)</A></STRONG>
+<UL><LI><EM>From:</EM> frantz@netcom.com (Bill Frantz)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00534.html">Re: Assassination Politics(tm) was V-chips, CC, and Motorcycle Helmets</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00674.html">re: Bootable disks</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00488.html">Re: TCP/IP Stego (was CU-SeeMe)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00430.html">Not a good idea...</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00541"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00541"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

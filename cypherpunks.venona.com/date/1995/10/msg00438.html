@@ -1,0 +1,184 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: De Re ASN.1 and encoding rules ( was Re: X.509,...) -->
+<!--X-From-R13: Qney Syyvfba <pzrNFWE.QA[> -->
+<!--X-Date: Tue, 3 Oct 95 07:57:18 PDT -->
+<!--X-Message-Id: 9510031453.AA22371@tis.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: Pine.SOL.3.91.951002141516.6137B&#45;100000@chivalry -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: De Re ASN.1 and encoding rules ( was Re: X.509,...)</TITLE>
+<LINK REV="made" HREF="mailto:cme@TIS.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00451.html">Date Prev</A>][<A HREF="msg00439.html">Date Next</A>][<A HREF="msg00381.html">Thread Prev</A>][<A HREF="msg00449.html">Thread Next</A>][<A HREF="index.html#00438">Date Index</A>][<A HREF="threads.html#00438">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: De Re ASN.1 and encoding rules ( was Re: X.509,...)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:ses@tipper.oit.unc.edu">ses@tipper.oit.unc.edu</A></LI>
+<LI><em>Subject</em>: Re: De Re ASN.1 and encoding rules ( was Re: X.509,...)</LI>
+<LI><em>From</em>: Carl Ellison &lt;<A HREF="mailto:cme@TIS.COM">cme@TIS.COM</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 3 Oct 95 10:53:59 EDT</LI>
+<LI><em>Cc</em>: <A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:cme@TIS.COM">cme@TIS.COM</A></LI>
+<LI><em>Cc</em>: <A HREF="mailto:Tom_Van_Vleck@taligent.com">Tom_Van_Vleck@taligent.com</A></LI>
+<LI><em>In-Reply-To</em>: Simon Spero's message of Mon, 2 Oct 1995 17:13:21 -0700 (PDT) &lt;<A HREF="msg00381.html">Pine.SOL.3.91.951002141516.6137B-100000@chivalry</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+(my friend Tom is cc:'d as the Multics expert, re: the ref below)
+-----BEGIN PGP SIGNED MESSAGE-----
+
+&gt;Date: Mon, 2 Oct 1995 17:13:21 -0700 (PDT)
+&gt;From: Simon Spero &lt;ses@tipper.oit.unc.edu&gt;
+
+&gt;Lets use 3DES as our example. We'll start with a naive specification:
+
+[etc.]
+
+You're starting down the same road I did in writing my example of how ASN.1
+seduces you into bad design.  ..very good, but you stopped short.
+
+[The PER sounds much better than BER -- but I've never seen PER before.  I
+learned enough about ASN.1 to have decided it is a lost cause -- far easier
+to let ASN.1 advocates talk to themselves while I go off to do something
+independent and good.]
+
+Back to the example.
+
+&gt;--
+&gt;LongLong ::= OCTET STRING (SIZE(8)) -- a long long is 8 bytes, er, long
+
+Really?  There is an OCTET STRING (SIZE(8)) and you can make it a datatype?
+
+I suppose you can make an OCTET STRING (SIZE(9)) too?
+
+That can be really convenient.  You can have a tagged quantity (using the
+top byte).  Alternatively, someone could define:
+
+DesKey ::= SEQUENCE {
+ encr BIT STRING (SIZE(1)), -- encrypt mode if 1, decrypt if 0
+ value OCTET STRING (SIZE(8))
+}
+
+and now you can use DesKey as your data type with no bad effects and only
+good ones (as far as the ASN.1 user is concerned).  Of course, the code to
+pack/unpack just exploded.  So did the packet size (maybe, depending on
+effort spent in pack/unpack) and so did the internal struct, probably.
+
+[Truth in advertising: the example above is adapted from early Multics
+where PL/I allowed you to do such nonsense and some programmer saw the
+power of it -- so he used it in the file system, until he got caught.]
+
+Lesson from this: there is a reason not to give a designer generality you
+would not use in an actual implementation.
+
+Anyway -- my example of ASN.1 abuse is along these lines but I won't
+reproduce it here.  We can leave this as a parlor game for computer geeks.
+:-)
+
+
+&gt;Here's the new definitions:
+&gt;
+&gt;--
+&gt;Long ::= OCTET STRING (SIZE(4))
+&gt;
+&gt;ThreeDes ::=SEQUENCE {
+&gt;	   IV SEQUENCE OF (SIZE(1..2) LONG,
+&gt;	   Key1 DesKey,
+&gt;	   Key2 DesKey OPTIONAL,
+&gt;	   Key3 DesKey OPTIONAL
+&gt;}
+
+See -- ASN.1 is powerful in its seductiveness.  Even though you were trying
+to convince me that it can be the same as my primitive example (and
+therefore just as efficient), you couldn't resist using the power of the
+generality to elaborate on the structure.
+
+This is not a good feature of ASN.1.  This is its primary fault.  This is
+why I call it a work of Satan.  (BER/DER helps in that evaluation, of
+course).
+
+
+&gt;To be continued... (unless I get flamed off the list)
+
+As I said, this could be a wonderful parlor game -- or list topic, if
+people want to waste the time.  Think of it as the Crossword Puzzle page of
+the cypherpunks on-line newspaper. :-)
+
+ - Carl
+
++--------------------------------------------------------------------------+
+|Carl M. Ellison      cme@tis.com    <A  HREF="http://www.clark.net/pub/cme">http://www.clark.net/pub/cme</A>	   |
+|Trusted Information Systems, Inc.   <A  HREF="http://www.tis.com/">http://www.tis.com/</A>                   |
+|3060 Washington Road          PGP 2.6.2:  61E2DE7FCB9D7984E9C8048BA63221A2|
+|Glenwood MD  21738         Tel:(301)854-6889      FAX:(301)854-5363       |
++--------------------------------------------------------------------------+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBMHFNJFQXJENzYr45AQFV2AP9H1/A5bY4H8C/Ms3dhHIPOWiLCYhqLzFR
+qKdvQaBYvPDCrr8jXLwQhTogvzu/9gkZ2DwnXVya7MxEpyy+1A5WrO3Jlqu+6Euy
+bBcl1idhoomMzmzOga/F7YasXsFkoZoSqNYQKX/ZKcFvEuDGrzohlBNV5ubDEL7G
+E3hdsak0f2Y=
+=cjU/
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00381" HREF="msg00381.html">De Re ASN.1 and encoding rules ( was Re: X.509,...)</A></STRONG>
+<UL><LI><EM>From:</EM> Simon Spero &lt;ses@tipper.oit.unc.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00451.html">Re: economic espionage (@#$%^&amp;*) (fwd)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00439.html">Re: Simple Hardware RNG Idea</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00381.html">De Re ASN.1 and encoding rules ( was Re: X.509,...)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00449.html">Re: X.509, S/MIME, and evolution of PGP</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00438"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00438"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

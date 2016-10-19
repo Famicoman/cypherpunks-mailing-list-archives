@@ -1,0 +1,219 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Cracking MD5 for $10M -->
+<!--X-From-R13: "Rnivq O. Intare" <qnjntareNcubravk.Bevaprgba.SRG> -->
+<!--X-Date: Sun, 11 Sep 94 02:28:25 PDT -->
+<!--X-Message-Id: 9409091916.AA01012@bow.Princeton.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9409091639.AA29959@mycroft.rand.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Cracking MD5 for $10M</TITLE>
+<LINK REV="made" HREF="mailto:dawagner@phoenix.Princeton.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00322.html">Date Prev</A>][<A HREF="msg00325.html">Date Next</A>][<A HREF="msg00268.html">Thread Prev</A>][<A HREF="msg00343.html">Thread Next</A>][<A HREF="index.html#00283">Date Index</A>][<A HREF="threads.html#00283">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Cracking MD5 for $10M</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Cracking MD5 for $10M</LI>
+<LI><em>From</em>: "David A. Wagner" &lt;<A HREF="mailto:dawagner@phoenix.Princeton.EDU">dawagner@phoenix.Princeton.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 9 Sep 1994 15:16:29 -0400 (EDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:jim@rand.org">jim@rand.org</A>, <A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00259.html">9409091639.AA29959@mycroft.rand.org</A>&gt; from "Jim Gillogly" at Sep 9, 94 09:39:55 am</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; 
+&gt; Hal discusses using the Distinguished Points method to find hash
+&gt; collisions presented by Michael Wiener with Paul van Oorschot at Rump
+&gt; Crypto '94, and lists two benefits:
+&gt; 
+&gt; (1) saves space in searching for loops on a single processor;
+&gt; (2) allows parallel searches for collisions over multiple processors.
+&gt; 
+&gt; I claim it's useful only for (2), because another algorithm dominates it
+&gt; for single processor loop detection... at least in storage space.
+&gt; 
+[...describes nifty algorithm (which seems to be well-known in the
+    folklore?) for finding cycles in linear time and constant space...]
+
+Yeah!  I was discussing this algorithm 4 or 5 months ago on alt.math.iams;
+it's quite elegant.  If there is a collision after the n-th value, then
+I believe this algorithm will find it after generating (at most) 2n
+values.  It's been kinda simmering in the back of my head for months,
+me wondering how to parallelize this algorithm -- and it's really cool
+to see how Wiener and van Oorschot found a way to find cycles efficiently
+in parallel!
+
+Apparently two professors here (Yao &amp; Sedgewick) wrote a paper on
+this in SIAM Journal of Computer in 1981 -- I'm gonna go dig through
+the library to see if I can find this, when I get a chance...
+
+&gt; 
+&gt; The distinguished points across machines is a great idea for (2), though,
+&gt; and doesn't depend on anything looping...  cool stuff!
+&gt; 
+
+Uh..  I think it *does* depend on looping!
+
+A collision in *any* point means that there will soon be a collision
+in a distinguished point, when you use looping.  This probably won't
+be true with any other generation method.
+
+Suppose we use the sequence a_n = MD5(n).  Then a collision a_i = a_j
+will only be detected if a_i is a distinguished point.
+
+But because we use the sequence a_n = MD5( a_{n-1} ), a collision
+a_i = a_j implies that there will soon be a collision a_{i+m} = a_{j+m}
+with a_{i+m} a distinguished point (after m ~= 2^32 extra iterations,
+on average, if 1 in 2^32 points are distinguished).
+
+&gt; 
+&gt; Do you (Hal?) or anybody else know whether Wiener and van Oorschot were
+&gt; taking into account the contraction of the range each time you iterate
+&gt; MD5?  I think the size of the set of all numbers that are the result of
+&gt; MD5ing a 128-bit number is considerably smaller than 2^128... is it 1/e of
+&gt; that?
+&gt; 
+
+Hrmm, why should this change the expected number of iterations required
+to find a collision?  If I'm being dense, hopefully you'll spell it out
+for me. :-)
+
+I've been thinking about writing a program to test the single-processor
+cycling algorithm with (for example) crypt(3) for a while now -- maybe
+this'd be a good excuse to write it now, and try the parallel distinguished
+point stuff, too.  Does anybody think it'd be interesting to get some
+practical experience here?  Sound like an interesting doable project?
+
+A few things I've been thinking about, which maybe will spark your
+interest enough to answer all my questions. (one can always hope! :-)
+
+First of all, there's some non-zero probability that (when using the
+parallelized distinguished points algorithm) two processors will have
+their streams match exactly without yielding a useful collision.
+Suppose one processor picks the random starting value 3 and generates
+a sequence starting with 3,1,4,5,2,7,9,...  Now further suppose that
+MD5(6)=3 and that another processor picks the random starting value 6;
+then the second processor will generate 6,3,1,4,5,2,7,9,...  We'll
+eventually notice this: if 9 is a distinguished point, then we'll see
+that two processors have seen the value 9, and we'll start backtracing,
+but we won't get any useful collision in MD5 out of this -- we'll only
+get the information that MD5(6)=3, which is useless, since both 6 and 3
+were random choices.  This means that the second processor's computer
+power was wasted.  Can anyone estimate how often this will happen so
+that we can know it won't slow things down too much?
+
+Also, there was the arbitrary choice of making the distinguished points
+be those with the lower 32 bits all zero -- I wonder what is the effect
+of requiring (say) all 48 least significant bits to be zero?  This will
+increase the time required to backtrack (unless some fancy schmancy
+rescursive or parallel algorithm is used?) but it would also decrease
+the space and inter-chip communication required significantly.  Any
+comments?
+
+Another thing -- I'm not sure this method is (directly) useful for
+generating lots of collisions, if that is what is desired.  I believe
+Dr. Hellman wrote some paper about the cycling properties of random
+functions (out of interest in DES), and he concluded (if I remember
+correctly) that when you generate lots of random starting values and
+look at their cycling properties, most starting values will drain into
+a very few specific cycles.  [I think this was in some volume of CRYPTO:
+maybe '86 or so?   I think the title was something like "Drainage
+properties of the DES" or somesuch.  I'll have to look it up.]  Doesn't
+that reduce the number of different collisions that you can generate
+by a large factor?  If so, are there any simple modifications to the
+iteration function which would help?  How about
+
+a_n = MD5( a_{n-1} XOR V )
+
+for some random V picked anew each time we want a new collision?
+
+Finally, is there a way to adopt an approach like this to reduce the
+space requirements needed to break double DES?  Let P and P' be two
+plaintexts, and C=E(k,E(k',P)) and C'=E(k,E(k',P')) be their encipherment
+under double DES; we want to find the unknown keys k, k'.  For any X in
+{0,1}^128, , define the function function h : {0,1}^128 -&gt; {0,1}^128 by
+
+h(X) = E(y,P) concatenated with E(y,P')		if z=0, or
+h(X) = D(y,P) concatenated with D(y,P')		if z=1
+
+where y consists of bits 0-55 of X and z is bit 56 of X.  If h(X)=h(X')
+and X != X' and w != w', then with high probability the collision in h
+gives us the enciphering keys y and y'.  Can we use some parallel
+distinguished points cycling - like algorithm to find the appropriate
+collision in h?  If we generate enough values of h, we will exhaust
+the entire keyspace, and will necessarily find the enciphering keys.
+(By the coupon collector's paradox, this should require something like
+2^57 * 57 * log 2 iterations or so on average.)  The only problem is
+that there will probably be lots of collisions X,X' with h(X)=h(X')
+and X != X' and w = w' -- I think.  Can anyone think of a way to deal
+with these useless collisions in h to make finding a useful collision
+in h easy?  If so, this should give a method to break double DES in
+2^64 time and very little memory.  But maybe this all useless drivel...
+
+Anyhow, this message has gotten very long.  Thanks for reading.  And
+many many thanks to Hal for typing in the description of Wiener and van
+Oorschot's idea!
+
+-------------------------------------------------------------------------------
+David Wagner                                             dawagner@princeton.edu
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00259" HREF="msg00259.html">Re: Cracking MD5 for $10M</A></STRONG>
+<UL><LI><EM>From:</EM> Jim Gillogly &lt;jim@rand.org&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00322.html">Re: Crypto Anarchist Manifesto (location)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00325.html">Re: CONTROL FREAKS</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00268.html">Re: Cracking MD5 for $10M</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00343.html">Re: Cracking MD5 for $10M</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00283"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00283"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

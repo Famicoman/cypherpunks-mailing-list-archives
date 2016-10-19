@@ -1,0 +1,515 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: [garay@watson.ibm.com: Tunnel protocol revisited] -->
+<!--X-From-R13: Sevp Pybffbz <roNfe.uc.pbz> -->
+<!--X-Date: Wed, 1 Jun 94 15:05:09 PDT -->
+<!--X-Message-Id: 9406012204.AA23908@srlr14.sr.hp.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>[garay@watson.ibm.com: Tunnel protocol revisited]</TITLE>
+<LINK REV="made" HREF="mailto:eb@sr.hp.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00030.html">Date Prev</A>][<A HREF="msg00033.html">Date Next</A>][<A HREF="msg00285.html">Thread Prev</A>][<A HREF="msg00034.html">Thread Next</A>][<A HREF="index.html#00029">Date Index</A>][<A HREF="threads.html#00029">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>[garay@watson.ibm.com: Tunnel protocol revisited]</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: [garay@watson.ibm.com: Tunnel protocol revisited]</LI>
+<LI><em>From</em>: Eric Blossom &lt;<A HREF="mailto:eb@sr.hp.com">eb@sr.hp.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 1 Jun 1994 15:04:48 -0700</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:eb@sr.hp.com">eb@sr.hp.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Apologies to those who have already seen this.
+Eric Blossom
+----------------------------------------------------------------
+Return-Path: &lt;ipsec-request@ans.net&gt;
+Date: Wed, 1 Jun 94 17:20:36 EDT
+From: "Juan A. Garay" &lt;garay@watson.ibm.com&gt;
+To: ipsec@ans.net
+Cc: amir@watson.ibm.com, hugo@watson.ibm.com
+Subject: Tunnel protocol revisited
+
+Jim,
+
+We (Amir Herzberg, Hugo Krawczyk and I) took a look at your key
+negotiation protocol for encrypting tunnels.
+We applaud your bringing up the issue; we fully agree that this constitutes
+an essential component of any secure architecture for Internet.
+In this note we present a secure tunnel establishment protocol that is
+related to, but different than yours. The remainder of the note is
+organized as follows. We first sketch the requirements/goals for/of
+a key establishment protocol. This is combined with comments and observations
+about your proposal. We then present the protocol in two stages: a high
+level design, followed by an implementation-oriented description. We
+conclude with a review and more detailed comparison.
+
+(WARNING: this is a long note.)
+
+GOALS OF A KEY EXCHANGE PROTOCOL
+
+1. Provide a shared session key. Your protocol achieves this from public
+        keys. However, it should be possible in general to obtain a session
+        key from a "master" shared key. The master key itself could be
+        obtained from the public key, but not exclusively. Besides being
+        more efficient, this approach would accommodate a variety of solutions,
+        like key distribution centers, manual key installation, key cacheing,
+        etc. In particular, the life span of a master shared key can cover
+        several sessions; in each of these sessions a new (session) key is
+        derived from the master key using conventional functions which are
+        significantly more efficient than public-key operations.
+        We maintain this distinction between master and session key throughout
+        the rest of this note.
+
+        An integral part of a key exchange and session establishment
+        protocol is the mutual authentication of the parties.  This provides
+        to each party assurance on the authentic identity of the other.
+        Also, included in these protocols is the negotiation of tunnel
+        parameters.
+
+2. Efficiency. It is important to minimize both the number of flows and the
+        the number of exponentiations (with large exponents).
+        While the number of exponentiations required by your proposal is 8,
+        our scheme  support different variants that require from 2 to 4
+        exponentiations only (and no exponentiation at all if the parties
+        already share a master key).
+        Our scheme does not use Diffie-Helman, although it can be
+        accommodated in the protocol. The reason is that D-H is expensive
+        (4 exponentiations), but, as you mention, takes care of the
+        "rubber hose" attack. This effectively poses a tradeoff
+        in terms of the number of exponentiations that are required
+        to achieve a certain level of security (see item (3) below).
+        Key cacheing is also an important efficiency consideration.
+        In your protocol, public keys are used in each session to derive the
+        session keys. In our approach, public keys are used to obtain master
+        shared keys, which in turn are used to obtain the session keys.
+
+3. Level of Security. Our protocol is immune to the exposure of one of the
+        private keys (indeed, an adversary needs to discover the private keys of
+        both sender and receiver to derive the tunnel's key). We feel that this
+        should be sufficient for the vast majority of applications.
+        Your protocol, on the other hand, is secure even if both keys are
+        exposed, at the expense of using Diffie-Helman.
+        Simplicity and being amenable to analysis and proof are important
+        features of any cryptographic protocol. Our protocol is structured,
+        simple, and thus easier to analyze. (Indeed, methods similar to those of
+        [1,2] can be used to establish the protocol's desired properties.)
+
+
+Here's our proposal. We first present the high-level design, including
+only the relevant information - the additional information (e.g., tunnel
+parameters) which requires authentication is omitted here for simplicity.
+We then specify the optimized implementation in more detail. Also for the
+sake of clarity, in the high level description we present the two protocols
+(i.e., master key exchange and session establishment) separately, and then
+indicate how to combine them.
+
+THE MASTER KEY EXCHANGE PROTOCOL
+
+There are two parties, S and R. We assume that S and R posses an
+authentic public key of each other, as well as share a nonce (a random
+number).  The nonce serves as a challenge for guaranteeing the freshness of
+the authentication (i.e., avoid replay attacks). Sharing a nonce is not
+essential; it can be replaced by use of time stamps (at the expense of
+requiring good clock synchronization) or by adding an extra flow to the
+protocol (at the expense of performance).  The nonce also serves the purpose
+of your Reply Identifier, namely, alleviating the effect of clogging.
+In any case, we stress that our nonces require no secrecy, i.e., they can be
+transmitted in the clear.
+
+S (for sender) is the party that initiates the protocol.
+We first include a brief explanation of the terminology:
+
+
+        K_X: Random string chosen by party X.
+
+        N_X: A nonce (i.e., a random number) chosen by X.
+
+        E_X: RSA encryption with X's public key (this is your RSA1).
+             We assume that the information is padded with a random string
+             prior to encryption.
+
+        SIGN_X: X's RSA signature (your RSA2).
+        More specifically, by SIGN we mean first apply MD5 to the signed
+        information, and then apply RSA (i.e., exponentiation with X's
+        private key.) Since RSA operations require an argument as long as its
+        modulus, and the MD5 output is shorter than this modulus, then
+        the RSA operation will be performed on the concatenation of MD5 and
+        some other fields in the packet to complete the modulus length
+        (probably, with added randomness and redundancy). Details TBD.
+
+        K: The shared master key, outcome of the protocol.
+
+        MAC_K: A Message Authentication Code (or function) which is applied
+        to a piece of information for authentication using a secret key K.
+        Examples include block ciphers, e.g. DES, in MAC mode, or key-ed
+        cryptographic hash functions, e.g. MD5 with prefixed/suffixed key.
+        (MAC mode of block ciphers is like CBC encryption mode but only the
+        last block is output.)
+
+
+Here's the two-flow protocol. Initially, S and R share N_R:
+
+
+  S                                             R
+
+  S randomly chooses K_S, N_S
+
+  Let E_1  = E_R(K_S)
+
+
+      E_1, N_S, SIGN_S(E_1, TIME, N_S, N_R)
+
+       ------------------------------------&gt;
+
+                                                 R randomly chooses K_R, N'_R
+
+                                                 Let E_2 = E_S (K_R)
+
+         E_2, N'_R, SIGN_R(E_2, N'_R, N_S)
+
+       &lt;-------------------------------------
+
+
+  Both S and R compute the new master key as K = K_S XOR K_R.
+
+  N'_R is the nonce to be used next time, i.e., S and R set N_R:=N'_R.
+
+Observations:
+
+1) The use of TIME in the S--&gt;R flow is not strictly necessary. If the random
+        nonce is not kept, then R may agree to use the time instead.
+2) SIGN_R in the return flow is not really necessary either, it
+        can be replaced by MAC_K(E_2, N_S, N'_R).
+        The advantage of this is efficiency (i.e., less exponentiations),
+        at the price of not being homogeneous in both flows.
+        This replacement of SIGN by MAC doesn't hold for the first flow,
+        where the signature is mandatory
+        (i.e., anybody can choose K_S and compute E_R(K_S) and MAC_K_S(...)).
+3) R first verifies the signature, and only if this succeeds it decrypts K_R
+        (this reduces computational overhead, e.g., against
+        clogging, since signature verification is much cheaper than decryption).
+4) The protocol is in some sense minimal, since 2 flows are always
+         needed, as well as secrecy and authentication each way (thus the 2
+        exponentiations). This can be made even cheaper by letting
+        only one party choose the key (in which case the compromise of the
+        private key of this party would compromise the exchanged key).
+5) The above protocol uses 4 exponentiations in total (2 by each party).
+        Using variant 2) reduces the number to 3 (2 by S and 1 by R). By
+        using also 4) the number of exponetiations can further be reduced to
+        2 (1 per party).
+        Our proposal is based on variant 2).
+
+THE SESSION ESTABLISHMENT PROTOCOL
+
+We now turn to the process of establishing a session between S and R.
+This includes mutual authentication and the exchange of a session key (SK).
+We assume that S and R already share a master key K, as well as the nonce N_R.
+The protocol becomes:
+
+  S                                              R
+
+           N_S, MAC_K(TIME, N_S, N_R)
+
+       ------------------------------------&gt;
+
+                                                  R randomly chooses N'_R
+
+
+             N'_R, MAC_K(N'_R, N_S)
+
+       &lt;------------------------------------
+
+
+Let T be the MAC expression in the return flow, i.e., T = MAC_K(N'_R, N_S).
+Then, both S and R compute SK = F_K(T) and SK becomes the new session key.
+
+Here F_K is a pseudorandom function with index K (K is the shared master
+key). Roughly speaking, pseudorandom functions are characterized by the
+pseudorandomness of their output, namely, each bit in the output of the
+function is unpredictable if K is unknown.
+Some of the functions used as MAC are also used as pseudorandom functions,
+e.g., DES in MAC mode. Some key-ed hash functions, as MD5, are also conjectured
+to be pseudorandom (although there exists less evidence for that than in the
+case of DES; the same is true for the use of these functions as MAC).
+
+Observations:
+
+1. Notice that the session key SK is not explicitly transmitted. This avoids
+        the need to encrypt this key as well as the need to authenticate it.
+        The authenticity of SK is derived from the authenticity of the
+        expression T.
+2. The method can be readily extended to derive in turn several session keys
+        (different keys may be needed, for example, for confidentiality and for
+        integrity verification).
+3. Notice that this protocol involves no public key at all.
+
+THE COMBINED PROTOCOL
+
+When exchanging a master key it is desirable to also have a mechanism to
+derive a session key. This is obtained by combining the two protocols
+presented above. This allows S and R to establish, starting with their
+public keys, both a master key AND a session key in just two flows. The
+first flow (from S to R) is the same as in the master key exchange protocol
+described above.  For efficiency, the second flow uses observation 2)
+of that protocol.
+
+
+  S                                           R
+
+      E_1, N_S, SIGN_S(E_1, TIME, N_S, N_R)
+
+       ------------------------------------&gt;
+
+
+
+         E_2, N'_R, MAC_K(E_2, N'_R, N_S)
+
+       &lt;-------------------------------------
+
+Let T' be the MAC expression in the return flow, i.e.,
+T' = MAC_K(E_2, N'_R, N_S).  Then, both S and R compute SK = F_K(T') and
+SK becomes the new session key.
+
+Remark: the similarity between this protocol and the above session
+        establishment protocol allows having the same packet format for the
+        flows of both protocols.  This is presented in detail in the next
+        section.
+
+
+IMPLEMENTATION
+
+We now describe the implementation aspects in more detail. (We are
+borrowing the layout you used in your note.)
+Most importantly, we stress that both the master key exchange protocol
+and the session establishment protocol use the SAME packet format for the
+different flows. Thus, we get added functionality without the penalty
+of managing more packets.
+
+For the sake of clarity we start with a description of the packet for the
+case of master key exchange, and then comment on the use of the same packet
+format for the session key establishment task.
+Some of the details are still left undefined. Some of them are already treated in
+your proposal; others will be added once/if the group shows interest in this
+proposal.
+
+The contents of the protocol's first flow (in the master key exchange
+protocol) are as follows:
+
+   0                   1                   2                   3
+   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+     +
+  |                   S's IP address                              |     |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+     |
+  |                   R's IP address                              |     |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+     |
+  |       Protocol Id; flow #; length of signature  (16 bits)     |     |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+     |
+  | Length of public key; Options (prot. mode, tunnel param., etc)|     |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+  +  |
+  |                   K_S                                         |  |  |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ E_1 |
+  |                   Random pad                                  |  |  |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+  +  |  *
+  |                   Time                                        |    MD5 |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+     |  |
+  |                   N_S                                         |     |  |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+     |SIGN_S
+  |                   N_R                                         |     |  |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+     +  |
+  |                   HASH                                        |        |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+        +
+
+Where:
+
+"Tunnel parameters" includes all the administrative data, such as tunnel
+lifetime, etc.
+
+
+"Protocol Id"
+
+"Protocol Mode" is basically a bit(s) indicating how should the contents
+be interpreted.
+
+The field K_S and the subsequent random pad do not appear in plain but
+encrypted under RSA_R (this is E_1 in our notation).
+The encryption can be extended, if desired, to hide additional fields
+(e.g., the protocol parameters).
+
+The HASH field contains the result of MD5 (or other one-way hash function,
+if desired) computed on all previous fields (or in all fields that require
+authentication).
+NOTE: The position of N_S and N_R as the last arguments in the computation
+of MD5 is intentional. The effectiveness of these nonces as freshness
+guarantee is enhanced by fixing their offset relative to the beginning
+or end of the authenticated arguments.
+
+The signature (using the private key of S) is applied to information of
+the length of the RSA modulus in use. This information MUST include the
+result of the HASH in the last field and may include other
+authentication fields as well as additional random padding and
+redundancy. These details TBD.  We recommend, as Jim did, having the
+nonce N_R included since this represents a good check against clogging.
+(Notice that the variability on the signature scope is represented in
+the above figure by the *).
+
+The order of operations is as follows.
+
+For S:
+
+- Encrypt (i.e., E_1);
+- perform MD5; and
+- sign.
+
+For R (upon receiving):
+
+- Open signature;
+- verify N_R;
+- verify MD5; and
+- decrypt.
+
+Here's the master key exchange protocol's second flow:
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+     +
+   |                   S's IP address                              |     |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+     |
+   |                   R's IP address                              |     |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+     |
+   |       Protocol Id; flow #; length of signature  (16 bits)     |     |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+     |
+   | Length of public key; Options (prot. mode, tunnel param., etc)|     |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+  +  |
+   |                   K_R                                         |  |  |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ E_2 |
+   |                   Random pad                                  |  |  |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+  +  |
+   |                   Time                                        |   MAC_K
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+     |
+   |                   N'_R                                        |     |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+     |
+   |                   N_S                                         |     |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+     +
+   |                   MAC                                         |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+
+The field K_R and the subsequent random pad do not appear in plain but
+encrypted under RSA_S (this is E_2 in our notation).  The encryption
+can be extended, if desired, to hide additional fields.
+
+The MAC field contains the result of MAC_K computed on all previous fields
+(or in all fields that require authentication). As explained above for MD5
+computation, also here the position of N'_R and N_S as the last fields in the
+computation of MD5 is intentional.
+
+The order of operations. For R:
+
+- Encrypt (i.e., E_2); and
+- compute MAC_K(...).
+
+Upon receiving (S):
+
+- Verify N_S;
+- decrypt; and
+- compute MAC_K(...) and compare with MAC field.
+
+USE OF ABOVE PACKETS FOR THE SESSION ESTABLISHMENT PROTOCOL. Notice that
+the second flow of both protocols (master key exchange and session
+establishment) is identical except for the field E_2 in the first case.
+Therefore, the packet for the second flow of the session establishment
+protocol is identical to the one described above with the E_2 field omitted.
+Since E_2 is a variable length field (depending on the modulus size) one
+can use length 0 to accommodate the second flow of session establishment.
+As for the first flow, in the case of session establishment no public key
+operations are required. This means the following:
+a) There is no need to use the field E_1 (this is similar to the omission of E_2,
+discussed above); and
+b) the HASH field in the above packet is used as the MAC field of the session
+establishment protocol (128-160 bits will accommodate both cases).
+
+
+SUMMARY
+
+We have presented a protocol for the establishment of a secure tunnel.
+The protocol supports the exchange of a shared (master) key for the
+communicating parties as well as the establishment of secure sessions
+between them. The sharing of a master key uses public key to a minimum,
+and for session establishment (including session key exchange) no public
+key is required.  Moreover,  our solution supports scenarios where shared
+keys are obtained by different means, e.g., manual key installation
+("sneaker-net"), key distribution centers, etc., and takes advantage of the
+cacheing of these keys.
+This added flexibility and functionality relative to Jim's proposal comes
+without additional price in complexity (system- and computation-wise).
+On the contrary, our solution accommodates the above scenarios with protocols
+that require a) minimal interaction (i.e., two flows), b) a single and
+compact packet format, and c) minimal computational overhead (only 3
+long exponentiations).
+
+
+REFERENCES
+
+[1] R. Bird et al., "Systematic Design of Two-Party Authentication
+        Protocols," Proc. Crypto '91, August 1991.
+[2] Bellare, P. Rogaway, "Entity Authentication and Key Distribution",
+        Advances in Cryptography '93, Springer-Verlag Lecture Notes on
+        Computer Science #773
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00030.html">Unicorn vs. tmp@netcom</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00033.html">Re:  IMP (was Re: ecash-info (fwd))</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00285.html">Re: Unicorn vs. tmp@netcom</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00034.html">CEB 5 - The Hangover</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00029"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00029"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

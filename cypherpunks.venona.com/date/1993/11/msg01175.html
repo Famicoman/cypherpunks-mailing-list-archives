@@ -1,0 +1,236 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Statistics of Low&#45;Order Bits in Images -->
+<!--X-From-R13: gpznlNargpbz.pbz (Fvzbgul Q. [nl) -->
+<!--X-Date: Tue, 30 Nov 93 11:17:42 PST -->
+<!--X-Message-Id: 199311301914.LAA27327@mail.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Statistics of Low-Order Bits in Images</TITLE>
+<LINK REV="made" HREF="mailto:tcmay@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01184.html">Date Prev</A>][<A HREF="msg01187.html">Date Next</A>][<A HREF="msg01183.html">Thread Prev</A>][<A HREF="msg01185.html">Thread Next</A>][<A HREF="index.html#01175">Date Index</A>][<A HREF="threads.html#01175">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Statistics of Low-Order Bits in Images</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Statistics of Low-Order Bits in Images</LI>
+<LI><em>From</em>: <A HREF="mailto:tcmay@netcom.com">tcmay@netcom.com</A> (Timothy C. May)</LI>
+<LI><em>Date</em>: Tue, 30 Nov 93 11:14:13 PST</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Several folks have recently mentioned the need to carefully look at
+the statistics/distributions of bit values in the low-order bits
+(least-significant bits, LSBs) of real-world images intended for
+steganographic use. I concur.
+
+This problem interests me. Material from Li and Vitanyi's "An
+Introduction to Kolmogorov Complexity and Its Applications," 1993,
+bears directly on the issues of "picture distance" and how much one
+can change an image before it's recognizably "different" or before
+filter programs can detect the presence (or absence) of characteristic
+structure in images.
+
+In this little article I'll be making some general points and
+reasoning informally about image statistics, picture distances, and
+the like. There's no doubt a more rigorous way to reason about these
+statistical properties, using sigmas and summations and Central Limit
+Theorems and the like, but I'm not that much of a real mathematician
+to be bothered with that. C'est la vie.
+
+Several points:
+
+1. Probably not a pressing concern, yet. I expect few sites have
+LSB-analyzers, just as few folks are using LSB stegonagraphy.
+
+2. Romana Machado's "Stego" program for the Mac is interesting, and
+may be useful, but it makes almost no effort to hide the _existence_ of
+the message bits, e.g., anyone with a copy of Stego can apply it to an
+image and recover the plaintext or ciphertext. (I mean in contrast to
+some of the schemes which require a copy of the original image, a kind
+of one-time pad approach, in which one XORs or subtracts the original
+image to see the "differences" in the LSBs--a cryptanalyst without the
+"reference" image is unable to extract any bits for further analysis.)
+
+(I suggest we keep these two models in mind. Proposal for jargon:
+"Type 1 Stego": No reference model needed: message bits are just the
+specified bits, e.g., LSB, or larger low-order bits. "Type 2 Stego": a
+reference model--an image or DAT or whatever--is needed to XOR with
+message to recover the plaintext or ciphertext (if more encryption was
+used originally).)
+
+3. With fairly noisy 8-bit images, such as might be gotten by
+frame-grabbing a video image under poor lighting or focus conditions,
+my experiences at Intel (I ran an image processing lab, for electron
+microscope analyis of microprocessors) tells me that the lowest
+_several_ bits of each pixel are "noisy." Very noisy. The bottom bit
+is "almost purely noise" (also a dangerous term!).  But I agree that
+more recent images need to be looked at and the statistics analyzed.
+
+Still, I suspect the bottom bit, the LSB, will be found to have
+Gaussian noise characteristics. Note also that images are often run
+through filters, as in PhotoShop, which can give Gaussian
+characteristics where before there were none.
+
+4. Can "image analyzers" in the hands of border security/law
+enforcement be used to proseute holders of images that have such
+white noise characteristics in the LSBs? I doubt it.
+
+I interject this point here because an important long-term issue for
+stego is whether the "Crypto Authority" (resonance with Gibson's
+"Turing Authority") can make such images ipso facto illegal. I suspect
+this is hopeless, both because many images have these characteristics
+and because many people will massage their images to be this way,
+regardless of original camera-CCD characteristics.
+
+5. All of these arguments apply to the LSBs in DATs. Ambient room
+noise, noise in microphones, thermal noise in the electronics, etc.,
+all contributes to there being almost no "signal" in the LSB of a
+16-bit CD or DAT sample of music. (There are anecdotal reports of
+people being able to hear effects here, and different noise-shaping
+filters may have audible effects at least some of the time. So, I do
+agree that these statistics ought to be looked at, eventually. Some of
+my audio magazines have articles on this, which I'll try to look at
+soon.)
+
+6. Here's a strategy which may work OK even if the statistical
+patterns of the LSBs are not "completely random" (a dangerous term, of
+course).
+
+- take a plaintext or ciphertext and compress it with a good
+compressor (L-Z may not be enough to wring out all the structure and
+raise the entropy to the full 8 bits per character, for ASCII). A good
+encryption of the text should of course produce high entropy.
+
+- XOR the compressed (high entropy) text with the LSBs of the image.
+
+- the resulting LSBs should have _similar statistics_ as compared with
+the original image. "Noise" has been added, but no knew structure has
+been added. Consider a couple of examples to see this:
+
+Original image (in bits) :    1 0 1 0 1 1 0 1 1 0 1 0 1 0 1 1 1 1 0 1
+Random      1s and Os:        1 1 0 0 1 0 1 0 1 0 0 0 1 1 1 0 1 0 1 0
+Resultant Image (XOR):        0 1 1 0 0 1 1 1 0 0 1 0 0 1 0 1 0 1 1 1
+
+(Another example: If one toggles all the bits in a binary image, the
+"Hamming distance" between the images is maximal, and yet the "picture
+distance" is very small, i.e., the images look nearly the same. The
+picture distance being small means the structure is the same, even
+though the Hamming distance is, by definition, the greatest it can
+be. This provides a powerful clue that there is a "lot of room" to
+manipulate images so as to pack bits into this "Hamming space" while
+still keeping the resulting pictures in a "tiny picture space
+volume.")
+
+Well, this is of coure not a proof, but gives a feel for why XORing
+with a high entropy image will not _add_ structure.
+
+However, it can certainly _remove_ structure! Which takes us back to
+the original issue of the statistics (structure) of the LSBs of
+images. If in fact there were "clumps" of 1s and 0s, "ridges" and
+"valleys" caused by camera/CCD characteristics, then XORing the LSB
+image with a "random" image will demolish this structure. This is
+nothing more than the role of the one-time pad....to remove structure
+but allow its immediate reconstruction on the other end.
+
+At least in this case one does not have to worry about the ciphertext
+_adding_ unwanted structure, only that it may _remove_ structure
+already present in the image (and perhaps "typical" of images not
+carrying stego bits). 
+
+7. A better approach may be to take two very similar images, perhaps
+successive frame grabs with the same camera/digitizer, and use the
+statistics of the LSBs directly as part of the "one-time pad" above
+(Type 2 Stego). This could be used to give the LSBs the same
+"structure" (ridges and valleys of pixel values, for example) as a
+"real image" but without leaking message bits. (More work needed here.)
+
+(I apologize for any vagueness here. Partly it is that I haven't
+worked this out completely. Partly it is the lack of a blackboard to
+draw pictures on--verbal descriptions get confusing after a while. And
+partly it is that this message is already too long and I want to wrap
+it up.)
+
+8. None of this subtlety really matters too much, I suspect. An image
+or DAT contains _so much room_ for stego bits that the problem of
+finding a tiny fraction of message bits in megabytes or hundreds of
+megabytes (DATs) of noisy source material seems well beyond current
+crunch capabilties. Perhaps images being sent to some sensitive
+location could be given a quick analysis to see if the LSBs are "too
+regular," but even this I doubt. And at least the XOR method described
+above won't introduce new structure....at worst the images or DATs
+would appear to be "too random."
+
+Perhaps we need to paraphrase Eric's line: "Use a random image, go to jail."
+
+--Tim May
+
+-- 
+..........................................................................
+Timothy C. May         | Crypto Anarchy: encryption, digital money,  
+tcmay@netcom.com       | anonymous networks, digital pseudonyms, zero
+408-688-5409           | knowledge, reputations, information markets, 
+W.A.S.T.E.: Aptos, CA  | black markets, collapse of governments.
+Higher Power: 2^756839 | Public Key: PGP and MailSafe available.
+Note: I put time and money into writing this posting. I hope you enjoy it.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01185" HREF="msg01185.html">Re: Statistics of Low-Order Bits in Images</A></STRONG>
+<UL><LI><EM>From:</EM> Jim choate &lt;ravage@wixer.bga.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01184.html">Re: Cryptosplit 2.0</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01187.html">Unsubscribe</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01183.html">WiReD has a gopher (and its name was...)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01185.html">Re: Statistics of Low-Order Bits in Images</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01175"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01175"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

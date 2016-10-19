@@ -1,0 +1,190 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: PGP MIME INTERNET DRAFT considered harmful. -->
+<!--X-From-R13: ryxvafNnreb.bet ([vpunry Syxvaf) -->
+<!--X-Date: Tue, 21 May 1996 15:05:27 +0800 -->
+<!--X-Message-Id: 199605201710.KAA23072@muddcs.cs.hmc.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 832582505snx@hrnowl.lonestar.org -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: PGP MIME INTERNET DRAFT considered harmful.</TITLE>
+<LINK REV="made" HREF="mailto:elkins@aero.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01250.html">Date Prev</A>][<A HREF="msg01224.html">Date Next</A>][<A HREF="msg01222.html">Thread Prev</A>][<A HREF="msg01513.html">Thread Next</A>][<A HREF="index.html#01227">Date Index</A>][<A HREF="threads.html#01227">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: PGP MIME INTERNET DRAFT considered harmful.</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:pgp%2Dmime@purpletape.cs.uchicago.edu">pgp-mime@purpletape.cs.uchicago.edu</A></LI>
+<LI><em>Subject</em>: Re: PGP MIME INTERNET DRAFT considered harmful.</LI>
+<LI><em>From</em>: <A HREF="mailto:elkins@aero.org">elkins@aero.org</A> (Michael Elkins)</LI>
+<LI><em>Date</em>: Mon, 20 May 1996 10:10:36 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:paul.elliott@hrnowl.lonestar.org">paul.elliott@hrnowl.lonestar.org</A> (Paul Elliott)</LI>
+<LI><em>In-Reply-To</em>: &lt;832582505snx@hrnowl.lonestar.org&gt;; from "Paul Elliott" on May 20, 1996 8:55:05 +0000</LI>
+<LI><em>References</em>: &lt;832582505snx@hrnowl.lonestar.org&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+[Note: CC'd to the pgp-mime list.]
+
+Paul Elliott writes:
+&gt; [Encrypted &amp; Signed binary data.] 
+&gt; Now when there is a data path for PGP's cyphertext, PGP provides a
+&gt; binary data path for its plain text. Thus, the inner base64 that PGP
+&gt; MIME internet draft requires is totally unnecessary. It will cause a 30%
+&gt; increase in the size of those messages that are encrypted and signed and
+&gt; large amounts of CPU time will be used applying &amp; removing the base64.
+
+This design decision actually serves a purpose.  The scenario is as
+follows:  Suppose you are a company which has west-coast and east-coast
+offices, and the only connectivity which exists is via the open Internet.
+Suppose further that you wished to send out a company memorandum to all
+the employees.  Obviously you will want to sign and encrypt your message.
+However, one it reaches your offices, you would like to have the encryption
+"layer" stripped leaving just the signed message.  Now, if when you generated
+that message you did not restrict yourself to 7 bits, there is a likely
+probability given todays software, that you are not going to be able to
+transmit that message over an SMTP framework.
+
+Now, this does present some bloat for people who do not strip the encryption,
+but it seems far better to design the protocol such that this case will
+work.
+
+&gt; [Signed binary data.]
+&gt; Now let us consider the question of what PGP-MIME draft requires users
+&gt; to sign. Suppose we want to send a signed .gif file to a sysop. The
+&gt; sysop wants to store the .gif in his download section. Suppose the sysop
+&gt; wants to store the signature as a detached signature so that people who
+&gt; download it can check the authorship. But the signature proposed by the
+&gt; PGP-MIME draft is useless for this purpose. It has MIME headers attached
+&gt; and it has been base64'ed. People who download such a file from a BBS
+&gt; have no use for it, unless they have MIME.
+
+[...several other examples deleted...]
+
+PGP/MIME is _not_ meant to be used in this fashion!  It never was!  PGP/MIME
+is only to be used for transport, not for long term storage.  If you need
+a persistent signature, you should generate a detached signature as an
+attachment.
+
+&gt; If users get in the habit of signing binary files which represent
+&gt; multimedia data, and which can not be examined with commonly available
+&gt; inspection tools, it is inevitable and predictable that sooner or later
+&gt; this will cause some kind of negative security event.
+
+By this argument nobody should bother signing e-mail or news posts.  I
+haven't seen any good tools to handle this easily for PC's and Macs.
+New proposals have to be made before the tools become available.  This
+draft is the result of experience with what does and doesn't work.
+For example, the application/pgp content-type which many people like
+is horribly broken for what it's probably used for 95% of the time.
+
+&gt; There is no good reason to sign the base64 rather than the original
+&gt; data. Once a file has been base64ed, the file can not be examined
+&gt; with the usual inspection tools.
+
+Yes, base64 is just another stream of bytes, but there are FEW places on
+the Internet SMTP framework that can support BINARY transport.  BINARY
+streams often contain very long lines which existing software simply can't
+handle.
+
+There is also another reason to sign the encoded version.  Remember that
+it also includes the content headers of that part.  This is very important
+especially for automated processing of messages.
+
+&gt; The typical user of MIME software is not necessarily technically
+&gt; sophisticated. When the deficiencies and disasters associated with
+&gt; software patterned on this draft become apparent, not everyone will know
+&gt; exactly which software component is at fault. The problems associated
+&gt; with the draft (or its successors) may adversely affect the reputation
+&gt; of PGP.
+
+Bad implementations can always adversely affect your reputation, even if
+the theory behind it is solid.  The average non-technical user which you
+have been describing in this message will should not even be aware of
+the underlying details if the implementation is done correctly.
+
+&gt; The draft should be withdrawn. People should rethink and create a better
+&gt; plan to combine the benefits of PGP and MIME.
+
+You are more than welcome to submit your proposal the the pgp-mime mailing
+list.  [send mail to pgp-mime-request@lists.uchicago.edu with a subject of
+"subscribe"]
+
+We've seen a lot of different proposals go by, and none of them have stood
+up to PGP/MIME.  From my point of view, most of the problems that people
+have with the draft is their failure to understand what it is to be used
+for.  Many people have the impression that PGP/MIME is meant to be the
+end-all-be-all for PGP.  But it's not!  PGP/MIME is meant to securely
+transmit messages across the Internet in a manner which all platforms
+can use.  PGP/MIME is text based because most transport systems in use
+are.  Nowhere is anyone saying "thou shalt not use PGP without MIME."
+I think if more people understood that, we wouldn't have so many
+objections to it.
+
+&gt; It should not require any additional space overhead  (more than that
+&gt; which may be necessary for transport) when signing and encrypting.
+
+The note in parens is interesting.  What you consider overhead I consider
+necessary for transport.
+
+me
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01513" HREF="msg01513.html">Re: PGP MIME INTERNET DRAFT considered harmful.</A></STRONG>
+<UL><LI><EM>From:</EM> Paul Elliott &lt;paul.elliott@hrnowl.lonestar.org&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01250.html">An alternative to remailer shutdowns</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01224.html">Re: The Crisis with Remailers</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01222.html">PGP MIME INTERNET DRAFT considered harmful.</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01513.html">Re: PGP MIME INTERNET DRAFT considered harmful.</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01227"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01227"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

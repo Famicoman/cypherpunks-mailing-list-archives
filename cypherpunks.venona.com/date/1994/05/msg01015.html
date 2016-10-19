@@ -1,0 +1,155 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Rabin -->
+<!--X-From-R13: Yney Zhv Pneehf <xyoneehfNbjyarg.evpr.rqh> -->
+<!--X-Date: Mon, 16 May 94 19:39:44 PDT -->
+<!--X-Message-Id: 9405170239.AA23367@flammulated.owlnet.rice.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Rabin</TITLE>
+<LINK REV="made" HREF="mailto:klbarrus@owlnet.rice.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01006.html">Date Prev</A>][<A HREF="msg01009.html">Date Next</A>][<A HREF="msg01006.html">Thread Prev</A>][<A HREF="msg01074.html">Thread Next</A>][<A HREF="index.html#01015">Date Index</A>][<A HREF="threads.html#01015">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Rabin</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Rabin</LI>
+<LI><em>From</em>: Karl Lui Barrus &lt;<A HREF="mailto:klbarrus@owlnet.rice.edu">klbarrus@owlnet.rice.edu</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 16 May 94 21:39:32 CDT</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Earlier, anonymous asked:
+
+&gt; In the Rabin PK system, your modulus is a Blum integer, a number n
+&gt; of the form p*q, where p and q are primes equal to 3, mod 4.
+&gt; According to Schneier, p. 289, encryption is done by C = M^2 mod n.
+&gt; On the next page, he gives four possible square roots of C:
+
+&gt; Anybody know the right way to do square roots mod a Blum integer?
+
+Well, I'll look at what Schneier says; maybe there is a typo in the
+formula... but the way you can solve this is with the Chinese
+Remainder Theorem.
+
+If c = m^2 mod n, then a solution is a common solution of
+
+m^2 mod n = c mod p
+m^2 mod n = c mod q
+
+Since p+1 and q+1 are divisible by 4, then (a^((p+1)/4))^2 = a since a
+is a quadratic residue modulo p, and then a^((p-1)/2) mod p = 1
+
+anyway, you calculate x1 = a^((p+1)/4) mod p
+                      x2 = a^((q+1)/4) mod q
+
+and then use the CRT four times to get the solution.
+
+For this example, p = 7, q = 11, n = p q = 77, m = 50
+
+c = 50^2 mod 77 = 36
+
+x1 = c^((p+1)/4) mod p = 36^2 mod 7  = 1
+x2 = c^((q+1)/4) mod q = 36^3 mod 11 = 5
+
+So now you use the Chinese Remainder Theorem for the following four
+cases
+
+CRT(n, p, q, x1, x2)
+CRT(n, p, q, x1, q - x2)
+CRT(n, p, q, p - x1, q)
+CRT(n, p, q, p - x1, q - x1)
+
+yeilding:
+
+CRT(77, 7, 11, 1, 5) --&gt; 71
+CRT(77, 7, 11, 1, 6) --&gt; 50
+CRT(77, 7, 11, 6, 5) --&gt; 27
+CRT(77, 7, 11, 6, 6) --&gt; 6
+
+Sorry, but I don't have time to write out the steps for the CRT ;)
+It's pretty straightforward, given the algorithm.
+
+so (71, 50, 27, 6) satisfy the equation x^2 mod n = c
+                                        x^2 mod 77 = 36
+
+as you can see, the original message (m = 50) is one of the choices.
+
+This is similar to an oblivious transfer protocol.  Actually, I think
+it is an oblivious transfer as described by Blum.
+
+Karl Barrus
+klbarrus@owlnet.rice.edu
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a
+
+iQCVAgUBLdguSYOA7OpLWtYzAQG35wP+MpdhCUBtSodd53Ppn41UHcKSpkkamx13
+YqMmlmP0dKsRV2Vas1IVdcIGcjcowBxDT7IkRJO9UNtj33BB2tTsRDNOi2GqERZl
+AARVL/y941EIAXwwj2w+WQ/jCAaFhy4ohvZVbI5snWw6D+dsxQ7jMx193ehLjnu1
+ieEL4BvHUzA=
+=MJ0E
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01074" HREF="msg01074.html">Rabin</A></STRONG>
+<UL><LI><EM>From:</EM> hughes@ah.com (Eric Hughes)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01006.html">[ANON] War in rec.guns Winds Down, All Parties Lose</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01009.html">lies, damn lies, Internet-statistics, and "sinister" EDI (fwd)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01006.html">[ANON] War in rec.guns Winds Down, All Parties Lose</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01074.html">Rabin</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01015"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01015"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

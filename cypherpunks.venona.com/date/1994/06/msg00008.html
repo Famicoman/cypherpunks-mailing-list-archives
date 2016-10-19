@@ -1,0 +1,156 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: RE: NSA breaks Russian PRNGs with neural networks?? -->
+<!--X-From-R13: xbbagmqNyepf.ybeny.pbz (Rnivq Ybbagm ) -->
+<!--X-Date: Wed, 1 Jun 94 10:23:51 PDT -->
+<!--X-Message-Id: 9406011531.AA16098@io.lrcs.loral.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>RE: NSA breaks Russian PRNGs with neural networks??</TITLE>
+<LINK REV="made" HREF="mailto:koontzd@lrcs.loral.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00010.html">Date Prev</A>][<A HREF="msg00018.html">Date Next</A>][<A HREF="msg00001.html">Thread Prev</A>][<A HREF="msg00002.html">Thread Next</A>][<A HREF="index.html#00008">Date Index</A>][<A HREF="threads.html#00008">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>RE: NSA breaks Russian PRNGs with neural networks??</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: RE: NSA breaks Russian PRNGs with neural networks??</LI>
+<LI><em>From</em>: <A HREF="mailto:koontzd@lrcs.loral.com">koontzd@lrcs.loral.com</A> (David Koontz )</LI>
+<LI><em>Date</em>: Wed, 1 Jun 94 08:31:44 PDT</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+&gt;From: rishab@dxm.ernet.in
+&gt;
+&gt;tcmay@netcom.com:
+&gt;&gt; An interesting article by Seymour Hersh is cited below. It says that
+&gt;&gt; NSA had transcripts of the 1991 coup plotters (and presumably other
+&gt;&gt; Russian leaders) and that Bush passed these on to Yeltsin to warn him.
+&gt;
+&gt;A recent article from the Daily Telegraph, another British paper, went on abou
+&gt;the possible encryption techniques used by the Russians. It described how
+&gt;reused one-time pads led to the unmasking of Fuchs, the Rosenbergs, Philby
+&gt;et al. Then it suggested that the method the NSA broke was based on (presumabl
+&gt;weak) PRNGs, a stream cipher. It suggested that the NSA might have developed
+&gt;techniques to find patterns in PRNG outputs through neural networks, or geneti
+&gt;algorithms!!
+&gt;
+&gt;While the latter sounds like crap to me, even though I've worked with and
+&gt;believe in the power of neural networks for amazing pattern recognition, unles
+&gt;the PRNGs were _really_ weak, I'm skeptical. I don't think the Russians are
+&gt;fools, and in these times one doesn't rely on secret weak algorithms for
+&gt;crypto, not when there are publicly well known strong ones. Humint? Maybe.
+
+I can recall having seen keylists for Soviet crypto, similar (but larger)
+than those used for shift register based U.S. tactical crypto from the
+Korean War era.  We used to monitor send/receive ciphertext for U.S.
+crypto during key changes.  One handy tool was a meter, which would integrate
+(low pass) the data stream.  We could easily determine that the key had been
+changed by watching the meter.  This was done with idle circuits operating
+under traffic flow security (meaning the line was active, data equal to a
+constant mark, the encrypted constant mark showing on the data stream).
+The distribution of average voltage values (MIL STD 188) and how fast
+and furious it would change, hop, skip and jump were generally distinct
+between successive keys.
+
+DES S Box outputs have the identical symbol distribution for key and key_not
+(E(Rn) xor KSn, input to the S Boxes).  For a given round key (and its
+inverse), there are between 0 and 65,536 symbols missing from the domain
+of the P permutation (32 bit symbols).  Which symbols and how many that
+don't show up are dependant on the key.  Some keys have no missing symbols,
+while others have lots.  This is a function of the E permutation and R bit
+sharing between adjacent S Boxes.  Someone appears to have been quite
+aware of this weakness, the second XOR operation found in a DES round
+( (E(Rn) xor KSn) xor Ln )goes a long way towards masking the fact that
+some symbols can be missing.
+
+Were DES not to perform the second XOR, you could determine the key
+simply by monitoring missing symbols from the output of the S boxes
+(P permutation).  Each new symbol found would eliminate certain patterns
+from the scheduled key (KSn), a 48 bit value.  It would go a long way
+to reducing the number of unknown key bits to the range of easy brute
+force attacks.
+
+Now imagine that shift register based crypto generally doesn't mix key and
+data as well.  DES  operates on each bit 16 times, more than the typical
+shift register based crypto.  Each bit of the output block of DES depends
+on all the input bits and all the key bits input to the key scheduler.  A
+shift register based crypto with a shift register of a size comparable to
+the block size of DES would typically have a lot fewer variables contributing
+to each key bit, making brute force attacks on a known crypto system
+with known plaintext (including idle data values) much easier.  Now, imagine
+that there is statistical significance to the output distribution of 1's
+and 0's based on weaker mixing.  This sounds right up the alley for neural
+nets.
+
+Anyway, I think it really depends on the age of the crypto gear in use.
+Older gear tends to be less secure based on shift register size, and
+key/data mixing.  There are also rules used to specify tap to input
+selections, which eliminate weak keys (the sort of rules enforced by
+key card readers).  Attacking a cryptosystem operated with keys provided
+from a centralized generation/distribution system would further reduce the
+key search domain to strong keys.
+
+Having worked on crypto gear built the year I was born (1954) through the
+late '70s, I have no problem believing that Russia is using antiquated (and
+thus more vulnerable) crypto today.  Based on replacement cost, the only thing
+that would drive comsec gear out of service would be demonstrable weakness
+(such as Bush giving Yeltsin intercepts, personnel insecurity with respect
+to key handling, etc.), or prohibitive maintenance/operating costs.   After
+all, some protection is better than none.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00010.html">Re:  Clipper in patent trouble?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00018.html">Re: Cypherpunks' Electronic Book 3</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00001.html">NSA breaks Russian PRNGs with neural networks??</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00002.html">Re:  Privacy at Dunkin Donuts</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00008"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00008"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

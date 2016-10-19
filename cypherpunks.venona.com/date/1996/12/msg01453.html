@@ -1,0 +1,160 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Executing Encrypted Code -->
+<!--X-From-R13: Pvyy Tenagm <senagmNargpbz.pbz> -->
+<!--X-Date: Sat, 21 Dec 1996 17:11:48 &#45;0800 (PST) -->
+<!--X-Message-Id: v03007803aee23282cc0b@[206.217.121.78] -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199612210614.BAA25984@istar.ca -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Executing Encrypted Code</TITLE>
+<LINK REV="made" HREF="mailto:frantz@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01452.html">Date Prev</A>][<A HREF="msg01467.html">Date Next</A>][<A HREF="msg01400.html">Thread Prev</A>][<A HREF="msg01459.html">Thread Next</A>][<A HREF="index.html#01453">Date Index</A>][<A HREF="threads.html#01453">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Executing Encrypted Code</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: &lt;<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Executing Encrypted Code</LI>
+<LI><em>From</em>: Bill Frantz &lt;<A HREF="mailto:frantz@netcom.com">frantz@netcom.com</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 21 Dec 1996 17:14:32 -0800</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01400.html">199612210614.BAA25984@istar.ca</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Let me try to sketch a design for an Encrypted Code Computer (ECC).
+
+I will start with what has become the standard architecture for Personal
+Computers/Workstations.  That is:
+
+(1) One or more CPU chips, each of which includes a RISC core, memory
+management, and L1 cache.
+(2) A L2 cache memory chip.
+(3) A main memory bus which either includes an I/O bus or,
+(4) A separate I/O bus.
+
+If we decrypt the code on the disk, we gain almost no piracy protection
+over current systems, so we must decrypt somewhere in the memory hierarchy.
+If we decrypt on the main memory bus, then it will be easy to add bus
+snooping hardware to catch the unencrypted program as it is accessed.
+While average computer user may not do this, the foreign pirates certainly
+will.  Basically the same argument applies to decrypting in the L2 cache,
+since it will be easy to sample the signals between the L2 cache and the
+CPU.
+
+That leaves us with decrypting in the CPU.  Most CPU chips have separate
+instruction and data L1 caches.  If we assume separate caches for our
+system, it becomes logical to decrypt the code as we load it into the L1
+cache.  If we assume that we are using public key cryptography to protect
+the programs, where the CPU chip has the only copy of the secret key, then
+we have to solve the following problems:
+
+(1) We have to decrypt each code line in a few cycles or the system's
+performance will be much worse that a similar system without encryption.
+(2) We must decrypt cache lines accessed in a basically random manner.
+
+Point (1) means we probably want to encrypt the code with a symmetric
+cypher and then encrypt the symmetric key with the CPU's public key.  There
+will need to be a way of telling the CPU, "Here's a new encrypted symmetric
+key for code."  To avoid having to do a public key decryption on every
+process/program switch, the CPU will need a cache of symmetric keys, and
+the OS will have to tell it which key-cache entry to use at any point
+during execution of the program.  There will have to be a way to
+automatically change the key when servicing an interrupt.
+
+Point (2) means we can't use any of the really good encryption modes, and
+are pretty much limited to ECB like modes.  If we use straight ECB mode,
+then our program becomes subject to a number of cypher-text only attacks.
+If we can arrange our software system so code always executes at a constant
+virtual address we can reduce these attacks by salting the code cache
+blocks with the virtual address.  However, constant virtual addresses make
+DLLs somewhat difficult.
+
+
+Given this design, we need a symmetric cypher which can be decrypted with a
+logic array shallower than about 100 gates (which works out to about 5
+clock cycles).  We are still going to pay a performance penalty because we
+are adding clocks to a critical performance path, but perhaps we can get
+Steve Jobs to sell it to the masses :-).
+
+We still have a major problem if we want a multiprocessor system.  How do
+we migrate threads between processors?  It seems that we need to have the
+same key on all processors (or license and keep in memory multiple copies
+of the code).  If we allow the keys off-chip, then recovering them becomes
+much easier.  If we keep them on-chip, then the CPU manufacturer needs to
+build CPU chips which share a secret key, with all the attendant inventory
+problems etc.  (And, if I can move the CPU chips to different systems, then
+I can run a single key of the software on multiple systems.)
+
+
+-------------------------------------------------------------------------
+Bill Frantz       | I still read when I should | Periwinkle -- Consulting
+(408)356-8506     | be doing something else.   | 16345 Englewood Ave.
+frantz@netcom.com | It's a vice. - R. Heinlein | Los Gatos, CA 95032, USA
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01459" HREF="msg01459.html">Re: Executing Encrypted Code</A></STRONG>
+<UL><LI><EM>From:</EM> "Timothy C. May" &lt;tcmay@got.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01400" HREF="msg01400.html">Re: Executing Encrypted Code</A></STRONG>
+<UL><LI><EM>From:</EM> "Dalban" &lt;orbeck@istar.ca&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01452.html">Re: Ebonics</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01467.html">Re: Ebonics</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01400.html">Re: Executing Encrypted Code</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01459.html">Re: Executing Encrypted Code</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01453"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01453"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

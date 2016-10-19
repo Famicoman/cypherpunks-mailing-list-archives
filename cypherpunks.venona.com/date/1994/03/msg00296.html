@@ -1,0 +1,161 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Update on user&#45;level hack to do telnet encryption posted recently -->
+<!--X-From-R13: tgbnyNna&#45;grnyynpu.pbz (Uenunz Fbny) -->
+<!--X-Date: Sat, 5 Mar 94 11:04:23 PST -->
+<!--X-Message-Id: 199403051903.TAA24567@an&#45;teallach.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Update on user-level hack to do telnet encryption posted recently</TITLE>
+<LINK REV="made" HREF="mailto:gtoal@an-teallach.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00279.html">Date Prev</A>][<A HREF="msg00280.html">Date Next</A>][<A HREF="msg00279.html">Thread Prev</A>][<A HREF="msg00288.html">Thread Next</A>][<A HREF="index.html#00296">Date Index</A>][<A HREF="threads.html#00296">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Update on user-level hack to do telnet encryption posted recently</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:alt%2Dsecurity%2Dpgp@demon.co.uk">alt-security-pgp@demon.co.uk</A>, <A HREF="mailto:alt%2Dsources%2Dd@demon.co.uk">alt-sources-d@demon.co.uk</A>,       <A HREF="mailto:comp%2Dsecurity%2Dunix@demon.co.uk">comp-security-unix@demon.co.uk</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>,       <A HREF="mailto:sci%2Dcrypt@demon.co.uk">sci-crypt@demon.co.uk</A></LI>
+<LI><em>Subject</em>: Update on user-level hack to do telnet encryption posted recently</LI>
+<LI><em>From</em>: <A HREF="mailto:gtoal@an%2Dteallach.com">gtoal@an-teallach.com</A> (Graham Toal)</LI>
+<LI><em>Date</em>: Sat, 5 Mar 1994 19:03:40 GMT</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+OK folks, I've started tidying up that hack code I posted recently which
+outlined a method for rolling your own telnet-style encryption.  In particular,
+I've done the hard bit of making it work with an arbitrary binary 1:1 stream
+cypher, rather than the original hack which *had* to encrypt printable text
+as printable text (to get it through 7 bit terminal links).
+
+[Note, anyone who didn't look at it too closely because they thought it was
+only for telnet - look again: it's useful for *any* local to remote connection,
+even kermit down a serial line, as long as you're calling between unixes.]
+
+Now, what I need are volunteers - preferably outside the US and any other
+country where any relevant patents are valid - to work on a suitable stream
+cypher.  Note you don't have to use any patented technology, as long as
+whatever you come up with is sufficiently secure for your needs - this will
+eventually be issued as a modular system, with the default encryption module
+being rot13.  If you don't really care much about the strength of encryption
+(assuming your only opponents are kids who sniff packets who won't have
+enough crypto experience to decode even an trivial cypher) then there's
+a lot to be said for everyone implementing their own variation... just for
+the amusement of tying up the time of all those more competant people who
+feel they have to know everything that's going on everywhere in the world.
+Machine cycles they can afford aplenty; man years are a different question...
+
+
+Anyway, back to the project:
+
+Currently there's a trivial interface that you can work to - I suggest
+for demo purposes just using a hard-coded known key at each end, and we'll
+do the key exchange stuff after we've got the stream cypher working.
+
+Here's the header file:
+
+/* Placeholder module for arbitrary stream encryption */
+
+#define STATE_SIZE 128
+
+typedef struct cypherstate {
+  char *unique_tag;
+  char whatever[STATE_SIZE];
+  long int byteno;
+  /* Add useful stuff here as need be... */
+} CYPHER_STATE;
+
+void new_cypher(CYPHER_STATE *s, char *unique_tag);
+
+char stream_cypher(CYPHER_STATE *s, char byte);
+
+
+Put any state you need in the struct, initialise it (with a known secret
+key for now) in new_cypher; and supply a function that does a 1:1 encoding
+of a byte in stream_cypher.  Make the function stateless apart from the
+CYPHER_STATE parameter so that it can be used to encode multiple streams
+without interference.
+
+With a bit of help from you guys, this project shouldn't take more than
+a week to get a prototype running...  When I have a feel for what sort
+of encryption methods people want, and how precisely they're implemented,
+I'll know better how to generically code the key-exchange part too.
+
+I don't think it's appropriate for me to post any more source over
+the net.  Anyone who wants to discuss this in public rather than by mail,
+I suggest we stick to alt.sources.d
+
+Anyone wants the current sources, send mail to gtoal@an-teallach.com
+
+Thanks
+
+G
+
+PS The sources I have probably won't work anywhere except on BSD systems.
+If you want to make the framework bit work on other versions of unix,
+drop me a line about that too.  Your programming will have to be up to the
+level of writing a clone of the unix 'script' command, which is all this
+program is really.
+
+PPS Americans: please don't get either you or me in trouble by mailing
+me unsolicited gifts of crypto code.  I don't want it.  The crypto part
+of this project is for those people in countries where there's no legal
+barrier to them participating.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00288" HREF="msg00288.html">Re: Update on user-level hack to do telnet encryption posted recently</A></STRONG>
+<UL><LI><EM>From:</EM> "Perry E. Metzger" &lt;pmetzger@lehman.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00279.html">Stego in Jazz?...The Miles Files</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00280.html">Seattle Times, 3/6/94</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00279.html">Stego in Jazz?...The Miles Files</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00288.html">Re: Update on user-level hack to do telnet encryption posted recently</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00296"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00296"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

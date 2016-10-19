@@ -1,0 +1,279 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: DH Exchange Code / Magic Money comments -->
+<!--X-From-R13: erznvyreNzreqr.qvf.bet (erznvyre obthf nppbhag) -->
+<!--X-Date: Fri, 25 Feb 94 23:15:35 PST -->
+<!--X-Message-Id: 9402260715.AA18185@merde.dis.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>DH Exchange Code / Magic Money comments</TITLE>
+<LINK REV="made" HREF="mailto:remailer@merde.dis.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01407.html">Date Prev</A>][<A HREF="msg01416.html">Date Next</A>][<A HREF="msg01409.html">Thread Prev</A>][<A HREF="msg01417.html">Thread Next</A>][<A HREF="index.html#01410">Date Index</A>][<A HREF="threads.html#01410">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>DH Exchange Code / Magic Money comments</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: DH Exchange Code / Magic Money comments</LI>
+<LI><em>From</em>: <A HREF="mailto:remailer@merde.dis.org">remailer@merde.dis.org</A> (remailer bogus account)</LI>
+<LI><em>Date</em>: Fri, 25 Feb 94 23:15:08 PST</LI>
+<LI><em>Remailed-By</em>: remailer bogus account &lt;remailer@utter.dis.org&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+DH Exchange announcement follows these comments on mpd's message.
+
+                                                Pr0duct Cypher
+
+mpd@netcom.com wrote:
+
+&gt;Earlier this morning I grabbed the latest version of Magic Money
+&gt;from csn.org and compiled it under the Borland C++ 3.1 IDE. Since
+&gt;the Borland C compiler is one of the more paranoid ones around, I
+&gt;thought I would briefly list the things I had to do in order to
+&gt;get zero warnings and zero errors.
+
+&gt;The sources I started with were MGMNY10E.ZIP and PGPTL10C.ZIP.
+
+&gt;After #defining MSDOS you will find that it is a good idea to
+&gt;#include &lt;stdlib.h&gt; in almost every module.  This prototypes
+&gt;quite a few of the commonly used functions which would otherwise
+&gt;cause the compiler to complain.  A few modules will require
+&gt;&lt;mem.h&gt;, &lt;string.h&gt;, and &lt;time.h&gt; since they call functions in
+&gt;these modules which are not in &lt;stdio.h&gt; or &lt;stdlib.h&gt;.
+
+Have they changed the .h files? My compiler isn't missing any functions
+when I compile it.
+
+&gt;The C library function "randomize" is defined in &lt;stdlib.h&gt;. This
+&gt;conflicts with the Magic Money function of the same name which
+&gt;initializes the MD5 based RNG used to generate coin ids. I
+&gt;changed the name of the Magic Money one to "random_init".
+
+Blaaah. I didn't have stdlib compiled into that module, so I didn't
+notice this one.
+
+&gt;There is no prototype for pgp_randombyte.  Since this function
+&gt;returns "byte", not "int", this could be painful on any compiler
+&gt;which treats these types of function returns differently.
+
+There is a prototype for it in pgptools.h
+
+&gt;Complete prototypes for (*output) and (*lookup) need to be
+&gt;provided in the function header of pgp_check_sigs and also for a
+&gt;different function pointer (*output) used in PGPKGEN.
+
+Is this bad? I thought a function pointer didn't really care, as long
+as you called it correctly.
+
+&gt;The Borland compiler always warns on "if (a=b)" because it
+&gt;assumes the user mistyped "if (a==b)".  To get rid of the
+&gt;warning, you have to say "if (0!=(a=b)) which is optomized out by
+&gt;the compiler.  This occurs in a number of places, including the
+&gt;macro for multiplication mod 65537 in idea.c.
+
+I know, mine complains about that too, but it's a common programming
+technique and there is nothing wrong with it. I've been ignoring that
+particular warning.
+
+&gt;There is a reference to an undefined pgp_pubkey in fifo.c which
+&gt;goes away if you #include "pgptools.h".  You then also have to
+&gt;toss in "mpilib.h" and "md5.h" to make "pgptools.h" happy.
+
+Yes, when fifo.c includes pgpmem.h, it notices that in one of the
+prototypes in that function. But the only function fifo calls within
+pgpmem is safemalloc, so it doesn't matter. I didn't want every file
+to include every other file, although it has been hard to avoid.
+
+&gt;It appears that mpilib.c has been persuaded to compile the UPTON
+&gt;modmult instead of the SMITH modmult.  Unfortunately, there are a
+&gt;few modules which fail to #include the definition of UPTON and
+&gt;still call stage_smith_modulus and smith_modmult.  Sticking in a
+&gt;#define to UPTON at the top of "mpilib.h" fixes this.
+
+MPILIB has not been altered. It is the same as in PGP. PLATFORM appears
+to set the appropriate modmult, but I usually define UPTON because SMITH
+has given me some problems in the past.
+
+&gt;The conditional code which allows prior definition of external
+&gt;versions of mp_setp, mp_addc, mp_subb, mp_smul, and mp_rotl
+&gt;written in assembly language for some strange reason causes the
+&gt;compiler to generate externals to _P_SETP, _P_ADDC, _P_SUBB,
+&gt;_P_SMUL, and _P_ROTL instead of _mp_setp, _mp_addc, _mp_subb,
+&gt;_mp_smul, and _mp_rotl in modules which reference these routines.
+&gt;It does not seem to have this effect in mpilib.c where these
+&gt;routines are defined.  Deleting the corresponding #ifdefs cures
+&gt;this.
+
+This I hadn't noticed. You have to define NO_ASM or compile in 8086.asm.
+Also define MSDOS and SMALL_MEM and DYN_ALLOC for an MSDOS machine. Take
+a look at the PGP 2.3a project file.
+
+&gt;The compiler correctly points out that pgp_extract_rsa never uses
+&gt;the variable "pk" passed to it.  At the cost of a few machine
+&gt;cycles, you can silence the compiler by putting "pk=pk" as the
+&gt;first executable statement in this function.
+
+True. I noticed this after writing the prototype. The public key might
+be useful in the future if the modexp is changed, so I left it in.
+
+&gt;The function pgp_randombyte hashes a variable "time" without
+&gt;first initializing its value.  It might be nice to change "time"
+&gt;to "timestamp" and do a "time(&amp;timestamp) unless it was the
+&gt;authors intention to utilize uninitialized memory.  
+
+I screwed up here. I meant to include the time in the hash and forgot
+to put in the call to time. I just sent an update to csn.org to fix this
+one, because it could reduce the entropy of the randomizer. Time was
+already factored into the initialize, so it wasn't a killer, but it
+badly needed fixing. Thanks for finding it.
+
+&gt;If the server is executed more than one time within a second, it 
+&gt;can generate indentical random values.  This could be a problem when
+&gt;batch-processing mail. Including a fast timer register in the MD5
+&gt;hash in addition to the time of day in seconds would likely
+&gt;eliminate this risk.
+
+What are you running, a Cray? My machine takes quite a few seconds to run the
+server. How do you include this fast timer register? Not all machines have 
+it, so doing so would be very machine dependent. You could put in ifdefs 
+for the PC. I think PGP has this.
+
+&gt;The program uses "safemalloc" and "mm_safeopen" to access memory
+&gt;and files, but does a very large number of "fread" and "fwrite"
+&gt;calls without checking to see if they completed successfully.  A
+&gt;"safefread" and "safefwrite" might be a good idea so the server
+&gt;does not continue happily on as the hash file fills up the disk.
+
+Yeah, I know, and so does fifo.c in PGP Tools. I hate error checking.
+If I put in safe read and write calls, what do I do if they fail? You
+could do this easily with some defines, if you have the error recovery
+code in mind.
+
+Thanks for pointing out that bug, and especially for setting up a Magic
+Money server.
+
+- -----------------------------------------------------------------------
+
+Diffie-Hellman Exchange addition to PGP Tools
+Should appear on csn.org as dhex10a.zip
+
+There has been quite a bit of interest in online crypto applications, such
+as secure phones, BBSes, and TELNET connections. For these applications,
+Diffie-Hellman exchange has a major advantage over RSA: there is no private
+key to steal.
+
+If RSA is used for key exchange, an attacker could record the encrypted
+sessions, and then acquire your private key after the fact and decrypt
+them. With Diffie-Hellman, the secret information is gone as soon as the
+session is over. Using DH is equivalent to using a disposable one-time RSA
+key for each session, but much faster.
+
+This is a DH add-on for PGP Tools. There is a new PGPKGEN which exports the
+prime-finding functions, the main files DHEX.C and DHEX.H, and a demo.
+
+To use DH, we need a modulus n and a generator g. Unlike an RSA modulus,
+which is a product of two primes, a DH modulus must be prime. (n-1)/2 must
+also be prime. This makes the moduli slightly painful to find, but they can
+be reused indefinitely. DHEX tests a modulus by first testing both n and
+(n-1)/2 with fastsieve. Only if both pass is slowtest used. It still took
+me a whole day to find the 1024-bit modulus in the demo. There is also a
+512-bit modulus there.
+
+To find the generator, we need the factors of n-1. They are 2 and (n-1)/2.
+For each factor f, we compute ((g^((n-1)/f)) mod n). If this is 1 for
+either factor, the number is NOT a generator. Generators are easy to find,
+usually in one to three tries.
+
+The modulus and generator can be saved and reused. Now Alice and Bob each
+call precomp. This generates a private piece x and computes X=g^x mod n.
+Big-X is the public piece. Alice and Bob exchange public pieces, then each
+compute k=Y^x mod n where Y is the other person's public piece and x is
+your own private piece. K will be the shared secret. We take the MD5 of
+this number to get an IDEA key, which will be the same on both sides. No
+eavesdropper can get this number. The public and private pieces are
+disposed of - they are only used once.
+
+This is vulnerable to a man-in-the-middle attack, where an attacker carries
+out a separate DH exchange with each party and then sits in the middle,
+decrypting with one session key and encrypting with the other. A digital
+signature will prevent this, if Alice and Bob have each others' public
+keys. One approach is for both parties to sign their public pieces before
+exchanging them. Another is to do the DH, go secure, and then each party
+signs the session key and sends the signature to the other. If there is a
+man in the middle, the session keys will be different. I prefer the second
+method because a passive eavesdropper does not find out who is
+communicating with whom. You can do this with the pgp signature functions
+in PGP Tools.
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a
+
+iQCVAgUBLW7drcGoFIWXVYodAQHKRwQAj4zOGBqNeT6w6VeHRn6QMk5sAmYAep9M
+MpiVYTEdcSTzW7C2TP9RF/f1cqIpPy4pBK5ATRmGCnaDe12FxM4iIZVMVcprS7Ao
+XaL52RR/0d0Tctt6YhQBMaODaosPm0Nbd+R3ztRRpugCU37lAFTWLHTuDAVlNqzl
+yX/8iTSbyGo=
+=gZ8U
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01417" HREF="msg01417.html">DH Exchange Code / Magic Money comments</A></STRONG>
+<UL><LI><EM>From:</EM> hughes@ah.com (Eric Hughes)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01407.html">re: inept spy</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01416.html">Re: Clipper Death Threat</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01409.html">re: inept spy</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01417.html">DH Exchange Code / Magic Money comments</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01410"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01410"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

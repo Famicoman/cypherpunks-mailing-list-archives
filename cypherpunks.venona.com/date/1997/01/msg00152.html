@@ -1,0 +1,265 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: fingerd -->
+<!--X-From-R13: Brgre [ Oyyna <crgre.nyynaNnrng.pb.hx> -->
+<!--X-Date: Fri, 24 Jan 1997 06:14:54 &#45;0800 (PST) -->
+<!--X-Message-Id: 199701241414.GAA25351@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: fingerd</TITLE>
+<LINK REV="made" HREF="mailto:peter.allan@aeat.co.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00138.html">Date Prev</A>][<A HREF="msg02453.html">Date Next</A>][<A HREF="msg02452.html">Thread Prev</A>][<A HREF="msg00142.html">Thread Next</A>][<A HREF="index.html#00152">Date Index</A>][<A HREF="threads.html#00152">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: fingerd</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:steve@miranova.com">steve@miranova.com</A></LI>
+<LI><em>Subject</em>: Re: fingerd</LI>
+<LI><em>From</em>: Peter M Allan &lt;<A HREF="mailto:peter.allan@aeat.co.uk">peter.allan@aeat.co.uk</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 24 Jan 97 12:27:15 GMT</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+Hi,
+
+
+These messages have been sent about fingerd.
+My preference for fiddling with remote fingers is to
+leave fingerd as supplied by the vendor (run by "nobody") and
+replace the finger program itself.  It can be made to recognise
+when it is being run by "nobody" and behave differently
+from when run by another user.
+
+Source at the end of this file.  (Bashed out fairly quickly
+starting from a utmp-eraser I made for a luser who wouldn't
+tolerate wall messages from shutdown.)
+
+I have (among other things) an extension to TCP-wrappers
+(a new hosts_access.c file), and a prog to find disk space wasted by duplicated files.  
+(mail me with Subject: "send goodies" for these.)
+
+ -- Peter Allan   peter.allan@aeat.co.uk
+
+
+
+
+
+Date: 23 Jan 1997 17:22:10 -0800
+From: Steven L Baur &lt;steve@miranova.com&gt;
+&gt; cfingerd is not a safe program.  It must run as root, and has some big
+&gt; problems.
+
+&gt; On Tue, 17 Sep 1996, Administrador da Rede wrote:
+&gt; &gt; I use the newest version of cfinger, setted to not allow general finger, just
+&gt; &gt; specific ones. Does anyone knows how this person did that ? I hope I can
+&gt; &gt; find out, otherwise, bye bye finger service.
+
+&gt; Badly.
+&gt; I have sent the author a letter, but never got any reply back (it's 3
+&gt; months later now!), so I just take the opportunity to warn the public
+&gt; against its use.
+
+
+
+/*  
+*  
+*  compile and test myfinger
+*  
+*  	cc  -C -o myfinger myfinger.c
+*  
+*  
+*  (assuming the standard finger is /usr/ucb/finger)
+*     cp /usr/ucb/finger /usr/ucb/finger.real
+*     cp myfinger /usr/ucb/finger
+*  
+*  
+*  (if using TCP wrapper reverse-fingers, make them NOT nobody,
+*   but another id such as nobody2.)
+*  
+*  I disclaim any disasters........
+*  
+*/  
+
+/*
+ *
+ *   my finger program - local only, to be less informative than /usr/ucb/finger
+ *   
+ */
+
+
+#undef _utmp_h
+#define TRUE  1
+#define FALSE 0
+#define FAKE 1
+#define WIPE 2
+#define UTMP "/etc/utmp"
+
+
+#include &lt;stdio.h&gt;
+#include &lt;pwd.h&gt;
+#include "utmp.h"
+#include &lt;lastlog.h&gt;
+
+main(argc, argv, env)
+int  argc;
+char **argv;
+char **env;
+{
+	int  i, listed;
+	struct passwd *pwent;
+
+	if (argc &lt; 1)
+		exit(0);	/* beat sneaks */
+
+         /*  If run by "nobody" (uid=65534) assume this is a remote finger */
+         /* otherwise run the standard finger command */
+         if (65534!=getuid()) {
+                       execv("/usr/ucb/finger.real", argv);
+                       /** if we get here exec failed, so we default to my finger  **/
+         }
+
+
+	printf("Login       Name          Where\n");
+
+
+	listed = 1;
+	while ((pwent = getpwent()) != NULL) {
+
+		if (argc &gt; 1) {
+		/*
+		 * if there are args, and  name is NOT one of them, we skip
+		 * it
+		 */
+			listed = 0;
+			for (i = 1; (!listed) &amp;&amp; (i &lt; argc); i++) {
+				if (!strcmp(argv[i], pwent-&gt;pw_name))
+					listed = 1;
+			}
+		}
+		if (listed)
+			info(pwent);
+	}
+
+}
+
+
+info(pwent)
+struct passwd *pwent;
+{
+	long lpos;
+	FILE *fp;
+	int  i;
+	struct utmp *sp;
+	struct utmp utmpentry;
+        char *login,*gecos;
+      
+        login=pwent-&gt;pw_name;
+        gecos=pwent-&gt;pw_gecos;
+
+
+	sp = &amp;utmpentry;
+
+	if ((fp = fopen(UTMP, "r")) == NULL) {
+		fprintf(stderr, "failed to open utmp for reading\n");
+		exit(1);
+	}
+
+
+	i = fseek(fp, 0, 0);
+	if (i) {
+		puts("failed to fseek start of file");
+		exit(2);
+	}
+
+	do {
+/* get current pos in file using ftell */
+		lpos = ftell(fp);
+
+/* fread the struct */
+		fread(sp, sizeof utmpentry, 1, fp);
+
+
+		if (!feof(fp)) {
+			if (!strcmp(login, sp-&gt;ut_name)) {
+				if (!nonuser(utmpentry)) {
+                                        utmpentry.ut_host[15]='\0';
+					printf("%s\t%s\t%s\t%s\n",login,gecos,sp-&gt;ut_line,sp-&gt;ut_host);
+				}
+			}
+		}
+
+
+
+/* on error we close &amp; exit */
+		if (ferror(fp)) {
+			fprintf(stderr, " file error! so failed to find our session in utmp\n");
+			fclose(fp);
+			exit(3);
+		}
+
+	} while (!feof(fp));
+
+
+
+	fclose(fp);
+
+}
+/* end */
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00138.html">Homosexuals</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02453.html">Re: THE NEW YORKER on the V-Chip</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02452.html">Re: fingerd</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00142.html">Re: fingerd</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00152"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00152"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

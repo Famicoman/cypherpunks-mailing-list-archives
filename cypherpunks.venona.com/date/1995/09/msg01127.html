@@ -1,0 +1,168 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Netscape SSL implementation cracked! -->
+<!--X-From-R13: Wna Ubyqoret <vnatNQE.Prexryrl.SRG> -->
+<!--X-Date: Sun, 17 Sep 95 21:41:08 PDT -->
+<!--X-Message-Id: 199509180441.VAA16683@lagos.CS.Berkeley.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Netscape SSL implementation cracked!</TITLE>
+<LINK REV="made" HREF="mailto:iang@CS.Berkeley.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01119.html">Date Prev</A>][<A HREF="msg01133.html">Date Next</A>][<A HREF="msg01119.html">Thread Prev</A>][<A HREF="msg01133.html">Thread Next</A>][<A HREF="index.html#01127">Date Index</A>][<A HREF="threads.html#01127">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Netscape SSL implementation cracked!</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Netscape SSL implementation cracked!</LI>
+<LI><em>From</em>: Ian Goldberg &lt;<A HREF="mailto:iang@CS.Berkeley.EDU">iang@CS.Berkeley.EDU</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 17 Sep 1995 21:41:01 -0700 (PDT)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+As some of you may recall, a few weeks ago I posted a
+reverse-compilation of the random number generation routine used by
+netscape to choose challenge data and encryption keys.
+
+Recently, one of my officemates (David Wagner &lt;daw@cs.berkeley.edu&gt;)
+and I (Ian Goldberg &lt;iang@cs.berkeley.edu&gt;) finished the job
+of seeing exactly how the encryption keys are picked.
+
+What we discovered is that, at least on the systems we checked (Solaris
+and HP-UX), the seed value for the RNG was fairly trivial to guess by
+someone with an account on the machine running netscape (so much so
+that in this situation, it usually takes less than 1 minute to find
+the key), and not too hard for people without accounts, either.
+See below for details.
+
+I've included the header to a program we wrote to do this key-cracking
+below.  I would like to get some information, though:
+
+o Where should I put the full source (1 file, ~12k) so that ITAR lovers
+  don't get mad at me?
+
+o Where can I find a version of netscape that does RC4-128?  It is
+  likely that it suffers from the same problem, and even a brute-force
+  search of the entire seed space is _much_ less than 128 bits.
+
+Happy hacking,
+
+   - Ian "who just saw _Hackers_ today with some other Bay Area cypherpunks,
+           and it put me in the mood"
+
+/* unssl.c - Last update: 950917
+
+   Break netscape's shoddy implementation of SSL on some platforms
+   (tested for netscape running RC4-40 on Solaris and HP-UX; other
+    Unices are probably similar; other crypt methods are unknown, but
+    it is likely that RC4-128 will have the same problems).
+
+   The idea is this: netscape seeds the random number generator it uses
+   to produce challenge-data and master keys with a combination of the
+   time in seconds and microseconds, the pid and the ppid.  Of these,
+   only the microseconds is hard to determine by someone who
+   (a) can watch your packets on the network and
+   (b) has access to any account on the system running netscape.
+
+   Even if (b) is not satisfied, the time can often be obtained from
+   the time or daytime network daemons; an approximation to the pid can
+   sometimes be obtained from a mail daemon (the pid is part of most
+   Message-ID's); the ppid will usually be not much smaller than the pid,
+   and has an higher than average chance of being 1.  Clever guessing
+   of these values will in all likelihood cut the expected search space
+   down to less than brute-forcing a 40-bit key, and certainly is less
+   than brute-forcing a 128-bit key.
+
+   Subsequent https: connections after the first (even to different hosts)
+   seem to _not_ reseed the RNG.  This makes things much easier, once
+   you've broken the first message.  Just keep generating 16 bytes of
+   random numbers until you get the challenge-data for the next message.
+   The next key will then be the 16 random bytes after that.
+
+   main() and bits of MD5Transform1 by Ian Goldberg &lt;iang@cs.berkeley.edu&gt;
+   and David Wagner &lt;daw@cs.berkeley.edu&gt;.  The rest is taken from the
+   standard MD5 code; see below.
+
+   This code seems to want to run on a big-endian machine.  There may be
+   other problems as well.  This code is provided as-is; if it causes you
+   to lose your data, sleep, civil liberties, or SO, that's your problem.
+
+#include &lt;std/disclaimer.h&gt;
+
+   On the command line, give the time in seconds, the pid, the ppid and
+   the SSL challenge data (each byte in hex, separated by some non-hex
+   character like a colon) of the _first_ SSL message generated by
+   the instance of netscape.  This program will search through the
+   microsecond values.  You may need to run it again with a slightly
+   different value for the seconds, depending on how accurately you know
+   the time on the system running netscape.  The output will be the
+   master key (all 16 bytes; note you never even told the program the
+   11 bytes you knew) and the value for the microseconds that produced it.
+
+   As a benchmark, this code runs in just under 25 seconds real time
+   (for an unsuccessful search through 1&lt;&lt;20 values for the microseconds)
+   on an unloaded HP 712/80.
+*/
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01133" HREF="msg01133.html">Re: Netscape SSL implementation cracked!</A></STRONG>
+<UL><LI><EM>From:</EM> Black Unicorn &lt;unicorn@polaris.mindport.net&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="01134" HREF="msg01134.html">Re: Netscape SSL implementation cracked!</A></STRONG>
+<UL><LI><EM>From:</EM> "Perry E. Metzger" &lt;perry@piermont.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="01131" HREF="msg01131.html">Re: Netscape SSL implementation cracked!</A></STRONG>
+<UL><LI><EM>From:</EM> Kevin L Prigge &lt;klp@gold.tc.umn.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01119.html">Central Banking for the 21st Century -- Thurs 28Sep, San Fran</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01133.html">Re: Netscape SSL implementation cracked!</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01119.html">Central Banking for the 21st Century -- Thurs 28Sep, San Fran</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01133.html">Re: Netscape SSL implementation cracked!</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01127"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01127"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

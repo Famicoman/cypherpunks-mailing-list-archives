@@ -1,0 +1,163 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Counting bits -->
+<!--X-From-R13: Wna Tnedhune <vsneduneNynhery.bpf.zd.rqh.nh> -->
+<!--X-Date: Wed, 6 Jul 94 23:48:51 PDT -->
+<!--X-Message-Id: 199407070647.AA12059@laurel.ocs.mq.edu.au -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Counting bits</TITLE>
+<LINK REV="made" HREF="mailto:ifarqhar@laurel.ocs.mq.edu.au">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00338.html">Date Prev</A>][<A HREF="msg00389.html">Date Next</A>][<A HREF="msg00337.html">Thread Prev</A>][<A HREF="msg00361.html">Thread Next</A>][<A HREF="index.html#00388">Date Index</A>][<A HREF="threads.html#00388">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Counting bits</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Counting bits</LI>
+<LI><em>From</em>: Ian Farquhar &lt;<A HREF="mailto:ifarqhar@laurel.ocs.mq.edu.au">ifarqhar@laurel.ocs.mq.edu.au</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 7 Jul 1994 16:47:27 +1000 (EST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+&gt;Just for entertainment value, I clipped your function and compiled it
+&gt;with Turbo C++ 1.01 in default (ANSI C) mode.  Here's the .asm code
+&gt;produced (comments and setup code edited for brevity)
+
+Both Sun C and GCC on a Sun SPARC system running 4.1.3 produced this code
+for each bit-count line (-O4 optimization used):
+
+L77042:
+        andcc   %o0,2,%g0		; AND the bit
+        bne,a   L77044			; branch/anull if zero
+        inc     %o5			; increment bitcount
+L77044:
+
+This, I believe, is as optimized as it is possible to get on a uniprocessor
+machine.
+
+On both compilers, the routine size was 28 instructions total, and that
+would also be the maximum path length for the execution of this routine
+when passed an ASCII 255 value.
+
+A MIPS-based DECserver running Ultrix 7.1 produced this (again, -O4):
+
+$34:
+        lb      $11, 0($sp)		; Load the byte off the stack
+        and     $12, $11, 16		; AND the bit
+        beq     $12, 0, $35		; branch/anull if zero
+        addu    $3, $3, 1		; increment bitcount
+$35:
+
+Total instruction count was 28.  This is non-optimal, as there is no
+need to reload off the top of the stack on every line, and if so 
+modified it would be equivalently efficient to the SPARC implementation.
+
+On a Cray Y-MP/EL running UNICOS 7.0.6 (-O3, which is equivalent to
+- -hinline3,scalar3,task3,vector3):
+
+L5          =               P.*
+            S7              2		; Move 2 into S7
+            S0              S2&amp;S7	; S0 = S2 AND S7
+            JSZ             L6		; Jump to L6 if the bit was zero
+            S7              1		; Move 1 into S7
+            S1              S1+S7	; Up the bitcount in S1
+L6          =               P.*                             ;               9
+
+Note that the Cray C compiler (or indeed any C compiler I know of) is not
+yet capable of recognising the option of using the population count
+instruction here, because it is nearly impossible to determine what this
+particular routine is doing.  Even so, the total instruction count is
+80, which is somewhat excessive.  The "Move 1 into S7" could probably
+be eliminated by using another scalar register, and I suspect (but don't
+have the manual here so I cannot confirm) that they'd be better not
+to reload the mask every line, but instead to load it once and shift.
+Additionally, you could probably vectorise this, but I doubt it would
+buy you much.
+
+Anyway, that's an analysis of three high end architectures on this
+code fragment.  Personally I feel that a lookup table would be a MUCH
+more efficient implementation for most systems which lack population
+count, even for words up to 20 bits or so in size (depending on your storage
+requirements and latency at accessing main memory, of course).
+
+Enjoy.  One of these days I will get back to my project of implementing
+crypto primatives in CAL, but I do not have the time right now.
+BTW, folks, playing around with this is fun.  I still believe that either
+the SKIPJACK interim reports Cray-implementation timing figures were
+wrong, or the conditions under which the program was compiled was
+incorrect (most likely), or that SKIPJACK contains no s-boxes.
+Take your pick.
+
+						Ian.
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3
+
+iQCVAgUBLhukvdCZASdT8NoBAQHe/wQAzW/zmoiiAz9vswLO5kQcs6TSoAhIK7SM
+1hTrvbXTbNwrnK2FyhC4nZaUPIjnZufOeCoQPs1DJNsCZ1q6Gx1nlVj/hTyBUxYr
+THQ9ZLOUFruSDa18enx4J1iSrliBeoGcV0CuGRxClNoFrDkYedzRS0nN+m/rq35W
+Vcsk0HFxq0g=
+=Wpri
+-----END PGP SIGNATURE-----
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00361" HREF="msg00361.html">Re: Counting bits</A></STRONG>
+<UL><LI><EM>From:</EM> sommerfeld@orchard.medford.ma.us (Bill Sommerfeld)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00338.html">RE: Kevin Mitnik</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00389.html">Need help in Russia...............</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00337.html">Re: Counting bits</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00361.html">Re: Counting bits</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00388"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00388"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

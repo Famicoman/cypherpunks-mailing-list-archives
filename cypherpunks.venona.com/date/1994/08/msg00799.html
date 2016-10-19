@@ -1,0 +1,231 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: timestamp.c -->
+<!--X-From-R13: jrvqnvNrfxvzb.pbz (Irv Rnv) -->
+<!--X-Date: Fri, 19 Aug 94 01:43:08 PDT -->
+<!--X-Message-Id: 199408190842.AA06174@eskimo.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>timestamp.c</TITLE>
+<LINK REV="made" HREF="mailto:weidai@eskimo.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00800.html">Date Prev</A>][<A HREF="msg00813.html">Date Next</A>][<A HREF="msg00812.html">Thread Prev</A>][<A HREF="msg00813.html">Thread Next</A>][<A HREF="index.html#00799">Date Index</A>][<A HREF="threads.html#00799">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>timestamp.c</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: timestamp.c              </LI>
+<LI><em>From</em>: <A HREF="mailto:weidai@eskimo.com">weidai@eskimo.com</A> (Wei Dai)</LI>
+<LI><em>Date</em>: Fri, 19 Aug 1994 01:42:55 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+To: cypherpunks@toad.com
+
+-----BEGIN PGP SIGNED MESSAGE-----
+
+/* timestamp.c - Automatic PGP Time Stamper v0.1
+*  by
+*  Wei Dai &lt;weidai@eskimo.com&gt;
+*
+*       Put the line "|timestamp" in your .forward file, and this
+*  program will automaticly scan all your mail for a certain subject heading
+*  and if found, will sign the body of that mail with PGP, and send it back.
+*  Otherwise, the mail goes to your regular mailbox.
+*  This is probably most useful as a "trusted" time stamping service.
+*
+*  Use for experimental purposes only.  Feel free to modify it, but please
+*  send me some e-mail if you do more than change the #defines.
+*/
+
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;fcntl.h&gt;
+
+#define MAILBOX "/usr/spool/mail/weidai"
+#define MAILLOCK "/usr/spool/mail/weidai.lock"
+#define PGPPATH "/u/w/weidai/.pgp"
+#define LOG "/u/w/weidai/.timestamp.log"
+
+#define COMMAND "Time Stamp This Mail"
+#define MAXLINE 1024
+#define FROM "From "
+#define SUBJECT "Subject: "
+
+void Remove_nl (char *);
+
+main()
+{
+        char sLine[MAXLINE], sFrom[255], sFile[255], sTmp[255];
+        char *p;
+        FILE *fOut, *fMail, *fLog;
+        int bDoIt, fd;
+
+        fLog = fopen(LOG, "a");
+
+        sprintf(sFile, "/tmp/pts_%d", getpid());
+        fOut = fopen(sFile, "w");
+
+        sFrom[0]=0;
+
+        while (fgets(sLine, MAXLINE, stdin) != NULL)
+        {
+                fputs(sLine, fOut);
+                if (strncmp(sLine, FROM, strlen(FROM)) == 0)
+                {
+                        fputs(sLine, fLog);
+                        for (p = sLine + strlen(FROM); *p &amp;&amp; *p != ' '; ++p);
+                        *p = '\0';
+                        strcpy(sFrom, sLine+strlen(FROM));
+                        Remove_nl(sFrom);
+                }
+                else if (strncmp(sLine, SUBJECT, strlen(SUBJECT)) == 0)
+                {
+                        fputs(sLine, fLog);
+                        bDoIt = (strncasecmp(sLine+strlen(SUBJECT), COMMAND, str
+                }
+                else if (strlen(sLine) &lt;= 1)
+                        break;
+        }
+
+
+        if (sFrom[0]==0)
+                bDoIt=0;
+
+        if (bDoIt)
+        {
+                fclose(fOut);
+                fOut = fopen(sFile, "w");
+
+                while (fgets(sLine, MAXLINE, stdin) != NULL)
+                        fputs(sLine, fOut);
+                fclose(fOut);
+
+                sprisFile);
+                system(sTmp);
+                fputs(sTmp, fLog);
+                fputs("\n", fLog);
+                unlink(sFile);
+
+                sprintf(sTmp, "/usr/ucb/mail -s 'Time Stamp Output' '%s' &lt; %s.as
+                system(sTmp);
+                fputs(sTmp, fLog);
+                fputs("\n", fLog);
+                sprintf(sTmp, "%s.asc", sFile);
+                unlink(sTmp);
+
+                fputs("*** time stamped ***********\n\n", fLog);
+        }
+        else
+        {
+                while (fgets(sLine, MAXLINE, stdin) != NULL)
+                        fputs(sLine, fOut);
+                fclose(fOut);
+
+                while ( (fd=open(MAILLOCK, 0)) != -1)
+                {
+                        close(fd);
+                        sleep(5);
+                }
+                fd=creat(MAILLOCK, 0600);
+                close(fd);
+
+                fOut=fopen(MAILBOX, "a");
+                fMail=fopen(sFile, "r");
+                while (fgets(sLine, MAXLINE, fMail) != NULL)
+                        fputs(sLine, fOut);
+                fputs("\n", fOut);
+                fclose(fMail);
+                fclose(fOut);
+
+                unlink(MAILLOCK);
+                unlink(sFile);
+
+                fputs("--- personal mail -----------\n\n", fLog);
+        }
+        fclose(fLog);
+        return(0);
+}
+
+
+void Remove_nl (char *string)
+{
+        int i=0;
+
+        while(string[i]!='\n' &amp;&amp; string[i]!=0)
+                i++;
+
+        string[i]=0;
+}
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.3a
+
+iQCVAgUBLlRcjjl0sXKgdnV5AQEv2AQAid9urvFjtaQjPYvpqcwhWLy8CCH2OI+O
+9mWNnubDZuReH97upNvFYWbDQkFew2Gjfbsj7RwrYSe85gQm+RV0F+/ud64lTCe1
+eoPuFrBy2kXugbtJVtp+HB2BGSNc2GtgxIfc61Z3x3E6F4eDagZxtAn2m3ht9Vib
+n41IQtRk1uA=
+=ojFS
+-----END PGP SIGNATURE-----
+
+
+PGP Public Key available
+
+                   
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00800.html">trusted time stamping</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00813.html">15 years!</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00812.html">trusted time stamping</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00813.html">15 years!</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00799"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00799"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

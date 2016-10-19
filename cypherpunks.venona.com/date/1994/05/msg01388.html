@@ -1,0 +1,392 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Patches to make PGP2.3a compatible with 2.6 -->
+<!--X-From-R13: Oyna Pneergg <oneerggNqnvfl.rr.haq.np.mn> -->
+<!--X-Date: Wed, 25 May 94 09:31:40 PDT -->
+<!--X-Message-Id: Pine.3.89.9405251813.P180&#45;0100000@newdaisy.ee.und.ac.za -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Patches to make PGP2.3a compatible with 2.6</TITLE>
+<LINK REV="made" HREF="mailto:barrett@daisy.ee.und.ac.za">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01349.html">Date Prev</A>][<A HREF="msg01368.html">Date Next</A>][<A HREF="msg01372.html">Thread Prev</A>][<A HREF="msg01400.html">Thread Next</A>][<A HREF="index.html#01388">Date Index</A>][<A HREF="threads.html#01388">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Patches to make PGP2.3a compatible with 2.6</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Patches to make PGP2.3a compatible with 2.6</LI>
+<LI><em>From</em>: Alan Barrett &lt;<A HREF="mailto:barrett@daisy.ee.und.ac.za">barrett@daisy.ee.und.ac.za</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 25 May 1994 18:30:50 +0200 (GMT+0200)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Here's a set of patches relative to PGP 2.3a to make it do the following:
+
+  * Display and accept hexadecimal key IDs with 8 digits.
+
+  * Accept input "packets" with version 2 or 3.
+
+  * Produce output "packets" with either version 2 or 3, under control
+    of the new "version_byte" variable in the config file or on the
+    command line.
+
+  * Produce ASCII armour (or "armor" for USAans) with an desired version
+    string, under control of the new "armor_version" variable in the
+    config file or on the command line.
+
+This stuff needs testing and documentation.  No warranty, etc.
+Please send comments to me.
+
+If it works the way I hope, then
+
+	pgp +armor_version=2.6 +version+byte=2
+
+should be compatible with MIT PGP 2.6 before September, and
+
+	pgp +armor_version=2.6 +version+byte=2
+
+should be compatible with MIT PGP 2.6 after September.
+
+Enjoy,
+- --apb (Alan Barrett)
+
+diff -u3 -r pgp/src/armor.c pgp-apb/src/armor.c
+- --- pgp/src/armor.c	Sat Jul  3 00:32:38 1993
++++ pgp-apb/src/armor.c	Wed May 25 17:38:32 1994
+@@ -29,6 +29,8 @@
+ #include "crypto.h"
+ #include "armor.h"
+ 
++char armor_version[20] = "";	/* version text in armor output */
++
+ static int dpem_file(char *infile, char *outfile);
+ static crcword crchware(byte ch, crcword poly, crcword accum);
+ static int pem_file(char *infilename, char *outfilename, char *clearfilename);
+@@ -508,7 +510,8 @@
+ 	else
+ 		fprintf (outFile, "-----BEGIN PGP MESSAGE, PART %02d/%02d-----\n",
+ 					1, noSections);
+- -	fprintf (outFile, "Version: %s\n",rel_version);
++	fprintf (outFile, "Version: %s\n", (armor_version[0] != '\0' ?
++					    armor_version : rel_version));
+ 	fprintf (outFile, "\n");
+ 
+ 	init_crc();
+diff -u3 -r pgp/src/config.c pgp-apb/src/config.c
+- --- pgp/src/config.c	Mon Jun 14 02:44:57 1993
++++ pgp-apb/src/config.c	Wed May 25 18:00:33 1994
+@@ -84,7 +84,7 @@
+ 	MYNAME, TEXTMODE, TMP, TZFIX, VERBOSE, BAKRING,
+ 	ARMORLINES, COMPLETES_NEEDED, MARGINALS_NEEDED, PAGER,
+ 	CERT_DEPTH, CHARSET, CLEAR, SELF_ENCRYPT,
+- -	INTERACTIVE, PKCS_COMPAT,
++	INTERACTIVE, PKCS_COMPAT, ARMOR_VERSION, VERSION_BYTE,
+ 	/* options below this line can only be used as command line
+ 	 * "long" options */
+ #define CONFIG_INTRINSICS	BATCHMODE
+@@ -96,7 +96,7 @@
+ 	"MYNAME", "TEXTMODE", "TMP", "TZFIX", "VERBOSE", "BAKRING",
+ 	"ARMORLINES", "COMPLETES_NEEDED", "MARGINALS_NEEDED", "PAGER",
+ 	"CERT_DEPTH", "CHARSET", "CLEARSIG", "ENCRYPTTOSELF", 
+- -	"INTERACTIVE", "PKCS_COMPAT",
++	"INTERACTIVE", "PKCS_COMPAT", "ARMOR_VERSION", "VERSION_BYTE",
+ 	/* command line only */
+ 	"BATCHMODE", "FORCE",
+ };
+@@ -106,7 +106,7 @@
+ 	STRING, BOOL, STRING, NUMERIC, NUMERIC, STRING,
+ 	NUMERIC, NUMERIC, NUMERIC, STRING,
+ 	NUMERIC, STRING, BOOL, BOOL,
+- -	BOOL, NUMERIC,
++	BOOL, NUMERIC, STRING, NUMERIC,
+ 	/* command line only */
+ 	BOOL, BOOL,
+ };
+@@ -392,6 +392,20 @@
+ 				
+ 			case INTERACTIVE:
+ 				interactive_add = flag;
++				break;
++
++			case ARMOR_VERSION:
++				strncpy(armor_version, str,
++					sizeof(armor_version));
++				armor_version[sizeof(armor_version)-1] = '\0';
++				break;
++
++			case VERSION_BYTE:
++				version_byte = value;
++				if (version_byte &lt; VERSION_BYTE_MIN)
++					version_byte = VERSION_BYTE_MIN;
++				if (version_byte &gt; VERSION_BYTE_MAX)
++					version_byte = VERSION_BYTE_MAX;
+ 				break;
+ 				
+ 			case BATCHMODE: batchmode = flag; break;
+diff -u3 -r pgp/src/crypto.c pgp-apb/src/crypto.c
+- --- pgp/src/crypto.c	Fri Jul  2 23:55:07 1993
++++ pgp-apb/src/crypto.c	Wed May 25 17:53:53 1994
+@@ -59,6 +59,7 @@
+ 
+ #define	USE_LITERAL2
+ 
++int version_byte = VERSION_BYTE_DEFAULT;	/* PGP packet format version */
+ 
+ /* This variable stores the md5 hash of the current file, if it is
+    available.  It is used in open_strong_pseudorandom. */
+@@ -313,7 +314,15 @@
+  */
+ int
+ version_error(int val, int checkval)
+- -{	if (val != checkval)
++{	return version_range_error(val, checkval, checkval);
++}
++
++/* Return nonzero if val isn't in range from minval to maxval, after
++ * printing a warning.
++ */
++int
++version_range_error(int val, int minval, int maxval)
++{	if (val &lt; minval || val &gt; maxval)
+ 	{	fprintf (pgpout, PSTR(
+ "\n\007Unsupported packet format - you need a newer version of PGP for this file.\n"));
+ 		return(1);
+@@ -786,7 +795,7 @@
+ 	put_word16((word16) ske_length, certificate+certificate_length);
+ 	certificate_length+=2;	/* advance past word */
+ 
+- -	certificate[certificate_length++] = VERSION_BYTE;
++	certificate[certificate_length++] = version_byte;
+ 
+ 	/* Begin fields that are included in MD calculation... */
+ 
+@@ -1367,7 +1376,7 @@
+ 		goto badcert;	/* complain and return bad status */
+ 
+ 	version = *certificate++;
+- -	if (version_error(version, VERSION_BYTE))
++	if (version_range_error(version, VERSION_BYTE_MIN, VERSION_BYTE_MAX))
+ 		goto err1;
+ 
+ 	mdlensave = mdlen = *certificate++;	/* length of material to be added to MD */
+@@ -1807,7 +1816,7 @@
+ 		goto badcert2;	/* complain and return bad status */
+ 
+ 	version = *certificate++;
+- -	if (version_error(version, VERSION_BYTE))
++	if (version_range_error(version, VERSION_BYTE_MIN, VERSION_BYTE_MAX))
+ 		goto err2;
+ 
+ 	mdlensave = mdlen = *certificate++;	/* length of material to be added to MD */
+@@ -2361,7 +2370,7 @@
+ 			       FALSE);
+ 		
+ 		/* Write version byte */
+- -		ver = VERSION_BYTE;
++		ver = version_byte;
+ 		fwrite (&amp;ver, 1, 1, g);
+ 		
+ 		writekeyID( n, g );	
+@@ -2745,7 +2754,8 @@
+ 
+ 		/* Read and check version */
+ 		fread (&amp;ver, 1, 1, f);
+- -		if (version_error(ver, VERSION_BYTE))
++		if (version_range_error(ver, VERSION_BYTE_MIN,
++					VERSION_BYTE_MAX))
+ 			{	fclose (f);
+ 				return (-1);
+ 			}
+diff -u3 -r pgp/src/crypto.h pgp-apb/src/crypto.h
+- --- pgp/src/crypto.h	Mon May 10 01:38:27 1993
++++ pgp-apb/src/crypto.h	Wed May 25 17:11:46 1994
+@@ -75,6 +75,9 @@
+ /* Print an error message and return nonzero if val != checkval */
+ int version_error (int val, int checkval);
+ 
++/* Print an error message and return nonzero if val not in [minval..maxval] */
++int version_range_error (int val, int minval, int maxval);
++
+ int check_key_sig(FILE *fkey, long fpkey, int keypktlen, char *keyuserid,
+ 	 FILE *fsig, long fpsig, char *keyfile, char *siguserid, byte *xtimestamp,
+ 	 byte *sigclass);
+diff -u3 -r pgp/src/keymgmt.c pgp-apb/src/keymgmt.c
+- --- pgp/src/keymgmt.c	Wed Jun 23 22:53:53 1993
++++ pgp-apb/src/keymgmt.c	Wed May 25 18:06:31 1994
+@@ -137,7 +137,7 @@
+ 	char		*bufptr;	/* ptr to Key ID string */
+ 	static char	keyIDbuf[2*KEYFRAGSIZE+1];
+ 
+- -	/*	only show bottom 3 bytes of keyID	*/
++	/*	only show bottom 4 bytes of keyID	*/
+ 
+ 	bufptr = keyIDbuf;
+ 	
+@@ -156,7 +156,7 @@
+ 	**	MSB-first keyID format
+ 	*/
+ 
+- -	for (i = KEYFRAGSIZE-3; i &lt; KEYFRAGSIZE; i++)
++	for (i = KEYFRAGSIZE-4; i &lt; KEYFRAGSIZE; i++)
+ 		{
+ 		sprintf( bufptr, "%02X", keyID[i] );
+ 		bufptr += 2;
+@@ -302,7 +302,7 @@
+ 	fwrite(&amp;ctb,1,1,f);		/* write key certificate header byte */
+ 	convert(cert_length);	/* convert to external byteorder */
+ 	fwrite(&amp;cert_length,1,sizeof(cert_length),f);
+- -	version = VERSION_BYTE;
++	version = version_byte;
+ 	fwrite(&amp;version,1,1,f);		/* set version number */
+ 	convert_byteorder(timestamp,4);	/* convert to external form */
+ 	fwrite(timestamp,1,4,f); /* write certificate timestamp */
+@@ -467,7 +467,8 @@
+ 	else if (is_ctb_type (ctb, CTB_SKE_TYPE))
+ 	{	if (sigkeyID)
+ 		{	fread(&amp;version,1,1,f);		/* Read version of sig packet */
+- -			if (version_error(version, VERSION_BYTE))
++			if (version_range_error(version, VERSION_BYTE_MIN,
++						VERSION_BYTE_MAX))
+ 				SKIP_RETURN(-6);			/* Need a later version */
+ 			/* Skip timestamp, validity period, and type byte */
+ 			fread(&amp;mdlen, 1, 1, f);
+@@ -493,7 +494,7 @@
+ 	if (n != NULL)
+ 		set_precision(MAX_UNIT_PRECISION);	/* safest opening assumption */
+ 	fread(&amp;version,1,1,f);	/* read and check version */
+- -	if (version_error(version, VERSION_BYTE))
++	if (version_range_error(version, VERSION_BYTE_MIN, VERSION_BYTE_MAX))
+ 		SKIP_RETURN(-6);			/* Need a later version */
+ 	if (timestamp)
+ 	{	fread(timestamp,1,SIZEOF_TIMESTAMP,f);	/* read certificate timestamp */
+@@ -1214,10 +1215,10 @@
+ 	}
+ 
+ /*	Here's a good format for display of key or signature certificates:
+- -Type bits/keyID   Date       User ID
+- -pub  1024/xxxxxx yyyy-mm-dd  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+- -sec   512/xxxxxx yyyy-mm-dd  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+- -sig   384/xxxxxx yyyy-mm-dd  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
++Type bits/keyID     Date       User ID
++pub  1024/xxxxxxxx yyyy-mm-dd  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
++sec   512/xxxxxxxx yyyy-mm-dd  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
++sig   384/xxxxxxxx yyyy-mm-dd  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ */
+ 
+ 	if (moreflag)
+@@ -1406,7 +1407,7 @@
+ 			if (mcguffin &amp;&amp; strlen(mcguffin) &gt; 0)
+ 				fprintf(pgpout,PSTR(", looking for user ID \"%s\"."),LOCAL_CHARSET(mcguffin));
+ 		}
+- -		fprintf(pgpout,PSTR("\nType bits/keyID   Date       User ID\n"));
++		fprintf(pgpout,PSTR("\nType bits/keyID     Date       User ID\n"));
+ 	}
+ 	for ( ; ; )
+ 	{	long fpos = ftell(f);
+diff -u3 -r pgp/src/pgp.h pgp-apb/src/pgp.h
+- --- pgp/src/pgp.h	Fri Jun 11 09:44:11 1993
++++ pgp-apb/src/pgp.h	Wed May 25 17:33:27 1994
+@@ -118,7 +118,9 @@
+ #define CK_ENCRYPTED_BYTE	2	/* Conventional key is encrypted */
+ 
+ /* Version byte for data structures created by this version of PGP */
+- -#define	VERSION_BYTE		2	/* PGP2 */
++#define	VERSION_BYTE_MIN	2	/* PGP2 to 2.5 */
++#define	VERSION_BYTE_MAX	3	/* PGP2.6 */
++#define	VERSION_BYTE_DEFAULT	2	/* PGP2 */
+ 
+ /* Values for trust bits in keycntrl packet after key packet */
+ #define	KC_OWNERTRUST_MASK		0x07	/* Trust bits for key owner */
+@@ -230,6 +232,8 @@
+ extern int compl_min;	/* number of fully trusted signatures needed */
+ extern int max_cert_depth;
+ extern char pager[];	/* file lister command */
++extern char armor_version[20];	/* version text in armor output */
++extern int version_byte;	/* PGP packet format version */
+ 
+ /* These lists store hashed passwords for future use. */
+ /* passwds are passwords of as-yet-unknown purpose; keypasswds
+diff -u3 -r pgp/src/zipup.c pgp-apb/src/zipup.c
+- --- pgp/src/zipup.c	Mon May 10 01:39:19 1993
++++ pgp-apb/src/zipup.c	Wed May 25 17:49:09 1994
+@@ -37,7 +37,7 @@
+ #    define fhow (O_RDONLY|O_BINARY)
+ #  else /* !MSDOS */
+ #ifndef AMIGA
+- -     long lseek();
++     off_t lseek();
+ #endif /* AMIGA */
+ #    define fhow 0
+ #  endif /* ?MSDOS */
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.whatever
+
+iQCVAgUBLeN86t7alOJsS1cfAQFS1gQArASHvKV51lLRIuaSiyAqF6h9XXQpalZo
+jdeZpoCC7P8oEe4inKNbtmFqPcQl8uTVlpTdUxJeErDLxSoDXlw04csW6gNssaFL
+07+DpXqoogrOV9+kaPflNl+U3O1EWEDMGG064uDSSgJXLldYs8gGONOWpMV3EqZr
+tdQzYgc0rBM=
+=wsTt
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01400" HREF="msg01400.html">Re: Patches to make PGP2.3a compatible with 2.6</A></STRONG>
+<UL><LI><EM>From:</EM> rel@lipo.st.co.at (Roland E. Lipovits)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01349.html">Re: Graph isomorphism based PK cryptosystems?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01368.html">Re: Graph isomorphism based PK cryptosystems?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01372.html">Re: Trust Models</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01400.html">Re: Patches to make PGP2.3a compatible with 2.6</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01388"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01388"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,196 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: crypto technique -->
+<!--X-From-R13: uhturfNnu.pbz (Sevp Vhturf) -->
+<!--X-Date: Fri, 22 Oct 93 18:32:59 PDT -->
+<!--X-Message-Id: 9310230129.AA01896@ah.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: crypto technique</TITLE>
+<LINK REV="made" HREF="mailto:hughes@ah.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01065.html">Date Prev</A>][<A HREF="msg01074.html">Date Next</A>][<A HREF="msg00940.html">Thread Prev</A>][<A HREF="msg00729.html">Thread Next</A>][<A HREF="index.html#01068">Date Index</A>][<A HREF="threads.html#01068">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: crypto technique</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: crypto technique</LI>
+<LI><em>From</em>: <A HREF="mailto:hughes@ah.com">hughes@ah.com</A> (Eric Hughes)</LI>
+<LI><em>Date</em>: Fri, 22 Oct 93 18:29:43 -0700</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I've looked at Matthew Ghio's encryption technique and have some
+comments.  First let me summarize the system.
+
+private key: a sequence of polynomial functions f_1, f_2 ... f_n of the
+  form a_i x (x+1)/2 + b_i, where a_i is odd.
+
+public key: the composition of these functions f(x) = f_1 ( f_2 ( ... f_n(x)))
+  and a modulus P = 2^k
+
+plaintext: a value 't'
+
+ciphertext: the value u = f(t)
+
+decryption: finding t such that f(t)=u, by using of the f_i
+
+
+Matthew has repeatedly claimed that it can't be broken.  Now one of
+the first rules of cipher design is don't claim that unless you have
+some good reason to believe that it can't be broken.  Merely saying "I
+can't figure out how" is NOT sufficient.  No flame intended, Matthew,
+this is probably the single most common failing of people interested
+in crypto.
+
+In particular, Matthew has made the claim that one must find the
+coefficients of the f_i in order to decrypt and claims that finding
+such coefficients is difficult.  He calls this operation factoring;
+properly speaking this is a 'decomposition', since the operation used
+to make f(x) is not multiplication by composition (called iteration
+when all the functions are the same).
+
+As I suspected and Karl has demonstrated, these decompositions are not
+unique.  Since the plaintext, ciphertext pair does not depend on the
+representation of the function, only upon the coefficients of the
+polynomial function which is the public key, any such decomposition
+will suffice for decryption.  In other words, you don't have to find
+how the function was created in order to decode.  All you need is some
+way of inverting the polynomial function f(x).
+
+Note that I am using the phrase polynomial function here, and not just
+the word polynomial.  There is a big difference.  Polynomial functions
+are real functions with a domain and range.  Polynomials are elements
+of a ring created by adjoining an indeterminate 'x' to some ring.
+Polynomials can be 'evaluated' as polynomial functions under some
+circumstances, but not always.
+
+A side note.  The function Matthew picks, 1/2 x(x+1) is not, properly
+speaking, a function with coefficients in Z/2^k (integers mod 2^k).
+It is, however, a coefficient in Z/2^{k+1}
+
+There's one significant difference for the purposes of this proposed
+cipher: polynomials have arbitrarily large degree, but every
+polynomial function over a finite ring (such as integers mod N) is
+equal to some polynomial function of finite degree.  One can see this
+easily be recalling Fermat's little theorem a^N == a (mod N).  Thus
+x^N == x (mod N) for polynomial functions, which limits the degree.
+
+Matthew has proposed that arbitrarily many compositions will give a
+function which can't be inverted.  This is certainly not the case if N
+= 2^k as he proposes.  The following relation holds for all integers
+n &gt; 0 and for all integers t:
+
+	2^{2^n - 1} | \Product_{i=0}^{2^n - 1} ( t + i )
+
+What this means is that as the 2^k grows larger, the maximum degree of
+the polynomial functions grows as 'k', not as 2^k.  In other words,
+the degree grows as the logarithm of the modulus, or linearly in the
+number of bits in the modulus, if you prefer.  This is certainly not a
+good sign.
+
+Recommendation: don't use N=2^k.
+
+It's a general rule of cryptosystems that if you use 2^k moduli to
+speed your encryption, you will also speed the attack, and not just
+from increased speed, but from algebraic properties of these moduli.
+There have been some spectacular failures in this regard, notably a
+chip which was built to do modular exponention for a particular 2^k
+which was later found to be totally insecure.
+
+Another property which decreases the security of the scheme is that
+polynomials over Z/2^k don't have unique factorization.  Therefore the
+polynomial functions don't have unique representations.  For example
+
+	(x+1)(x+3) = (x+5)(x+7) (mod 8)
+	(x+2)(x+4) = x (x+6) (mod 8)
+	x (x+1)(x+2)(x+3) = 0 (mod 8) (from the expression above)
+
+This makes it all the easier to invert the polynomial.  The reason
+that you don't have unique factorization is that Z/2^k has zero
+divisors: 2 x 4 = 0 (mod 8), so two divides zero.  The presence of
+zero divisors means that you don't get unique factorization.
+
+There is, however, a twist.  If you don't even see the zero-divisors,
+you can pretend they aren't there.  This is exactly what RSA does,
+since if you find a multiple of one of the factors of the modulus,
+you've broken the system.
+
+But if you use a modulus of the form pq, you're basically using RSA!
+RSA picks a particularly easy polynomial function to invert, namely
+f(x) = x^e.  Other polynomials would work as well, and, in fact,
+appear in the patent application, albeit without examples.
+
+Now if you pick a prime modulus, you don't have a public key system
+anymore.  This is the Hellman-Pohlig patent, which uses x^e (mod p) as
+its encryption.  In this scheme 'p' is kept secret, since otherwise
+the exponentiation could be reversed.
+
+In short, I don't think Matthew's scheme can be made to work.  There
+is an open question about how the base field increases with each
+composition because of the presence of the 1/2, but I don't think
+currently that this makes it work.
+
+For a specific reference, see the collection _Cryptology and
+Computational Number Theory_ which contains an essay by Kevin McCurley
+"Odds and Ends from Computational Number Theory."  Section 3 of this
+essay discusses the breaking of some similar schemes by some
+non-obvious means.  I quote: "Moreover, it holds a valuable lesson for
+those who tend to believe that a computational problem is difficult
+just because the only apparent solution is difficult."
+
+Eric
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01065.html">Re: Subliminal Channels (jsteg)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01074.html">random dot stereo</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00940.html">Re: crypto technique</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00729.html">digital cash/legal tender</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01068"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01068"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

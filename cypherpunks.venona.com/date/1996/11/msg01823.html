@@ -1,0 +1,202 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: anonymous proxy server in 100 lines of Perl (fwd) -->
+<!--X-From-R13: [negva Vnzvygba <znegvaNzeey.yhg.np.hx> -->
+<!--X-Date: Thu, 21 Nov 1996 00:37:14 &#45;0800 (PST) -->
+<!--X-Message-Id: 199611210837.IAA15346@gizmo.lut.ac.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>anonymous proxy server in 100 lines of Perl (fwd)</TITLE>
+<LINK REV="made" HREF="mailto:martin@mrrl.lut.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01809.html">Date Prev</A>][<A HREF="msg01870.html">Date Next</A>][<A HREF="msg01773.html">Thread Prev</A>][<A HREF="msg01870.html">Thread Next</A>][<A HREF="index.html#01823">Date Index</A>][<A HREF="threads.html#01823">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>anonymous proxy server in 100 lines of Perl (fwd)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: anonymous proxy server in 100 lines of Perl (fwd)</LI>
+<LI><em>From</em>: Martin Hamilton &lt;<A HREF="mailto:martin@mrrl.lut.ac.uk">martin@mrrl.lut.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 21 Nov 1996 08:37:01 +0000</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I'm sure this could be squeezed onto one line.  Sheesh - comments even! :-)
+
+Martin
+
+------- Forwarded Message
+
+From: Randal Schwartz &lt;merlyn@stonehenge.com&gt;
+To: libwww-perl@ics.UCI.EDU
+Subject: anonymous proxy server in 100 lines of Perl
+Date: 20 Nov 1996 20:21:43 -0700
+
+
+No cookies.  No referer.  No From.  All we need is a dozen of these
+around the planet. :-)
+
+Gisle, thanks.  You truly are "the wizard of aas". :-)
+
+And yes, this is the code for the next Web Techniques magazine column.
+
+#!/home/merlyn/bin/perl -Tw
+use strict;
+$ENV{PATH} = join ":", qw(/usr/ucb /bin /usr/bin);
+$|++;
+
+## Copyright (c) 1996 by Randal L. Schwartz
+## This program is free software; you can redistribute it
+## and/or modify it under the same terms as Perl itself.
+
+## Anonymous HTTP proxy (handles http:, gopher:, ftp:)
+## requires LWP 5.04 or later
+
+my $HOST = "localhost";
+my $PORT = "8008";
+
+sub prefix {
+  my $now = localtime;
+
+  join "", map { "[$now] [${$}] $_\n" } split /\n/, join "", @_;
+}
+
+$SIG{__WARN__} = sub { warn prefix @_ };
+$SIG{__DIE__} = sub { die prefix @_ };
+$SIG{CLD} = $SIG{CHLD} = sub { wait; };
+
+my $AGENT;			# global user agent (for efficiency)
+BEGIN {
+  use LWP::UserAgent;
+
+  @MyAgent::ISA = qw(LWP::UserAgent); # set inheritance
+
+  $AGENT = MyAgent-&gt;new;
+  $AGENT-&gt;agent("anon/0.07");
+  $AGENT-&gt;env_proxy;
+}
+
+sub MyAgent::redirect_ok { 0 } # redirects should pass through
+
+{				### MAIN ###
+  use HTTP::Daemon;
+
+  my $master = new HTTP::Daemon
+    LocalAddr =&gt; $HOST, LocalPort =&gt; $PORT;
+  warn "set your proxy to &lt;URL:", $master-&gt;url, "&gt;";
+  my $slave;
+  &amp;handle_connection($slave) while $slave = $master-&gt;accept;
+  exit 0;
+}				### END MAIN ###
+
+sub handle_connection {
+  my $connection = shift;	# HTTP::Daemon::ClientConn
+
+  my $pid = fork;
+  if ($pid) {			# spawn OK, and I'm the parent
+    close $connection;
+    return;
+  }
+  ## spawn failed, or I'm a good child
+  my $request = $connection-&gt;get_request;
+  if (defined($request)) {
+    my $response = &amp;fetch_request($request);
+    $connection-&gt;send_response($response);
+    close $connection;
+  }
+  exit 0 if defined $pid;	# exit if I'm a good child with a good parent
+}
+
+sub fetch_request {
+  my $request = shift;		# HTTP::Request
+
+  use HTTP::Response;
+
+  my $url = $request-&gt;url;
+  warn "fetching $url";
+  if ($url-&gt;scheme !~ /^(http|gopher|ftp)$/) {
+    my $res = HTTP::Response-&gt;new(403, "Forbidden");
+    $res-&gt;content("bad scheme: @{[$url-&gt;scheme]}\n");
+    $res;
+  } elsif (not $url-&gt;rel-&gt;netloc) {
+    my $res = HTTP::Response-&gt;new(403, "Forbidden");
+    $res-&gt;content("relative URL not permitted\n");
+    $res;
+  } else {
+    &amp;fetch_validated_request($request);
+  }
+}
+
+sub fetch_validated_request {
+  my $request = shift;	# HTTP::Request
+
+  ## uses global $AGENT
+
+  ## warn "orig request: &lt;&lt;&lt;", $request-&gt;headers_as_string, "&gt;&gt;&gt;";
+  $request-&gt;remove_header(qw(User-Agent From Referer Cookie));
+  ## warn "anon request: &lt;&lt;&lt;", $request-&gt;headers_as_string, "&gt;&gt;&gt;";
+  my $response = $AGENT-&gt;request($request);
+  ## warn "orig response: &lt;&lt;&lt;", $response-&gt;headers_as_string, "&gt;&gt;&gt;";
+  $response-&gt;remove_header(qw(Set-Cookie));
+  ## warn "anon response: &lt;&lt;&lt;", $response-&gt;headers_as_string, "&gt;&gt;&gt;";
+  $response;
+}
+
+
+------- End of Forwarded Message
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01809.html">Better ways to spy</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01870.html">Draft OECD crypto guidelines on WWW</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01773.html">Re: The Limey PUNK needs TERMINATED</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01870.html">Draft OECD crypto guidelines on WWW</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01823"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01823"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

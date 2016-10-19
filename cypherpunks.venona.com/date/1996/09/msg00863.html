@@ -1,0 +1,181 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Can you trust your ISP ?? -->
+<!--X-From-R13: "W~avtb Ubamnyrm" <arkhfNnqi.rf> -->
+<!--X-Date: Tue, 10 Sep 1996 11:28:32 +0800 -->
+<!--X-Message-Id: 3234A158.3492@adv.es -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Can you trust your ISP ??</TITLE>
+<LINK REV="made" HREF="mailto:nexus@adv.es">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00814.html">Date Prev</A>][<A HREF="msg00838.html">Date Next</A>][<A HREF="msg00859.html">Thread Prev</A>][<A HREF="msg00826.html">Thread Next</A>][<A HREF="index.html#00863">Date Index</A>][<A HREF="threads.html#00863">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Can you trust your ISP ??</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:best%2Dof%2Dsecurity@suburbia.net">best-of-security@suburbia.net</A></LI>
+<LI><em>Subject</em>: Can you trust your ISP ??</LI>
+<LI><em>From</em>: "I~nigo Gonzalez" &lt;<A HREF="mailto:nexus@adv.es">nexus@adv.es</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 10 Sep 1996 00:59:36 +0200</LI>
+<LI><em>CC</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Newsgroups</em>: sci.crypt,comp.security.misc</LI>
+<LI><em>Organization</em>: ADV Internet</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Hello, 
+   I'm thinking about how can I get rid off this kind of attack *before* it 
+happens. Can you please send me your comments about this? I don't know so 
+much about the how SSL works, but I think this is something that can 
+happen...
+
+SCENARIO
+--------
+
+1) Suppose We have a host with https protocol enabled, and someone 
+outside wish to access the information we have on the server via https; 
+but (for some reason wich we don't know), the connection has to be made 
+through the Gateway named X (see plain diagram below):
+                                 
+     Outside &lt;-------------&gt; Gateway X &lt;---------------&gt; Our Server
+
+2) I think that when a Secure Socket Layer connection begin this is what it 
+happens:
+
+  a) Outside generates a private/public key pair and he send us
+     his public key, wich has to go through Gateway X, who send 
+     it to Our Server.
+
+  b) Our Server generates his own private/public key pair and send
+     his public key (whether it's sent ciphered or not doesn't 
+     matter... yet).
+
+  c) Now both parts have their response public keys, ciphered
+     transaction begins. 
+
+All seems to be fine, but...
+
+3) Suppose that We don't trust on what's going on through the line, and 
+that IN FACT, someone in Gateway X is disturbing our communications like 
+this:
+
+  a) When Outside's public key comes to the gateway, Gateway X generates
+     a public/private key pair (wich we will call spoofed keys),
+     and it send a spoofed IP header marked as from "Outside" in order
+     to act as "Outside" for "Our Server".
+
+  b) Once "Our server" send his public key, "Gateway X" intercept the
+     packet, decrypts it if necessary (because it has the private key
+     needed to decrypt it), and it send "Outside" the public spoofed
+     key (remember what it did on stpe a?).
+
+  c) Now transaction takes place through "Gateway X", wich can read
+     modify, and fake any data because it has now the ability to act
+     as the other side to both "Outside" and "Our Server"...
+
+Avoid the problem:
+
+   - The *only* think I can figure out to avoid the menace is to have a 
+certified (Verisign and others) public key with a short expiration date.
+
+  Of course this approach has a little problem: *how* can I verify that 
+once expired "Our Server's" public key is really "Our Server's" key... a 
+Certification Authority is something worth of spoofing... ;-) Maybe the 
+best thing could be becoming my own certification authority... but how!?
+
+  If for *some* reason the above cannot be done, the a simple way to avoid 
+too much trouble is to limit transactions to just *atomic* transactions 
+(checking account and getting some money are two different transactions). 
+This can still be spoofed if "Gateway X" makes its own transaction with 
+faked Outside's keys. Of course, We must limit the tansactions we accept in 
+"Our Server". Notice that a password and challenges are useless in this 
+kind of situations.
+
+¿Any other way? maybe we can get somethig a bit safer if we found something 
+fixed, inmutable and rely on it (acting like some kind of virtual 
+communication channel between Outside and Our Server:
+
+                             Untrusted
+     Outside &lt;-------------&gt; Gateway X &lt;---------------&gt; Our Server
+        ^                                                     ^
+        |                                                     |
+        \-------- Virtual secure communication channel -------/
+
+       
+If every message "Outside" send to "Our Server" must have a response, then 
+we could make "Our Server" send responses with some good (well tought) 
+cryptographic technique wich will refer somehow to "Outside's" message 
+fingerprint.
+
+I mean, every message from the Outside must have a message signature (i.e 
+message must pass through MD5); and its response must have a valid 
+"Response to: &lt;query's MD5 signature&gt;" and (of course) that response must 
+be signed somehow. I still don't know how to do it well; but I will tell 
+you how as soon as I will know.
+
+Thank you for wasting your time reading this.
+--
+  Iñigo González - ADV Internet Technical Advisor &lt;nexus@adv.es&gt;
+  "Never say anything online that you wouldn't want to see on the
+  front page of The New York Times." - alt.2600.moderated Posting
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00826" HREF="msg00826.html">Re: BoS: Can you trust your ISP ??</A></STRONG>
+<UL><LI><EM>From:</EM> Eric Murray &lt;ericm@lne.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00814.html">Re: Anonymous phone calls (was: What is the EFF doing exactly?)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00838.html">Re: talker [is illiterate</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00859.html">U.S. Presidential Odds Are In</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00826.html">Re: BoS: Can you trust your ISP ??</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00863"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00863"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,160 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Magic Money gripes -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Sun, 13 Mar 94 22:20:02 PST -->
+<!--X-Message-Id: 199403140620.WAA25305@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Magic Money gripes</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00534.html">Date Prev</A>][<A HREF="msg00561.html">Date Next</A>][<A HREF="msg00534.html">Thread Prev</A>][<A HREF="msg00561.html">Thread Next</A>][<A HREF="index.html#00559">Date Index</A>][<A HREF="threads.html#00559">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Magic Money gripes</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Magic Money gripes</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 13 Mar 1994 22:20:53 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I hate to complain.  Magic Money is something that people have been asking
+for for a long time, and it's a very nice implementation.  A lot of aspects
+have been really well thought out, particularly the money aging and replace-
+ment.  But I've been playing with it off and on lately and there are some
+improvements needed IMO.
+
+I'll just assume interested readers know how the program works and jump
+right into it.
+
+ - The program handles encryption of messages to and from the bank auto-
+   matically, but makes the user have to handle encryption of messages to
+   other people.  I can see some justification for this - maybe the message
+   (that is, a coins.dat file) will be sent via secure means like a direct
+   or IR connection, so encryption is not needed.  But most of the time it
+   is needed, in which case the user has to use PGP or something as a sep-
+   arate step.
+
+ - The program distinguishes between bank messages, which are signed blinded
+   coins, and user messages, which are raw coins, by whether they are in
+   ASCII text or not.  This is not the significant distinction between these
+   two kinds of messages.
+
+ - Bank messages look just like other PGP messages.  But the user has to
+   know not to try to run them through PGP and instead give them directly to
+   the MM program un-decrypted.  The only way he can tell is to notice that
+   the sender address is the bank.  If the bank ever sends him a real coin
+   file (which it may to prime the pump) then the user just has to know
+   to treat these messages differently.
+
+ - There is no way to know which bank an incoming coin file is for.  I think
+   this is one of the biggest weaknesses of the system.  If more than one
+   bank is competing I have to know which bank a given coin file is
+   associated with and go to that directory to process that coin file.
+
+ - There is no way to put coin files directly into your allcoins.dat file.
+   There are a couple of cases in which you might want to do this.  First,
+   you might pay out some coins and then change your mind before sending
+   them, and want to put them back.  Or second, you might receive some coins
+   from a trustworthy person (your mum, say) and just want to add them
+   without going through the bank.
+
+ - More generally, it is difficult to use the program in a safe way which
+   deals robustly with errors of various types.  When I was first building
+   the program I had some bugs which caused coins to appear to be double-
+   spent, to not signature-check properly, to not be found in the proto file,
+   etc.  The program did not appear to handle all of these errors safely,
+   sometimes aborting in the middle of a file.
+   In addition, the program always calls its output files coins.dat and
+   output.asc.  If you run it twice without renaming these files you can
+   lose data and lose money.  Then, when you send the files, you need to
+   manually keep backups in case the email fails.  Again, otherwise you will
+   lose money.
+
+ - The money data structures do not allow for expansion.  I'd like to see a
+   way of adding new fields in the future which will be ignored by older
+   versions of the program.  For example, in regard to the above, I'd like
+   to see a "bank email address" and possibly a bank key added to the
+   coins.dat file.  Then you could mail the coins to someone without including
+   a lot of out-of-band data about the bank they were for.  It would be nice
+   if this could be done without totally breaking the current program.  At
+   a minimum a version number could be stuck at the front so that old programs
+   would recommend that users upgrade.
+
+ - The program uses PGP algorithms and data structures, but not its files.
+   The bank's key and user's keys are kept in separate files.  There might
+   be advantages in putting these keys into PGP's regular files.  Also, the
+   random number generation in PGP looks stronger than MM, since it keeps
+   much more state from run to run.  MM seeds based on a very, very elementary
+   hash on a file called rand.dat, which will tend to be fixed, and the time
+   of day.
+
+ - None of the MM files are encrypted on the disk.  The money files could
+   be stolen by someone with access to your computer, and your secret key
+   used for communications with the bank could be stolen as well.  This
+   would be a major security flaw in some situations.
+
+Having made these complaints, let me reiterate that I am very pleased with
+this program overall.  I also appreciate mpd@netcom.com's efforts in running
+a server.  I have built a Mac client for MM which is not too mac-like but
+lets you drag-n-drop incoming files onto the MM icon and it handles them
+right.  I'll tweak that a little more then upload it with the other clients.
+
+Hal
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00534.html">Cypherpunk meetings.  The next step.</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00561.html">I hate to nitpick, but...</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00534.html">Cypherpunk meetings.  The next step.</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00561.html">I hate to nitpick, but...</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00559"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00559"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,211 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: IDEA and timing attacks -->
+<!--X-From-R13: Pvyy Egrjneg <ovyyfgrjnegNjbeyqarg.ngg.arg> -->
+<!--X-Date: Sat, 31 Aug 1996 19:29:24 +0800 -->
+<!--X-Message-Id: 3228024F.1C1A@worldnet.att.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: RDPyBl2.jmkelsey@delphi.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>IDEA and timing attacks</TITLE>
+<LINK REV="made" HREF="mailto:billstewart@worldnet.att.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02362.html">Date Prev</A>][<A HREF="msg02366.html">Date Next</A>][<A HREF="msg02362.html">Thread Prev</A>][<A HREF="msg02366.html">Thread Next</A>][<A HREF="index.html#02361">Date Index</A>][<A HREF="threads.html#02361">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>IDEA and timing attacks</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: IDEA and timing attacks</LI>
+<LI><em>From</em>: Bill Stewart &lt;<A HREF="mailto:billstewart@worldnet.att.net">billstewart@worldnet.att.net</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 31 Aug 1996 02:13:51 -0700</LI>
+<LI><em>Organization</em>: http://www.idiom.com/~wcs</LI>
+<LI><em>References</em>: &lt;RDPyBl2.jmkelsey@delphi.com&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+John Kelsey &lt;jmkelsey@delphi.com&gt; wrote in sci.crypt
+&gt; 
+&gt; -----BEGIN PGP SIGNED MESSAGE-----
+&gt; 
+&gt; [ To: sci.crypt ## Date: 08/24/96 03:11 am ##
+&gt;   Subject: IDEA and Timing Attacks ]
+&gt; 
+&gt; I'm still kind-of recovering from this year's Crypto conference, but
+&gt; I told several people I would post this.  At the rump session this
+&gt; year, I presented an arguably practical timing attack on many
+&gt; implementations of IDEA.  There are actually two attacks available,
+&gt; but one requires extremely fine timing results.  After I gave the
+&gt; presentation, Willi Meier told me he had independently found the
+&gt; same results, and had implemented the full attack (which I hadn't
+&gt; yet done).
+&gt; 
+&gt; There are two different attacks.  The most practical is an
+&gt; adaptive chosen-plaintext attack, which requires about 5*n*2^{16}
+&gt; chosen plaintexts (read ``five n times two to the sixteenth''),
+&gt; where the parameter n depends on the precision of timings available
+&gt; and the timing variability of the implementation.  The second attack
+&gt; is ciphertext-only, but requires timing measurements precise enough
+&gt; to detect the difference between a single multiply of a zero vs.
+&gt; nonzero value.  It requires about 5*n*2^{16} values, as well.
+&gt; 
+&gt; The basic idea behind the attack is as follows:  in many
+&gt; implementations, a zero input into the multiply operation is handled
+&gt; by an if statement, and so does not cause a multiply instruction to
+&gt; actually be executed.  The result on a 486 is that it is
+&gt; significantly faster to multiply by a zero rather than a nonzero
+&gt; value.  This timing difference gives us a really nice way to learn
+&gt; information about the internal values of the cipher.
+&gt; 
+&gt; This presentation is necessarily not very good, since I can't embed
+&gt; a diagram here.  If you have a copy of _Applied Cryptography_, then
+&gt; turn to the section on IDEA (page 321 in the hardback version of the
+&gt; second edition).  The diagram shows one round of IDEA, and then
+&gt; (after the ellipses) the output transformation.
+&gt; 
+&gt; The chosen plaintext attack works as follows:
+&gt; 
+&gt; 1.   Build a run of n*2^{16} chosen plaintexts, by choosing a
+&gt; single value for X_1, and choosing n of each possible value for X_3,
+&gt; with X_2 and X_4 taking on values at random.  Time the encryption of
+&gt; each batch of n plaintexts with the same X_3 value.
+&gt; 
+&gt; 2.   Choose a new value for X_1, and then build another run of
+&gt; chosen plaintexts exactly as above.
+&gt; 
+&gt; 3.   For each of these two runs, if the value of Z_5 is not zero,
+&gt; there should be a different value for X_3 that gives the lowest
+&gt; encryption time.  (These are the values that force the input to the
+&gt; multiply with Z_5 to be zero.)  Call these X_3 and X_3'.  This gives
+&gt; us two equations in two unknowns, and we can solve for it with a
+&gt; 32-bit brute-force search.  (There may be faster ways, as well.)
+&gt; 
+&gt;      (X_1 (*) Z_1) = (X_3 + Z_3)
+&gt;      (X_1'(*) Z_1) = (X_3'+ Z_3)
+&gt; 
+&gt; We now have recovered Z_1 and Z_3.
+&gt; 
+&gt; 4.   Let's call the input to the multiply with Z_5 A.  We can use
+&gt; knowledge of Z_1 and Z_3 to force A to keep the same value.  We then
+&gt; choose three new runs of chosen plaintexts, each containing 2^{16}
+&gt; batches of n plaintexts apiece.  Each of these ensures that A and
+&gt; X_2 are kept constant, so that we wind up three difference values
+&gt; for A, X_2 and X_4 which correspond to zero inputs into the multiply
+&gt; with Z_6.  This means that we wind up with three equations in three
+&gt; unknowns.
+&gt; 
+&gt;      (A  (*) Z_5) + ((Z_2 + X_2  ) XOR (Z_4 (*) X_4  )) = 0
+&gt;      (A' (*) Z_5) + ((Z_2 + X_2' ) XOR (Z_4 (*) X_4' )) = 0
+&gt;      (A''(*) Z_5) + ((Z_2 + X_2'') XOR (Z_4 (*) X_4'')) = 0.
+&gt; 
+&gt; This can be solved with a 48-bit brute force search (there are
+&gt; probably faster ways).  We now have 80 bits of IDEA's key, and can
+&gt; brute-force search the remaining 48 bits.
+&gt; 
+&gt; Note that this is actually an adaptive chosen-plaintext attack as
+&gt; described.  I'm pretty sure this can be turned into a proper
+&gt; chosen-plaintext attack with some work, and I'll probably be hacking
+&gt; on this in the next few weeks, as time allows.
+&gt; 
+&gt; The ciphertext only attack is simpler in some ways.  The first 32
+&gt; bits are extremely easy to recover--find the average time to encrypt
+&gt; blocks with each value in their first and last 16 bits, and then
+&gt; solve for the subkey values that would be necessary for those
+&gt; multiplies to have zeros as their inputs.  Next, we look for a
+&gt; correlation between low encryption times and the values for Z_3 in
+&gt; the output transformation that would result in zero inputs into the
+&gt; previous round's MA box multiply.  Finally, we attack the second
+&gt; multiply in that MA box, using all four output values.  The
+&gt; approximate computational difficulty is 2^{48}, as before.
+&gt; 
+&gt; There are other timing attacks on IDEA.  We gave one in our paper at
+&gt; Crypto this year (the one on related-key cryptanalysis of several
+&gt; ciphers, by Bruce Schneier, David Wagner, and me), and the
+&gt; related-key timing attack is where I got the idea to try a timing
+&gt; attack on the whole cipher.
+&gt; 
+&gt; All timing attacks are implementation-dependent to some extent.  On
+&gt; a Pentium, I suspect the timing attack will be considerably harder.
+&gt; (One person I discussed the attack with said he thought it would
+&gt; take longer to do the conditional branch for the if statement than
+&gt; to do the multiply, so we might have zero multiplies taking more
+&gt; rather than less time.)
+&gt; 
+&gt; Most applications aren't really susceptible to timing attacks,
+&gt; because of the way they're used.  In addition, chosen-plaintext
+&gt; attacks on block ciphers are pretty nicely thwarted by using CBC or
+&gt; CFB modes.  It is probably also possible to implement IDEA so that
+&gt; it executes in constant time.  I should point out that it is *NOT*
+&gt; enough either to add random delays (which fall out if you add more
+&gt; samples), nor to just get rid of the big timing difference with zero
+&gt; inputs (though that will make timing attacks somewhat more
+&gt; difficult).  As long as internal (secret) information is being
+&gt; leaked by timing, the cipher is probably vulnerable to some kind of
+&gt; timing attack.
+&gt; 
+&gt;    --John Kelsey, jmkelsey@delphi.com / kelsey@counterpane.com
+&gt;  PGP 2.6 fingerprint = 4FE2 F421 100F BB0A 03D1 FE06 A435 7E36
+&gt; 
+&gt; -----BEGIN PGP SIGNATURE-----
+&gt; Version: 2.6.2
+&gt; 
+&gt; iQCVAwUBMh7GKEHx57Ag8goBAQEqGQQApXRQUMWz3gpJIwGrLbVhcgcpSMXyrq0g
+&gt; iTi2qjH7dJjmWugpLnbm18XHzOPZMKizdZ/gin1O3Rk89dXfqK4sIICwY3QmkwFR
+&gt; ZQ2My4mTUn27ibjAjZTDuvxLXnqqoOFRrMUTQGIlMTCZdBooSWrif+pTLQbIsoPr
+&gt; saHlDl2bWts=
+&gt; =tWIq
+&gt; -----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02362.html">FWD: Re: Tiger?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02366.html">Local Obscenity Regulations</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02362.html">FWD: Re: Tiger?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02366.html">Local Obscenity Regulations</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02361"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02361"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,137 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: p&#45;NEW digital signatures -->
+<!--X-From-R13: Yrag Pevttf <72124.3234Npbzchfreir.pbz> -->
+<!--X-Date: Sat, 13 Jan 1996 08:43:48 +0800 -->
+<!--X-Message-Id: 960112182626_72124.3234_EHJ93&#45;1@CompuServe.COM -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>p-NEW digital signatures</TITLE>
+<LINK REV="made" HREF="mailto:72124.3234@compuserve.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00801.html">Date Prev</A>][<A HREF="msg00816.html">Date Next</A>][<A HREF="msg00814.html">Thread Prev</A>][<A HREF="msg00782.html">Thread Next</A>][<A HREF="index.html#00794">Date Index</A>][<A HREF="threads.html#00794">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>p-NEW digital signatures</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: cypherpunks &lt;<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>&gt;</LI>
+<LI><em>Subject</em>: p-NEW digital signatures</LI>
+<LI><em>From</em>: Kent Briggs &lt;<A HREF="mailto:72124.3234@compuserve.com">72124.3234@compuserve.com</A>&gt;</LI>
+<LI><em>Date</em>: 12 Jan 96 13:26:26 EST</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I've been experimenting with discrete logarithm digital signatures.  Schneier
+describes a scheme call p-NEW on page 498 of "AP" (2nd ed).
+It has the advantage of not requiring an inverse calculation via the extended
+Euclid algorithm.  The signature is shown as:
+
+r=mg^(-k) mod p
+s=k-r'x mod q
+
+The verification equation is
+
+m=(g^s)(y^r')r mod p
+
+r'=r mod q.  If p is a strong prime then q=p-1 and r'=r.  The public key is
+y=g^x mod p.  x is the private key.  k is a random number less than q.  m is the
+message being signed.
+
+I'm confused about the negative k value in the r equation.  This would lead to
+1/g^k which is a fractional number.  It seems the equation should be:
+
+r=mg^(q-k) mod p
+
+Or, I can rearrange both equations like this:
+
+r=mg^k mod p
+s=-k-rx mod p
+
+To avoid using negative numbers in the mod function, I can calc s as:
+
+s=q-((k+rx) mod q)
+
+I tried this with some small integers and the numbers work out.  The s
+calculation will be quick since there is no exponentiation.  Most of the time
+spent in signing a message will be the r calculation.  However, the the
+verification equation [m=(g^s)(y^r)r mod p] has two exponentiation calculations
+and will take more time.
+
+Since a message is only signed once but could be verified many times, I could
+precompute rg^s during the signing:
+
+r=mg^k mod p
+s=q-((k+rx) mod q)
+z=rg^s mod p
+
+s is discarded and the signature is r and z.  The verification is:
+
+m=zy^r mod p
+
+This slows down the signing but speeds up the verification.  Here's the $64K
+question:  Does this compromise the signature's security?
+
+Kent Briggs
+kbriggs@execpc.com
+CIS: 72124,3234
+  
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00782" HREF="msg00782.html">Re: p-NEW digital signatures</A></STRONG>
+<UL><LI><EM>From:</EM> ghio@c2.org (Matthew Ghio)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00801.html">Re: Novel use of Usenet and remailers to mailbomb from luzskru@cpcnet.com</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00816.html">Re: PRZ grand jury - how about free accts for them...</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00814.html">CDT Policy Post No.34 - Victory for Zimmermann, Fundamental Privacy Issues Remain</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00782.html">Re: p-NEW digital signatures</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00794"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00794"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

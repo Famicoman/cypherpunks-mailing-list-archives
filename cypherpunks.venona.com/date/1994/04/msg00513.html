@@ -1,0 +1,164 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: New anon mailer idea? -->
+<!--X-From-R13: "tgbnyNtgbny.pbz" <tgbnyNcvmmnobk.qrzba.pb.hx> -->
+<!--X-Date: Mon, 11 Apr 94 21:59:24 PDT -->
+<!--X-Message-Id: 9404120451.AA29748@pizzabox.demon.co.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: New anon mailer idea?</TITLE>
+<LINK REV="made" HREF="mailto:gtoal@pizzabox.demon.co.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00500.html">Date Prev</A>][<A HREF="msg00503.html">Date Next</A>][<A HREF="msg00506.html">Thread Prev</A>][<A HREF="msg00583.html">Thread Next</A>][<A HREF="index.html#00513">Date Index</A>][<A HREF="threads.html#00513">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: New anon mailer idea?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: New anon mailer idea?</LI>
+<LI><em>From</em>: "<A HREF="mailto:gtoal@gtoal.com">gtoal@gtoal.com</A>" &lt;<A HREF="mailto:gtoal@pizzabox.demon.co.uk">gtoal@pizzabox.demon.co.uk</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 12 Apr 94 04:51:23 GMT</LI>
+<LI><em>Reply-To</em>: Graham Toal &lt;<A HREF="mailto:gtoal@pizzabox.demon.co.uk">gtoal@pizzabox.demon.co.uk</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Following up my own post, because I'm rather pleased with it and have had
+some more ideas... :-)
+
+: I want to mail fred@somesite anonymously.  I know fred@somesite's
+: public key.  I encrypt my message for fred, then send it to a
+: remailer address with instructions to pass it on to fred.  For a little
+: eavesdropping security, I include an anonymous pgp key of mine
+: in the mail to fred so that he can reply to me without the remailer
+: operators reading his mail.  You can choose your favourite syntax
+: for how I ask the remailer to send this mail to fred - I don't care
+: what it is.
+
+: The remailer then encrypts *my reply mail address* with the remailers own
+: key, and inserts this as a header in the mail which only it can read.
+: It attaches a little message to this header saying 'when you reply to
+: this message, be sure to include this opaque header I'm giving
+: you here...'
+
+: The recipient gets the mail, decodes it, reads it, and replies.
+: (Maybe encrypted with an anonymous public key I included in the
+: mail, maybe in cleartext - doesn't matter for the scheme) When
+: he replies, he included the small encrypted block that the remailer
+: gave him at the top of his message, as he was asked to do by the
+: remailer.
+
+: The reply goes to the anonymous remailer.  The anonymous remailer
+: decrypts the header block that it searches the mail for, and
+: extracts my email address from it again.  The remailer then passes
+: the mail back to me - this time including an encrypted block with
+: the fred@somesite's address in it.  (Or some other address if
+: fred replied from another account; or perhaps I mailed a mail
+: to news gateway - well, my encrypted address will still work
+: even if a dozen people reply to the news article by mailing
+: via the remailer, and now I *don't* know who the encrypted
+: sender is)
+
+: In this way, once a conversation has been established, replies
+: can keep going backwards and forwards without much fancy protocol
+: at all - all you ever do is remember not to delete the encrypted
+: block that the remailer keeps inserting at the top of your mail.
+
+
+I've thought of another thing that cypherpunks like that this scheme can do:
+return postage.  Where the remailer encrypts the reply address and puts
+it in the body of the destination mail, so that the adressee can reply,
+I'd been assuming a public key system like pgp, just because that's what
+we're used to.  But in fact the encryption is entirely private to the
+remailer and might as well be secret key like DES.
+
+So instead of having a single master key, let's use a key that's generated
+for each message.  So, the remailer encrypts the return block with a secret
+DES key, and includes something like the MD5 hash of the DES key in
+cleartext so that it can find the correct DES key when the reply comes
+back.  (Hmmm.  doesn't have to be the md5 hash - could even be the filename
+that stores the key - yeah, that works better...)
+
+Anyway, we now have a way of doing postage.  Let's say that the outgoing
+message was to a mail2news gateway, and the sender asked for a limit of
+10 replies.  Then as each reply comes in, the reply count stored in the
+file that holds the DES key is decremented to 0, and when it hits 0 the
+file is deleted.  Unless the remailer operator made illicit backups, that
+return address can *never* be used again - it may be out there on the
+net in an encrypted version, but *no-one* can now decrypt it.
+
+More likely you'd use this feature to guarantee single-shot replies.
+
+Similarly, the same thing can be applied to timed-expiry keys - the file
+storing the DES key can be removed after a certain time has elapsed.  If
+you post a message on some timely event, you arrange that only answers
+posted in the next 48 hours will be delivered - anything that arrives
+too late is bounced by the remailer. I can see *lots* of uses for this
+feature :-)  One nice use of this is to foil traffic analysis - if you
+send off something to someone with a reply address and force an
+immediate reply, they don't have time to get stuff in place to watch
+all the feed sites and follow a message through the net if they later
+want to trace who you are by sending you lots of mail (a technique I
+realised would work against Julf's mailer) - as soon as one of the
+remailer-chain's keys has expired (and been deleted), that part of
+the routing is permanently broken.
+
+Couple this implementation of postage-limitation with the Magic-money stuff
+for payment and I think we have quite a nice extension of the cypherpunk
+mailing ethos.  I wonder if it could be hacked in to the existing
+remailers?  Anyone interested?
+
+G
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00500.html">RE: Shot 'Round the World</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00503.html">Cyber PsyOps (Re: Shot)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00506.html">New anon mailer idea?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00583.html">Re: New anon mailer idea?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00513"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00513"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

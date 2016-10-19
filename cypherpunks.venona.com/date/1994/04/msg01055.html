@@ -1,0 +1,187 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: remailers -->
+<!--X-From-R13: Enzrre <fnzrreNfbqn.orexryrl.rqh> -->
+<!--X-Date: Wed, 20 Apr 94 18:55:08 PDT -->
+<!--X-Message-Id: m0ptnzT&#45;00010yC@infinity.hip.berkeley.edu -->
+<!--X-Content-Type: text -->
+<!--X-Reference: 199404210139.AA06941@access1.digex.net -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: remailers</TITLE>
+<LINK REV="made" HREF="mailto:sameer@soda.berkeley.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01054.html">Date Prev</A>][<A HREF="msg01070.html">Date Next</A>][<A HREF="msg01064.html">Thread Prev</A>][<A HREF="msg01212.html">Thread Next</A>][<A HREF="index.html#01055">Date Index</A>][<A HREF="threads.html#01055">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: remailers</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:unicorn@access.digex.net">unicorn@access.digex.net</A> (Black Unicorn)</LI>
+<LI><em>Subject</em>: Re: remailers</LI>
+<LI><em>From</em>: Sameer &lt;<A HREF="mailto:sameer@soda.berkeley.edu">sameer@soda.berkeley.edu</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 20 Apr 1994 18:55:41 -0700 (PDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01064.html">199404210139.AA06941@access1.digex.net</A>&gt; from "Black Unicorn" at Apr 20, 94 09:39:53 pm</LI>
+<LI><em>Pgp-Strong-Print</em>: 3C AE E4 00 C2 6A 81 FF  49 4E EE 0C CD CD 1D 80</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Black Unicorn spake:
+&gt; 
+&gt; 
+&gt; 
+&gt; For some reason I have not been able to get any of the remailers to
+&gt; work with PGP encryption.
+&gt; 
+&gt; In addition, the ping figures at the end of the soda finger file
+&gt; don't seem to have changed since I first looked at them some
+&gt; days ago.... is this just me?
+&gt; 
+
+	No, the ping-thing is actually turned off. ;-(.
+	Should probably start that up once again..
+
+&gt; Is anyone out there chaining with PGP supporting remailers?
+
+	I wrote a perl script which does chaining.. it follows
+
+#!/usr/bin/perl
+$home = $ENV{'HOME'};
+$pgpdir = $home . "/.psuedo";
+$pgpexe = "PGPPATH=$pgpdir pgp " ;
+$tmp = "/tmp/out.$$" ;
+$oldfile = "/tmp/oldfile.$$" ;
+@REMAILERS = ('hal@alumni.caltech.edu',
+              'remail@infinity.hip.berkeley.edu',
+              'hfinney@shell.portal.com',
+              'ebrandt@jarthur.claremont.edu',
+              'catalyst@netcom.com');
+
+
+
+
+$option = $ARGV[0];
+shift;
+unshift(ARGV, '-');
+
+&amp;createapath;
+
+sub createapath
+{
+    print STDERR "Create a path--remailer list:\n";
+    $count = 0;
+    do
+    {
+        do
+        {
+            $num = 0;
+            foreach $remailer (@REMAILERS)
+            {
+                $num++;
+                print STDERR $num . ")" . $remailer . "\n" ;
+            }
+            print STDERR "Choose the next site: (or 0 to end hops) ";
+            while(&lt;&gt;)
+            {
+                $choice = $_ - 1;
+                last;
+            }
+        }
+        until ( $choice &lt; $num &amp;&amp; $choice &gt; -2 );
+        $HOP[$count] = $REMAILERS[$choice] if $choice != -1;
+        $count++;
+    }
+    until ( $choice == -1 ) ;
+
+    $count--;
+    print STDERR "Choose the destination: ";
+    while(&lt;&gt;)
+    {
+        $HOP[$count] = $_;
+        last;
+    }
+
+    while ( $count &gt; 0 )
+    {
+        open(CRYPT, "| $pgpexe -eaf $HOP[$count-1] &gt; $tmp");
+        print CRYPT "::\nAnon-To: $HOP[$count]\n\n";
+        if ( open(OLDER, $oldfile) )
+        {
+            print CRYPT &lt;OLDER&gt;;
+            close OLDER;
+        }
+        close CRYPT;
+        open (OLDER, "&gt;" . $oldfile);
+        open (CRYPTED, $tmp);
+        print OLDER "::\nEncrypted: PGP\n\n";
+        print OLDER &lt;CRYPTED&gt;;
+        close CRYPTED;
+        close OLDER;
+        $count--;
+    }
+    open (FILE,"&gt;" . $option);
+    print FILE "To: $HOP[0]\n\n";
+    open(DONE, $oldfile);
+    print FILE &lt;DONE&gt;;
+    close DONE;
+    unlink($tmp);
+    unlink($oldfile);
+}
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01064" HREF="msg01064.html">remailers</A></STRONG>
+<UL><LI><EM>From:</EM> Black Unicorn &lt;unicorn@access.digex.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01054.html">Re: Blacknet and espionage.</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01070.html">Re: Black Net</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01064.html">remailers</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01212.html">Remailers</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01055"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01055"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

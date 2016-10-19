@@ -1,0 +1,193 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: PGP 5.5 CMR/GAK: a possible solution -->
+<!--X-From-R13: znexNhavpbea.pbz -->
+<!--X-Date: Wed, 22 Oct 1997 18:10:30 +0800 -->
+<!--X-Message-Id: 877514566.20581.193.133.230.33@unicorn.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>PGP 5.5 CMR/GAK: a possible solution</TITLE>
+<LINK REV="made" HREF="mailto:mark@unicorn.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01041.html">Date Prev</A>][<A HREF="msg01044.html">Date Next</A>][<A HREF="msg01031.html">Thread Prev</A>][<A HREF="msg01037.html">Thread Next</A>][<A HREF="index.html#01034">Date Index</A>][<A HREF="threads.html#01034">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>PGP 5.5 CMR/GAK: a possible solution</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: PGP 5.5 CMR/GAK: a possible solution</LI>
+<LI><em>From</em>: <A HREF="mailto:mark@unicorn.com">mark@unicorn.com</A></LI>
+<LI><em>Date</em>: Wed, 22 Oct 1997 03:02:48 -0700 (PDT)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:jon@pgp.com">jon@pgp.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+[Posted to cypherpunks, cc:-ed to Jon Callas]
+
+You know, in the last few days I've read a lot of messages on both sides
+of this debate, and I've umm-ed and ahh-ed and slowly gone from thinking
+that what PGP are doing is evil to thinking that it's just bad. While I
+believe that Adam Back's suggestions for alternate systems are good and
+neccesary ideas for the long-term, I'm coming to the conclusion that PGP
+are heading in the right direction for the short-term, but have things
+backwards. 
+
+The current system sends out a user's personal key, with a tag to say that
+if I don't encrypt to the company as well, my mail will bounce. But think
+about this: how often do I want to send email to a particular person in a
+company, and ensure that only they see it? And how often do I want to send
+mail to a particular group inside a company? All I want is to ensure that
+I get a response from the company, I usually don't care who I talk to in the
+process.
+
+So PGP's "everything private unless you choose to make it public" system
+seems backwards. Surely what we really need to meet these customer demands
+is an "everything public (within the company) unless you choose to make it
+private" system? That is, all mail to my department inside the company
+should be encrypted to a department key, shared by all members, *unless*
+it is confidential, in which case it should *only* be encrypted to me. 
+
+Here's how I see this working: when Joe Blow joins Foo-Bah Cryptosystems,
+he creates his own personal PGP key. He also gets a copy of the department
+key, which he can use to decrypt any mail which is encrypted to his
+department; or this decryption could be handled automatically by a
+department email server to ensure that individuals never have access to the
+department's private key. PGP then creates a public key for 'Joe Blow
+&lt;joe.blow@foo-bah.com&gt;', which would be the department key with a signed tag
+linking it to his personal public key. This is the tagged corporate public
+key which he would give out to any customers. 
+
+When a customer wishes to send email to Joe, he would use this public key.
+When encrypting, PGP would detect the tag and put up a dialog box pointing
+out that this is a corporate key and if they click on the 'confidential'
+button it will be encrypted to the user's personal key prior to encrypting
+to the corporate key (by which I mean superencryption, to avoid traffic
+analysis). The default would be not to superencrypt; and as a side effect
+this system would be compatible with any version of PGP for
+non-confidential mail (assuming that version understands the encryption
+algorithms in use). 
+
+The effect of this is that if someone wants to send email about an urgent
+bug and I'm out at lunch, any of my co-workers can read that mail. But if
+they want to send *me* mail about confidential inter-company negotiations,
+the co-workers could decrypt the outer layer of the message, but would be
+blocked by the inner layer encryption to my personal key. 
+
+As I see it, this system is simple, solves the problems which PGP claim
+they need to solve without creating the snooping problems Tim and others
+have discussed, cannot easily be adapted to GAK ('This message is to be
+encrypted to the FBI public key. If it is confidential, click here to
+superencrypt to the recipient's personal key'), and won't require a
+massive change to the PGP source code. 
+
+There are some obvious security issues with having the department key
+shared amongst the members of the department, but I don't see that they
+are any worse than PGP's current CMR implementation, which has already
+discussed the use of department keys; it's certainly better than using
+plaintext. There are also problems with encrypting confidential mail to
+multiple recipients, but they're surmountable; an easy solution, if you
+don't care about traffic analysis, is to only encrypt confidential mail
+to the personal key rather than superencrypt with the corporate key. In most 
+cases such mail wouldn't be sent to multiple recipients anyway. 
+
+So here's how I'd see the simple system working:
+
+A PGP CMR key would consist of
+
+1. A corporate key; this might be company-wide, department-wide, or
+   an individual escrowed key; this choice is a seperate key-management
+   issue for the corporation.
+2. Optionally a personal key, which could only be decrypted by the
+   individual.
+3. A signature from the corporate key linking the personal key to it
+   and the specified User Id.
+4. Optional flag to indicate which key to encrypt to by default.
+5. User Id, signatures, etc
+
+When PGP was asked to encrypt to such a key, it would check for the
+optional personal key. If it wasn't there, it would put up a warning
+box to tell the user that the message can be read by people other than
+the recipient. If it is, then it would put up a dialog box allowing the
+user to choose whether to encrypt to the corporate key or the individual
+key, normally defaulting to the corporate key. This system could not easily
+become GAK because it will only encrypt to one of the keys and not both;
+the FBI could create FBI CMR keys from all our public keys, but then PGP
+would either encrypt to the FBI and I wouldn't be able to read it, or
+encrypt to me and the FBI wouldn't be able to read it.
+
+Anyone care to pick any holes?
+
+        Mark
+
+|-----------------------------------------------------------------------|
+|Mark Grant M.A., U.L.C.                       EMAIL: mark@unicorn.com  |
+|WWW: <A  HREF="http://www.unicorn.com/">http://www.unicorn.com/</A>                  MAILBOT: bot@unicorn.com |
+|-----------------------------------------------------------------------|
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01037" HREF="msg01037.html">Re: PGP 5.5 CMR/GAK: a possible solution</A></STRONG>
+<UL><LI><EM>From:</EM> amp@pobox.com</LI></UL></LI>
+<LI><STRONG><A NAME="01046" HREF="msg01046.html">shared keys, proxy encryption (was Re: PGP 5.5 CMR/GAK: a possible solution)</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Back &lt;aba@dcs.ex.ac.uk&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="01050" HREF="msg01050.html">Re: PGP 5.5 CMR/GAK: a possible solution</A></STRONG>
+<UL><LI><EM>From:</EM> Jon Callas &lt;jon@pgp.com&gt;</LI></UL></LI>
+<LI><STRONG><A NAME="01054" HREF="msg01054.html">Re: PGP 5.5 CMR/GAK: a possible solution</A></STRONG>
+<UL><LI><EM>From:</EM> Tim May &lt;tcmay@got.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01041.html">Re: SMTP Encryption Extension</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01044.html">Re: wanted dead or alive: pgp5.5 key pair</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01031.html">Re: the migration path (was Re: Your "RIGHT" to Speak to Big Brother)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01037.html">Re: PGP 5.5 CMR/GAK: a possible solution</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01034"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01034"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

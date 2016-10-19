@@ -1,0 +1,197 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: more IPG and random numbers -->
+<!--X-From-R13: Sevp [heenl <revpzNyar.pbz> -->
+<!--X-Date: Tue, 3 Dec 1996 21:25:25 &#45;0800 (PST) -->
+<!--X-Message-Id: 199612040524.VAA18488@slack.lne.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>more IPG and random numbers</TITLE>
+<LINK REV="made" HREF="mailto:ericm@lne.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00204.html">Date Prev</A>][<A HREF="msg00193.html">Date Next</A>][<A HREF="msg00189.html">Thread Prev</A>][<A HREF="msg00241.html">Thread Next</A>][<A HREF="index.html#00192">Date Index</A>][<A HREF="threads.html#00192">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>more IPG and random numbers</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: more IPG and random numbers</LI>
+<LI><em>From</em>: Eric Murray &lt;<A HREF="mailto:ericm@lne.com">ericm@lne.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 3 Dec 1996 21:24:16 -0800 (PST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+
+I did some more experiments with the IPG stream-cipher
+algorithim and random number tests.  Since IPG claim that their
+algorithim passes chi-square tests of randomness, I found
+a chi-square test program.  It's written by Peter Boucher
+and was posted to sci.crypt in '93 (&lt;2bum8sINN98j@roche.csl.sri.com&gt;).
+I found it on the web site crypto.com, sorry I don't remember the
+exact URL but I can send it on request. From the comments:
+
+
+&gt; New, and improved anal.c, uses chi-square.
+&gt; 
+&gt; Does the 'runs up' (or 'runs down') test with run-length equal to two
+&gt; get me anything over the standard chi-square test?  I left it in.
+&gt; 
+&gt; BTW, the  buf[i] = (((seed = (1103515245*seed +12345)) &gt;&gt; 16) &amp; 0xff);
+&gt; test fails this one at high numbers.  It's too evenly distributed.
+&gt; 
+&gt; -Peter
+&gt; 
+&gt; /* ***************************************************************
+&gt;  * anal.c --
+&gt;  *
+&gt;  * Copyright 1993 Peter K. Boucher
+&gt;  * Permission to use, copy, modify, and distribute this
+&gt;  * software and its documentation for any purpose and without
+&gt;  * fee is hereby granted, provided that the above copyright
+&gt;  * notice appear in all copies.
+&gt;  *
+&gt;  * Usage:  anal [input_file [output_file]]
+&gt;  *
+&gt;  * This program counts the occurances of each character in a file
+&gt;  * and notifies the user when a the distribution is too ragged or
+&gt;  * too even.
+&gt;  *
+&gt;  * Because the chance of getting byte B after byte A should be 1:256
+&gt;  * (for all A's and B's), the program also checks that the successors
+&gt;  * to each byte are randomly distributed.  This means that for each byte
+&gt;  * value (0 - 255) that occurs in the text, a count is kept of the
+&gt;  * byte value that followed in the text, and the frequency distribution
+&gt;  * of these succeeding bytes is also checked.
+&gt;  *
+&gt;  */
+ 
+ [..]
+ 
+&gt; #define Vmin    (205.33) /*  1% chance it's less */
+&gt; #define Vlo (239.39) /* 25% chance it's less */
+&gt; #define Vhi (269.88) /* 75% chance it's less */
+&gt; #define Vmax    (310.57) /* 99% chance it's less */
+&gt; 
+&gt; 
+
+
+
+First I ran the output from my version of the IPG algorithim that I
+posted a couple days ago :
+
+% ./boucher &lt; ipg.out
+Occurances:  n =  12000000, V=-8375833.71
+Character occurances non-random
+Successions: n =     46875, V=62287.82
+Character successions non-random
+
+
+Then I ran output from a test RNG that's basically a loop around random():
+
+% ./boucher &lt; myrandom/out
+Occurances:  n =   3414720, V=213050.62
+Character occurances non-random
+Successions: n =     13338, V=1143.41
+Character successions non-random
+
+As you'd expect, it doesn't look like the output from random() is all
+that great.
+
+Finally I generated some output from a random seed generator
+I wrote a while back.  It gets randomness from high-resolution timers
+and hashing system files.  It's not as fast as repeated calls to
+rand() but is faster than reading from /dev/random:
+
+% ./boucher &lt; out
+Occurances:  n =    594352, V=269.75
+================ Frequency distribution excellent! ====================
+Successions: n =      2321, V=256.12
+================= Successor randomness excellent! =====================
+
+
+So, from these tests it looks like IPGs PRNG, which their stream
+cipher is based on, is not a very good source of random values.  Hence
+anything encrypted with it is succeptable to cryptoanalysis.
+How succeptable, I do not know.  I am sort of curious, since IPG claimed
+that their PRNG produces "perfect" random data as measured by chi-square
+analysis, yet my analysis shows otherwise.  Perhaps I have coded the
+algorithim incorrectly (I don't think so, it's pretty simple).
+Or perhaps IPG chose their keys for the ABC tables carefully to
+produce good results.  Unfortunately that would mean that keys
+would have to be carefully chosen, something that's not very practical.
+
+
+Based on the work I've done, and the work Igor Chudov posted, it
+looks like the IPG algorithim is probably not very strong.  If two
+relative crypto neophytes can find serious problems with it, imagine
+what might happen if experienced cryptoanalists look at it.  If you were
+one of the people who said "it's snake oil unless it's been been
+tested for a zillion years" etc. you can pat yourself on the back now
+'cause you were right.
+
+However I think that some of us owe Mr Wood, if not an apology for the
+excessive abuse he got on this list, at least some respect for
+putting his money where his mouth is and posting his algorithims.
+Maybe he'll do some research, tone down the hype, and come back
+with something better.
+
+
+-- 
+Eric Murray  ericm@lne.com  ericm@motorcycle.com  <A  HREF="http://www.lne.com/ericm">http://www.lne.com/ericm</A>
+PGP keyid:E03F65E5 fingerprint:50 B0 A2 4C 7D 86 FC 03  92 E8 AC E6 7E 27 29 AF
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00204.html">Re: PRIVACY: X-No-Archive and mail.cypherpunks</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00193.html">RE: Counterproductive Dorothy Denning Flames</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00189.html">NEWS.COM DISPATCH December 3, 1996</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00241.html">Re: more IPG and random numbers</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00192"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00192"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

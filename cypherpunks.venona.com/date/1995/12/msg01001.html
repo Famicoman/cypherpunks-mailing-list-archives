@@ -1,0 +1,157 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: SecurIDs (was Re: Australian "calculatorcard") -->
+<!--X-From-R13: ivaNfuber.arg (Hva [pZryyna) -->
+<!--X-Date: Mon, 1 Jan 1996 03:25:59 +0800 -->
+<!--X-Message-Id: v02130500ad0c83fd970b@[198.115.179.213] -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>SecurIDs (was Re: Australian "calculatorcard")</TITLE>
+<LINK REV="made" HREF="mailto:vin@shore.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00996.html">Date Prev</A>][<A HREF="msg01002.html">Date Next</A>][<A HREF="msg01012.html">Thread Prev</A>][<A HREF="msg01002.html">Thread Next</A>][<A HREF="index.html#01001">Date Index</A>][<A HREF="threads.html#01001">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>SecurIDs (was Re: Australian "calculatorcard")</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:wb8foz@nrk.com">wb8foz@nrk.com</A></LI>
+<LI><em>Subject</em>: SecurIDs (was Re: Australian "calculatorcard")</LI>
+<LI><em>From</em>: <A HREF="mailto:vin@shore.net">vin@shore.net</A> (Vin McLellan)</LI>
+<LI><em>Date</em>: Sun, 31 Dec 1995 13:56:02 -0500</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:Alan.Pugh@internetMCI.COM">Alan.Pugh@internetMCI.COM</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+        amp &lt;Alan.Pugh@internetMCI.COM&gt; described his SecurID:
+
+&gt;&gt; sounds like the card i use for remote dialup to certain non-public
+&gt;&gt; systems i use at work. it has a six digit number on the front that
+&gt;&gt; changes every 60 seconds.
+
+        David Lesher &lt;wb8foz@nrk.com&gt; asked:
+
+&gt;Do these card systems use a window to handle clock-slip?
+
+        SDI's ACE/Server or ACE access control module (ACM) has a Progress
+RDBS built in which maintains a constantly-updated historical record of the
+_relative_ drift in a particular token's clock-chip, relative to the clock
+in the server or host.  When it receives the first identifier from a user
+(Name) submitting a SecurID authentication call, the server checks the
+database for the recorded drift and then predicts what that particular
+token will use as Current Time.  CT, together with a token-specific secret
+key, is then hashed to generate a token-code which is matched with that
+submitted by the user,  together with the user's memorized PIN.
+
+&gt;I'd think you could have the server safely accept # N, N-60 sec, and
+&gt;N+60 seconds; and adjust the server's idea of your card's clock speed
+&gt;from that.
+
+        You have it almost exactly right (or, at least, that's how SDI's
+ACE/SecurID system handles it;-) SDI throws in a couple other factors:  the
+ACE system handles Current Time in 30 or 60-second blocks (depending on the
+model of SecurID token being authenticated,) so it needs a little leeway to
+handle a token which, because of drift, slips into the next time-slot or
+the one behind.
+
+        The ACE system actually pre-calculates three token-codes -- each a
+pseudo-random number, so one will not inform your guess of another -- as it
+waits for a user's incoming authentication call to be completed.  The
+server will approve access if it receives a token code generated from
+either its _projected_ Current Time (for this particular token,) or the
+token-codes generated from Current Time plus or minus one time-slot.
+
+        When the ACE database indicates that this particular SecurID token
+has not been used in the past 60 days (many sysadmin make this 90 days) it
+also kicks in a search mode to minimize the false rejections.  In search
+mode it calculates a series of prospective card-codes, sweeping out to a
+maximum of 10 time-slots (the actual scope of the search is defined by the
+sysadmin) fore and aft of whatever the database suggests this token should
+consider Current Time.  If it finds a match between the token-code
+submitted from a long-unused SecurID and one of those calculated by the
+server in search mode, it updates its database projection for the drift of
+that particular token and then requests the use to submit another PRN
+token-code.  A search-mode "match" alone will never result in a user being
+authenticated -- it only sets him or her up for a second formal
+authentication cycle where a new PRN card-code is matched against a new set
+of three token-codes.
+
+        There are also a number of additional security devices and rules
+which the server enforces to protect against security threats, racing
+spoofs, stolen PINs, stolen tokens, etc.  The most obvious is a secured
+record of all incoming authentication calls, recorded by token-code and GMT
+time.  All incoming authentication calls are checked against this file. A
+SecurID PRN token-code is never accepted twice, and the virtual
+"time-stamp" within an incoming SecurID token-code must always be later and
+in proper sequence to all other recorded authentication calls.
+&gt;
+&gt;What new risk would that create?
+
+        If the SDI hash algorithm is of sufficient strength, very little, I
+would think.
+
+        (SDI just asked me to create an FAQ for their SecurID, so all
+queries are welcome -- on-line or off.)
+
+        Suerte,
+                        _Vin
+
+
+    Vin McLellan +The Privacy Guild+ &lt;vin@shore.net&gt;
+ 53 Nichols St., Chelsea, Ma. 02150 USA Tel: (617) 884-5548
+                &lt;*&gt;&lt;*&gt;&lt;*&gt;&lt;*&gt;&lt;*&gt;&lt;*&gt;&lt;*&gt;&lt;*&gt;&lt;*&gt;
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00996.html">Can We Cut the Crap?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01002.html">(NOISE - LONG) Re: PLA_gue Germ Terrorism</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01012.html">Re: Can We Cut the Crap?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01002.html">(NOISE - LONG) Re: PLA_gue Germ Terrorism</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01001"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01001"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

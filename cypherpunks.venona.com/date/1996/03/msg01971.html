@@ -1,0 +1,309 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Noise sphere plotter in C for X Windows -->
+<!--X-From-R13: Xrss Pneore <wrssoNfjner.pbz> -->
+<!--X-Date: Thu, 28 Mar 96 07:32:31 PST -->
+<!--X-Message-Id: 199603281506.KAA10317@jafar.sware.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199603250551.AAA22514@unix.asb.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Noise sphere plotter in C for X Windows</TITLE>
+<LINK REV="made" HREF="mailto:jeffb@sware.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01635.html">Date Prev</A>][<A HREF="msg01972.html">Date Next</A>][<A HREF="msg01399.html">Thread Prev</A>][<A HREF="msg01382.html">Thread Next</A>][<A HREF="index.html#01971">Date Index</A>][<A HREF="threads.html#01971">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Noise sphere plotter in C for X Windows</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:wlkngowl@unix.asb.com">wlkngowl@unix.asb.com</A> (Mutatis Mutantdis)</LI>
+<LI><em>Subject</em>: Noise sphere plotter in C for X Windows</LI>
+<LI><em>From</em>: Jeff Barber &lt;<A HREF="mailto:jeffb@sware.com">jeffb@sware.com</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 28 Mar 1996 10:06:18 -0500 (EST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A> (Cypherpunks List), <A HREF="mailto:coderpunks@toad.com">coderpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg01399.html">199603250551.AAA22514@unix.asb.com</A>&gt; from "Mutatis Mutantdis" at Mar 25, 96 05:38:32 am</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Mutatis Mutantdis writes:
+
+&gt; &gt;I've got a short program for the PC (w/TPascal source) that plots a 
+&gt; &gt;noise sphere from a file of (pseudo) random data, if anyone is 
+&gt; &gt;interested.  Requires a VGA card that handles mode 5Fh (640 x 480, 
+&gt; [..]
+&gt; &gt;The source has a brief explanation of what noise spheres are and a 
+&gt; &gt;reference to the Pickover article the program was based on.
+
+&gt; Somebody sent me a C++ conversion of it. It compiles fine with BCC 4.02.
+&gt; 
+&gt; Enclosed here (thanks to  "James Pate Williams, Jr." &lt;pate@mindspring.com&gt;)
+
+Here's a version of it for X Windows, translated into plain-old C. 
+
+
+-- Jeff
+                                 oo
+-----------------------------cut /\ here------------------------------
+/*
+  xnoisesph.c
+
+  Compiled on Linux with:
+  	cc -o xnoisesph xnoisesph.c -L /usr/X11R6/lib -lX11 -lm
+
+  Usage: xnoisesph file
+  Or:    xnoisesph &lt;file
+
+  Based on:
+
+  NOISESPH.PAS, A Noise Sphere plotter written in Turbo Pascal (23-Mar-96)
+  Robert Rothenburg Walking-Owl &lt;WlkngOwl@unix.asb.com&gt;
+  No copyright is claimed.  No guarantees made.
+
+  Usage: noisesph file
+
+  This program reads a file of random or pseudo-random data and plots
+  a noise sphere of the data. Poor RNGs or sampling methods will show
+  clear patterns (definite splotches or spirals).
+
+  The theory behind this is to get a set of 3D polar coordinates from
+  the RNG and plot them.  An array is kept of the values, which is
+  rotated each time a new byte is read (see the code in the main
+  procedure).
+
+  Rather than plot one sphere which can be rotated around any axis,
+  it was easier to plot the sphere from three different angles.
+
+  This program is based on a description from the article below.  It
+  was proposed as a means of testing pseudo-RNGs:
+
+  Pickover, Clifford A. 1995. "Random number generators: pretty good
+	 ones are easy to find."  The Visual Computer (1005) 11:369-377.
+*/
+
+#include &lt;X11/Xlib.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;math.h&gt;
+#include &lt;errno.h&gt;
+#include &lt;unistd.h&gt;
+
+typedef struct _Cartesian {
+  double x, y, z;
+  unsigned Color;
+} Cartesian;
+
+typedef struct _Polar {
+  double r, theta, phi;
+} Polar;
+
+double ByteToReal(unsigned char);
+unsigned int ScaleColor(double);
+int Round(double);
+void Plot(Cartesian *);
+void PolarToCartesian(Polar *, Cartesian *);
+
+int MidA, MidB, MidC, MidY, Scale;
+
+char *pgm;
+Window w;
+Display *d;
+GC gc;
+
+void
+main(int ac, char **av)
+{
+    int i;
+    char *fname;
+    FILE *inp;
+    XEvent event;
+    XExposeEvent *ee = (XExposeEvent *)&amp;event;
+    int width, height, bwidth, depth, wx, wy;
+    Window root;
+
+    pgm = basename(*av);
+    if (ac &gt; 2) {
+	fprintf(stderr, "Usage: %s [file]\n", pgm);
+	exit(1);
+    }
+
+    if (ac == 2) {
+	fname = av[1];
+	if ((inp = fopen(fname, "rb")) == NULL) {
+	    fprintf(stderr, "%s: Can't open %s - %s\n", pgm, av[1],
+	    	strerror(errno));
+	    exit(1);
+	}
+    }
+    else {
+    	inp = stdin;
+    	fname = "(stdin)";
+    }
+
+    if (!(d = XOpenDisplay(NULL)))
+    {
+	fprintf(stderr, "%s: Can't open display\n", pgm);
+	exit(1);
+    }
+
+    w = XCreateSimpleWindow(d, RootWindow(d, DefaultScreen(d)),
+	0, 0, 640, 480, 0, BlackPixel(d, DefaultScreen(d)),
+	BlackPixel(d, DefaultScreen(d)));
+
+    XSelectInput(d, w, ExposureMask);
+
+    gc = XCreateGC(d, w, 0L, NULL);
+    XSetBackground(d, gc, BlackPixel(d, DefaultScreen(d)));
+    XSetForeground(d, gc, WhitePixel(d, DefaultScreen(d)));
+
+    XMapRaised(d, w);
+
+    while (XNextEvent(d, &amp;event), event.type != Expose)
+    	;
+
+    /*
+     * Get the window's actual width and height.
+     */
+    XGetGeometry(d, w, &amp;root, &amp;wx, &amp;wy, &amp;width, &amp;height, &amp;bwidth, &amp;depth);
+
+    /*
+     * Initialization done, window on screen; time for real work.
+     */
+
+    {
+	double X[3];
+	int i, n = 0;
+	int byte;
+	Cartesian C;
+	Polar P;
+
+	Scale = width / 6;
+	MidA = Scale;
+	MidB = 3 * Scale;
+	MidC = 5 * Scale;
+	MidY = height / 2;
+	if (MidY &lt; Scale)
+	    Scale = MidY;
+
+	for (i = 0; i &lt; 3; i++) {
+	    if ((byte = getc(inp)) == EOF) {
+		fprintf(stderr, "%s: Early EOF on %s\n", pgm, fname);
+		exit(1);
+	    }
+	    X[i] = ByteToReal((unsigned char) byte);
+	}
+
+	while (1) {
+	    P.r = sqrt(X[(n + 2) % 3]);
+	    P.theta = M_PI * X[(n + 1) % 3];
+	    P.phi = 2 * M_PI * X[n];
+	    PolarToCartesian(&amp;P, &amp;C);
+	    Plot(&amp;C);
+	    if ((byte = getc(inp)) == EOF)
+	    	break;
+	    X[n] = ByteToReal((unsigned char) byte);
+	    n = (n + 1) % 3;
+	}
+    }
+
+    /*
+     * Now hang out.  Let the window manager kill us.
+     */
+    while (1)
+	XNextEvent(d, &amp;event);
+
+    exit(0);
+}
+
+double ByteToReal(unsigned char b)
+{
+  /*note that there will be some gaps since we're only using the
+	 equivalent of an 8-bit decimal here*/
+  return  b / 256.0;
+}
+
+unsigned int ScaleColor(double x)
+{
+  return 0;
+}
+
+int Round(double x)
+{
+  return (int) (x + 0.5);
+}
+
+void Plot(Cartesian *C)
+{
+    XDrawPoint(d, w, gc, MidA + Round(Scale * C-&gt;y),
+    			MidY - Round(Scale * C-&gt;z));
+    XDrawPoint(d, w, gc, MidB + Round(Scale * C-&gt;x),
+    			MidY - Round(Scale * C-&gt;y));
+    XDrawPoint(d, w, gc, MidC + Round(Scale * C-&gt;z),
+    			MidY - Round(Scale * C-&gt;x));
+}
+
+void PolarToCartesian(Polar *P, Cartesian *C)
+{
+  /* No rotation was added. Instead we plot from three angles... */
+  C-&gt;x = P-&gt;r * sin(P-&gt;phi) * cos(P-&gt;theta);
+  C-&gt;y = P-&gt;r * sin(P-&gt;phi) * sin(P-&gt;theta);
+  C-&gt;z = P-&gt;r * cos(P-&gt;phi);
+  /* We can assign colors based on x, y, z, r, theta / pi or phi / (2 * pi) */
+  C-&gt;Color = ScaleColor(C-&gt;y);
+}
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01399" HREF="msg01399.html">Noise Sphere Plotter in C++ (was Re: Noise sphere graphical tests of randomness)</A></STRONG>
+<UL><LI><EM>From:</EM> wlkngowl@unix.asb.com (Mutatis Mutantdis)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01635.html">No Subject</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01972.html">Re: HP &amp; Export of DCE</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01399.html">Noise Sphere Plotter in C++ (was Re: Noise sphere graphical tests of randomness)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01382.html">[ADMIN] PGP Announce List Update</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01971"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01971"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

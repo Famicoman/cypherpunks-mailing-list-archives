@@ -1,0 +1,173 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Diffie&#45;Hellman for Matchmaking? -->
+<!--X-From-R13: Rvzvgevf Ffncnxvqvf <qvzvgegNqpf.euoap.np.hx> -->
+<!--X-Date: Tue, 5 Mar 1996 19:48:56 +0800 -->
+<!--X-Message-Id: 199603042327.XAA19170@carol.cs.rhbnc.ac.uk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Diffie-Hellman for Matchmaking?</TITLE>
+<LINK REV="made" HREF="mailto:dimitrt@dcs.rhbnc.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00203.html">Date Prev</A>][<A HREF="msg00217.html">Date Next</A>][<A HREF="msg00201.html">Thread Prev</A>][<A HREF="msg00222.html">Thread Next</A>][<A HREF="index.html#00212">Date Index</A>][<A HREF="threads.html#00212">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Diffie-Hellman for Matchmaking?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Diffie-Hellman for Matchmaking?</LI>
+<LI><em>From</em>: Dimitris Tsapakidis &lt;<A HREF="mailto:dimitrt@dcs.rhbnc.ac.uk">dimitrt@dcs.rhbnc.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 4 Mar 1996 23:27:55 +0000</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Ok, I am reposting this, with more detail this time. Hope this
+answers the two questions I received.
+
+I want to design/find some matchmaking protocols. I define matchmaking
+as follows:
+Bob must find out whether Alice has declared (commited) her interest
+in him, if and only if he has declared (commited) his interest in her.
+Before he does so, he can at most know that a girl is interested in him.
+Another description: Bob and Alice can have a date if they both commit
+to each other. If only one commits, nobody will ever find out about it.
+
+Below are the protocols I came up with. They all depend on the
+Diffie-Hellman "common key" as derived in the DH key exchange.
+
+- T is the trusted third party.
+- hash_k() is a keyed hash function with key k.
+- pseudo(Alice) is a pseudonym for Alice.
+- n is a large prime.
+- g is a primitive element mod n.
+- A is Alice's secret exponent. Her public key would be g^A mod n.
+- Alice's and Bob's "common key" would be g^(AB)mod n
+
+----
+
+1. The mediated off-line one:
+
+- T selects a secret k (which he uses for the duration of a month,
+  say).
+
+- Alice is interested in Bob, so she calculates a=g^(AB)mod n and
+  anonymously and securely sends it to T along with pseudo(Alice).
+
+- T calculates c=hash_k(a) and broadcasts c and pseudo(A) to the
+  planet or puts them on a bulletin board.
+
+- Bob is ignorant of Alice's actions. If he ever decides that he
+  likes her, he calculates and sends a=g^(AB)mod n to T (plus
+  pseudo(Bob)). T will calculate hash_k(a) which equals c. T broadcasts
+  c plus pseudo(B) so both Alice and Bob will know they have a match.
+  If Bob is not actually interested in Alice, he doesn't perform this
+  step at all, so nothing happens, and Alice just assumes Bob is not
+  interested.
+
+Replay is not an issue here.
+
+2. The mediated on-line one:
+
+- Alice is interested in Bob, so she calculates a=g^(AB)mod n and
+  ANONYMOUSLY approaches Bob.
+
+- Bob calculates b=g^(BX)mod n, where X may or may not be Alice.
+  If Bob is not interested in anyone, he could tell Alice to leave,
+  or select a random X while calculating b.
+
+- Alice and Bob want to compare a and b. They generate a random k using
+  some coin-flipping protocol. Then they send (possibly pseudonymously)
+  hash_k(a) and hash_k(b) to T who compares them and announces the
+  result.
+
+Using a keyed hash function reduces the trust on T, compared to
+protocol (1), I hope. Now, T has to conspire with one of the
+parties to get the "common key". I suspect this can be improved
+using the Digital Envelopes protocol as described by Fagin,
+Naor and Winkler in "Comparing information without leaking it"
+to replace the hashing.
+
+3. Non-mediated on-line one: This third protocol would remove T in
+(2). Alice and Bob would compare their "common keys" directly. The
+problem here is fairness i.e. to ensure nobody finds the result
+of the comparison first. If this was possible, people could
+"probe" other people's interests and terminate the protocol
+as soon as they find the answer (i.e. the result of the
+"common key" comparison). I think ZK protocols would be of use
+here. I am still working on this one.
+
+----
+
+Assume that in any of these protocols Alice calculates her "common key"
+with X: a=g^(AX)mod n which means that she is interested in X. The
+reason a must remain sercet is that if X learns it, he could calculate
+all possible b(Y)=g^(YX)mod n until he finds a Y such that b(Y)=a,
+in which case he will find out Alice is interested in him. Note
+that X will not try all possible values for Y, but will use the
+public keys of all the girls, instead.
+
+I would appreciate any comments on these protocols and on the
+use of DH "common key".
+
+  Dimitris
+
+
+-- 
+Dimitris Tsapakidis               PGP keyID: 735590D5
+dimitrt@dcs.rhbnc.ac.uk           MSc in Information Security,
+This space reserved               Royal Holloway, University of London
+for future use.                   Origin: Thessaloniki, Macedonia, Hellas
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00203.html">Re: A brief comparison of email encryption protocols</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00217.html">Re: (Fwd) Gov't run anon servers</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00201.html">re: NYT on crypto</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00222.html">"Physical Reality III"</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00212"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00212"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

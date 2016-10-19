@@ -1,0 +1,401 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: How to use procmail -->
+<!--X-From-R13: Oqnz Eubfgnpx <nqnzNubzrcbeg.bet> -->
+<!--X-Date: Thu, 5 Sep 1996 10:40:05 +0800 -->
+<!--X-Message-Id: 199609050006.TAA07462@homeport.org -->
+<!--X-Content-Type: text -->
+<!--X-Reference: 9609042045.AA27973@sabel.idacom.hp.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: How to use procmail</TITLE>
+<LINK REV="made" HREF="mailto:adam@homeport.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00375.html">Date Prev</A>][<A HREF="msg00384.html">Date Next</A>][<A HREF="msg00367.html">Thread Prev</A>][<A HREF="msg01859.html">Thread Next</A>][<A HREF="index.html#00393">Date Index</A>][<A HREF="threads.html#00393">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: How to use procmail</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:janzen@idacom.hp.com">janzen@idacom.hp.com</A></LI>
+<LI><em>Subject</em>: Re: How to use procmail</LI>
+<LI><em>From</em>: Adam Shostack &lt;<A HREF="mailto:adam@homeport.org">adam@homeport.org</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 4 Sep 1996 19:06:33 -0500 (EST)</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00367.html">9609042045.AA27973@sabel.idacom.hp.com</A>&gt; from "Martin Janzen" at Sep 4, 96 01:45:29 pm</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Martin Janzen wrote:
+
+| New procmail users, listen to Adam!  (And read the man page, even
+| though it's a bit intimidating at first.)
+
+Yeah, Listen to me! Listen to me! (Its the new cypherpunks theme
+song!)
+
+More seriously, here's my .procmailrc.  I'm fond of it, but the cpunks
+section could use some more work.  Other parts may be useful basis
+for other people's hacking.
+
+Adam
+
+# $Id: .procmailrc,v 1.10 1996/08/05 04:54:46 adam Exp $
+PATH=/bin:/usr/bin:/usr/local/bin:/usr/local/lib/mh
+MAILDIR=$HOME/Mail/=      	#you'd better make sure it exists
+DEFAULT=/var/spool/mail/adam
+LOGFILE=$MAILDIR/.procmail.log
+REALLF=$LOGFILE			# So I only have one path to LF
+COMSAT=no			# don't tell comsat; its obstelete.
+# VERBOSE=on		# bad bad bad!
+
+
+#This first ruleset protets me from mailbombs from an automated service
+#that I often send incorrect commands to, generating 5mb of reply.
+# It also sorts based on sucsess of the command.
+
+:0c :
+.safe
+
+:0
+* From bal@swissnet.ai.mit.edu
+{
+   :0 h
+   * &gt;10000
+   /dev/null
+
+   :0 h
+   *^Subject:.*no keys match
+   /dev/null
+
+   :0:
+   *Subject: Your command, ADD
+   $DEFAULT
+
+
+   :0E
+   | pgp +batchmode -fka
+}
+
+
+# This is a backup. Don't forget to cycle safe boxes.
+
+
+# this is here because I don't want to hear about everything going in .safe.
+# prevent duplicate messages from showing up in several folders.
+
+LOGABSTRACT=all
+# doesn't work
+:0 Wh: msgid.lock
+| formail -D 65536 .msgid.cache
+
+# auto key retreival
+#
+# I have an elm alias, pgp, points to a keyserver
+# The logfile gets unset briefly to keep the elm lines out of my
+# logfile.
+
+:0BW
+* -----BEGIN PGP
+*!^FROM_DAEMON
+KEYID=|/home/adam/bin/sender_unknown
+
+LOGFILE=
+
+:0 ahc	# added h 8 jan 95
+* ! ^X-Loop: Adams autokey retreival.
+| formail -a"X-Loop: Adams akr" |elm -s"mget $KEYID" pgp
+
+
+
+LOGFILE=$REALLF
+
+:0
+* (^TOCypherpunks|Sender:.*cypherpunks|^From owner-cypherpunks@toad.com)
+{
+   :0:
+   * From.*owner-cp-lite@comsec.com
+   cp-lite
+
+   :0 h
+   * Subject:.*(Delete|u*n*Sub*| add |leave|help|Undeliverable Message)
+   * &lt; 1000
+   /dev/null
+   
+   :0 :rml.lock
+   * ^From: Raph Levien
+   * ^Subject: List of reliable remailers
+   | cat /dev/null - &gt; ~/sec/remailer-list
+
+   :0:
+   * 1^1 ^(From|To|Cc):.*david@sternlight.com
+   * 1^1 ^Subject:.*CDA
+   * 1^1 ^Subject:.*Assasination
+   * 1^1 ^Subject:.*Reasons in support of crypto-anarchy
+   * 1^1 ^Subject:.*Noise
+   * 1^1 ^Subject:.*FV
+   * 1^1 ^Subject:.*(PLEASE REPLY|test)
+   cjunk
+
+
+   :0B:
+   * ^Alice de 'nonymous
+   * an455120@anon.penet.fi
+   * ^P.S.  This post is in the public domain.
+   | formail -a "Status: O" &gt;&gt; cjunk
+
+
+
+# I really ought to make this a wieghted rule.
+   :0:
+   * ^From:.*(aba@atlas|adam@lighthouse|blancw|cdodhner|cfrye|chen|cman|cme|colin@|daw@cs|ddt|ebrandt|eric@remail|futplex|frissell|gnu|gtoal|habs|hallam|hfinney|hugh|jis|karn|loewenste|loki|mab|froomki|mpj|nate|nsb|perry|pfarrel|rah|rjc|rsalz|sameer|sandfort|schneier|ses|smb|stewarts|szabo|tcmay|trei|unicorn|usura@berserk|warlord|weidai|whitaker|Zimmerman)
+   * !^From.*(anonymous|perry@jpunix.com|jonathan@Memexis|perry@psii.persci.com|gertstein|Schartman|don@cs.byu.edu|senate.gov|doug@eng)
+   cpunks
+
+   :0:
+   cpunks-noise
+}
+:0:
+* ^TOfirewalls
+firewalls
+
+
+:0:
+*^From owner-fwtk-users@tis.com
+fwtk
+
+:0
+*^TOcyberia-l
+{
+#   VERBOSE=on
+
+   :0 HW
+   FROM=|formail -x "From: "
+
+   :0 f
+   | formail -I"Reply-To: $FROM"
+
+   :0 fw:cyberia.sed.lock
+   * ^From: Timothy Arnold-Moore &lt;tja@kbs.citri.edu.au&gt;
+   |sed 's/^ //g'
+
+   :0:
+   cyberia
+}
+
+:0:
+* ^From procmail-request@informatik.rwth-aachen.de
+procmail
+
+
+# Thats it for the high volume lists.  Low volume lists I don't push
+# through formail.
+
+:0:
+* ^TOyucks@cs.purdue.edu
+* ^Subject: Yucks Digest
+| formail +1 -ds cat &gt;&gt; yucks
+
+:0:
+* ^TObugtraq
+bugtraq
+
+:0
+* ^TO .*(ietf|rfc-dist)
+{
+   :0h
+   *^Subject:.*ON-SITE
+   /dev/null
+ 
+   :0:
+   ietf
+}
+
+
+:0
+* ^TOwww-buyinfo
+{
+   :0
+   * ^From: rah@shipwright
+   * ^Subject: .*(cpx)
+   /dev/null
+
+   :0:
+   | formail -a "Status: O" &gt;&gt; wwwb
+}
+
+:0:
+*^TOspki
+spki
+
+:0
+*^TOssl-talk
+{
+   :0
+   *^Subject:.*remove
+   * &lt; 2000
+   /dev/null
+
+   :0:
+   ssl
+}
+
+:0:
+*^TOwww-security@ns2.rutgers.edu
+wwws
+
+:0:
+*^From owner-ssh
+ssh
+
+
+:0:
+*^TOremailer-operators@c2.org
+remailers
+
+:0:
+*From best-of-security
+bos
+
+
+:0:
+* ^TObblisa
+bblisa
+
+:0:
+*^TOcoderpunks
+coderpunks
+
+
+:0:
+*^TOmix-l
+mix-l
+
+:0:
+* ^TOphrack
+v/phrack
+
+:0:
+*^TOsdadmin
+sdadmin
+
+:0:
+* Precedence: (junk|bulk)
+junk
+
+:0:
+* To: postmaster
+postmaster
+
+# basic file server.  Only sends whats in .outbound
+:0 
+* ^Subject: (SEND|get) [0-9a-z][-_/0-9a-z.]+$
+* !^Subject:.*[ /.]\.
+* !^FROM_DAEMON
+{
+   # FILE=`formail -x Subject: | sed 's/.* //'`
+   FILE=`sed -n -e '/Subject:/s/.* //p' -e '/^$/q'`
+
+  :0c 
+  | (formail -rt -A"Precedence: junk";\
+     cat $HOME/.outbound/$FILE) | $SENDMAIL -t
+
+  :0: 
+  $MAILDIR/.log
+}
+
+
+# This handles vacation messages.  Make sure .vacation.msg and
+# .vacationlist exist
+
+:0 hc:vaction.lock 	#  untested
+* ?  [ -r $MAILDIR/.vacationlist ]
+* !? [ -r $MAILDIR/.vacation.msg ]
+| rm -f $MAILDIR/.vacationlist
+
+
+:0
+* ? [ -s $MAILDIR/.vacation.msg ] 
+* !^Precedence:(junk|bulk)
+* !^FROM_DAEMON
+{
+ FROM=`formail -rx To:`
+ ALREADYSENT=$MAILDIR/.vacationlist
+   :0 hc:
+   * !? fgrep -e "$FROM" $ALREADYSENT
+   | echo "$FROM" &gt;&gt; $ALREADYSENT;\
+ 	(formail -rA"Precedence: junk";\
+	cat $MAILDIR/.vacation.msg ;\
+   ) | $SENDMAIL -t
+}
+
+
+
+
+
+-- 
+"It is seldom that liberty of any kind is lost all at once."
+					               -Hume
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01859" HREF="msg01859.html">Re: How to use procmail</A></STRONG>
+<UL><LI><EM>From:</EM> ichudov@algebra.com (Igor Chudov @ home)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00367" HREF="msg00367.html">Re: How to use procmail</A></STRONG>
+<UL><LI><EM>From:</EM> Martin Janzen &lt;janzen@idacom.hp.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00375.html">Re: Race Bit: C</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00384.html">Browne and foreign tyrants</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00367.html">Re: How to use procmail</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01859.html">Re: How to use procmail</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00393"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00393"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

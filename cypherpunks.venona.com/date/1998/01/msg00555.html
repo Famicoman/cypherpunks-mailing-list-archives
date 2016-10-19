@@ -1,0 +1,407 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Plan 9's auth() function &#45; partialy secure distributed computing -->
+<!--X-From-R13: Xvz Qubngr <enintrNffm.pbz> -->
+<!--X-Date: Wed, 14 Jan 1998 07:31:29 +0800 -->
+<!--X-Message-Id: 199801132352.RAA29571@einstein.ssz.com -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Plan 9's auth() function - partialy secure distributed computing</TITLE>
+<LINK REV="made" HREF="mailto:ravage@ssz.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00569.html">Date Prev</A>][<A HREF="msg00556.html">Date Next</A>][<A HREF="msg00569.html">Thread Prev</A>][<A HREF="msg00556.html">Thread Next</A>][<A HREF="index.html#00555">Date Index</A>][<A HREF="threads.html#00555">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Plan 9's auth() function - partialy secure distributed computing</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@ssz.com">cypherpunks@ssz.com</A> (Cypherpunks Distributed Remailer)</LI>
+<LI><em>Subject</em>: Plan 9's auth() function - partialy secure distributed computing</LI>
+<LI><em>From</em>: Jim Choate &lt;<A HREF="mailto:ravage@ssz.com">ravage@ssz.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 13 Jan 1998 17:52:44 -0600 (CST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Forwarded message:
+&gt;From ravage@ssz.com Tue Jan 13 17:51:44 1998
+Date: Tue, 13 Jan 1998 17:51:42 -0600
+From: Jim Choate &lt;ravage@ssz.com&gt;
+Message-Id: &lt;199801132351.RAA29535@einstein.ssz.com&gt;
+X-within-URL: <A  HREF="http://plan9.bell-labs.com/magic/man2html/6/auth">http://plan9.bell-labs.com/magic/man2html/6/auth</A>
+To: ravage@einstein.ssz.com
+Subject: auth
+
+
+   [search] [index] delim $$ define lbr ' roman "{" ' define rbr ' roman
+   "}" '
+   
+    NAME
+    
+          ticket - authentication service
+          
+    DESCRIPTION
+    
+          This manual page describes the protocols used to authorize
+          connections, confirm the identities of users and machines, and
+          maintain the associated databases. The machine that provides
+          these services is called the authentication server (AS). The AS
+          may be a stand-alone machine or a general-use machine such as a
+          CPU server. The network database ndb(6) holds for each public
+          machine, such as a CPU server or file server, the name of the
+          authentication server that machine uses.
+          
+          Each machine contains three values important to authentication;
+          a 56-bit DES key, a 28-byte authentication ID, and a 48-byte
+          authentication domain name. The ID is a user name and
+          identifies who is currently responsible for the kernel running
+          on that machine. The domain name identifies the machines across
+          which the ID is valid. Together, the ID and domain name
+          identify the owner of a key.
+          
+          When a terminal boots, the user is prompted for user name and
+          password. The user name becomes the terminal's authentication
+          ID. The password is converted using passtokey (see auth(2))
+          into a 56-bit DES key and saved as the machine's key. The
+          authentication domain is set to the null string. If possible,
+          the terminal validates the key with the AS before saving it.
+          For Internet machines the correct AS to ask is found using
+          bootp(8). For Datakit machines the AS is a system called
+          p9auth on the same Datakit node as the file server the
+          terminal booted from.
+          
+          When a CPU or file server boots, it reads the key, ID, and
+          domain name from non-volatile RAM. This allows servers to
+          reboot without operator intervention.
+          
+          The details of any authentication are mixed with the semantics
+          of the particular service they are authenticating so we
+          describe them one case at a time. The following definitions
+          will be used in the descriptions:
+          
+        $CH sub c$
+                an 8-byte random challenge from a client
+                
+        $CH sub s$
+                an 8-byte random challenge from a server
+                
+        $K sub s$
+                server's key
+                
+        $K sub c$
+                client's key
+                
+        $K sub n$
+                a nonce key created for a ticket
+                
+        $K lbr m rbr$
+                message $m$ encrypted with key $K$
+                
+        $ID sub s$
+                server's ID
+                
+        $DN sub s$
+                server's authentication domain name
+                
+        $ID sub c$
+                client's ID
+                
+        $UID sub c$
+                user's name on the client
+                
+        $UID sub s$
+                user's name on the server
+                
+   
+          
+          A number of constants defined in auth.h are also used:
+          AuthTreq, AuthChal, AuthOK, AuthErr, AuthTs, AuthTc, AuthAs,
+          and AuthAc.
+          
+      File Service
+      
+          File service sessions are long-lived connections between a
+          client host and a file server. Processes belonging to different
+          users share the session. Whenever a user process on the client
+          mounts a file server (see bind(2)), it must authenticate
+          itself. There are four players in an authentication: the
+          server, the client kernel, the user process on the client, and
+          the authentication server. The goal of the authentication
+          protocol is to convince the server that the client may validly
+          speak for the user process.
+          
+          To reduce the number of messages for each authentication,
+          common information is exchanged once at the beginning of the
+          session within a session message (see attach(5)): 
+          
+        Client-&gt;Server
+                Tsession($CH sub c$)
+                
+        Server-&gt;Client
+                Rsession(${CH sub s},~{ID sub s},~{DN sub s}$)
+                
+   
+          
+          Each time a user mounts a file server connection, an attach
+          message is sent identifying/authenticating the user:
+          
+        Client-&gt;Server
+                Tattach($K sub s lbr AuthTs, ~ {CH sub s},~{UID sub c}, ~
+                {UID sub s}, ~ K sub n rbr , ~ {K sub n} lbr AuthAc, ~
+                {CH sub s}, count rbr )$
+                
+        Server-&gt;Client
+                Rattach($ K sub n lbr AuthAs,~{CH sub c},~count rbr$)
+                
+   
+          
+          The part of the attach request encrypted with $Ksubs$ is called
+          a ticket. Since it is encrypted in the server's secret key,
+          this message is guaranteed to have originated on the AS. The
+          part encrypted with the $K sub n$ found in the ticket is called
+          an authenticator. The authenticator is generated by the client
+          kernel and guarantees that the ticket was not stolen. The count
+          is incremented with each mount to make every authenticator
+          unique, thus foiling replay attacks. The server is itself
+          authenticated by the authenticator it sends as a reply to the
+          attach.
+          
+          Tickets are created by the AS at the request of a user process.
+          The AS contains a database of which $ID sub c$'s may speak for
+          which $UID sub c$'s. If the $ID sub c$ may speak for the $UID
+          sub c$, two tickets are returned.
+          
+        UserProc-&gt;AS
+                $AuthTreq, ~ CH sub s , ~ ID sub s , ~ DN sub s , ~ ID
+                sub c , ~ UID sub c$
+                
+        AS-&gt;UserProc
+                $AuthOK, ~ K sub c lbr AuthTc, ~ CH sub s , ~ UID sub c ,
+                ~ UID sub s , ~ K sub n rbr , ~ K sub s lbr AuthTs, ~ CH
+                sub s , ~ UID sub c , ~ UID sub s , ~ K sub n rbr$
+                
+   
+          
+          Otherwise an error message is returned.
+          
+        AS-&gt;UserProc
+                $AuthErr$, 64-byte error string
+                
+   
+          
+          The user passes both tickets to the client's kernel using the
+          fauth system call (see fsession(2)). The kernel decrypts the
+          ticket encrypted with $K sub c$. If $UID sub c$ matches the
+          user's login ID, the tickets are remembered for any subsequent
+          attaches by that user of that file server session. Otherwise,
+          the ticket is assumed stolen and an error is returned.
+          
+      Remote Execution
+      
+          
+          
+          A number of applications require a process on one machine to
+          start a process with the same user ID on a server machine.
+          Examples are cpu(1), rx (see con(1)), and exportfs(4). The
+          called process replies to the connection with a ticket request.
+          
+        Server-&gt;UserProc
+                $AuthTreq, ~ CH sub s , ~ ID sub s , ~ DN sub s , ~ xxx,
+                ~ xxx$
+                
+   
+          
+          Here xxx indicates a field whose contents do not matter.
+          
+          The calling process adds its machine's $ID sub c$ and its $UID
+          sub c$ to the request and follows the protocol outlined above
+          to get two tickets from the AS. The process passes the $K sub
+          s$ encrypted ticket plus an authenticator generated by
+          /dev/authenticator from the $K sub c$ ticket to the remote
+          server, which writes them to the kernel to set the user ID (see
+          cons(3)). The server replies with its own authenticator which
+          can be written to the kernel along with the $K sub c$ encrypted
+          ticket to confirm the server's identity (see cons(3)). 
+          
+        UserProc-&gt;Server
+                $ K sub s lbr AuthTs, ~ CH sub s , ~ UID sub c , ~ UID
+                sub s , ~ K sub n rbr , ~ K sub n lbr AuthAc, ~ CH sub s
+                , ~ 0 rbr $
+                
+        Server-&gt;UserProc
+                $K sub n lbr AuthAs, ~ CH sub s , ~ 0 rbr$
+                
+      Challenge Box
+      
+          A user may also start a process on a CPU server from a non Plan
+          9 machine using commands such as con, telnet, or ftp (see
+          con(1) and ftpfs(4)). In these situations, the user can
+          authenticate using a hand-held DES encryptor. The telnet or FTP
+          daemon first sends a ticket request to the authentication
+          server. If the AS has keys for both the $ID sub c$ and $UID sub
+          c$ in the ticket request it returns a challenge as a
+          hexadecimal number.
+          
+        Daemon-&gt;AS
+                $AuthChal, ~ CH sub c , ~ ID sub c , ~ DN sub s , ~ ID
+                sub c , ~ UID sub c $
+                
+        AS-&gt;Daemon
+                $AuthOK$, 16-byte ASCII challenge
+                
+   
+          
+          Otherwise, it returns a null-terminated 64-byte error string.
+          
+        AS-&gt;Daemon
+                $AuthErr$, 64-byte error string
+                
+   
+          
+          The daemon relays the challenge to the calling program, which
+          displays the challenge on the user's screen. The user encrypts
+          it and types in the result, which is relayed back to the AS.
+          The AS checks it against the expected response and returns
+          either a ticket or an error.
+          
+        Daemon-&gt;AS
+                16-byte ASCII response
+                
+        AS-&gt;Daemon
+                $AuthOK, ~ K sub c lbr AuthTs, ~ CH sub c , ~ UID sub c ,
+                ~ UID sub c , ~ K sub n rbr$
+                
+   
+          
+          or
+          
+        AS-&gt;Daemon
+                $AuthErr$, 64-byte error string
+                
+   
+          
+          Finally, the daemon passes the ticket to the kernel to set the
+          user ID (see cons(3)). 
+          
+      Password Change
+      
+          Any user can change the key stored for him or her on the AS.
+          Once again we start by passing a ticket request to the AS. Only
+          the user ID in the request is meaningful. The AS replies with a
+          single ticket (or an error message) encrypted in the user's
+          personal key. The user encrypts both the old and new keys with
+          the $K sub n$ from the returned ticket and sends that back to
+          the AS. The AS checks the reply for validity and replies with
+          an AuthOK byte or an error message.
+          
+        UserProc-&gt;AS
+                $AuthPass, ~ xxx, ~ xxx, ~ xxx, ~ xxx, ~ UID sub c$
+                
+        AS-&gt;UserProc
+                $AuthOK, ~ K sub c lbr AuthTc, ~ xxx, ~ xxx, ~ xxx, ~ K
+                sub n rbr$
+                
+        UserProc-&gt;AS
+                $K sub u lbr AuthPass, ~ roman "old password", ~ roman
+                "new password" rbr$
+                
+        AS-&gt;UserProc
+                $AuthOK$
+                
+   
+          
+          or
+          
+        AS-&gt;UserProc
+                $AuthErr$, 64-byte error string
+                
+   
+          
+      Data Base
+      
+          An ndb(2) database file exists for the authentication server.
+          The attribute types used by the AS are hostid and uid. The
+          value in the hostid is a client host's ID. The values in the
+          uid pairs in the same entry list which users that host ID make
+          speak for. A uid value of * means the host ID may speak for all
+          users. A uid value of !user means the host ID may not speak for
+          user. For example:
+          
+
+hostid=bootes
+
+        uid=!sys uid=!adm uid=*
+
+   
+          
+          is interpreted as bootes may speak for any user except sys and
+          adm.
+          
+    FILES
+    
+               /lib/ndb/auth
+                database file
+                
+        /lib/ndb/auth.*
+                hash files for /lib/ndb/auth
+                
+    SEE ALSO
+    
+          fsession(2), auth(2), cons(3), attach(5), auth(8) 
+          
+   
+   Copyright © 1995 Lucent Technologies. All rights reserved.
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00569.html">load balancing web proxy and server networks</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00556.html">Plan 9 ordering info [rather expensive]</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00569.html">load balancing web proxy and server networks</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00556.html">Plan 9 ordering info [rather expensive]</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00555"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00555"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

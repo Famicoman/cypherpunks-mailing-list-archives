@@ -1,0 +1,175 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: No Subject -->
+<!--X-From-R13: abobqlNDSBZOK.QA[ (Oabalzbhf) -->
+<!--X-Date: Sun, 2 Nov 1997 16:13:50 +0800 -->
+<!--X-Message-Id: 199711020810.JAA29037@basement.replay.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>No Subject</TITLE>
+<LINK REV="made" HREF="mailto:nobody@REPLAY.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00065.html">Date Prev</A>][<A HREF="msg00000.html">Date Next</A>][<A HREF="msg00066.html">Thread Prev</A>][<A HREF="msg00162.html">Thread Next</A>][<A HREF="index.html#00080">Date Index</A>][<A HREF="threads.html#00080">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>No Subject</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>From</em>: <A HREF="mailto:nobody@REPLAY.COM">nobody@REPLAY.COM</A> (Anonymous)</LI>
+<LI><em>Date</em>: Sun, 2 Nov 1997 09:10:12 +0100 (MET)</LI>
+<LI><em>Organization</em>: Replay and Company UnLimited</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+##
+In-reply-to: &lt;<A HREF="msg00037.html">199711020051.QAA23884@sirius.infonex.com</A>&gt; (message from Mix on
+	Sat, 1 Nov 1997 16:51:19 -0800 (PST))
+Subject: Re: cute.
+
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Monty says
+&gt; What would be really nice is if the mailing list machines time stamped
+&gt; messages.
+
+That would be nice.  I wonder, could one of our list hosts add a
+script to sign outgoing majordomo traffic?
+
+Here's a script to do it:
+
+- --------------------8&lt;--------------------
+#!/usr/local/bin/perl
+$userID="cypherpunks\@algebra.com";
+$pgp="/usr/local/bin/pgp";
+$tmp="/tmp/.sig$$";
+undef($/);
+$post = &lt;STDIN&gt;;
+($headers,@body) = split(/\n\n/,$post);$body = join("\n\n",@body);
+open(PIPE,"|$pgp -satf +batchmode +verbose=0 -u $userID &gt; $tmp");
+print PIPE $body;
+close(PIPE);
+open(SIGNED,"&lt;$tmp");$signed=&lt;SIGNED&gt;;close(SIGNED);
+print "$headers\n\n$signed";
+unlink($tmp);
+- --------------------8&lt;--------------------
+
+It handles one mail only.  If you want to run it on a mail folder, use
+formail.
+
+&gt; This would also prevent an attack where somebody forges mail from a
+&gt; cypherpunks list machine to flush out identities.  If the attacker
+&gt; sends a unique message to every person, he or she will be able to
+&gt; break an identity if the message is replied to on the list.
+
+You could do something similar with independent parties posting hashes
+of messages in the feed they got to the list, or to subscribers to the
+service.
+
+The list bot signing is more convenient to check though with existing
+software.  Also, unfortunately, most MUA pgp software doesn't check
+nested signatures, so a signature from the list would break ability to
+auto check signatures from posters.
+
+Here's another script to check the list added signature on receipt:
+
+- --------------------8&lt;--------------------
+#!/usr/local/bin/perl
+$userID="cypherpunks\@algebra.com";
+$pgp="/usr/local/bin/pgp";
+$tmp="/tmp/.sig$$";$in="/tmp/.in$$";$msg="/tmp/.msg$$";
+undef($/);
+$post = &lt;STDIN&gt;;
+($headers,@body) = split(/\n\n/,$post);$body = join("\n\n",@body);
+open(BODY,"&gt;$in");print BODY $body;close(BODY);
+$res = system("$pgp -f +batchmode +verbose=0 -u $userID &lt; $in &gt; $tmp 2&gt; $msg");
+open(SIGNED,"&lt;$tmp");$signed=&lt;SIGNED&gt;;close(SIGNED);
+open(ERR,"&lt;$msg");$err=&lt;ERR&gt;;close(ERR);
+if ($res==0) {
+    ($who) = ($err =~ m/Good signature from user "(.*)"\./);
+    if ($who !~ m/$userID/) { $res=1; }
+}
+$headers =~ s/\[FORGERY\]//g;
+if ($res) {
+    $headers =~ s/(Subject: )([^\n]*)/\1\[FORGERY\] \2/g;
+}
+print "$headers\n";
+print "X-Signature: ", $res ? "forgery" : "ok $who", "\n";
+print "\n\n$signed\n";
+unlink($tmp,$in,$msg);
+- --------------------8&lt;--------------------
+
+&gt; I'm not sure a timestamp matters that much for "authenticating" your
+&gt; key.  After all, you don't own "Amad3us", you own key 0x4D162BBE1.
+
+Yes.  Except for minor nit: 0x4D162BBE1 is susceptible to a 0xdeadbeef
+attack, anyone can generate another key with that keyID.  Even the
+fingerprint is spoofable.  But the combination is truly hard to spoof,
+and this I do own: 0xa11a8a18bf6dbe8362926e9458a3616d/0x4d162bbe1
+(fingerprint/keyID).
+
+Amad3us (0xa11a8a18bf6dbe8362926e9458a3616d/0x4d162bbe1)
+
+-----BEGIN PGP SIGNATURE-----
+iQCVAwUBNFwjxvKMuKFNFivhAQGYnAQA33Ss68TKF+QfDGweQZ7TAkbmlOeqPC/J
+iBoV5zA+skqdgs+PD2afLAhQn5otm7xbx7rBEnBgMOYff9GyKB6Bfs/po7juwqs5
+dACGPZhc5kNf4f18V04jv5sr6PWLWdwsoVegshVsiHmQgWtG9UlnZ0wKe2ORKzxf
+sQkJsIe3/jA=
+=naXX
+-----END PGP SIGNATURE-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00065.html">new PGP key</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00000.html">Privacy Software</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00066.html">Re: &lt;SIGH&gt;</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00162.html">No Subject</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00080"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00080"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

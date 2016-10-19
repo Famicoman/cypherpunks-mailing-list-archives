@@ -1,0 +1,182 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: GPS and security -->
+<!--X-From-R13: xneaNdhnypbzz.pbz (Buvy Ynea) -->
+<!--X-Date: Tue, 28 Dec 93 14:17:42 PST -->
+<!--X-Message-Id: 199312282214.OAA21740@servo.qualcomm.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9312282001.AA24981@vail.tivoli.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: GPS and security</TITLE>
+<LINK REV="made" HREF="mailto:karn@qualcomm.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00622.html">Date Prev</A>][<A HREF="msg00632.html">Date Next</A>][<A HREF="msg00623.html">Thread Prev</A>][<A HREF="msg00622.html">Thread Next</A>][<A HREF="index.html#00624">Date Index</A>][<A HREF="threads.html#00624">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: GPS and security</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:m5@vail.tivoli.com">m5@vail.tivoli.com</A></LI>
+<LI><em>Subject</em>: Re: GPS and security</LI>
+<LI><em>From</em>: <A HREF="mailto:karn@qualcomm.com">karn@qualcomm.com</A> (Phil Karn)</LI>
+<LI><em>Date</em>: Tue, 28 Dec 1993 14:14:43 -0800</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00623.html">9312282001.AA24981@vail.tivoli.com</A>&gt; (m5@vail.tivoli.com)</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+I heard about this show, but missed it. Looks like 60 Minutes has
+bought the military's scare story, hook line and sinker.
+
+Sure, it's possible for a terrorist to build a GPS-guided bomb. But
+terrorists have been building highly accurate (more accurate than GPS)
+guided bombs long before GPS. The Japanese called them "kamikazes",
+while in the Middle East the preference seems to be for heavy trucks.
+As long as you've got fanatical pilots/drivers willing to sacrifice
+themselves, who needs GPS?
+
+I follow GPS and "selective availability" pretty closely. A complete
+tutorial on this subject would be pretty long, but here are the major
+points:
+
+GPS satellites broadcast several signals. Two RF carriers are used, L1
+at 1575.42 Mhz and L2 at 1227.6 Mhz. All satellites use the same
+frequencies; receivers can separate them because CDMA (code division
+multiple access, a form of spread spectrum) is used.
+
+These two carriers can carry two signals.  One is the C/A ("Coarse
+Acquisition" or "Clear Access", depending on which reference you
+read).  This is a 1.023 megachip/sec spread spectrum signal with a
+short (1023) chip spreading sequence. The sequences (Gold codes, one
+per satellite) are published. The second signal is the "P" (or
+"Precision") code at 10.23 megachips/sec. This is a much longer
+sequence that is restarted every week. Contrary to popular belief, the
+P code is also published. It can, however, be encrypted with a
+classified cipher to produce the "Y" code.
+
+In general, the C/A code is only on the L1 carrier, while P/Y is on
+both L1 and L2. The idea of having P/Y on two frequencies is to help a
+receiver correct for ionospheric dispersion. Using the basic
+principles of RF propagation through a plasma, by measuring the
+difference between these two signals you can compute and correct for
+the absolute dispersion delay.
+
+Originally the C/A code was to be completely open, and the Y code
+reserved to "authorized users" (i.e., the US military). The Y-code
+encryption was more to prevent spoofing of the satellite signals than
+to prevent its "unauthorized" use. That's why the Y-code mode is
+usually called "antispoofing" mode, since someone who doesn't know the
+encryption sequence can't produce a fake Y code.
+
+The thinking was that the C/A code by itself wouldn't be accurate
+enough to be a "threat".  But C/A receivers worked surprisingly well
+(&lt;25m), so the DoD got paranoid and introduced the notorious
+"Selective Availability" (SA).  They haven't released the details of
+how SA works, saying only that it will degrade accuracy to some
+specified level, eg 100m with 95% confidence.  But many people have
+observed SA in action and have a good idea how it works.
+
+First, they can encrypt the low order bits of the satellite
+ephemerides. These are the satellites' orbital elements that allow the
+receiver to compute the position of each satellite as a function of
+time. In order for the receiver to determine where it is, it needs to
+know where the satellites are; if its estimate of a satellite's
+position is incorrect, then so will its estimate of its own position.
+
+Second, they can add cryptographically generated "phase noise" to the
+atomic clock timebase. This adds "dither" to the ranges as measured
+by the receiver, again leading to errors in the receiver's calculated
+position.
+
+But there's a flaw in the ointment. If you take two GPS receivers and
+place them side by side and tell them to track the same satellites, SA
+will cause them to produce the SAME errors! This is the idea behind
+"differential" GPS that has the DoD so spooked. Take a GPS receiver
+and place it in a well-surveyed fixed spot. (Let it measure its
+location for a month or two and average the results.) Then have it
+periodically transmit, over a local radio link, the differences it
+observes between the ranges it measures to each visible satellite and
+what those ranges *should* be, given the receiver's accurately known
+location. Other GPS receivers in the area can receive these
+corrections and apply them to their own calculations.
+
+Viola! Not only have you subtracted out all of the effects of SA, but
+you've also corrected for several natural sources of error as well,
+including ionospheric and troposperic dispersion. About the only
+source of error remaining is each receiver's finite signal-to-noise
+ratio, but this is minor compared to these other error sources.
+Differential GPS accuracies of 2-3 m are not uncommon as long as the
+reference receiver is within a few hundred km of the user receiver.
+
+Since these accuracies are useful for many legitimate civilian
+applications, e.g., harbor approach navigation, the US Coast Guard has
+begun deploying differential GPS beacons along the US coast. The irony
+here is amusing; first you have the DoD intentionally sabotaging the
+signal with SA, and then another military service (albeit one under
+the DoT rather than the Dod) comes along and undoes it. Your tax dollars
+at work!
+
+The Coast Guard also runs a GPS public information office. They have a
+BBS and a watch officer you can call on the phone. They'll send you
+information (e.g., the ICD-GPS-200 spec on the GPS signal interface)
+free just for the asking.
+
+Phil
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00623" HREF="msg00623.html">GPS and security</A></STRONG>
+<UL><LI><EM>From:</EM> m5@vail.tivoli.com (Mike McNally)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00622.html">Re: GPS and security</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00632.html">CACM Letters</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00623.html">GPS and security</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00622.html">Re: GPS and security</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00624"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00624"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,252 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: How to use procmail -->
+<!--X-From-R13: [negva Xnamra <wnamraNvqnpbz.uc.pbz> -->
+<!--X-Date: Thu, 5 Sep 1996 06:17:58 +0800 -->
+<!--X-Message-Id: 9609041821.AA27906@sabel.idacom.hp.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>How to use procmail</TITLE>
+<LINK REV="made" HREF="mailto:janzen@idacom.hp.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00359.html">Date Prev</A>][<A HREF="msg00360.html">Date Next</A>][<A HREF="msg00336.html">Thread Prev</A>][<A HREF="msg00367.html">Thread Next</A>][<A HREF="index.html#00357">Date Index</A>][<A HREF="threads.html#00357">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>How to use procmail</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:frogfarm@yakko.cs.wmich.edu">frogfarm@yakko.cs.wmich.edu</A></LI>
+<LI><em>Subject</em>: How to use procmail</LI>
+<LI><em>From</em>: Martin Janzen &lt;<A HREF="mailto:janzen@idacom.hp.com">janzen@idacom.hp.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 4 Sep 1996 11:21:57 -0700</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+"Damaged Justice" writes:
+&gt; Would some kind soul out there be willing to instruct a novice in the
+&gt; mysteries of procmail? I've finally decided to start killfiling my mail
+&gt; as well as my news.
+
+A fine idea.  Procmail makes the Cypherpunks list infinitely more readable.
+
+
+1) First, here's how to get it:
+
+----------------------
+A recent version can be picked up at various comp.sources.misc archives.
+The latest version can be obtained directly from the ftp-archive at:
+
+        amaru.informatik.rwth-aachen.de (137.226.112.31)
+
+        as compressed tar file:         pub/unix/procmail.tar.Z         &lt;100KB
+        or in compressed shar format:   pub/unix/procmail.0?.Z
+----------------------
+
+
+2) Build the procmail program and install it in a suitable location.  I
+have no idea what your familiarity with UNIX and C is; you may want to
+have your sysadmin help you with this.  Alternatively, you could use
+Alta Vista or equivalent to search for binaries for your system.
+
+
+3) Create a file of procmail "recipes", which tell it how to process
+your mail.  This file is called "$HOME/.procmailrc".  Mine begins like
+this; fix up directory names as needed for your system:
+
+-----------------------
+#
+# $HOME/.procmailrc  -  procmail recipe file
+#
+PATH=/usr/local/bin:/usr/ucb:/bin:/usr/bin:$HOME/bin/700o:$HOME/bin
+ME=             janzen
+HOME=           /Home/$ME
+LOGFILE=        $HOME/.procmaillog
+MAILDIR=        $HOME/Mail
+ORGMAIL=        /usr/mail/$ME
+DEFAULT=        $ORGMAIL
+TMP=            $HOME/tmp
+SENDMAIL=       /usr/lib/sendmail
+TMPFILE=        $TMP/procmail.$$
+LOCKFILE=       $HOME/Mail/.procmail
+
+# toss out junk mail
+:1
+^Subject:.*unsubscribe
+/dev/null
+
+# sort mail from mailing lists into the proper folders
+:1
+cypherpunks
+Cypherpunks
+-----------------------
+
+The last part sorts all mail whose header contains the word "cypherpunks"
+into the folder $MAILDIR/Cypherpunks.  Now the fun part -- writing your
+"recipes"!  You can get as specific as you want: 
+
+-----------------------
+# kill a particular thread
+:2
+^To:.*cypherpunks@toad.com
+^Subject:.*Workers of the
+/dev/null
+
+# ignore a particular user
+:2
+cypherpunks
+patrickbc@juno.com
+/dev/null
+
+# I haven't tried this one, but any subject with too many consecutive
+# capitals is probably spam or worse.  Separate it out, but don't toss
+# it just yet.
+:2
+cypherpunks
+^Subject:.*[A-Z][A-Z][A-Z][A-Z][A-Z][A-Z]
+ProbableSpam
+
+# search the whole message body, not just the headers, for probable spam
+:1HB
+^dear friend
+ProbableSpam
+
+# put everything else in the incoming Cypherpunks mail folder
+:1
+^To:.*cypherpunks@toad.com
+NewCypherpunksMail
+-----------------------
+
+Rules are evaluated in top-to-bottom order; first matching rule wins.
+Anything not matched ends up in your usual $ORGMAIL folder.
+
+
+4) Run your incoming mail through procmail.  To do this, most Unix systems
+let you create a file called "$HOME/.forward" with the following contents
+(including the quotes):
+
+"| IFS=' '; /usr/local/bin/procmail -p"
+
+(Replace "/usr/local/bin" with the directory in which you installed procmail.)
+
+
+5) One thing to watch out for:  procmail is executed on the machine which
+handles your mail.  If this machine has a different architecture than your
+own machine, you must build procmail for the mail handling machine, not
+your own.
+
+Also, the permissions on your $HOME/.forward and $HOME/.procmailrc files
+must be set so that they are readable on the mail handling machine.  If
+your home directory is NFS-mounted, this should happen automatically;
+otherwise, you may need to copy them to the mail handling machine manually.
+
+Finally, the procmail process may not have your userid, so you must make
+these files world-readable:
+
+chmod 644 $HOME/.forward $HOME/.procmailrc
+
+For the first day or two, check your $HOME/.procmaillog file frequently
+to see whether there are any problems.  Check with your sysadmin to make
+sure that your mail isn't ending up "all over the floor".  Send yourself
+mail to test "recipes".
+
+
+6) Once it's running smoothly, you can get fancy and run the following
+shell script, which reads the $HOME/.procmaillog file and produces a nice
+summary, sorted by mail folder:
+
+-------------------------------------------------------------------------------
+#!/bin/sh
+# Summarize the ~/.procmaillog file
+
+LOGFILE=${LOGFILE:=$HOME/.procmaillog}
+
+echo "Subject: Procmail Summary"
+echo " "
+
+sort ${LOGFILE} | /usr/bin/awk '
+/^  Folder:/ {
+        folder = $2;
+        nbytes = $3;
+        msgcount[folder] += 1;
+        totalbytes[folder] += nbytes;
+}
+
+END {
+        for (folder in msgcount)
+                printf "Folder %s:\tsaved %d messages (%d bytes)\n", \
+                        folder, msgcount[folder], totalbytes[folder];
+}
+'
+
+if [ "$1" = "-clear" ]; then rm -f $LOGFILE; fi
+-------------------------------------------------------------------------------
+
+To arrange to have it run daily, I use the following crontab entry:
+
+0 7 * * * /Home/janzen/bin/pmsumm.sh -clear | elm -s "Procmail Summary" janzen
+
+which means, "At 7:00AM every morning, run the pmsumm.sh script, use the
+Elm mailer to mail the output to me, and then clear $HOME/.procmaillog".
+See the "cron" man page for your system, and/or talk to your sysadmin,
+since this varies among different flavors of Unix.
+
+
+Hope this helps...
+
+--
+Martin Janzen           janzen@idacom.hp.com
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00359.html">Re: 2^1,257,787-1</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00360.html">Re: What is the EFF doing exactly?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00336.html">(Fwd) Re: Secure anonymouse server protocol: comments please</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00367.html">Re: How to use procmail</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00357"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00357"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

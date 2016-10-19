@@ -1,0 +1,469 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: CHALLENGE? Toto/signature attack w. unpublished public key -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Sat, 19 Sep 1998 06:13:33 +0800 -->
+<!--X-Message-Id: 199809191052.LAA19676@server.eternity.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>CHALLENGE? Toto/signature attack w. unpublished public key</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00883.html">Date Prev</A>][<A HREF="msg00877.html">Date Next</A>][<A HREF="msg00870.html">Thread Prev</A>][<A HREF="msg00935.html">Thread Next</A>][<A HREF="index.html#00885">Date Index</A>][<A HREF="threads.html#00885">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>CHALLENGE? Toto/signature attack w. unpublished public key</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A></LI>
+<LI><em>Subject</em>: CHALLENGE? Toto/signature attack w. unpublished public key</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 19 Sep 1998 11:52:47 +0100</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+
+This post discusses the possibility of generating a RSA public key n,
+and e given a signature s on a message m creating using an unknown
+(unpublished) n and e.  A message and signature whose validity has
+some bearing on a current IRS investigation is given as a target for
+an attack if such an attack is feasible.
+
+Toto published one signed message [1] but not a public key for the
+signature.  It seems to me that there should be other public keys
+which one could generate which could have signed the same message.
+
+I would like comments on the feasibility of the signature attack
+proposed below, and suggestions for more efficient methods.
+
+(For those not following the Toto saga, he was the author of a series
+of anti-government rants and future fiction stories on cypherpunks.
+The posting of [1] to the list seems to have been deemed a handy
+excuse for the IRS to arrange Carl Johnson's incarceration See:
+<A  HREF="http://jya.com/cejfiles.htm">http://jya.com/cejfiles.htm</A>.  They claim that the presence of a public
+key on Carl Johnson's hard disk proves that he authored the post in
+question [1].)
+
+What we have is:
+
+Unknowns: e, n, d
+Knowns: m, s
+
+Where m = padding || md5( message )
+
+A signature is computed as:
+
+	s = m ^ d mod n
+
+and verified by checking that:
+
+	s ^ e mod n = m
+
+( where RSA says: n = p.q, d.e = 1 mod (p-1).(q-1) )
+
+We are trying to find an n and an e which satisfy s ^ e mod n = m,
+with the additional constraints that log2( n ) = 1024 and n &gt; s
+(because we have the signature s, and it is 1024 bits in length).
+
+For bonus points it would be nice for n mod 2^64 = 0xCE56A4072541C535,
+which is the key-id in the signature.  (I say bonus points because the
+key-id in the signature is not authenticated, or included in the
+message digest, so could have been for example edited after the
+signature was made, or filled with random numbers for whatever
+reason).
+
+Tinkering with PGP I can extract the values for the knowns:
+
+s =   0x08F4D5CBC10063725B206F787EB7370BBD0C5B4854CE79A9007D1801AEAEE6E6
+	D2C68D7EDF877FECE1FA539D08BEC54BD152BA05113951E8A84CDECAD2CB8E7A
+	C28BE916570BA7BB9C00C64DF57113C4AE81613BD351541523CD3A028FBF220E
+	F7469BD4175302DCB5B6E886974877F28A2D301433AFFFE26081008BFF687B37
+
+m =   0x0001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+	FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+	FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF003020
+	300C06082A864886F70D0205050004105A82A30F832DC6839C20DD6DB2EF783B
+
+(the 00 01 FF .. FF 00 are the PKCS#7 required padding, then the
+3020300c06082a864886f70d020505000410 is the ASN padding indicating
+various PKCS #7 cruft, and 5A82A30F832DC6839C20DD6DB2EF783B is the
+digest of the message (which includes some of the info in the
+signature block: timestamp, signature type, etc))
+
+So next we would like to solve:
+
+	s ^ e mod n = m
+
+or in other words find e, k and n st:
+
+	s ^ e - m = k * n
+
+I have been trying to factor f3 = s ^ e - m for e = 3, and can get
+factors:
+
+f = 2 2 5 11 17 26496937
+
+and
+
+251048771208077840279253039518619486761149393656018551881762776705901\
+323868599665917317036581098944533770815064901485649759588104677561495\
+719846643046535204246014520276297740544890135011586884286882393788265\
+716989378535974685125268132766806309723740928058713253950594405611241\
+121342427851929130344133177905256374336176401503386547907484013668011\
+870701681839150463738400849274433891413410494500220449307074230633487\
+686485522732190007426023068542565670710414256907678005650439818373128\
+045462081252984434043133357326332595300178784873354995536385391488171\
+082297914170316457453668703759313538562865586078736676571820284813613\
+435988240345557012477625002576044754861439307189875911957770722297269\
+127365840009630893296289725097984631185778357339553526670628683341222\
+179800672224971064029655723085468566526546006022122686584662976524189\
+679277675211381453870834486124773894995875790430641434242560016378644\
+4039359130261
+
+(I call the f resulting from choosing e = 3, f3, other e values can be
+denoted f5, f7, etc).
+
+It seems to me that if we can get get a factor out (or construct a
+composite from factors) which is greater than s, and is 1024 bits
+long, then this "key" could have signed the message in question.
+
+If the number has 2 or more factors, which we know because we
+constructed it by multiplying them, then we could even "sign" another
+message with this key, by generating a d based on the p, q (and
+possibly other multiples) and have both messages appear to be signed
+by the same key.
+
+If we can get some larger factors, we stand a chance because we have
+the flexibility of being able to adjust a potentional n's size by
+multiplying by combinations of factors found so far 5 11 17 26496937.
+This means we can adjust n's size by adding bits by multiplying by
+combinations as follows
+
+combination		bits added
+
+5			2 - 3
+11			3 - 4
+17			4
+5 11			5 - 6
+5 17			6 - 7
+11 17			7 - 8
+26496937		24 - 25
+
+So the challenge is to find other factors of:
+
+f =	251048771208077840279253039518619486761149393656018551881762776705901\
+	323868599665917317036581098944533770815064901485649759588104677561495\
+	719846643046535204246014520276297740544890135011586884286882393788265\
+	716989378535974685125268132766806309723740928058713253950594405611241\
+	121342427851929130344133177905256374336176401503386547907484013668011\
+	870701681839150463738400849274433891413410494500220449307074230633487\
+	686485522732190007426023068542565670710414256907678005650439818373128\
+	045462081252984434043133357326332595300178784873354995536385391488171\
+	082297914170316457453668703759313538562865586078736676571820284813613\
+	435988240345557012477625002576044754861439307189875911957770722297269\
+	127365840009630893296289725097984631185778357339553526670628683341222\
+	179800672224971064029655723085468566526546006022122686584662976524189\
+	679277675211381453870834486124773894995875790430641434242560016378644\
+	4039359130261
+
+One could also try other values for e, although they result in larger
+f.  
+
+What is the best factoring code available to have a go at factoring
+the above?  (I have been usign the demo pollard-rho factoring code
+which comes with ssh-1.2.26 in the gmp-2.0.2-ssh-2/demos directory).
+Anyone interested to give this a go, who has say got a few (hundred?)
+workstations already setup for another factoring challenge which they
+could divert to attack the above f3 (or f5, f7, etc).
+
+Course, if Toto is still at large, and Carl Johnson is not the only
+one with the key (and some messages on cypherpunks recently lend
+credence to this), he might trash this challenge by posting another
+signed message, or weaken it's value by posting a public key which
+proved could be shown to have been derived by this method.
+(Interestingly, I think merely posting a public key claiming to be the
+`real key' which we couldn't factor nor show to be a factor of f
+wouldn't prove that that key was any more legitimate than a key
+generated by a success on this challenge, all it would tend to show
+would be that the person who posted it had more compute power
+available than us!)
+
+Adam
+
+[1]
+-----BEGIN PGP SIGNED MESSAGE-----
+
+
+
+"Contrary to one famous philosopher,
+you're saying the medium is not the
+message," Judge Thomas Nelson said,
+alluding to the media theorist Marshall
+McLuhan. 
+<A  HREF="http://www.nytimes.com/library/cyber/week/120997encrypt-bernstein.html">http://www.nytimes.com/library/cyber/week/120997encrypt-bernstein.html</A>
+
+  Bullshit!
+  The bits and bytes of email encryption are a clear message
+that I wish to exercise my right to speak freely, without those
+who wish to do me harm invading my privacy.
+  The death of strong encryption on the InterNet will be the
+global death of free speech on the InterNet. Accordingly, I 
+feel it is necessary to make a stand and declare that I stand
+ready and willing to fight to the death against anyone who
+takes it upon themselves to try to imprison me behind an
+ElectroMagnetic Curtain.
+
+  This includes the Ninth Distric Court judges, if they come to
+the conclusion that the government that they represent needs to
+electronically imprison their citizens 'for their own safety.'
+
+
+The problem: Criminals with a simple
+encryption program can scramble their data
+beyond even the government's ability to read it. 
+<A  HREF="http://www.zdnet.com/zdnn/content/zdnn/1208/261695.html">http://www.zdnet.com/zdnn/content/zdnn/1208/261695.html</A>
+
+  Fuck the lame LEA pricks who whine about not being able to
+stop someone bringing in a planeload of drugs without being
+able to invade the privacy of every person on the face of
+the earth.
+  Am I supposed to believe that I have knowledge of when and
+where major drug shipments are taking place, simply by virtue
+of hanging out as a musician, yet the LEA's are incapable of
+finding out the same information by being competent in their
+profession? Barf City...
+ [I will shortly provide information for any LEA which wishes
+  to prosecute me for my coming 'physical' death threat, on
+  how to hunt me down like the filthy dog that I am.]
+
+"Why are you saying that the fact that [encryption]
+is functional takes it out of the First Amendment
+context?" Myron Bright, one of the judges, asked
+the Justice Department attorney, who was still in
+mid-sentence. He answered that the regulations
+were not aimed at suppressing speech, but only at
+the physical capacity of encryption to thwart
+government intelligence gathering. 
+
+  The Spanish language has the same "physical capacity." So 
+does (:&gt;), (;[), and {;-|). Likewise, BTW, FWIW, FYI, and
+my own personal favorite, YMMV (You Make Me Vomit? --or--
+Your Mileage May Vary?). &lt;-- Ambidextrous encryption.
+  An-cay e-way pect-exay ig-pay atin-lay usts-bay of 
+ildren-chay?
+  Whispering also has the "physical capacity" to "thwart 
+government intelligence gathering."
+
+  When does the bullshit stop? When do we stop making the
+use of the Spanish language over the InterNet illegal?
+When do we stop making whispering, pig-latin, anagrams
+and acronyms illegal?
+  When do we stop saying that our government is such a
+piece of crap that it is a danger to let its citizens
+communicate freely, in private, and share their private
+thoughts with one another?
+
+
+At one point Fletcher called the government's case 
+"puzzling."
+<A  HREF="http://www.news.com/News/Item/0,4,17114,00.html">http://www.news.com/News/Item/0,4,17114,00.html</A>
+
+  Only because her mom taught her that it was unladylike to
+say "Bullshit!"
+
+
+In arguments Monday, a Justice Department
+lawyer, Scott McIntosh, said the government's
+intent was to preserve the ability of intelligence
+agencies to eavesdrop on foreign governments
+and citizens. 
+<A  HREF="http://www.nytimes.com/library/cyber/week/120997encrypt-bernstein.html">http://www.nytimes.com/library/cyber/week/120997encrypt-bernstein.html</A>
+
+  Let's see if I have this right...
+  The U.S. government needs to destroy the right to free speech 
+and right to privacy of its own citizens in order to infringe
+upon the human rights of the governments and citizens of other
+countries? Countries which already have strong encryption?
+Countries like Red China, which is currently engaged in 
+encryption research with an American company who got permission
+to export much more diverse encryption material (after making
+a huge campaign donation to the Whitehouse) than Professor
+Bernstein will ever likely share with others?
+  Apologies to Judge Fletcher, but that's not "puzzling." That's
+the same-old-same-old Bullshit!
+
+
+OFFICIAL 'PHYSICAL' DEATH THREAT!!!
+  The pen is mightier than the sword. Thus, I prefer to wage my
+'war to the death' against those who would stomp on my basic
+human rights *"in the interests of National Security"* with my
+electronic pen, on the InterNet, using encryption when I have
+reason to fear persecution by Facist, Nazi motherfuckers.
+[* ~~ TruthMonger Vernacular Translation ~~ "so that the 
+ government can maintain its authority over the citizens
+ by use of force and violation of human rights, rather than
+ going to all of the trouble of acting in a manner that will
+ garner the citizens' respect."]
+
+  I will continue to express my thoughts through the words
+I send electronically over the InterNet, both publically
+and privately. I will fight to the bandwidth death against
+anyone who wants to deny me my right to express my opinions
+and access the opinions of those who also wish to express
+their own opinions and share their true thoughts with their
+fellow humans.
+  If the ElectronicMagnetic Curtain slams down around me, 
+then I will have no choice but to continue my current fight
+in MeatSpace.
+  And I am not alone...
+
+  I will share the same 'DEATH THREAT!!!' with Judges Fletcher,
+Nelson and Bright that I have shared with the President and
+a host of Congressional and Senatorial representatives:
+  "You can fuck some of the people all of the time, and all of
+the people some of the time, but you are going to end up in a
+body bag or a pine box before you manage to fuck all of the
+people all of the time."
+
+  Am *I* going to whack you out? Maybe...
+  I would prefer just dumping some tea in Boston Harbor, if that
+will get my message across in MeatSpace, but if it won't, then
+I guess I will have to take stronger action.
+  There are undoubtedly a plethora of LEA's ready and willing to
+prosecute and imprison me for agreeing with Patrick Henry, who
+said, "Give me liberty, or give me death." The irony, of course,
+is that I do not pose a great danger to anyone but myself as
+long as I continue to have my human rights and my liberty
+unthreatened.
+
+  The chances of me actually getting off of my fat butt and
+going out into the real world to whack out the enemies of
+freedom are probably pretty small (unless I run out of 
+cigarettes and beer, and wouldn't have to make an extra 
+trip).
+  I fully understand that this does not lessen the potential
+of any LEA who gets a wild hair up their butt to throw a
+mountain of taxpayer resources into prosecuting me and 
+imprisoning me for their own professional/political gain.
+  However, if you are performing actions so outrageously against
+basic human rights and freedoms as to get me off of my lazy ass,
+then I am the least of your problems, because there undoubtedly
+are millions of people more functional than myself (who get out
+of the house and go further than the liquor store) who are less
+willing than myself to put up with increasingly heavy chains
+placed around their hands and feet 'in the interests of national
+security.'
+
+  Feel free to have the Federales break down my door and
+imprison me for pointing out the obvious. After all, I fit
+the profile of a domestic terrorist--I quote the Constitution 
+and the Bill of Rights, and I speak out against increasingly
+big government.
+  But remember...it's the quiet ones you've got to watch...
+If you force everyone to 'be quiet', then you've got a world
+of trouble on your hands.
+
+Sincerly,
+John Gilmore &lt;gnu@toad.com&gt;
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+p.s.
+NOTICE TO LEA AGENTS IN NEED OF A CAREER BOOST!
+  Yes, I'm just a troublemaking asshole, trying to get John
+&lt;spit&gt; Gilmore &lt;fart&gt; in trouble.
+  However, if you want to go to the trouble of tracking me 
+down, I will give you some hints, since it seems likely that
+anyone who has trouble finding a ton of cocaine at an 
+airport might not be competent in CyberSpace, either.
+  You might want to check with the Webmasters at the sites
+quoted above to see who has accessed their web sites this
+morning. The anonymous remailer I will be using is an open
+secret to CypherPunks around the world as a really bad 
+attempt at disguising my true MeatSpace identity. This alone
+ought to be enough for some aggressive young LEA and/or
+federal prosecutor to earn themself some brownie-points,
+since I am a sorry enough son-of-a-bitch that they would not
+have much trouble convicting me in front of a jury of 'their'
+peers, assuming that they can make certain that I am not 
+tried by a jury of my own peers.
+
+Bonus Points:
+  I can also be tied into Jim Bell's Worldwide Conspiracy to 
+assassinate government authorities, through my implementation
+of an Assassination Bot.
+ (I am willing to 'rat out' Jim for two bottles of Scotch. If
+ he is willing to rat _me_ out for less, then I guess it's
+ just my hard luck, eh? &lt;--that's another hint!)
+
+p.p.s.
+  You can also charge me with use of 'conventional' encryption
+in the commission of a crime.
+  Must be your lucky fucking day, eh?
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBNI24Hs5WpAclQcU1AQFaggP8CPTVy8EAY3JbIG94frc3C70MW0hUznmp
+fRgBrq7m5tLGjX7fh3/s4fpTnQi+xUvRUroFETlR6KhM3srSy456wovpFlcLp7uc
+xk31cRPEroFhO9NRVBUjzToCj78iDvdGm9QXUwLctbbohpdId/KKLTAUM6//4mCB
+i/9oezfegWc=
+=4/6E
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00935" HREF="msg00935.html">(fwd) Re: CHALLENGE? Toto/signature attack w. unpublished public key</A></STRONG>
+<UL><LI><EM>From:</EM> Adam Back &lt;aba@dcs.ex.ac.uk&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00883.html">atheism (was: RE: Democracy... (fwd))</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00877.html">atheism (was: RE: Democracy... (fwd)) (fwd)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00870.html">It's Nobody's Business!</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00935.html">(fwd) Re: CHALLENGE? Toto/signature attack w. unpublished public key</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00885"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00885"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,238 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Attacks on remailers -->
+<!--X-From-R13: usvaarlNfuryy.cbegny.pbz -->
+<!--X-Date: Mon, 23 Aug 93 10:36:21 PDT -->
+<!--X-Message-Id: 9308230602.AA25533@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Attacks on remailers</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00652.html">Date Prev</A>][<A HREF="msg00661.html">Date Next</A>][<A HREF="msg00671.html">Thread Prev</A>][<A HREF="msg00669.html">Thread Next</A>][<A HREF="index.html#00653">Date Index</A>][<A HREF="threads.html#00653">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Attacks on remailers</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Attacks on remailers</LI>
+<LI><em>From</em>: <A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A></LI>
+<LI><em>Date</em>: Sun, 22 Aug 93 23:02:17 PDT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Chaum, in his first paper on "Mixes" (anonymous remailers) described
+protocols which were designed to resist several attacks.  (See the
+February, 1981, Communications of the ACM, p. 84.)  These can
+be understood by considering a series of attacks of increasing sophis-
+tication, with corresponding responses.
+
+Our opponent has as his goal to track a message through a chain of
+remailers.
+
+Attack 1: Just intercept the message from the sender, and look at the
+commands of the form:
+::
+Request-Remailing-To: first-remailer
+::
+Request-Remailing-To: second-remailer
+::
+Request-Remailing-To: final-destination
+
+The final command shows where the message is finally going to go.
+
+Response: Encrypt the messages.  Use "nesting", so that all that is
+visible as each message leaves a remailer is the destination of the
+next remailer.
+
+Attack 2: Look at the mail logs on the system running the remailer to
+see which message goes out from the remailer account shortly after each
+message comes in.
+
+Response: Run the remailer on a machine which does not keep mail logs,
+or on a machine to which you can deny the attackers access.
+
+Attack 3: Monitor the messages in real time as they flow into and out of
+each remailer machine, again looking for the message which comes out
+just after each incoming message.
+
+Response: Batch up many messages which arrive over a period of time,
+only sending them out at regular intervals or when a certain number have
+accumulated.  Send them out in random order.  Alternatively, delay each
+message by a random amount of time before the message goes out.  (This
+response will also deal with the previous attack.)
+
+Attack 4: Look at distinguishing features of the messages which are
+preserved by the remailers, such as subject line or message size, to
+match up incoming and outgoing messages within each batch.
+
+Response: Do not retain any header fields through remailers, not even
+subject.  Use an encryption mode in which messages are rounded up to
+some standard size so that all messages appear to be the same size.
+
+Attack 5: Record an incoming message to the remailer, and insert a copy
+of it into the incoming message stream, so that the batch will have two
+identical messages.  Look for two identical outgoing messages.  Remove
+one.  This is the match to that incoming message.
+
+Response: Check for duplicate incoming messages in the remailer, and
+remove all but one copy of each duplicate.
+
+Attack 6: Insert a duplicate message multiple times in separate batches.
+Observe the outgoing batches and look for a pattern of destinations
+which are correlated with those batches in which the incoming message
+is inserted.
+
+Response: Check for messages which have been duplicated from earlier
+batches and remove them.  Include time/date stamps on incoming messages
+with a time limit so that they are no good after a certain number of
+days; this way the check for duplicates only has to go back that many
+days.
+
+Attack 7: Look at all messages coming out of the first remailer, and
+follow them into their 2nd remailers; take all messages from those and
+follow them on, and so on.  This will eventually lead to a number of
+destinations, one of which must have been the destination of the original
+message.  Over a period of time, look for correlations between destinations
+and sources.
+
+Response: Use large remailer chains of popular remailers.  With enough
+mixing at each stage of the chain, the number of possible destinations
+will become astronomically large, making correlations statistically
+impossible.
+
+Attack 8: Correlate messages being sent from person A with messages being
+received a certain time later by person B.  Even without the ability to
+track messages through the remailers this can show a communication pattern.
+
+Response: Send dummy messages at regular intervals, which bounce through
+the remailer network and then die.  When you have a real message to send,
+replace one of the dummies with this.  The sender's traffic pattern is
+then constant and no information can be gained from it.
+
+Attack 9: Bribe or coerce one or more remailer operators into revealing
+their keys, or into decrypting the desired messages.  Alternatively, run
+many remailers, pretending to be dedicated to privacy, while secretly
+gathering information on the messages.
+
+Response: Use many remailers in a variety of geographical locations, so
+that it is unlikely that all of them can be corrupted in this way.
+
+These are all the attacks I can remember being implicitly considered in
+Chaum's paper.  Other people who have ideas for attacks should mention
+them so we can think of responses.
+
+Chaum also discusses anonymous return addresses.  We have a simple form
+of these enabled in our encrypting remailers.  The idea is to encrypt
+a series of remailing requests for the path the message will follow,
+with the last request directing the message to the user whose anonymous
+address this is.
+
+Some more attacks are possible in this case:
+
+Attack 1A: Look at the message content as it passes through each remailer,
+to correlate incoming and outgoing messages.
+
+Response: Encrypt the message at each stage to prevent this matching.  This
+raises the problem of how to determine the encryption key in such a way
+that the final user can decrypt the message.  Chaum suggested including the
+encryption key in the anonymous address (a different key at each stage
+of the chain), so that the user can decrypt the message.  Eric Messick
+has proposed letting the remailer choose the key, with a protocol for the
+user to communicate again with the remailer to get the message decrypted.
+
+Attack 1B: Send two different messages to the same return address with
+different contents, and look for duplicate address blocks in the outgoing
+batches.
+
+Response: Apply some randomization to the address blocks at each stage so
+that messages to the same address don't look identical.  (Chaum did not
+give this solution, as he viewed the next attack as being essentially
+unanswerable.)
+
+Attack 1C: Send many addresses to the anonymous address, and look for a
+destination which receives that many messages in a correlated fashion.
+
+Response: Chaum's response is that the remailer must not accept more than
+one message with a given anonymous return address, just as it must not
+accept more than one copy of a message in the regular case.  This implies
+that anonymous return addresses must be use-once to be truly secure.
+
+This conclusion is uncomfortable, as the requirement that an address be
+use-once will severely impair its usability.  But this attack appears
+hard to avoid.
+
+There is always the possibility of giving up on anonymous addresses in
+the Chaumian sense, and instead using other ideas which have been
+suggested here, such as posting to newsgroups, or message broadcast
+pools.  All of these ideas have the problem that they expose everyone
+in some group to all of the messages intended for every group member,
+hence the number of messages will scale as the square of the number of
+group members.  This will quickly become unmanageable for large groups,
+therefore providing only a limited amount of anonymity.
+
+It's also worth noting that our remailers are vulnerable to almost all
+of these attacks; at best we are safe against two or three of them.
+
+Hal Finney
+hfinney@shell.portal.com
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00669" HREF="msg00669.html">Re: Attacks on remailers</A></STRONG>
+<UL><LI><EM>From:</EM> cme@ellisun.sw.stratus.com (Carl Ellison)</LI></UL></LI>
+<LI><STRONG><A NAME="00670" HREF="msg00670.html">Re: Attacks on remailers</A></STRONG>
+<UL><LI><EM>From:</EM> cme@ellisun.sw.stratus.com (Carl Ellison)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00652.html">Chaum on the wrong foot?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00661.html">(CuD) (CuNews) Smart Kard Forum</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00671.html">Chaum on the wrong foot?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00669.html">Re: Attacks on remailers</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00653"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00653"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

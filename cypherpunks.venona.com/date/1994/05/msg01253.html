@@ -1,0 +1,199 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: "Email&#45;Firewalls" / Instant Corporate PGP -->
+<!--X-From-R13: Hvaprag.QngrNTGD[W@F.@SQFOD.QE.Q[G.SRG -->
+<!--X-Date: Sun, 22 May 94 13:05:42 PDT -->
+<!--X-Message-Id: 769636657/vac@FURMINT.NECTAR.CS.CMU.EDU -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: "Email-Firewalls" / Instant Corporate PGP</TITLE>
+<LINK REV="made" HREF="mailto:Vincent.Cate@FURMINT.NECTAR.CS.CMU.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01249.html">Date Prev</A>][<A HREF="msg01254.html">Date Next</A>][<A HREF="msg01250.html">Thread Prev</A>][<A HREF="msg01254.html">Thread Next</A>][<A HREF="index.html#01253">Date Index</A>][<A HREF="threads.html#01253">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: "Email-Firewalls" / Instant Corporate PGP</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:outnews%2Bnetnews.alt.security.pgp@andrew.cmu.edu">outnews+netnews.alt.security.pgp@andrew.cmu.edu</A></LI>
+<LI><em>Subject</em>: Re: "Email-Firewalls" / Instant Corporate PGP</LI>
+<LI><em>From</em>: <A HREF="mailto:Vincent.Cate@FURMINT.NECTAR.CS.CMU.EDU">Vincent.Cate@FURMINT.NECTAR.CS.CMU.EDU</A></LI>
+<LI><em>Date</em>: Sun, 22 May 1994 15:57-EDT</LI>
+<LI><em>In-Reply-To</em>: Vincent.Cate's mail message of Sun, 22 May 1994 02:55-EDT</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+ecarp@netcom.com (Ed Carp):
+&gt;I thought stdin was 0, and stdout was 1...
+
+That works much better!!!!    Thanks.
+
+I also made an outgoing "pgp-send" and renamed the incoming to
+"pgp-receive".  The pgp-send can be used for many users but does need a
+new line in your .maildelivery for each.  
+
+They are both FTPable from:
+
+     <A  HREF="ftp://furmint.nectar.cs.cmu.edu/security">ftp://furmint.nectar.cs.cmu.edu/security</A> 
+
+I also include them below.
+
+   -- Vince
+
+
+#!/bin/csh -f
+#
+#  pgp-send
+#
+#  This lets you set up mail addresses like "vac+eric" so you
+#  can send that you send encrypted mail without any extra work.
+#  To use this add lines like the following to your .maildelivery
+#  file:
+#
+#  Addr vac+tovince      pipe ? /usr/vac/pgp/pgp-send vac+pgp@cs.cmu.edu
+# 
+#  The "vac+tovince" is your own alias for this person.  The 
+#  vac+pgp@cs.cmu.edu is both the mailing address and what PGP uses 
+#  to find the key.
+# 
+#  This assumes PGPPATH is set and pgp is on your PATH.
+#  If not either fix that, or add a "cd" to that directory.
+#
+#  Note that the unecrypted mail will be on your machine a little 
+#  longer this way so this is a bit less secure than encrypting the 
+#  mail by hand.  However, this is a short period, and if your 
+#  machine's security is broken they could have read your mail as you 
+#  wrote it. 
+#
+#  With this, someone would need to do some "breaking and entering" 
+#  to get at your mail.  
+#
+#  Vince Cate
+#  vac@cs.cmu.edu
+#
+#  cd /usr/vac/pgp
+
+
+set TO = $1
+
+cat &gt; sendtmp.txt
+pgp -fe $TO &lt; sendtmp.txt | /usr/ucb/mail -s "encrypted mail" $TO
+
+/bin/rm sendtmp.txt
+
+exit 0
+
+
+
+#!/bin/csh -f
+#
+#  pgp-receive
+#
+#  The idea is to have an email address like "vac+pgp" that causes
+#  this script to be run which decrypts the mail and then sends it
+#  to your normal address.  
+#
+#  This lets you receive encrypted mail on a Unix machine without
+#  having to do anything extra.  It will work with any Unix machine
+#  that supports .maildelivery files using any mail reader.  It
+#  could even be used to forward mail to non-Unix machines if you
+#  thought you were on a reasonably secure net.  The entry in the
+#  .maildelivery file should be something like:
+#
+#  Addr vac+pgp          pipe ? /usr/vac/pgp/pgp-receive
+#
+#  This would be safe if your host machine were safe.  In any case,
+#  someone has to do some "breaking and entering" to get your mail.
+#  So this is much better than no encryption at all.
+#
+#  This file is <A  HREF="ftp://furmint.nectar.cs.cmu.edu/security/pgp-receive">ftp://furmint.nectar.cs.cmu.edu/security/pgp-receive</A>
+#     Vince Cate
+#     vac@cs.cmu.edu
+#
+#  For me the pgp directory is protected, so is a good to be in
+#  that directory both to drop the temporary file.
+#  The setenve PGPPASSFD 1 tells PGP to get the passphrase from
+#  the standard input.  To install this you need to edit the 3
+#  places with a "vac".
+
+setenv PGPPATH /usr/vac/pgp
+setenv PGPPASSFD 1
+
+cd $PGPPATH
+
+cat &gt; mailtmp.asc
+
+egrep 'Date:|From:|Subject:|To:' mailtmp.asc &gt;  mailtmp
+echo " "                                     &gt;&gt; mailtmp
+
+# This is less secure since some Unix ps commands can show other 
+# user's environemnts.
+#
+# setenv PGPPASS "not really vacs passphrase"
+# pgp -f &lt; mailtmp.asc &gt;&gt; mailtmp
+
+setenv PGPPASSFD 0
+(echo "not really vacs passphrase" ; cat mailtmp.asc) | pgp -f &gt;&gt; mailtmp
+
+
+/usr/ucb/mail -s "Was encrypted" vac &lt; mailtmp
+
+exit 0
+
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01249.html">Re: "Email-Firewalls" / Instant Corporate PGP</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01254.html">Re: "Email-Firewalls" / Instant Corporate PGP</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01250.html">Re: "Email-Firewalls" / Instant Corporate PGP</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01254.html">Re: "Email-Firewalls" / Instant Corporate PGP</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01253"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01253"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

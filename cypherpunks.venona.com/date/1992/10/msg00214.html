@@ -1,0 +1,210 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: entropy, with code -->
+<!--X-From-R13: Sevp Vhturf <uhturfNfbqn.orexryrl.rqh> -->
+<!--X-Date: Mon, 26 Oct 92 12:58:58 PPE -->
+<!--X-Message-Id: 9210261958.AA28999@soda.berkeley.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>entropy, with code</TITLE>
+<LINK REV="made" HREF="mailto:hughes@soda.berkeley.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00213.html">Date Prev</A>][<A HREF="msg00215.html">Date Next</A>][<A HREF="msg00221.html">Thread Prev</A>][<A HREF="msg00225.html">Thread Next</A>][<A HREF="index.html#00214">Date Index</A>][<A HREF="threads.html#00214">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>entropy, with code</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: entropy, with code</LI>
+<LI><em>From</em>: Eric Hughes &lt;<A HREF="mailto:hughes@soda.berkeley.edu">hughes@soda.berkeley.edu</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 26 Oct 92 11:58:24 -0800</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+The entropy-calculating code is at the end of this message.  I took
+the opportunity to calculate some sample entropies:
+
+entropy.c	5.283772	the source code
+entropy.asc	6.052222	entropy.c, encrypted and armored 
+entropy.as2	6.012493	entropy.asc, with the wrappers removed
+entropy.pgp	7.830532	entropy.c, encrypted alone
+entropy.obj	6.112890
+entropy.exe	6.947111
+randseed.bin	4.584963	from pgp, 24 bytes long
+pubring.pgp	7.754017	my public key ring
+
+The entropy of the source code is in the high end of the range for
+English, which is not surprising given the amount of symbols in
+ordinary C code.  The entropy increases with the object and the
+executable, each of which has less overt structure to it.
+
+The entropy of the encrypted and ascii armored source code is within
+1% of 6 bits, just as predicted.  And with the wrappers removed, it's
+even closer!  The binary version of the encrypted message has the
+highest entropy of all these tests.
+
+In randseed.bin, the entropy is much less than 8.  But the length of
+the file is 24 bytes and log_2 24 = 4.584963, indicating that there
+are no duplicate bytes in the file.  Hence the warning:  entropy
+calculations with small samples _will_ be misleading.
+
+Note that the entropy subroutine can be used to calculate the
+frequencies of any distribution.  This will allow all you code-writing
+cypherpunks to measure bit entropies, digram entropies, etc.
+
+Eric
+
+----------------------------------------------------------------
+
+/* entropy.c -- Calculate monogram entropies of standard input.
+ */
+
+#include &lt;stdio.h&gt;
+#include &lt;math.h&gt;
+
+/* This next define is to counteract the foolish C 7.00 runtime mapping
+ * of \x1A to EOF
+ */
+#define STUPID_NEWLINE_TRANSLATE	1
+
+#ifdef STUPID_NEWLINE_TRANSLATE
+#include &lt;io.h&gt;
+#include &lt;fcntl.h&gt;
+#endif
+
+/*--------------------------------------*/
+#define NUMBER_OF_BYTES		256
+long byte_freq[ NUMBER_OF_BYTES ] ;
+
+void
+main()
+{
+	int c, verbose = 0 ;
+	unsigned int j ;
+	double entropy( long *, int ) ;
+
+#if STUPID_NEWLINE_TRANSLATE
+	_setmode( _fileno( stdin ), _O_BINARY ) ;
+#endif
+
+	for ( j = 0 ; j &lt; NUMBER_OF_BYTES ; ++j ) {
+		byte_freq[ j ] = 0 ;
+	}
+
+	while ( EOF != ( c = getchar() ) ) {
+		++ byte_freq[ (unsigned int) c ] ;
+	}
+
+
+	if ( verbose ) {
+		for ( j = 0 ; j &lt; NUMBER_OF_BYTES ; ++j ) {
+			printf( "%3d=%-3d ", j, byte_freq[ j ] ) ;
+			if ( j % 8 == 7 ) printf( "\n" ) ;
+		}
+	}
+
+	printf( "%lf\n", entropy( byte_freq, NUMBER_OF_BYTES ) ) ;
+}
+
+/*--------------------------------------*/
+/* Calculates the entropy of the distribution given in list v of n elements.
+ * The list v gives counts.  v is summed, and frequencies are assigned 
+ * as v[i]/sum(v).
+ *
+ * Uses the following definitions and identities:
+ *   A = \Sum_{i=0}^{n-1} v_i
+ *   p_i = v_i / A
+ *   H = \Sum_{i} - p_i \log p_i
+ *	   = log A - 1/A \Sum_{i} v_i \log v_i
+ *   lim_{x \rightarrow 0} x \log x = 0
+ */
+
+double
+entropy( long *v, int n )
+{
+	double h ;
+	long sum ;
+	int j ;
+
+	/* first sum the array
+	 */
+	sum = 0 ;
+	for ( j = 0 ; j &lt; n ; ++j ) {
+		sum += v[ j ] ;
+	}
+
+	/* next calculate the entropy function
+	 */
+	h = 0 ;
+	for ( j = 0 ; j &lt; n ; ++ j ) {
+
+		/* If the frequency is zero, the entropy contribution is zero
+		 */
+		if ( v[ j ] == 0 ) continue ;
+
+		h -= v[ j ] * log( v[ j ] ) ;
+	}
+	h /= sum ;
+	h += log( sum ) ;
+
+	/* Now adjust the base of the logarithm to base 2
+	 */
+	h /= log( 2 ) ;
+
+	return h ;
+}
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00213.html">Re: Alpha Particles and One Time Pads</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00215.html">Alpha Particles and One Time Pads</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00221.html">Re: A Trial Balloon to Ban Encryption?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00225.html">list status</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00214"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00214"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

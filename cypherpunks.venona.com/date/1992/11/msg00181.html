@@ -1,0 +1,268 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: How far is to far? -->
+<!--X-From-R13: ninybaNpbbzof.nah.rqh.nh (Rneera Drrq) -->
+<!--X-Date: Thu, 19 Nov 92 19:35:05 PST -->
+<!--X-Message-Id: 9211192343.AA27930@coombs.anu.edu.au -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 9211191342.AA18149@coombs.anu.edu.au -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: How far is to far?</TITLE>
+<LINK REV="made" HREF="mailto:avalon@coombs.anu.edu.au">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00169.html">Date Prev</A>][<A HREF="msg00162.html">Date Next</A>][<A HREF="msg00175.html">Thread Prev</A>][<A HREF="msg00164.html">Thread Next</A>][<A HREF="index.html#00181">Date Index</A>][<A HREF="threads.html#00181">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: How far is to far?</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:mark@coombs.anu.edu.au">mark@coombs.anu.edu.au</A> (Mark)</LI>
+<LI><em>Subject</em>: Re: How far is to far?</LI>
+<LI><em>From</em>: <A HREF="mailto:avalon@coombs.anu.edu.au">avalon@coombs.anu.edu.au</A> (Darren Reed)</LI>
+<LI><em>Date</em>: Fri, 20 Nov 92 10:43:53 EST</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00175.html">9211191342.AA18149@coombs.anu.edu.au</A>&gt;; from "Mark" at Nov 20, 92 12:42 am</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:avalon@coombs.anu.edu.au">avalon@coombs.anu.edu.au</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+I've fixed the IP bouncer so it doesnt chew so much cpu any more,
+backgrounds itself and detachs from the tty.  In testing last night,
+it was using less %cpu than the telnet being used to connect to it on
+the same machine (hope that bodes well! :).
+
+Darren
+
+-----------------------------------------------------------------------------
+/* This file is telserv.c and is part of the Telnet Server package v. 1.0,
+   written by "Hal-9000".  Much of this package was developed by Richard
+   Stephens and my thanks go to "Xanadude" for providing me with that
+   section.  Performance fix by Darren Reed.
+
+   To compile, type "cc -O -s telserv.c -o telserv". */
+
+#include &lt;stdio.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;errno.h&gt;
+#include &lt;netinet/in.h&gt;
+#include &lt;arpa/inet.h&gt;
+#include &lt;sys/ioctl.h&gt;
+
+#define	SERV_TCP_PORT	12345	/* port I'll listen for connections on */
+#define	REM_HOST_ADDR	"127.0.0.1"	/* host I will bounce to */
+#define	REM_TCP_PORT	19		/* port I will bounce to */
+
+char sbuf[2048], cbuf[2048];
+
+main()
+{
+  int sockfd, newsockfd, clilen, childpid, opt = 1;
+  struct sockaddr_in  cli_addr, serv_addr;
+
+  sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &amp;opt, sizeof(opt));
+  bzero((char *) &amp;serv_addr, sizeof(serv_addr));
+  serv_addr.sin_family      = AF_INET;
+  serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+  serv_addr.sin_port        = htons(SERV_TCP_PORT);
+  if (bind(sockfd, (struct sockaddr *) &amp;serv_addr, sizeof(serv_addr)) == -1) {
+    perror("bind");
+    exit(-1);
+  }
+  listen(sockfd, 5);
+  setpgrp(getpid(), 0);
+  close(0); close(1); close(2);
+#ifdef TIOCNOTTY
+  if ((newsockfd = open("/dev/tty", O_RDWR)) &gt;= 0) {
+    ioctl(newsockfd, TIOCNOTTY, (char *)0);
+    close(newsockfd);
+  }
+#endif
+  if (fork())
+    exit(0);
+  while (1) {
+    clilen = sizeof(cli_addr);
+    newsockfd=accept(sockfd, (struct sockaddr *) &amp;cli_addr, &amp;clilen);
+    if (newsockfd == -1)
+      exit(-1);
+    setsockopt(newsockfd, SOL_SOCKET, SO_REUSEADDR, &amp;opt, sizeof(opt));
+    /*
+    ** NB: FNDELAY and O_NDELAY aren't the same on all machines and on most
+    ** we want FNDELAY.  The differences are subtle but differences all the
+    ** same.
+    */
+#ifdef FNDELAY
+    fcntl(newsockfd,F_SETFL,fcntl(newsockfd,F_GETFL,0)|FNDELAY);
+#else
+    fcntl(newsockfd,F_SETFL,O_NDELAY);
+#endif
+    childpid = fork();
+    if (childpid == 0) {         /* child process */
+      close(sockfd);             /* close original socket */
+      telcli(newsockfd);         /* process the request */
+      exit(0);
+    }
+
+    close(newsockfd);            /* parent process */
+    wait(0);
+    }
+  }
+
+telcli(clisockfd)
+{
+  int servsockfd;
+  struct sockaddr_in  serv_addr;
+
+  bzero((char *) &amp;serv_addr, sizeof(serv_addr));
+  serv_addr.sin_family       = AF_INET;
+  serv_addr.sin_addr.s_addr  = inet_addr(REM_HOST_ADDR);
+  serv_addr.sin_port         = htons(REM_TCP_PORT);
+  servsockfd = socket(AF_INET, SOCK_STREAM, 0);
+  connect(servsockfd, (struct sockaddr *) &amp;serv_addr, sizeof(serv_addr));
+#ifdef FNDELAY
+  fcntl(servsockfd,F_SETFL,fcntl(clisockfd,F_GETFL,0)|FNDELAY);
+#else
+  fcntl(servsockfd,F_SETFL,O_NDELAY);
+#endif
+  communicate(servsockfd,clisockfd);
+  close(servsockfd);
+  exit(0);
+}
+
+communicate(sfd,cfd)  {
+  char *chead, *ctail, *shead, *stail;
+  int num, nfd, spos, cpos;
+  extern int errno;
+  fd_set rd, wr;
+
+  chead = ctail = cbuf;
+  cpos = 0;
+  shead = stail = sbuf;
+  spos = 0;
+
+  while (1) {
+    FD_ZERO(&amp;rd);
+    FD_ZERO(&amp;wr);
+
+    if (spos &lt; sizeof(sbuf)-1)
+      FD_SET(sfd, &amp;rd);
+    if (ctail &gt; chead)
+      FD_SET(sfd, &amp;wr);
+    if (cpos &lt; sizeof(cbuf)-1)
+      FD_SET(cfd, &amp;rd);
+    if (stail &gt; shead)
+      FD_SET(cfd, &amp;wr);
+    nfd = select(256, &amp;rd, &amp;wr, 0, 0);
+    if (nfd &lt;= 0)
+      continue;
+
+    if (FD_ISSET(sfd, &amp;rd)) {
+      num=read(sfd,stail,sizeof(sbuf)-spos);
+      if ((num==-1) &amp;&amp; (errno != EWOULDBLOCK)) return;
+      if (num==0) return;
+      if (num&gt;0) {
+        spos += num;
+        stail += num;
+	if (!--nfd)
+	  continue;
+      }
+    }
+    if (FD_ISSET(cfd, &amp;rd)) {
+      num=read(cfd,ctail,sizeof(cbuf)-cpos);
+      if ((num==-1) &amp;&amp; (errno != EWOULDBLOCK)) return;
+	if (num==0) return;
+	if (num&gt;0) {
+	  cpos += num;
+	  ctail += num;
+	  if (!--nfd)
+	    continue;
+      }
+    }
+    if (FD_ISSET(sfd, &amp;wr)) {
+      num=write(sfd,chead,ctail-chead);
+      if ((num==-1) &amp;&amp; (errno != EWOULDBLOCK)) return;
+      if (num&gt;0) {
+        chead += num;
+        if (chead == ctail) {
+          chead = ctail = cbuf;
+          cpos = 0;
+        }
+        if (!--nfd)
+          continue;
+      }
+    }
+    if (FD_ISSET(cfd, &amp;wr)) {
+      num=write(cfd,shead,stail-shead);
+      if ((num==-1) &amp;&amp; (errno != EWOULDBLOCK)) return;
+      if (num&gt;0) {
+        shead += num;
+        if (shead == stail) {
+          shead = stail = sbuf;
+          spos = 0;
+        }
+        if (!--nfd)
+          continue;
+      }
+    }
+  }
+}
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00175" HREF="msg00175.html">How far is to far?</A></STRONG>
+<UL><LI><EM>From:</EM> mark@coombs.anu.edu.au (Mark)</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00169.html">Some proposals to consider</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00162.html">Re: PGP to SMTP mailer</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00175.html">How far is to far?</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00164.html">Re: How far is to far?</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00181"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00181"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

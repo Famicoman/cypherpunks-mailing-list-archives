@@ -1,0 +1,218 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: no subject (file transmission) -->
+<!--X-From-R13: abobqlNfbqn.orexryrl.rqh -->
+<!--X-Date: Sat, 12 Dec 92 14:25:21 PST -->
+<!--X-Message-Id: 9212122224.AA04784@soda.berkeley.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>no subject (file transmission)</TITLE>
+<LINK REV="made" HREF="mailto:nobody@soda.berkeley.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00112.html">Date Prev</A>][<A HREF="msg00113.html">Date Next</A>][<A HREF="msg00112.html">Thread Prev</A>][<A HREF="msg00113.html">Thread Next</A>][<A HREF="index.html#00111">Date Index</A>][<A HREF="threads.html#00111">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>no subject (file transmission)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: no subject (file transmission)</LI>
+<LI><em>From</em>: <A HREF="mailto:nobody@soda.berkeley.edu">nobody@soda.berkeley.edu</A></LI>
+<LI><em>Date</em>: Sat, 12 Dec 92 14:24:34 -0800</LI>
+<LI><em>Remailed-By</em>: Eric Hollander &lt;hh@soda.berkeley.edu&gt;</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Cypherpunks!
+
+Like several people (I guess), I am working on an implementation of
+digital cash.  Because of the possible legal repurcussions, I'd prefer
+to remain anonymous at this time.  Thanks to the efforts of the people
+on this list, this is now possible.
+
+My implementation is pretty far along.  It uses PGP modules for the
+arithmetic, so the speed is good.  It works on Unix and I should be
+able to get it working on MSDOS in a day or two.  Sorry, I don't have
+the ability to work on a Mac version.
+
+Here are some of the features.  The basic cash algorithm is the Chaum
+system which was posted here.  Multiple denominations are supported,
+using different exponents for each denomination.  The program is
+presented in the context of a package to be used for an email based
+game like Monopoly where the program would be used to allow cash
+transfers.  One player is the "banker", and he uses a different
+execution module than the other players.  The banker program keeps a
+database of used note numbers which is used to detect money reuse.
+The database is maintained using a freeware version of the "dbm"
+package, so it should be fast even for large note number databases.
+
+The mapping between exponents and values is as follows:
+
+    exponent	    value
+	17		1
+	19		2
+	23		5
+	29		10
+	31		20
+	37		50
+	41		100
+	43		200
+	47		500
+	53		1000
+	59		2000
+	61		5000
+	67		10000
+
+and so on, up to a value of 2e9.  The exponents are ascending primes
+starting with 17.  This was chosen because you want them to be
+smallish for fast note checking, but it was too slow to find primes p
+and q for the bank key such that (p-1)(q-1) was not divisible by any
+small primes.  The program chooses random p and then tests p-1 to make
+sure it passes the divisibility test, and rejects it if not.  Too many
+were being rejected when I started with an exponent of 3.  Starting
+with 17 rejects about 1/2 the exponents, compared to something like
+80% when I started with 3.  The "value" fields are presumed to be
+cents, but could be whatever you like.
+
+The code I've written does not do anything other than the basic
+electronic cash algorithms.  It does not do bank account maintenance.
+It doesn't do PGP encryption.  It doesn't send mail.  (It does have
+some functions to scan and check the files created by the program.)
+
+Cash generation is a 3 step process.  First, the user creates what I
+call a "withdrawal request" packet.  This is a set of triplets of the
+form (e, s, refx), where e is the exponent from the table above, s is
+a 16-byte "unique identifier" used solely to link these withdrawal
+requests with the returned messages from the bank, and refx is r^e * f(x).
+f(x) is MD5 of x, padded to the size of the bank's modulus n using the
+PGP routine which pads MD5 signatures.  This padding helps make sure the
+arithmetic is more "mixing".  x is the random input to MD5, which I've
+chosen as 64 bytes since that is the block size MD5 works on.  (The
+output of MD5 is 16 bytes.)  r is the blinding factor.  This is now
+128 bits long; longer r's take too long to calculate r^-1 in the third
+step, below.  (It takes longer for PGP to calculate r^-1 than to do an
+RSA decryption, for r = n = 1024 bits!)
+
+Second, the bank program converts the withdrawal request packet into
+what I call a "withdrawal" packet, by just RSA-decrypting the third
+entry using the inverse exponent "d" for the value exponent "e".
+(These "d" values are calculated at keygen time and stored with the
+bank's key information in a private file.)  I call the return triplet
+(e, s, rfxd), where e is the value exponent again, s is the same
+unique identifier, and rfxd is r * f(x)^d.
+
+(As I said above, the code I've written does not try to maintain
+account balances or do any other banking functions.  It just does the
+cash algorithms.  There is a routine to scan a withdrawal request and
+return the total value being requested for withdrawal.  The idea was
+that this could be used as input to a banking program to decide
+whether to allow the withdrawal.)
+
+Third, the "player" (e.g. user) program transforms the withdrawal
+packet into a "money" packet, by un-blinding it.  To do this, it has
+to recover the x and r which correspond with each triplet.  This is
+done by the use of a dbm database of "pending withdrawal requests"
+which is written during step 1, above.  The database entries are keyed
+by (e, s) and return the corresponding (x, r) which were generated
+during step 1.  Using x and r, the user transforms (e, s, rfxd) into
+(e, x, fxd), the digital cash.  e is the value exponent, x is the
+random 64-byte number, and fxd is f(x)^d, the signed version of the
+MD5'd and padded x.
+
+There are also player functions to scan and check a money file
+(comparing a calculated f(x) to fxd^e), merge money files, and extract
+some items from a money file into another money file (this last is
+what is to be used for payment).  There are banker functions to check
+incoming money and compare against the used-note database, and to add
+incoming money to that database.  (The database consists of the
+16-byte f(x) values for each note.)
+
+I am pretty happy with the basic routines, but the user interface
+needs work.  There are three kinds of files floating around
+(withdrawal requests, withdrawals, and money files) and I'm worried
+that this will be confusing to the user.  If he accidentally deletes
+one at the wrong time he could lose money permanently.  Or if he
+accidentally reuses one he could be accused of fraud.  I'm not sure
+what the best model is for the user.
+
+The specific issues of creating withdrawal messages and extracting
+"bills" from a money file are areas where the user interface should be
+made nice.  We want to make it easy for the user to specify exactly
+what denominations he wants to work with.  One possibility is to
+simply have him input the amount (e.g. $10.55) and the program
+calculates that that's a 1000, a 50, and a 5, but this isn't really
+flexible enough.  A nice system would be to give him a list of options
+and let him fill out a form on-screen, but that's hard to do portably.
+
+Another idea I've had is that there should be a special money file
+called the user's "wallet" which is the default place where incoming
+money from the bank should go.  This might help organize things.  He
+still needs to be able to create other money files for paying other
+people, and remembering to delete them after he sends them.
+
+Any suggestions or thoughts on these interface issues, or comments
+about how this program could or should be integrated into a larger
+system, would be appreciated.
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: 2.0
+
+mQCNAisiUPkAAAED/i1Pf1DaubveDsgjh360rNJ7kWkhssobaVmmWa70l4lOTwy/
+sGwhJaA+JdScO9g3B66DIAaU0GiNrTS4YEl/b5ohNDZFdqKlxZ7NW9A5JYjUlhGE
+a53cRwqUXs42kbPbMh/uKxXBgbUnKrKZnWAh29irDWb+G8OEPQrkCJ6S8691AAUR
+tAl4UGhhZWRydXM=
+=HVRq
+-----END PGP PUBLIC KEY BLOCK-----
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00112.html">no subject (file transmission)</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00113.html">Remailer problem at rebma fixed</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00112.html">no subject (file transmission)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00113.html">Remailer problem at rebma fixed</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00111"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00111"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,157 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Cracking RC4/40 for massive wiretapps -->
+<!--X-From-R13: Oqnz Pnpx <nonNqpf.rk.np.hx> -->
+<!--X-Date: Fri, 2 Aug 1996 11:51:54 +0800 -->
+<!--X-Message-Id: 199608020034.BAA02423@server.test.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199608010603.XAA19276@toad.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Cracking RC4/40 for massive wiretapps</TITLE>
+<LINK REV="made" HREF="mailto:aba@dcs.ex.ac.uk">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00081.html">Date Prev</A>][<A HREF="msg00082.html">Date Next</A>][<A HREF="msg00026.html">Thread Prev</A>][<A HREF="msg00038.html">Thread Next</A>][<A HREF="index.html#00114">Date Index</A>][<A HREF="threads.html#00114">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Cracking RC4/40 for massive wiretapps</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A></LI>
+<LI><em>Subject</em>: Re: Cracking RC4/40 for massive wiretapps</LI>
+<LI><em>From</em>: Adam Back &lt;<A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 2 Aug 1996 01:34:39 +0100</LI>
+<LI><em>CC</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:aba@dcs.ex.ac.uk">aba@dcs.ex.ac.uk</A></LI>
+<LI><em>In-reply-to</em>: &lt;199608010603.XAA19276@toad.com&gt; (message from Bill Stewart onWed, 31 Jul 1996 23:01:16 -0700)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Bill Stewart &lt;stewarts@ix.netcom.com&gt; writes:
+&gt; But those designs are for one-at-a-time cracks.  An interesting question
+&gt; is whether you can speed up performance substantially by cracking
+&gt; multiple messages at once.
+
+For known plaintext attack on pure RC4 this would work marvelously,
+should get close to linear speed up I think as the greatest overhead
+is the key setup.
+
+This was discussed some during the netscape SSL break, it didn't apply
+to 40 bit SSL because it was really 128 bit, just with 88 bits
+disclosed, so the 88 bits functioned as a salt.  But it applies just
+fine to pure RC4-40, ... or even to ECB DES...
+
+This is interesting as applied to DES, does anyone have any banking or
+funds transfer protocols handy which use DES in ECB mode :-)
+
+Perhaps we could get DES down to a manageable number of bits, together
+with the argument that the attacker wouldn't care who's money he stole.
+
+&gt; For instance, if you've got known plaintext, such as a standard
+&gt; header format saying "FooVoice" or "BEGIN DSA-SIGNED..", you can try
+&gt; many keys and compare them with _many_ cyphertexts, which may not
+&gt; slow down the FPGA very much.
+
+Thinking of software attacks and RC4-40, if you were attacking pure
+RC4-40, you would collect your 16k known-plaintext / ciphertext pairs,
+xor them, and sort the xored texts and store them in some kind of
+dictionary lookup structure .  Then you'd do the key schedule, then
+traverse the btree with each byte that the RC4_encrypt_byte would have
+xored with the text being encrypted.  As soon as you took a branch
+which didn't exist in the btree you'd move on to the next key and
+keyschedule.
+
+[hacking interlude]
+
+I got bored so I hacked up a test of this of the overheads of lookups,
+using bsearch under linux I get lookups / sec against number of known
+plaintexts:
+
+  known	plaintext/
+  ciphertext			actual		avg time to 
+  pairs		lookups/s	keys/s	keys/s	find a key
+  ========================================================
+  16k		71k		23k	376M	24 mins
+  8k		77k		24k	193M	48 mins
+  4k		91k		25k	101M	1.5 hrs
+  2k		100k		25k	52M	2.9 hrs
+  1k		125k		27k	27M	5.6 hrs
+  1		-		34k	34k	187 days
+
+The tests were done on an AMD 486 dx/4 120 (a 120Mhz i486 clone), the
+keys/s for pure rc4-40 are from a hand optimised assembly version
+which I'd been playing with.
+
+`actual keys' is the keys from the search space of 2^40.
+
+`lookups/s' is the number of bsearches per second for the given sized
+pre-xored table.  (Known plaintext xored with ciphertext allows the
+check for correct key to be done with memcmp).
+
+`keys/s' is the number of keys tested at once * the actual keys/s
+
+`avg time..' is the expected time before find a key.
+
+So based on one machine, if you had 1000 known plaintexts, you would
+get a key in around 5 hours.  Multiply by 100 machines, some faster
+some slower and it gets interesting.
+
+Our only problem now is to find someone dumb enough to use pure RC4-40,
+
+Adam
+--
+#!/bin/perl -sp0777i&lt;X+d*lMLa^*lN%0]dsXx++lMlN/dsM0&lt;j]dsj
+$/=unpack('H*',$_);$_=`echo 16dio\U$k"SK$/SM$n\EsN0p[lN*1
+lK[d2%Sa2/d0$^Ixp"|dc`;s/\W//g;$_=pack('H*',/((..)*)$/)
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00081.html">Re: Tolerance</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00082.html">Viet Nam Considered Less Harmful than Cambodia</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00026.html">Re: Cracking RC4/40 for massive wiretapps</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00038.html">Security of Web registration of Lview Pro</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00114"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00114"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

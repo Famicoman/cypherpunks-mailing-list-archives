@@ -1,0 +1,136 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re:  Testing randomness of PGP&#45;generated IDEA keys -->
+<!--X-From-R13: zweNFWE.QA[ -->
+<!--X-Date: Tue, 14 Sep 93 20:00:08 PDT -->
+<!--X-Message-Id: 13737.9309150258@otter.TIS.COM -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re:  Testing randomness of PGP-generated IDEA keys</TITLE>
+<LINK REV="made" HREF="mailto:mjr@TIS.COM">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00302.html">Date Prev</A>][<A HREF="msg00308.html">Date Next</A>][<A HREF="msg00309.html">Thread Prev</A>][<A HREF="msg00324.html">Thread Next</A>][<A HREF="index.html#00305">Date Index</A>][<A HREF="threads.html#00305">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re:  Testing randomness of PGP-generated IDEA keys</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:an31185@anon.penet.fi">an31185@anon.penet.fi</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re:  Testing randomness of PGP-generated IDEA keys</LI>
+<LI><em>From</em>: <A HREF="mailto:mjr@TIS.COM">mjr@TIS.COM</A></LI>
+<LI><em>Date</em>: Tue, 14 Sep 93 22:58:57 -0400</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;Hi, you may remember a few weeks back I was going to take a look at
+&gt;the randomness of PGP random number generation.... well, I finally
+&gt;got round to it. Since the MD5 of the file being encrypted is used
+&gt;as part of the random number generation process to prevent anyone 
+&gt;copying the randseed.bin file and generating all future keys from it, [...]
+
+	I found myself embroiled in a similar exploration of random
+number generation as part of some other work, and it took me a while
+to realize that running statistics on the output of the PRNG is
+almost useless, if you're using a cryptosystem or cryptographic hash
+as the PRNG. With any decent cryptosystem, one bit change in the
+input to the PRNG will cause every bit of the output to have a
+50% chance of being different - that's a desirable property in a
+cryptosystem. DES, and I assume IDEA, show this property.
+
+	What you've got to look at is the predictability of the
+input to the PRNG. PGP is in really good shape here, because it
+bootstraps its PRNG with its input, which presumably is unknown
+to the attacker. An example of a weak PRNG would be:
+
+	`date | md5`
+
+	For example:
+
+otter-&gt; cat foo
+#!/bin/sh
+date | /usr/local/bin/md5
+date | /usr/local/bin/md5
+sleep 1
+date | /usr/local/bin/md5
+otter-&gt; foo
+f4a66f827a8e62ad9c419f7e2117abc6
+f4a66f827a8e62ad9c419f7e2117abc6
+bcfa24d319ccdcad56a99be2e203e787
+
+	As you expect the first two runs are exactly the same.
+The second run is completely different. The seed, however, is
+only very slightly changed (by one second). You could run
+statistical analyses on the output for a long time and never
+realize that your random number is really extremely easy to
+crack. If I knew roughly what day you generated the "random"
+number on, I could crack it in only 86,400 MD5 hashes, and
+it's an operation that parallelizes trivially. *MUCH* cheaper
+to attack the PRNG than the cryptosystem! And if you used a
+toy PRNG to generate your RSA key, then you're lunchmeat.
+
+	Anyhow, I've been over-long winded. I think PGP is
+in good shape because of the aforementioned property of
+using the message as a seed. Messages that don't change
+much, or that change predictably, are subject to exhaustive
+searching. A means of analysing the unpredictability of
+the seed is more worthwhile. I made some basic starts at
+doing this by ad hoc measures (generating repeated seeds
+and running them through a program to count a minimum-bit
+edit similar to diff) but I wasn't sure enough of the
+validity of my approach to bother continuing it. My hat
+is off to the guy who came up with the idea of seeding
+the PRNG with the message. That was *clever*.
+
+mjr.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00302.html">No Subject</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00308.html">more than spread spectrum</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00309.html">Testing randomness of PGP-generated IDEA keys</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00324.html">Re: Testing randomness of PGP-generated IDEA keys</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00305"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00305"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,208 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: More on remailer chaining -->
+<!--X-From-R13: abobqlNfuryy.cbegny.pbzusvaarlNfuryy.cbegny.pbz (Vny Tvaarl) -->
+<!--X-Date: Tue, 9 Aug 94 17:42:21 PDT -->
+<!--X-Message-Id: 199408100042.RAA15568@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>More on remailer chaining</TITLE>
+<LINK REV="made" HREF="mailto:nobody@shell.portal.comhfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00452.html">Date Prev</A>][<A HREF="msg00462.html">Date Next</A>][<A HREF="msg00455.html">Thread Prev</A>][<A HREF="msg00471.html">Thread Next</A>][<A HREF="index.html#00461">Date Index</A>][<A HREF="threads.html#00461">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>More on remailer chaining</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: More on remailer chaining</LI>
+<LI><em>From</em>: <A HREF="mailto:nobody@shell.portal.com">nobody@shell.portal.com</A></LI>
+<LI><em>From</em>: <A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A> (Hal Finney)</LI>
+<LI><em>Date</em>: Tue, 9 Aug 1994 17:42:05 -0700</LI>
+<LI><em>Comments</em>: This message is NOT from the person listed in the Fromline.  It is from an automated software remailing service operating atthat address.  Please report problem mail to &lt;hfinney@shell.portal.com&gt;.</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+I have one small addition to the analysis I did yesterday of remailer
+chaining effects.  Previously I was assuming that there was a uniform
+distribution of messages across remailers, so that all saw the same
+number of packets.  How does this change if some remailers are used
+more than others?
+
+Again I will sneak up on the problem by taking a concrete example.
+Suppose there are two remailers and that we are using two-remailer
+chains which include the possibility of using the same remailer twice.
+
+Suppose one of the remailers is used much more than the other.  Take
+an extreme case, where remailer 1 is used 90% of the time and remailer
+2 is used 10% of the time.  If we suppose that these probabilities
+affect both the choice of the first and second remailer in the chain,
+then the four possible chains have the following frequencies of use:
+
+1,1   81%
+1,2    9%
+2,1    9%
+2,2    1%
+
+Notice that this also implies that 90% of the messages enter the net
+at remailer 1 and 10% at 2, and also that 90% leave via 1 and 10%
+leave via 2.
+
+Now, ignoring for a moment the fact that there may be some reason
+people are shunning 2 (they suspect it is compromised, or it is
+unreliable, or something - but maybe it's just new and a lot of people
+haven't heard about it yet), what is the safest way to use this
+network?
+
+The key, I believe, is to imitate the observed statistics in your own
+choice of a chain, at least for the 2nd hop.  90% of the messages
+coming out of the first stage of either remailer will go to remailer
+1.  If you want your message to be lost most effectively among the
+others, you should choose remailer 1 as your own 2nd hop 90% of the
+time.  This way your message will be 9 times more likely to go to 1
+than 2, but since there is 9 times the traffic going to 1 than to 2 it
+will be perfectly masked.
+
+The result will be that your message is equally likely to be any of
+the N messages coming out of the remailer.  Your statistics will match
+all of the others.  Therefore, you get a full factor of N mixing with
+such an unbalanced network, just as much as you get with a perfectly
+symmetrical network - as long as you imitate the network statistics.
+
+The choice of the first remailer in your chain does not appear to be
+critical.  We assume the opponent can see which remailer you have
+chosen (by tracking your message from your site to the remailer) so
+there is no advantage to choosing 1 over 2 as far as secrecy.  You
+will get full N-fold mixing in either case.  This is a bit
+counter-intuitive; it might seem that choosing 1 is superior to
+choosing 2 in terms of mixing.  But look at a specific example:
+
+Suppose 100 messages enter the network, 90 at 1 and 10 at 2.  After
+the first step, 9 messages go from 1 to 2 (10% of the 90) and 9
+messages go from 2 to 1 (90% of the 10).  Then 90 messages are sent
+from 1 and 10 from 2.  Now, if your message entered at 2, but had a
+90% probability of going to 1 at the second hop, then there is a 90%
+chance that it ended up as one of the 90 messages leaving 1, and a 10%
+chance that it ended up as one of the 10 messages leaving 2.  This
+tells observers exactly nothing about where your message is.  So
+choosing 2 as the first hop is just as good as choosing 1.
+
+Although I have not yet extended these results to longer hops and
+larger numbers of remailers, my guess is that the same general rule
+will apply there as well.  This suggests that it will be useful and
+important to have accurate information about the usage levels of the
+various remailers so that you can accurately mimic those
+probabilities.
+
+How bad is it if you don't have accurate usage information?  According
+to my calculations, in the case of two remailers, if the actual
+probabilities of the two remailers being used are p and 1-p, and the
+probabilities you use are q and 1-q, the mixing level you get
+decreases from N to N * (p/q)^q * ((1-p)/(1-q))^(1-q).  If q=p and you
+have accurate information there is no reduction.  In the example
+above, with p=.9, if you didn't know this and used q=.5, your mixing
+level reduces to N*.6.  This is not a huge reduction even for this
+rather extreme case, but I can't guess how this will extend to larger
+networks and chains.
+
+Assuming these results do hold true, though, it suggests some
+interesting "market" dynamics.  Patterns of usage of the remailers may
+tend to be stable since anyone who departs from the current usage
+pattern will stand out and hence lose security.  It may be difficult
+for new remailers to become established since their initial usage
+level will be low, making it risky to use them to any significant
+degree.  These considerations are somewhat similar to situations where
+there are competing but incompatible standards (e.g. Beta vs VHS
+VCR's) in terms of the barriers to entry.
+
+There may also be considerable misinformation about usage levels.  It
+will be to the advantage of a site to exaggerate the number of
+messages they are handling.  Especially if noise messages are used (a
+strategy I haven't tried to analyze yet) it would be easy to generate
+bogus statistics.  Maybe some organization could collect statistics by
+polling remailer users about their practices rather than believing the
+operators, and make that information available.
+
+Another point is that, assuming that remailer operation is actually
+going to be profitable some day, there will be advantages to being one
+of the first to market.  Getting your remailer widely known and used
+in the early days could establish market leadership which will have
+considerable staying power just from the inherent properties of how
+these networks work.  Heavily-used remailers could charge premium
+prices while the "little guys" have to be cut rate in order to grow,
+compensating users for the loss of security they will experience.
+
+Maybe this will encourage people to make the investment to become what
+Tim May has called "Mom and Pop" remailers.  This might be the golden
+opportunity to get in on the ground floor.  For more information, send
+$10 in digital cash for our investment kit: "How you can make a
+fortune running anonymous remailers!"  Please include an anonymous
+return address. :-)
+
+Hal
+
+-----BEGIN PGP SIGNATURE-----
+Version: 3.14159
+
+iQCVAgUBLkghT6gTA69YIUw3AQFaJgP/e7RRWrEowQDQ9RdN+w9wC5zQ3Zod2w5n
+oeZLFlMJFzEjer2gxjh0yt+a0CPJA1p33W1BvxNODI2nmPHiFeVcD24L9oNzoyf9
+QBrUMAJiuR09QQCPz8MjBwXdIXD1hU25hMiCN/drrJuRCgsFpp1wPlmWU2EnHK4g
+uoiDsWb4Wg4=
+=l7nS
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00452.html">Direct Satellite phone service</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00462.html">Re: No more NSA supra-computer?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00455.html">Offline reading</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00471.html">This is a test</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00461"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00461"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

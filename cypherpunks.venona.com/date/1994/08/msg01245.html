@@ -1,0 +1,231 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: MATH: Brands cash, Hal's posts -->
+<!--X-From-R13: Yney Zhv Pneehf <xyoneehfNbjyarg.evpr.rqh> -->
+<!--X-Date: Fri, 26 Aug 94 15:37:09 PDT -->
+<!--X-Message-Id: 9408262236.AA17736@snowy.owlnet.rice.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>MATH: Brands cash, Hal's posts</TITLE>
+<LINK REV="made" HREF="mailto:klbarrus@owlnet.rice.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01241.html">Date Prev</A>][<A HREF="msg01248.html">Date Next</A>][<A HREF="msg01236.html">Thread Prev</A>][<A HREF="msg01254.html">Thread Next</A>][<A HREF="index.html#01245">Date Index</A>][<A HREF="threads.html#01245">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>MATH: Brands cash, Hal's posts</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: MATH: Brands cash, Hal's posts</LI>
+<LI><em>From</em>: Karl Lui Barrus &lt;<A HREF="mailto:klbarrus@owlnet.rice.edu">klbarrus@owlnet.rice.edu</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 26 Aug 94 17:36:34 CDT</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Cypherpunks, or maybe that's Atompunks,
+
+Earlier, Hal posted several excellent messages concerning Brands' cash, 
+and some introductory material.  I always find it useful to work through
+various protocols by hand (well, with Mathematica), working with real 
+numbers to help understand the protocol and how it works.  So like I did 
+a long time ago when Hal posted a description of Chaumian cash, I will give 
+an example of the protocols described.  I intend to follow along Hal's posts 
+and work math as it comes up (and try to keep the notation consistent!).
+I'll not be using numbers large enough to give actual security.
+
+For folks with Mathematica, the functions of interest are PowerMod[a,b,c]
+to calculate a^b mod c, and Mod[a,b] to calculate a mod b.
+
+Hal's first post was introductory material on discrete logs:
+
+* Generators
+
+&gt; Discrete-log based cryptosystems generally work with a modulus n which is
+&gt; prime, along with a "generator" g &lt; n such that the series g^0, g^1, g^2,
+&gt; ... , includes all values from 1 to n-1.  It is pretty straightforward to
+&gt; find such n's and g's.  It is easy to compute g^x for any x, but
+&gt; intractable to calculate x given just g^x.
+
+Finding a generator g is easy if you know the factorization of n-1.  You just
+need to calculate g^((n-1)/q) mod n for all values of q, the prime factors of
+n.  If any of the results are 1, then g is not a generator.
+
+So say you want to see if 5 is a generator mod 2047.  The prime factors of 
+n - 1 = 2046 are { 2, 3, 11, 31 }, so you calculate:
+
+5 ^ (2046/2) mod 2047 = 1034
+5 ^ (2046/3) mod 2047 = 622
+5 ^ (2046/11) mod 2047 = 1435
+5 ^ (2046/31) mod 2047 =  622
+
+None of these turned out to equal 1, so 5 is a generator mod 2047.
+
+* Diffie-Hellman key exchange
+
+&gt; 1.  Alice chooses a random x and sends GX = g^x to Bob.  Bob chooses a
+&gt;     random y and sends GY = g^y to Alice.
+
+Let's use g = 10, and pick p = 17389.  10 is indeed a generator mod 17389.
+
+Alice chooses x = 53, and calculates g^x mod p = 10^53 mod 17389
+                                               = 9059
+
+Bob chooses y = 4321 and calculates g^y mod p = 10^4321 mod 17389
+                                              = 16077
+
+They exchange, so Alice receives GY = 16077 and Bob receives GX = 9059
+
+&gt; 2.  Alice calculates GY^x, which is g^(y*x).  Bob calculates GX^y, which
+&gt;     is g^(x*y).
+
+Alice calculates 16077^53 mod 17389 = 11643
+Bob calculates 9059^4321 mod 17389 = 11643
+
+&gt; 3.  These are equal, so they use them as their shared secret value.
+
+Alice and Bob agree to the shared secret 11643.
+
+&gt; An observer sees only GX and GY, and without knowledge of x and y is
+&gt; unable to calculate g^(x*y).
+
+* DH-based identification protocol
+
+For this example, suppose we use g = 10, p = 17389 as above.  Also, Paul
+chooses x = 555 to be his private key, therefore 10^555 mod 17389 = 11106
+is his public key.
+
+&gt; 1.  Vicki chooses a random y and sends GY = g^y to Paul.
+
+Vicki randomly chooses y = 1994, so she sends 10^1994 mod 17389 = 13848.
+
+&gt; 2.  Paul calculates GYX = GY^x = g^(y*x) and sends that back to Vicki.
+
+Paul calculates 13848^555 mod 17389 = 8324, and sends it back.
+
+&gt; 3.  Vicki confirms that GYX = GX^y; both should be g^(x*y).
+
+Vicki checks 11106^1994 mod 17389 = 8324.  This matches what Paul sent back.
+
+* Schnorr identification protocol
+
+&gt; 1.  Paul chooses a random w and sends GW = g^w to Vicki.
+
+Paul chooses w = 200, and sends 10^200 mod 17389 = 14097 to Vicki.
+
+&gt; 2.  Vicki chooses a random c and sends it to Paul.
+
+Vicki chooses c = 561 and sends this to Paul.
+
+&gt; 3.  Paul calculates r = cx+w and sends that to Vicki.
+
+Paul calculates r = 561 * 555 + 200 = 311555.
+
+&gt; 4.  Vicki confirms that g^r = (GX^c)*GW.  Both should be g^(cx+w).
+
+Vicki checks: 10^315555 mod 17389 = 4594
+      (11106^561) 14097 mod 17389 = ((11106^561 mod 17389) * 14097) mod 17389
+                                  = 4594
+
+* Chaum discrete log interactive signature protocol
+
+Here, we'll pick m = 1040.  Thus, Paul can calculate MX = 1040^555 mod 17389
+                                                        = 8608
+                   
+&gt; 1.  Paul chooses a random w and sends GW = g^w and MW = m^w to Vicki.
+
+As above, Paul chooses w = 200, so he sends GW = 14097 and 
+MW = m^w mod p = 1040^200 mod 17389 = 472 to Vicki.
+
+&gt; 2.  Vicki chooses a random c and sends it to Paul.
+
+She chooses 561 again.
+
+&gt; 3.  Paul calculates r = cx+w and sends that to Vicki.
+
+He calculates 311555 again.
+
+&gt; 4.  Vicki confirms that g^r = (GX^c)*GW.  Both should be g^(cx+w).  She
+&gt;     also confirms that m^r = (MX^c)*MW.  Both should be m^(cx+w).
+
+Vicki checks g^r as above.  
+Now she also checks: m^r mod p = 1040^311555 mod 17389 = 13723
+                     (MX^c)*MW = (8608^561)*472 mod 17389 = 13723
+
+* Chaum discrete log signature protocol
+
+Well, this is similar to the above protocol except a hash function is used.
+
+I'll do something similar for Hal's other posts as time permits.
+
+Karl Barrus
+klbarrus@owlnet.rice.edu
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6
+
+iQCVAgUBLl5uPsSF/V8IjI8hAQE4/AP/VNauuo2nIWvF7xukbh6zNXK/pTnD7vGM
+7jQeD9Hk7z9a/GXD2OTjlKUf1HAtFRkPB95X3HS/u5TzO1RdUIoxuiUok38At8vX
+UUBaRXaF6JJUI8xkvgOt9qCrSnZNKhjh4wZ2JxxOUY/0rB/1TBRzPe/MIIzyy0Ee
+bKaCRv+gJLA=
+=esaf
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01254" HREF="msg01254.html">Re: MATH: Brands cash, Hal's posts</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01241.html">Re: Cash, cheaters, and anonymity</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01248.html">Spoofing Weapons 2</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01236.html">PRIVACY 101</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01254.html">Re: MATH: Brands cash, Hal's posts</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01245"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01245"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

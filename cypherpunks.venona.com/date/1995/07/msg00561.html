@@ -1,0 +1,219 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: TINSIGN:  Simple script for PGP signing messages in Tin 1.22 -->
+<!--X-From-R13: "Dboreg O. Vnlqra" <unlqraNxelcgba.znaxngb.zfhf.rqh> -->
+<!--X-Date: Wed, 19 Jul 95 10:26:42 PDT -->
+<!--X-Message-Id: Pine.ULT.3.91.950719122403.1187B&#45;100000@krypton.mankato.msus.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>TINSIGN:  Simple script for PGP signing messages in Tin 1.22</TITLE>
+<LINK REV="made" HREF="mailto:hayden@krypton.mankato.msus.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00554.html">Date Prev</A>][<A HREF="msg00559.html">Date Next</A>][<A HREF="msg00636.html">Thread Prev</A>][<A HREF="msg00571.html">Thread Next</A>][<A HREF="index.html#00561">Date Index</A>][<A HREF="threads.html#00561">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>TINSIGN:  Simple script for PGP signing messages in Tin 1.22</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Cypherpunks Mailing List &lt;<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>&gt;</LI>
+<LI><em>Subject</em>: TINSIGN:  Simple script for PGP signing messages in Tin 1.22</LI>
+<LI><em>From</em>: "Robert A. Hayden" &lt;<A HREF="mailto:hayden@krypton.mankato.msus.edu">hayden@krypton.mankato.msus.edu</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 19 Jul 1995 12:27:09 -0500 (CDT)</LI>
+<LI><em>Newsgroups</em>: alt.security.pgp,news.software.readers</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Howdy, me again.  In keeping with my wish to make PGP signing of 
+transmissions simple and commonplace, I've got another script for y'all.  
+This is for the Tin Newsreader.
+
+I hope you find it useful.
+
+Comments appreciated.
+
+============================================================
+
+#!/bin/sh
+
+# TinSign v1.0
+# Written by Robert A. Hayden &lt;hayden@krypton.mankato.msus.edu&gt;
+
+# Based in part on the PGP editor wrapper, Version 1.0 (editpgp)
+# Copyright (c) 1994, Mark Lewis &lt;nostra@city.ac.uk&gt;.
+
+# TINSIGN is a simple program that will allow you to automatically sign
+# your news messages composed with the TIN 1.2pl2 news reader.  It
+# may also work with other news programs, but it has not been tested.
+
+# INSTRUCTIONS FOR CONFIGURING TIN
+#
+# You need to define the following options in Tin.  This is done via 
+# editing the $HOME/.tin/tinrc file.
+#
+#	A)	start_editor_offset=ON
+#	B)	default_editor_format=&lt;path to this script&gt; +%N %F
+#		Example:  /users/foo/bar/tinsign +%N %F
+#	C)	default_sigfile=/dev/null
+#		NOTE:  	I have been unable to get my copy of tin to read 
+#			any file other than $HOME/.signature, no matter
+#			what this parameter is set to.  The solution I 
+#			found was to remove $HOME/.signature and create
+#			another file that is read in by defining the
+#			variable below.  You may want to experiment with
+#			this to find out what works best for you as this 
+#			might be a bug specific to our local compilation.
+
+# INSTRUCTIONS FOR CONFIGURING TINSIGN
+#
+# The PGP program must be in your path, and the PGPPATH environment
+# variable must be defined.  See the PGP documentation for details.
+#
+# In addition to PGP and the editor you define, TinSign also will use the 
+# following programs:
+#	awk
+#	cat
+#	echo
+#	egrep
+#	mv
+#	rm
+#	sleep
+#
+# Double check that the first line of this program points to sh.
+#
+# Execute the command "chmod 700 &lt;path/to/tinsign&gt;".
+#
+# Edit the SIGPATH and TINEDITOR variables to point at your signature
+# (if any) and the editor you wish to use for your Tin messages.  Default
+# signature will be the file .signature-tin in your $HOME directory.
+# Default editor is pico -z -t.
+#
+# Define SIGPATH=/dev/null if you do not have an ASCII signature to 
+# append.
+
+SIGPATH=$HOME/.signature-tin
+TINEDITOR='pico -z -t'
+
+# INSTRUCTIONS FOR USING TINSIGN
+#
+# When you compose a message, you will compose your message as normal.
+#
+# When you exit your editor (control-X in Pico), you will receive a 
+# prompt asking for your PGP passphrase.  Type this in.  
+#
+# At this point, if you have defined one, your ASCII signature will be 
+# appended to the message AFTER the digital signature.
+#
+# You will then be put into the Tin menu asking if you wish to edit your 
+# posting some more, quit the post (ie, abort it), or post it.
+
+### DO NOT TAMPER BELOW THIS LINE UNLESS YOU KNOW WHAT YOU ARE DOING ###
+
+# Define internal variables
+	filename=`echo $2 | cut -f$# -d' '`
+	tmpdir=/tmp
+
+#Run editor
+	$TINEDITOR +$1 $2
+
+# Split the headers from the body of the article
+        awk '{ print }; /^$/ { exit }' $filename &gt; ${tmpdir}/tmp$$.hdr
+        awk 'body == 1 { print }; /^$/ { body=1 }' $filename &gt; ${tmpdir}/tmp$$
+
+# Remove "--"
+	egrep -ve '^--$' ${tmpdir}/tmp$$ &gt; ${tmpdir}/tmp2$$
+	mv ${tmpdir}/tmp2$$ ${tmpdir}/tmp$$
+
+# Sign the message
+	pgp -sat +comment="PGP Signed with TinSign 1.0" +clearsig=on ${tmpdir}/tmp$$
+	if [ $? -eq 0 ]; then
+	        cat ${tmpdir}/tmp$$.hdr ${tmpdir}/tmp$$.asc &gt; $filename
+	else
+	    echo ""; echo "*Error in signing. Aborted."
+	    sleep 5
+	fi
+
+# clean up any files in temp space
+        rm -f ${tmpdir}/tmp$$.hdr ${tmpdir}/tmp$$.asc ${tmpdir}/tmp$$
+
+# append your ASCII signature to the message
+	echo " " &gt;&gt; $filename
+	cat $SIGPATH &gt;&gt; $filename
+
+
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+Comment: PGP Signed with PineSign 2.1
+
+iQCVAwUBMA1AZjokqlyVGmCFAQGv4QP/XB8BU91sU0KlzWTKkyZaW4j2KYKDzGin
+SgbFtdd9KdcoalhLU0myzOvMcpr3QAhAbaXN4Zq56IE/OYm5WL0MUJnJ6GF7kdEc
+F2r0vC9Nt7iZrWoG7LsqJrKrlLDp8eFhcWrpkwhH7trWA2jAjqHzof4Gy0fr8LD0
+Xc1KEPpQ+JA=
+=Jsj3
+-----END PGP SIGNATURE-----
+ 
+____        Robert A. Hayden      &lt;=&gt; Cthulhu Matata
+\  /__          -=-=-=-=-         &lt;=&gt;          -=-=-=-=-
+ \/  /  Finger for Geek Code Info &lt;=&gt; hayden@krypton.mankato.msus.edu
+   \/   Finger for PGP Public Key &lt;=&gt; <A  HREF="http://att2.cs.mankato.msus.edu/~hayden">http://att2.cs.mankato.msus.edu/~hayden</A>
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00571" HREF="msg00571.html">Re: TINSIGN: Simple script for PGP signing messages in Tin 1.22</A></STRONG>
+<UL><LI><EM>From:</EM> "Robert A. Hayden" &lt;hayden@krypton.mankato.msus.edu&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00554.html">cypherpunk "Zen" victories</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00559.html">RE: Stego-Rants ?</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00636.html">Re: cypherpunk "Zen" victories</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00571.html">Re: TINSIGN: Simple script for PGP signing messages in Tin 1.22</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00561"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00561"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

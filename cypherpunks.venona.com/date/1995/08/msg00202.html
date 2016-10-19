@@ -1,0 +1,178 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re:  Java and Safe&#45;TCL security -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Fri, 4 Aug 95 10:02:55 PDT -->
+<!--X-Message-Id: 199508041701.KAA10421@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re:  Java and Safe-TCL security</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00208.html">Date Prev</A>][<A HREF="msg00203.html">Date Next</A>][<A HREF="msg00212.html">Thread Prev</A>][<A HREF="msg00214.html">Thread Next</A>][<A HREF="index.html#00202">Date Index</A>][<A HREF="threads.html#00202">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re:  Java and Safe-TCL security</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re:  Java and Safe-TCL security</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 4 Aug 1995 10:01:49 -0700</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+The safe-tcl mailing list has not been active for a few months.  I think
+a lot of interest has transferred to Java.  One problem is that safe-tcl
+was oriented around email, so it lacks facilities for accessing web
+pages.
+
+I agree with Ray that the security of safe-tcl leaves something to be
+desired.  I implemented a safe-tcl mail filter which would automatically
+run incoming mail scripts which were in safe-tcl format.  This would be a
+generalization of a remailer, so that users could write scripts which
+would determine when the remailing would occur, etc.  However I ran into
+a number of problems, particularly related to persistent storage (e.g.
+disk file access).  This is a hard problem for a "safe" system to solve.
+
+One solution is to just forbid it, but beyond that you need to have rules
+about how much disk space a script can use, whether they can access each
+other's space, etc.  There are some nice applications if they can do so,
+for example the telescript model where two software agents come together
+and exchange some information.
+
+Another tricky issue is if you are going to let the script talk to the
+outside world via email or tcp connections.  How do you prevent abuse of
+this feature (sending junk email, or connecting to a web page and
+entering bogus data into a form)?  But again, without this capability the
+script is pretty much limited to drawing pretty pictures on your screen,
+which isn't very useful.
+
+Here is one message I sent to the safe-tcl list earlier this year
+describing some of these problems in a little more detail.  Note that
+there were also several bugs in the implementation which left security
+holes, things being checked in the wrong context and such.  This is
+similar to what Ray was citing.
+
+Hal
+
+&gt; From owner-safe-tcl@CS.UTK.EDU  Fri Feb 10 22:30:35 1995
+&gt; X-Resent-To: safe-tcl@CS.UTK.EDU ; Sat, 11 Feb 1995 01:22:02 EST
+&gt; Date: Fri, 10 Feb 1995 22:21:28 -0800
+&gt; From: Hal &lt;hfinney@shell.portal.com&gt;
+&gt; To: safe-tcl@CS.UTK.EDU
+&gt; Subject: setconfigdata and delivery time
+&gt; Status: R
+&gt; 
+&gt; The spec appears to allow delivery-time scripts to do setconfigdata.
+&gt; This is a mechanism for a script to store persistent data.  One application
+&gt; would be a telescript-like interaction between scripts.  Some data could
+&gt; be stored by one script and later read by another.  More interesting, a
+&gt; script could even store some script, perhaps some or all of itself, into this
+&gt; persistent store.  That script could then be read and eval'd by a later
+&gt; script.  This way scripts could in effect call subroutines in each other,
+&gt; providing somewhat similar functionality to telescript's procedure calls
+&gt; between agents.
+&gt; 
+&gt; At activation time the user gets asked whenever a script does
+&gt; getconfigdata, although oddly not when a script does setconfigdata.
+&gt; Also, the .safetcl.conf file is written on any getconfigdata after the
+&gt; user has supplied or confirmed a database value.  This will have the
+&gt; side effect of writing out any setconfigdata values which have been
+&gt; previously set by the script.
+&gt; 
+&gt; At delivery time the current implementation will not ask the user since
+&gt; there is no user to ask, which causes the writing out of the config data
+&gt; base never to happen.  So there is actually no way for a delivery time
+&gt; script to set a persistent value right now.  It would be easy to change
+&gt; the code to allow delivery time scripts to set persistent values with
+&gt; setconfigdata.
+&gt; 
+&gt; However, this does open up a possible avenue for abuse.  There is
+&gt; presently no limit on how much data is written with setconfigdata.  And
+&gt; actually if the idea above were used where scripts put themselves into
+&gt; the database for later running then the database could legitimately be
+&gt; quite large.  The problem would arise if a script abused this capability
+&gt; by filling the disk with junk database entries.
+&gt; 
+&gt; Maybe something is needed analogous to AutoConfirmMailHook to determine
+&gt; whether a given SafeTcl_setconfigdata should be able to go out to the
+&gt; disk.  It would want to be given the data as input and possibly also
+&gt; the size of the current database.  Maybe there should be a counter of how
+&gt; many times the current script has written to the database (or perhaps the
+&gt; hook could retain this information itself).
+&gt; 
+&gt; Two other points: as mentioned before the use of the database to retain
+&gt; "system" information conflicts with its use for this purpose.  If
+&gt; database entries like "mailer" or "external-site" are changed and saved
+&gt; to .safetcl.conf, that could break later invocations of swish.  I think
+&gt; this system data should be somewhere else (or else there needs to be
+&gt; another form of persistent store for scripts).
+&gt; 
+&gt; Secondly, the code right now checks the SafeTcl_evaluation_time
+&gt; variable in the restricted interpreter to decide whether it should ask
+&gt; the user.  This is not reliable as the untrusted script could change
+&gt; SafeTcl_evaluation_time.  In other places the code checks
+&gt; SafeTcl_InterfaceStyle and if it is empty then it doesn't ask.  That
+&gt; seems safer.
+&gt; 
+&gt; Hal Finney
+&gt; hfinney@shell.portal.com
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00214" HREF="msg00214.html">Re: Java and Safe-TCL security</A></STRONG>
+<UL><LI><EM>From:</EM> Ray Cromwell &lt;rjc@clark.net&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00208.html">House Adopts Exon-Like Speech Crimes, Also Adopts Cox/Wyden Amendment</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00203.html">SuperMac Sentinel: Customer Support tale</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00212.html">Re: House Adopts Exon-Like Speech Crimes, Also Adopts Cox/Wyden , Amendment</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00214.html">Re: Java and Safe-TCL security</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00202"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00202"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

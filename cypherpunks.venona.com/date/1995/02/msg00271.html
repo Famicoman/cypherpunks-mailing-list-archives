@@ -1,0 +1,150 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: (dis)advantages of DC&#45;Net vs remailers -->
+<!--X-From-R13: Oaqerj Zbjrafgrea <naqerj_ybrjrafgreaNvy.hf.fjvffonax.pbz> -->
+<!--X-Date: Tue, 7 Feb 95 09:37:02 PST -->
+<!--X-Message-Id: 9502071736.AA00821@ch1d157nwk -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: (dis)advantages of DC-Net vs remailers</TITLE>
+<LINK REV="made" HREF="mailto:andrew_loewenstern@il.us.swissbank.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00266.html">Date Prev</A>][<A HREF="msg00267.html">Date Next</A>][<A HREF="msg00240.html">Thread Prev</A>][<A HREF="msg00241.html">Thread Next</A>][<A HREF="index.html#00271">Date Index</A>][<A HREF="threads.html#00271">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: (dis)advantages of DC-Net vs remailers</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "James A. Donald" &lt;<A HREF="mailto:jamesd@netcom.com">jamesd@netcom.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: (dis)advantages of DC-Net vs remailers</LI>
+<LI><em>From</em>: Andrew Lowenstern &lt;<A HREF="mailto:andrew_loewenstern@il.us.swissbank.com">andrew_loewenstern@il.us.swissbank.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue,  7 Feb 95 11:35:57 -0600</LI>
+<LI><em>Cc</em>: Wei Dai &lt;<A HREF="mailto:weidai@eskimo.com">weidai@eskimo.com</A>&gt;, "Timothy C. May" &lt;<A HREF="mailto:tcmay@netcom.com">tcmay@netcom.com</A>&gt;,       <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt;  And when you try to figure how to deal with denial of service
+&gt;  attacks in a big DC net that tries to use bandwidth with tolerable
+&gt;  efficiency -- I don't know if anyone has figured out what would be
+&gt;  involved -- I certainly have not.
+
+The bandwidth is the easy part.  Building clients that do a DC protocol with  
+real-world reliability and resistance to denial of service is the hard part.   
+And doing all this in a package that would be easy to get people to use is  
+probably the hardest part.
+
+The only way I know of to deal with denial of service is for everyone to  
+reveal their flips and kick the attackers out of the net.  However, if  
+someone is legitimately transmitting that round they loose their  
+untraceability.  So pretty much the only way to do it is ensure that only one  
+participant has permission to transmit and that the participant with  
+permission gets to decide if everyone shows their hands.
+
+A way to do this would be to have a separate reservation phase of the  
+protocol.  In the reservation phase all of the participants 'bid' on a token.  
+ Whoever gets the token has permission to transmit during that round.  If  
+collisions have been occurring, the participant holding the token can demand  
+that everyone reveal their flips.  I think there is a paper describing a  
+protocol for this, but I don't have access to a library with crypto material.
+
+The protocol for distributing the token would be somewhere between an  
+All-Or-Nothing-Disclosure-Of-Secrets and a poker card dealing protocol.  Only  
+one person should be able to get the token and nobody should know who got it.  
+ To make it more complicated, for people to be able to transmit in a timely  
+fashion, you should be able to specifically request the token when you want  
+it (so you would have a 1/n chance of getting it with n being the total  
+number of participants wanting to transmit that round), and not have any  
+chance of getting it when you don't want to transmit.  In addition the  
+generation of the token(s) should be secure so that none of the participants  
+have to trust anyone that only one participant can get a valid transmit  
+token.
+
+I can think of a way to do this with a mental poker protocol.  The only  
+problem is there is always a 1/n chance of getting the transmit token (where  
+n is the total number of participants), whether you want it or not.  I  
+believe it also requires some trust in the 'dealer'...  Anyway, the deck  
+would consist of 1 transmit token and n-1 blank tokens.  Immediately after  
+the transmit phase the participant holding the token can optionally demand  
+that everyone reveal their flips.  To do that the participant would reveal  
+their valid transmit token.  At that point everyone else would reveal their  
+blank transmit tokens (to make sure there are no duplicates).  If anyone  
+refuses to reveal their blank token, they are removed from the net.  Once  
+it's been determined that there is only one valid transmit token, everyone  
+reveals their flips.
+
+In theory all of this stuff would work, but implementing it is a different  
+story.  For a DC net to be practical, it would have to run completely without  
+human intervention.  Maybe a client could be placed in your .login or shell  
+rc file and would run in the background whenever you were logged in.  It  
+could keep running after you logged out if you had a message in your queue to  
+be sent out.  Clients must be smart enough to synchronize rounds and remove  
+participants who aren't responding fast within time-outs, etc...   
+automatically attempt to 'lay a trap' when collisions have been occurring,  
+figure out who is disrupting or not following protocol and remove them or  
+alternately have the client drop out of the DC-Net when protocol hasn't been  
+followed to satisfaction (duplicate tokens in one round, etc...), etc...
+
+Quite a tall order, and for how much more untraceability than the current  
+remailer system?  Even if it is implemented you still have to get people to  
+use it.  The current remailer system can be used with no software  
+whatsoever...
+
+Still, it's an interesting prospect, as it offers real sender and receiver  
+untraceability within the group of participants.  But is it worth it?
+
+
+(apologies for the length...)
+andrew
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00266.html">Re: Is the remailer crisis over?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00267.html">Re: dna ink</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00240.html">Re: (dis)advantages of DC-Net vs remailers</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00241.html">Automatic Echo of Test Posting</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00271"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00271"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

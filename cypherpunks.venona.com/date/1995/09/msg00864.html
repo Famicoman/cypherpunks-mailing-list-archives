@@ -1,0 +1,317 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: No Subject -->
+<!--X-From-R13: Vebyyre Oabalzbhf Drznvyre <uebyyreNp2.bet> -->
+<!--X-Date: Thu, 14 Sep 95 09:12:58 PDT -->
+<!--X-Message-Id: 199509141607.JAA25886@infinity.c2.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>No Subject</TITLE>
+<LINK REV="made" HREF="mailto:hroller@c2.org">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00870.html">Date Prev</A>][<A HREF="msg00881.html">Date Next</A>][<A HREF="msg00764.html">Thread Prev</A>][<A HREF="msg00865.html">Thread Next</A>][<A HREF="index.html#00864">Date Index</A>][<A HREF="threads.html#00864">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>No Subject</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>From</em>: Hroller Anonymous Remailer &lt;<A HREF="mailto:hroller@c2.org">hroller@c2.org</A>&gt;</LI>
+<LI><em>Date</em>: Thu, 14 Sep 1995 09:07:50 -0700</LI>
+<LI><em>Comments</em>: This message did not originate from the address above.  It was remailed by an anonymous remailing service.  If you have questions or complaints, please direct them to &lt;hroller@c2.org&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+/* SAFER SK-64 By James L. Massey who did not do this
+   conversion and is not responsible for any bugs in it.
+
+   This a 'C' conversion of the reference Turbo Pascal implementation
+
+Examples of Encryption with SAFER SK-64 (i.e., with the strengthened key
+schedule of 64 bits.)
+ 
+PLAINTEXT is        1   2   3   4   5   6   7   8
+The KEY is          0   0   0   0   0   0   0   1
+after round 1     131 177  53  27 130 249 141 121
+after round 2      68  73  32 102 134  54 206  57
+after round 3     248 213 217  11  23  68   0 243
+after round 4     194  62 109  79  24  18  13  84
+after round 5     153 156 246 172  40  72 173  39
+after round 6     154 242  34   6  61  35 216  28
+CRYPTOGRAM is      21  27 255   2 173  17 191  45
+ 
+PLAINTEXT is        1   2   3   4   5   6   7   8
+The KEY is          1   2   3   4   5   6   7   8
+after round 1     223  98 177 100  46 234  13 210
+after round 2     182 246 230  93 158  14  48  89
+after round 3      45 234 128 149  40 101  10 134
+after round 4      30  17 249 236 158 120  69 100
+after round 5       1 200 182 241   0 127 152 162
+after round 6     144  85  94 214   5  38  65 150
+CRYPTOGRAM is      95 206 155 162   5 132  56 199
+*/
+
+
+#include &lt;stdio.h&gt;
+
+
+/* globals */
+
+unsigned char a1,a2,a3,a4,a5,a6,a7,a8,
+              b1,b2,b3,b4,b5,b6,b7,b8,
+              r;
+
+unsigned char k[21][8],k1[9];
+
+int logtab[256],exptab[256],i,j,n;
+
+mat1(p1,p2,q1,q2)
+unsigned char p1,p2,*q1,*q2;
+{
+  *q2=p1+p2;
+  *q1=*q2+p1;
+}
+
+invmat1(p1,p2,q1,q2)
+unsigned char p1,p2,*q1,*q2;
+{
+  *q1=p1-p2;
+  *q2=-*q1+p2;
+}
+
+init_tables()
+{
+/* This portion of the program computes the powers of the primitive
+   element 45 of the finite field GF(257) and stores these numbers
+   in the table "exptab".  The corresponding logarithms to the base
+   45 are stored in the table "logtab" */
+
+  logtab[1]=0;
+  exptab[0]=1;
+
+  for(i=1;i&lt;=255;i++)
+  {
+    exptab[i]=(45*exptab[i-1]) % 257;
+    logtab[exptab[i]]=i;
+  }
+
+  exptab[128]=0;
+  logtab[0]=128;
+  exptab[0]=1;
+}
+
+set_rounds()
+{
+  int rounds;
+
+  do
+  {
+    printf("Enter number of rounds (max 10): ");
+    scanf("%d",&amp;rounds);
+  } while(rounds&lt;1 || rounds&gt;10);
+
+  r=(unsigned char)rounds;
+}
+
+get_plaintext()
+{
+  int i1,i2,i3,i4,i5,i6,i7,i8;
+
+  printf("Enter plaintext as 8 bytes (0-255 separated by spaces)\n");
+  scanf("%d%d%d%d%d%d%d%d",&amp;i1,&amp;i2,&amp;i3,&amp;i4,&amp;i5,&amp;i6,&amp;i7,&amp;i8);
+
+  a1=(unsigned char)i1;
+  a2=(unsigned char)i2;
+  a3=(unsigned char)i3;
+  a4=(unsigned char)i4;
+  a5=(unsigned char)i5;
+  a6=(unsigned char)i6;
+  a7=(unsigned char)i7;
+  a8=(unsigned char)i8;
+}
+
+get_key()
+{
+  int i1,i2,i3,i4,i5,i6,i7,i8;
+
+  printf("Enter key as 8 bytes (0-255 separated by spaces)\n");
+  scanf("%d%d%d%d%d%d%d%d",&amp;i1,&amp;i2,&amp;i3,&amp;i4,&amp;i5,&amp;i6,&amp;i7,&amp;i8);
+
+  k[0][0]=k1[0]=(unsigned char)i1;
+  k[0][1]=k1[1]=(unsigned char)i2;
+  k[0][2]=k1[2]=(unsigned char)i3;
+  k[0][3]=k1[3]=(unsigned char)i4;
+  k[0][4]=k1[4]=(unsigned char)i5;
+  k[0][5]=k1[5]=(unsigned char)i6;
+  k[0][6]=k1[6]=(unsigned char)i7;
+  k[0][7]=k1[7]=(unsigned char)i8;
+}
+
+key_schedule()
+{
+/* append a "parity byte" to the key k1 */
+
+  k1[8]=k1[0]^k1[1]^k1[2]^k1[3]^k1[4]^k1[5]^k1[6]^k1[7];
+
+/* derive keys k2, k3, ... k2r+1 from input key k1 */
+
+  for(n=2;n&lt;=(2*r)+1;n++)
+  {
+  /* each byte of the key k1 is left rotated by 3 */
+
+    for(j=0;j&lt;=8;j++)
+      k1[j]=(k1[j]&lt;&lt;3) + (k1[j]&gt;&gt;5);
+
+  /* the key bias is added here to the right rotated k1 */
+
+    for(j=1;j&lt;=8;j++)
+      k[n-1][j-1]=k1[(j+n-2) % 9]+exptab[exptab[(9*n)+j]];
+  }
+}
+
+encrypt()
+{
+  for(i=1;i&lt;=r;i++)
+  {
+  /* Key 2i-1 is mixed bit and byte added  to the round input */
+
+    a1=a1 ^ k[2*i-2][0];
+    a2=a2 + k[2*i-2][1];
+    a3=a3 + k[2*i-2][2];
+    a4=a4 ^ k[2*i-2][3];
+    a5=a5 ^ k[2*i-2][4];
+    a6=a6 + k[2*i-2][5];
+    a7=a7 + k[2*i-2][6];
+    a8=a8 ^ k[2*i-2][7];
+
+  /* The result now passes through the nonlinear layer */
+
+    b1=exptab[a1];
+    b2=logtab[a2];
+    b3=logtab[a3];
+    b4=exptab[a4];
+    b5=exptab[a5];
+    b6=logtab[a6];
+    b7=logtab[a7];
+    b8=exptab[a8];
+
+  /* Key 2i is now mixed byte and bit added to the result */
+
+    b1=b1 + k[2*i-1][0];
+    b2=b2 ^ k[2*i-1][1];
+    b3=b3 ^ k[2*i-1][2];
+    b4=b4 + k[2*i-1][3];
+    b5=b5 + k[2*i-1][4];
+    b6=b6 ^ k[2*i-1][5];
+    b7=b7 ^ k[2*i-1][6];
+    b8=b8 + k[2*i-1][7];
+
+  /* The result now enters the linear layer */
+
+    mat1(b1,b2,&amp;a1,&amp;a2);
+    mat1(b3,b4,&amp;a3,&amp;a4);
+    mat1(b5,b6,&amp;a5,&amp;a6);
+    mat1(b7,b8,&amp;a7,&amp;a8);
+
+    mat1(a1,a3,&amp;b1,&amp;b2);
+    mat1(a5,a7,&amp;b3,&amp;b4);
+    mat1(a2,a4,&amp;b5,&amp;b6);
+    mat1(a6,a8,&amp;b7,&amp;b8);
+
+    mat1(b1,b3,&amp;a1,&amp;a2);
+    mat1(b5,b7,&amp;a3,&amp;a4);
+    mat1(b2,b4,&amp;a5,&amp;a6);
+    mat1(b6,b8,&amp;a7,&amp;a8);
+
+  /* The round is now completed! */
+
+    printf("after round %d   %3d %3d %3d %3d %3d %3d %3d %3d\n",
+	   (int)i,a1,a2,a3,a4,a5,a6,a7,a8);
+  }
+
+/* Key 2r+1 is now mixed bit and byte added to produce the final cryptogram */
+
+  a1=a1 ^ k[2*r][0];
+  a2=a2 + k[2*r][1];
+  a3=a3 + k[2*r][2];
+  a4=a4 ^ k[2*r][3];
+  a5=a5 ^ k[2*r][4];
+  a6=a6 + k[2*r][5];
+  a7=a7 + k[2*r][6];
+  a8=a8 ^ k[2*r][7];
+}
+
+main()
+{
+  init_tables();
+  for(;;)
+  {
+    set_rounds();
+    get_plaintext();
+    get_key();
+
+    printf("PLAINTEXT is    %3d %3d %3d %3d %3d %3d %3d %3d\n",
+	   a1,a2,a3,a4,a5,a6,a7,a8);
+    printf("THE KEY IS      %3d %3d %3d %3d %3d %3d %3d %3d\n",
+	   k[0][0],k[0][1],k[0][2],k[0][3],k[0][4],k[0][5],k[0][6],k[0][7]);
+
+    key_schedule();
+    encrypt();
+
+    printf("CRYPTOGRAM IS   %3d %3d %3d %3d %3d %3d %3d %3d\n\n",
+	   a1,a2,a3,a4,a5,a6,a7,a8);
+  }
+}
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00870.html">Re: An opportunity not to be missed</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00881.html">Re: NSA on GAK</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00764.html">Re: your mail</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00865.html">No Subject</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00864"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00864"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

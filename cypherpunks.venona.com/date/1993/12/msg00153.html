@@ -1,0 +1,149 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Anonymous Digicash -->
+<!--X-From-R13: usvaarlNfuryy.cbegny.pbz (Vny Tvaarl) -->
+<!--X-Date: Sat, 4 Dec 93 23:09:37 PST -->
+<!--X-Message-Id: 9312050705.AA12780@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Anonymous Digicash</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00155.html">Date Prev</A>][<A HREF="msg00161.html">Date Next</A>][<A HREF="msg00147.html">Thread Prev</A>][<A HREF="msg00170.html">Thread Next</A>][<A HREF="index.html#00153">Date Index</A>][<A HREF="threads.html#00153">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Anonymous Digicash</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Anonymous Digicash</LI>
+<LI><em>From</em>: <A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A> (Hal Finney)</LI>
+<LI><em>Date</em>: Sat, 4 Dec 93 23:05:29 PST</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Mike Ingle asks about digicash.  The simplest system I know of that
+is anonymous is the one by Chaum, Fiat, and Naor, which we have discussed
+here a few times.  The idea is that the bank chooses an RSA modulus,
+and a set of exponents e1, e2, e3, ..., where each exponent ei represents
+a denomination and possibly a date.  The exponents must be relatively
+prime to (p-1)(q-1).  PGP has a GCD routine which can be used to check
+for valid exponents.
+
+As with RSA, to each public exponent ei corresponds a secret exponent
+di, calculated as the multiplicative inverse of ei mod (p-1)(q-1).  Again,
+PGP has a routine to calculate multiplicative inverses.
+
+In this system, a piece of cash is a pair (x, f(x)^di), where f() is a
+one-way function.  MD5 would be a reasonable choice for f(), but notice
+that it produces a 128-bit result.  f() should take this 128-bit output
+of MD5 and "reblock" it to be an multi-precision number by padding it;
+PGP has a "preblock" routine which does this, following the PKCS standard.
+
+The way the process works, with the blinding, is like this.  The user
+chooses a random x.  This should probably be at least 64 or 128 bits,
+enough to preclude exhaustive search.  He calculates f(x), which is
+what he wants the bank to sign by raising to the power di.  But rather
+than sending f(x) to the bank directly, the user first blinds it by
+choosing a random number r, and calculating D=f(x) * r^ei.  (I should
+make it clear that ^ is the power operator, not xor.)  D is what he
+sends to the bank, along with some information about what ei is, which
+tells the denomination of the cash, and also information about his account
+number.
+
+The bank debits his account for the amount corresponding to exponent ei,
+and signs D by raising it to the power di.  This leads to
+E = f(x)^di * r, which is what the bank sends back to the user.  The
+user divides E by r (this is done by calculating the multiplicative inverse
+of r modulo the bank's modulus, and multiplying E by that), giving C=f(x)^di.
+The user can then create the actual coin as (x, f(x)^di).  This should
+also have some information appended to it to remember what exponent was
+used (what denomination this is), so it would actually be (ei, x, f(x)^di).
+
+There are some complications in this system.  The user may want to withdraw
+several coins at once, and when he gets back the E values he needs to know
+which is which (so he knows which r to divide by for each one).  So he
+may want to include some unique tag with his D values he sends to the bank
+and get the bank to send those back with the E values so that he can
+distinguish them.
+
+The bank will not recognize the coins (ei, x, f(x)^di) when they are
+deposited (returned to the bank), due to the blinding.  But it will need
+to keep a list of all the x values it has seen so far so that it can detect
+double-spending.  If the ei values encode not only denominations but also
+issue dates at some level, and if the cash is given a limited lifetime,
+the list can be purged of old values periodically.
+
+I do think a prototype digital cash system would not be too hard to do.
+It would not have to address all of these problems right away.  The
+larger problem is how to experiment in a meaningful way with diigicash
+due to the difficulty in giving it value.  We've talked about this problem
+before but I haven't seen any really good solutions.  Karl Barrus tried to
+start up a non-anonymous cash system some months ago but there was nothing
+to spend it on.  (Actually, he does have a remailer which uses his cash,
+but since other remailers are free that has probably limited interest in
+the for-pay remailer.)
+
+I am continuing to work on a simple TCL interface to much of the PGP
+functionality which would be needed for such a system (and for other
+types of experimentation).  I have the MP library done, so the additional
+entry points needed would include the MD5 one-way function, the random-
+number generation, and the reblocking.  Perhaps in another week I will
+have those hooks in place.  Then you could write the control software
+in TCL, which would be easier for prototyping purposes since it's
+interpreted.
+
+Hal Finney
+hfinney@shell.portal.com
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00155.html">Re: Quote of the Week</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00161.html">A Clarification on My Trials and Tribulations</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00147.html">Anonymous Digicash</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00170.html">Re: Anonymous Digicash</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00153"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00153"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

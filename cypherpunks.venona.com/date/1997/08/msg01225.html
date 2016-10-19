@@ -1,0 +1,147 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Bypassing the trap door for LanMan -->
+<!--X-From-R13: Dvpx Afobear <bfobearNtngrjnl.tehzzna.pbz> -->
+<!--X-Date: Tue, 26 Aug 1997 02:21:19 +0800 -->
+<!--X-Message-Id: 3.0.3.32.19970825140545.009f15f0@gateway.grumman.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Bypassing the trap door for LanMan</TITLE>
+<LINK REV="made" HREF="mailto:osborne@gateway.grumman.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01207.html">Date Prev</A>][<A HREF="msg01226.html">Date Next</A>][<A HREF="msg01223.html">Thread Prev</A>][<A HREF="msg01226.html">Thread Next</A>][<A HREF="index.html#01225">Date Index</A>][<A HREF="threads.html#01225">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Bypassing the trap door for LanMan</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: cypherpunks mailing list &lt;<A HREF="mailto:cypherpunks@Algebra.COM">cypherpunks@Algebra.COM</A>&gt;</LI>
+<LI><em>Subject</em>: Bypassing the trap door for LanMan</LI>
+<LI><em>From</em>: Rick Osborne &lt;<A HREF="mailto:osborne@gateway.grumman.com">osborne@gateway.grumman.com</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 25 Aug 1997 14:05:45 -0400</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+I was thinking about LanMan passwords on NT (thanks to Hobbit and Mudge for
+the background) when it occurred to me that you don't *really* have to
+brute force the entire keyspace to get a password under the two systems.
+Bear with me here for a sec, and please let me know if something I say is
+incorrect.  I haven't read through Applied Crypto in a while and may be a
+bit rusty.
+
+What I'm thinking is this: why do you need *the* password?  Can't you just
+find an MD5 collision by working the algorithm in reverse?  Obviously, when
+working it in reverse you are highly unlikely to get *the* password, but if
+you then shove what you got back through and it hashes out to the same
+thing, what difference does it make?
+
+We know that you can grab Win32 password hashed with minimal effort (thanks
+to pwdump), and since the salt in those passwords is constant, and since
+the LanMan password is just an uppercased version of the NTLM password,
+could we not reverse-engineer that hash to get a working version of the
+password?  It shouldn't have to be *the* password, as no challenge/response
+system is in place for LanMan, and it only has to hash out to the same
+thing (which is guaranteed).
+
+Also, in a RL scenario, you'd only need the password once: to add a given
+account to the Domain Admins group, or to create such an account in the
+first place.  At that point, you use your dummy account and you are good to
+go.
+
+So we have a system here:
+1. Use `net view` to get a list of all nodes on the network.
+2. Get the list of Domain Admins.
+3. Pass that list of nodes to successive calls to pwdump to
+   grab passwords from the registries, until you find one that
+   a Domain Admin has logged into.
+4. Reverse-engineer the Domain Admin's password and create an
+   account in the Domain Admin group.
+5. Use pwdump on the PDC to get the list of all usernames
+   and passwords.
+
+Now, if pwdump could be done in Perl (using Win32::Registry), then this
+entire process could be automated (also using Win32::AdminMisc and a
+backwards version of Cypto::MD5) trivially.  Also, since MS has yet to
+truly fix the GetAdmin problem, steps 1-4 can be replaced with a single
+call to that.
+
+Using L0phtCrack (or something similar) and a nice big wordlist (say, 2
+million words), I estimate that some 60%-70% of the user passwords could be
+gotten in this manner, including a few of the Domain Admins' (assuming
+normal, non-cypto-savvy Domain Admins), in under 2 hrs of work.
+
+Now, as a lighter side of this, this could also be useful: Say you already
+are a domain admin and are unhappy with the level of security your site is
+using.  And say that whenever a user forgets their password it is reset to
+something trivial (like 'password' or their employee number, etc).  A large
+number of employees are not going to change that reset password (unless
+User Must Change Password is set).  An Admin could therefore hash out
+'password', dump the entire user/pass list, and force the ones with the
+same hash to change their password at the next logon (this is in a bitfield
+somewhere).  This script could be set to run once a week, insuring
+non-trivial passwords.  In an environment where management refuses to
+institute strong-password securities, this could be a trivial way for an
+Admin to do it him/herself, without making it obvious what is going on or
+without making too much work for themselves.
+
+--Rick
+[Who has *just* that kind of management. :( ]
+
+-- Rick Osborne, &lt;osborne@gateway.grumman.com&gt;
+Real programmers don't use APL, unless the whole program can be written
+on one line.
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01207.html">Re: Welfare / Norplant</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01226.html">Re: lack of evolution (So What!)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01223.html">*Burp Test - Ignore *</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01226.html">Re: lack of evolution (So What!)</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01225"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01225"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,154 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Hi again, and an invitation to kibitz -->
+<!--X-From-R13: Pvyy Egrjneg <fgrjnegfNvk.argpbz.pbz> -->
+<!--X-Date: Sun, 26 Jan 1997 15:29:31 &#45;0800 (PST) -->
+<!--X-Message-Id: 199701262329.PAA27341@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Hi again, and an invitation to kibitz</TITLE>
+<LINK REV="made" HREF="mailto:stewarts@ix.netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00285.html">Date Prev</A>][<A HREF="msg00286.html">Date Next</A>][<A HREF="msg02623.html">Thread Prev</A>][<A HREF="msg01562.html">Thread Next</A>][<A HREF="index.html#00273">Date Index</A>][<A HREF="threads.html#00273">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Hi again, and an invitation to kibitz</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Amanda Walker &lt;<A HREF="mailto:amanda@intercon.com">amanda@intercon.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Hi again, and an invitation to kibitz</LI>
+<LI><em>From</em>: Bill Stewart &lt;<A HREF="mailto:stewarts@ix.netcom.com">stewarts@ix.netcom.com</A>&gt;</LI>
+<LI><em>Date</em>: Sun, 26 Jan 1997 14:51:41 -0800</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+In addition to David Wagner's comments, I'd like to point out
+several more weaknesses.
+- Would Kerberos work just as well?  No sense reinventing the 3-headed dog.
+- You're not authenticating the server to the client.
+- If the challenge is different every time, the server needs to 
+  keep the user's password in plaintext (unlike Unix encrypted passwords.)
+  This means that attacks on the server's file system can steal it,
+  and since the password is used for session encryption, it can be
+  used to forge sessions as well.
+- Alternatively, if the challenge is always the same (per user),
+  then even one eavesdrop kills you, as with Unix passwords.
+- Since you're using the same 7-byte password hash for the
+  first third of the authentication as for the session key,
+  the dictionary attack on E(challenge, First-seven-bytes)
+  gives you the session key, so you can eavesdrop just fine.
+  If the password is too short, you can then dictionary-attack MD4
+  to find it also.
+
+- There's a Diffie-Hellman variant that can do logins.  
+  Unfortunately, it's patented (by some guy from Siemens in Paderborn DE, 
+  who patented it in Germany about 2 years before I rediscovered it, 
+  and patented it in the US about 6 months before :-)  
+  It covers any login methods using commutative hashes H1(H2(x)) == H2(H1(x)).
+  The Siemens version extends it to authenticate both ends to each other;
+  I extended it to get a session key for encryption and/or authentication.
+  This really shouldn't have been patentable - my rediscovery shows that
+  it must be pretty obvious to anyone skilled in the trade :-), and rather
+  than reinventing the wheel, I was reinventing the hubcap or tire swing....
+
+&gt; In article &lt;<A HREF="msg01564.html">199701140755.CAA04514@mail.intercon.com</A>&gt;,
+&gt;Amanda Walker &lt;amanda@intercon.com&gt; wrote:
+&gt;&gt; (a) Server sends 8-byte challenge to client
+&gt;&gt; (b) Client sends Microsoft NT authentication response to the server
+&gt;&gt;     (take the password in Unicode form, do an MD4 hash, pad with 0s to 21
+&gt;&gt;     bytes, split into 3 7-byte groups, use these as DES keys to encrypt
+&gt;&gt;     the challenge three times, send the 24-byte result as the response).
+&gt;&gt; (c) If authentication fails, close the connection.
+&gt;&gt; (d) If authentication succeeds, all subsequent traffic is enccrypted with
+&gt;&gt;     DES in CFB mode.  Until April :), the DES key used is taken from the
+&gt;&gt;     first 7 bytes of the MD4 hash of the password (after April, we expect
+&gt;&gt;     to switch to Diffie-Hellman key exchange first, followed by a revised
+&gt;&gt;     authentication handshake).
+&gt;
+At 11:20 AM 1/17/97 -0800, David Wagner wrote:
+&gt;Some weaknesses:
+&gt;- It doesn't resist dictionary attacks (no salt) when the attacker can make
+&gt;    one active probe (forge a fixed challenge and get the client's response).
+
+In particular, an 8 byte challenge is nowhere near enough, though the 
+average million-dollar DES-cracker won't be as easy to adapt for 2**64 
+cycles of hash+DES*3 - and don't handle each third separately!
+At least do something like 3DES-EDE and return an 8-byte response,
+or hash the three output bytes together and send the hash.
+Using &gt;=16 bytes of challenge would be better, or &gt;=24 if you 
+want printable challenges.
+
+&gt;- It doesn't stop replay attacks (replay a fixed challenge, now the same DES
+&gt;    key is used, so replay DES-encrypted session data).
+
+You may not be able to replay a given challenge usefully, assuming it's
+different each time, but MITM attacks work ok after you've cracked the
+password by dictionary attack in the previous round.
+
+&gt;- DES-encryption doesn't provide message authentication against active
+&gt;    attacks; use a MAC too.
+&gt;- You should use independent DES keys for each direction of the connection.
+&gt;- Also the DES encryption key doesn't change for each connection.  It should.
+
+
+
+#			Thanks;  Bill
+# Bill Stewart, +1-415-442-2215 stewarts@ix.netcom.com
+# You can get PGP outside the US at ftp.ox.ac.uk/pub/crypto/pgp
+#     (If this is a mailing list, please Cc: me on replies.  Thanks.)
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00285.html">Cellular Encryption Docs</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00286.html">[Humor] Crypto in Traveller (a game)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02623.html">Re: Hi again, and an invitation to kibitz</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01562.html">UnderNet:</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00273"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00273"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,233 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: A new attack to RSA on tamperproof devices -->
+<!--X-From-R13: qratNvff.ahf.ft (Dboreg Rrat) -->
+<!--X-Date: Tue, 22 Oct 1996 18:35:14 &#45;0700 (PDT) -->
+<!--X-Message-Id: 9610230138.AA01250@aquarius.iss.nus.sg -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>A new attack to RSA on tamperproof devices</TITLE>
+<LINK REV="made" HREF="mailto:deng@iss.nus.sg">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01592.html">Date Prev</A>][<A HREF="msg01588.html">Date Next</A>][<A HREF="msg01724.html">Thread Prev</A>][<A HREF="msg01600.html">Thread Next</A>][<A HREF="index.html#01618">Date Index</A>][<A HREF="threads.html#01618">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>A new attack to RSA on tamperproof devices</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:mab@research.att.com">mab@research.att.com</A>, <A HREF="mailto:shamir@wisdom.weizmann.ac.il">shamir@wisdom.weizmann.ac.il</A>,       <A HREF="mailto:benaloh@microsoft.com">benaloh@microsoft.com</A>, <A HREF="mailto:brassard@iro.umontreal.ca">brassard@iro.umontreal.ca</A>, <A HREF="mailto:yiqun@rsa.com">yiqun@rsa.com</A></LI>
+<LI><em>Subject</em>: A new attack to RSA on tamperproof devices</LI>
+<LI><em>From</em>: <A HREF="mailto:deng@iss.nus.sg">deng@iss.nus.sg</A> (Robert Deng)</LI>
+<LI><em>Date</em>: Wed, 23 Oct 1996 09:38:15 --800</LI>
+<LI><em>Cc</em>: <A HREF="mailto:baofeng@iss.nus.sg">baofeng@iss.nus.sg</A>, <A HREF="mailto:deng@iss.nus.sg">deng@iss.nus.sg</A>, <A HREF="mailto:yfhan@iss.nus.sg">yfhan@iss.nus.sg</A>, <A HREF="mailto:jeng@iss.nus.sg">jeng@iss.nus.sg</A>,       <A HREF="mailto:teowhin@iss.nus.sg">teowhin@iss.nus.sg</A>, <A HREF="mailto:desai@iss.nus.sg">desai@iss.nus.sg</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+              A New Attack to RSA on Tamperproof Devices
+
+
+                   Feng Bao (baofeng@iss.nus.sg)
+                   Robert Deng (deng@iss.nus.sg)
+                   Yongfei Han (yfhan@iss.nus.sg)
+                   Albert Jeng (jeng@iss.nus.sg)
+                   Teow Hin Nagir (teowhin@iss.nus.sg)
+                   Desai Narasimhalu (desai@iss.nus.sg)
+                  
+                     Information Security Group
+                     Institute of Systems Science
+                     National University of Singapore
+
+                          23rd October 1996
+
+
+In September 96, Boneh Demillo and Lipton from Bellcore announced a new type 
+of cryptanalytic attack against RSA-like public key cryptosystems on tamperproof 
+devices such as smart card (see, e.g., <A  HREF="http://www.bellcore.com/PRESS/ADVSRY96/">http://www.bellcore.com/PRESS/ADVSRY96/</A>
+medadv.html). However, due to the sketchiness of the Bellcore attack, it is
+impossible to perform a meaningful assessment of this attack until more detailed
+information becomes available.
+
+On October 18, Eli Biham and Adi Shamir published their new attack, called 
+Differential Fault Analysis (DFA), to secret key cryptosystems, such as DES. 
+Some concrete ideas on how this attack works were revealed in their announcement 
+(see, e.g., <A  HREF="http://jya.com/dfa.htm">http://jya.com/dfa.htm</A>).
+
+Our work here was motivated first by the Bellcore announcement and then by the 
+DFA announcement. We present an attack to RSA on tamperproof devices. At the 
+time of writing, we have no idea whether our attack is similar to the Bellcore 
+attack. 
+
+We make the following assumption as in the Bellcore and DFA announcements.
+
+Assumption: By exposing a sealed tamperproof device such as a smart card to 
+certain physical effects (e.g., ionizing or microwave radiation), one can induce 
+with reasonable probability a fault at a random bit location in one of the 
+registers at some random intermediate stage in the cryptographic computation.
+(We will explain later that our attack also works against multiple bit faults).
+
+Without loss of generality, assume that n=pq in RSA is a 512 bit number. Let e be 
+the public exponent which is publicly known and d be the secret exponent which 
+is stored inside the tamperproof device. Let P be a plaintext, then the 
+corresponding ciphertext is
+                              C = P^e                           (1)
+
+(In the following, only residues modulo n are shown, e.g., we use P^e instead 
+of P^e mod n). 
+
+We denote the binary representation of the secret exponent as
+
+             d = d511|d510| ...|di|...|d1|d0                    (2)
+
+where di, takes value 1 or 0, is the ith bit and where x|y denotes concatenation 
+of x and y. Further, we denote
+
+            C0=C, C1=C^2, C2=C^{2^2}, ..., C511=C^{2^511}       (3)
+
+Given C and d, we can express the corresponding plaintext P as
+
+      P=(C511^d511)(C510^d510)...(Ci^di) ...(C1^d1)(C0^d0)      (4)
+       
+
+We assume that the attacker is in physical possession of the tamperproof device 
+and that he can repeat the experiment with the same key by applying external 
+physical effects to obtain outputs due to single bit errors.
+
+To simplify the description, we illustrate our attack by two examples.
+
+EXAMPLE 1:
+
+Suppose that one bit in the binary representation of d in equation (2) is 
+changed from 1 to 0 or vice versa, and that the fault bit position is randomly 
+located.
+
+An attacker arbitrarily chooses a plaintext P and computes the ciphertext C 
+using (1). He then applies external physical effects to the tamperproof device 
+and at the same time asks the device to decrypt C. Assuming that di in (2) is 
+changed to its complement di', then the output of the device will be
+ 
+        P'=(C511^d511)(C510^d510)...(Ci^di') ...(C1^d1)(C0^d0)   (5)
+
+Since the attacker possesses P, he can compute 
+
+                     P'/P = Ci^di'/Ci^di                         (6)
+
+Obviously, if P'/P = 1/Ci, then di = 1, and if P'/P = Ci, then di = 0. The attacker 
+can re-compute Ci and 1/Ci for i = 0, 1, ..., 511, and compares (6) to these values 
+in order to determine one bit of d. The attacker can repeat the above process 
+using either the same plaintext/ciphertext pair or using different plaintext/
+ciphertext pairs until he obtains enough information to uncover the binary 
+representation of the secret exponent d.
+
+EXAMPLE 2:
+
+For the sake of simplicity, here we assume that in decrypting a ciphertext, the 
+tamperproof device first computes the data sequence in (3) and then computes (4). 
+We also assume that the attacker applies external physical effects to the tamperproof 
+device to induce an one bit error in Ci, i = 0, 1, ..., 511. 
+
+Suppose that the one bit error is in Ci, we denote the corrupted value as Ci'. Then 
+the output from the tamperproof device is
+
+       P'=(C511^d511)(C510^d510)...(Ci'^di) ...(C1^d1)(C0^d0)     (7)
+
+The attacker can then compute
+
+                       P'/P = Ci'^di/Ci^di = Ci'/Ci               (8)
+
+(Note that di in (8) must be 1.) Suppose that the attacker has computed all the 
+possible Ci'/Ci values in advance (there are a total of 512x512 such values) and 
+stored them somewhere. Now the attacker can compare all these values with P'/P. 
+Once a match is found, the attacker knows i then knows that di is 1. The attacker 
+repeats the above process until he has enough information to determine d.
+
+The above examples are just meant to illustrate the basic ideas of our attack. 
+Anyway, by the two examples we showed that: One bit fault at certain location and 
+time can cause fatal leakage of the secret key. Such leakage gradually increases 
+as the above procedures are repeated using one or multiple pairs of P and C.
+
+It should be noted that our attack also works for multiple bit errors. Assuming 
+two bit faults and consider the scenario of EXAMPLE 2. The possible Ci'/Ci values 
+now increases from 512 x 512 to 512 x 512 x 512. In this case, matching P'/P 
+requires more time, while with large possibility you obtain 2 di's once a match
+is obtained. 
+  
+To conclude this research note, we would like to say a few words on how to resist 
+this kind of attacks.
+
+1. The attack may be avoided by calculating values 2 times and checking the two 
+results. However, this approach doubles the computational time. As pointed out 
+by Bellcore, this double computation method also avoids their attack.
+
+2. In many cases, the encryption key e is usually small. So we can verify the result 
+by checking 
+     
+                               P^e= C ?
+
+This approach is much more efficient than the double computation approach if e is 
+small.
+
+3. In some protocols for digital signature, a random string is chosen by the smart
+card and concatenated to a message m which is to be signed by the smart card. For
+example, m is a 412 binary string given to the smart card. The smart card randomly
+chooses a 100 bit number r and the output is (C|r)^d. Since r is different each time,
+the attack does not work in such case.
+
+
+
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01592.html">Re: LC-1</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01588.html">Re: Blue Box Plans &amp; hacker bbs's</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01724.html">Re: pgp3 (was Re: MD5?)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01600.html">Re: pgpmoose on q.net working; sorry; new issues. [moderation admin issue]</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01618"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01618"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

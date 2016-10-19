@@ -1,0 +1,177 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Clarification of my remarks about Netscape -->
+<!--X-From-R13: Vny <usvaarlNfuryy.cbegny.pbz> -->
+<!--X-Date: Wed, 14 Dec 94 14:36:53 PST -->
+<!--X-Message-Id: 199412142236.OAA21214@jobe.shell.portal.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Clarification of my remarks about Netscape</TITLE>
+<LINK REV="made" HREF="mailto:hfinney@shell.portal.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00876.html">Date Prev</A>][<A HREF="msg00877.html">Date Next</A>][<A HREF="msg00866.html">Thread Prev</A>][<A HREF="msg00899.html">Thread Next</A>][<A HREF="index.html#00878">Date Index</A>][<A HREF="threads.html#00878">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Clarification of my remarks about Netscape</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: Clarification of my remarks about Netscape</LI>
+<LI><em>From</em>: Hal &lt;<A HREF="mailto:hfinney@shell.portal.com">hfinney@shell.portal.com</A>&gt;</LI>
+<LI><em>Date</em>: Wed, 14 Dec 1994 14:36:31 -0800</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+From: kipp@warp.mcom.com (Kipp E.B. Hickman)
+&gt; From the spec, the appendix on certificates:
+&gt; 
+&gt;    Certificates are validated using a few straightforward steps. First,
+&gt;    the signature on the certificate is checked and if invalid, the
+&gt;    certificate is invalid (either a transmission error or an attempted
+&gt;    forgery occurred). Next, the CertificateInfo::issuer field is verified
+&gt;    to be an issuer that the application trusts (using an unspecified
+&gt;    mechanism). The CertificateInfo::validity field is checked against the
+&gt;    current date and verified.
+&gt; 
+&gt; Here is what we do in Netscape (for now). We have imbedded a set of
+&gt; certificates in the client. The certificates are for issuers of
+&gt; certificates that "we" trust. Any server which is certified by one of
+&gt; these issuers will be automatically trusted by the Netscape
+&gt; Navigator...
+&gt; 
+&gt; Admittedly this is primitive, but it's a start.
+
+Thanks, I had overlooked that in the appendix.  I notice you left off the
+next paragraph:
+
+          Finally, the CertificateInfo::subject field is checked. This
+          check is optional and depends on the level of trust required by
+          the application using SSL.
+
+This subject field would hold the distinguished name of the server.  That
+is pretty important to check!  Otherwise anybody with any old certificate
+will fool you.  In your appendix D when you describe the man in the
+middle attack, you say:
+
+          The man in the middle operates by pretending to be the real
+          server to the client. With SSL this attack is impossible
+          because of the usage of server certificates. During the
+          security connection handshake the server is required to provide
+          a certificate that is signed by a certificate authority.
+          Contained in the certificate is the server's public key as well
+          as its name and the name of the certificate issuer. The client
+          verifies the certificate by first checking the signature and
+          then verifying that the name of the issuer is somebody that the
+          client trusts.
+
+This is in accord with your description above.  Note that the only name
+check mentioned is the name of the issuer.  But later, in analyzing this
+attack, you say:
+
+          If the certificate provided by the
+          bad guy is legitimate, but for the bad guy instead of for the
+          real server, then the signature will pass but the name check
+          will fail
+
+Here you must mean a different name check, the optional one that checks
+the subject field.  So this analysis is somewhat inconsistent with the
+procedure I quoted just above.  Also, when you describe the subject name
+check as "optional" and depending on the required level of trust, perhaps
+you should say explicitly that if you don't do it you are vulnerable to a
+man in the middle attack.
+
+Actually, the attack is more general than that: if I could intercept
+connections to your server and use my own certificate to make the user
+think he is securely talking to you then I don't actually have to involve
+you at all.  I am not a man in the middle, I am a spoofer pretending to
+be you.  And you have marked the important step in the protocol which
+would check for this as optional.
+
+It appears from your docs that the Netscape client has a File menu item
+that brings up a Document Information dialog box which displays the
+distinguished names of the certificate issuer and of the subject (the
+owner of the key).  This does provide a way of checking that you are
+securely connected to the server that you expect (assuming that the
+name is recognizable to the user).  But it sounds like this is not
+something which the customer sees automatically.  Again, this seems
+like an important security aspect which should be displayed more
+prominently.
+
+BTW, what do you see in the dialog when you connect securely to
+mcom.com?  What is the subject name in your certificate?
+
+I hope these comments are helpful to you.  I am surprised that you
+published this spec only after distributing implementations of it.  This
+wil probably make it hard to change.  Usually it is better to do the
+review before implementation rather than afterwards.
+
+Hal Finney
+hfinney@shell.portal.com
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6
+
+iQBVAwUBLu9zThnMLJtOy9MBAQEVPgH+KObAFiOsALCGokUzk7gsqpnVEda85MUD
+5LU5P2GjFhmR5msBKr6uuDKSrodUl69bq0/CfpE3qYSzcz7SGPrrag==
+=ivlO
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00899" HREF="msg00899.html">Re: Clarification of my remarks about Netscape</A></STRONG>
+<UL><LI><EM>From:</EM> Hal &lt;hfinney@shell.portal.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00876.html">Re: Less Flaming, More Civility</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00877.html">Re: MIME (again)</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00866.html">Re: Clarification of my remarks about Netscape</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00899.html">Re: Clarification of my remarks about Netscape</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00878"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00878"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

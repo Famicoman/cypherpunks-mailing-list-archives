@@ -1,0 +1,137 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: bulk RC4 brute forcing -->
+<!--X-From-R13: ylnypNbmrznvy.pbz.nh (ylny pbyyvaf) -->
+<!--X-Date: Sun, 3 Dec 1995 12:09:54 +0800 -->
+<!--X-Message-Id: 199512030356.OAA17497@oznet02.ozemail.com.au -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>bulk RC4 brute forcing</TITLE>
+<LINK REV="made" HREF="mailto:lyalc@ozemail.com.au">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00130.html">Date Prev</A>][<A HREF="msg00166.html">Date Next</A>][<A HREF="msg00130.html">Thread Prev</A>][<A HREF="msg01320.html">Thread Next</A>][<A HREF="index.html#00200">Date Index</A>][<A HREF="threads.html#00200">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>bulk RC4 brute forcing</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: bulk RC4 brute forcing</LI>
+<LI><em>From</em>: <A HREF="mailto:lyalc@ozemail.com.au">lyalc@ozemail.com.au</A> (lyal collins)</LI>
+<LI><em>Date</em>: Sun, 3 Dec 1995 14:56:45 +1100 (EST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Some time ago, I wrote about testing multiple plain/cipher pairs against a
+key as a possible speed up for brute forcing 40 bit RC4 key cracking.
+
+I have finally done something about it, written some code, and run tests
+which I believe gives a about 6-8 times improvement over single
+key/plain/cipher testing against RC4-40 encryption.
+
+Basically:
+A single RC4 master "key schedule" is generated.
+This is copied to an master array of 126 RC4_keys (126 chosen due to segment
+boundary probs).
+Then each of 126 plain/cipher (P/C) pairs are tested for a match. Acquiring
+the plain/cipher pairs in real life is another question.
+If a match is found, the pair is marked 'found', and testing continues on
+the remaining unfound P/C pairs.
+This loops until all 126 plain/cipher/keys have been tested and found.
+8 plaintext, 8 cipher bytes are used. Keys are 8 bytes, the last 5 of which
+are variable (40 bits).
+
+Test results :
+A test set of data was created by incrementing a key byte, and making a P/C
+pair.
+Then all keys bytes are set to 0, and testing commenced.
+Typically, a 486/33 with the above in 'C' code running on DOS achieves about
+15000 tests per second.
+One extended test ran about 480 million tests in 7.5 hours and found 68% of
+the keys - approx 17,700/sec, averaging 5.6 million tests per found key.
+
+My reasoning follows thus:
+For 126 plain/cipher pairs, with "randomly" generated keys, one valid
+key/plain/cipher pairs 'should' be located in 2^33 key tries (126 is approx.
+2^7)
+15000 tests/sec across 126 P/C pairs is about 119 keys/second tested.
+at 119/second, 2^33 key tests will take 835 days. This should "guarantee"
+a key match is found.
+By contrast: 
+The "bruterc4.c" code used by this forum earlier showed approximately 2200
+key tests per second on my machine. Testing 2^40 keys at 2200/sec will take
+5784 days to guarantee a key match (using 2^39, 2892 days).
+This is a 6.9(3.46) ratio, that finds a single key match.
+Finding all 126 keyswould should take approximately 293 years in "bulk"
+mode, or 1996 years in single mode (126x5784 days).
+
+The code is available, and will be posted here is desired (it is messy).
+
+Ideally, faster key/plain/cipher testing could be accomplished if a larger
+array of keys could be used. The Intel segment problem has prevented me for
+making larger arrays - I don't know how to turn these features in my
+compiler (yes - I am a beginner at coding, but the "huge" directive in
+Borland C did not seem to work, and I don't know why - yet). 
+Tests on 31, 63 and 126 P/C pairs showed results of 10689, 13326 and 15689
+tests/sec, respectively. This indicates array size has a direct relationship
+with test/sec.
+
+I invite others who can better manipulate statistics, or better exeprienced,
+to comment, refute, or otherwise contribute to this.
+
+lyal
+All mistakes in this message belong to me - you should not use them!
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00130.html">Re: The future will be easy to use</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00166.html">Re:  Info on Netscape's key escrow position</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00130.html">Re: The future will be easy to use</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01320.html">Re: bulk RC4 brute forcing</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00200"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00200"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,189 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Still more on the Digicash protocol -->
+<!--X-From-R13: qnjNthnlznf.QE.Prexryrl.SRG (Rnivq O Intare) -->
+<!--X-Date: Wed, 6 Dec 95 15:02:28 PST -->
+<!--X-Message-Id: 199512062301.SAA15714@bb.hks.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Still more on the Digicash protocol</TITLE>
+<LINK REV="made" HREF="mailto:daw@guaymas.CS.Berkeley.EDU">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01435.html">Date Prev</A>][<A HREF="msg01437.html">Date Next</A>][<A HREF="msg01410.html">Thread Prev</A>][<A HREF="msg01473.html">Thread Next</A>][<A HREF="index.html#01436">Date Index</A>][<A HREF="threads.html#01436">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Still more on the Digicash protocol</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Still more on the Digicash protocol</LI>
+<LI><em>From</em>: <A HREF="mailto:daw@guaymas.CS.Berkeley.EDU">daw@guaymas.CS.Berkeley.EDU</A> (David A Wagner)</LI>
+<LI><em>Date</em>: Wed, 6 Dec 1995 18:01:12 -0500</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Ian &amp; I were talking about the Digicash protocol some more.
+
+Hal has pointed out that payments &amp; deposits with a wildcard in the
+payment_hdr should NOT be sent in the clear, since they can be stolen
+by any passive eavesdropper.
+
+Ian has pointed out the same problem with cancellations: the payer_code
+should NOT be sent in the clear, since any passive eavesdropper can
+grab this info and steal the corresponding payment.
+
+Sadly, the current Digicash client DOES send those items in the clear
+(without even warning users to avoid wildcards).  Why?
+
+
+Anyhow, the obvious solution is encryption.  Our new observation is
+that encrypting deposits &amp; cancellations with the mint's public key
+is not enough to solve the problem.
+
+To see this, recall how the public key encryption works: a session
+key for a bulk cipher is encrypted under the public key, and the data
+(e.g. userhdr, payment_hdr, coins, ...) is encrypted under the bulk
+cipher.  Digicash hasn't told us yet what bulk cipher they use, but
+let's assume for concreteness they use RC4.
+
+Now I'm an attacker -- I want to modify userhdr.userID -- and then
+the mint will accept the payment and deposit the coins into the wrong
+account.  But this is just easy for an active attacker -- I just flip
+bits in the ciphertext!  (Presumably I can guess fairly well what
+plaintext value is expected for the userhdr.userID field.)
+
+This is just a corollary of my Pet Peeve for protocol designers:
+
+	Don't use encryption when you want message authentication;
+	with encryption, you should only count on confidentiality!
+
+Ok, so you mention that maybe Digicash uses DES-CBC or somesuch instead
+of a stream cipher like RC4.  I'll briefly note that while the attack
+isn't so trivial anymore, DES-CBC ciphertext is not tamper-proof -- again,
+encryption does not provide message authentication.
+
+
+Another nitpick from your friendly neighborhood techno-geek.  I noticed
+that signatures (when used) don't cover the headers.  Since the mint uses
+header information to make important decisions (e.g. the userhdr.userID
+field specifies who's account a deposit should go to), shouldn't this be
+signed, just as a matter of ordinary everyday paranoia?
+
+
+While I'm ranting, let me also remind you of a problem Ian discovered
+earlier through reverse-engineering: the payment &amp; deposit messages aren't
+encrypted, and they send
+	payee (e.g. shop) identity
+	payer's and payee's banks
+	payer's currency-of-choice
+	amount of money transferred
+	description of the product
+	time of payment
+in the clear, accessible to any passive eavesdropper.
+
+With traffic analysis, if payers use the default TCP connection, all
+this information about them can be compiled.  If I target a payer, I'll
+probably be able to record all his transactions (unless he's using
+remailers or pipenet).  If I sit outside a small business, I can compile
+a dossier on its buying habits.
+
+Worse still, anonymity for the shop is worse with Digicash than with real
+cash.  If I pay you real cash on a secluded street, you're fairly anonymous.
+If I pay you Digicash over the Internet, any passive eavesdropper could be
+recording your identy and the whole transaction.  Blech.
+
+So Digicash's product does all sorts of neat crypto to provide you with
+anonymity from the bank, but doesn't do much to provide anonymity from
+eavesdroppers on the Internet.
+
+This is exactly backwards from how I'd prioritize -- I'll trust my bank
+to keep me private long before I'll trust messages sent in the clear
+over the Internet (on a virtual postcard) for all to see!  Blech.
+
+
+So, what should Digicash be doing to remedy these problems?
+
+* always set up an encrypted, authenticated connection before sending
+  any messages in the Digicash protocol.
+
+  (Yes, this means shops will need to have certificates if you want
+  to avoid a man-in-the-middle attack.  So be it.  Most online shops
+  will be using SSL, and thus have a certificate anyhow.  You can safely
+  punt on the authentication between customer &lt;-&gt; shop if you're not
+  worried about active attacks.)
+
+* add a big warning to the documentation: users should not use wildcards
+  in payments (unless they know the dangers &amp; are encrypting with e.g. PGP).
+
+* sign the header stuff too.
+
+* continue specifying the protocol at a deeper level, like you promised
+  (and throw in source for security-critical modules too, eh? :-)
+- ---
+[This message has been signed by an auto-signing service.  A valid signature
+means only that it has been received at the address corresponding to the
+signature and forwarded.]
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+Comment: Gratis auto-signing service
+
+iQBFAwUBMMYgtioZzwIn1bdtAQHx9QF+J6qWEqWcsaoVOUQ3i9qaVF8MgYdztCLg
+9si9YDnjqPnFEsGTHYBjZXB8/TpOfiZe
+=cBGu
+-----END PGP SIGNATURE-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01435.html">Re: The "Future" Fallacy</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01437.html">Re: Untraceability in Mobile Networks</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01410.html">[NOISE] Re: PGP</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01473.html">Re: Still more on the Digicash protocol</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01436"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01436"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

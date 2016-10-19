@@ -1,0 +1,459 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: my menu sys. -->
+<!--X-From-R13: X. [vpunry Rvruy <zqvruyNgevgba.haz.rqh> -->
+<!--X-Date: Tue, 25 May 93 00:04:28 PDT -->
+<!--X-Message-Id: 9305250704.AA02467@triton.unm.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>my menu sys.</TITLE>
+<LINK REV="made" HREF="mailto:mdiehl@triton.unm.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00431.html">Date Prev</A>][<A HREF="msg00434.html">Date Next</A>][<A HREF="msg00437.html">Thread Prev</A>][<A HREF="msg00434.html">Thread Next</A>][<A HREF="index.html#00432">Date Index</A>][<A HREF="threads.html#00432">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>my menu sys.</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: my menu sys.</LI>
+<LI><em>From</em>: J. Michael Diehl &lt;<A HREF="mailto:mdiehl@triton.unm.edu">mdiehl@triton.unm.edu</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 25 May 93 1:04:21 MDT</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+After I posted my menu batch file for pgp, I realized that I hadn't put my name
+on it, which I felt I should do.  So, here it is, with with my copyleft message
+attatched.  I hope someone enjoys it.
+
+rem This is the PGP menu system by Mike Diehl version 0.0.  This program 
+rem requires 4dos command.com replacement to run.  It may run under norton's
+rem N-dos. Since I wrote this program for my own use, and in an effort to help
+rem with the cypherpunk cause, I am releasing this program into the public
+rem domain.  I ask that this message not be removed, and that you do not 
+rem distribute modified copies of this program.  Further, I hope that, if you 
+rem think this program makes pgp easier to use, you will send me an (encrypted)
+rem email message telling me so.  It helps my ego to think someone likes my
+rem program besides me. ;^)  I have enclosed my pgp 2.2 public key at the end
+rem of this file.  Take care, and enjoy.  Mike Diehl.
+
+rem 
+@echo off
+setlocal
+break on
+
+:main
+cls
+drawbox 0 0 23 78 2 red on black
+drawhline 17 0 79 1 red on black
+drawbox 4 29 16 49 2 red on black 
+scrput 1 27 blue on black Mike's PGP shell ver. 0.0.
+scrput 3 35 blue on black MAIN MENU
+
+scrput  5 32 red on black Encrypt a file.
+scrput  7 32 red on black Decrypt a file.
+scrput 09 32 red on black siGn a file.
+scrput 11 32 red on black Wipe file.
+scrput 13 32 red on black Next menu.
+scrput 15 32 red on black Quit.
+
+scrput 18 5 white on black Select an option by typing the corisponding capitalized letter.
+scrput 19 5 white on black For example, to encrypt a file, you would press the E key.
+
+inkey /K"EeDdGgWwNnQq" %%in
+goto menu1-%in
+
+:menu1-q
+screen 17 26
+pause 
+cls
+endlocal
+quit
+
+:menu1-e
+cls
+drawbox 0 0 23 78 2 red on black
+drawhline 17 0 79 1 red on black
+drawbox 6 3 8 74 2 red on black
+
+scrput 18 5 white on black Here you will be asked for the name of a file to be
+scrput 19 5 white on black encrypted.  Then you will be asked for the names of 
+scrput 20 5 white on black the people who should be able to read the file.
+scrput 21 5 white on black Enter them all on the line separated by a space.
+
+scrput 7 5 red on black Enter the name of the file to encrypt.
+screen 7 52
+input %%file
+
+if exist %file goto menu1-e-good
+scrput 15 10 red on black That file is not in the current directory!
+screen 16 10
+pause
+goto menu1-e
+
+:menu1-e-good
+
+drawbox 10 3 12 74 2 red on black
+scrput 11 5 red on black Enter the name(s) of the recipients.
+screen 11 52
+input %%in
+
+cls
+rem I never claimed that this would be elegent....
+
+drawbox 0 0 23 78 2 red on black
+drawhline 17 0 79 1 red on black
+scrput 18 5 white on black Here you are asked if you want to mark this message "For Your Eyes Only,"
+scrput 19 5 white on black and if you want to sign the message.  If you reply 'y' to the first
+scrput 20 5 white on black question, the recipient will only be ablt to display the message. He
+scrput 21 5 white on black won't be to save it.  If you reply 'y' to the second question, the 
+scrput 22 5 white on black recipient will know for certain that the message is from you.
+
+drawbox 6 3 8 74 2 red on black
+scrput 7 5 red on black Would you like to mark this "For Your Eyes Only?"
+inkey /K"ynN" %%f
+drawbox 10 3 12 74 2 red on black
+scrput 11 5 red on black Would you like to sign this message?
+inkey /K"ynN" %%s
+
+if "%f" == "y" goto f
+if "%s" == "y" goto s
+cls
+pgp -pe %file %in 
+goto encrypted
+:f
+if "%s" == "y" goto sf
+cls
+pgp -mep %file %in 
+goto encrypted
+:sf
+cls
+pgp -mesp %file %in 
+goto encrypted
+:s
+cls
+pgp -pes %file %in 
+
+:encrypted
+echo %@name[%file].asc is the name of the encrypted file.
+pause
+goto main
+
+:menu1-d
+cls
+drawbox 0 0 23 78 2 red on black
+drawhline 17 0 79 1 red on black
+drawbox 6 3 8 74 2 red on black
+
+scrput 18 5 white on black Here you will be asked for the name of a file to be
+scrput 19 5 white on black read.  Then you will be asked if you want to save the
+scrput 20 5 white on black plaintext file.  If you do, you will be asked for a 
+scrput 21 5 white on black new filename.
+
+scrput 7 5 red on black Enter the name of the file to read.
+screen 7 52
+input %%file
+
+if exist %file goto menu1-d-good
+scrput 15 10 red on black That file is not in the current directory!
+screen 16 10
+pause
+goto main
+
+:menu1-d-good
+cls
+pgp -m %file
+goto main
+
+:menu1-g
+cls
+drawbox 0 0 23 78 2 red on black
+drawhline 17 0 79 1 red on black
+drawbox 6 3 8 74 2 red on black
+
+scrput 18 5 white on black Here you will be asked for the name of a file to be
+scrput 19 5 white on black signed.  If you sign a message, it can be proved that
+scrput 20 5 white on black it came from you.  There is no "Plausible Deniability."
+
+scrput 7 5 red on black Enter the name of the file to signed.
+screen 7 52
+input %%file
+
+if exist %file goto menu1-g-good
+scrput 15 10 red on black That file is not in the current directory!
+screen 16 10
+pause
+goto main
+
+:menu1-g-good
+cls
+pgp -s %file
+echo %@name[%file].asc is the name of the signed file.
+pause
+goto main
+
+:menu1-w
+cls
+drawbox 0 0 23 78 2 red on black
+drawhline 17 0 79 1 red on black
+drawbox 6 3 8 74 2 red on black
+
+scrput 18 5 white on black Here you will be asked for the name of a file to be
+scrput 19 5 white on black wiped. Remember, after a file is wiped...
+scrput 20 5 blink white on black There is no way to retrieve the file!
+
+scrput 7 5 red on black Enter the name of the file to wiped.
+screen 7 52
+input %%file
+
+if exist %file goto menu1-w-good
+scrput 15 10 red on black That file is not in the current directory!
+screen 16 10
+pause
+goto main
+
+:menu1-w-good
+
+cls
+pgp -w %file 
+goto main
+
+:menu1-n
+cls
+drawbox 0 0 23 78 2 red on black
+drawhline 17 0 79 1 red on black
+drawbox 4 29 16 49 2 red on black 
+scrput 1 27 blue on black Mike's PGP shell ver. 0.0.
+scrput 3 35 blue on black SECOND MENU
+
+scrput  5 32 red on black Add a key.
+scrput  7 32 red on black Extract a key.
+scrput 09 32 red on black View a key.
+scrput 11 32 red on black Fingerprint.
+scrput 13 32 red on black Next menu.
+scrput 15 32 red on black Quit.
+
+scrput 18 5 white on black Select an option by typing the corisponding capitalized letter.
+scrput 19 5 white on black For example, to add a key to your ring, you would press the A key.
+
+inkey /K"AaEeVvFfNnQq" %%in
+goto menu2-%in
+
+:menu2-q
+goto menu1-q
+
+:menu2-a
+cls
+drawbox 0 0 23 78 2 red on black
+drawhline 17 0 79 1 red on black
+drawbox 6 3 8 74 2 red on black
+
+scrput 18 5 white on black Here you will be asked for the name of a file that  
+scrput 19 5 white on black contains the keys to be added to your public key ring.
+scrput 7 5 red on black Enter the name of the file to read.
+screen 7 52
+input %%file
+
+if exist %file goto menu2-a-good
+scrput 15 10 red on black That file is not in the current directory!
+screen 16 10
+pause
+goto main
+
+:menu2-a-good
+
+cls
+pgp -ka %file 
+pause
+goto main
+
+:menu2-e
+cls
+drawbox 0 0 23 78 2 red on black
+drawhline 17 0 79 1 red on black
+drawbox 6 3 8 74 2 red on black
+
+scrput 18 5 white on black Here you will be asked for the key ID to be extracted.
+scrput 19 5 white on black Then you will be asked for the names of the file to 
+scrput 20 5 white on black put the key in.
+
+scrput 7 5 red on black Enter the key ID to extract.
+screen 7 52
+input %%in
+
+drawbox 10 3 12 74 2 red on black
+scrput 11 5 red on black Enter the name of the file that is to hold the key.
+screen 11 59
+input %%file
+
+if not exist %file goto menu2-e-good
+scrput 10 10 red on black That file already exists in the current directory!
+screen 16 10
+pause
+goto main
+
+:menu2-e-good
+
+cls
+pgp -kx %in %file
+echo %@name[%file].asc contains the key for %in.
+pause
+goto main
+
+:menu2-v
+cls
+pgp -kv 
+pause
+goto main
+
+:menu2-f
+cls
+drawbox 0 0 23 78 2 red on black
+drawhline 17 0 79 1 red on black
+drawbox 6 3 8 74 2 red on black
+
+scrput 18 5 white on black Here you will be asked for the name of the person who's key fingerprint you 
+scrput 19 5 white on black want to examine.
+
+scrput 7 5 red on black Enter the name of the person.
+screen 7 52
+input %%in
+
+cls
+pgp -kvc %in 
+echo Remember to write this information down!
+pause
+goto main
+
+:menu2-n
+cls
+drawbox 0 0 23 78 2 red on black
+drawhline 17 0 79 1 red on black
+drawbox 4 29 16 49 2 red on black 
+scrput 1 27 blue on black Mike's PGP shell ver. 0.0.
+scrput 3 35 blue on black THIRD MENU
+
+scrput  5 32 red on black Generate a key.
+scrput  7 32 red on black Remove a key.
+scrput 09 32 red on black Disable a key.
+scrput 13 32 red on black Next menu.
+scrput 15 32 red on black Quit.
+
+scrput 18 5 white on black Select an option by typing the corisponding capitalized letter.
+scrput 19 5 white on black For example, to generate a new key, you would press the G key.
+
+inkey /K"GgRrDdNnQq" %%in
+goto menu3-%in
+
+:menu3-g
+cls
+pgp -kg 
+pause
+goto main
+
+:menu3-r
+cls
+drawbox 0 0 23 78 2 red on black
+drawhline 17 0 79 1 red on black
+drawbox 6 3 8 74 2 red on black
+
+scrput 18 5 white on black Here you will be asked for the name of the key to be
+scrput 19 5 white on black removed.
+
+scrput 7 5 red on black Enter the name of the key to remove.
+screen 7 52
+input %%in
+
+cls
+pgp -kr %in 
+pause
+goto main
+
+:menu3-q
+goto menu1-q
+
+:menu3-d
+cls
+drawbox 0 0 23 78 2 red on black
+drawhline 17 0 79 1 red on black
+drawbox 6 3 8 74 2 red on black
+
+scrput 18 5 white on black Here you will be asked for the name of the key to be
+scrput 19 5 white on black either disabled or re-enabled.
+
+scrput 7 5 red on black Enter the name of the key.
+screen 7 52
+input %%in
+
+cls
+pgp -kd %in 
+pause
+goto main
+
+:menu3-n
+goto main
+
+I may be reached by any of these addresses.
+mdiehl@triton.unm.edu, al945@cwns9.ins.cwru.edu
+
+Or, in care of Rory McManus at r.mcmanus4@genie.geis.com
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: 2.2
+
+mQA9Aiu/jVAAAAEBgM2F5mSlCA+KRd6TXIrqmPfiiAEytwSttZs7Yua939GMu2mP
+JL+5Qpi/ZKqF2nAJAwAFEbQsSi4gTWljaGFlbCBEaWVobCwgMSwgPG1kaWVobEB0
+cml0b24udW5tLmVkdT4=
+=lyvx
+-----END PGP PUBLIC KEY BLOCK-----
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00431.html">No Subject</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00434.html">Digital cash issues...</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00437.html">Re: UUDecode</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00434.html">Digital cash issues...</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00432"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00432"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

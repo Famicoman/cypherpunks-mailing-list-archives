@@ -1,0 +1,205 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: ANNOUNCEMENT: PGPfone Beta 7 Now Available for Download -->
+<!--X-From-R13: jvyyvnzfNin.nepn.pbz (Xrss Ivyyvnzf) -->
+<!--X-Date: Fri, 12 Jul 1996 05:54:28 +0800 -->
+<!--X-Message-Id: 3257270267.87025315@va.arca.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: ANNOUNCEMENT: PGPfone Beta 7 Now Available for Download</TITLE>
+<LINK REV="made" HREF="mailto:williams@va.arca.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00650.html">Date Prev</A>][<A HREF="msg00652.html">Date Next</A>][<A HREF="msg00660.html">Thread Prev</A>][<A HREF="msg00677.html">Thread Next</A>][<A HREF="index.html#00662">Date Index</A>][<A HREF="threads.html#00662">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: ANNOUNCEMENT: PGPfone Beta 7 Now Available for Download</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>, <A HREF="mailto:wprice@primenet.com">wprice@primenet.com</A></LI>
+<LI><em>Subject</em>: Re: ANNOUNCEMENT: PGPfone Beta 7 Now Available for Download</LI>
+<LI><em>From</em>: <A HREF="mailto:williams@va.arca.com">williams@va.arca.com</A> (Jeff Williams)</LI>
+<LI><em>Date</em>: 11 Jul 1996 15:47:44 GMT</LI>
+<LI><em>Organization</em>: Arca Systems, Inc </LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:williams@va.arca.com">williams@va.arca.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Will Price writes:
+
+&gt; PGPfone uses Diffie-Hellman public-key technology to provide encryption
+&gt; keys for the user's selection of CAST, TripleDES, or Blowfish
+&gt; encryption algorithms
+
+Does the Blowfish implementation address the weakness described
+below?
+
+--Jeff
+
+------------------------
+
+Warning:  Blowfish can be cracked.  (I apologize for
+the sensationalism.  I also apologize if this has
+been mentioned before.  This needs your attention.)
+ 
+I have found a way to crack 80 bytes of ciphertext 
+encrypted with the blowfish algorithm (ECB mode), 
+25% of the time.   Blowfish, as printed in "Applied  
+Cryptography, Second Edition", and as corrected in 
+Bruce Schneier's Errata Sheet, using a randomly 
+generated 64 bit key, can be cracked in much less 
+than 10 minutes on a Pentium 120MHz (10 minutes is 
+worst case).  According to my calculations, with 
+optimizations, I could cut this down to about 5 
+seconds to 2.5 minutes worst case.
+ 
+Previously, I wrote:
+&gt;...
+&gt;I have come up with several sets of vectors, 
+&gt;{k1,k2,pl,pr,cl,cr} such that when you use 
+&gt;k1 or k2 to encrypt pl and pr you will always 
+&gt;get cl, and cr, where k1={b10,b11,b1...,b1n}, 
+&gt;where b1i is the ith byte in the key k1, and 
+&gt;where n is divisible by 4.
+&gt;... 
+&gt; 
+&gt; 
+&gt;Mike Morgan
+ 
+I investigated this further, and it turned out
+to be a source code implementation error.
+ 
+There is an implementation error in published
+Blowfish Code. The program chokes on the 
+commented  "choke" statement, below:
+ 
+bfinit(char *key,int keybytes)
+{
+	unsigned long data;
+	...
+	j=0;
+	...
+		data=0;
+		for(k=0;k&lt;4;k++){
+			data=(data&lt;&lt;8)|key[j];/* choke*/
+			j+=1;
+			if(j==keybytes)
+				j=0;
+		}
+		...
+}
+ 
+It chokes whenever the most significant bit
+of key[j] is a '1'.  For example, if key[j]=0x80,
+key[j], a signed char, is sign extended to 0xffffff80 
+before it is ORed with data.   For examle, when:
+ 
+	(j&amp;0x3)==0x3 (that is j=0x3,0x7,0xf, etc.) 
+- -and-
+	(key[j]&amp;0x80)==0x80 (or when k[j]=0x80,0x81,etc.)
+ 
+data=0xffffff80 (0xffffff81,etc.) upon exit from the 
+above "for(k=...)" loop.  ORing all of these 1's into 
+data effectively wipes out 3/4 of the key characters!  
+(that is, 3/4 of the key characters are known to be 
+set to 1 when the 4th key byte to be ORed into data 
+has a 1 in the most significant bit.)  For a randomly 
+selected 32-bit key, there is a 50% chance that 3/4 
+of the key could be considered as all '1's, even if 
+they weren't that way to begin with. 
+ 
+This is obviously a security issue.  Note, contrary
+to my previous statement, the key length in bytes
+_does not_ need to be divisible by 4 to exploit this
+implementation flaw.
+ 
+The following fix has been verified to work:
+ 
+	data&lt;&lt;=8;
+	data|=(unsigned long)key[j]&amp;0xff;
+ 
+Another fix is to declare 'key' as 'unsigned char *'.
+Other fixes are possible.
+ 
+NOTE:  Most test vectors will not check for this bug 
+       because they use keys comprised of ASCII 
+       (value&lt;0x80) strings.  This bug does not show
+       up when every character in the key has a value
+       less than 0x80.
+ 
+This should be corrected and noted in the source code 
+for blowfish.  
+ 
+Also, test vectors with unsigned character values greater 
+than 0x80 should be generated and published.
+ 
+I did not notice this bug in the "Applied Cryptography"
+errata.  It should be noted there, too.
+ 
+This flaw may or may not be present in other implementations 
+of the Blowfish algorithm.  Thanks to non-standard use of
+the 'union' construct, I think others who use blowfish may
+or may not have avoided this bug.  In cases where this bug
+has been avoided, it may have been done purposefully or
+inadvertantly.
+
+Regards,
+ 
+Mike Morgan, 			Hardware Engineer
+Digi International, 		mmorgan@dgii.com
+- --
+I do not speak for my company in this post.
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00650.html">It's more than "White Punks on Dope"</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00652.html">Re: Metered Phone</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00660.html">Re: ANNOUNCEMENT: PGPfone Beta 7 Now Available for Download</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00677.html">Re: ANNOUNCEMENT: PGPfone Beta 7 Now Available for Download</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00662"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00662"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

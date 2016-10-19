@@ -1,0 +1,120 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Lan Manager security -->
+<!--X-From-R13: yjfNgenafnep.pbz -->
+<!--X-Date: Mon, 22 Jan 96 08:21:38 PST -->
+<!--X-Message-Id: 9601221620.AA11356@capybara.transarc.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Lan Manager security</TITLE>
+<LINK REV="made" HREF="mailto:lws@transarc.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02596.html">Date Prev</A>][<A HREF="msg02601.html">Date Next</A>][<A HREF="msg02652.html">Thread Prev</A>][<A HREF="msg02619.html">Thread Next</A>][<A HREF="index.html#02597">Date Index</A>][<A HREF="threads.html#02597">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Lan Manager security</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:ota@transarc.com">ota@transarc.com</A>, <A HREF="mailto:beaver@transarc.com">beaver@transarc.com</A></LI>
+<LI><em>Subject</em>: Lan Manager security</LI>
+<LI><em>From</em>: <A HREF="mailto:lws@transarc.com">lws@transarc.com</A></LI>
+<LI><em>Date</em>: Mon, 22 Jan 96 11:20:47 -0500</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Have you seen an analysis of the security of the LanMan 
+authentication scheme?  It strikes me as better than K4, but worse 
+than K5.  I wonder if you concur.
+
+Since Don and Ted have probably not seen this before, here's the 
+technique as I understand it (summarized from the SAMBA docs).
+
+The password is uppercased and truncated to 14 bytes (or padded to 14 
+bytes with nulls).  This is split (0..6,7..13) into two DES keys 
+which are each used to encrypt a static 8-byte value. The resulting 
+16 byte key is stored at the server. 
+
+To authenticate a connection, the server issues an 8 byte random 
+challenge.
+I presume this is returned in the clear since the docs don't specify 
+otherwise, but I haven't sniffed one.  The randomness of the 
+challenge doesn't matter so much if it crosses the network in the 
+clear (though I can't understand why they did this), as long as the 
+period of the generator is large enough to prevent replay attacks.
+
+The client then pads the 16-byte key to 21 bytes (with zeros, natch), 
+splits it in thirds, {0..6}, {7..13}, {14,15,NUL,NUL,NUL,NUL,NUL}, 
+uses each third to DES-encrypt the challenge, concatenates the 
+ciphertexts, and returns the response to the server.
+
+I don't want to prejudice you too much by posting my own thoughts on 
+this protocol, but here are a couple of things that should be obvious:
+1. It doesn't hand back free samples of enciphered known plaintexts 
+to all comers for offline attack.  This is a Good Thing, unlike some 
+other NOTABLE EXAMPLES.
+2. This business with padding the keys out with zero bits really 
+simplifies cryptanalysis.  Where my limited expertise breaks down, is 
+identifying just how easy it makes things.
+3.  I'm kind of boggled as to why they do this multiple encryption of 
+things and then *concatenate* the ciphertexts.  If you're going to do 
+multiple encryption, it seems to make sense to pipeline the stages.  
+Doesn't it?
+
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02596.html">NYT New Web Site</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02601.html">(fwd) e$: PBS NewsHour, Path Dependency, IPSEC, Cyberdog, and the Melting of Mr.Bill.</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02652.html">Re: NYT New Web Site</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02619.html">Re: Lan Manager security</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02597"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02597"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,233 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: constructed anonymous addresses -->
+<!--X-From-R13: Yney Z. Pneehf <oneehfNgerr.rte.hu.rqh> -->
+<!--X-Date: Mon, 11 Jan 93 13:03:35 PST -->
+<!--X-Message-Id: 9301112102.AA23795@tree.egr.uh.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>constructed anonymous addresses</TITLE>
+<LINK REV="made" HREF="mailto:barrus@tree.egr.uh.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00076.html">Date Prev</A>][<A HREF="msg00079.html">Date Next</A>][<A HREF="msg00076.html">Thread Prev</A>][<A HREF="msg00077.html">Thread Next</A>][<A HREF="index.html#00078">Date Index</A>][<A HREF="threads.html#00078">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>constructed anonymous addresses</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: constructed anonymous addresses</LI>
+<LI><em>From</em>: Karl L. Barrus &lt;<A HREF="mailto:barrus@tree.egr.uh.edu">barrus@tree.egr.uh.edu</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 11 Jan 93 15:02:45 -0600</LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+Had sort of a slow day at work, so I had the chance to crank out this:
+
+Here is a rough script which will allow you to route your mail through
+the various remailers.  (However, extropia is not yet supported...I'm
+working on it).  You must have the public key for each remailer on
+your keyring.
+
+Save the file, run it, and it will prompt for 1) mail, or 2) header.
+Choose 1 to pick a path and send a file, choose 2 to create a header
+which can be used to reach you.  I intend option 2 to be used as
+follows: create a message to someone you want to remain anonymous
+from, run the script, pick 2, follow the prompts, and then instruct
+the script to append the header to your letter.  Then your recipient
+will be able to follow the directions and respond to you.
+
+When the script prompts for "And then to (1-3 or address)", to end the
+process, type the final address you want your mail sent to.  Of
+course, if you are creating a header, you'll want to type your own
+address.
+
+Further improvements include supporting extropia; and rewriting in C,
+perl, awk, ksh, or any language with arrays!
+
+I've tested this script using the remailers at alumni and rosebud,
+because the turnaround time seems faster.  But there is no reason
+that rebma shouldn't work as well.
+
+--------8&lt;--cut here--&gt;8--------
+#!/bin/sh
+# support script for anonymous remailers
+# allows routing a message through various remailers
+# NOTE: extropia remailer not supported just yet
+
+#find out which mode user wants
+echo "Do you want to:"
+echo "1. Create routing and mail a file"
+echo "   This will allow you to specify the route your message will take,"
+echo "   and mail a file through that route."
+echo "2. Create remailing header"
+echo "   This creates an appropriate remailing header, with instructions."
+echo "   Include the generated file in one of your own messages and"
+echo "   someone else can use it to reply to you."
+
+read choice
+
+#declare remailers
+mail1=hal@alumni.caltech.edu
+mail2=remailer@rebma.mn.org
+mail3=elee7h5@rosebud.ee.uh.edu
+mail4=remail@extropia.wimsey.com
+
+#temporary files
+t1=.anon1
+t2=.anon2
+t3=.anon3
+
+#set up header
+echo "::" &gt; $t1
+echo "Encrypted: PGP" &gt;&gt; $t1
+echo "" &gt;&gt; $t1
+
+#blank out .anon3
+cat /dev/null &gt; $t3
+
+#print menu
+echo ""
+echo "1) $mail1"
+echo "2) $mail2"
+echo "3) $mail3"
+#echo "4) $mail4"
+echo ""
+
+#get hop
+echo "Mail to (1-3): "
+read to
+
+#convert from number to address
+if [ $to = "1" ]
+then
+  to=$mail1
+elif [ $to = "2" ]
+then
+  to=$mail2
+else
+  to=$mail3
+fi
+firsthop=$to
+
+notdone=true
+#begin loop
+while [ $notdone ]
+do
+#find out remailing request
+	echo "And then to (1-3 or address): "
+	read rto
+
+	if [ $rto = "1" ]
+	then
+	  rto=$mail1
+	elif [ $rto = "2" ]
+	then
+	  rto=$mail2
+	elif [ $rto = "3" ]
+	then
+	  rto=$mail3
+	fi
+
+	echo "::" &gt; $t2
+	echo "Request-Remailing-To: $rto" &gt;&gt; $t2
+	echo "" &gt;&gt; $t2
+
+#	echo "remailing to $rto; encrypted for $to"
+	pgp -ea $t2 $to 2&gt; /dev/null
+	cat $t1 $t2.asc &gt;&gt; $t3
+
+	if [ $rto = $mail1 -o $rto = $mail2 -o $rto = $mail3 ]
+	then
+	  to=$rto
+	else
+	  notdone=""
+	fi
+done
+
+if [ $choice = "1" ]
+then
+#now include message
+  echo "Message to include? "
+  read msg
+  if [ ! -f $msg ]
+  then
+    echo "$msg not found"
+    exit 1
+  fi
+
+  cat $msg &gt;&gt; $t3
+  elm -s "anonymous mail" $firsthop &lt; $t3
+else
+  echo "Append to file: "
+  read msg
+  echo "--------8&lt;--cut here--&gt;8--------" &gt;&gt; $msg
+  cat $t3 &gt;&gt; $msg
+  echo "" &gt;&gt; $msg
+  echo "&lt;To reply, save everything below the \"cut here\" marks above" &gt;&gt; $msg
+  echo "&lt;into another file.  Type your reply here (below the blank " &gt;&gt; $msg
+  echo "&lt;line three lines above!) and mail to $firsthop" &gt;&gt; $msg
+fi
+
+rm -rf $t1 $t1.asc $t2 $t2.asc
+#end of script----------------------------
+
+
+/-----------------------------------\
+| Karl L. Barrus                    |
+| barrus@tree.egr.uh.edu (NeXTMail) |
+| elee9sf@menudo.uh.edu             |
+\-----------------------------------/
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00076.html">request digest format</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00079.html">Re: .Sig suppression</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00076.html">request digest format</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00077.html">multiple aliases. It doesn't matter how many</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00078"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00078"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

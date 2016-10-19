@@ -1,0 +1,222 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: A Distributed Network Cache Service -->
+<!--X-From-R13: [vxr Rhibf <rabpuNmvcpba.arg> -->
+<!--X-Date: Sat, 30 Aug 1997 05:26:37 +0800 -->
+<!--X-Message-Id: 19970829211621.6411.qmail@zipcon.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>A Distributed Network Cache Service</TITLE>
+<LINK REV="made" HREF="mailto:enoch@zipcon.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01451.html">Date Prev</A>][<A HREF="msg01450.html">Date Next</A>][<A HREF="msg01451.html">Thread Prev</A>][<A HREF="msg01447.html">Thread Next</A>][<A HREF="index.html#01443">Date Index</A>][<A HREF="threads.html#01443">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>A Distributed Network Cache Service</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@cyberpass.net">cypherpunks@cyberpass.net</A>, <A HREF="mailto:eternity@internexus.net">eternity@internexus.net</A></LI>
+<LI><em>Subject</em>: A Distributed Network Cache Service</LI>
+<LI><em>From</em>: Mike Duvos &lt;<A HREF="mailto:enoch@zipcon.net">enoch@zipcon.net</A>&gt;</LI>
+<LI><em>Date</em>: Fri, 29 Aug 1997 14:16:21 -0700 (PDT)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.COM">owner-cypherpunks@Algebra.COM</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+I've been thinking a bit about the micropayment-based distributed
+network file system of the future.
+
+It should be scalable, with the addition of servers being a
+simple process.  Anyone should be able to run a server.
+
+Kidnapping a server should disclose nothing about the contents of
+files stored there.  Which files are stored on which servers
+should be concealed from mere users of the network.
+
+Anyone should be able to use the system by connecting to the
+server nearest them.  Deterministic routing between servers
+should be used by servers to provide files to other servers.
+
+The system should provide for replication of files on a fixed
+number of servers, with "k of n" parts being sufficient for
+reconstruction.
+
+Aside from replication done for reliability, there should be only
+one copy of a file in the system at any time.  If multiple users
+submit the same file, there should be no more copies than if one
+user submitted it.
+
+The architecture of the system should be completely independent
+of any specific file system organization, and any user should be
+able to sync all or any part of his file system with the network
+file system, or cache against the network file system on his
+local machine.
+
+The system should be completely secure, even from operators of
+servers.  The person submitting a file receives a secret
+necessary for its reconstruction, and the file may only be
+accessed by the owner and those to whom the secret is
+communicated.  The war room at the Pentagon and TCMay should be
+able to use the same server as an extension of their local file
+systems without any security worries.
+
+Let's consider the following service...
+
+Bob has an string of 100,000 octets he wants to make available to
+Alice and a few of their closest friends.  Bob makes a secure
+connection to a Trusted Agent doing business with the network
+file system, and gives the Trusted Agent the string, and a
+micropayment of $1/MB or 10 cents.  Working in a secure box, the
+Trusted Agent batch compresses and scrambles Bob's string into a
+much smaller string of seemingly random bits, and gives Bob two
+128 bit values, a TAG, which will identify Bob's data to Bob, and
+to anyone else Bob may wish to share his data with, and a
+CONTEXT, which will unravel Bob's data back into its original
+form.  The Trusted Agent then signs Bob's data, declaring that
+the resulting digital coccoon produced from Bob's data is
+associated with the TAG, and that the CONTEXT necessary to
+recover the data has been communicated to Bob and all copies
+destroyed.  The agent gives Bob the TAG and CONTEXT, and sends
+the processed data and the TAG to the distributed file system,
+and it is stored on one or more of its servers for the next 100
+days, after which it expires.
+
+For the next 100 days, Bob and all of his friends may use the 256
+bit TAG/CONTEXT pair in place of Bob's data and may serve that
+data for free any number of times off any network file system
+server.  They simply make a secure connection to any server, and
+send the TAG.  The server returns to them the seemingly random
+stream of bits, after which a freeware program takes that data
+and the CONTEXT, and regenerates the original data.
+
+After 100 days, bob may fork over another 10 cents for another
+100 days, or his data will disappear.  The TAG assigned to an
+Octet String is unique, and no two strings have the same TAG, and
+no string is ever assigned multiple tags, no matter how often it
+may be entered and purged from the system.
+
+Now, almost everything you could want from a network wide
+distributed file system can be carried on top of this simple
+service, which might be considered a system of temporary lodging
+for popular Octet Strings.
+
+You rent your Octet String a room, where you and people you
+authorize may have unlimited visits for 100 days, and at the end,
+your Octet String checks out for parts unknown.
+
+One can do an almost unlimited number of useful things with such
+a service which, given a fast network connection, allows you to
+store any file in 256 bits for a period of time ranging from 100
+days to forever, for a small fee.
+
+Bob could back up his entire file system to the network, sending
+each individual file or directory as an Octet String, with hard
+links to files replaced with TAG/CONTEXT pairs.  The TAG/CONTEXT
+pair for Bob's root directory would then be used to access Bob's
+file system off any network server.  If Bob changed some files,
+he could resync his FS with the server by only updating a few
+Octet Strings.  If Bob synced his FS with the network daily, and
+jotted down the TAG/CONTEXT pair for his root directory, Bob
+could mount his file system as it appeared at backup time for any
+of the last 100 days, with no replication of material on the
+servers that contained it.
+
+Bob could write a "compression" program, Bobzip, which would
+produce an "archive" where each file only took 256 bits of space,
+and which could be "unBobzipped" on any machine connected to the
+Network for the next 100 days.  Bob could mail this small
+"archive" to his friends.
+
+If browsers understood URLs referencing the distributed file
+system, Usenet binaries could be replaced with appropriate
+pointers in Usenet articles, ending the endless replication of
+binaries on thousands of machines, and reducing Usenet back to a
+managable volume of data.
+
+Users could boot their machines off the Network, and instantly
+see gigabytes of software available to them.  After syncing their
+cache file system with the network, they could drop their PC off
+the roof, buy another one, and by typing in just one TAG/CONTEXT
+pair, see all their files again.
+
+Cache proxys could be set up which would grab files from the
+servers and provide NFS access to them, permitting other hosts to
+export NNTP, HTTP, and FTP access to the distributed network data.
+
+I would imagine a typical useful node in such a distributed
+system would need about 10 gig of disk, a fast network
+connection, and a reasonably fast processor.  Such a node could
+hold 100 meg of compressed data for each of the 100 days until
+the space was reused.  At full utilization, each node would
+generate in excess of $100 a day of revenue at $1/MB.
+
+--
+     Mike Duvos         $    PGP 2.6 Public Key available     $
+     enoch@zipcon.com   $    via Finger                       $
+         {Free Cypherpunk Political Prisoner Jim Bell}
+
+
+
+
+
+
+
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01447" HREF="msg01447.html">Re: A Distributed Network Cache Service</A></STRONG>
+<UL><LI><EM>From:</EM> Lucky Green &lt;shamrock@netcom.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01451.html">Website highjacking -- Cybercrime Conf Announcement</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01450.html">Re: Greetings,</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01451.html">Website highjacking -- Cybercrime Conf Announcement</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01447.html">Re: A Distributed Network Cache Service</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01443"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01443"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,211 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Defeating MITM with Eric's Secure Phone -->
+<!--X-From-R13: "Xbua Yryfrl" <xryfrlNcyarg.arg> -->
+<!--X-Date: Sat, 11 Oct 1997 15:31:26 +0800 -->
+<!--X-Message-Id: 199710110651.BAA02401@email.plnet.net -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Defeating MITM with Eric's Secure Phone</TITLE>
+<LINK REV="made" HREF="mailto:kelsey@plnet.net">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00611.html">Date Prev</A>][<A HREF="msg00593.html">Date Next</A>][<A HREF="msg00579.html">Thread Prev</A>][<A HREF="msg00672.html">Thread Next</A>][<A HREF="index.html#00615">Date Index</A>][<A HREF="threads.html#00615">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Defeating MITM with Eric's Secure Phone</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: "Perry's Crypto List" &lt;<A HREF="mailto:cryptography@c2.net">cryptography@c2.net</A>&gt;,       "cypherpunks" &lt;<A HREF="mailto:cypherpunks@Algebra.Com">cypherpunks@Algebra.Com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Defeating MITM with Eric's Secure Phone </LI>
+<LI><em>From</em>: "John Kelsey" &lt;<A HREF="mailto:kelsey@plnet.net">kelsey@plnet.net</A>&gt;</LI>
+<LI><em>Date</em>: Sat, 11 Oct 1997 01:53:37 -0500</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@Algebra.Com">owner-cypherpunks@Algebra.Com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+
+[ To: Cryptography, cypherpunks ## Date: 10/10/97 ##
+  Subject: Re: Defeating MITM with Eric's Secure Phone ]
+
+&gt;Date: Thu, 9 Oct 1997 21:02:53 -0700
+&gt;From: Bill Frantz &lt;frantz@netcom.com&gt;
+&gt;Subject: Re: Defeating MITM with Eric's Secure Phone
+&gt;Cc: cryptography@c2.net, cypherpunks@Algebra.COM
+
+I wrote (and Bill commented on):
+&gt;&gt; 1.	Exchange PGP-encrypted e-mail establishing a set of
+&gt;&gt; sixteen different words, labeled for 0..f in each direction.
+&gt;&gt; Thus:
+&gt;&gt;
+&gt;&gt; 0. Dilbert 1. Alpha 2. Cable 3. Swordsman ... f. Marxist
+&gt;&gt;
+&gt;&gt; Now, the checksum reading is very hard to spoof.  Suppose I
+&gt;&gt; get 0x33f. I say ``My checksum is Swordsman Swordsman
+&gt;&gt; Marxist, or 33f.''
+
+Bill responded with some nice reasoning:
+&gt;Assume that the contents of the paper are secret between
+&gt;Alice and Bob. When Alice calls Bob, she reads the word
+&gt;coresponding to the first digit of the checksum.  Either
+&gt;Mallory is in the middle or he isn't.  If he isn't, no
+&gt;problem.  The word list remains secure.
+
+&gt;If he is in the middle, he has 15 chances in 16 of being
+&gt;caught on the first exchange.  He only survives if the first
+&gt;digit of the Alice-Mallory connection is the same as the
+&gt;first digit of the Mallory-Bob connection. He now knows the
+&gt;word for one value and can continue to play 1 out of 16
+&gt;times.
+
+This is *almost* right.  We need to add one more thing,
+though:
+
+1.      Alice calls Mallory, thinking she's calling Bob.
+She reads the first three digits to him.  He makes the
+connection fall apart.  At the same time, Mallory calls Bob,
+pretending to be Alice, and causes the connection to fall
+apart at the same time.
+
+2.      Alice calls Bob again, re-establishes their
+connection, and talks to him.  Both seem to have had the
+same thing happen, so it's believeable that it was just
+noise on the line.  (Where I am, this isn't so uncommon that
+it would imply an active attack.)
+
+3.      Mallory now knows three of these words in the
+dictionary.  He lies low for the next few calls before
+trying the same trick again, until he learns most or all the
+dictionary entries.
+
+This implies a couple of things:  First, Alice and Bob
+ought to be suspiscious of line noise that conveniently
+clobbers them during reading of checksums.  Second, Alice
+and Bob shouldn't keep the same 16-word dictionary forever.
+If they change it once a week, this may be enough to make
+the attack I describe above unworkable.
+
+Note that this all works only when the phones/dictionaries
+are used only by single users.
+
+I also made a poorly-thought-through comment about using
+6-digit hex secrets, and adding or XORing them into the
+checksums.  This is vulnerable to a trivial attack, of
+course.  The thing is, this doesn't need to be as complex or
+cryptographically secure as a hash function or MAC, because
+of the way it's used.  We can probably also expect
+one-day-only keys for this application.
+
+I can think of dozens of things that *ought* to work here,
+and still be strong enough to resist the limited possible
+attacks, but I can't seem to convince myself of the security
+of any that are simple enough to use with a calculator.  If
+I settled on one, it would be
+
+New checksum = (((old checksum * C0) mod P)+ C1) mod 2^{64}.
+
+where P is a random 64-bit prime, C0 is a random 64-bit
+number between 0 and P-1 inclusive, and C1 is a random
+64-bit number.  If P,C0, and C1 are all unknown, I *think*
+that's secure.  An attacker given the high-order half of
+this doesn't seem to have the information needed to guess
+its low-order half on a different checksum, nor to reliably
+learn the value of P.
+
+This is essentially the IBC-Hash message authentication
+code, which is provably secure if the key is used once.
+I can't see a way that this could be attacked in this
+application, given one-time use of the keys.  Can anyone
+else?  (I may be missing something obvious again.)
+
+&gt;BTW - I really like John's idea of doing another exchange
+&gt;later in the conversation.  Perhaps something like, "You
+&gt;know, I was dancing the Foxtrot with my wife 9 days ago at
+&gt;5AM."
+
+I wish I could claim this, but it's been around for a while.
+Didn't some of the PGPphone people come up with this idea?
+(Or was it users of older, government-issued secure phones?)
+
+&gt;Bill Frantz       | Internal surveillance      | Periwinkle --
+Consulting
+&gt;(408)356-8506     | helped make the USSR the   | 16345 Englewood
+Ave.
+&gt;frantz@netcom.com | nation it is today.        | Los Gatos, CA
+95032, USA
+
+   --John Kelsey, Counterpane Systems, kelsey@counterpane.com
+ PGP 2.6 fingerprint = 4FE2 F421 100F BB0A 03D1 FE06 A435 7E36
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.2
+
+iQCVAwUBND8+LUHx57Ag8goBAQHgCAQA1a6JjY0CMymvvXkWC8L8xOkyy2oosmQU
+rJAGtN9pYOdv+fyxSwEu4Mh03jjbcmQ1YBKkkD5CVfrhIYN93FGMZq9tVT+hIVCE
+04/ki48Os1AitU/vZI94GlJlajhssSPy0R9fcPbFtR96KAw8csuFICtX2quwBK6a
++SkkfLZgaKc=
+=vGOh
+-----END PGP SIGNATURE-----
+
+
+   --John Kelsey, Counterpane Systems, kelsey@counterpane.com
+ PGP 2.6 fingerprint = 4FE2 F421 100F BB0A 03D1 FE06 A435 7E36
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00672" HREF="msg00672.html">Re: Defeating MITM with Eric's Secure Phone</A></STRONG>
+<UL><LI><EM>From:</EM> Bill Frantz &lt;frantz@netcom.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00611.html">Re: PGP CAKware &amp; IETF controlled Open-PGP standard</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00593.html">Re: Defeating MITM with Eric's Secure Phone</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00579.html">Re: Defeating MITM with Eric's Secure Phone</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00672.html">Re: Defeating MITM with Eric's Secure Phone</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00615"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00615"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

@@ -1,0 +1,161 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: RSA&#45;130 Falls to NFS &#45; Lenstra Posting to sci.crypt.research -->
+<!--X-From-R13: zcqNargpbz.pbz ([vxr Rhibf) -->
+<!--X-Date: Tue, 16 Apr 1996 08:42:34 +0800 -->
+<!--X-Message-Id: 199604152038.NAA03204@netcom10.netcom.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199604151824.LAA07600@netcom6.netcom.com -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: RSA-130 Falls to NFS - Lenstra Posting to sci.crypt.research</TITLE>
+<LINK REV="made" HREF="mailto:mpd@netcom.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00888.html">Date Prev</A>][<A HREF="msg00879.html">Date Next</A>][<A HREF="msg00873.html">Thread Prev</A>][<A HREF="msg00882.html">Thread Next</A>][<A HREF="index.html#00878">Date Index</A>][<A HREF="threads.html#00878">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: RSA-130 Falls to NFS - Lenstra Posting to sci.crypt.research</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Re: RSA-130 Falls to NFS - Lenstra Posting to sci.crypt.research</LI>
+<LI><em>From</em>: <A HREF="mailto:mpd@netcom.com">mpd@netcom.com</A> (Mike Duvos)</LI>
+<LI><em>Date</em>: Mon, 15 Apr 1996 13:38:01 -0700 (PDT)</LI>
+<LI><em>In-Reply-To</em>: &lt;<A HREF="msg00873.html">199604151824.LAA07600@netcom6.netcom.com</A>&gt; from "Vladimir Z. Nuri" at Apr 15, 96 11:24:27 am</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+"Vladimir Z. Nuri" &lt;vznuri@netcom.com&gt; writes:
+
+ &gt; I have been wondering about malicious hackers getting into
+ &gt; these pools. would it be possible for them to contribute
+ &gt; false data that screws up the end results? or are such
+ &gt; anomalies easily discarded or disregarded by the final
+ &gt; processes?
+
+If you are doing a distributed search of a key space, then it is
+of course possible that people, either accidently or
+deliberately, may fail to correctly do their part of the search
+and report misleading results.  You may recall a hostile attack
+on SSL a while back where the design was flawless but the desired
+key failed to appear when the results of the individual searches
+were merged.
+
+Fortunately, where integer factorization is concerned, it is
+trivial to verify the full and partial relations for correctness
+and discard any bad data during the counting process.  Thus there
+is no chance of garbage making it into the final reduction.
+
+ &gt; there is a reduction step in the NFS (number field sieve,
+ &gt; technique used to factor large numbers) in which all the
+ &gt; collected data is mashed. how sensitive is this process to
+ &gt; spurious data? i.e. if there was a little bit of bad data
+ &gt; in its computation, does it completely screw it up, or is it
+ &gt; robust and resistant to this kind of problem?
+
+The input to the reduction step is simply a large number of ways
+of making the number "1" by multiplying together elements of the
+factor base, all modulo the number of be factored.  Given an
+overdetermined set of such relations, one can can search for
+linearly dependent combinations of their exponents modulo 2. Each
+such dependency permits one to construct a relation in which all
+the exponents are even, and possibly a non-trivial square root of
+1 modulo N.  Since each dependency has at least a 50-50 chance of
+yielding a factor of N, only a handful of them are needed.
+
+Certainly bad data in the matrix could cause problems, but the
+matrix is sparse and damage would probably be localized.  You
+might get out some dependencies that weren't real, but unless you
+had quite a lot of garbage data, you would probably get enough
+good ones to succeed.  Non-relations involving small primes would
+probably be more poisonous than ones involving the high end of
+the factor base.  In any case, as I stated earlier, it is trivial
+to guarantee all the data going into the final reduction has been
+sterilized.
+
+ &gt; it seems to me that in many cases, these collaborative
+ &gt; projects virtually cannot check the validity of the
+ &gt; supplied data without repeating the computation effort,
+ &gt; although there may be good tests that tend to screen out
+ &gt; "most" bad data.
+
+ &gt; future implementors of these programs might amuse
+ &gt; themselves with trying to create such safeguards or
+ &gt; anticipate such "attacks" which are pretty significant the
+ &gt; more the processes become distributed.
+
+The only safeguards I can think of when doing a distributed
+search of a keyspace are to randomly assign each area to be
+searched to multiple participants, and to encapsulate the
+software in some sort of hack-resistant module, possibly
+calculating a running hash which could be checked when results
+were submitted to the central authority.
+
+If you have 10,000 volunteers, each searching 0.01% of the
+keyspace using a klutz-proof software module, quite a few
+sophisticated users would have to collaborate to create a
+significant chance of missing the key.
+
+In cyptography, as in life, there are no guarantees.
+
+--
+     Mike          $    PGP 2.6 Public Key available     $
+     mpd@netcom.com     $    via Finger.                      $
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="00873" HREF="msg00873.html">Re: RSA-130 Falls to NFS - Lenstra Posting to sci.crypt.research</A></STRONG>
+<UL><LI><EM>From:</EM> "Vladimir Z. Nuri" &lt;vznuri@netcom.com&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00888.html">Hey...  someone please teach me...</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00879.html">Re: why compression doesn't perfectly even out entropy</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00873.html">Re: RSA-130 Falls to NFS - Lenstra Posting to sci.crypt.research</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00882.html">Re: RSA-130 Falls to NFS - Lenstra Posting to sci.crypt.research</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00878"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00878"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

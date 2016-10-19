@@ -1,0 +1,199 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Transforming variable&#45; to fixed&#45;length keys -->
+<!--X-From-R13: cthg001Npf.nhpxynaq.np.am -->
+<!--X-Date: Sun, 7 Jul 1996 00:39:49 +0800 -->
+<!--X-Message-Id: 199607061347.BAA08574@cs26.cs.auckland.ac.nz -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Transforming variable- to fixed-length keys</TITLE>
+<LINK REV="made" HREF="mailto:pgut001@cs.auckland.ac.nz">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00324.html">Date Prev</A>][<A HREF="msg00325.html">Date Next</A>][<A HREF="msg00716.html">Thread Prev</A>][<A HREF="msg00341.html">Thread Next</A>][<A HREF="index.html#00372">Date Index</A>][<A HREF="threads.html#00372">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Transforming variable- to fixed-length keys</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Transforming variable- to fixed-length keys</LI>
+<LI><em>From</em>: <A HREF="mailto:pgut001@cs.auckland.ac.nz">pgut001@cs.auckland.ac.nz</A></LI>
+<LI><em>Date</em>: Sun, 7 Jul 1996 01:47:12 +1200 (NZST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+In preparing the next version of cryptlib (which is going to have some cool
+features when it's ready, which should be before the end of the millenium),
+I've run into a problem in writing a general-purpose n-byte input to m-byte
+output transformation function.  What this does is take an arbitrary-length
+user key and transform it to a fixed-length encryption key (for example an
+entered passphrase into a 112-bit triple-DES key).  The constraints on memory
+usage are:
+ 
+- The input (user) key can't be altered (you can't change data passed in by the
+  caller)
+- The user key can't be copied to an internal buffer (it can be of arbitrary
+  length, and is sensitive material so shouldn't be copied elsewhere)
+ 
+In other words there's no temporary storage available apart from what's
+provided in the output key.  This is almost always a different length from the
+input key.
+ 
+Some other constraints are:
+ 
+- The transformation must be algorithm-independant (it shouldn't, for example,
+  rely on SHA1 to transform an input string into a fixed output of 160 bits and
+  assume you'll never need a key longer than 160 bits).
+ 
+This means you can't just use a single pass of a hash function to generate the
+output key, since the output can be smaller or larger than the hash function
+output.
+ 
+- The transformation must be able to be iterated to make a password-guessing
+  attack harder to perform.
+ 
+This one is tricky, since the lack of temporary buffer space means you can't
+just feed the output back to the input and iterate.
+ 
+Here's my initial approach, if anyone has any comments to make on this or knows
+of a better way to do it, please let me know.
+ 
+Peter.
+ 
+-- Snip --
+ 
+Initially, the user key is passed in as a byte string:
+ 
+    +-------------------------------------------------------+
+    |                      User Key                         |
+    +-------------------------------------------------------+
+ 
+The first stage in the key hashing prepends the length of the string as a
+big-endian 16-bit count to the user key:
+ 
+    +------+-------------------------------------------------------+
+    |Length|                      User Key                         |
+    +------+-------------------------------------------------------+
+ 
+The aim of the hashing is to reduce this variable-length input string to a
+fixed-length key appropriate to the encryption algorithm being used.  This is
+done by treating the user encryption keys as circular buffers and repeatedly
+hashing chunks of the user key and xoring the result into the output buffer.
+Thus the first chunk of the encryption key would be obtained with:
+ 
+    +------+-------------------------------------------------------+
+    |Length|                      User Key                         |
+    +------+-------------------------------------------------------+
+     |                            |
+     |                       _  /
+     |  Hash           _  /
+     |           _  /
+     |        /
+     |      |
+    +-----------------------+
+    |     Encryption Key    |
+    +-----------------------+
+ 
+The second chunk of the enryption key would be obtained with:
+ 
+    +------+-------------------------------------------------------+
+    |Length|                      User Key                         |
+    +------+-------------------------------------------------------+
+             |                            |
+             |                       _  /
+             |  Hash           _  /
+             |           _  /
+             |        /
+             |      |
+    +-----------------------+
+    |     Encryption Key    |
+    +-----------------------+
+ 
+Since the input to the hash function is much larger than its output, a
+significant amount of the user key affects each chunk of the encryption key.
+The size of each "chunk" is determined by the hash function being used.  For
+example with the MD4 hash function, 64 bytes of user key affect each 16 bytes
+of encryption key.
+ 
+Once the end of the user key or encryption key buffer is reached, the hash
+function wraps around to the start of the buffer and takes its data from there.
+A pass over the user key is considered complete when the hash function input
+has wrapped around completely and is back at the start of the buffer.
+ 
+The amount of wraparound depends on the length of the user and encryption keys.
+For example with 8-byte (strictly speaking 56-bit) DES keys even a single
+application of MD4 will wrap around the encryption key buffer twice, shrinking
+up to 64 bytes down to 8 bytes in a single operation.  On the other hand a
+4-byte user key will wrap the user key buffer around twice, expanding it to
+fill 8 bytes of the encryption key buffer (without, however, actually giving 8
+bytes of effective key space).
+ 
+In order to avoid repeatedly hashing the same data (which results in the output
+key cancelling out every second round), the input data is varied by adding the
+iteration count mod 256 to each byte before it is hashed.  Therefore for five
+rounds of key hashing the user key "This is a key" would give the following
+effective input to the hash function:
+ 
+  \x00\x0DThis is a user key
+  \x01\x0EUijt!jt!b!vtfs!lfz
+  \x02\x0FVjku"ku"c"wugt"mg{
+  \x03\x10Wklv#lv#d#xvhu#nh|
+  \x04\x11Xlmw$mw$e$ywiv$oi}
+ 
+[Is this nice?  Problems are that you might be able to perform some sort of
+ related-key attack, and that if you know the input value to round n you can
+ get the input value to round n+m without having to go through all m rounds.
+ However I can't see how this would aid an attacker].
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00324.html">Re: Word lists for passphrases</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00325.html">Re: Word lists for passphrases</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00716.html">Re: Need PGP-awareness in common utilities</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00341.html">Re: Transforming variable- to fixed-length keys</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00372"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00372"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

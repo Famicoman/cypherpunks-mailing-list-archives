@@ -1,0 +1,197 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Ignoramus Chewed&#45;Off on IPG algorithm -->
+<!--X-From-R13: vpuhqbiNnytroen.pbz (Wtbe Quhqbi N ubzr) -->
+<!--X-Date: Sat, 30 Nov 1996 10:03:22 &#45;0800 (PST) -->
+<!--X-Message-Id: 199611301759.LAA13760@manifold.algebra.com -->
+<!--X-Content-Type: text -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Ignoramus Chewed-Off on IPG algorithm</TITLE>
+<LINK REV="made" HREF="mailto:ichudov@algebra.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg02354.html">Date Prev</A>][<A HREF="msg02368.html">Date Next</A>][<A HREF="msg02354.html">Thread Prev</A>][<A HREF="msg02365.html">Thread Next</A>][<A HREF="index.html#02363">Date Index</A>][<A HREF="threads.html#02363">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Ignoramus Chewed-Off on IPG algorithm</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:wichita@cyberstation.net">wichita@cyberstation.net</A>, <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: Ignoramus Chewed-Off on IPG algorithm</LI>
+<LI><em>From</em>: <A HREF="mailto:ichudov@algebra.com">ichudov@algebra.com</A> (Igor Chudov @ home)</LI>
+<LI><em>Date</em>: Sat, 30 Nov 1996 11:59:10 -0600 (CST)</LI>
+<LI><em>Organization</em>: Bool Sheet Software</LI>
+<LI><em>Reply-To</em>: <A HREF="mailto:ichudov@algebra.com">ichudov@algebra.com</A> (Igor Chudov)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Hi,
+
+I was sort of tired of endless talk that "IPG algorithm was not 
+peer-reviewed, blah blah blah, so we won't even look at it, 
+blah blah blah", and decided to look at what Don Wood writes and
+try to see how his program actually works. 
+
+Of course, I am not an expert in cryptography, and will appreciate all
+corrections. The web page to look at is <A  HREF="http://www.netprivacy.com/algo.html">http://www.netprivacy.com/algo.html</A>,
+and it describes IPG algorithm in some detail.
+
+First of all, the description of the algorithm is extremely unclear. I
+understand that this may be Don Wood's writing style, but it is certainly 
+not the most efficient style for precise communications. I suggest that
+Don tries to rewrite his description to be more structured.
+
+Second, I seriously suspect that his algorithm of "trimming" is NOT
+going to work right. Just to remind everyone, he generates pseudo-random
+A(JV), B(JV), C(JV) such that
+
+	16384 &lt;  C &lt; 20361
+	         B &lt; 12227
+	A arbitrary (at least the web page contains no restrictions 
+	  on the value of A).
+
+and then goes on to "trimming" -- a process that obtains a new value
+of A that is LESS than 16384 through this algorithm: 
+
+       DO
+         JV=JV+1
+         IF JV=53 THEN JV=0
+         A(JV)=(A(JV)+B(JV)) MOD C(JV)
+       UNTIL A(JV)&lt;16384
+
+We shall first note that THERE ARE CASES WHEN THIS ALGORITHM WILL NEVER
+STOP! For example, if all A values are _initially_ 16385 and all C
+values are 16386 and all B's are 0, it is obvious that the pseudocode 
+above will be stuck in endless loop.
+
+No good for IPG algorithm.
+
+in fact, if only some triplets of A, B, and C have B == 0 and 16384 &lt; A &lt; C,
+these triplets will always be ignored (skipped) by his trimming process.
+
+Second, IPG's claim that ``Of even greater importance is the second role
+of producing a distribution of the numbers 0 to 16383, so that the
+number of each of those numbers produce, asymptotically approach an
+even distribution, in the same way that theoretically a true random
+number generator produces a set of numbers whose frequency
+asymptotically approach an even distribution'' is FALSE:
+
+I do not see why the distribution of A's should necessarily contain all
+numbers from 0 to 16383, less to "approach" an even distribution. For
+example, if all initial A, B, and Cs are even numbers, we'll obviously
+never get an odd number for A(JV), no matter how many iterations.
+
+If, say, 40 out of 53 of triplets A, B, and C contain only even numbers
+(not a statistical impossibility!), then about 75% of resulting values of
+A(JV) will be even.
+
+No good for the keystream. There are many more imperfections than just
+related to all-even triplets.
+
+- - - -
+
+Let's go on, to the description of the "scrambling tables" and 
+actual encryption.
+
+He uses three tables, DIFF, DISP, DETR, each containing 4096 elements.
+DISP is randomly generated (or so I understand his term "prescrambled"),
+DIFF is a random transposition of DISP (same values as in DISP, but in
+another order), and DETR, again, is filled with some random data.
+
+It does not really matter to my analysis how DISP and DETR are generated.
+
+Here's how he encrypts the data (in a loop for I from 0 to 4095):
+
+                       D1=(D1+A(JV)) AND 4095
+                       D2=DISP((D2+D1) AND 4095)
+                       F=DETR(D2)&lt;&lt;8
+                       D3=(D3+D2) AND 4095
+                       BUF(DIFF(I))=BUF(DIFF(I)) XOR (F+(DETR(DISP(D3))))
+
+I.e., D1, D2, and D3 are regenerated each pass of the loop and then are
+used to encrypt item DIFF[I] (i.e., 2-byte word with index DIFF[i], NOT
+I). 
+
+That is very bad: what it means is that we are not guaranteed that all
+BUF[i] will be scrambled! It is fairly clear that about 1/(e*e) (e is
+the base of natural logs) will be left unscrambled!!!
+
+This follows from the fact that even with perfectly random numbers used
+as DIFF[i], the probability that a cell J will be scrambled is 2/4096
+(it is 2 and not 1 since each hit covers two bytes and not one).
+Therefore, the probability  that cell J will be left unscrambled is
+
+                (1-2/4096) ** 4096
+
+which is approximately equal exp(-2) == 1/(e*e).
+
+It means that 1 out of seven characters will be left unencrypted at all.
+
+No good for a stream cipher. I think that his cipher could have been
+made stronger if he actually did not use DIFF[i] as an index and used
+I instead.
+
+Still, of course, his algorithm has nothing to do with one time pads.
+Since this is clearly not a matter of high theories but a simple question 
+of accepted definitions, there is little point to argue about it and I
+preferred to address details of his algorithm instead.
+
+There may be more problems with IPG algorithm that I simply missed.
+
+I would appreciate your corrections and notes.
+
+Thank you.
+
+	- Igor.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg02354.html">NEWS.COM DAILY DISPATCH</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg02368.html">Re: denial of service and government rights</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg02354.html">NEWS.COM DAILY DISPATCH</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg02365.html">Re: Ignoramus Chewed-Off on IPG algorithm</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#02363"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#02363"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

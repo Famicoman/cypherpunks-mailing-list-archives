@@ -1,0 +1,157 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: SHA patch -->
+<!--X-From-R13: [vpunry Euvcyrgg <jnyehfNhzvpu.rqh> -->
+<!--X-Date: Mon, 3 Oct 94 09:46:40 PDT -->
+<!--X-Message-Id: 199410031646.MAA16702@judgmentday.rs.itd.umich.edu -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>SHA patch</TITLE>
+<LINK REV="made" HREF="mailto:walrus@umich.edu">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00047.html">Date Prev</A>][<A HREF="msg00050.html">Date Next</A>][<A HREF="msg00049.html">Thread Prev</A>][<A HREF="msg00050.html">Thread Next</A>][<A HREF="index.html#00054">Date Index</A>][<A HREF="threads.html#00054">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>SHA patch</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>Subject</em>: SHA patch</LI>
+<LI><em>From</em>: Michael Shiplett &lt;<A HREF="mailto:walrus@umich.edu">walrus@umich.edu</A>&gt;</LI>
+<LI><em>Date</em>: Mon, 03 Oct 1994 12:46:27 -0400</LI>
+<LI><em>Cc</em>: Bruce Schneier &lt;<A HREF="mailto:schneier@chinet.com">schneier@chinet.com</A>&gt;</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+Hello there,
+
+    After some work with the SHS (or is the implementation actually
+the SHA?) code listed in _Applied Cryptography_, I have patched it to
+allow updates of buffer sizes that are not a multiple of
+SHS_BLOCKSIZE. The patched version works for the different groupings
+of the test data "abc", e.g.,
+        update(abc)
+        update(a) + update(bc)
+	update(ab) + update(c)
+
+    Since the "abc" case tests only the logic of shsUpdate() [all the
+transformation invocations are actually performed by shsFinal()], I
+ran the original code and the modified code on several files and
+(fortunately) received the same hash values for the two
+implementations.
+
+    shsUpdate() follows. You may need to define a bcopy-&gt;memcpy macro.
+
+michael
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void
+shsUpdate(SHS_INFO *shsInfo, BYTE *buffer, int count)
+{
+    int	offset, need;
+
+    /* determine if there are left over bytes in the
+       shs data. they are handled specially below */
+    offset = (int) ((shsInfo-&gt;countLo &gt;&gt; 3) &amp; 0x3f);
+    need = SHS_BLOCKSIZE - offset;
+
+    /* update bitcount */
+    if ((shsInfo-&gt;countLo + ((LONG) count &lt;&lt; 3)) &lt; shsInfo-&gt;countLo)
+        shsInfo-&gt;countHi++;	/* carry from low to high bitCount */
+
+    shsInfo-&gt;countLo += ((LONG) count &lt;&lt; 3);
+    shsInfo-&gt;countHi += ((LONG) count &gt;&gt; 29);
+
+    /* if there were indeed left over data bytes,
+       see if the incoming data is sufficient to
+       fill to SHS_BLOCKSIZE. if not, copy the
+       incoming data and return; otherwise fill
+       the block, perform a transformation, and
+       continue as usual */
+    if (offset)
+    {
+        if (count &lt; need)
+        {
+            bcopy(buffer, (BYTE *) shsInfo-&gt;data + offset, count);
+            return;
+        }
+        else
+        {
+            bcopy(buffer, (BYTE *) shsInfo-&gt;data + offset, need);
+#ifdef LITTLE_ENDIAN
+            byteReverse(shsInfo-&gt;data, SHS_BLOCKSIZE);
+#endif
+            shsTransform(shsInfo);
+            buffer += need;
+            count -= need;
+        }
+    }
+
+    /* process data in SHS_BLOCKSIZE chunks */
+    while (count &gt;= SHS_BLOCKSIZE)
+    {
+        bcopy(buffer, shsInfo-&gt;data, SHS_BLOCKSIZE);
+#ifdef LITTLE_ENDIAN
+        byteReverse(shsInfo-&gt;data, SHS_BLOCKSIZE);
+#endif
+        shsTransform(shsInfo);
+        buffer += SHS_BLOCKSIZE;
+        count -= SHS_BLOCKSIZE;
+    }
+
+    /* store the left over data */
+    bcopy(buffer, shsInfo-&gt;data, count);
+}
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00047.html">Re: EFFy Wiretap Win?</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00050.html">Filing FOIA Requests</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg00049.html">Anarchy-X Notification</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg00050.html">Filing FOIA Requests</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00054"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00054"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

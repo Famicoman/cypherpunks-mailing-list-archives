@@ -1,0 +1,215 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: SSL search attacks -->
+<!--X-From-R13: Epbgg Pevpxare <fwoNnhfgva.voz.pbz> -->
+<!--X-Date: Tue, 29 Aug 95 18:01:35 PDT -->
+<!--X-Message-Id: 9508300101.AA11637@ozymandias.austin.ibm.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: 199508292102.PAA01897@wero -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: SSL search attacks</TITLE>
+<LINK REV="made" HREF="mailto:sjb@austin.ibm.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg01466.html">Date Prev</A>][<A HREF="msg01479.html">Date Next</A>][<A HREF="msg01458.html">Thread Prev</A>][<A HREF="msg01577.html">Thread Next</A>][<A HREF="index.html#01472">Date Index</A>][<A HREF="threads.html#01472">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: SSL search attacks</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: <A HREF="mailto:don@cs.byu.edu">don@cs.byu.edu</A></LI>
+<LI><em>Subject</em>: Re: SSL search attacks </LI>
+<LI><em>From</em>: Scott Brickner &lt;<A HREF="mailto:sjb@austin.ibm.com">sjb@austin.ibm.com</A>&gt;</LI>
+<LI><em>Date</em>: Tue, 29 Aug 1995 20:01:15 -0500</LI>
+<LI><em>Cc</em>: <A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A></LI>
+<LI><em>In-Reply-To</em>: (Your message of Tue, 29 Aug 1995 15:02:41 CDT.)            &lt;<A HREF="msg01458.html">199508292102.PAA01897@wero</A>&gt; </LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+don@cs.byu.edu writes
+&gt;From: Scott Brickner &lt;sjb@austin.ibm.com&gt;
+&gt;
+&gt;&gt;The problems in the current system were to be expected of a first
+&gt;&gt;attempt.  In the future:  Only the server assigns segments, only the
+&gt;&gt;assignee may report the status of a segment, and after all segments are
+&gt;&gt;NAKed we know condition 1 has occurred, at which time we start over,
+&gt;&gt;but never assign the same segment to the same searcher.  Limit the
+&gt;&gt;number of segments which may be outstanding with one searcher at one
+&gt;&gt;time as a function of work rate.  Deploy redundant servers.
+&gt;
+&gt;BEAAAT STATE! Push 'em back.. WAAAAAAY BAAAACK. 
+&gt;(relevant comments follow)
+
+I suppose this does seem like a "statist" protocol, but let's look at
+the purpose.  The whole idea of the central server was to permit a
+*coordinated* attack on the key.  We've established that there is a 1/e
+cost factor in removing the central server.  I just threw out these
+items as specific changes which could defend against the identified
+attack modes *without* losing the benefit of the central coordination.
+
+In order for the coordinator to be successful, there must be a
+mechanism to ensure that someone who knows the key can't break the
+system by just reporting "I searched this segment and didn't find it."
+This means that the server should consider such statements as
+irrelevant, unless it was the *server* who suggested that the user
+search the space.  This makes the likelihood of the key's segment being
+assigned to a "bad guy" pretty low.
+
+The server *could* take unsolicited NAKs "under advisement", and hand
+them out at a slower rate than unACKed segments, but this still allows
+the "result hoarder" to slow down the attack.
+
+&gt;In regard to both messages, I think that with sequentially allocated
+&gt;keyspace an attacker who knows the real key would have trouble getting the
+&gt;right segment unless s/he grabbed a big enough piece. If the search is
+&gt;restarted, we know something's up.  Ensuring that nobody gets to search
+&gt;keyspace they searched before would be one improvement.
+
+Hence the prohibition against (as Tim put it) "J. Random User claiming
+keyspace".
+
+&gt;A random (instead
+&gt;of sequential) allocation _by the keyserver_ (out of unallocated 
+&gt;piecemeal segments) would also take some work to implement. 
+
+I don't think it would really be that hard, if one were willing to go
+with less than "cryptographic" strength in the PRNG, which I don't think
+is really necessary here.
+
+The problem is that it's irrelevant to the problem.  Random allocation
+at the server is equivalent to simply "shuffling" the segments before
+assignment, which doesn't affect the rate at which the space is searched.
+
+&gt;From: tcmay@got.net (Timothy C. May)
+&gt;&gt;On the negative side, ostracize or punish those who bite off more than they
+&gt;&gt;can chew. This approach is fraught with dangers.
+&gt;
+&gt;If the search wraps around to catch the UNACK'ed pieces, this type of
+&gt;oversight will only slow down the actual discovery of the key. Failure
+&gt;to report a found key, though, is a bit different. I would not be opposed
+&gt;to having my program report possible hits, with the server being what
+&gt;discovers if I've found it or not.
+
+I'm not sure I follow you, here.  The search wraps around on the unACKed
+segments because the work was assigned, but not (as far as the server
+knows) completed.  This doesn't slow down the discovery of the key,
+it just reflects the *real* composite key testing rate as opposed to
+the *apparent* rate (which is based on the rate at which the segments
+are assigned).  The server doesn't consider a segement "done" until it
+gets an ACK or NAK.
+
+&gt;&gt;On the positive side, let everyone simply attack the keyspace as they see
+&gt;&gt;fit, picking random parts to attack. This should not be "worse" than a
+&gt;&gt;factor of several from a "perfectly coordinated" attack. (I haven't spent
+&gt;&gt;time calculating this, but my intuition is that a random attack, with
+&gt;&gt;overlapping keyspace, is not a lot less efficiently attacked than
+&gt;&gt;attempting to arrange for no overlaps...just based on my mental picture of
+&gt;&gt;dropping line segments randomly on some interval and figuring coverage of
+&gt;&gt;the line segment.)
+
+NB: Elsewhere, Tim provides an argument showing the efficiency of the
+random attack to be 1/e worse than the coordinated attack (about 37%).
+
+&gt;Why not have a random backup-mode, in case someone does mount a denial of
+&gt;service attack. Or imploy a combination of the two modes. The machines
+&gt;running brloop can search sequentially (out of the middle 50%?) and the
+&gt;machines not connected search randomly (out of the outside 50%?). Or,
+&gt;venturing further into the I-wonder-who's-gonna-code-this world, log the
+&gt;random searches for possible conversion to an exhaustive search later. 
+&gt;
+&gt;It would be nice to be able to hit the emergency button and switch to
+&gt;random mode, but currently I don't think there's a need to actually
+&gt;use it.
+
+I still don't see how the server can use unsolicited NAKs as anything
+other than a nominal reduction in the probability that the key is in
+the NAKed segment.  Perhaps this does give an idea of a server strategy
+to do *just* that, though.
+
+The server maintains a list of the unique users who have reported an
+unsolicited NAK for each segment.  Requests for work are filled by
+randomly selecting segments, with the highest weight going to the
+segments with the fewest unsolicited NAKs, but only segments with
+*solicited* NAKs and those assigned, but with no response, are not
+considered.
+
+If the weight were inversely proportional to the square of the number
+of unsolicited NAKs (plus one), then segments which have a lot of NAKs
+won't likely be assigned until the end of the jobs.
+
+When a segment with unsolicited NAKs is assigned, further weight might
+be given to unsolicited NAKs from those users in the future, reflecting
+an improvement in their reputation.
+
+The biggest problem with this scenario is that it requires a
+potentially *huge* amount of storage on the server.
+
+Another alternative that comes to mind is to hand out segments with
+unsolicited NAKs to some of the slower machines.  Since their
+contribution to the overall search rate is small, there's less of a hit
+taken by assigning them potentially redundant work.  As they provide
+verification of the data reported as unsolicited NAKs, the server's
+reputation data is improved, and the search can concentrate even more
+on the unACKed segments.
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<UL><LI><STRONG>Follow-Ups</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01577" HREF="msg01577.html">Re: SSL search attacks</A></STRONG>
+<UL><LI><EM>From:</EM> Jiri Baum &lt;jirib@sweeney.cs.monash.edu.au&gt;</LI></UL></LI>
+</UL></LI></UL>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<UL><LI><STRONG>References</STRONG>:
+<UL>
+<LI><STRONG><A NAME="01458" HREF="msg01458.html">SSL search attacks</A></STRONG>
+<UL><LI><EM>From:</EM> don@cs.byu.edu</LI></UL></LI>
+</UL></LI></UL>
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg01466.html">Locked out of Quicken - HELP!</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg01479.html">Re: Florida Drivers Permits and a Hello</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg01458.html">SSL search attacks</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg01577.html">Re: SSL search attacks</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#01472"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#01472"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>

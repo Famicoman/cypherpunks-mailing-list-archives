@@ -1,0 +1,194 @@
+<!-- MHonArc v2.4.3 -->
+<!--X-Subject: Re: Dissolving Choke Points (fwd) -->
+<!--X-From-R13: vpuhqbiNnytroen.pbz -->
+<!--X-Date: Mon, 3 Feb 1997 19:26:10 &#45;0800 (PST) -->
+<!--X-Message-Id: 199702040326.TAA12077@toad.com -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<HTML>
+<HEAD>
+<TITLE>Re: Dissolving Choke Points (fwd)</TITLE>
+<LINK REV="made" HREF="mailto:ichudov@algebra.com">
+</HEAD>
+<BODY>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<HR>
+[<A HREF="msg00194.html">Date Prev</A>][<A HREF="msg00151.html">Date Next</A>][<A HREF="msg03003.html">Thread Prev</A>][<A HREF="msg03044.html">Thread Next</A>][<A HREF="index.html#00161">Date Index</A>][<A HREF="threads.html#00161">Thread Index</A>]
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<H1>Re: Dissolving Choke Points (fwd)</H1>
+<HR>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<UL>
+<LI><em>To</em>: Cypherpunks &lt;<A HREF="mailto:cypherpunks@toad.com">cypherpunks@toad.com</A>&gt;</LI>
+<LI><em>Subject</em>: Re: Dissolving Choke Points (fwd)</LI>
+<LI><em>From</em>: <A HREF="mailto:ichudov@algebra.com">ichudov@algebra.com</A></LI>
+<LI><em>Date</em>: Mon, 3 Feb 1997 20:00:10 -0600 (CST)</LI>
+<LI><em>Sender</em>: <A HREF="mailto:owner%2Dcypherpunks@toad.com">owner-cypherpunks@toad.com</A></LI>
+</UL>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<HR>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<PRE>
+&gt; From: ####### ### &lt;###@###.com&gt;
+&gt; To: ichudov@algebra.com
+&gt; Subject: Re: Dissolving Choke Points
+&gt; 
+&gt; ichudov@algebra.com writes:
+&gt;  &gt; i do have unix (linux) and stuff, but i can't take a lot of subscribers
+&gt;  &gt; -- maybe 200-300 or so.
+&gt;  &gt; 
+&gt;  &gt; i actually wrote a proposal for a mailing list without a central control
+&gt;  &gt; point, with several advantages being impossibility of control, absense
+&gt;  &gt; of a single point of failure, and cryptographic verification of honesty 
+&gt;  &gt; of moderators.
+&gt;  &gt; 
+&gt;  &gt; if there is any interest, i will post it here.
+&gt; 
+&gt;      Please do.
+&gt; 
+&gt; Regards,
+&gt; 
+&gt; ####### ###
+
+Here, I propose a new scheme for the Cypherpunks mailing list that would
+
+1) Ensure that no one person is able to take over the control over the list
+2) Ensure that there will be no single point of failure, i.e., shutdown
+   of any single computer will not kill the list
+3) Ensure that even people with relatively small Net resources can help
+   keep the list afloat.
+
+The idea is as follows: even though Cypherpunks is one group, the group
+will be based on multiple mailing lists with identical content. These
+lists may be named, for example, cypherpunks@algebra.com,
+cypherpunks@toad.com, and cypherpunks@netcom.com (obviously, these names
+are used as an example only).
+
+Any user is free to subscribe to any of these lists. All of these lists
+will interact with each other in the following way: 
+
+1) Each node would forward ALL incoming submissions to a) all other nodes
+   and b) to all subscribers "attached" to the node
+2) Each node will send information about all new subscriptions to 
+   each other node.
+
+The following procmail recipes for cypherpunks@ accounts may be used to 
+ensure quick forwarding: 
+
+# is it sent to cypherpunks (some spams will be trashed here)
+# and is it not a mail loop?
+:0
+* ^TOcypherpunks
+* !^X-Loop:
+{
+  #
+  # This recipe removes duplicates!
+  #
+  :0 Wh: msgid.lock
+  | formail -D 32768 msgid.cache
+
+  # forward it to other cypherpunks lists
+  :0 c
+  !cypherpunks@netcom.com cypherpunks@toad.com
+
+  # send it to all local subscribers
+  :0 c
+  !majordomo -some -arguments
+
+  # store the checksum and message-id for honesty verification (see below)
+  :0
+  |accounting
+}
+
+# suSCRibe/unsuSCRibe recipes go here
+
+This scheme ensures that the list is run in a cooperative fashion and
+can be maintained by a number of individuals without any one of them
+having an expensive internet connection or being "in charge". It also
+ensures that even if one node fails, traffic can be re-routed to other
+nodes. Just as well, it ensures that any attempts of cheating will be
+noticed: it is easy to write a bot that would subscribe to all of these
+lists and see if any messages get "lost".
+
+Users can send their articles to only one node, or, if they feel
+paranoid, to several nodes at once. All we need is to make sure that 
+all Message-IDs of outgoing messages are unique at every node.
+
+Honesty verification: 
+
+I suppose that there may be some more elaborate, crypto-based schemes 
+to control and monitor article distribution. For example, there can be
+another list, cypherpunks-control, where each of the nodes posts a 
+publicly available signed summary of checksums of articles that went
+through, and individual users would be able (with the help of s simple
+client program) to verify that
+
+        1) They received these articles
+        2) That summaries received from all nodes are identical
+        3) That all articles were received by all nodes
+
+
+They do not HAVE to do it, but they can if they want. If they do, there
+will be no way for list maintainers to censor anything.
+
+If a node goes down or if the users' verification scripts indicate a 
+potential for cheating, they can resubscribe to some other node and
+let everyone else know what's going on.
+
+My proposal strikes me as fairly simple and potentially workable. Even
+though 90% of the users will never get to usnig the verification
+mechanism, it will ensure honesty.
+
+Note also that this mechanism is a gross simplification of the way 
+USENET works, so some may vouch for a usenet group instead. 
+
+Your opinions will be appreciated.
+
+        - Igor.
+
+
+</PRE>
+
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<HR>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<UL>
+<LI>Prev by Date:
+<STRONG><A HREF="msg00194.html">More Hacking of the Mykotronx Site!</A></STRONG>
+</LI>
+<LI>Next by Date:
+<STRONG><A HREF="msg00151.html">Re: Dissolving Choke Points</A></STRONG>
+</LI>
+<LI>Prev by thread:
+<STRONG><A HREF="msg03003.html">Re: Dissolving Choke Points (fwd)</A></STRONG>
+</LI>
+<LI>Next by thread:
+<STRONG><A HREF="msg03044.html">More Hacking of the Mykotronx Site!</A></STRONG>
+</LI>
+<LI>Index(es):
+<UL>
+<LI><A HREF="index.html#00161"><STRONG>Date</STRONG></A></LI>
+<LI><A HREF="threads.html#00161"><STRONG>Thread</STRONG></A></LI>
+</UL>
+</LI>
+</UL>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</BODY>
+</HTML>
